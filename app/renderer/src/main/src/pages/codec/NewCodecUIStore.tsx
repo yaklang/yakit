@@ -17,11 +17,11 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import { DefaultOptionType } from "antd/lib/select"
-import { queryYakScriptList } from "../yakitStore/network"
-import { YakScript } from "../invoker/schema"
-import { YakParamProps } from "../plugins/pluginsType"
-import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {DefaultOptionType} from "antd/lib/select"
+import {queryYakScriptList} from "../yakitStore/network"
+import {YakScript} from "../invoker/schema"
+import {YakParamProps} from "../plugins/pluginsType"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps extends YakitInputProps {
     // 标题
@@ -133,23 +133,22 @@ export interface NewCodecSelectUIProps extends YakitSelectProps {
 }
 // 当前控件样式仅适配此尺寸 - 如需更多尺寸请自行扩展
 export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
-    const {require, title, showSearch, directionBox, options = [],isPlugin,onSearch, ...restProps} = props
-    const [show, setShow] = useState<boolean>(false)
-    const [optionsList,setOptionsList] = useState<DefaultOptionType[]>(options)
+    const {require, title, showSearch, directionBox, options = [], isPlugin, onSearch, ...restProps} = props
+    const [optionsList, setOptionsList] = useState<DefaultOptionType[]>(options)
 
     const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([])
-    useEffect(()=>{
-        if(isPlugin){
+    useEffect(() => {
+        if (isPlugin) {
             search()
         }
-    },[])
+    }, [])
 
     const search = useMemoizedFn((keyword?: string) => {
         // setPluginLoading(true)
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                const codecPlugin:CodecType[] = i.map((script) => {
+                const codecPlugin: CodecType[] = i.map((script) => {
                     return {
                         key: script.ScriptName,
                         help: script.Help,
@@ -157,13 +156,14 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                         isYakScript: true
                     }
                 })
-                const codecPluginSelect = codecPlugin.map((item)=>({label:item.key||"",value:item.key||""}))
+                const codecPluginSelect = codecPlugin.map((item) => ({label: item.key || "", value: item.key || ""}))
                 setCodecPlugin(codecPlugin)
                 setOptionsList(codecPluginSelect)
             },
-            () => setTimeout(() => {
-                // setPluginLoading(false)
-            }, 300),
+            () =>
+                setTimeout(() => {
+                    // setPluginLoading(false)
+                }, 300),
             10,
             undefined,
             keyword
@@ -175,8 +175,8 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
             className={classNames(styles["new-codec-select-ui"], {
                 [styles["new-codec-title-select-ui"]]: title,
                 [styles["new-codec-no-title-select-ui"]]: !title,
-                [styles["new-codec-no-title-search-select-ui"]]: showSearch&&!title,
-                [styles["new-codec-title-search-select-ui"]]: showSearch&&title,
+                [styles["new-codec-no-title-search-select-ui"]]: showSearch && !title,
+                [styles["new-codec-title-search-select-ui"]]: showSearch && title,
                 [styles["new-codec-right-border-select-ui"]]: directionBox === "right"
             })}
         >
@@ -186,33 +186,45 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                     {require && <div className={styles["icon"]}>*</div>}
                 </div>
             )}
-            <YakitSelect
-                showSearch={showSearch}
-                placeholder='请选择...'
-                suffixIcon={
-                    showSearch ? (
+            {showSearch ? (
+                <YakitSelect
+                    showSearch={true}
+                    placeholder='请选择...'
+                    suffixIcon={
                         <div className={styles["search-icon"]}>
                             <OutlineSearchIcon />
-                            {/* <DownOutlined /> */}
                         </div>
-                    ) : undefined
-                }
-                onDropdownVisibleChange={(v) => setShow(v)}
-                // wrapperClassName={style["unit-select"]}
-                onSearch={(v) => {
-                    if(isPlugin){
-                        search(v)
                     }
-                    else{
-                        onSearch&&onSearch(v)
-                    }
-                }}
-                {...restProps}
-            >
-                {optionsList.map((item) => (
-                    <YakitSelect value={item.value}>{item.label}</YakitSelect>
-                ))}
-            </YakitSelect>
+                    onSearch={(v) => {
+                        if (isPlugin) {
+                            search(v)
+                        } else {
+                            onSearch && onSearch(v)
+                        }
+                    }}
+                    {...restProps}
+                >
+                    {optionsList.map((item) => (
+                        <YakitSelect value={item.value}>{item.label}</YakitSelect>
+                    ))}
+                </YakitSelect>
+            ) : (
+                <YakitSelect
+                    placeholder='请选择...'
+                    onSearch={(v) => {
+                        if (isPlugin) {
+                            search(v)
+                        } else {
+                            onSearch && onSearch(v)
+                        }
+                    }}
+                    {...restProps}
+                >
+                    {optionsList.map((item) => (
+                        <YakitSelect value={item.value}>{item.label}</YakitSelect>
+                    ))}
+                </YakitSelect>
+            )}
         </div>
     )
 }
@@ -264,7 +276,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
 
     useEffect(() => {
         // 当弹窗编辑器更改时
-        if (reqEditor&&reqEditor.getValue()!==editorValue) {
+        if (reqEditor && reqEditor.getValue() !== editorValue) {
             reqEditor.setValue(editorValue)
         }
     }, [reqEditor, editorValue])
@@ -315,7 +327,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
                             onChange && onChange(editorValue)
                         }}
                     >
-                        应用
+                        保存
                     </div>
                     <Divider
                         type={"vertical"}
@@ -334,7 +346,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
             </div>
             <div className={styles["editor-box"]}>
                 <YakitEditor
-                    type="codec"
+                    type='codec'
                     editorDidMount={(editor) => {
                         setReqEditor(editor)
                     }}
@@ -367,7 +379,7 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
     useEffect(() => {
         setEditorValue(value)
     }, [value])
-    
+
     return (
         <>
             <NewCodecEditorBody
@@ -375,32 +387,34 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
                 editorValue={editorValue}
                 setEditorValue={setEditorValue}
                 extend={false}
-                onExtend={()=>setShowExtend(true)}
+                onExtend={() => setShowExtend(true)}
                 {...props}
             />
-            {isShowExtend&&<YakitModal
-                title={null}
-                footer={null}
-                width={1200}
-                type={"white"}
-                closable={false}
-                maskClosable={false}
-                hiddenHeader={true}
-                visible={isShowExtend}
-                bodyStyle={{padding: 0}}
-            >
-                <NewCodecEditorBody
-                    extend={true}
-                    onClose={() => {
-                        setShowExtend(false)
-                    }}
-                    editorValue={editorValue}
-                    setEditorValue={(str) => {
-                        setEditorValue(str)
-                    }}
-                    {...props}
-                />
-            </YakitModal>}
+            {isShowExtend && (
+                <YakitModal
+                    title={null}
+                    footer={null}
+                    width={1200}
+                    type={"white"}
+                    closable={false}
+                    maskClosable={false}
+                    hiddenHeader={true}
+                    visible={isShowExtend}
+                    bodyStyle={{padding: 0}}
+                >
+                    <NewCodecEditorBody
+                        extend={true}
+                        onClose={() => {
+                            setShowExtend(false)
+                        }}
+                        editorValue={editorValue}
+                        setEditorValue={(str) => {
+                            setEditorValue(str)
+                        }}
+                        {...props}
+                    />
+                </YakitModal>
+            )}
         </>
     )
 }

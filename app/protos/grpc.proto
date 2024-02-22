@@ -3726,6 +3726,7 @@ message CodecParam {
   string Desc = 5; // 描述
   string Regex = 6; // 正则
   string Label = 7; // 参数文本标签
+  string DefaultValue = 8; // 默认值
 }
 
 // Yak Invoker

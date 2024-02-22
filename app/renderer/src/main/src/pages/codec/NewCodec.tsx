@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Divider, Tooltip, Upload} from "antd"
-import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect} from "ahooks"
+import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect, useSize} from "ahooks"
 import styles from "./NewCodec.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -8,7 +8,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidDragsortIcon, SolidPlayIcon, SolidStarIcon} from "@/assets/icon/solid"
-import {SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
+import {ExclamationIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {
     OutlineArrowBigUpIcon,
     OutlineArrowscollapseIcon,
@@ -16,8 +16,10 @@ import {
     OutlineBanIcon,
     OutlineClockIcon,
     OutlineDocumentduplicateIcon,
+    OutlineDotshorizontalIcon,
     OutlineImportIcon,
     OutlinePauseIcon,
+    OutlinePlayIcon,
     OutlineSearchIcon,
     OutlineStarIcon,
     OutlineStorageIcon,
@@ -46,7 +48,11 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {openABSFileLocated} from "@/utils/openWebsite"
-import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {EnterOutlined} from "@ant-design/icons"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -63,6 +69,13 @@ interface NewCodecRightEditorBoxProps {
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
     const {isExpand, setExpand, inputEditor, setInputEditor, outputEditor, setOutputEditor} = props
+    const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
+    const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
+    const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
+    const [outputMenuOpen, setOutputMenuOpen] = useState<boolean>(false)
+    const editorBoxRef = useRef<HTMLDivElement>(null)
+    const uploadRef = useRef<HTMLDivElement>(null)
+    const size = useSize(editorBoxRef)
     const Expand = () => (
         <div
             className={styles["expand-box"]}
@@ -73,6 +86,38 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
         </div>
     )
+
+    const judgeStringSize = useMemoizedFn((str: string) => {
+        // 将字符串转换为字节数
+        const bytes = new Blob([str]).size
+        // 将字节数转换为KB
+        const kilobytes = bytes / 1024
+        // 如果字符串大小大于500KB，则截取到500KB大小
+        if (kilobytes > 500) {
+            // 计算截取的字符数
+            const charactersToKeep = Math.floor((500 * 1024) / 2) // 一个字符占用2字节
+            // 截取字符串
+            const truncatedString = str.substring(0, charactersToKeep)
+            return {
+                hidden: true,
+                value: truncatedString
+            }
+        } else {
+            // 字符串大小不大于500KB，返回原始字符串
+            return {
+                hidden: false,
+                value: str
+            }
+        }
+    })
+
+    const inputObj = useMemo(() => {
+        return judgeStringSize(inputEditor)
+    }, [inputEditor])
+
+    const outPutObj = useMemo(() => {
+        return judgeStringSize(outputEditor)
+    }, [outputEditor])
 
     // 导入
     const onImport = useMemoizedFn((path: string) => {
@@ -98,79 +143,33 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             warn("暂无保存内容")
             return
         }
-        let name: string = ""
-        const m = showYakitModal({
-            title: "保存",
-            content: (
-                <div className={styles["codec-save-modal"]}>
-                    <YakitInput.TextArea
-                        placeholder='请为保存内容取个名字...'
-                        showCount
-                        maxLength={50}
-                        onChange={(e) => {
-                            name = e.target.value
-                        }}
-                    />
-                    <div className={styles["btn-box"]}>
-                        <YakitButton
-                            type='outline2'
-                            onClick={() => {
-                                m.destroy()
-                            }}
-                        >
-                            取消
-                        </YakitButton>
-                        <YakitButton
-                            type='primary'
-                            onClick={() => {
-                                if (name.length === 0) {
-                                    warn("请输入名字")
-                                    return
-                                }
-                                m.destroy()
-                                ipcRenderer
-                                    .invoke("openDialog", {
-                                        title: "请选择文件夹",
-                                        properties: ["openDirectory"]
-                                    })
-                                    .then((data: {filePaths: string[]}) => {
-                                        const filesLength = data.filePaths.length
-                                        if (filesLength) {
-                                            const absolutePath = data.filePaths
-                                                .map((p) => p.replace(/\\/g, "\\"))
-                                                .join(",")
-                                            ipcRenderer
-                                                .invoke("SaveCodecOutputToTxt", {
-                                                    data: outputEditor,
-                                                    outputDir: absolutePath,
-                                                    fileName: `${name}-${new Date().getTime()}.txt`
-                                                })
-                                                .then((r) => {
-                                                    console.log(r)
-                                                    if (r?.ok) {
-                                                        success("保存成功")
-                                                        r?.outputDir && openABSFileLocated(r.outputDir)
-                                                    }
-                                                })
-                                                .catch((e) => {
-                                                    failed(`Save Codec failed ${e}`)
-                                                })
-                                                .finally(() => {})
-                                        }
-                                    })
-                            }}
-                        >
-                            保存
-                        </YakitButton>
-                    </div>
-                </div>
-            ),
-            onCancel: () => {
-                m.destroy()
-            },
-            footer: null,
-            width: 400
-        })
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory"]
+            })
+            .then((data: {filePaths: string[]}) => {
+                const filesLength = data.filePaths.length
+                if (filesLength) {
+                    const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
+                    ipcRenderer
+                        .invoke("SaveCodecOutputToTxt", {
+                            data: outputEditor,
+                            outputDir: absolutePath,
+                            fileName: `Output-${new Date().getTime()}.txt`
+                        })
+                        .then((r) => {
+                            if (r?.ok) {
+                                success("保存成功")
+                                r?.outputDir && openABSFileLocated(r.outputDir)
+                            }
+                        })
+                        .catch((e) => {
+                            failed(`Save Codec failed ${e}`)
+                        })
+                        .finally(() => {})
+                }
+            })
     })
 
     // 替换
@@ -188,8 +187,73 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         let file_index = file_name.lastIndexOf(".")
         return file_name.slice(file_index, file_name.length)
     }
+
+    const inputMenuData = useMemo(() => {
+        return [
+            {
+                key: "import",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineImportIcon />
+                        <div className={styles["menu-name"]}>导入</div>
+                    </div>
+                )
+            },
+            {
+                key: "wordwrap",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <EnterOutlined />
+                        <div className={styles["menu-name"]}>{noInputWordwrap ? "自动换行" : "不自动换行"}</div>
+                    </div>
+                )
+            }
+        ]
+    }, [noInputWordwrap])
+
+    const outputMenuData = useMemo(() => {
+        return [
+            {
+                key: "save",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineStorageIcon />
+                        <div className={styles["menu-name"]}>保存</div>
+                    </div>
+                )
+            },
+            {
+                key: "replace",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineArrowBigUpIcon />
+                        <div className={styles["menu-name"]}>将Output替换至Input</div>
+                    </div>
+                )
+            },
+            {
+                key: "copy",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineDocumentduplicateIcon />
+                        <div className={styles["menu-name"]}>复制</div>
+                    </div>
+                )
+            },
+            {
+                key: "wordwrap",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <EnterOutlined />
+                        <div className={styles["menu-name"]}>{noOutputWordwrap ? "自动换行" : "不自动换行"}</div>
+                    </div>
+                )
+            }
+        ]
+    }, [noOutputWordwrap])
+
     return (
-        <div className={styles["new-codec-editor-box"]}>
+        <div className={styles["new-codec-editor-box"]} ref={editorBoxRef}>
             <YakitResizeBox
                 isVer={true}
                 isShowDefaultLineStyle={false}
@@ -200,10 +264,25 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 firstNode={
                     <div className={classNames(styles["input-box"], styles["editor-box"])}>
                         <div className={styles["header"]}>
-                            <div className={styles["title"]}>Input</div>
+                            <div className={styles["title"]}>
+                                <span className={styles["text"]}>Input</span>
+                                {inputObj.hidden && (
+                                    <Tooltip title={size && size.width > 450 ? null : "超大输入"}>
+                                        <YakitTag style={{marginLeft: 8}} color='danger'>
+                                            <div className={styles["tag-box"]}>
+                                                <ExclamationIcon className={styles["icon-style"]} />
+                                                {size && size.width > 450 && <span>超大输入</span>}
+                                            </div>
+                                        </YakitTag>
+                                    </Tooltip>
+                                )}
+                            </div>
                             <div className={styles["extra"]}>
                                 <Tooltip title={"导入"}>
                                     <Upload
+                                        className={classNames(styles["upload-box"], {
+                                            [styles["upload-box-hidden"]]: size && size.width <= 300
+                                        })}
                                         accept={"text/plain"}
                                         multiple={false}
                                         maxCount={1}
@@ -223,11 +302,57 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                             return false
                                         }}
                                     >
-                                        <div className={styles["extra-icon"]}>
+                                        <div className={styles["extra-icon"]} ref={uploadRef}>
                                             <OutlineImportIcon />
                                         </div>
                                     </Upload>
                                 </Tooltip>
+                                {size && size.width > 300 && (
+                                    <Tooltip title={"不自动换行"}>
+                                        <YakitButton
+                                            size={"small"}
+                                            type={noInputWordwrap ? "text" : "primary"}
+                                            icon={<EnterOutlined />}
+                                            onClick={() => {
+                                                setNoInputWordwrap(!noInputWordwrap)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                )}
+
+                                {size && size.width <= 300 && (
+                                    <YakitDropdownMenu
+                                        menu={{
+                                            data: inputMenuData as YakitMenuItemProps[],
+                                            onClick: ({key}) => {
+                                                setInputMenuOpen(false)
+                                                switch (key) {
+                                                    case "import":
+                                                        uploadRef.current && uploadRef.current.click()
+                                                        break
+                                                    case "wordwrap":
+                                                        setNoInputWordwrap(!noInputWordwrap)
+                                                        break
+                                                    default:
+                                                        break
+                                                }
+                                            }
+                                        }}
+                                        dropdown={{
+                                            overlayClassName: styles["codec-input-menu"],
+                                            trigger: ["click"],
+                                            placement: "bottomRight",
+                                            onVisibleChange: (v) => {
+                                                setInputMenuOpen(v)
+                                            },
+                                            visible: inputMenuOpen
+                                        }}
+                                    >
+                                        <div className={styles["extra-icon"]}>
+                                            <OutlineDotshorizontalIcon />
+                                        </div>
+                                    </YakitDropdownMenu>
+                                )}
                                 <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                 <div className={styles["clear"]} onClick={onClear}>
                                     清空
@@ -237,10 +362,11 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <div className={styles["editor"]}>
                             <YakitEditor
                                 type='codec'
-                                value={inputEditor}
+                                value={inputObj.value}
                                 setValue={(content: string) => {
                                     setInputEditor(content)
                                 }}
+                                noWordWrap={noInputWordwrap}
                                 // loading={loading}
                             />
                         </div>
@@ -249,23 +375,91 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 secondNode={
                     <div className={classNames(styles["output-box"], styles["editor-box"])}>
                         <div className={styles["header"]}>
-                            <div className={styles["title"]}>Output</div>
+                            <div className={styles["title"]}>
+                                <span className={styles["text"]}>Output</span>
+                                {outPutObj.hidden && (
+                                    <Tooltip
+                                        title={size && size.width > 450 ? null : "超大输出，请点击保存下载文件查看"}
+                                    >
+                                        <YakitTag style={{marginLeft: 8}} color='danger'>
+                                            <div className={styles["tag-box"]}>
+                                                <ExclamationIcon className={styles["icon-style"]} />
+                                                {size && size.width > 450 && (
+                                                    <span>超大输出，请点击保存下载文件查看</span>
+                                                )}
+                                            </div>
+                                        </YakitTag>
+                                    </Tooltip>
+                                )}
+                            </div>
                             <div className={styles["extra"]}>
-                                <Tooltip title={"保存"}>
-                                    <div className={styles["extra-icon"]} onClick={onSave}>
-                                        <OutlineStorageIcon />
-                                    </div>
-                                </Tooltip>
-                                <Tooltip title={"将Output替换至Input"}>
-                                    <div className={styles["extra-icon"]} onClick={onReplace}>
-                                        <OutlineArrowBigUpIcon />
-                                    </div>
-                                </Tooltip>
-                                <Tooltip title={"复制"}>
-                                    <div className={styles["extra-icon"]} onClick={onCopy}>
-                                        <OutlineDocumentduplicateIcon />
-                                    </div>
-                                </Tooltip>
+                                {size && size.width > 300 ? (
+                                    <>
+                                        <Tooltip title={"保存"}>
+                                            <div className={styles["extra-icon"]} onClick={onSave}>
+                                                <OutlineStorageIcon />
+                                            </div>
+                                        </Tooltip>
+                                        <Tooltip title={"将Output替换至Input"}>
+                                            <div className={styles["extra-icon"]} onClick={onReplace}>
+                                                <OutlineArrowBigUpIcon />
+                                            </div>
+                                        </Tooltip>
+                                        <Tooltip title={"复制"}>
+                                            <div className={styles["extra-icon"]} onClick={onCopy}>
+                                                <OutlineDocumentduplicateIcon />
+                                            </div>
+                                        </Tooltip>
+                                        <Tooltip title={"不自动换行"}>
+                                            <YakitButton
+                                                size={"small"}
+                                                type={noOutputWordwrap ? "text" : "primary"}
+                                                icon={<EnterOutlined />}
+                                                onClick={() => {
+                                                    setNoOutputWordwrap(!noOutputWordwrap)
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </>
+                                ) : (
+                                    <YakitDropdownMenu
+                                        menu={{
+                                            data: outputMenuData as YakitMenuItemProps[],
+                                            onClick: ({key}) => {
+                                                setOutputMenuOpen(false)
+                                                switch (key) {
+                                                    case "save":
+                                                        onSave()
+                                                        break
+                                                    case "replace":
+                                                        onReplace()
+                                                        break
+                                                    case "copy":
+                                                        onCopy()
+                                                        break
+                                                    case "wordwrap":
+                                                        setNoOutputWordwrap(!noOutputWordwrap)
+                                                        break
+                                                    default:
+                                                        break
+                                                }
+                                            }
+                                        }}
+                                        dropdown={{
+                                            overlayClassName: styles["codec-output-menu"],
+                                            trigger: ["click"],
+                                            placement: "bottomRight",
+                                            onVisibleChange: (v) => {
+                                                setOutputMenuOpen(v)
+                                            },
+                                            visible: outputMenuOpen
+                                        }}
+                                    >
+                                        <div className={styles["extra-icon"]}>
+                                            <OutlineDotshorizontalIcon />
+                                        </div>
+                                    </YakitDropdownMenu>
+                                )}
 
                                 <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                 {Expand()}
@@ -275,10 +469,11 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             <YakitEditor
                                 readOnly={true}
                                 type='codec'
-                                value={outputEditor}
+                                value={outPutObj.value}
                                 setValue={(content: string) => {
                                     setOutputEditor(content)
                                 }}
+                                noWordWrap={noOutputWordwrap}
                                 // loading={loading}
                             />
                         </div>
@@ -440,24 +635,28 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                     </div>
                 </div>
                 <div className={styles["type-extra"]}>
-                    <div
-                        className={classNames(styles["extra-icon"], {
-                            [styles["extra-icon-default"]]: itemStatus !== "shield",
-                            [styles["extra-icon-active"]]: itemStatus === "shield"
-                        })}
-                        onClick={onShieldFun}
-                    >
-                        <OutlineBanIcon />
-                    </div>
-                    <div
-                        className={classNames(styles["extra-icon"], {
-                            [styles["extra-icon-default"]]: itemStatus !== "suspend",
-                            [styles["extra-icon-active"]]: itemStatus === "suspend"
-                        })}
-                        onClick={onSuspendFun}
-                    >
-                        <OutlinePauseIcon />
-                    </div>
+                    <Tooltip title={itemStatus !== "shield" ? "禁用" : "启用"}>
+                        <div
+                            className={classNames(styles["extra-icon"], {
+                                [styles["extra-icon-default"]]: itemStatus !== "shield",
+                                [styles["extra-icon-active"]]: itemStatus === "shield"
+                            })}
+                            onClick={onShieldFun}
+                        >
+                            <OutlineBanIcon />
+                        </div>
+                    </Tooltip>
+                    <Tooltip title={itemStatus !== "suspend" ? "开启断点" : "关闭断点"}>
+                        <div
+                            className={classNames(styles["extra-icon"], {
+                                [styles["extra-icon-default"]]: itemStatus !== "suspend",
+                                [styles["extra-icon-active"]]: itemStatus === "suspend"
+                            })}
+                            onClick={onSuspendFun}
+                        >
+                            {itemStatus !== "suspend" ? <OutlinePauseIcon /> : <OutlinePlayIcon />}
+                        </div>
+                    </Tooltip>
                     <div className={styles["close-icon"]} onClick={onDeleteFun}>
                         <OutlineXIcon />
                     </div>
@@ -579,10 +778,13 @@ interface SaveObjProps {
 }
 
 interface NewCodecMiddleRunListProps {
+    fold: boolean
+    setFold: (v: boolean) => void
     rightItems: RightItemsProps[]
     setRightItems: (v: RightItemsProps[]) => void
     inputEditor: string
     setOutputEditor: (v: string) => void
+    isClickToRunList: React.MutableRefObject<boolean>
 }
 
 interface CheckFailProps {
@@ -611,11 +813,13 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
-    const {rightItems, setRightItems, inputEditor, setOutputEditor} = props
+    const {fold, setFold, rightItems, setRightItems, inputEditor, setOutputEditor, isClickToRunList} = props
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [_, setFilterName, getFilterName] = useGetState<string>("")
     // 是否自动执行
     const [autoRun, setAutoRun] = useState<boolean>(false)
+    // 执行列表定位
+    const runScrollToRef = useRef<HTMLDivElement>(null)
     useDebounceEffect(
         () => {
             if (autoRun && rightItems.length > 0 && inputEditor.length > 0) {
@@ -646,12 +850,25 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         )
     }, [autoRun])
 
+    // 检查元素是否有滚动条
+    const isScrollbar = useMemoizedFn((element: HTMLDivElement) => {
+        return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
+    })
+    useUpdateEffect(() => {
+        if (runScrollToRef.current && isClickToRunList.current) {
+            isClickToRunList.current = false
+            if (isScrollbar(runScrollToRef.current)) {
+                // 滚动条触底
+                runScrollToRef.current.scrollTop =
+                    runScrollToRef.current.scrollHeight - runScrollToRef.current.clientHeight - 16
+            }
+        }
+    }, [rightItems, isClickToRunList])
+
     // 历史选取项
     const onMenuSelect = useMemoizedFn((v: SaveObjProps) => {
         setRightItems(v.rightItems)
     })
-    // 列表定位
-    const scrollToRef = useRef<HTMLDivElement>(null)
 
     // 保存至历史
     const onSaveCodecRunListHistory = useMemoizedFn(() => {
@@ -849,10 +1066,6 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         if (checkFail.length > 0) {
             // 提示
             warn(checkFail[0].message)
-            if (scrollToRef.current) {
-                // 此处锚点跳转功能预留
-                // scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
         } else {
             // 执行函数
             runCodecFun(rightItemsStop)
@@ -868,7 +1081,18 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         <div className={styles["new-codec-run-list"]}>
             <div className={styles["header"]}>
                 <div className={styles["title"]}>
-                    编解码顺序<span className={styles["count"]}>{rightItems.length}</span>
+                    {!fold && (
+                        <Tooltip placement='right' title='展开Codec分类'>
+                            <SideBarOpenIcon
+                                className={styles["fold-icon"]}
+                                onClick={() => {
+                                    setFold(true)
+                                }}
+                            />
+                        </Tooltip>
+                    )}
+                    <span>编解码顺序</span>
+                    <span className={styles["count"]}>{rightItems.length}</span>
                 </div>
                 <div className={styles["extra"]}>
                     <Tooltip title={"保存"}>
@@ -890,9 +1114,11 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                         onVisibleChange={setPopoverVisible}
                         visible={popoverVisible}
                     >
-                        <div className={styles["extra-icon"]}>
-                            <OutlineClockIcon />
-                        </div>
+                        <Tooltip title={"历史存储"}>
+                            <div className={styles["extra-icon"]}>
+                                <OutlineClockIcon />
+                            </div>
+                        </Tooltip>
                     </YakitPopover>
                     <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                     <div className={styles["clear"]} onClick={onClear}>
@@ -900,7 +1126,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     </div>
                 </div>
             </div>
-            <div className={styles["run-list"]} ref={scrollToRef}>
+            <div className={styles["run-list"]} ref={runScrollToRef}>
                 {/* 右边拖放目标 */}
                 <Droppable droppableId='right' direction='vertical'>
                     {(provided) => (
@@ -939,6 +1165,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                             )}
                                         </Draggable>
                                     ))}
+                                    <div style={{height: 16}}></div>
                                 </>
                             ) : (
                                 <div className={styles["no-data"]}>
@@ -1030,7 +1257,12 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
             }
         >
             <div className={styles["drag-list-item"]} onClick={() => onClickToRunList(item)}>
-                <div className={styles["title"]}>{item.CodecName}</div>
+                <div className={styles["title"]}>
+                    <div className={styles["drag-icon"]}>
+                        <SolidDragsortIcon />
+                    </div>
+                    <span className={styles["text"]}>{item.CodecName}</span>
+                </div>
                 <div className={styles["extra"]}>
                     {collectList.includes(item.CodecName) ? (
                         <div
@@ -1083,19 +1315,26 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                         <>
                             {item.length > 0 && (
                                 <div className={styles["drag-list-item-clone"]}>
-                                    <div className={styles["title"]}>{item[0].CodecName}</div>
-                                    <div className={styles["extra"]}>
-                                        {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])}>
-                                            <OutlineStarIcon/>
-                                        </div> */}
-                                        <div
-                                            className={classNames(styles["star-icon"], styles["star-icon-active"])}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        >
-                                            <SolidStarIcon />
+                                    <div className={styles["title"]}>
+                                        <div className={styles["drag-icon"]}>
+                                            <SolidDragsortIcon />
                                         </div>
+                                        <span className={styles["text"]}>{item[0].CodecName}</span>
+                                    </div>
+                                    <div className={styles["extra"]}>
+                                        {collectList.includes(item[0].CodecName) ? (
+                                            <div
+                                                className={classNames(styles["star-icon"], styles["star-icon-active"])}
+                                            >
+                                                <SolidStarIcon />
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className={classNames(styles["star-icon"], styles["star-icon-default"])}
+                                            >
+                                                <OutlineStarIcon />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -1136,6 +1375,8 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
 }
 
 interface NewCodecLeftDragListProps {
+    fold: boolean
+    setFold: (v: boolean) => void
     leftData: LeftDataProps[]
     leftCollectData: LeftDataProps[]
     collectList: string[]
@@ -1155,6 +1396,8 @@ interface LeftDataProps {
 // codec左边拖拽列表
 export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props) => {
     const {
+        fold,
+        setFold,
         leftData,
         leftCollectData,
         collectList,
@@ -1165,137 +1408,122 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
         getCollectData,
         onClickToRunList
     } = props
-    const [fold, setFold] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<string[]>([])
 
     return (
-        <>
-            {fold ? (
-                <div className={styles["new-codec-drag-list"]}>
-                    <div className={styles["header"]}>
-                        <div className={styles["title"]}>Codec 分类</div>
-                        <div className={classNames(styles["extra"], styles["fold-icon"])}>
-                            <Tooltip placement='top' title='向左收起'>
-                                <SideBarCloseIcon
-                                    className={styles["fold-icon"]}
-                                    onClick={() => {
-                                        setFold(false)
-                                    }}
-                                />
-                            </Tooltip>
-                        </div>
-                    </div>
-                    <div className={styles["search"]}>
-                        <YakitInput
-                            prefix={
-                                <div className={styles["prefix"]}>
-                                    <OutlineSearchIcon />
-                                </div>
-                            }
-                            style={{width: "100%"}}
-                            placeholder='请输入关键词搜索'
-                            value={searchValue}
-                            onChange={(e) => {
-                                setSearchValue && setSearchValue(e.target.value)
+        <div
+            className={classNames(styles["new-codec-drag-list"], {
+                [styles["new-codec-drag-list-show"]]: fold,
+                [styles["new-codec-drag-list-hidden"]]: !fold
+            })}
+        >
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>Codec 分类</div>
+                <div className={classNames(styles["extra"], styles["fold-icon"])}>
+                    <Tooltip placement='top' title='收起Codec分类'>
+                        <SideBarCloseIcon
+                            className={styles["fold-icon"]}
+                            onClick={() => {
+                                setFold(false)
                             }}
                         />
-                    </div>
-                    <div className={styles["left-drag-list"]}>
-                        <YakitSpin spinning={false}>
-                            {/* 左边列表 */}
-                            <>
-                                {isShowSearchList ? (
-                                    <div className={styles["left-drag-list-collapse"]}>
-                                        <NewCodecLeftDragListItem
-                                            node={leftSearchData}
-                                            collectList={collectList}
-                                            getCollectData={getCollectData}
-                                            onClickToRunList={onClickToRunList}
-                                        />
-                                        <div className={styles["to-end"]}>已经到底啦～</div>
-                                    </div>
-                                ) : (
-                                    <YakitCollapse
-                                        expandIcon={() => <></>}
-                                        accordion={true}
-                                        activeKey={activeKey}
-                                        onChange={(key) => {
-                                            const arr = key as string[]
-                                            setActiveKey(arr)
-                                        }}
-                                        className={styles["left-drag-list-collapse"]}
-                                    >
-                                        {[...leftCollectData, ...leftData].map((item, index) => {
-                                            return (
-                                                <YakitPanel
-                                                    header={
-                                                        (activeKey || []).includes(item.title) ? (
-                                                            <div className={styles["panel-active-title"]}>
-                                                                {item.title}
-                                                            </div>
-                                                        ) : (
-                                                            item.title
-                                                        )
-                                                    }
-                                                    key={item.title}
-                                                    extra={
-                                                        item.title === "我收藏的工具" ? (
-                                                            <>
-                                                                {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
+                    </Tooltip>
+                </div>
+            </div>
+            <div className={styles["search"]}>
+                <YakitInput
+                    prefix={
+                        <div className={styles["prefix"]}>
+                            <OutlineSearchIcon />
+                        </div>
+                    }
+                    style={{width: "100%"}}
+                    placeholder='请输入关键词搜索'
+                    value={searchValue}
+                    onChange={(e) => {
+                        setSearchValue && setSearchValue(e.target.value)
+                    }}
+                />
+            </div>
+            <div className={styles["left-drag-list"]}>
+                <YakitSpin spinning={false}>
+                    {/* 左边列表 */}
+                    <>
+                        {isShowSearchList ? (
+                            <div className={styles["left-drag-list-collapse"]}>
+                                <NewCodecLeftDragListItem
+                                    node={leftSearchData}
+                                    collectList={collectList}
+                                    getCollectData={getCollectData}
+                                    onClickToRunList={onClickToRunList}
+                                />
+                                <div className={styles["to-end"]}>已经到底啦～</div>
+                            </div>
+                        ) : (
+                            <YakitCollapse
+                                expandIcon={() => <></>}
+                                accordion={true}
+                                activeKey={activeKey}
+                                onChange={(key) => {
+                                    const arr = key as string[]
+                                    setActiveKey(arr)
+                                }}
+                                className={styles["left-drag-list-collapse"]}
+                            >
+                                {[...leftCollectData, ...leftData].map((item, index) => {
+                                    return (
+                                        <YakitPanel
+                                            header={
+                                                (activeKey || []).includes(item.title) ? (
+                                                    <div className={styles["panel-active-title"]}>{item.title}</div>
+                                                ) : (
+                                                    item.title
+                                                )
+                                            }
+                                            key={item.title}
+                                            extra={
+                                                item.title === "我收藏的工具" ? (
+                                                    <>
+                                                        {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
                                                         e.stopPropagation()
                                                     }}>
                                                     <OutlineStarIcon/>
                                                 </div> */}
-                                                                <div
-                                                                    style={{color: "#FFD583"}}
-                                                                    className={classNames(
-                                                                        styles["star-icon"],
-                                                                        styles["star-icon-active"]
-                                                                    )}
-                                                                    // onClick={(e) => {
-                                                                    //     e.stopPropagation()
-                                                                    // }}
-                                                                >
-                                                                    <SolidStarIcon />
-                                                                </div>
-                                                            </>
-                                                        ) : null
-                                                    }
-                                                >
-                                                    {item.node.length > 0 && (
-                                                        <NewCodecLeftDragListItem
-                                                            node={item.node}
-                                                            parentItem={item}
-                                                            collectList={collectList}
-                                                            getCollectData={getCollectData}
-                                                            onClickToRunList={onClickToRunList}
-                                                        />
-                                                    )}
-                                                </YakitPanel>
-                                            )
-                                        })}
-                                        <div className={styles["to-end"]}>已经到底啦～</div>
-                                    </YakitCollapse>
-                                )}
-                            </>
-                        </YakitSpin>
-                    </div>
-                </div>
-            ) : (
-                <div className={classNames(styles["drag-list-hidden"])}>
-                    <div className={styles["open-box"]}>
-                        <Tooltip placement='right' title='向右展开'>
-                            <SideBarOpenIcon
-                                className={styles["fold-icon"]}
-                                onClick={() => {
-                                    setFold(true)
-                                }}
-                            />
-                        </Tooltip>
-                    </div>
-                </div>
-            )}
-        </>
+                                                        <div
+                                                            style={{color: "#FFD583"}}
+                                                            className={classNames(
+                                                                styles["star-icon"],
+                                                                styles["star-icon-active"]
+                                                            )}
+                                                            // onClick={(e) => {
+                                                            //     e.stopPropagation()
+                                                            // }}
+                                                        >
+                                                            <SolidStarIcon />
+                                                        </div>
+                                                    </>
+                                                ) : null
+                                            }
+                                        >
+                                            {item.node.length > 0 && (
+                                                <NewCodecLeftDragListItem
+                                                    node={item.node}
+                                                    parentItem={item}
+                                                    collectList={collectList}
+                                                    getCollectData={getCollectData}
+                                                    onClickToRunList={onClickToRunList}
+                                                />
+                                            )}
+                                        </YakitPanel>
+                                    )
+                                })}
+                                <div className={styles["to-end"]}>已经到底啦～</div>
+                            </YakitCollapse>
+                        )}
+                    </>
+                </YakitSpin>
+            </div>
+        </div>
     )
 }
 // 输入框
@@ -1438,6 +1666,7 @@ export interface CodecParam {
     Type: string
     Options: string[]
     Required: boolean
+    DefaultValue: string
     Desc: string
     Regex: string
     Label: string
@@ -1454,6 +1683,8 @@ export interface CodecMethods {
 }
 export interface NewCodecProps {}
 const NewCodec: React.FC<NewCodecProps> = (props) => {
+    // codec分类展开收起
+    const [fold, setFold] = useState<boolean>(true)
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
     const [rightItems, setRightItems] = useState<RightItemsProps[]>(initialRightItems)
@@ -1470,7 +1701,8 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
     // Input/Output编辑器内容
     const [inputEditor, setInputEditor] = useState<string>("")
     const [outputEditor, setOutputEditor] = useState<string>("")
-
+    // 是否为点击添加至执行列表
+    const isClickToRunList = useRef<boolean>(false)
     // 构造页面左边列表数据
     const initLeftData = useMemoizedFn((Methods: CodecMethod[]) => {
         // 分类的类名
@@ -1579,7 +1811,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
 
     const initNode = useMemoizedFn((codecItem: CodecMethod) => {
         return codecItem.Params.map((item) => {
-            const {Type, Options, Label, Name, Required, Regex, Desc} = item
+            const {Type, Options, Label, Name, Required, DefaultValue, Regex, Desc} = item
             switch (Type) {
                 case "select":
                     return {
@@ -1587,7 +1819,8 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                         selectArr: Options.map((item) => ({label: item, value: item})),
                         title: Label,
                         name: Name,
-                        require: Required
+                        require: Required,
+                        value: DefaultValue || undefined
                     } as RightItemsSelectProps
                 case "input":
                     return {
@@ -1642,6 +1875,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
         const newRightItems: RightItemsProps[] = JSON.parse(JSON.stringify(rightItems))
         newRightItems.push({title: item.CodecName, codecType: item.CodecMethod, key: uuidv4(), node})
         setRightItems(newRightItems)
+        isClickToRunList.current = true
     })
 
     /**
@@ -1713,6 +1947,8 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                     onBeforeCapture={onBeforeCapture}
                 >
                     <NewCodecLeftDragList
+                        fold={fold}
+                        setFold={setFold}
                         leftData={leftData}
                         leftCollectData={leftCollectData}
                         collectList={collectList}
@@ -1724,10 +1960,13 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                         onClickToRunList={onClickToRunList}
                     />
                     <NewCodecMiddleRunList
+                        fold={fold}
+                        setFold={setFold}
                         rightItems={rightItems}
                         setRightItems={setRightItems}
                         inputEditor={inputEditor}
                         setOutputEditor={setOutputEditor}
+                        isClickToRunList={isClickToRunList}
                     />
                 </DragDropContext>
             )}

@@ -7,10 +7,22 @@
     justify-content: space-between;
     background: var(--yakit-primary-1);
     .title {
-        color: #31343f;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        .drag-icon {
+            color: #ccd2de;
+            svg {
+                height: 12px;
+                width: 12px;
+            }
+        }
+        .text {
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
     }
     .star-icon {
         height: 24px;
@@ -35,12 +47,16 @@
     display: flex;
     flex-direction: row;
     .new-codec-drag-list {
-        width: 301px;
         height: 100%;
         border-right: 1px solid #eaecf3;
         display: flex;
         flex-direction: column;
+        transition:
+            width 0.2s ease,
+            opacity 0.2s ease;
+        overflow: hidden;
         .header {
+            width: 301px;
             display: flex;
             padding: 6px 12px;
             justify-content: space-between;
@@ -56,6 +72,7 @@
             }
         }
         .search {
+            width: 301px;
             padding: 0px 12px 8px 12px;
             .prefix {
                 display: flex;
@@ -68,6 +85,7 @@
             }
         }
         .left-drag-list {
+            width: 301px;
             overflow: auto;
             .left-drag-list-collapse {
                 .panel-active-title {
@@ -91,18 +109,31 @@
                     color: #f28b44;
                 }
                 .drag-list-item {
-                    padding: 10px 12px 10px 16px;
+                    padding: 10px 12px;
                     display: flex;
                     align-items: center;
                     flex-direction: row;
                     justify-content: space-between;
                     border-bottom: 1px solid #eaecf3;
                     background: #f8f8f8;
+
                     .title {
-                        color: #31343f;
-                        font-size: 12px;
-                        font-weight: 400;
-                        line-height: 16px;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        .drag-icon {
+                            color: #ccd2de;
+                            svg {
+                                height: 12px;
+                                width: 12px;
+                            }
+                        }
+                        .text {
+                            color: #31343f;
+                            font-size: 12px;
+                            font-weight: 400;
+                            line-height: 16px;
+                        }
                     }
                     &:hover {
                         background: var(--yakit-primary-1);
@@ -123,6 +154,9 @@
                                 font-size: 12px;
                                 font-weight: 600;
                                 line-height: 16px;
+                            }
+                            &:hover {
+                                background-color: #f8f8f8;
                             }
                         }
                         .ant-collapse-content {
@@ -157,6 +191,14 @@
             background-color: transparent;
         }
     }
+    .new-codec-drag-list-show {
+        opacity: 1;
+        width: 301px;
+    }
+    .new-codec-drag-list-hidden {
+        opacity: 0;
+        width: 0px;
+    }
     .new-codec-run-list {
         width: 420px;
         height: 100%;
@@ -174,6 +216,29 @@
                 font-size: 12px;
                 font-weight: 500;
                 line-height: 16px;
+                display: flex;
+                align-items: center;
+
+                .fold-icon {
+                    color: #85899e;
+                    cursor: pointer;
+                    border-radius: 4px;
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-right: 16px;
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                    &:hover {
+                        background-color: var(--yakit-background-color);
+                        color: var(--yakit-primary-5);
+                    }
+                }
+
                 .count {
                     border-radius: 8px;
                     background: #f0f1f3;
@@ -197,6 +262,7 @@
                     height: 16px;
                     box-sizing: content-box;
                     padding: 4px;
+                    border-radius: 4px;
                     cursor: pointer;
                     color: #85899e;
                     svg {
@@ -204,6 +270,7 @@
                         height: 16px;
                     }
                     &:hover {
+                        background-color: var(--yakit-background-color);
                         color: var(--yakit-primary-5);
                     }
                 }
@@ -257,10 +324,15 @@
                 justify-content: space-between;
                 background: #f8f8f8;
                 .title {
-                    color: #31343f;
-                    font-size: 12px;
-                    font-weight: 500;
-                    line-height: 16px;
+                    display: flex;
+                    align-items: center;
+                    .text {
+                        color: #31343f;
+                        font-size: 12px;
+                        font-weight: 500;
+                        line-height: 16px;
+                    }
+
                     .count {
                         border-radius: 8px;
                         background: #f0f1f3;
@@ -271,17 +343,41 @@
                         font-weight: 400;
                         line-height: 16px;
                     }
+                    .tag-box {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        .icon-style {
+                            svg {
+                                height: 16px;
+                                width: 16px;
+                            }
+                        }
+                    }
                 }
                 .extra {
                     display: flex;
                     flex-direction: row;
                     align-items: center;
                     gap: 4px;
+                    .upload-box {
+                        height: 24px;
+                        .extra-icon {
+                            display: flex;
+                            position: relative;
+                            top: 2px;
+                        }
+                    }
+                    .upload-box-hidden {
+                        width: 0px;
+                        overflow: hidden;
+                    }
                     .extra-icon {
                         width: 16px;
                         height: 16px;
                         box-sizing: content-box;
                         padding: 4px;
+                        border-radius: 4px;
                         cursor: pointer;
                         color: #85899e;
                         svg {
@@ -289,6 +385,7 @@
                             height: 16px;
                         }
                         &:hover {
+                            background-color: var(--yakit-background-color);
                             color: var(--yakit-primary-5);
                         }
                     }
@@ -328,19 +425,6 @@
                 flex: 1;
                 background: #f0f1f3;
                 padding: 12px 0px 12px 12px;
-            }
-        }
-    }
-    .drag-list-hidden {
-        width: 25px;
-        height: 100%;
-        border-right: 1px solid #eaecf3;
-        .open-box {
-            padding: 4px;
-            margin-top: 8px;
-            .fold-icon {
-                width: 16px;
-                height: 16px;
             }
         }
     }
@@ -495,7 +579,6 @@
     }
 }
 
-
 .codec-run-list-history-store {
     width: 300px;
     .header {
@@ -511,42 +594,42 @@
     .list-item-border {
         border-bottom: 1px solid var(--yakit-border-color);
     }
-    .list{
+    .list {
         max-height: 280px;
         overflow: auto;
-       .list-item {
-        padding: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        &:hover {
-            background-color: rgb(248, 248, 248);
-            border-radius: 4px;
-        }
-        .name {
-            font-size: 13px;
-            flex: 1;
-            padding-right: 6px;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
-        .opt {
-            cursor: pointer;
-            svg {
-                height: 16px;
-                width: 16px;
-                color: #b4bbca;
-            }
+        .list-item {
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             &:hover {
+                background-color: rgb(248, 248, 248);
+                border-radius: 4px;
+            }
+            .name {
+                font-size: 13px;
+                flex: 1;
+                padding-right: 6px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .opt {
+                cursor: pointer;
                 svg {
-                    color: #f6544a;
+                    height: 16px;
+                    width: 16px;
+                    color: #b4bbca;
+                }
+                &:hover {
+                    svg {
+                        color: #f6544a;
+                    }
                 }
             }
         }
-    } 
     }
-    
+
     .no-data {
         font-style: normal;
         font-weight: 400;
@@ -565,5 +648,23 @@
         width: 100%;
         gap: 10px;
         margin-top: 29px;
+    }
+}
+.codec-input-menu,
+.codec-output-menu {
+    .extra-menu {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+        .menu-name {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
     }
 }

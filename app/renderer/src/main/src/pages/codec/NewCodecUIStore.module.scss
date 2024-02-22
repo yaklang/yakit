@@ -100,10 +100,8 @@
                 padding-right: 0px;
             }
         }
-
         .ant-select:not(.ant-select-customize-input) .ant-select-arrow {
             right: 8px;
-            color: #31343f;
         }
         .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
             background-color: #ffffff;
@@ -144,7 +142,7 @@
         }
     }
 }
-.new-codec-title-search-select-ui{
+.new-codec-title-search-select-ui {
     .search-icon {
         svg {
             width: 16px;
@@ -152,11 +150,10 @@
         }
     }
     :global {
-      .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input{
-        margin-top: 20px;
-      }
+        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+            margin-top: 20px;
+        }
     }
-    
 }
 .new-codec-no-title-search-select-ui {
     .search-icon {
@@ -172,9 +169,7 @@
             input {
                 margin-top: 4px;
             }
-            
         }
-        
     }
 }
 .new-codec-title-select-ui {
@@ -209,10 +204,10 @@
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             align-items: flex-end;
         }
-        .ant-select-single .ant-select-selector .ant-select-selection-placeholder{
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
             margin-bottom: 0px;
         }
-        .ant-select-single.ant-select-show-arrow .ant-select-selection-item{
+        .ant-select-single.ant-select-show-arrow .ant-select-selection-item {
             margin-bottom: 0px;
         }
     }
