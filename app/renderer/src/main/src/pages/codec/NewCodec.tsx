@@ -818,8 +818,6 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     const [_, setFilterName, getFilterName] = useGetState<string>("")
     // 是否自动执行
     const [autoRun, setAutoRun] = useState<boolean>(false)
-    // 执行列表定位
-    const runScrollToRef = useRef<HTMLDivElement>(null)
     useDebounceEffect(
         () => {
             if (autoRun && rightItems.length > 0 && inputEditor.length > 0) {
@@ -851,16 +849,16 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     }, [autoRun])
 
     // 检查元素是否有滚动条
-    const isScrollbar = useMemoizedFn((element: HTMLDivElement) => {
+    const isScrollbar = useMemoizedFn((element: HTMLElement) => {
         return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
     })
     useUpdateEffect(() => {
-        if (runScrollToRef.current && isClickToRunList.current) {
+        const runScrollToRef = document.getElementById(`codec-middle-run-scroll`)
+        if (runScrollToRef && isClickToRunList.current) {
             isClickToRunList.current = false
-            if (isScrollbar(runScrollToRef.current)) {
+            if (isScrollbar(runScrollToRef)) {
                 // 滚动条触底
-                runScrollToRef.current.scrollTop =
-                    runScrollToRef.current.scrollHeight - runScrollToRef.current.clientHeight - 16
+                runScrollToRef.scrollTop = runScrollToRef.scrollHeight - runScrollToRef.clientHeight - 16
             }
         }
     }, [rightItems, isClickToRunList])
@@ -1126,14 +1124,19 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     </div>
                 </div>
             </div>
-            <div className={styles["run-list"]} ref={runScrollToRef}>
+            <div className={styles["run-list"]}>
                 {/* 右边拖放目标 */}
                 <Droppable droppableId='right' direction='vertical'>
                     {(provided) => (
                         <div
                             ref={provided.innerRef}
+                            id='codec-middle-run-scroll'
                             {...provided.droppableProps}
-                            style={rightItems.length > 0 ? {height: "100%"} : {height: "100%", overflow: "hidden"}}
+                            style={
+                                rightItems.length > 0
+                                    ? {height: "100%", overflow: "auto"}
+                                    : {height: "100%", overflow: "hidden"}
+                            }
                         >
                             {rightItems.length > 0 ? (
                                 <>

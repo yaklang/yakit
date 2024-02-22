@@ -285,8 +285,8 @@
             }
         }
         .run-list {
-            overflow: auto;
             flex: 1;
+            overflow: hidden;
             .no-data {
                 height: 100%;
                 display: flex;
