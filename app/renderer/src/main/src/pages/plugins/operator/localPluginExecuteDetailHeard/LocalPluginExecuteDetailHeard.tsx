@@ -73,7 +73,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
 
     /**是否展开/收起 */
-    const [isExpand, setIsExpand] = useState<boolean>(false)
+    const [isExpand, setIsExpand] = useState<boolean>(true)
     /**额外参数弹出框 */
     const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
     const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
@@ -199,6 +199,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             ExecParams: yakExecutorParams
         }
         debugPluginStreamEvent.reset()
+        setRuntimeId("")
         apiDebugPlugin(executeParams, token).then(() => {
             setIsExecuting(true)
             setIsExpand(false)
@@ -211,6 +212,11 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             debugPluginStreamEvent.stop()
             setIsExecuting(false)
         })
+    })
+    /**在顶部的执行按钮 */
+    const onExecuteInTop = useMemoizedFn(() => {
+        const value = form.getFieldsValue()
+        onStartExecute(value)
     })
     /**保存额外参数 */
     const onSaveExtraParams = useMemoizedFn((v: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue) => {
@@ -233,12 +239,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const openExtraPropsDrawer = useMemoizedFn(() => {
         if (isExecuting) return
         setExtraParamsVisible(true)
-    })
-    const onClearExecuteResult = useMemoizedFn(() => {
-        debugPluginStreamEvent.reset()
-        setRuntimeId("")
-        setIsExpand(true)
-        yakitNotify("success", "执行结果清除成功")
     })
     const isShowExtraParamsButton = useMemo(() => {
         switch (plugin.Type) {
@@ -293,19 +293,23 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                                             name={progressList[0].id}
                                         />
                                     )}
-                                    {runtimeId && (
-                                        <YakitButton type='text' danger onClick={onClearExecuteResult}>
-                                            清除执行结果
-                                        </YakitButton>
-                                    )}
                                     {isExecuting ? (
-                                        <>
-                                            <YakitButton danger onClick={onStopExecute}>
-                                                停止
-                                            </YakitButton>
-                                        </>
+                                        !isExpand && (
+                                            <>
+                                                <YakitButton danger onClick={onStopExecute}>
+                                                    停止
+                                                </YakitButton>
+                                            </>
+                                        )
                                     ) : (
-                                        <>{extraNode}</>
+                                        <>
+                                            {!isExpand && (
+                                                <YakitButton onClick={onExecuteInTop}>
+                                                    执行
+                                                </YakitButton>
+                                            )}
+                                            {extraNode}
+                                        </>
                                     )}
                                 </div>
                             ) : (

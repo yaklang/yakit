@@ -120,9 +120,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         })
         setPlugin(undefined)
     })
-    const onRemove = useMemoizedFn((e) => {
-        e.stopPropagation()
-        if (!plugin) return
+    const onRemove = useMemoizedFn(() => {
+        if (!plugin || removeLoading) return
         onRemovePluginDetailSingleBefore(plugin)
     })
     const onExport = useMemoizedFn(() => {
@@ -195,6 +194,9 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 break
             case "remove-menu":
                 onRemoveMenu()
+                break
+            case "remove-plugin":
+                onRemove()
                 break
             default:
                 break
@@ -294,12 +296,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         return (
             <>
                 <div className={styles["plugin-info-extra-header"]}>
-                    {removeLoading ? (
-                        <LoadingOutlined className={styles["loading-icon"]} />
-                    ) : (
-                        <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
-                    )}
-                    <div className='divider-style' />
                     <YakitButton type='text2' icon={<OutlinePencilaltIcon onClick={onEdit} />} />
                     <div className='divider-style' />
                     <FuncFilterPopover
@@ -312,11 +308,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     label: "导出",
                                     itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
                                 },
-                                // {
-                                //     key: "local-debugging",
-                                //     label: "本地调试",
-                                //     itemIcon: <OutlineTerminalIcon className={styles["plugin-local-extra-node-icon"]} />
-                                // },
                                 {
                                     key: "add-to-menu",
                                     label: "添加到菜单栏",
@@ -324,11 +315,16 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                         <OutlinePluscircleIcon className={styles["plugin-local-extra-node-icon"]} />
                                     )
                                 },
-                                {type: "divider"},
                                 {
                                     key: "remove-menu",
                                     itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
-                                    label: "移出菜单栏",
+                                    label: "移出菜单栏"
+                                },
+                                {type: "divider"},
+                                {
+                                    key: "remove-plugin",
+                                    itemIcon: <OutlineTrashIcon className={styles["plugin-local-extra-node-icon"]} />,
+                                    label: "删除插件",
                                     type: "danger"
                                 }
                             ],

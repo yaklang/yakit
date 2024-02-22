@@ -6,7 +6,7 @@
         @extend %display-flex-center;
         justify-content: flex-end;
         flex: 1;
-        min-width: 280px;
+        // min-width: 280px;
         flex-shrink: 0;
         gap: 8px;
     }
