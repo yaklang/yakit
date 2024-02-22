@@ -1,10 +1,11 @@
-import React, {useState} from "react";
-import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage";
-import {Form, Space} from "antd";
-import {InputItem} from "@/utils/inputUtil";
-import {DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect";
-import {DemoItemSwitch} from "@/demoComponents/itemSwitch/ItemSwitch";
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import React, { useState } from "react";
+import { ThirdPartyApplicationConfig } from "@/components/configNetwork/ConfigNetworkPage";
+import { Form, Space } from "antd";
+import { InputItem } from "@/utils/inputUtil";
+import { DemoItemSelectOne } from "@/demoComponents/itemSelect/ItemSelect";
+import { DemoItemSwitch } from "@/demoComponents/itemSwitch/ItemSwitch";
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton";
+import { KVPair } from "@/models/kv";
 import { DefaultOptionType } from "antd/lib/select";
 import { SelectOptionsProps } from "@/demoComponents/itemSelect/ItemSelectType";
 import { YakitAutoComplete } from "../yakitUI/YakitAutoComplete/YakitAutoComplete";
