@@ -213,6 +213,7 @@ service Yak {
   rpc ExtractData(stream ExtractDataRequest) returns (stream ExtractDataResponse);
   rpc ImportHTTPFuzzerTaskFromYaml(ImportHTTPFuzzerTaskFromYamlRequest) returns (ImportHTTPFuzzerTaskFromYamlResponse);
   rpc ExportHTTPFuzzerTaskToYaml(ExportHTTPFuzzerTaskToYamlRequest) returns (ExportHTTPFuzzerTaskToYamlResponse);
+  rpc RenderHTTPFuzzerPacket(RenderHTTPFuzzerPacketRequest) returns (RenderHTTPFuzzerPacketResponse);
 
   rpc SaveFuzzerLabel(SaveFuzzerLabelRequest) returns (Empty);
   rpc QueryFuzzerLabel(Empty) returns (QueryFuzzerLabelResponse);
@@ -289,7 +290,7 @@ service Yak {
   rpc YaklangLanguageSuggestion(YaklangLanguageSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
   // 从代码中提取yaklang数据
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
-  // 进行数据迁移使用
+  // 进行数据迁移使用 
   rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
@@ -619,8 +620,14 @@ service Yak {
   rpc DeleteHybridScanTask(DeleteHybridScanTaskRequest) returns (Empty);
 
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
+  rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
 
+}
+message GetSpaceEngineAccountStatusRequest {
+  string Type = 1;
+  string Key = 2;
+  string Account = 3;
 }
 
 message GetSpaceEngineStatusRequest {
@@ -701,7 +708,6 @@ message HybridScanResponse {
   // 这字段表示的是，正在执行的任务可以展示出来
   HybridScanUpdateActiveTaskTable UpdateActiveTask = 11;
 
-  
   // 任务配置
   string ScanConfig = 12;
 }
@@ -738,6 +744,7 @@ message HybridScanRequest {
   // resume: 恢复任务
   // pause: 暂停任务
   // stop: 停止任务
+  // status: 查询任务状态
   string HybridScanMode = 8;
   string ResumeTaskId = 1;
 
@@ -1124,7 +1131,7 @@ message SmokingEvaluateResult {
   string Suggestion = 2;
   bytes ExtraInfo = 3;
   Range Range = 4;
-  string Severity = 5;
+  string Severity = 5; // Error || Warning
 }
 
 message SmokingEvaluatePluginResponse {
@@ -3308,6 +3315,13 @@ message QueryPortsRequest {
   string ComplexSelect = 10;
   string Proto = 11;
   string RuntimeId = 12;
+
+  int64 BeforeUpdatedAt = 13;
+  int64 AfterUpdatedAt = 14;
+  int64 AfterId = 15;
+  int64 BeforeId = 16;
+  string OrderBy = 17;
+  string Order = 18;
 }
 
 message QueryPortsResponse {
@@ -4662,6 +4676,13 @@ message ExportHTTPFuzzerTaskToYamlResponse{
   string YamlContent = 2;
 }
 
+message RenderHTTPFuzzerPacketRequest {
+  bytes Packet = 1;
+}
+
+message RenderHTTPFuzzerPacketResponse {
+  bytes Packet = 1;
+}
 
 message SmokingEvaluatePluginBatchRequest {
   repeated string ScriptNames = 1;
