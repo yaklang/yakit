@@ -729,6 +729,25 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                         </div>
                     </div>
                 )}
+                {type === "codec" && (
+                    <div className={styles["setting-switch"]}>
+                        <div className={styles["switch-wrapper"]}>
+                            <YakitSwitch
+                                checked={tags.includes(PluginGV.PluginCodecContextMenuExecuteSwitch)}
+                                onChange={(check) => {
+                                    if (check) {
+                                        const arr = tags.concat([PluginGV.PluginCodecContextMenuExecuteSwitch])
+                                        setTags([...arr])
+                                    } else {
+                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecContextMenuExecuteSwitch)
+                                        setTags([...arr])
+                                    }
+                                }}
+                            />
+                            用于自定义右键菜单执行
+                        </div>
+                    </div>
+                )}
             </div>
         )
     })

@@ -52,7 +52,7 @@ import { monacoEditorWrite } from "@/pages/fuzzer/fuzzerTemplates"
 import { onInsertYakFuzzer, showDictsAndSelect } from "@/pages/fuzzer/HTTPFuzzerPage"
 import { openExternalWebsite } from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
-import { GetPluginLanguage } from "@/pages/plugins/builtInData"
+import { GetPluginLanguage, PluginGV } from "@/pages/plugins/builtInData"
 import { createRoot } from "react-dom/client"
 import { setEditorContext } from "@/utils/monacoSpec/yakEditor"
 import { YakParamProps } from "@/pages/plugins/pluginsType"
@@ -189,15 +189,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }, [showLineBreaks])
 
     // 自定义HTTP数据包变形处理
-    const [codecPlugin, setCodecPlugin] = useState<CodecTypeProps[]>([])
-    const searchForCodecFuzzerPlugin = useMemoizedFn(() => {
+    const [customHTTPMutatePlugin, setCustomHTTPMutatePlugin] = useState<CodecTypeProps[]>([])
+    const searchCodecCustomHTTPMutatePlugin = useMemoizedFn(() => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
                 if (!total || total == 0) {
                     return
                 }
-                setCodecPlugin(
+                setCustomHTTPMutatePlugin(
                     i.map((script) => {
                         return {
                             key: script.ScriptName,
@@ -213,11 +213,39 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             undefined,
             undefined,
             undefined,
-            ["allow-custom-http-packet-mutate"]
+            [PluginGV.PluginCodecHttpSwitch]
+        )
+    })
+
+    // 自定义右键菜单执行
+    const [contextMenuPlugin, setContextMenuPlugin] = useState<CodecTypeProps[]>([])
+    const searchCodecCustomContextMenuPlugin = useMemoizedFn(() => {
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    return
+                }
+                setContextMenuPlugin(
+                    i.map((script) => {
+                        return {
+                            key: script.ScriptName,
+                        } as CodecTypeProps
+                    })
+                )
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            [PluginGV.PluginCodecContextMenuExecuteSwitch]
         )
     })
     useEffect(() => {
-        searchForCodecFuzzerPlugin()
+        searchCodecCustomHTTPMutatePlugin()
+        searchCodecCustomContextMenuPlugin()
     }, [])
 
     /**
@@ -225,16 +253,24 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
      * 菜单组的key值对应的组内菜单项的key值数组
      */
     useEffect(() => {
-        // 往customhttp菜单组中注入codec插件
+        // 往菜单组中注入codec插件
         try {
-            ; (extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = codecPlugin.map((item) => {
+            // 自定义HTTP数据包变形
+            ; (extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = customHTTPMutatePlugin.map((item) => {
+                return {
+                    key: item.key,
+                    label: item.key
+                } as EditorMenuItemProps
+            })
+            // 自定义右键菜单执行
+            ; (extraMenuLists["customcontextmenu"].menu[0] as EditorMenuItemProps).children = contextMenuPlugin.map((item) => {
                 return {
                     key: item.key,
                     label: item.key
                 } as EditorMenuItemProps
             })
         } catch (e) {
-            failed(`get custom mutate request failed: ${e}`)
+            failed(`get custom plugin failed: ${e}`)
         }
 
         const keyToRun: Record<string, string[]> = {}

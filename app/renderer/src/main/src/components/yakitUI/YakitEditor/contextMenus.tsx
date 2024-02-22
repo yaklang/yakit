@@ -6,8 +6,12 @@ import { AutoCard } from "../../AutoCard"
 import { YakitEditor } from "./YakitEditor"
 import { YakitButton } from "../YakitButton/YakitButton"
 import { monacoEditorClear, monacoEditorWrite } from "@/pages/fuzzer/fuzzerTemplates"
-import { failed } from "@/utils/notification"
+import { failed, yakitNotify } from "@/utils/notification"
 import { fetchCursorContent, fetchSelectionRange } from "./editorUtils"
+import { useEffect, useRef, useState } from "react"
+import { AutoSpin } from "@/components/AutoSpin"
+import { YakitSpin } from "../YakitSpin/YakitSpin"
+import { showYakitModal } from "../YakitModal/YakitModalConfirm"
 
 
 const { ipcRenderer } = window.require("electron")
@@ -118,7 +122,6 @@ const decodeSubmenu: { key: string; label: string }[] = [
     { key: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）" },
     { key: "urlunescape", label: "URL 解码" }
 ]
-/** @name 自定义HTTP数据包变形模块子菜单 */
 /** @name HTTP数据包变形模块子菜单 */
 const httpSubmenu: {
     key: string
@@ -224,7 +227,24 @@ export const extraMenuLists: OtherMenuListProps = {
                 failed(`custom mutate request failed: ${e}`)
             }
         }
-    }
+    },
+    customcontextmenu: {
+        menu: [
+            {
+                key: "customcontextmenu",
+                label: "自定义右键菜单执行",
+                //  generate from YakitEditor.tsx
+                children: [],
+            }
+        ],
+        onRun: (editor: YakitIMonacoEditor, key: string) => {
+            try {
+                customContextMenuExecute(key, editor)
+            } catch (e) {
+                failed(`custom context menu execute failed: ${e}`)
+            }
+        }
+    },
 }
 
 
@@ -236,17 +256,19 @@ const execCodec = async (
     text: string,
     noPrompt?: boolean,
     replaceEditor?: YakitIMonacoEditor,
-    clear?: boolean
+    clear?: boolean,
+    scriptName?: string,
+    title?: string,
 ) => {
     return ipcRenderer
-        .invoke("Codec", { Text: text, Type: typeStr })
+        .invoke("Codec", { Text: text, Type: typeStr, ScriptName: scriptName })
         .then((result: { Result: string }) => {
             if (replaceEditor) {
                 let m = showModal({
                     width: "50%",
                     content: (
                         <AutoCard
-                            title={"编码结果"}
+                            title={title || "编码结果"}
                             bordered={false}
                             extra={
                                 <YakitButton
@@ -276,7 +298,7 @@ const execCodec = async (
 
             if (noPrompt) {
                 showModal({
-                    title: "编码结果",
+                    title: title || "编码结果",
                     width: "50%",
                     content: (
                         <div style={{ width: "100%" }}>
@@ -301,7 +323,7 @@ interface MutateHTTPRequestResponse {
 const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEditor) => {
     ipcRenderer.invoke("HTTPRequestMutate", params).then((result: MutateHTTPRequestResponse) => {
         if (editor) {
-           
+
             // monacoEditorClear(editor)
             // monacoEditorReplace(editor, new Buffer(result.Result).toString("utf8"))
             monacoEditorWrite(editor, new Buffer(result.Result).toString("utf8"), editor.getModel()?.getFullModelRange())
@@ -311,14 +333,69 @@ const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEdi
 }
 /** @name 自定义HTTP数据包变形模块处理函数 */
 const customMutateRequest = (key: string, text?: string, editor?: YakitIMonacoEditor) => {
-    if (editor) {
-        ipcRenderer
-            .invoke("Codec", { Type: key, Text: text, Params: [], ScriptName: key })
-            .then((res) => {
-                monacoEditorWrite(editor, new Buffer(res?.Result || "").toString("utf8"), editor.getModel()?.getFullModelRange())
-            })
-            .catch((err) => {
-                if (err) throw err;
-            })
+    if (!editor) {
+        return
     }
+    ipcRenderer
+        .invoke("Codec", { Type: key, Text: text, Params: [], ScriptName: key })
+        .then((res) => {
+            monacoEditorWrite(editor, new Buffer(res?.Result || "").toString("utf8"), editor.getModel()?.getFullModelRange())
+        })
+        .catch((err) => {
+            if (err) throw err;
+        })
 }
+
+/** @name 自定义右键菜单执行处理函数 */
+const customContextMenuExecute = (key: string, editor: YakitIMonacoEditor) => {
+    showYakitModal({
+        title: "执行结果",
+        width: "50%",
+        content: (
+            <ContextMenuExecutor scriptName={key} editor={editor}  />
+        )
+    })
+}
+
+export interface ContextMenuProp {
+    editor: YakitIMonacoEditor
+    scriptName: string
+}
+
+export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
+    const {scriptName,editor} = props
+
+    const [loading, setLoading] = useState<boolean>(true)
+    const [value, setValue] = useState<string>("")
+    useEffect(() => {
+        const model = editor.getModel();
+        const selection = editor.getSelection()
+        let text = model?.getValue()
+        if (selection) {
+            let selectText = model?.getValueInRange(selection)||""
+            if (selectText.length > 0) {
+                text = selectText
+            }
+        }
+        ipcRenderer.invoke("Codec", { Text: text, ScriptName: scriptName }).then((result: { Result: string }) => {
+            setValue(result.Result)
+        }).catch((e) => {
+            yakitNotify('error',e)
+        }).finally(() => {
+          setTimeout(() => {
+            setLoading(false)
+          }, 200);
+        })
+    }, [])
+    
+    return (
+        <YakitSpin spinning={loading} style={{ width: "100%" }}>
+            <Space style={{ width: "100%" }} direction={"vertical"}>
+                <div style={{ height: 300 }}>
+                    <YakitEditor  fontSize={14} type={"text"} readOnly={true} value={value} />
+                </div>
+            </Space>
+        </YakitSpin>
+    )
+}
+
