@@ -353,6 +353,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             typeRef.current
         )
         hybridScanStreamEvent.reset()
+        setRuntimeId("")
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpand(false)
@@ -364,6 +365,11 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         e.stopPropagation()
         setStopLoading(true)
         apiStopHybridScan(runtimeId, tokenRef.current)
+    })
+    /**在顶部的执行按钮 */
+    const onExecuteInTop = useMemoizedFn(() => {
+        const value = form.getFieldsValue()
+        onStartExecute(value)
     })
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
@@ -452,15 +458,20 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             {progressList.length === 1 && (
                                 <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
                             )}
-                            {isExecuting ? (
+                            {isExecuting
+                                ? !isExpand && (
                                 <>
                                     <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
                                         停止
                                     </YakitButton>
                                     <div className={styles["divider-style"]}></div>
                                 </>
-                            ) : (
-                                <></>
+                                  )
+                                : !isExpand && (
+                                      <>
+                                          <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                          <div className={styles["divider-style"]}></div>
+                                      </>
                             )}
                             <YakitButton
                                 type='text2'
