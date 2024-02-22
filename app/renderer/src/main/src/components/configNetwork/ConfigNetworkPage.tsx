@@ -68,7 +68,7 @@ export interface GlobalNetworkConfig {
 }
 
 export interface ThirdPartyApplicationConfig {
-    Type: "zoomeye" | "hunter" | "shodan" | "fofa" | "github" | ""
+    Type: "zoomeye" | "hunter" | "shodan" | "fofa" | "github" | "openai" | "skylark" | "aliyun" | "tencent" | string
     APIKey: string
     UserIdentifier: string
     UserSecret?: string
