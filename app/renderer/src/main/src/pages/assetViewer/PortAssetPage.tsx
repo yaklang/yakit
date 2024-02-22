@@ -133,6 +133,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             .invoke("QueryPortsGroup", {})
             .then((data: QueryPortsGroupResponse) => {
                 setPortsGroup(data.PortsGroupList)
+                setAdvancedConfig(data.PortsGroupList.length > 0)
             })
             .catch((e: any) => {
                 failed("getPortsGroup failed: " + e)
@@ -177,7 +178,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         })
         setIsRefresh(!isRefresh)
     })
-
     return (
         <div ref={portAssetRef} className={styles["portAsset-content"]} style={{display: "flex", flexDirection: "row"}}>
             <div className={styles["portAsset"]}>
@@ -236,7 +236,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             </Badge>
                         </YakitDropdownMenu>
 
-                        {total > 0 && !advancedConfig && (
+                        {!advancedConfig && (
                             <>
                                 <Divider type='vertical' style={{margin: "0 8px", marginRight: 12}} />
                                 <span style={{marginRight: 4}}>高级筛选</span>
@@ -278,7 +278,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             <PortAssetQuery
                 loading={advancedQueryLoading}
                 portsGroupList={portsGroup}
-                visible={total > 0 && advancedConfig}
+                visible={advancedConfig}
                 setVisible={setAdvancedConfig}
                 queryList={queryList || {}}
                 setQueryList={setQueryList}
