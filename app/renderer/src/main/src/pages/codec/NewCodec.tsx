@@ -536,7 +536,6 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
 
     // 更改控件值
     const setValueByUI = useMemoizedFn((val: any, index: number) => {
-        console.log("setValueByUI---", val)
         const itemArr = rightItems.filter((item) => item.key === outerKey)
         const newNode = itemArr[0]?.node
         if (Array.isArray(newNode)) {
@@ -824,7 +823,6 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     useDebounceEffect(
         () => {
             if (autoRun && rightItems.length > 0 && inputEditor.length > 0) {
-                console.log("自动执行----")
                 runCodec()
             }
         },
@@ -948,7 +946,6 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
 
     // 执行函数
     const runCodecFun = useMemoizedFn((runItems: RightItemsProps[]) => {
-        console.log("runCodecFun---", runItems)
         let newCodecParams: {Text: string; WorkFlow: CodecWorkProps[]} = {
             Text: inputEditor,
             WorkFlow: []
@@ -978,12 +975,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             }
             newCodecParams.WorkFlow.push(obj)
         })
-        console.log("newCodecParams---", newCodecParams)
 
         ipcRenderer
             .invoke("NewCodec", newCodecParams)
             .then((data: {Result: string}) => {
-                console.log("newCodec**", data)
                 // 执行完成后 更改Output值
                 setOutputEditor(data.Result)
             })
@@ -995,7 +990,6 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
 
     // 执行校验
     const runCodec = useMemoizedFn(() => {
-        console.log("runCodec---", rightItems)
         // 筛选掉跳过项
         const rightItemsSkip = rightItems.filter((item) => item.status !== "shield")
         // 获取中止项及其前面内容
@@ -1063,7 +1057,6 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                 })
             }
         })
-        console.log("checkFail--", checkFail)
         if (checkFail.length > 0) {
             // 提示
             warn(checkFail[0].message)
@@ -1755,7 +1748,6 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             const otherItem = data.splice(index, 1)[0]
             data.push(otherItem)
         }
-        console.log("tagList---", tagList, data)
         setLeftData(data)
     })
 
@@ -1802,7 +1794,6 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     // 获取codec列表
     const getLeftData = useMemoizedFn(() => {
         ipcRenderer.invoke("GetAllCodecMethods").then((res: CodecMethods) => {
-            console.log("GetAllCodecMethods---", res)
             const {Methods} = res
             cacheCodecRef.current = Methods
             getCollectData()
@@ -1886,7 +1877,6 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
      * @description: 点击后添加至运行列表
      */
     const onClickToRunList = useMemoizedFn((item: CodecMethod) => {
-        console.log("onClickToRunList", item)
         const node = initNode(item)
         const newRightItems: RightItemsProps[] = JSON.parse(JSON.stringify(rightItems))
         newRightItems.push({title: item.CodecName, codecType: item.CodecMethod, key: uuidv4(), node})
@@ -1899,7 +1889,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
      */
     const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
         const {source, destination, draggableId} = result
-        console.log("onDragEnd", result)
+        // console.log("onDragEnd", result)
 
         // 左边向右边拖拽
         if (source.droppableId === "left" && destination && destination.droppableId === "right") {
@@ -1909,7 +1899,6 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             // 获取拖拽项
             const CodecName = draggableId.substring(firstDashIndex + 1)
             const codecArr = cacheCodecRef.current.filter((item) => item.CodecName === CodecName)
-            console.log("item--", codecArr)
             if (codecArr.length > 0) {
                 const codecItem = codecArr[0]
                 const node = initNode(codecItem)
@@ -1920,7 +1909,6 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                     key: uuidv4(),
                     node
                 })
-                console.log("newRightItems", newRightItems, node)
                 setRightItems(newRightItems)
             }
         }
@@ -1929,7 +1917,6 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
         if (source.droppableId === "right" && destination && destination.droppableId === "right") {
             const newRightItems: RightItemsProps[] = JSON.parse(JSON.stringify(rightItems))
             const [removed] = newRightItems.splice(source.index, 1)
-            console.log("removed--", removed)
             newRightItems.splice(destination.index, 0, removed)
             setRightItems([...newRightItems])
         }

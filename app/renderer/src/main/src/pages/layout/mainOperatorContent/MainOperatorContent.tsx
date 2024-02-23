@@ -594,7 +594,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
             if (type === "**config-network") openMenuPage({route: YakitRoute.Beta_ConfigNetwork})
-            if (type === "**beta-codec") openMenuPage({route: YakitRoute.Beta_Codec})
             if (type === "**beta-debug-traffic-analize") openMenuPage({route: YakitRoute.Beta_DebugTrafficAnalize})
             if (type === "**webshell-manager") openMenuPage({ route: YakitRoute.Beta_WebShellManager })
             if (type === "**webshell-opt") addWebShellOpt(data)

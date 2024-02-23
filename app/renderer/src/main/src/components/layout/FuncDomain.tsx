@@ -939,10 +939,6 @@ const GetUIOpSettingMenu = () => {
                     label: "(靶场)Vulinbox"
                 },
                 {
-                    key: "new-codec",
-                    label: "新版Codec"
-                },
-                {
                     key: "debug-traffic-analize",
                     label: "流量分析"
                 },
@@ -1117,9 +1113,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "config-network":
                 addToTab("**config-network")
-                return
-            case "new-codec":
-                addToTab("**beta-codec")
                 return
             case "debug-traffic-analize":
                 addToTab("**beta-debug-traffic-analize")
