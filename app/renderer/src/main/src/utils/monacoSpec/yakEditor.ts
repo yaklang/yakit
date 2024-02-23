@@ -358,7 +358,7 @@ export const setUpYaklangMonaco = () => {
                 [/@escapes/, 'string.escape'],
                 [/@inlineExpr/, 'string.inline.expr'],
                 [/@invalidInlineExpr/, 'string.invalid'],
-                [/[^\\"]+/, 'string'],
+                [/[^\\"]/, 'string'],
                 [/\\./, 'string.escape.invalid'],
                 [/"/, 'string', '@pop']
             ],
@@ -373,7 +373,7 @@ export const setUpYaklangMonaco = () => {
 
             string: [
                 [/@escapes/, 'string.escape'],                
-                [/[^\\"]+/, 'string'],
+                [/[^\\"]/, 'string'],
                 [/\\./, 'string.invalid'],
                 [/"/, 'string', '@pop']
             ],
