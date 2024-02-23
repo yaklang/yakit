@@ -204,8 +204,10 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                     }}
                     {...restProps}
                 >
-                    {optionsList.map((item,index) => (
-                        <YakitSelect.Option value={item.value} key={`${item.label}-${index}`}>{item.label}</YakitSelect.Option>
+                    {optionsList.map((item, index) => (
+                        <YakitSelect.Option value={item.value} key={`${item.label}-${index}`}>
+                            {item.label}
+                        </YakitSelect.Option>
                     ))}
                 </YakitSelect>
             ) : (
@@ -220,8 +222,10 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                     }}
                     {...restProps}
                 >
-                    {optionsList.map((item,index) => (
-                        <YakitSelect.Option value={item.value} key={`${item.label}-${index}`}>{item.label}</YakitSelect.Option>
+                    {optionsList.map((item, index) => (
+                        <YakitSelect.Option value={item.value} key={`${item.label}-${index}`}>
+                            {item.label}
+                        </YakitSelect.Option>
                     ))}
                 </YakitSelect>
             )}
@@ -372,13 +376,25 @@ export interface NewCodecEditorProps {
     disabled?: boolean
 }
 export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
-    const {value = ""} = props
+    const {value = "", onChange} = props
     const [editorValue, setEditorValue] = useState<string>("")
     // 是否打开弹层
     const [isShowExtend, setShowExtend] = useState<boolean>(false)
     useEffect(() => {
         setEditorValue(value)
     }, [value])
+
+    // 自动保存
+    useEffect(() => {
+        const id = setInterval(() => {
+            if (editorValue !== value) {
+                onChange && onChange(editorValue)
+            }
+        }, 5000)
+        return () => {
+            clearInterval(id)
+        }
+    }, [editorValue, value, onChange])
 
     return (
         <>

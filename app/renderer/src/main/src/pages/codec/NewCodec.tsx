@@ -202,7 +202,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             {
                 key: "wordwrap",
                 label: (
-                    <div className={styles["extra-menu"]}>
+                    <div className={classNames(styles["extra-menu"], styles["menu-menu-size"])}>
                         <EnterOutlined />
                         <div className={styles["menu-name"]}>{noInputWordwrap ? "自动换行" : "不自动换行"}</div>
                     </div>
@@ -225,7 +225,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             {
                 key: "replace",
                 label: (
-                    <div className={styles["extra-menu"]}>
+                    <div className={classNames(styles["extra-menu"], styles["menu-menu-stroke"])}>
                         <OutlineArrowBigUpIcon />
                         <div className={styles["menu-name"]}>将Output替换至Input</div>
                     </div>
@@ -243,7 +243,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             {
                 key: "wordwrap",
                 label: (
-                    <div className={styles["extra-menu"]}>
+                    <div className={classNames(styles["extra-menu"], styles["menu-menu-size"])}>
                         <EnterOutlined />
                         <div className={styles["menu-name"]}>{noOutputWordwrap ? "自动换行" : "不自动换行"}</div>
                     </div>
@@ -361,7 +361,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         </div>
                         <div className={styles["editor"]}>
                             <YakitEditor
-                                type='codec'
+                                type='plaintext'
                                 value={inputObj.value}
                                 setValue={(content: string) => {
                                     setInputEditor(content)
@@ -468,7 +468,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <div className={styles["editor"]}>
                             <YakitEditor
                                 readOnly={true}
-                                type='codec'
+                                type='plaintext'
                                 value={outPutObj.value}
                                 setValue={(content: string) => {
                                     setOutputEditor(content)
@@ -746,7 +746,8 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                         <div
                             key={item.historyName}
                             className={classNames(styles["list-item"], {
-                                [styles["list-item-border"]]: index !== mitmSaveData.length - 1
+                                [styles["list-item-border"]]: index !== mitmSaveData.length - 1,
+                                [styles["list-item-border-top"]]: index === 0
                             })}
                             onClick={() => {
                                 onSelectItem(item)
@@ -778,6 +779,7 @@ interface SaveObjProps {
 }
 
 interface NewCodecMiddleRunListProps {
+    id: string
     fold: boolean
     setFold: (v: boolean) => void
     rightItems: RightItemsProps[]
@@ -813,7 +815,8 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
-    const {fold, setFold, rightItems, setRightItems, inputEditor, setOutputEditor, isClickToRunList} = props
+    const {id, fold, setFold, rightItems, setRightItems, inputEditor, setOutputEditor, isClickToRunList} = props
+
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [_, setFilterName, getFilterName] = useGetState<string>("")
     // 是否自动执行
@@ -853,7 +856,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
     })
     useUpdateEffect(() => {
-        const runScrollToRef = document.getElementById(`codec-middle-run-scroll`)
+        const runScrollToRef = document.getElementById(`codec-middle-run-scroll-${id}`)
         if (runScrollToRef && isClickToRunList.current) {
             isClickToRunList.current = false
             if (isScrollbar(runScrollToRef)) {
@@ -1130,7 +1133,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     {(provided) => (
                         <div
                             ref={provided.innerRef}
-                            id='codec-middle-run-scroll'
+                            id={`codec-middle-run-scroll-${id}`}
                             {...provided.droppableProps}
                             style={
                                 rightItems.length > 0
@@ -1220,6 +1223,7 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
         // 使用正则表达式匹配 translate 函数中的两个参数
         const match = transform.match(/translate\((-?\d+)px, (-?\d+)px\)/)
         if (match) {
+            lastIsDragging=true
             // 提取匹配到的两个值，并将它们转换为数字
             const [value1, value2] = match.slice(1).map(Number)
             // 判断值是否小于 0
@@ -1231,13 +1235,18 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
                 )
                 transform = modifiedString
             }
-            // 为解决列表最后一个元素超出时,样式溢出
-            if (!lastIsDragging && value1 === 0 && value2 < -200) {
-                transform = `translate(0px, 0px)`
+        }
+        else{
+            if(!lastIsDragging){
+                // 解决拖拽送松开时,样式溢出（屏蔽异常样式）
+                transform = `translate(0px, 0px)`  
             }
+            
         }
     }
-    lastIsDragging = isDragging
+    else{
+        lastIsDragging = false
+    }
     return {
         ...draggableStyle,
         transform
@@ -1685,8 +1694,11 @@ export interface CodecMethod {
 export interface CodecMethods {
     Methods: CodecMethod[]
 }
-export interface NewCodecProps {}
+export interface NewCodecProps {
+    id: string
+}
 export const NewCodec: React.FC<NewCodecProps> = (props) => {
+    const {id} = props
     // codec分类展开收起
     const [fold, setFold] = useState<boolean>(true)
     // 是否全部展开
@@ -1964,6 +1976,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         onClickToRunList={onClickToRunList}
                     />
                     <NewCodecMiddleRunList
+                        id={id}
                         fold={fold}
                         setFold={setFold}
                         rightItems={rightItems}

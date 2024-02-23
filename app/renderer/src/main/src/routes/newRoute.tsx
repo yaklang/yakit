@@ -515,7 +515,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case YakitRoute.Codec:
-            return <NewCodec />
+            return <NewCodec id={params?.id || ""}/>
         case YakitRoute.DataCompare:
             return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
