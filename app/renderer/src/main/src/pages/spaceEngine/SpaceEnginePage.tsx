@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import styles from "./SpaceEnginePage.module.scss"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
-import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
+import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -63,6 +63,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const [tabName, setTabName] = useState<string>(initSpaceEnginePageInfo())
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [scanBeforeSave, setScanBeforeSave] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
 
@@ -91,7 +92,10 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
         token: tokenRef.current,
         onEnd: () => {
             spaceEngineStreamEvent.stop()
-            setTimeout(() => setIsExecuting(false), 300)
+            setTimeout(() => {
+                setExecuteStatus("finished")
+                setIsExecuting(false)
+            }, 300)
         },
         setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
@@ -114,6 +118,8 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const onStartExecute = useMemoizedFn((value) => {
         setScanBeforeSave(!!value?.ScanBeforeSave)
         spaceEngineStreamEvent.reset()
+        setExecuteStatus("process")
+        setRuntimeId("")
         const params: SpaceEngineStartParams = {
             ...value,
             PageSize: 100,
@@ -121,7 +127,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
         }
         apiFetchPortAssetFromSpaceEngine(params, tokenRef.current).then(() => {
             setIsExecuting(true)
-            onExpand()
+            setIsExpand(false)
             spaceEngineStreamEvent.start()
         })
     })
@@ -132,35 +138,42 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
             setIsExecuting(false)
         })
     })
-    const onClearExecuteResult = useMemoizedFn((e) => {
+    /**在顶部的执行按钮 */
+    const onExecuteInTop = useMemoizedFn((e) => {
         e.stopPropagation()
-        spaceEngineStreamEvent.reset()
-        setRuntimeId("")
-        onExpand()
-        yakitNotify("success", "执行结果清除成功")
+        form.validateFields()
+            .then(onStartExecute)
+            .catch(() => {
+                setIsExpand(true)
+            })
     })
     const isShowResult = useCreation(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
     return (
         <div className={styles["space-engine-wrapper"]} ref={spaceEngineWrapperRef}>
-            <ExpandAndRetract className={styles["space-engine-heard"]} onExpand={onExpand} isExpand={isExpand}>
+            <ExpandAndRetract
+                className={styles["space-engine-heard"]}
+                onExpand={onExpand}
+                isExpand={isExpand}
+                status={executeStatus}
+            >
                 <span className={styles["space-engine-heard-tabName"]}>{tabName}</span>
                 <div>
-                    {runtimeId && (
-                        <YakitButton type='text' danger onClick={onClearExecuteResult}>
-                            清除执行结果
-                        </YakitButton>
-                    )}
-                    {isExecuting ? (
-                        <>
-                            <YakitButton danger onClick={onStopExecute}>
-                                停止
-                            </YakitButton>
-                        </>
-                    ) : (
-                        <></>
-                    )}
+                    {isExecuting
+                        ? !isExpand && (
+                              <>
+                                  <YakitButton danger onClick={onStopExecute}>
+                                      停止
+                                  </YakitButton>
+                              </>
+                          )
+                        : !isExpand && (
+                              <>
+                                  <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                  <div className={styles["divider-style"]}></div>
+                              </>
+                          )}
                 </div>
             </ExpandAndRetract>
             <div className={styles["space-engine-content"]}>

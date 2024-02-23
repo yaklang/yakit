@@ -7,8 +7,8 @@ export interface PluginExecuteResultProps {
     streamInfo: HoldGRPCStreamInfo
     loading: boolean
     pluginType: string
-    defaultActiveKey?:string
-    pluginExecuteResultWrapper?:string
+    defaultActiveKey?: string
+    pluginExecuteResultWrapper?: string
 }
 
 export interface VulnerabilitiesRisksTableProps {

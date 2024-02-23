@@ -64,13 +64,13 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         debugPluginStreamEvent,
         progressList,
         setRuntimeId,
-        runtimeId
+        runtimeId,
+        executeStatus,
+        setExecuteStatus
     } = props
 
     const [form] = Form.useForm()
     const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
-    /** 当前插件是否点击过开始执行 */
-    const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
 
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -83,10 +83,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
 
     const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
-
-    useEffect(() => {
-        setIsClickExecute(false)
-    }, [plugin.ScriptName])
 
     /**必填的参数,作为页面上主要显示 */
     const requiredParams: YakParamProps[] = useMemo(() => {
@@ -180,7 +176,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     }
     /**开始执行 */
     const onStartExecute = useMemoizedFn((value) => {
-        if (!isClickExecute) setIsClickExecute(true)
         const yakExecutorParams: YakExecutorParam[] = getYakExecutorParam({...value, ...customExtraParamsValue})
         const input = value["Input"]
 
@@ -200,6 +195,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")
+        setExecuteStatus("process")
         apiDebugPlugin(executeParams, token).then(() => {
             setIsExecuting(true)
             setIsExpand(false)
@@ -207,16 +203,21 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         })
     })
     /**取消执行 */
-    const onStopExecute = useMemoizedFn(() => {
+    const onStopExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
         apiCancelDebugPlugin(token).then(() => {
             debugPluginStreamEvent.stop()
             setIsExecuting(false)
         })
     })
     /**在顶部的执行按钮 */
-    const onExecuteInTop = useMemoizedFn(() => {
-        const value = form.getFieldsValue()
-        onStartExecute(value)
+    const onExecuteInTop = useMemoizedFn((e) => {
+        e.stopPropagation()
+        form.validateFields()
+            .then(onStartExecute)
+            .catch(() => {
+                setIsExpand(true)
+            })
     })
     /**保存额外参数 */
     const onSaveExtraParams = useMemoizedFn((v: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue) => {
@@ -277,6 +278,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 onExpand={onExpand}
                 className={styles["expand-retract"]}
                 animationWrapperClassName={styles["expand-retract-animation-wrapper"]}
+                status={executeStatus}
             >
                 <PluginDetailHeader
                     pluginName={plugin.ScriptName}
@@ -285,36 +287,28 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     tags={plugin.Tags}
                     extraNode={
                         <div className={styles["plugin-head-executing-wrapper"]}>
-                            {isClickExecute ? (
-                                <div className={styles["plugin-head-executing"]}>
-                                    {progressList.length === 1 && (
-                                        <PluginExecuteProgress
-                                            percent={progressList[0].progress}
-                                            name={progressList[0].id}
-                                        />
-                                    )}
-                                    {isExecuting ? (
-                                        !isExpand && (
-                                            <>
-                                                <YakitButton danger onClick={onStopExecute}>
-                                                    停止
-                                                </YakitButton>
-                                            </>
-                                        )
-                                    ) : (
+                            <div className={styles["plugin-head-executing"]}>
+                                {progressList.length === 1 && (
+                                    <PluginExecuteProgress
+                                        percent={progressList[0].progress}
+                                        name={progressList[0].id}
+                                    />
+                                )}
+                                {isExecuting ? (
+                                    !isExpand && (
                                         <>
-                                            {!isExpand && (
-                                                <YakitButton onClick={onExecuteInTop}>
-                                                    执行
-                                                </YakitButton>
-                                            )}
-                                            {extraNode}
+                                            <YakitButton danger onClick={onStopExecute}>
+                                                停止
+                                            </YakitButton>
                                         </>
-                                    )}
-                                </div>
-                            ) : (
-                                <>{extraNode}</>
-                            )}
+                                    )
+                                ) : (
+                                    <>
+                                        {!isExpand && <YakitButton onClick={onExecuteInTop}>执行</YakitButton>}
+                                        {extraNode}
+                                    </>
+                                )}
+                            </div>
                         </div>
                     }
                     img={plugin.HeadImg || ""}

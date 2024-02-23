@@ -28,6 +28,17 @@
     }
 }
 
+.expand-and-retract-header-process {
+    background-color: var(--yakit-primary-1);
+}
+.expand-and-retract-header-finished {
+    background-color: var(--yakit-success-1);
+}
+
+.expand-and-retract-header-error {
+    background-color: var(--yakit-danger-1);
+}
+
 .expand-and-retract-header-icon-body {
     display: flex;
     align-items: center;

@@ -53,7 +53,7 @@ const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
-    const {streamInfo, runtimeId, loading, pluginType, defaultActiveKey,pluginExecuteResultWrapper=''} = props
+    const {streamInfo, runtimeId, loading, pluginType, defaultActiveKey, pluginExecuteResultWrapper = ""} = props
 
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
@@ -110,7 +110,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     })
 
     return (
-        <div className={classNames(styles["plugin-execute-result"],pluginExecuteResultWrapper)}>
+        <div className={classNames(styles["plugin-execute-result"], pluginExecuteResultWrapper)}>
             {streamInfo.cardState.length > 0 && (
                 <div className={styles["plugin-execute-result-wrapper"]}>
                     <HorizontalScrollCard title={"Data Card"} data={streamInfo.cardState} />

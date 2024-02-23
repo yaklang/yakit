@@ -5,6 +5,7 @@ import {KVPair} from "@/models/kv"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {FormInstance} from "antd"
+import { ExpandAndRetractExcessiveState } from "../expandAndRetract/ExpandAndRetract"
 
 export interface PluginExecuteDetailHeardProps {
     token: string
@@ -24,6 +25,8 @@ export interface PluginExecuteDetailHeardProps {
     progressList: StreamResult.Progress[]
     runtimeId: string
     setRuntimeId: (b: string) => void
+    executeStatus: ExpandAndRetractExcessiveState
+    setExecuteStatus:(b:ExpandAndRetractExcessiveState)=>void
 }
 
 export interface YakExtraParamProps {

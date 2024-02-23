@@ -6,14 +6,19 @@ import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecute
 import {LocalPluginExecuteProps} from "./PluginsLocalType"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import styles from "./PluginsLocalDetail.module.scss"
+import {ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/ExpandAndRetract"
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
     const {plugin, headExtraNode} = props
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [runtimeId, setRuntimeId] = useState<string>("")
 
     const tokenRef = useRef<string>(randomString(40))
+    useEffect(() => {
+        setExecuteStatus("default")
+    }, [plugin.ScriptName])
 
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "debug-plugin",
@@ -21,7 +26,10 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
         token: tokenRef.current,
         onEnd: () => {
             debugPluginStreamEvent.stop()
-            setTimeout(() => setIsExecuting(false), 300)
+            setTimeout(() => {
+                setExecuteStatus("finished")
+                setIsExecuting(false)
+            }, 300)
         },
         setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
@@ -44,6 +52,8 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 progressList={streamInfo.progressState}
                 runtimeId={runtimeId}
                 setRuntimeId={setRuntimeId}
+                executeStatus={executeStatus}
+                setExecuteStatus={setExecuteStatus}
             />
             {isShowResult && (
                 <PluginExecuteResult
