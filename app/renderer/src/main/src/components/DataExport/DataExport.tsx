@@ -35,46 +35,44 @@ interface PaginationProps {
 
 const maxCellNumber = 100000 // 最大单元格10w
 
-
 /* 校验数组长度是否大于90MB，并在超过90MB时将数组分割成多个小段 */
 const splitArrayBySize = (arr, maxSizeInBytes) => {
     // chunkSize用于减少解析次数-性能优化（每chunkSize条判断一次）
-    const chunkSize:number = 100
-    const chunks:any[] = [];
-    let currentChunk:any[]  = [];
-    let currentSize:number  = 0;
-  
+    const chunkSize: number = 100
+    const chunks: any[] = []
+    let currentChunk: any[] = []
+    let currentSize: number = 0
+
     for (let i = 0; i < arr.length; i++) {
-      const element:any = arr[i];
-  
-      // 将元素添加到当前块
-      currentChunk.push(element);
-  
-      // 每隔 chunkSize 条数据一起计算一次是否超过指定大小，或者已经到达数组末尾
-      if ((i + 1) % chunkSize === 0 || i === arr.length - 1) {
-        // 一起计算前20个元素的大小
-        const elementsToCalculate = currentChunk.slice(-chunkSize);
-        const elementsSize = elementsToCalculate.reduce((size, el) => {
-          return size + new TextEncoder().encode(JSON.stringify(el)).length;
-        }, 0);
-  
-        currentSize += elementsSize;
-  
-        if (currentSize > maxSizeInBytes) {
-          // 如果当前块超过了指定大小，将其存储并创建新的块
-          chunks.push(currentChunk.slice(0, -chunkSize)); // push 未超过时的数组
-          currentChunk = elementsToCalculate;
-          currentSize = elementsSize;
+        const element: any = arr[i]
+
+        // 将元素添加到当前块
+        currentChunk.push(element)
+
+        // 每隔 chunkSize 条数据一起计算一次是否超过指定大小，或者已经到达数组末尾
+        if ((i + 1) % chunkSize === 0 || i === arr.length - 1) {
+            // 一起计算前20个元素的大小
+            const elementsToCalculate = currentChunk.slice(-chunkSize)
+            const elementsSize = elementsToCalculate.reduce((size, el) => {
+                return size + new TextEncoder().encode(JSON.stringify(el)).length
+            }, 0)
+
+            currentSize += elementsSize
+
+            if (currentSize > maxSizeInBytes) {
+                // 如果当前块超过了指定大小，将其存储并创建新的块
+                chunks.push(currentChunk.slice(0, -chunkSize)) // push 未超过时的数组
+                currentChunk = elementsToCalculate
+                currentSize = elementsSize
+            } else if (i === arr.length - 1) {
+                // 最后一次循环，且未超过指定大小，将剩余的 currentChunk 加到 chunks 中
+                chunks.push(currentChunk)
+            }
         }
-        else if(i === arr.length - 1){
-            // 最后一次循环，且未超过指定大小，将剩余的 currentChunk 加到 chunks 中
-            chunks.push(currentChunk)
-        }
-      }
     }
-  
-    return chunks;
-};
+
+    return chunks
+}
 
 export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     const {
@@ -87,6 +85,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         newUIType = "outline2"
     } = props
     const [loading, setLoading] = useState<boolean>(false)
+    const [selectItem, setSelectItem] = useState<number>()
     const [visible, setVisible] = useState<boolean>(false)
     const [frequency, setFrequency] = useState<number>(0)
     const exportDataBatch = useRef<Array<string[]>>([]) // 保存导出的数据
@@ -98,8 +97,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         Pagination: genDefaultPagination(pageSize, 1),
         Total: 0
     })
-    const [splitVisible,setSplitVisible] = useState<boolean>(false)
-    const [chunksData,setChunksData] = useState<any[]>([])
+    const [splitVisible, setSplitVisible] = useState<boolean>(false)
+    const [chunksData, setChunksData] = useState<any[]>([])
     const beginNumberRef = useRef<number>(0)
     const toExcel = useMemoizedFn((query = {Limit: pageSize, Page: 1}) => {
         setLoading(true)
@@ -109,10 +108,10 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                     const {header, exportData, response, optsSingleCellSetting} = res
                     const totalCellNumber = header.length * exportData.length
 
-                    const maxSizeInBytes = 90 * 1024 * 1024; // 90MB
-                    const chunks:any[] = splitArrayBySize(exportData,maxSizeInBytes)
+                    const maxSizeInBytes = 90 * 1024 * 1024 // 90MB
+                    const chunks: any[] = splitArrayBySize(exportData, maxSizeInBytes)
 
-                    if ((totalCellNumber < maxCellNumber && response.Total <= pageSize)&&chunks.length===1) {
+                    if (totalCellNumber < maxCellNumber && response.Total <= pageSize && chunks.length === 1) {
                         // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
                         export_json_to_excel({
                             header: header,
@@ -122,8 +121,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                             bookType: "xlsx",
                             optsSingleCellSetting
                         })
-                    }
-                    else if(!(totalCellNumber < maxCellNumber && response.Total <= pageSize)){
+                    } else if (!(totalCellNumber < maxCellNumber && response.Total <= pageSize)) {
                         // 分批导出
                         const frequency = Math.ceil(totalCellNumber / maxCellNumber) // 导出次数
                         exportNumber.current = Math.floor(maxCellNumber / header.length) //每次导出的数量
@@ -132,8 +130,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                         optsCell.current = optsSingleCellSetting
                         setFrequency(frequency)
                         setVisible(true)
-                    } 
-                    else {
+                    } else {
                         // 分割导出
                         headerExcel.current = header
                         optsCell.current = optsSingleCellSetting
@@ -153,7 +150,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                         //     })
                         // }
                     }
-                    
+
                     setPagination(response)
                 }
             })
@@ -182,6 +179,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
             bookType: "xlsx",
             optsSingleCellSetting: optsCell.current
         })
+        setSelectItem(undefined)
     }
 
     const onChange = (page, pageSize) => {
@@ -192,23 +190,24 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         toExcel(query)
     }
 
-    const onSplitExport = useMemoizedFn((data,start,end)=>{
+    const onSplitExport = useMemoizedFn((data, start, end) => {
         export_json_to_excel({
             header: headerExcel.current,
             data: data,
             filename: `${fileName}${start}-${end}`,
             autoWidth: true,
             bookType: "xlsx",
-            optsSingleCellSetting:optsCell.current
+            optsSingleCellSetting: optsCell.current
         })
+        setSelectItem(undefined)
     })
     return (
         <>
             {showButton ? (
                 <>
                     <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...btnProps}>
-                            {text || "导出Excel"}
-                        </YakitButton>
+                        {text || "导出Excel"}
+                    </YakitButton>
                 </>
             ) : (
                 <>
@@ -224,27 +223,38 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 footer={null}
             >
                 <div style={{padding: 24}}>
-                <Space wrap>
-                    {Array.from({length: frequency}).map((_, index) => (
-                            <YakitButton type='outline2' onClick={() => inBatchExport(index)}>
+                    <Space wrap>
+                        {Array.from({length: frequency}).map((_, index) => (
+                            <YakitButton
+                                type='outline2'
+                                loading={selectItem === index}
+                                disabled={typeof selectItem === "number"}
+                                key={index}
+                                onClick={() => {
+                                    setSelectItem(index)
+                                    setTimeout(() => {
+                                        inBatchExport(index)
+                                    }, 500)
+                                }}
+                            >
                                 第{pagination.Pagination.Page}页
                                 {exportNumber.current && exportNumber.current * index + 1}-
-                            {(index === frequency - 1 && exportDataBatch.current?.length) ||
-                                (exportNumber.current && exportNumber.current * (index + 1))}
+                                {(index === frequency - 1 && exportDataBatch.current?.length) ||
+                                    (exportNumber.current && exportNumber.current * (index + 1))}
                             </YakitButton>
-                    ))}
-                </Space>
-                <div className={styles["pagination"]}>
-                    <Pagination
-                        size='small'
-                        total={pagination.Total}
-                        current={Number(pagination.Pagination.Page)}
-                        pageSize={pageSize}
-                        showTotal={(total) => `共 ${total} 条`}
-                        hideOnSinglePage={true}
-                        onChange={onChange}
-                    />
-                </div>
+                        ))}
+                    </Space>
+                    <div className={styles["pagination"]}>
+                        <Pagination
+                            size='small'
+                            total={pagination.Total}
+                            current={Number(pagination.Pagination.Page)}
+                            pageSize={pageSize}
+                            showTotal={(total) => `共 ${total} 条`}
+                            hideOnSinglePage={true}
+                            onChange={onChange}
+                        />
+                    </div>
                 </div>
             </YakitModal>
             <YakitModal
@@ -255,18 +265,32 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 footer={null}
             >
                 <div style={{padding: 24}}>
-                <Space wrap>
-                    {chunksData.map((item, index) =>{
-                        if(index===0){beginNumberRef.current = 0}
-                        let start:number = beginNumberRef.current || 1
-                        let end:number = beginNumberRef.current + item.length
-                        beginNumberRef.current = end+1
-                        return(<YakitButton key={index} type='outline2' onClick={() => onSplitExport(item,start,end)}>
-                                {start}-{end}
-                            </YakitButton>)
-                            
-                    })}
-                </Space>
+                    <Space wrap>
+                        {chunksData.map((item, index) => {
+                            if (index === 0) {
+                                beginNumberRef.current = 0
+                            }
+                            let start: number = beginNumberRef.current || 1
+                            let end: number = beginNumberRef.current + item.length
+                            beginNumberRef.current = end + 1
+                            return (
+                                <YakitButton
+                                    loading={selectItem === index}
+                                    disabled={typeof selectItem === "number"}
+                                    key={index}
+                                    type='outline2'
+                                    onClick={() => {
+                                        setSelectItem(index)
+                                        setTimeout(() => {
+                                            onSplitExport(item, start, end)
+                                        }, 500)
+                                    }}
+                                >
+                                    {start}-{end}
+                                </YakitButton>
+                            )
+                        })}
+                    </Space>
                 </div>
             </YakitModal>
         </>
@@ -277,7 +301,7 @@ interface ExportSelectProps {
     /* 导出字段 */
     exportValue: string[]
     /* 传出导出字段 */
-    setExportTitle:(v:string[])=>void
+    setExportTitle: (v: string[]) => void
     /* 导出Key 用于缓存 */
     exportKey: string
     /* 导出数据方法 */
@@ -289,28 +313,26 @@ interface ExportSelectProps {
 }
 // 导出字段选择
 export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
-    const {exportValue,fileName,setExportTitle,exportKey,getData,pageSize} = props
-    const [checkValue,setCheckValue] = useState<CheckboxValueType[]>([])
-    useEffect(()=>{
+    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize} = props
+    const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
+    useEffect(() => {
         getRemoteValue(exportKey).then((setting) => {
             if (!setting) {
                 // 第一次进入 默认勾选所有导出字段
                 setExportTitle(exportValue as string[])
                 setCheckValue(exportValue)
-            }
-            else{
+            } else {
                 const values = JSON.parse(setting)
                 setCheckValue(values?.checkedValues)
-                setExportTitle(values?.checkedValues as string[])  
+                setExportTitle(values?.checkedValues as string[])
             }
-            
         })
-    },[])
+    }, [])
     const onChange = (checkedValues: CheckboxValueType[]) => {
-        const orderCheckedValues = exportValue.filter((item)=>checkedValues.includes(item))
+        const orderCheckedValues = exportValue.filter((item) => checkedValues.includes(item))
         setExportTitle(orderCheckedValues)
         setCheckValue(orderCheckedValues)
-        setRemoteValue(exportKey, JSON.stringify({checkedValues:orderCheckedValues}))
+        setRemoteValue(exportKey, JSON.stringify({checkedValues: orderCheckedValues}))
     }
     return (
         <div className={styles["export-select"]}>
@@ -331,7 +353,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
                     newUIType='primary'
                     getData={getData}
                     fileName={fileName}
-                    text="导出"
+                    text='导出'
                     pageSize={pageSize}
                 />
             </div>
