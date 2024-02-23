@@ -24,7 +24,6 @@ import {
     ReadOnlyBatchExecutorByRecoverUid
 } from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
 import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
-import {AddYakitScript} from "@/pages/yakitStore/AddYakitScript/AddYakitScript"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
 import {YakitPluginJournalDetails} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
@@ -602,7 +601,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 />
             )
         case YakitRoute.AddYakitScript:
-            // return <AddYakitScript moduleType={params.moduleType} content={params.content} />
             return <PluginEditDetails />
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />

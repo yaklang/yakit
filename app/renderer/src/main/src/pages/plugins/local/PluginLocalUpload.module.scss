@@ -117,8 +117,7 @@
 }
 
 .plugin-private-select-single {
-    padding: 24px;
-    padding-top: 0;
+    padding: 0 16px 24px;
     @extend %display-align-justify-center;
     flex-direction: column;
     gap: 12px;

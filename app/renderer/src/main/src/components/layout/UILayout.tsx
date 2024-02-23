@@ -58,12 +58,8 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FeatureRequest, ReportBug} from "@/utils/template/issues"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
-
-import classNames from "classnames"
-import styles from "./uiLayout.module.scss"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {ResultObjProps, remoteOperation} from "@/pages/dynamicControl/DynamicControl"
-
 import {useStore, yakitDynamicStatus} from "@/store"
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSE from "@/assets/yakitSE.png"
@@ -71,7 +67,9 @@ import yakitCattle from "@/assets/yakitCattle.png"
 import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
-import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
+
+import classNames from "classnames"
+import styles from "./uiLayout.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -108,15 +106,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const cacheYakitStatus = useRef<YakitStatusType>("")
 
     const [localPort, setLocalPort] = useState<number>(0)
-    const [adminPort, setAdminPort] = useState<number>(0)
     const [keepalive, setKeepalive] = useState<boolean>(false)
 
     /** 自动远程模式 */
     const [runRemote, setRunRemote] = useState<boolean>(false)
-
-    /** 内置引擎版本 */
-    const [buildInEngineVersion, setBuildInEngineVersion] = useState("")
-    const haveBuildInEngine = buildInEngineVersion !== ""
 
     /** 认证信息 */
     const [credential, setCredential, getCredential] = useGetState<YaklangEngineWatchDogCredential>({
@@ -161,7 +154,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const getCacheEngineMode = useMemoizedFn(() => {
         setEngineMode(undefined)
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
-            info(`加载上次引擎模式：${val}`)
+            if(val) info(`加载上次引擎模式：${val}`)
             switch (val) {
                 case "remote":
                     setEngineMode("remote")
@@ -170,10 +163,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 case "local":
                     setEngineMode("local")
                     cacheEngineMode.current = "local"
-                    return
-                case "admin":
-                    setEngineMode("admin")
-                    cacheEngineMode.current = "admin"
                     return
                 default:
                     setEngineMode("local")
@@ -208,12 +197,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     isEnpriTraceAgent() ? setLatestYakit("") : setLatestYakit(data)
                 })
 
-                ipcRenderer.invoke("get-current-yak").then((data: string) => {
-                    setCurrentYaklang(data)
-                }).catch(()=>{})
-                ipcRenderer.invoke("fetch-latest-yaklang-version").then((data: string) => {
-                    setLatestYaklang(data)
-                }).catch((err) => {})
+                ipcRenderer
+                    .invoke("get-current-yak")
+                    .then((data: string) => {
+                        setCurrentYaklang(data)
+                    })
+                    .catch(() => {})
+                ipcRenderer
+                    .invoke("fetch-latest-yaklang-version")
+                    .then((data: string) => {
+                        setLatestYaklang(data)
+                    })
+                    .catch((err) => {})
             }
         })
     }, [])
@@ -331,30 +326,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             .catch(() => {
                 getRandomLocalEnginePort((p) => setLocalPort(p))
             })
-
-        getLocalValue(LocalGV.YaklangEngineAdminPort)
-            .then((portRaw) => {
-                const port = parseInt(portRaw)
-                if (!port) {
-                    getRandomLocalEnginePort((p) => setAdminPort(p))
-                } else {
-                    setAdminPort(port)
-                }
-            })
-            .catch(() => {
-                getRandomLocalEnginePort((p) => setAdminPort(p))
-            })
     }, [])
-
-    // 防止两个端口重复
-    useEffect(() => {
-        if (adminPort === 0) {
-            return
-        }
-        if (adminPort === localPort) {
-            getRandomLocalEnginePort((p) => setAdminPort(p))
-        }
-    }, [adminPort, localPort])
 
     /**
      * 根据引擎状态处理不同的方式
@@ -362,7 +334,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 由保持组件来设置状态
      * */
     useEffect(() => {
-        if (engineMode === undefined || localPort <= 0 || adminPort <= 0) {
+        if (engineMode === undefined || localPort <= 0) {
             return
         }
 
@@ -381,34 +353,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     Mode: "local"
                 })
                 setTimeout(() => {
-                    setStartAdminEngine(false)
                     setYakitStatus("ready")
                     cacheYakitStatus.current = "ready"
                 }, 100)
                 return
             case "remote":
                 outputToWelcomeConsole("远程模式或调试模式，需要用户手动启动引擎")
-                setStartAdminEngine(false)
-                return
-            case "admin":
-                outputToWelcomeConsole(`管理员模式，启动本地引擎: ${adminPort}`)
-                setCredential({
-                    Host: "127.0.0.1",
-                    IsTLS: false,
-                    Password: "",
-                    PemBytes: undefined,
-                    Port: adminPort,
-                    Mode: "admin"
-                })
-                setTimeout(() => {
-                    setStartAdminEngine(false)
-                    setYakitStatus("ready")
-                    cacheYakitStatus.current = "ready"
-                }, 100)
                 return
             default:
         }
-    }, [engineMode, localPort, adminPort])
+    }, [engineMode, localPort])
 
     /** yaklang引擎切换启动模式 */
     const changeEngineMode = useMemoizedFn(async (type: YaklangEngineMode, keepalive?: boolean) => {
@@ -437,10 +391,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         // 修改状态，重连引擎
         setLocalValue(LocalGV.YaklangEngineMode, type)
         switch (type) {
-            case "admin":
-                setEngineMode("admin")
-                cacheEngineMode.current = "admin"
-                return
             case "local":
                 setEngineMode("local")
                 cacheEngineMode.current = "local"
@@ -572,12 +522,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
-    /** 是否启动并连接管理员权限引擎 */
-    const [startAdminEngine, setStartAdminEngine] = useState<boolean>(false)
-    const startAdminEngineProcess = useMemoizedFn(() => {
-        changeEngineMode("admin")
-    })
-
     /** 项目导出相关功能变量 */
     const [currentProject, setCurrentProject] = useState<ProjectDescription>()
     const [projectModalInfo, setProjectModalInfo] = useState<{
@@ -634,13 +578,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (type) {
             case "console":
                 setYakitConsole(true)
-                return
-            case "adminMode":
-                if (engineMode === "admin") {
-                    info("当前已是管理员模式")
-                    return
-                }
-                setStartAdminEngine(true)
                 return
 
             case "break":
@@ -846,24 +783,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [linkDatabase, setLinkDatabase] = useState<boolean>(false)
     const [linkDatabaseHint, setLinkDatabaseHint] = useState<boolean>(false)
 
-    /**
-     * 管理员模式补充情况
-     * 连接的管理员进程进行关闭，然后手动触发重连，端口检测接口发出'端口不可用'信息
-     * 解决方案：进行新端口的生成，并重连
-     * 原因(猜测)：管理员进程的关闭是个过程，nodejs在kill后的30s才能检测端口可用
-     */
-    const onAdminPort = useMemoizedFn(() => {
-        getRandomLocalEnginePort((p) => {
-            setAdminPort(p)
-            setCredential({...getCredential(), Port: p})
-            setTimeout(() => {
-                ipcRenderer.invoke("engine-ready-link")
-            }, 300)
-        })
-    })
     const onReady = useMemoizedFn(() => {
         if (!getEngineLink()) {
-            // visitorsStatisticsFun()
             isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : (async () => {
@@ -902,9 +823,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (engineMode) {
             case "local":
                 setLocalValue(LocalGV.YaklangEnginePort, credential.Port)
-                return
-            case "admin":
-                setLocalValue(LocalGV.YaklangEngineAdminPort, credential.Port)
                 return
         }
     })
@@ -951,9 +869,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [_, setLocalInfo, getLocalInfo] = useGetState<LocalInfoProps>()
     useEffect(() => {
         // 获取操作系统、架构、Yakit 版本、Yak 版本
-        ipcRenderer.invoke("fetch-local-basic-info").then((data: LocalInfoProps) => {
-            setLocalInfo(data)
-        }).catch(()=>{})
+        ipcRenderer
+            .invoke("fetch-local-basic-info")
+            .then((data: LocalInfoProps) => {
+                setLocalInfo(data)
+            })
+            .catch(() => {})
     }, [])
     useEffect(() => {
         // 用户退出 - 验证license=>展示企业登录
@@ -1050,10 +971,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** chat-cs 功能逻辑 */
     const [showChatCS, setShowChatCS] = useState<boolean>(true)
     useEffect(() => {
-        getRemoteValue(RemoteGV.KnowChatCS).then((value: any) => {
-            if (!value) return
-            else setShowChatCS(false)
-        }).catch(()=>{})
+        getRemoteValue(RemoteGV.KnowChatCS)
+            .then((value: any) => {
+                if (!value) return
+                else setShowChatCS(false)
+            })
+            .catch(() => {})
     }, [engineLink])
     const onChatCS = useMemoizedFn(() => {
         setShowChatCS(false)
@@ -1091,7 +1014,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         onKeepaliveShouldChange={setKeepalive}
                         onReady={onReady}
                         onFailed={onFailed}
-                        onAdminPort={onAdminPort}
                         // 远程控制加载页面是否显示
                         setRunRemote={setRunRemote}
                     />
@@ -1359,7 +1281,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 latestYaklang={latestYaklang}
                                 setLatestYaklang={setLatestYaklang}
                                 localPort={localPort}
-                                adminPort={adminPort}
                                 onEngineModeChange={changeEngineMode}
                                 showEngineLog={showEngineLog}
                                 setShowEngineLog={setShowEngineLog}
@@ -1412,14 +1333,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     loading={killLoading}
                                     setVisible={setKillOldEngine}
                                     onSubmit={killOldProcess}
-                                />
-                            </div>
-                        )}
-                        {engineLink && startAdminEngine && (
-                            <div className={styles["ui-layout-body-mask"]}>
-                                <StartAdminEngineHint
-                                    setVisible={setStartAdminEngine}
-                                    onSubmit={startAdminEngineProcess}
                                 />
                             </div>
                         )}
@@ -1783,16 +1696,6 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                                         >
                                             {EngineModeVerbose("local")}
                                         </YakitButton>
-                                        {/*<Popconfirm*/}
-                                        {/*    title={"启动管理员模式将需要用户额外认证"}*/}
-                                        {/*    onConfirm={() => {*/}
-                                        {/*        changeEngineMode("admin")*/}
-                                        {/*    }}*/}
-                                        {/*>*/}
-                                        {/*    <YakitButton style={{marginLeft: 8}} size='max' type='outline2'>*/}
-                                        {/*        {EngineModeVerbose("admin")}*/}
-                                        {/*    </YakitButton>*/}
-                                        {/*</Popconfirm>*/}
                                     </>
                                 ) : (
                                     <YakitButton
@@ -2307,47 +2210,6 @@ const KillOldEngineProcess: React.FC<KillOldEngineProcessProps> = React.memo((pr
                                     取消
                                 </YakitButton>
                                 <YakitButton loading={loading} size='max' onClick={onSubmit}>
-                                    确定
-                                </YakitButton>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-})
-
-const StartAdminEngineHint: React.FC<KillOldEngineProcessProps> = React.memo((props) => {
-    const {setVisible, onSubmit} = props
-
-    return (
-        <div className={classNames(styles["kill-old-engine-modal"], styles["modal-top-wrapper"])}>
-            <div className={styles["kill-old-engine-hint"]}>
-                <div className={styles["yaklang-engine-hint-wrapper"]}>
-                    <div className={styles["hint-left-wrapper"]}>
-                        <div className={styles["hint-icon"]}>
-                            <YaklangInstallHintSvgIcon />
-                        </div>
-                    </div>
-
-                    <div className={styles["hint-right-wrapper"]}>
-                        <div className={styles["hint-right-title"]}>启动管理员权限引擎</div>
-                        <div className={styles["hint-right-content"]}>
-                            是否启动并连接管理员权限引擎
-                            <br />
-                            <span className={styles["warning-content"]}>
-                                由于后续功能规划，管理员权限将逐步进行下架，建议使用本地模式，如出现问题，使用“设置-网卡权限修复”即可
-                            </span>
-                        </div>
-
-                        <div className={styles["hint-right-btn"]}>
-                            <div></div>
-                            <div className={styles["btn-group-wrapper"]}>
-                                <YakitButton size='max' type='outline2' onClick={() => setVisible(false)}>
-                                    取消
-                                </YakitButton>
-                                <YakitButton size='max' onClick={onSubmit}>
                                     确定
                                 </YakitButton>
                             </div>

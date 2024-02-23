@@ -1,23 +1,20 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
-import {Dropdown, Progress} from "antd"
+import {Progress} from "antd"
 import {DownloadingState, YakitStatusType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
-import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {HelpSvgIcon, YaklangInstallHintSvgIcon} from "../layout/icons"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {failed, info, success} from "@/utils/notification"
-import {CheckIcon} from "@/assets/newIcon"
 import {UpdateYakitAndYaklang} from "../layout/update/UpdateYakitAndYaklang"
 import {InstallEngine, QuestionModal} from "../layout/update/InstallEngine"
 
 import classNames from "classnames"
 import styles from "./yakitLoading.module.scss"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
-import { RemoteLinkInfo } from "../layout/UILayout"
 import { DynamicStatusProps } from "@/store"
 import yakitSE from "@/assets/yakitSE.png";
 import yakitEE from "@/assets/yakitEE.png";
@@ -53,8 +50,6 @@ export const EngineModeVerbose = (m: YaklangEngineMode,n?:DynamicStatusProps) =>
         return "控制模式"
     }
     switch (m) {
-        // case "admin":
-        //     return "管理权限"
         case "local":
             return "本地模式"
         case "remote":
@@ -82,7 +77,6 @@ export interface YakitLoadingProp {
     setLatestYaklang: (val: string) => any
 
     localPort: number
-    adminPort: number
     onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
     showEngineLog: boolean
     setShowEngineLog: (flag: boolean) => any
@@ -237,7 +231,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             ipcRenderer
                 .invoke("start-local-yaklang-engine", {
                     port: props.localPort,
-                    sudo: false,
                     isEnpriTraceAgent:isEnpriTraceAgent()
                 })
                 .then(() => {
@@ -305,7 +298,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         ipcRenderer
         .invoke("start-local-yaklang-engine", {
             port: props.localPort,
-            sudo: false,
             isEnpriTraceAgent:isEnpriTraceAgent()
         })
         .then(() => {
@@ -634,7 +626,6 @@ export const YakitControlLoading: React.FC<YakitControlLoadingProp> = (props) =>
         ipcRenderer
         .invoke("start-local-yaklang-engine", {
             port: localPort,
-            sudo: false,
             isEnpriTraceAgent:isEnpriTraceAgent()
         })
         .then(() => {

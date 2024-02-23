@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useMemo} from "react"
-import {failed, info, success, yakitFailed} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 import {showModal} from "@/utils/showModal"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
@@ -10,20 +10,20 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon, GooglePhotosLogoSvgIcon} from "./icons"
-
-import classNames from "classnames"
-import styles from "./performanceDisplay.module.scss"
 import {YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import { isEnpriTraceAgent } from "@/utils/envfile"
 
+import classNames from "classnames"
+import styles from "./performanceDisplay.module.scss"
+
 const {ipcRenderer} = window.require("electron")
 
 interface PerformanceDisplayProps {
     engineMode: YaklangEngineMode | undefined
-    typeCallback: (type: "console" | "adminMode" | "break") => any
+    typeCallback: (type: "console" | "break") => any
 }
 
 export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo((props) => {
@@ -99,7 +99,7 @@ export interface yakProcess {
 
 interface UIEngineListProp {
     engineMode: YaklangEngineMode | undefined
-    typeCallback: (type: "console" | "adminMode" | "break") => any
+    typeCallback: (type: "console" | "break") => any
 }
 
 /** @name 已启动引擎列表 */
@@ -187,7 +187,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     })
 
     const isLocal = useMemo(() => {
-        return engineMode === "admin" || engineMode === "local"
+        return engineMode === "local"
     }, [engineMode])
 
     const {delTemporaryProject} = useTemporaryProjectStore()

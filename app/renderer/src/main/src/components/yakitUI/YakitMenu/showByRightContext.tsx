@@ -54,8 +54,8 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     /** 右键展示元素宽高 */
     const divWidth = roundDown(div.getBoundingClientRect().width || 0)
     const divHeight = roundDown(div.getBoundingClientRect().height || 0)
-    /**RightContext 根节点 */
-    let rightContextRootDiv
+        /**RightContext 根节点 */
+        // let rightContextRootDiv
 
     if (divWidth > 0 && divHeight > 0) {
         // y坐标计算
@@ -76,8 +76,12 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     document.body.appendChild(div)
 
     const destory = () => {
-        if (rightContextRootDiv) {
-            rightContextRootDiv.unmount()
+        // if (rightContextRootDiv) {
+        //     rightContextRootDiv.unmount()
+        // }
+        const unmountResult = ReactDOM.unmountComponentAtNode(div)
+        if (unmountResult && div.parentNode) {
+            div.parentNode.removeChild(div)
         }
     }
 
@@ -96,14 +100,16 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
                 destory()
                 document.removeEventListener("click", onClickOutsize)
             })
-            document.addEventListener("contextmenu", function onContextMenuOutsize() {
-                destory()
-                document.removeEventListener("contextmenu", onContextMenuOutsize)
-            })
-            if (!rightContextRootDiv) {
-                rightContextRootDiv = createRoot(div)
-            }
-            rightContextRootDiv.render(<RightContext data={props} callback={offsetPosition} />)
+            // document.addEventListener("contextmenu", function onContextMenuOutsize() {
+            //     destory()
+            //     document.removeEventListener("contextmenu", onContextMenuOutsize)
+            // })
+            // if (!rightContextRootDiv) {
+            //     rightContextRootDiv = createRoot(div)
+            // }
+            // rightContextRootDiv.render(<RightContext data={props} callback={offsetPosition} />)
+            // 上面注释内容为react 18新特性写法，但在antd menu下会有二级菜单多个同时打开问题
+            ReactDOM.render(<RightContext data={props} callback={offsetPosition} />, div)
         })
     }
     render()

@@ -2,7 +2,7 @@
 export type YakitSystem = "Linux" | "Darwin" | "Windows_NT"
 
 /** 当前启动yaklang引擎模式 */
-export type YaklangEngineMode = "local" | "admin" | "remote"
+export type YaklangEngineMode = "local" | "remote"
 
 /** 下载进度条-时间数据 */
 interface DownloadingTime {
@@ -43,7 +43,6 @@ export type YakitStatusType =
 /** @name funcDomain组件-全局setting功能的点击回调事件类型 */
 export type YakitSettingCallbackType =
     | "console"
-    | "adminMode"
     | "break"
     | "changeProject"
     | "encryptionProject"

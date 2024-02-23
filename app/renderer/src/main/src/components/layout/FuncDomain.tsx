@@ -47,7 +47,6 @@ import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
-import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 import {GithubSvgIcon, PencilAltIcon, TerminalIcon, CameraIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
@@ -65,14 +64,13 @@ import {YakitRoute} from "@/routes/newRoute"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {RcFile} from "antd/lib/upload"
 import {useRunNodeStore} from "@/store/runNode"
-import {Uint8ArrayToString} from "@/utils/str"
 import emiter from "@/utils/eventBus/eventBus"
-
-import classNames from "classnames"
-import styles from "./funcDomain.module.scss"
-import yakitImg from "../../assets/yakit.jpg"
 import { useTemporaryProjectStore } from "@/store/temporaryProject"
 import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
+
+import yakitImg from "../../assets/yakit.jpg"
+import classNames from "classnames"
+import styles from "./funcDomain.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 const {Dragger} = Upload
@@ -985,14 +983,6 @@ const GetUIOpSettingMenu = () => {
             ]
         },
         {type: "divider"},
-        // {
-        //     key: "otherMode",
-        //     label: "其他操作",
-        //     children: [
-        //         {label: "管理员模式", key: "adminMode"},
-        //         {label: "旧版本迁移", key: "migrateLegacy"}
-        //     ]
-        // },
         {
             key: "systemSet",
             label: "系统设置",
@@ -1092,7 +1082,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 onEngineModeChange(type)
                 return
             case "local":
-            case "admin":
                 if (dynamicStatus.isDynamicStatus) {
                     warn("远程控制中，暂无法修改")
                     return
@@ -1143,12 +1132,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "pcapfix":
                 showPcapPermission()
-                return
-            case "adminMode":
-                typeCallback("adminMode")
-                return
-            case "migrateLegacy":
-                migrateLegacyDatabase()
                 return
             case "changeProject":
             case "encryptionProject":
