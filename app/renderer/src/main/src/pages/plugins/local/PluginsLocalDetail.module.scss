@@ -12,6 +12,11 @@
     height: 100%;
     overflow: hidden;
     // padding-top: 12px;
+    :global {
+        .ant-tabs-right > .ant-tabs-nav .ant-tabs-tab {
+            margin-top: 4px;
+        }
+    }
     .plugin-info-wrapper {
         @extend %plugin-tab-content;
         padding-top: 12px;
