@@ -136,6 +136,7 @@ import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginB
 import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import { SinglePluginExecution } from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
+import {YakPoC} from "@/pages/securityTool/yakPoC/yakPoC"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -321,7 +322,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
 export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.HTTPHacker,
-    YakitRoute.PoC,
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
@@ -522,7 +522,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Mod_ScanPort:
             return <PortScanPage sendTarget={params?.scanportParams} />
         case YakitRoute.PoC:
-            return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
+            // return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
+            return <YakPoC />
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
             // return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />

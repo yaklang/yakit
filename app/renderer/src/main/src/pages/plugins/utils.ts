@@ -1109,10 +1109,10 @@ export const apiCancelDebugPlugin: (token: string) => Promise<null> = (token) =>
  */
 export const convertHybridScanParams = (
     params: HybridScanRequest,
-    pluginInfo: {selectPluginName: string[]; search: PluginSearchParams},
+    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams},
     pluginType: string
 ): HybridScanControlAfterRequest => {
-    const {selectPluginName, search} = pluginInfo
+    const {selectPluginName, search = {...cloneDeep(defaultSearch)}} = pluginInfo
     const hTTPRequestTemplate = {
         ...cloneDeep(params.HTTPRequestTemplate)
     }
