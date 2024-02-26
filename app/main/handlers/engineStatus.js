@@ -162,7 +162,6 @@ module.exports = (win, callback, getClient, newClient) => {
      */
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
-        console.log(22222,YakitProjectPath)
         const {port, isEnpriTraceAgent} = params
         return new Promise((resolve, reject) => {
             try {
@@ -225,7 +224,6 @@ module.exports = (win, callback, getClient, newClient) => {
 
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
-        console.log("11111111")
         if (!params["port"]) {
             throw Error("启动本地引擎必须指定端口")
         }
