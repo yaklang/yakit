@@ -834,23 +834,14 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                         </a>
                     </Dropdown>
                 </div>
-                <div
-                    className='add-icon'
+                <YakitButton
+                    type='text'
                     onClick={() => {
-                        if (checkList.length === 0) {
-                            info("选中数据未获取")
-                            return
-                        }
-                        let m = showModal({
-                            title: "添加插件组",
-                            width: 520,
-                            content: <AddPlugIn onClose={() => m.destroy()} />
-                        })
-                        return m
+                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
                     }}
                 >
-                    <PlusOutlined />
-                </div>
+                    管理分组
+                </YakitButton>
                 <div style={{marginLeft: 12}}>{settingRender && settingRender()}</div>
             </div>
             <div style={{whiteSpace: "initial"}}>

@@ -850,8 +850,6 @@ const PluginContList: React.FC<PluginContListProps> = React.memo(
                 <PluginGroup
                     selectGroup={selectGroup}
                     setSelectGroup={setSelectGroup}
-                    checkList={selectedPlugins.map((item) => item.ScriptName)}
-                    isSelectAll={isSelectAll}
                     isShowAddBtn={isShowAddBtn}
                     isShowDelIcon={isShowDelIcon}
                 />

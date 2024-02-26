@@ -539,10 +539,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 return (
                     <>
                         <PluginGroup
-                            checkList={checkList}
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
-                            isSelectAll={isSelectAll}
                         />
                         <div style={{paddingRight: 9}}>
                             <PluginSearch

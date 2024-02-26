@@ -461,10 +461,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 return (
                     <div className={styles["plugin-hijack-content-list"]}>
                         <PluginGroup
-                            checkList={checkList}
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
-                            isSelectAll={isSelectAll}
                             wrapperClassName={styles["plugin-group"]}
                         />
                         <YakModuleListHeard

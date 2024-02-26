@@ -41,6 +41,7 @@ import {getReleaseEditionName} from "@/utils/envfile"
 import {DownloadOnlinePluginsRequest} from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginGV} from "@/pages/plugins/builtInData"
+import {YakitRoute} from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -456,26 +457,21 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
 })
 
 interface PluginGroupProps {
-    checkList: string[]
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
-    isSelectAll: boolean
     wrapperClassName?: string
     isShowAddBtn?: boolean
     isShowDelIcon?: boolean
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     const {
-        checkList,
         selectGroup,
         setSelectGroup,
-        isSelectAll,
         wrapperClassName,
         isShowAddBtn = true,
         isShowDelIcon = true
     } = props
 
-    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     /**
      * @description 插件组
@@ -536,24 +532,12 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                 <YakitButton
                     type='text'
                     onClick={() => {
-                        if (checkList.length === 0) {
-                            info("选中数据未获取")
-                            return
-                        }
-                        setAddGroupVisible(true)
+                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
                     }}
-                    disabled={isSelectAll}
                 >
-                    添加至组
-                    <PlusCircleIcon className={style["plus-circle"]} />
+                    管理分组
                 </YakitButton>
             )}
-            <AddLocalPluginGroup
-                visible={addGroupVisible}
-                setVisible={setAddGroupVisible}
-                checkList={checkList}
-                onOk={setPlugGroup}
-            />
         </div>
     )
 })
