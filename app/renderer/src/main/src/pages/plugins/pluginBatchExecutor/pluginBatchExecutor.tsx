@@ -290,6 +290,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     /**在顶部的执行按钮 */
     const onExecuteInTop = useMemoizedFn((e) => {
         e.stopPropagation()
+        pluginBatchExecuteContentRef.current?.onStartExecute()
     })
     const pluginInfo = useCreation(() => {
         return {
@@ -379,7 +380,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                                   )
                                 : !isExpand && (
                                       <>
-                                          <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                          <YakitButton onClick={onExecuteInTop} disabled={selectNum === 0}>
+                                              执行
+                                          </YakitButton>
                                           <div className={styles["divider-style"]}></div>
                                       </>
                                   )}

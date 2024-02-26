@@ -84,6 +84,9 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
     const total = useCreation(() => {
         return response.Group.length
     }, [response.Group])
+    const onClearSelect = useMemoizedFn(() => {
+        setSelectGroupList([])
+    })
     return (
         <div
             className={classNames(styles["plugin-group-wrapper"], {
@@ -109,7 +112,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     <div className={styles["filter-body-right"]}>
                         <YakitButton type='text'>管理分组</YakitButton>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
-                        <YakitButton type='text' danger>
+                        <YakitButton type='text' danger onClick={onClearSelect}>
                             清空
                         </YakitButton>
                     </div>
@@ -169,7 +172,6 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
     /**停止 */
     const [stopLoading, setStopLoading] = useState<boolean>(false)
-
 
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()
