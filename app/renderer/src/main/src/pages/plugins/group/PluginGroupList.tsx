@@ -59,7 +59,7 @@ export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
                     return (
                         <div
                             className={classNames(styles["plugin-group-list-item"], {
-                                [styles["plugin-group-list-item-border-bottom-unshow"]]: false
+                                [styles["plugin-group-list-item-border-unshow"]]: editGroup && editGroup.id === item.id || activeGroupId === item.id
                             })}
                             key={item.id}
                         >

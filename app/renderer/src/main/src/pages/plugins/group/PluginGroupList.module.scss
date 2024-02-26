@@ -83,7 +83,11 @@
             border-color: transparent;
         }
 
-        &-item-border-bottom-unshow {
+        .plugin-group-list-item-border-unshow {
+            border-color: transparent;
+        }
+
+        .plugin-group-list-item-border-unshow + .plugin-group-list-item {
             border-color: transparent;
         }
     }
