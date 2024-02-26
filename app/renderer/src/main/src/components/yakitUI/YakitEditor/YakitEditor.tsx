@@ -35,7 +35,6 @@ import styles from "./YakitEditor.module.scss"
 import "./StaticYakitEditor.scss"
 import { queryYakScriptList } from "@/pages/yakitStore/network"
 import { YakScript } from "@/pages/invoker/schema"
-import { CodecType } from "@/pages/codec/CodecPage"
 import { failed } from "@/utils/notification"
 import { randomString } from "@/utils/randomUtil"
 import { v4 as uuidv4 } from "uuid"
@@ -56,6 +55,16 @@ import emiter from "@/utils/eventBus/eventBus"
 import { GetPluginLanguage } from "@/pages/plugins/builtInData"
 import { createRoot } from "react-dom/client"
 import { setEditorContext } from "@/utils/monacoSpec/yakEditor"
+import { YakParamProps } from "@/pages/plugins/pluginsType"
+
+interface CodecTypeProps {
+    key?: string
+    verbose: string
+    subTypes?: CodecTypeProps[]
+    params?: YakParamProps[]
+    help?: React.ReactNode
+    isYakScript?: boolean
+}
 
 const { ipcRenderer } = window.require("electron")
 
@@ -100,6 +109,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         contextMenu = {},
         onContextMenu,
         readOnly = false,
+        disabled = false,
         noWordWrap = false,
         noMiniMap = false,
         noLineNumber = false,
@@ -145,6 +155,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [nowFontsize, setNowFontsize] = useState<number>(fontSize)
 
+    useEffect(()=>{
+        // 控制编辑器失焦
+        if(disabled){
+            const fakeInput = document.createElement('input');
+            document.body.appendChild(fakeInput);
+            fakeInput.focus();
+            document.body.removeChild(fakeInput);
+        }
+    },[disabled])
+
     // 阻止编辑器点击URL默认打开行为 自定义外部系统默认浏览器打开URL
     useEffect(() => {
         monaco.editor.registerLinkOpener({
@@ -169,7 +189,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }, [showLineBreaks])
 
     // 自定义HTTP数据包变形处理
-    const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([])
+    const [codecPlugin, setCodecPlugin] = useState<CodecTypeProps[]>([])
     const searchForCodecFuzzerPlugin = useMemoizedFn(() => {
         queryYakScriptList(
             "codec",
@@ -183,7 +203,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             key: script.ScriptName,
                             verbose: "CODEC 社区插件: " + script.ScriptName,
                             isYakScript: true
-                        } as CodecType
+                        } as CodecTypeProps
                     })
                 )
             },
@@ -1150,7 +1170,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     return (
         <div
             className={classNames("yakit-editor-code", styles["yakit-editor-wrapper"], {
-                "yakit-editor-wrap-style": !showBreak
+                "yakit-editor-wrap-style": !showBreak,
+                [styles['yakit-editor-disabled']]:disabled
             })}
         >
             <ReactResizeDetector
@@ -1167,6 +1188,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 refreshMode={"debounce"}
                 refreshRate={30}
             />
+            {disabled&&<div className={styles['yakit-editor-shade']}></div>}
             <div
                 ref={wrapperRef}
                 className={styles["yakit-editor-container"]}

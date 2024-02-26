@@ -338,7 +338,9 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
                         <div
                             key={item.filterName}
                             className={classNames(styles["list-item"], {
-                                [styles["list-item-border"]]: index !== mitmSaveData.length - 1
+                                [styles["list-item-border"]]: index !== mitmSaveData.length - 1,
+                                [styles["list-item-border-top"]]: index === 0
+
                             })}
                             onClick={() => {
                                 onSelectItem(item.filter)

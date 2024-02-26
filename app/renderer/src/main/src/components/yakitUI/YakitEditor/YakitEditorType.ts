@@ -42,6 +42,8 @@ export interface YakitEditorProps {
     /** @name 右键菜单点击事件回调 */
     onContextMenu?: (editor: YakitIMonacoEditor, key: string) => any
 
+    /** @name 配置项-是否禁用 */
+    disabled?: boolean
     /** @name 配置项-是否开启只读模式 */
     readOnly?: boolean
     /** @name 配置项-是否关闭内容过长时的自动换行展示适配 */

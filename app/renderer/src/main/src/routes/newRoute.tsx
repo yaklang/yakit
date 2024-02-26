@@ -109,7 +109,6 @@ import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
 import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
 import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager"
 import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage"
-import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
@@ -130,13 +129,13 @@ import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
 import { NewPayload } from "@/pages/payloadManager/newPayload"
+import { NewCodec } from "@/pages/codec/NewCodec";
 import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
-const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 
@@ -220,8 +219,6 @@ export enum YakitRoute {
     Beta_DiagnoseNetwork = "beta-diagnose-network",
     // 配置全局
     Beta_ConfigNetwork = "beta-config-network",
-    //新版codec
-    Beta_Codec = "beta-codec",
     // 插件管理
     Plugin_Audit = "plugin-audit",
     // WebShell 管理
@@ -309,7 +306,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-vulinbox-manager": {label: "Vulinbox 管理器"},
     "beta-diagnose-network": {label: "网络异常诊断"},
     "beta-config-network": {label: "全局网络配置"},
-    "beta-codec": {label: "新版codec"},
     "plugin-audit": {label: "插件管理"},
     "**beta-debug-traffic-analize": {label: "流量分析"},
     "beta-webshell-manager": {label: "网站管理"},
@@ -353,7 +349,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_DiagnoseNetwork,
     YakitRoute.Beta_ConfigNetwork,
     YakitRoute.Beta_DebugTrafficAnalize,
-    YakitRoute.Beta_Codec,
     YakitRoute.Plugin_Audit,
     YakitRoute.Beta_WebShellManager,
     YakitRoute.Data_Statistics
@@ -383,6 +378,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.PayloadManager,
     YakitRoute.Data_Statistics,
     YakitRoute.BatchExecutorPage,
+    YakitRoute.Codec,
     YakitRoute.Space_Engine
 ]
 /** 无滚动条的页面路由 */
@@ -513,7 +509,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case YakitRoute.Codec:
-            return <CodecPage />
+            return <NewCodec id={params?.id || ""}/>
         case YakitRoute.DataCompare:
             return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
@@ -640,8 +636,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <DiagnoseNetworkPage />
         case YakitRoute.Beta_ConfigNetwork:
             return <ConfigNetworkPage />
-        case YakitRoute.Beta_Codec:
-            return <NewCodecPage />
         case YakitRoute.Plugin_Audit:
             return (
                 <OnlineJudgment isJudgingLogin={true}>
