@@ -9,6 +9,7 @@ import {
     HybridScanRequest,
     PluginBatchExecutorInputValueProps,
     apiCancelHybridScan,
+    apiGetPluginNameByGroup,
     apiHybridScan,
     apiQueryHybridScan,
     apiQueryYakScript,
@@ -419,7 +420,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
 
 interface PluginBatchExecuteContentProps {
     ref?: React.ForwardedRef<PluginBatchExecuteContentRefProps>
-    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams}
+    /** 如果同时传了 pluginInfo.selectPluginName,以pluginInfo.selectPluginGroup查询回来的插件为主 */
+    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams; selectPluginGroup?: string[]}
     /**选择插件得数量 */
     selectNum: number
     /**插件类型 */
@@ -443,14 +445,31 @@ interface PluginBatchExecuteContentProps {
     isExpand: boolean
     setIsExpand: (value: boolean) => void
 }
-interface PluginBatchExecuteContentRefProps {
+export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
     onStopExecute: () => void
+    onStartExecute: () => void
 }
-export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = forwardRef(
-    React.memo((props, ref) => {
+export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
+    forwardRef((props, ref) => {
         const {selectNum, pluginType = "", pluginInfo, defaultActiveKey, onInitInputValueAfter, setProgressList} = props
-
+        const [form] = Form.useForm()
+        const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+        useImperativeHandle(
+            ref,
+            () => ({
+                onQueryHybridScanByRuntimeId,
+                onStopExecute,
+                onStartExecute: () => {
+                    form.validateFields()
+                        .then(onStartExecute)
+                        .catch((e) => {
+                            setIsExpand(true)
+                        })
+                }
+            }),
+            [form]
+        )
         /**额外参数弹出框 */
         const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
         const [extraParamsValue, setExtraParamsValue] = useState<PluginBatchExecuteExtraFormValue>({
@@ -497,24 +516,13 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const progressList = useCreation(() => {
             return streamInfo.progressState
         }, [streamInfo.progressState])
-        useImperativeHandle(
-            ref,
-            () => ({
-                onQueryHybridScanByRuntimeId,
-                onStopExecute
-            }),
-            []
-        )
-
-        const [form] = Form.useForm()
-        const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
 
         useEffect(() => {
             setProgressList(progressList)
         }, [progressList])
 
         /** 通过runtimeId查询该条记录详情 */
-        const onQueryHybridScanByRuntimeId = useMemoizedFn((runtimeId: string) => {
+        const onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null> = useMemoizedFn((runtimeId) => {
             return new Promise((resolve, reject) => {
                 if (!runtimeId) reject("未设置正常得 runtimeId")
                 hybridScanStreamEvent.reset()
@@ -549,7 +557,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         })
 
         /**开始执行 */
-        const onStartExecute = useMemoizedFn((value) => {
+        const onStartExecute = useMemoizedFn(async (value) => {
+            const {selectPluginGroup = []} = pluginInfo
             // 任务配置参数
             const taskParams: PluginBatchExecutorTaskProps = {
                 Concurrent: extraParamsValue.Concurrent,
@@ -568,6 +577,15 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         : Buffer.from("", "utf8")
                 }
             }
+            let newPluginInfo = {...pluginInfo}
+            if (selectPluginGroup.length > 0) {
+                try {
+                    newPluginInfo.selectPluginName = await apiGetPluginNameByGroup(selectPluginGroup)
+                } catch (error) {
+                    newPluginInfo.selectPluginName = []
+                }
+            }
+            if (newPluginInfo.selectPluginName.length === 0) return
             const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(
                 params,
                 pluginInfo,
@@ -589,8 +607,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             setExtraParamsVisible(false)
         })
         /**取消执行 */
-        const onStopExecute = useMemoizedFn((e) => {
-            e.stopPropagation()
+        const onStopExecute = useMemoizedFn(() => {
             setStopLoading(true)
             apiStopHybridScan(runtimeId, tokenRef.current)
         })

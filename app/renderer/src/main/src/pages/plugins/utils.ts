@@ -1103,13 +1103,24 @@ export const apiCancelDebugPlugin: (token: string) => Promise<null> = (token) =>
         }
     })
 }
+/**通过组名获取组内插件 */
+export const apiGetPluginNameByGroup: (groups: string[]) => Promise<string[]> = (token) => {
+    return new Promise((resolve, reject) => {
+        try {
+            resolve([])
+        } catch (error) {
+            yakitNotify("error", "通过组名获取组内插件出错:" + error)
+            reject(error)
+        }
+    })
+}
 /**
  * @name HybridScan接口参数转换(前端数据转接口参数)
  * @description HybridScan
  */
 export const convertHybridScanParams = (
     params: HybridScanRequest,
-    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams},
+    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams; selectPluginGroup?: string[]},
     pluginType: string
 ): HybridScanControlAfterRequest => {
     const {selectPluginName, search = {...cloneDeep(defaultSearch)}} = pluginInfo

@@ -155,7 +155,11 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     )
     const onComputeItemHeight = useMemoizedFn(() => {
         if (!width) return
-        const computeCol = defCol || 1
+        if (defCol) {
+            setCol(defCol)
+            return
+        }
+        const computeCol = 1
         if (width <= 1024) {
             setCol(computeCol * 2)
         } else if (width >= 1024 && width < 1440) {
