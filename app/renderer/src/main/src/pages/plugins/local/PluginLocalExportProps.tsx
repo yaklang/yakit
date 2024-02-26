@@ -111,11 +111,11 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
             destroyOnClose={true}
             bodyStyle={{padding: 0}}
             footerStyle={{justifyContent: "flex-end"}}
-            footer={[
+            footer={
                 <YakitButton type={"outline2"} onClick={handleExportLocalPluginFinish}>
                     {localStreamData?.Progress === 1 ? "完成" : "取消"}
                 </YakitButton>
-            ]}
+            }
         >
             <div style={{padding: "0 16px"}}>
                 <ImportAndExportStatusInfo
