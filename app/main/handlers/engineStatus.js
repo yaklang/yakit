@@ -6,6 +6,7 @@ const {testRemoteClient} = require("../ipc")
 const {getLocalYaklangEngine, engineLog, YakitProjectPath} = require("../filePath")
 const net = require("net")
 const fs = require("fs")
+const path = require("path")
 
 /** 本地引擎启动日志 */
 let out = null
@@ -161,19 +162,25 @@ module.exports = (win, callback, getClient, newClient) => {
      */
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
-
+        console.log(22222,YakitProjectPath)
         const {port, isEnpriTraceAgent} = params
         return new Promise((resolve, reject) => {
             try {
                 toLog("已启动本地引擎进程")
-                const log = out ? out : "ignore"
+                // const log = out ? out : "ignore"
 
                 const grpcPort = ["grpc", "--port", `${port}`]
                 const extraParams = dbFile ? [...grpcPort, "--profile-db", dbFile] : grpcPort
                 const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 
+                try {
+                    var log = fs.openSync(path.join(YakitProjectPath, "./temp/yak-engine-"+Date.now()+".log"),'w+')
+                } catch (error) {
+                    console.log('ERROR',`${error}`)
+                }
+    
+                // errLog = fs.openSync(path.join(YakitProjectPath,"err.log"),'w')    
                 const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
-                    // stdio: ["ignore", "ignore", "ignore"]
                     detached: false,
                     windowsHide: true,
                     stdio: ["ignore", log, log],
@@ -218,6 +225,7 @@ module.exports = (win, callback, getClient, newClient) => {
 
     /** 本地启动yaklang引擎 */
     ipcMain.handle("start-local-yaklang-engine", async (e, params) => {
+        console.log("11111111")
         if (!params["port"]) {
             throw Error("启动本地引擎必须指定端口")
         }
