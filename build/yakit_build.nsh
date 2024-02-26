@@ -66,7 +66,6 @@ FunctionEnd
 
 
 !macro checkInstalled
-    ; 设置用户一开始的安装路径
     ReadRegStr $INSTALL_PATH HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
     ${If} $INSTALL_PATH != "" 
         ; set install path
@@ -76,7 +75,7 @@ FunctionEnd
     ; 判断是否已安装
     ${If} ${FileExists} `$INSTDIR\$EXE_NAME.exe`
         StrCpy $IS_INSTALLED "true"
-    ${EndIf}     
+    ${EndIf}
 !macroend
 
 !macro checkIsUpdated
@@ -103,6 +102,9 @@ FunctionEnd
             StrCpy $EXE_NAME "EnpriTrace"
         ${EndIf}
     ${EndIf}
+
+    ; 设置用户一开始的安装路径
+    StrCpy $INSTDIR "C:\Program Files\$EXE_NAME"
     
     !insertmacro checkInstalled
     !insertmacro checkIsUpdated
@@ -167,6 +169,7 @@ FunctionEnd
 Section "Main" SectionMain
     ; create new directory if not installed 
     ${If} $IS_INSTALLED != "true"
+    ${AndIf} ${FileExists} "$INSTDIR"
         StrCpy $INSTDIR "$INSTDIR\$EXE_NAME"
         CreateDirectory $INSTDIR
     ${EndIf}
