@@ -309,7 +309,8 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             >
                 <OutlinePluscircleIcon
                     className={styles["add-group-icon"]}
-                    onClick={() => {
+                    onClick={(e) => {
+                        e.stopPropagation()
                         optClick(data, index)
                     }}
                 />
@@ -405,7 +406,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                                     isCorePlugin={!!data.isCorePlugin}
                                     official={!!data.official}
                                     extraNode={(data) => optExtraNode(data, index)}
-                                    onClick={(data, index) => {}}
+                                    onClick={(data, index, value) => optCheck(data, value)}
                                     subTitle={optSubTitle}
                                 />
                             )

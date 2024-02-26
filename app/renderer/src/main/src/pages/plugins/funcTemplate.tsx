@@ -830,7 +830,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
     })
     // 组件点击回调
     const onclick = useMemoizedFn(() => {
-        if (onClick) return onClick(data, order)
+        if (onClick) return onClick(data, order, !checked)
         return null
     })
 

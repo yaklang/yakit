@@ -7,12 +7,12 @@ import {PluginOnlineGroupList} from "./PluginOnlineGroupList"
 import {PluginLocalGroupList} from "./PluginLocalGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import {useInViewport} from "ahooks"
-import {SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
 import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import emiter from "@/utils/eventBus/eventBus"
 import {apiFetchResetYakScriptGroup} from "../utils"
+import {InformationCircleIcon} from "@/assets/newIcon"
 import styles from "./PluginGroups.module.scss"
 
 interface PluginGroupsProps {}
@@ -42,7 +42,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                     <div className={styles["plugin-groups-left-header-info"]}>
                         <span className={styles["plugin-groups-left-header-text"]}>插件组管理</span>
                         <Tooltip title='插件组只能管理除Yak和Codec类型以外的插件' placement='bottomLeft'>
-                            <SolidQuestionmarkcircleIcon className={styles["pligin-group-mag-icon"]} />
+                            <InformationCircleIcon className={styles["pligin-group-mag-icon"]} />
                         </Tooltip>
                         {judgeOnlineStatus && (
                             <YakitRadioButtons

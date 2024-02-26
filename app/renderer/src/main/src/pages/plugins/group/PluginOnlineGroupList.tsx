@@ -1,5 +1,10 @@
 import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
-import {SolidFolderopenIcon, SolidQuestionmarkcircleIcon, SolidViewgridIcon} from "@/assets/icon/solid"
+import {
+    SolidDotsverticalIcon,
+    SolidFolderopenIcon,
+    SolidQuestionmarkcircleIcon,
+    SolidViewgridIcon
+} from "@/assets/icon/solid"
 import {GroupListItem, PluginGroupList} from "./PluginGroupList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePencilaltIcon, OutlineTrashIcon} from "@/assets/icon/outline"
@@ -16,6 +21,8 @@ import {
     apiFetchRenameYakScriptGroupOnline
 } from "../utils"
 import {API} from "@/services/swagger/resposeType"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import styles from "./PluginOnlineGroupList.module.scss"
 
 interface PluginOnlineGroupListProps {
     pluginsGroupsInViewport: boolean
@@ -26,6 +33,7 @@ interface PluginOnlineGroupListProps {
 export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (props) => {
     const {pluginsGroupsInViewport, onOnlineGroupLen, activeOnlineGroup, onActiveGroup} = props
     const [groupList, setGroupList] = useState<GroupListItem[]>([]) // 组数据
+    const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [editGroup, setEditGroup] = useState<GroupListItem>() // 编辑插件组
     const [delGroup, setDelGroup] = useState<GroupListItem>() // 删除插件组
     const [delGroupConfirmPopVisible, setDelGroupConfirmPopVisible] = useState<boolean>(false)
@@ -51,7 +59,7 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
             全部: {icon: <SolidViewgridIcon />, iconColor: "#56c991", showOptBtns: false},
             未分组: {icon: <SolidQuestionmarkcircleIcon />, iconColor: "#8863f7", showOptBtns: false}
         }
-        const groupItem = {icon: <SolidFolderopenIcon />, iconColor: "var(--yakit-primary-5)", showOptBtns: true}
+        const groupItem = {icon: <SolidFolderopenIcon />, iconColor: "#ffb660", showOptBtns: true}
         return isDefault ? noGroupItem[groupName][field] : groupItem[field]
     }
 
@@ -77,16 +85,28 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
     }
 
     // 插件组名input失焦
-    const onEditGroupNameBlur = (groupItem: GroupListItem, newName: string) => {
+    const onEditGroupNameBlur = (groupItem: GroupListItem, newName: string, successCallback: () => void) => {
         setEditGroup(undefined)
         if (!newName || newName === groupItem.name) return
         const params: PluginGroupRename = {group: groupItem.name, newGroup: newName}
         apiFetchRenameYakScriptGroupOnline(params).then(() => {
+            successCallback()
             getGroupList()
             if (activeOnlineGroup?.default === false && activeOnlineGroup.name === newName) {
                 emiter.emit("onRefPluginGroupMagOnlinePluginList", "")
             }
         })
+    }
+
+    // 点击删除
+    const onClickBtn = (groupItem: GroupListItem) => {
+        setDelGroup(groupItem)
+        if (!pluginGroupDelNoPrompt) {
+            setDelGroupConfirmPopVisible(true)
+        } else {
+            setDelGroup(undefined)
+            onGroupDel(groupItem)
+        }
     }
 
     // 插件组删除
@@ -115,25 +135,72 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
                                 <YakitButton
                                     icon={<OutlinePencilaltIcon />}
                                     type='text2'
-                                    onClick={(e) => {
-                                        setEditGroup(groupItem)
-                                    }}
+                                    onClick={(e) => setEditGroup(groupItem)}
                                 ></YakitButton>
                                 <YakitButton
                                     icon={<OutlineTrashIcon />}
                                     type='text'
                                     colors='danger'
-                                    onClick={(e) => {
-                                        setDelGroup(groupItem)
-                                        if (!pluginGroupDelNoPrompt) {
-                                            setDelGroupConfirmPopVisible(true)
-                                        } else {
-                                            setDelGroup(undefined)
-                                            onGroupDel(groupItem)
-                                        }
-                                    }}
+                                    onClick={(e) => onClickBtn(groupItem)}
                                 ></YakitButton>
                             </>
+                        )
+                    }}
+                    extraHideMenu={(groupItem) => {
+                        return (
+                            <YakitDropdownMenu
+                                menu={{
+                                    data: [
+                                        {
+                                            key: "rename",
+                                            label: (
+                                                <div className={styles["extra-opt-menu"]}>
+                                                    <OutlinePencilaltIcon />
+                                                    <div className={styles["extra-opt-name"]}>重命名</div>
+                                                </div>
+                                            )
+                                        },
+                                        {
+                                            key: "delete",
+                                            label: (
+                                                <div className={styles["extra-opt-menu"]}>
+                                                    <OutlineTrashIcon />
+                                                    <div className={styles["extra-opt-name"]}>删除</div>
+                                                </div>
+                                            ),
+                                            type: "danger"
+                                        }
+                                    ],
+                                    onClick: ({key}) => {
+                                        setMenuOpen(false)
+                                        switch (key) {
+                                            case "rename":
+                                                setEditGroup(groupItem)
+                                                break
+                                            case "delete":
+                                                onClickBtn(groupItem)
+                                                break
+                                            default:
+                                                break
+                                        }
+                                    }
+                                }}
+                                dropdown={{
+                                    trigger: ["click"],
+                                    placement: "bottomRight",
+                                    onVisibleChange: (v) => {
+                                        setMenuOpen(v)
+                                    },
+                                    visible: menuOpen
+                                }}
+                            >
+                                <SolidDotsverticalIcon
+                                    className={styles["dot-icon"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                />
+                            </YakitDropdownMenu>
                         )
                     }}
                     onActiveGroup={onActiveGroup}

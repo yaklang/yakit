@@ -16,14 +16,16 @@ export interface GroupListItem {
 interface PluginGroupListProps {
     data: GroupListItem[] // 插件组数据
     editGroup?: GroupListItem // 当前编辑组
-    onEditInputBlur: (groupItem: GroupListItem, newName: string) => void
+    onEditInputBlur: (groupItem: GroupListItem, newName: string, successCallback: () => void) => void
     extraOptBtn: (groupItem: GroupListItem) => ReactNode // 插件组操作按钮
+    extraHideMenu: (groupItem: GroupListItem) => ReactNode // 插件组隐藏菜单
     onActiveGroup: (groupItem: GroupListItem) => void
 }
 
 export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
-    const {data, editGroup, onEditInputBlur, extraOptBtn, onActiveGroup} = props
+    const {data, editGroup, onEditInputBlur, extraOptBtn, extraHideMenu, onActiveGroup} = props
     const [activeGroupId, setActiveGroupId] = useState<string>(data[0].id) // 当前选中插件组id
+    const activeGroupIdRef = useRef<string>(activeGroupId)
     const editInputRef = useRef<any>()
     const [newName, setNewName] = useState<string>("") // 插件组新名字
 
@@ -34,13 +36,16 @@ export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
     }, [editGroup])
 
     useEffect(() => {
-        const index = data.findIndex((item) => item.id === activeGroupId)
+        const index = data.findIndex((item) => item.id === activeGroupIdRef.current)
         if (index === -1) {
             setActiveGroupId(data[0].id)
+        } else {
+            onActiveGroup(data[index])
         }
     }, [data])
 
     useEffect(() => {
+        activeGroupIdRef.current = activeGroupId
         const findGroupItem = data.find((item) => item.id === activeGroupId)
         if (findGroupItem) {
             onActiveGroup(findGroupItem)
@@ -63,7 +68,14 @@ export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
                                     ref={editInputRef}
                                     wrapperStyle={{height: "100%"}}
                                     style={{height: "100%"}}
-                                    onBlur={() => onEditInputBlur(item, newName)}
+                                    onBlur={() => {
+                                        onEditInputBlur(item, newName, () => {
+                                            if (activeGroupId === item.id) {
+                                                setActiveGroupId(newName + "_group")
+                                            }
+                                        })
+                                        
+                                    }}
                                     autoFocus={true}
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value.trim())}
@@ -84,13 +96,17 @@ export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
                                     </span>
                                     <span className={styles["groups-text"]}>{item.name}</span>
                                 </div>
-                                <div
-                                    className={classNames(styles["plugin-number"], {
-                                        [styles["plugin-number-unshow"]]: item.showOptBtns
-                                    })}
-                                >
-                                    {item.number}
-                                </div>
+                                {activeGroupId === item.id && item.showOptBtns ? (
+                                    extraHideMenu(item)
+                                ) : (
+                                    <div
+                                        className={classNames(styles["plugin-number"], {
+                                            [styles["plugin-number-unshow"]]: item.showOptBtns
+                                        })}
+                                    >
+                                        {item.number}
+                                    </div>
+                                )}
                                 {item.showOptBtns && (
                                     <div
                                         className={styles["extra-opt-btns"]}

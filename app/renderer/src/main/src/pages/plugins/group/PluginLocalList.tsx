@@ -332,7 +332,8 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             >
                 <OutlinePluscircleIcon
                     className={styles["add-group-icon"]}
-                    onClick={() => {
+                    onClick={(e) => {
+                        e.stopPropagation()
                         optClick(data, index)
                     }}
                 />
@@ -429,7 +430,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                                     isCorePlugin={!!data.IsCorePlugin}
                                     official={!!data.OnlineOfficial}
                                     extraNode={(data) => optExtraNode(data, index)}
-                                    onClick={(data, index) => {}}
+                                    onClick={(data, index, value) => optCheck(data, value)}
                                     subTitle={optSubTitle}
                                 />
                             )
