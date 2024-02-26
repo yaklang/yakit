@@ -44,8 +44,9 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
             <PluginDetailsTab
                 executorShow={!loading}
                 plugin={plugin}
-                headExtraNode={headExtraNode}
+                headExtraNode={null}
                 wrapperClassName={styles["single-plugin-execution-wrapper"]}
+                hiddenLogIssue={true}
             />
         </>
     )

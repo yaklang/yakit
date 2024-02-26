@@ -445,7 +445,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
 }
 
 export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((props) => {
-    const {executorShow, plugin, headExtraNode, wrapperClassName = ""} = props
+    const {executorShow, plugin, headExtraNode, wrapperClassName = "", hiddenLogIssue} = props
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
             <PluginTabs defaultActiveKey='execute' tabPosition='right'>
@@ -480,14 +480,18 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                         </div>
                     </div>
                 </TabPane>
-                <TabPane tab='日志' key='log'>
-                    <div className={styles["plugin-log-wrapper"]}>
-                        <YakitPluginOnlineJournal pluginId={+plugin.OnlineId} />
-                    </div>
-                </TabPane>
-                <TabPane tab='问题反馈' key='feedback' disabled={true}>
-                    <div>问题反馈</div>
-                </TabPane>
+                {!hiddenLogIssue && (
+                    <TabPane tab='日志' key='log'>
+                        <div className={styles["plugin-log-wrapper"]}>
+                            <YakitPluginOnlineJournal pluginId={+plugin.OnlineId} />
+                        </div>
+                    </TabPane>
+                )}
+                {!hiddenLogIssue && (
+                    <TabPane tab='问题反馈' key='feedback' disabled={true}>
+                        <div>问题反馈</div>
+                    </TabPane>
+                )}
             </PluginTabs>
         </div>
     )

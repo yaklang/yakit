@@ -2,7 +2,7 @@ import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {LocalPluginAppAction} from "../pluginReducer"
 import {API} from "@/services/swagger/resposeType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
-import { ReactNode } from "react"
+import {ReactNode} from "react"
 
 export interface PluginsLocalProps {}
 
@@ -120,6 +120,9 @@ export interface PluginDetailsTabProps {
     executorShow: boolean
     /**插件数据 */
     plugin: YakScript
-    headExtraNode:ReactNode
+    headExtraNode: ReactNode
     wrapperClassName?: string
+
+    /** 是否隐藏日志和问题 */
+    hiddenLogIssue?: boolean
 }
