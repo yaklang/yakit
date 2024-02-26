@@ -741,20 +741,20 @@ export const apiFetchGroupStatisticsLocal: () => Promise<API.PluginsSearchRespon
                             }))
                         },
                         {
-                            groupKey: "tags",
-                            groupName: "Tag",
+                            groupKey: "plugin_group",
+                            groupName: "插件组",
                             sort: 2,
-                            data: (res["Tag"] || []).map((ele) => ({
+                            data: (res["Group"] || []).map((ele) => ({
                                 label: ele.Value,
                                 value: ele.Value,
                                 count: ele.Total
                             }))
                         },
                         {
-                            groupKey: "plugin_group",
-                            groupName: "插件组",
+                            groupKey: "tags",
+                            groupName: "Tag",
                             sort: 3,
-                            data: (res["Group"] || []).map((ele) => ({
+                            data: (res["Tag"] || []).map((ele) => ({
                                 label: ele.Value,
                                 value: ele.Value,
                                 count: ele.Total
