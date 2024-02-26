@@ -89,7 +89,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
         return copyList
     }
 
-    const onCheckedChange = useMemoizedFn((e, item) => {
+    const onCheckedChange = useMemoizedFn((e, item, newAddFlag) => {
         const checked: boolean = e.target.checked
         if (searchFlag) {
             if (addGroupList.length) {
@@ -105,6 +105,11 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
             }
         } else {
             setGroupList(changeFiled(groupList, item.groupName, checked))
+        }
+
+        // 新增组 需要清除搜索的值
+        if (newAddFlag) {
+            resetSearch()
         }
     })
 
@@ -130,7 +135,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
                                           checked={item.checked}
-                                          onChange={(e) => onCheckedChange(e, item)}
+                                          onChange={(e) => onCheckedChange(e, item, true)}
                                       >
                                           新增分组 “{item.groupName}"
                                       </YakitCheckbox>
@@ -143,7 +148,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
                                           checked={item.checked}
-                                          onChange={(e) => onCheckedChange(e, item)}
+                                          onChange={(e) => onCheckedChange(e, item, false)}
                                       >
                                           {item.groupName}
                                       </YakitCheckbox>
@@ -156,7 +161,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                                   <YakitCheckbox
                                       wrapperClassName={styles["group-name-wrap"]}
                                       checked={item.checked}
-                                      onChange={(e) => onCheckedChange(e, item)}
+                                      onChange={(e) => onCheckedChange(e, item, false)}
                                   >
                                       {item.groupName}
                                   </YakitCheckbox>

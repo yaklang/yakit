@@ -79,8 +79,6 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                                             onOkText: "确认",
                                             onOk: () => {
                                                 m.destroy()
-                                                // console.log({Token: userInfo.token});
-                                                // BUG 接口抛错 线上没有插件组的时候 重置到本地会多出无名插件组
                                                 apiFetchResetYakScriptGroup({Token: userInfo.token}).then(() => {
                                                     emiter.emit("onRefPluginGroupMagLocalQueryYakScriptGroup", "")
                                                 })
