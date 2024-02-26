@@ -54,74 +54,75 @@ export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
 
     return (
         <div className={styles["plugin-group-list"]}>
-            {data.map((item) => {
-                return (
-                    <div
-                        className={classNames(styles["plugin-group-list-item"], {
-                            [styles["plugin-group-list-item-border-bottom-unshow"]]: false
-                        })}
-                        key={item.id}
-                    >
-                        {editGroup && editGroup.id === item.id ? (
-                            <div className={styles["plugin-group-list-item-input"]}>
-                                <YakitInput
-                                    ref={editInputRef}
-                                    wrapperStyle={{height: "100%"}}
-                                    style={{height: "100%"}}
-                                    onBlur={() => {
-                                        onEditInputBlur(item, newName, () => {
-                                            if (activeGroupId === item.id) {
-                                                setActiveGroupId(newName + "_group")
-                                            }
-                                        })
-                                        
-                                    }}
-                                    autoFocus={true}
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value.trim())}
-                                ></YakitInput>
-                            </div>
-                        ) : (
-                            <div
-                                className={classNames(styles["plugin-group-list-item-cont"], {
-                                    [styles["plugin-group-list-item-cont-active"]]: activeGroupId === item.id
-                                })}
-                                onClick={() => {
-                                    setActiveGroupId(item.id)
-                                }}
-                            >
-                                <div className={styles["plugin-group-list-item-cont-left"]}>
-                                    <span className={styles["list-item-icon"]} style={{color: item.iconColor}}>
-                                        {item.icon}
-                                    </span>
-                                    <span className={styles["groups-text"]}>{item.name}</span>
-                                </div>
-                                {activeGroupId === item.id && item.showOptBtns ? (
-                                    extraHideMenu(item)
-                                ) : (
-                                    <div
-                                        className={classNames(styles["plugin-number"], {
-                                            [styles["plugin-number-unshow"]]: item.showOptBtns
-                                        })}
-                                    >
-                                        {item.number}
-                                    </div>
-                                )}
-                                {item.showOptBtns && (
-                                    <div
-                                        className={styles["extra-opt-btns"]}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
+            <div className={styles["plugin-group-list-wrap"]}>
+                {data.map((item) => {
+                    return (
+                        <div
+                            className={classNames(styles["plugin-group-list-item"], {
+                                [styles["plugin-group-list-item-border-bottom-unshow"]]: false
+                            })}
+                            key={item.id}
+                        >
+                            {editGroup && editGroup.id === item.id ? (
+                                <div className={styles["plugin-group-list-item-input"]}>
+                                    <YakitInput
+                                        ref={editInputRef}
+                                        wrapperStyle={{height: "100%"}}
+                                        style={{height: "100%"}}
+                                        onBlur={() => {
+                                            onEditInputBlur(item, newName, () => {
+                                                if (activeGroupId === item.id) {
+                                                    setActiveGroupId(newName + "_group")
+                                                }
+                                            })
                                         }}
-                                    >
-                                        {extraOptBtn(item)}
+                                        autoFocus={true}
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value.trim())}
+                                    ></YakitInput>
+                                </div>
+                            ) : (
+                                <div
+                                    className={classNames(styles["plugin-group-list-item-cont"], {
+                                        [styles["plugin-group-list-item-cont-active"]]: activeGroupId === item.id
+                                    })}
+                                    onClick={() => {
+                                        setActiveGroupId(item.id)
+                                    }}
+                                >
+                                    <div className={styles["plugin-group-list-item-cont-left"]}>
+                                        <span className={styles["list-item-icon"]} style={{color: item.iconColor}}>
+                                            {item.icon}
+                                        </span>
+                                        <span className={styles["groups-text"]}>{item.name}</span>
                                     </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )
-            })}
+                                    {activeGroupId === item.id && item.showOptBtns ? (
+                                        extraHideMenu(item)
+                                    ) : (
+                                        <div
+                                            className={classNames(styles["plugin-number"], {
+                                                [styles["plugin-number-unshow"]]: item.showOptBtns
+                                            })}
+                                        >
+                                            {item.number}
+                                        </div>
+                                    )}
+                                    {item.showOptBtns && (
+                                        <div
+                                            className={styles["extra-opt-btns"]}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        >
+                                            {extraOptBtn(item)}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
             <div className={styles["plugin-group-footer"]}>已经到底啦 ~ </div>
         </div>
     )

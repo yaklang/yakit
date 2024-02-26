@@ -1,78 +1,93 @@
 .plugin-group-list {
     height: 100%;
     overflow-y: auto;
-
-    &-item {
-        height: 40px;
-        border-bottom: 1px solid var(--yakit-border-color);
-        &-cont {
-            height: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            &:hover:not(.plugin-group-list-item-cont-active) {
-                background-color: var(--yakit-background-color);
-                .plugin-number-unshow {
-                    display: none;
-                }
-                .extra-opt-btns {
-                    display: block;
-                }
+    .plugin-group-list-wrap {
+        .plugin-group-list-item {
+            height: 40px;
+            &:not(:first-child) {
+                border-top: 1px solid var(--yakit-border-color);
             }
-            &-left {
+            &:last-child {
+                border-bottom: 1px solid var(--yakit-border-color);
+            }
+            &-cont {
+                height: 100%;
                 display: flex;
+                justify-content: space-between;
                 align-items: center;
-                width: calc(100% - 60px);
-                .list-item-icon {
-                    margin-top: 2px;
-                    svg {
-                        width: 16px;
-                        height: 16px;
+                padding: 10px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                &:hover:not(.plugin-group-list-item-cont-active) {
+                    background-color: var(--yakit-background-color);
+                    .plugin-number-unshow {
+                        display: none;
+                    }
+                    .extra-opt-btns {
+                        display: block;
                     }
                 }
-                .groups-text {
+                &-left {
+                    display: flex;
+                    align-items: center;
+                    width: calc(100% - 60px);
+                    .list-item-icon {
+                        margin-top: 2px;
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                        }
+                    }
+                    .groups-text {
+                        font-size: 12px;
+                        color: #31343f;
+                        font-weight: bold;
+                        margin-left: 4px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+                .plugin-number {
+                    display: block;
                     font-size: 12px;
-                    color: #31343f;
-                    font-weight: bold;
-                    margin-left: 4px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                    color: #b4bbca;
+                }
+                .extra-opt-btns {
+                    display: none;
                 }
             }
-            .plugin-number {
-                display: block;
-                font-size: 12px;
-                color: #b4bbca;
-            }
-            .extra-opt-btns {
-                display: none;
-            }
-        }
-        &-cont-active {
-            background: var(--yakit-primary-5);
-            .groups-text,
-            .plugin-number {
-                color: #fff;
-            }
-            .list-item-icon {
-                svg {
+            &-cont-active {
+                background: var(--yakit-primary-5);
+                .groups-text,
+                .plugin-number {
                     color: #fff;
                 }
+                .list-item-icon {
+                    svg {
+                        color: #fff;
+                    }
+                }
+            }
+            &-input {
+                height: 100%;
+                margin-top: -1px;
             }
         }
-        &-input {
-            height: 100%;
-            margin-top: -1px;
+
+        .plugin-group-list-item:hover {
+            border-color: transparent;
+        }
+
+        .plugin-group-list-item:hover + .plugin-group-list-item {
+            border-color: transparent;
+        }
+
+        &-item-border-bottom-unshow {
+            border-color: transparent;
         }
     }
 
-    &-item-border-bottom-unshow {
-        border-bottom: none;
-    }
     .plugin-group-footer {
         font-size: 11px;
         color: #ccd2de;
