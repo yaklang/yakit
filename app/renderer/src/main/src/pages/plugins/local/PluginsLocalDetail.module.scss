@@ -11,16 +11,24 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    padding-top: 12px;
+    // padding-top: 12px;
+    :global {
+        .ant-tabs-right > .ant-tabs-nav .ant-tabs-tab {
+            margin-top: 4px;
+        }
+    }
     .plugin-info-wrapper {
         @extend %plugin-tab-content;
+        padding-top: 12px;
     }
     .plugin-log-wrapper {
-        padding: 0 12px 12px 12px;
+        padding: 12px;
         height: 100%;
     }
     .plugin-execute-wrapper {
         @extend %plugin-tab-content;
+        padding: 0;
+        padding-bottom: 12px;
         .plugin-execute-spin {
             display: flex;
             flex: 1;
@@ -28,6 +36,10 @@
             padding-top: 10%;
         }
     }
+}
+
+.plugin-execute-result-wrapper {
+    padding: 12px 12px 0;
 }
 
 .plugin-info-extra-header {

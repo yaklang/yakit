@@ -134,6 +134,7 @@ import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
+import { SinglePluginExecution } from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -379,7 +380,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Data_Statistics,
     YakitRoute.BatchExecutorPage,
     YakitRoute.Codec,
-    YakitRoute.Space_Engine
+    YakitRoute.Space_Engine,
+    YakitRoute.Plugin_OP
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -518,7 +520,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
-            return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />
+            // return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />
+            return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
         case YakitRoute.Mod_Brute:
             return <BrutePage sendTarget={params?.bruteParams} />
         case YakitRoute.Plugin_Store:

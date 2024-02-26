@@ -40,7 +40,7 @@ import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
-import {ExpandAndRetract} from "../operator/expandAndRetract/ExpandAndRetract"
+import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/ExpandAndRetract"
 import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
@@ -100,6 +100,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [isExpand, setIsExpand] = useState<boolean>(true)
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [stopLoading, setStopLoading] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
 
@@ -130,6 +131,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         onEnd: () => {
             hybridScanStreamEvent.stop()
             setTimeout(() => {
+                setExecuteStatus("finished")
                 setIsExecuting(false)
                 setStopLoading(false)
             }, 200)
@@ -169,7 +171,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 setSelectList([])
                 setSearch(pluginInfo.search)
                 setTimeout(() => {
-                    fetchList(true,true)
+                    fetchList(true, true)
                 }, 200)
             }
             // form表单数据
@@ -224,7 +226,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     })
 
     const fetchList = useDebounceFn(
-        useMemoizedFn(async (reset?: boolean,isAllCheck:boolean=false) => {
+        useMemoizedFn(async (reset?: boolean, isAllCheck: boolean = false) => {
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -353,6 +355,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             typeRef.current
         )
         hybridScanStreamEvent.reset()
+        setRuntimeId("")
+        setExecuteStatus("process")
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpand(false)
@@ -364,6 +368,15 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         e.stopPropagation()
         setStopLoading(true)
         apiStopHybridScan(runtimeId, tokenRef.current)
+    })
+    /**在顶部的执行按钮 */
+    const onExecuteInTop = useMemoizedFn((e) => {
+        e.stopPropagation()
+        form.validateFields()
+            .then(onStartExecute)
+            .catch(() => {
+                setIsExpand(true)
+            })
     })
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
@@ -439,7 +452,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 // spinLoading={spinLoading || removeLoading}
                 spinLoading={loading && isLoadingRef.current}
                 rightHeardNode={
-                    <ExpandAndRetract isExpand={isExpand} onExpand={onExpand}>
+                    <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                         <div className={styles["plugin-batch-executor-title"]}>
                             <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
                             {selectNum > 0 && (
@@ -452,16 +465,21 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             {progressList.length === 1 && (
                                 <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
                             )}
-                            {isExecuting ? (
-                                <>
-                                    <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
-                                        停止
-                                    </YakitButton>
-                                    <div className={styles["divider-style"]}></div>
-                                </>
-                            ) : (
-                                <></>
-                            )}
+                            {isExecuting
+                                ? !isExpand && (
+                                      <>
+                                          <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
+                                              停止
+                                          </YakitButton>
+                                          <div className={styles["divider-style"]}></div>
+                                      </>
+                                  )
+                                : !isExpand && (
+                                      <>
+                                          <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                          <div className={styles["divider-style"]}></div>
+                                      </>
+                                  )}
                             <YakitButton
                                 type='text2'
                                 icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}

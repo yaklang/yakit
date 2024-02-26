@@ -1276,3 +1276,40 @@ export const apiQueryHybridScan: (runtimeId: string, token: string) => Promise<n
             })
     })
 }
+/**
+ * @description 去插件编辑页面
+ * @param plugin
+ * @returns
+ */
+export const onToEditPlugin = (plugin: YakScript) => {
+    if (plugin.IsCorePlugin) {
+        yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
+        return
+    }
+    if (plugin.Type === "packet-hack") {
+        yakitNotify("error", "该类型已下架，不可编辑")
+        return
+    }
+    if (plugin.Id && +plugin.Id) {
+        if (plugin.ScriptName === "综合目录扫描与爆破") {
+            yakitNotify("warning", "暂不可编辑")
+            return
+        }
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.ModifyYakitScript,
+                params: {source: YakitRoute.Plugin_Local, id: +plugin.Id}
+            })
+        )
+    }
+}
+
+/**
+ * @description 获取插件详情，通过插件id
+ */
+export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = (Id) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.invoke("GetYakScriptById", {Id}).then(resolve).catch(reject)
+    })
+}

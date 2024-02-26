@@ -2,6 +2,7 @@ import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {LocalPluginAppAction} from "../pluginReducer"
 import {API} from "@/services/swagger/resposeType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
+import {ReactNode} from "react"
 
 export interface PluginsLocalProps {}
 
@@ -93,9 +94,9 @@ export interface PluginExecutorProps {
     script: YakScript
 }
 
-export interface LocalPluginExecuteProps{
-    plugin:YakScript
-    headExtraNode:ReactNode
+export interface LocalPluginExecuteProps {
+    plugin: YakScript
+    headExtraNode: ReactNode
 }
 
 export interface ExportParamsProps {
@@ -112,4 +113,16 @@ export interface ExportYakScriptLocalResponse {
     Progress: number
     Message: string
     MessageType: string
+}
+
+export interface PluginDetailsTabProps {
+    /**显示执行模块 */
+    executorShow: boolean
+    /**插件数据 */
+    plugin: YakScript
+    headExtraNode: ReactNode
+    wrapperClassName?: string
+
+    /** 是否隐藏日志和问题 */
+    hiddenLogIssue?: boolean
 }
