@@ -601,7 +601,6 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         // 动态加载设置项
         settingRender
     } = props
-    const FILTER_CACHE_LIST_DATA = PluginGV.Fetch_Local_Plugin_Group
     const [form] = Form.useForm()
     const layout = {
         labelCol: {span: 5},

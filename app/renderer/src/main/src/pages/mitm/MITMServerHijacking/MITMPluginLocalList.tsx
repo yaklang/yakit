@@ -76,7 +76,6 @@ export interface YakFilterRemoteObj {
     total: number
 }
 
-export const FILTER_CACHE_LIST_DATA = PluginGV.Fetch_Local_Plugin_Group
 export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
     const {
         status,
