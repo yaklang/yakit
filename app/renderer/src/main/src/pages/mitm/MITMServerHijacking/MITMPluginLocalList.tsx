@@ -462,6 +462,9 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
      */
     const [pugGroup, setPlugGroup] = useState<YakFilterRemoteObj[]>([])
 
+    const pluginGroupRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(pluginGroupRef)
+
     useEffect(() => {
         // 获取插件组
         apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
@@ -472,9 +475,9 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
             }))
             setPlugGroup(data)
         })
-    }, [])
+    }, [inViewport])
     return (
-        <div className={classNames(style["mitm-plugin-group"], wrapperClassName)}>
+        <div className={classNames(style["mitm-plugin-group"], wrapperClassName)} ref={pluginGroupRef}>
             <Dropdown
                 overlay={
                     <PluginGroupList pugGroup={pugGroup} selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
