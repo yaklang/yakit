@@ -75,14 +75,20 @@ const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
 /** yakit安装包路径 */
 const yakitInstallDir = path.join(os.homedir(), "Downloads")
 
+/**
+ * win7系统特定逻辑,专用于映射的网络共享驱动盘情况
+ * 引擎存放位置
+ */
+const enginePath = path.join(appPath, "engine")
+
 /** 引擎文件路径 */
 const getLocalYaklangEngine = () => {
     switch (process.platform) {
         case "darwin":
         case "linux":
-            return path.join(yaklangEngineDir, "yak")
+            return path.join(enginePath, "yak")
         case "win32":
-            return path.join(yaklangEngineDir, "yak.exe")
+            return path.join(enginePath, "yak.exe")
     }
 }
 
@@ -138,6 +144,7 @@ module.exports = {
 
     yaklangEngineDir,
     yakitInstallDir,
+    enginePath,
     getLocalYaklangEngine,
     loadExtraFilePath,
 

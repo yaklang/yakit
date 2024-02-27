@@ -2,7 +2,7 @@ const {ipcMain, shell} = require("electron")
 const OS = require("os")
 const path = require("path")
 const process = require("process")
-const {yaklangEngineDir, remoteLinkDir, yakitInstallDir} = require("../filePath")
+const { remoteLinkDir, yakitInstallDir, enginePath} = require("../filePath")
 
 module.exports = (win, getClient) => {
     // CPU瞬时使用均值
@@ -115,7 +115,7 @@ module.exports = (win, getClient) => {
 
     /** 打开 yaklang 或 yakit 文件所在文件夹 (ps:随着yakit下载移动至下载文件夹中，此方法仅打开yaklang)*/
     ipcMain.handle("open-yakit-or-yaklang", (e) => {
-        return shell.openPath(yaklangEngineDir)
+        return shell.openPath(enginePath)
     })
 
     /** 打开 yakit 文件所在文件夹 */

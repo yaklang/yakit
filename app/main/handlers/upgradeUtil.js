@@ -7,6 +7,7 @@ const fs = require("fs");
 const https = require("https");
 const EventEmitter = require('events');
 const zip = require('node-stream-zip');
+const {YakitProjectPath} = require("../filePath")
 
 const {
     YakitProjectPath,
@@ -27,9 +28,9 @@ const {
     downloadYakEngine
 } = require("./utils/network");
 
+const codeDir = path.join(YakitProjectPath, "code");
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
 const authMeta = [];
-
 
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
@@ -120,9 +121,9 @@ const getLatestYakLocalEngine = () => {
     switch (process.platform) {
         case "darwin":
         case "linux":
-            return path.join(yaklangEngineDir, "yak")
+            return path.join(enginePath, "yak")
         case "win32":
-            return path.join(yaklangEngineDir, "yak.exe")
+            return path.join(enginePath, "yak.exe")
     }
 }
 
@@ -336,7 +337,7 @@ module.exports = {
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
             return new Promise(async (resolve, reject) => {
-                const dest = path.join(yaklangEngineDir, `yak-${version}`);
+                const dest = path.join(enginePath, `yak-${version}`);
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
@@ -428,7 +429,7 @@ module.exports = {
 
         const installYakEngine = (version) => {
             return new Promise((resolve, reject) => {
-                let origin = path.join(yaklangEngineDir, `yak-${version}`);
+                let origin = path.join(enginePath, `yak-${version}`);
                 origin = origin.replaceAll(`"`, `\"`);
 
                 let dest = getLatestYakLocalEngine(); //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
@@ -519,7 +520,7 @@ module.exports = {
                 })
                 console.info("Start to Extract yak.zip: Set `ready`")
                 zipHandler.on("ready", () => {
-                    const buildInPath = path.join(yaklangEngineDir, "yak.build-in");
+                    const buildInPath = path.join(enginePath, "yak.build-in");
 
                     console.log('Entries read: ' + zipHandler.entriesCount);
                     for (const entry of Object.values(zipHandler.entries())) {
@@ -554,7 +555,7 @@ module.exports = {
                              * 复制引擎到真实地址
                              * */
                             try {
-                                let targetEngine = path.join(yaklangEngineDir, isWindows ? "yak.exe" : "yak")
+                                let targetEngine = path.join(enginePath, isWindows ? "yak.exe" : "yak")
                                 if (!isWindows) {
                                     fs.copyFileSync(buildInPath, targetEngine)
                                     fs.chmodSync(targetEngine, 0o755)
@@ -606,7 +607,7 @@ module.exports = {
 
         // asyncRestoreEngineAndPlugin wrapper
         ipcMain.handle("RestoreEngineAndPlugin", async (e, params) => {
-            const engineTarget = isWindows ? path.join(yaklangEngineDir, "yak.exe") : path.join(yaklangEngineDir, "yak")
+            const engineTarget = isWindows ? path.join(enginePath, "yak.exe") : path.join(enginePath, "yak")
             const buidinEngine = path.join(yaklangEngineDir, "yak.build-in")
             const cacheFlagLock = path.join(basicDir, "flag.txt")
             try {
