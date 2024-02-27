@@ -16,7 +16,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
 import {FilterPopoverBtn, FuncFilterPopover} from "../funcTemplate"
-import {YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {PluginDetailsTabProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
@@ -251,15 +251,30 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 })
         })
     })
+    /**获取传到接口所需的filters*/
+    const getRealFilters = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+        const realFilters: PluginFilterParams = {
+            ...filter,
+            plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+        }
+        return realFilters
+    }
+    /** 插件组查询 */
+    const onGroupSearch = useMemoizedFn((group: YakFilterRemoteObj[]) => {
+        setSelectGroup(group)
+        onDetailSearch(search, getRealFilters(filters, {group}))
+        setAllCheck(false)
+        setSelectList([])
+    })
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
         setFilters(value)
-        onDetailSearch(search, value)
+        onDetailSearch(search, getRealFilters(value, {group: selectGroup}))
         setAllCheck(false)
         setSelectList([])
     })
     /**搜索需要清空勾选 */
     const onSearch = useMemoizedFn(() => {
-        onDetailSearch(search, filters)
+        onDetailSearch(search, getRealFilters(filters, {group: selectGroup}))
         setAllCheck(false)
         setSelectList([])
     })
@@ -358,13 +373,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 title='本地插件'
                 filterNode={
                     <>
-                        {/* 第二版放出来 */}
-                        {/* <PluginGroup
-                        checkList={checkList}
-                        selectGroup={selectGroup}
-                        setSelectGroup={setSelectGroup}
-                        isSelectAll={allCheck}
-                    /> */}
+                        <PluginGroup selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
+                        <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
                     </>
                 }
                 filterExtra={

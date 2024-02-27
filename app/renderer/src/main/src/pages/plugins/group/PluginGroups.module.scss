@@ -1,6 +1,6 @@
 .plugin-groups-wrapper {
     display: flex;
-    height: 100%;
+    height: calc(100% - 1px);
     .plugin-groups-left-wrap {
         width: 300px;
         background: var(--yakit-card-background-color);

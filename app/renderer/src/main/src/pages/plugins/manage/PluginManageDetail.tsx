@@ -37,6 +37,7 @@ import {PluginDebug} from "../pluginDebug/PluginDebug"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 const {TabPane} = PluginTabs
 
@@ -119,15 +120,35 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             loadMoreData,
             onDetailSearch
         } = props
-
+        /**获取传到接口所需的filters*/
+        const getRealFilters = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+            const realFilters: PluginFilterParams = {
+                ...filter,
+                plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+            }
+            return realFilters
+        }
+        const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
         const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
         const onSearch = useMemoizedFn((value: PluginSearchParams) => {
-            onDetailSearch(searchs, filters)
+            onDetailSearch(value, getRealFilters(filters, {group: selectGroup}))
+            setSelectList([])
+            setAllcheck(false)
         })
         const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
         const onFilter = useMemoizedFn((value: PluginFilterParams) => {
             setFilters(value)
-            onDetailSearch(searchs, value)
+            onDetailSearch(searchs, getRealFilters(value, {group: selectGroup}))
+            setSelectList([])
+            setAllcheck(false)
+        })
+
+        /** 插件组查询 */
+        const onGroupSearch = useMemoizedFn((group: YakFilterRemoteObj[]) => {
+            setSelectGroup(group)
+            onDetailSearch(searchs, getRealFilters(filters, {group}))
+            setSelectList([])
+            setAllcheck(false)
         })
 
         // 获取插件详情
@@ -559,6 +580,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 search={searchs}
                 setSearch={setSearchs}
                 onSearch={onSearch}
+                filterNode={
+                    <>
+                        <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
+                        <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
+                    </>
+                }
                 filterExtra={
                     <div className={"details-filter-extra-wrapper"}>
                         <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='check' />

@@ -394,7 +394,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                             queryPluginType={["port-scan", "mitm", "nuclei"]}
                             singleChoice={true}
                             isShowDelIcon={false}
-                            isShowAddBtn={false}
+                            isShowGroupMagBtn={false}
                             renderPluginItem={(i, itemClickFun) => {
                                 return (
                                     <div className={styles["plugin-local-info"]} style={{paddingLeft: 6}}>
@@ -706,7 +706,7 @@ interface PluginContListProps {
     singleChoice?: boolean // 是否单选
     queryPluginType: string[] // 查询插件类型
     isShowDelIcon?: boolean // 是否支持插件组删除Icon显示
-    isShowAddBtn?: boolean // 是否支持添加插件组
+    isShowGroupMagBtn?: boolean // 是否支持添加插件组
     onSelectedPlugins?: (i: YakScript[]) => void // 实际加载出来选中得插件数组
     renderPluginItem: (i: YakScript, itemClickFun: (i: YakScript) => void) => React.ReactNode // 渲染每一项
 }
@@ -716,7 +716,7 @@ const PluginContList: React.FC<PluginContListProps> = React.memo(
         singleChoice = false,
         queryPluginType,
         isShowDelIcon = true,
-        isShowAddBtn = true,
+        isShowGroupMagBtn = true,
         onSelectedPlugins,
         renderPluginItem
     }) => {
@@ -848,7 +848,7 @@ const PluginContList: React.FC<PluginContListProps> = React.memo(
                     />
                 </div>
 
-                <PluginGroup selectGroup={selectGroup} setSelectGroup={setSelectGroup} isShowAddBtn={isShowAddBtn} />
+                <PluginGroup selectGroup={selectGroup} setSelectGroup={setSelectGroup} isShowGroupMagBtn={isShowGroupMagBtn} />
                 <div style={{display: "flex", justifyContent: "space-between", marginBottom: 8}}>
                     <div className={styles["plugin-list-info"]}>
                         {!singleChoice && (

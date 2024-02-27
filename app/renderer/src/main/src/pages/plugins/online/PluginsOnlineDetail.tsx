@@ -22,6 +22,7 @@ import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -48,6 +49,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         currentIndex,
         setCurrentIndex
     } = props
+    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
@@ -147,9 +149,17 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             onCheck(false)
         })
     })
+    /**获取传到接口所需的filters*/
+    const getRealFilters = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+        const realFilters: PluginFilterParams = {
+            ...filter,
+            plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+        }
+        return realFilters
+    }
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
         setFilters(value)
-        onDetailSearch(search, value)
+        onDetailSearch(search, getRealFilters(value, {group: selectGroup}))
         setAllCheck(false)
         setSelectList([])
     })
@@ -162,14 +172,29 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     })
     /**搜索需要清空勾选 */
     const onSearch = useMemoizedFn(() => {
-        onDetailSearch(search, filters)
+        onDetailSearch(search, getRealFilters(filters, {group: selectGroup}))
         setAllCheck(false)
         setSelectList([])
     })
+
+    /** 插件组查询 */
+    const onGroupSearch = useMemoizedFn((group: YakFilterRemoteObj[]) => {
+        setSelectGroup(group)
+        onDetailSearch(search, getRealFilters(filters, {group}))
+        setAllCheck(false)
+        setSelectList([])
+    })
+
     if (!plugin) return null
     return (
         <PluginDetails<YakitPluginOnlineDetail>
             title='插件商店'
+            filterNode={
+                <>
+                    <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={onGroupSearch} isShowGroupMagBtn={false} />
+                    <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
+                </>
+            }
             filterExtra={
                 <div className={"details-filter-extra-wrapper"}>
                     <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='online' />

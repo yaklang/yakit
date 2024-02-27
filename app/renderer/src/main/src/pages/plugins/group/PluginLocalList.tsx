@@ -64,7 +64,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         const groups =
             activeGroup.default && activeGroup.id === "全部"
                 ? []
-                : [{value: activeGroup.name, count: 0, label: activeGroup.name}]
+                : [{value: activeGroup.name, count: activeGroup.number, label: activeGroup.name}]
         setFilters({...filters, plugin_group: groups})
     }, [activeGroup])
 

@@ -14,13 +14,9 @@ import {
     CloudDownloadIcon,
     FolderOpenIcon,
     ImportIcon,
-    SolidCloudDownloadIcon,
+    SolidCloudDownloadIcon
 } from "@/assets/newIcon"
-import {
-    DownloadOnlinePluginAllResProps,
-    TagValue,
-    YakModuleList
-} from "@/pages/yakitStore/YakitStorePage"
+import {DownloadOnlinePluginAllResProps, TagValue, YakModuleList} from "@/pages/yakitStore/YakitStorePage"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
@@ -30,11 +26,17 @@ import {ImportLocalPlugin} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
-import {getReleaseEditionName} from "@/utils/envfile"
-import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal, apiQueryYakScript} from "@/pages/plugins/utils"
+import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
+import {
+    DownloadOnlinePluginsRequest,
+    apiFetchQueryYakScriptGroupLocal,
+    apiFetchQueryYakScriptGroupOnline,
+    apiQueryYakScript
+} from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginGV} from "@/pages/plugins/builtInData"
 import {YakitRoute} from "@/routes/newRoute"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -446,13 +448,14 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
 })
 
 interface PluginGroupProps {
+    isOnline?: boolean
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
     wrapperClassName?: string
-    isShowAddBtn?: boolean
+    isShowGroupMagBtn?: boolean
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
-    const {selectGroup, setSelectGroup, wrapperClassName, isShowAddBtn = true} = props
+    const {selectGroup, setSelectGroup, wrapperClassName, isShowGroupMagBtn = true, isOnline = false} = props
 
     const [visible, setVisible] = useState<boolean>(false)
     /**
@@ -465,14 +468,27 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
 
     useEffect(() => {
         // 获取插件组
-        apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
-            const copyGroup = structuredClone(group)
-            const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
-                name: item.Value,
-                total: item.Total
-            }))
-            setPlugGroup(data)
-        })
+        if (isOnline) {
+            apiFetchQueryYakScriptGroupOnline().then((res: API.GroupResponse) => {
+                const copyGroup = structuredClone(res.data)
+                const data: YakFilterRemoteObj[] = copyGroup
+                    .filter((item) => !item.default)
+                    .map((item) => ({
+                        name: item.value,
+                        total: item.total
+                    }))
+                setPlugGroup(data)
+            })
+        } else {
+            apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
+                const copyGroup = structuredClone(group)
+                const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
+                    name: item.Value,
+                    total: item.Total
+                }))
+                setPlugGroup(data)
+            })
+        }
     }, [inViewport])
     return (
         <div className={classNames(style["mitm-plugin-group"], wrapperClassName)} ref={pluginGroupRef}>
@@ -496,7 +512,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     )}
                 </div>
             </Dropdown>
-            {isShowAddBtn && (
+            {isShowGroupMagBtn && (
                 <YakitButton
                     type='text'
                     onClick={() => {
