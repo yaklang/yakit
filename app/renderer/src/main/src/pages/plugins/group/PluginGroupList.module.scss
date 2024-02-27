@@ -73,22 +73,20 @@
                 height: 100%;
                 margin-top: -1px;
             }
-        }
 
-        .plugin-group-list-item:hover {
-            border-color: transparent;
-        }
-
-        .plugin-group-list-item:hover + .plugin-group-list-item {
-            border-color: transparent;
+            &:hover {
+                border-color: transparent;
+                & + .plugin-group-list-item {
+                    border-top-color: transparent;
+                }
+            }
         }
 
         .plugin-group-list-item-border-unshow {
             border-color: transparent;
-        }
-
-        .plugin-group-list-item-border-unshow + .plugin-group-list-item {
-            border-color: transparent;
+            & + .plugin-group-list-item {
+                border-top-color: transparent;
+            }
         }
     }
 
