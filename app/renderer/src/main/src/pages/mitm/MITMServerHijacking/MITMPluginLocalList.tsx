@@ -1,7 +1,7 @@
-import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {failed, info, yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import style from "../MITMPage.module.scss"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -14,14 +14,10 @@ import {
     CloudDownloadIcon,
     FolderOpenIcon,
     ImportIcon,
-    PlusCircleIcon,
     SolidCloudDownloadIcon,
-    SolidTrashIcon,
-    TrashIcon
 } from "@/assets/newIcon"
 import {
     DownloadOnlinePluginAllResProps,
-    DownloadOnlinePluginByTokenRequest,
     TagValue,
     YakModuleList
 } from "@/pages/yakitStore/YakitStorePage"
@@ -29,16 +25,13 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
-import {YakScript} from "@/pages/invoker/schema"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {ImportLocalPlugin, AddLocalPluginGroup} from "../MITMPage"
+import {GroupCount, QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
+import {ImportLocalPlugin} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
-import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
-import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {getReleaseEditionName} from "@/utils/envfile"
-import {DownloadOnlinePluginsRequest} from "@/pages/plugins/utils"
+import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal, apiQueryYakScript} from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginGV} from "@/pages/plugins/builtInData"
 import {YakitRoute} from "@/routes/newRoute"
@@ -75,12 +68,12 @@ interface MITMPluginLocalListProps {
     hooks: Map<string, boolean>
     onSelectAll: (b: boolean) => void
     onSendToPatch?: (s: YakScript) => void
-    includedScriptNames: string[]
-    setIncludedScriptNames: (s: string[]) => void
+    groupNames: string[]
+    setGroupNames: (s: string[]) => void
 }
 export interface YakFilterRemoteObj {
     name: string
-    value: string[]
+    total: number
 }
 
 export const FILTER_CACHE_LIST_DATA = PluginGV.Fetch_Local_Plugin_Group
@@ -91,7 +84,6 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         setCheckList,
         tags,
         searchKeyword,
-        setTags,
         triggerSearch,
         selectGroup,
         setSelectGroup,
@@ -100,10 +92,9 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         setTotal,
         hooks,
         setIsSelectAll,
-        onSelectAll,
         onSendToPatch,
-        includedScriptNames,
-        setIncludedScriptNames
+        groupNames,
+        setGroupNames
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -121,12 +112,11 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     }, [triggerSearch])
 
     useUpdateEffect(() => {
-        let newScriptNames: string[] = []
+        let groupName: string[] = []
         selectGroup.forEach((ele) => {
-            newScriptNames = [...newScriptNames, ...ele.value]
+            groupName = [...groupName, ele.name]
         })
-        setIncludedScriptNames(Array.from(new Set(newScriptNames)))
-
+        setGroupNames(Array.from(new Set(groupName)))
         setTimeout(() => {
             setRefresh(!refresh)
         }, 100)
@@ -139,26 +129,27 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     }, [inViewport, visibleOnline])
 
     const getAllSatisfyScript = useMemoizedFn(() => {
-        queryYakScriptList(
-            "mitm,port-scan",
-            (data, t) => {
-                setInitialTotal(t || 0)
+        const query: QueryYakScriptRequest = {
+            Pagination: {
+                Limit: 20,
+                Page: 1,
+                OrderBy: "updated_at",
+                Order: "desc"
             },
-            undefined,
-            1,
-            undefined,
-            searchKeyword,
-            {
-                Tag: tags,
-                Type: "mitm,port-scan",
-                Keyword: searchKeyword,
-                IncludedScriptNames: includedScriptNames,
-                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
-            }
-        )
+            Keyword: searchKeyword,
+            IncludedScriptNames: [],
+            Type: "mitm,port-scan",
+            Tag: tags,
+            ExcludeTypes: ["yak", "codec"],
+            Group: {UnSetGroup: false, Group: groupNames}
+        }
+
+        apiQueryYakScript(query).then((res) => {
+            setInitialTotal(res.Total || 0)
+        })
     })
     const onRenderEmptyNode = useMemoizedFn(() => {
-        if (Number(total) === 0 && (tags.length > 0 || searchKeyword || includedScriptNames.length > 0)) {
+        if (Number(total) === 0 && (tags.length > 0 || searchKeyword || groupNames.length > 0)) {
             return (
                 <div className={style["mitm-plugin-empty"]}>
                     <YakitEmpty title={null} description='搜索结果“空”' />
@@ -217,9 +208,10 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                     queryLocal={{
                         Tag: tags,
                         Type: "mitm,port-scan",
-                        IncludedScriptNames: includedScriptNames,
                         Keyword: searchKeyword,
-                        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+                        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                        ExcludeTypes: ["yak", "codec"], // 插件组需要过滤Yak、codec
+                        Group: {UnSetGroup: false, Group: groupNames}
                     }}
                     refresh={refresh}
                     itemHeight={44}
@@ -461,16 +453,9 @@ interface PluginGroupProps {
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
     wrapperClassName?: string
     isShowAddBtn?: boolean
-    isShowDelIcon?: boolean
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
-    const {
-        selectGroup,
-        setSelectGroup,
-        wrapperClassName,
-        isShowAddBtn = true,
-        isShowDelIcon = true
-    } = props
+    const {selectGroup, setSelectGroup, wrapperClassName, isShowAddBtn = true} = props
 
     const [visible, setVisible] = useState<boolean>(false)
     /**
@@ -480,37 +465,21 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
 
     useEffect(() => {
         // 获取插件组
-        getRemoteValue(FILTER_CACHE_LIST_DATA).then((data: string) => {
-            try {
-                if (!!data) {
-                    const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
-                    setPlugGroup(cacheData)
-                }
-            } catch (error) {
-                failed("获取插件组失败:" + error)
-            }
+        apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
+            const copyGroup = structuredClone(group)
+            const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
+                name: item.Value,
+                total: item.Total,
+                value: [""]
+            }))
+            setPlugGroup(data)
         })
     }, [])
-    /**
-     * @description 删除插件组
-     */
-    const onDeletePlugin = useMemoizedFn((deleteItem: YakFilterRemoteObj) => {
-        const newArr: YakFilterRemoteObj[] = pugGroup.filter((item) => item.name !== deleteItem.name)
-        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
-        setPlugGroup([...newArr])
-        setSelectGroup(selectGroup.filter((item) => item.name !== deleteItem.name))
-    })
     return (
         <div className={classNames(style["mitm-plugin-group"], wrapperClassName)}>
             <Dropdown
                 overlay={
-                    <PluginGroupList
-                        pugGroup={pugGroup}
-                        selectGroup={selectGroup}
-                        setSelectGroup={setSelectGroup}
-                        onDeletePlugin={onDeletePlugin}
-                        isShowDelIcon={isShowDelIcon}
-                    />
+                    <PluginGroupList pugGroup={pugGroup} selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
                 }
                 onVisibleChange={setVisible}
                 overlayStyle={{borderRadius: 4, width: 200}}
@@ -656,13 +625,9 @@ interface PluginGroupListProps {
     pugGroup: YakFilterRemoteObj[]
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (p: YakFilterRemoteObj[]) => void
-    onDeletePlugin: (p: YakFilterRemoteObj) => void
-    isShowDelIcon: boolean
 }
 const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
-    const {pugGroup, selectGroup, setSelectGroup, onDeletePlugin, isShowDelIcon} = props
-    const [visibleRemove, setVisibleRemove] = useState<boolean>(false)
-    const [deletePlugin, setDeletePlugin] = useState<YakFilterRemoteObj>()
+    const {pugGroup, selectGroup, setSelectGroup} = props
     const onSelect = useMemoizedFn((selectItem: YakFilterRemoteObj) => {
         const checked = selectGroup.findIndex((l) => l.name === selectItem.name) === -1
         if (checked) {
@@ -682,7 +647,6 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                         [style["plugin-group-item-select"]]: selectGroup.findIndex((l) => l.name === item.name) !== -1
                     })}
                     onClick={() => {
-                        if (visibleRemove) return
                         onSelect(item)
                     }}
                     key={item.name}
@@ -691,41 +655,10 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                         {item.name}
                     </div>
                     <div className={style["plugin-group-item-right"]}>
-                        <span className={style["plugin-group-item-length"]}>{item.value.length}</span>
-                        {isShowDelIcon && (
-                            <TrashIcon
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setVisibleRemove(true)
-                                    setDeletePlugin(item)
-                                }}
-                            />
-                        )}
+                        <span className={style["plugin-group-item-length"]}>{item.total}</span>
                     </div>
                 </div>
             ))}
-            <YakitHint
-                visible={visibleRemove}
-                title='删除插件组'
-                content={
-                    <span>
-                        确认要删除“<span style={{color: "var(--yakit-warning-5)"}}>{deletePlugin?.name}</span>
-                        ”插件组吗？不会删除组内插件。
-                    </span>
-                }
-                heardIcon={<SolidTrashIcon style={{color: "var(--yakit-warning-5)"}} />}
-                onCancel={() => {
-                    setVisibleRemove(false)
-                }}
-                okButtonText='确认删除'
-                okButtonProps={{colors: "danger"}}
-                onOk={() => {
-                    if (deletePlugin) {
-                        onDeletePlugin(deletePlugin)
-                        setVisibleRemove(false)
-                    }
-                }}
-            />
         </div>
     )
 })

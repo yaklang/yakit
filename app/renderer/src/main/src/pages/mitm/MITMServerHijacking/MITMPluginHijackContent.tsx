@@ -44,8 +44,8 @@ interface MITMPluginHijackContentProps {
     total: number
     isSelectAll: boolean
     setIsSelectAll: (e: boolean) => void
-    includedScriptNames: string[]
-    setIncludedScriptNames: (s: string[]) => void
+    groupNames: string[]
+    setGroupNames: (s: string[]) => void
     tags: string[]
     searchKeyword: string
     setTags: (s: string[]) => void
@@ -82,8 +82,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setTotal,
         isSelectAll,
         setIsSelectAll,
-        includedScriptNames,
-        setIncludedScriptNames,
+        groupNames,
+        setGroupNames,
         tags,
         searchKeyword,
         setTags,
@@ -495,8 +495,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 hooks={hooks}
                                 onSelectAll={onSelectAll}
                                 onSendToPatch={onSendToPatch}
-                                includedScriptNames={includedScriptNames}
-                                setIncludedScriptNames={setIncludedScriptNames}
+                                groupNames={groupNames}
+                                setGroupNames={setGroupNames}
                             />
                         </YakitSpin>
                     </div>

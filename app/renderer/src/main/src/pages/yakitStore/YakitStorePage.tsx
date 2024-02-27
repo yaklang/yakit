@@ -48,7 +48,7 @@ import {
     CloudUploadOutlined
 } from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
-import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
+import {genDefaultPagination, GroupCount, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 import {failed, success, warn, info, yakitFailed} from "../../utils/notification"
 import {CopyableField, InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
@@ -86,6 +86,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import { PluginGV } from "../plugins/builtInData"
 import { YakitRoute } from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import { apiFetchQueryYakScriptGroupLocal } from "../plugins/utils"
 
 const {Search} = Input
 const {Option} = Select
@@ -617,11 +618,14 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
     // // 引入公共Select组件数据
     // const [selectedTags, setSelectedTags] = useState<string[]>([])
     useEffect(() => {
-        getRemoteValue(FILTER_CACHE_LIST_DATA).then((data: string) => {
-            if (!!data) {
-                const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
-                setMenuList(cacheData)
-            }
+        // 获取插件组
+        apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
+            const copyGroup = structuredClone(group)
+            const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
+                name: item.Value,
+                total: item.Total,
+            }))
+            setMenuList(data)
         })
     }, [])
 
@@ -637,100 +641,15 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         multipleCallBack(value)
     }
 
-    const deletePlugIn = (e, name: string) => {
-        e.stopPropagation()
-        const newArr: YakFilterRemoteObj[] = menuList.filter((item) => item.name !== name)
-        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
-        nowData.current = newArr
-        setMenuList(nowData.current)
-        // setReload(!reload)
-    }
-
     const plugInMenu = () => {
         return menuList.map((item: YakFilterRemoteObj) => (
-            <div key={item.name} style={{display: "flex"}} onClick={() => menuClick(item.value)}>
+            <div key={item.name} style={{display: "flex"}} onClick={() => menuClick([item.name])}>
                 <div className='content-ellipsis' style={{width: 100}}>
                     {item.name}
                 </div>
-                <div style={{width: 10, margin: "0px 10px"}}>{item.value.length}</div>
-                <DeleteOutlined
-                    style={{position: "relative", top: 5, marginLeft: 4}}
-                    onClick={(e) => deletePlugIn(e, item.name)}
-                />
+                <div style={{width: 10, margin: "0px 10px"}}>{item.total}</div>
             </div>
         ))
-    }
-    const AddPlugIn = (props) => {
-        const {onClose} = props
-        const onFinish = useMemoizedFn((value) => {
-            getRemoteValue(FILTER_CACHE_LIST_DATA)
-                .then((data: string) => {
-                    let obj = {
-                        name: value.name,
-                        value: checkList
-                    }
-                    if (!!data) {
-                        const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
-                        const index: number = cacheData.findIndex((item) => item.name === value.name)
-                        // 本地中存在插件组名称
-                        if (index >= 0) {
-                            cacheData[index].value = Array.from(new Set([...cacheData[index].value, ...checkList]))
-                            nowData.current = cacheData
-                            setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(cacheData))
-                        } else {
-                            const newArr = [...cacheData, obj]
-                            nowData.current = newArr
-                            setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
-                        }
-                    } else {
-                        nowData.current = [obj]
-                        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify([obj]))
-                    }
-                })
-                .finally(() => {
-                    // setReload(!reload)
-                    setMenuList(nowData.current)
-                    info("添加插件组成功")
-                    onClose()
-                })
-        })
-        return (
-            <div>
-                <Form {...layout} form={form} name='add-plug-in' onFinish={onFinish}>
-                    <Form.Item
-                        {...itemLayout}
-                        name='name'
-                        label='名称'
-                        rules={[{required: true, message: "该项为必填"}]}
-                    >
-                        <AutoComplete
-                            options={menuList.map((item) => ({value: item.name}))}
-                            placeholder='请输入插件组名'
-                            filterOption={(inputValue, option) =>
-                                option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                            }
-                        />
-                    </Form.Item>
-                    <Form.Item {...itemLayout} label='插件'>
-                        <div style={{maxHeight: 460, overflow: "auto"}}>
-                            {checkList.map((item) => (
-                                <span style={{paddingRight: 12}} key={item}>
-                                    {item};
-                                </span>
-                            ))}
-                        </div>
-                    </Form.Item>
-                    <div style={{textAlign: "right"}}>
-                        <Space>
-                            <Button onClick={() => onClose()}>取消</Button>
-                            <Button type='primary' htmlType='submit'>
-                                添加
-                            </Button>
-                        </Space>
-                    </div>
-                </Form>
-            </div>
-        )
     }
     return (
         <div style={{minHeight: 47}}>

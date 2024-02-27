@@ -47,7 +47,6 @@ import {
     convertLocalPluginsRequestParams
 } from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {AddLocalPluginGroup} from "@/pages/mitm/MITMPage"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -91,7 +90,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [selectList, setSelectList] = useState<YakScript[]>([])
 
     const [pluginGroupList, setPluginGroupList] = useState<PluginGroupList[]>([])
-    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
 
     const [pluginRemoveCheck, setPluginRemoveCheck] = useState<boolean>(false)
     const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
@@ -575,10 +573,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             })) || []
         )
     }, [filters.plugin_type])
-    /**打开添加至分组的弹窗 */
-    const onAddToGroup = useMemoizedFn(() => {
-        setAddGroupVisible(true)
-    })
     /**批量删除插件之前操作  */
     const onRemovePluginBatchBefore = useMemoizedFn(() => {
         if (pluginRemoveCheck) {
@@ -844,7 +838,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                         {key: "export", label: "导出"},
                                         {key: "upload", label: "上传", disabled: allCheck},
                                         {key: "remove", label: "删除"}
-                                        // {key: "addToGroup", label: "添加至分组", disabled: allCheck} //第二版放出来
                                     ],
                                     onClick: ({key}) => {
                                         switch (key) {
@@ -858,9 +851,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                                 break
                                             case "remove":
                                                 onRemovePluginBatchBefore()
-                                                break
-                                            case "addToGroup":
-                                                onAddToGroup()
                                                 break
                                             default:
                                                 return
@@ -1006,7 +996,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
-            <AddLocalPluginGroup visible={addGroupVisible} setVisible={setAddGroupVisible} checkList={checkList} />
             <YakitHint
                 visible={removeCheckVisible}
                 title='是否要删除插件'

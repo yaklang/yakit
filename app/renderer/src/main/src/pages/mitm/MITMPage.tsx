@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState, useMemo} from "react"
 import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
-import {ExecResult} from "../invoker/schema"
+import {ExecResult, QueryYakScriptRequest} from "../invoker/schema"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
@@ -48,6 +48,7 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {v4 as uuidv4} from "uuid"
+import { apiQueryYakScript } from "../plugins/utils"
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
@@ -406,7 +407,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
     const [tags, setTags] = useState<string[]>([])
     const [searchKeyword, setSearchKeyword] = useState<string>("")
-    const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
+    const [groupNames, setGroupNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
 
     const [total, setTotal] = useState<number>(0)
     /**
@@ -515,23 +516,23 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     })
 
     const getAllSatisfyScript = useMemoizedFn((limit: number) => {
-        queryYakScriptList(
-            "mitm,port-scan",
-            (data, t) => {
-                setListNames(data.map((i) => i.ScriptName))
+        const query: QueryYakScriptRequest = {
+            Pagination: {
+                Limit: limit || 200,
+                Page: 1,
+                OrderBy: "updated_at",
+                Order: "desc"
             },
-            undefined,
-            limit || 200,
-            undefined,
-            searchKeyword,
-            {
-                Tag: tags,
-                Type: "mitm,port-scan",
-                Keyword: searchKeyword,
-                IncludedScriptNames: includedScriptNames,
-                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
-            }
-        )
+            Keyword: searchKeyword,
+            Type: "mitm,port-scan",
+            Tag: tags,
+            ExcludeTypes: ["yak", "codec"],
+            Group: {UnSetGroup: false, Group: groupNames}
+        }
+        apiQueryYakScript(query).then(res => {
+            const data = res.Data || []
+            setListNames(data.map((i) => i.ScriptName))
+        })
     })
     const onRenderFirstNode = useMemoizedFn(() => {
         switch (status) {
@@ -600,8 +601,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             }}
                             hooks={new Map<string, boolean>()}
                             onSelectAll={onSelectAll}
-                            includedScriptNames={includedScriptNames}
-                            setIncludedScriptNames={setIncludedScriptNames}
+                            groupNames={groupNames}
+                            setGroupNames={setGroupNames}
                         />
                     </>
                 )
@@ -634,8 +635,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             setTotal(t)
                             getAllSatisfyScript(t)
                         }}
-                        includedScriptNames={includedScriptNames}
-                        setIncludedScriptNames={setIncludedScriptNames}
+                        groupNames={groupNames}
+                        setGroupNames={setGroupNames}
                     />
                 )
         }
@@ -1081,120 +1082,5 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 successInfo={false}
             ></StartExecYakCodeModal>
         </>
-    )
-})
-
-interface AddPluginGroupProps {
-    visible: boolean
-    setVisible: (b: boolean) => void
-    onOk?: (v: YakFilterRemoteObj[]) => void
-    checkList: string[]
-}
-
-export const AddLocalPluginGroup: React.FC<AddPluginGroupProps> = React.memo((props) => {
-    const {visible, setVisible, checkList, onOk} = props
-    const [name, setName] = useState<string>("")
-    const [cacheData, setCacheData] = useState<YakFilterRemoteObj[]>([])
-    useEffect(() => {
-        setName("")
-        getLocalPluginGroup()
-    }, [visible])
-    const getLocalPluginGroup = useMemoizedFn(() => {
-        getRemoteValue(PluginGV.Fetch_Local_Plugin_Group).then((data: string) => {
-            try {
-                if (!!data) {
-                    const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
-                    setCacheData(cacheData)
-                }
-            } catch (error) {
-                failed("获取插件组失败:" + error)
-            }
-        })
-    })
-    /**
-     * @description 保存插件组
-     */
-    const onSave = useMemoizedFn(() => {
-        try {
-            let obj = {
-                name,
-                value: checkList
-            }
-            if (cacheData.length > 0) {
-                const index: number = cacheData.findIndex((item) => item.name === name)
-                // 本地中存在插件组名称
-                if (index >= 0) {
-                    cacheData[index].value = Array.from(new Set([...cacheData[index].value, ...checkList]))
-                    if (onOk) onOk([...cacheData])
-                    setRemoteValue(PluginGV.Fetch_Local_Plugin_Group, JSON.stringify(cacheData))
-                } else {
-                    const newArr = [...cacheData, obj]
-                    if (onOk) onOk(newArr)
-                    setRemoteValue(PluginGV.Fetch_Local_Plugin_Group, JSON.stringify(newArr))
-                }
-            } else {
-                if (onOk) onOk([obj])
-                setRemoteValue(PluginGV.Fetch_Local_Plugin_Group, JSON.stringify([obj]))
-            }
-            setVisible(false)
-            info("添加插件组成功")
-        } catch (error) {
-            failed("添加插件组失败:" + error)
-        }
-    })
-    const pugGroup = useMemo(() => {
-        return cacheData.map((ele) => ({value: ele.name, label: ele.name})) || []
-    }, [cacheData])
-    return (
-        <YakitModal
-            visible={visible}
-            onCancel={() => setVisible(false)}
-            footer={null}
-            closable={false}
-            hiddenHeader={true}
-            bodyStyle={{padding: 0}}
-        >
-            <div className={style["plugin-group-modal"]}>
-                <div className={style["plugin-group-heard"]}>
-                    <div className={style["plugin-group-title"]}>添加至插件组</div>
-                    <div className={style["close-icon"]} onClick={() => setVisible(false)}>
-                        <RemoveIcon />
-                    </div>
-                </div>
-                <div className={style["plugin-group-input"]}>
-                    <YakitAutoComplete
-                        placeholder='请输入插件组名'
-                        defaultActiveFirstOption={false}
-                        value={name}
-                        onChange={(value) => setName(value)}
-                        options={pugGroup}
-                        filterOption={(inputValue, option) => {
-                            if (option?.value && typeof option?.value === "string") {
-                                return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                            }
-                            return false
-                        }}
-                        onSelect={(val) => setName(val)}
-                    />
-                </div>
-
-                <div className={style["plugin-group-tip"]}>
-                    共选择了<span>{checkList.length}</span>个插件
-                </div>
-                <div className={style["plugin-buttons"]}>
-                    <YakitButton
-                        type='outline2'
-                        size='large'
-                        className={style["plugin-btn"]}
-                        onClick={() => setVisible(false)}
-                    >
-                        取消
-                    </YakitButton>
-                    <YakitButton type='primary' size='large' onClick={onSave}>
-                        确定
-                    </YakitButton>
-                </div>
-            </div>
-        </YakitModal>
     )
 })
