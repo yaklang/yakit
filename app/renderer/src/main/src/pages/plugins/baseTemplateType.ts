@@ -101,7 +101,7 @@ export interface PluginDetailHeaderProps {
     /**
      * 复制源插件
      */
-    basePluginId?: number
+    basePluginName?: string
 }
 /**协作者信息 */
 export interface CollaboratorInfoProps {

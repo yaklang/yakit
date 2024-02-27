@@ -236,7 +236,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         updated_at,
         prImgs = [],
         type,
-        basePluginId
+        basePluginName
     } = props
 
     const tagList = useMemo(() => {
@@ -355,12 +355,17 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             </div>
                         </>
                     )}
-                    {basePluginId && (
+                    {basePluginName && (
                         <>
                             <div className={styles["divider-style"]} />
                             <div className={styles["copy-wrapper"]}>
                                 <span>来源:</span>
-                                <YakitTag style={{marginRight: 0}}>复制</YakitTag>
+                                <Tooltip
+                                    title={`复制插件 “${pluginName}” 为 “${basePluginName}”`}
+                                    overlayClassName='plugins-tooltip'
+                                >
+                                    <YakitTag style={{marginRight: 0,cursor:'pointer'}}>复制</YakitTag>
+                                </Tooltip>
                             </div>
                         </>
                     )}

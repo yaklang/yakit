@@ -330,7 +330,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                                             userName: ele.user_name
                                         }))}
                                         type={plugin.type}
-                                        basePluginId={plugin.base_plugin_id}
+                                        basePluginName={plugin.base_script_name}
                                     />
                                     <div className={styles["details-editor-wrapper"]}>
                                         <YakitEditor type={plugin.type} value={plugin.content} readOnly={true} />
