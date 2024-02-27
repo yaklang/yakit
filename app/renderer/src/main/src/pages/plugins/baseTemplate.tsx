@@ -361,7 +361,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             <div className={styles["copy-wrapper"]}>
                                 <span>来源:</span>
                                 <Tooltip
-                                    title={`复制插件 “${pluginName}” 为 “${basePluginName}”`}
+                                    title={`复制插件 “${basePluginName}” 为 “${pluginName}”`}
                                     overlayClassName='plugins-tooltip'
                                 >
                                     <YakitTag style={{marginRight: 0,cursor:'pointer'}}>复制</YakitTag>
