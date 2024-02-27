@@ -68,6 +68,14 @@ service.interceptors.response.use(
             }
             return Promise.resolve(res)
         }
+        if(error.response && error.response.status === 501 && error.response.data){
+            const res = {
+                code: 501,
+                message: error.response.data,
+                userInfo: USER_INFO
+            }
+            return Promise.resolve(res)
+        }
         if (error.response) {
             return Promise.resolve(error.response.data)
         }

@@ -206,7 +206,7 @@ export const apiFetchCheckList: (query: PluginsQueryProps) => Promise<YakitPlugi
 }
 
 /**线上插件左侧统计接口基础版 */
-const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (query) => {
+export const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (query) => {
     return new Promise((resolve, reject) => {
         try {
             PluginNetWorkApi<API.PluginsSearchRequest, API.PluginsSearchResponse>({
