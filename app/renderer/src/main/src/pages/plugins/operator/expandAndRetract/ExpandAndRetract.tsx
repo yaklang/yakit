@@ -32,12 +32,12 @@ export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((pro
             <div className={classNames(styles["expand-and-retract-header-icon-body"], animationWrapperClassName)}>
                 {isExpand ? (
                     <>
-                        <OutlineChevrondoubleupIcon />
+                        <OutlineChevrondoubleupIcon className={styles['expand-and-retract-icon']}/>
                         <span className={styles["expand-and-retract-header-icon-text"]}>收起参数</span>
                     </>
                 ) : (
                     <>
-                        <OutlineChevrondoubledownIcon />
+                        <OutlineChevrondoubledownIcon className={styles['expand-and-retract-icon']}/>
                         <span className={styles["expand-and-retract-header-icon-text"]}>展开参数</span>
                     </>
                 )}
