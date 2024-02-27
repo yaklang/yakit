@@ -17,7 +17,7 @@ import {
     PluginBatchExecuteContent,
     PluginBatchExecuteContentRefProps
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -25,7 +25,7 @@ import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecute
 import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon} from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {FolderColorIcon} from "@/assets/icon/colors"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {QueryYakScriptGroupResponse, apiQueryYakScriptGroup} from "./utils"
 
 const getData = () => {
     let groupData: GroupCount[] = []
@@ -68,23 +68,76 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         valuePropName: "selectGroupList",
         trigger: "setSelectGroupList"
     })
+    const [keywords, setKeywords] = useState<string>("")
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    const [response, setResponse] = useState({
-        Group: getData()
+    const [response, setResponse] = useState<QueryYakScriptGroupResponse>({
+        Group: []
+    })
+    const pluginGroupGridRef = useRef<HTMLDivElement>(null)
+    const initialResponseRef = useRef<QueryYakScriptGroupResponse>({
+        Group: []
+    }) // 用来做搜索
+    const [inViewport = true] = useInViewport(pluginGroupGridRef)
+
+    useEffect(() => {
+        if (inViewport) getQueryYakScriptGroup()
+    }, [inViewport])
+
+    const getQueryYakScriptGroup = useMemoizedFn(() => {
+        setLoading(true)
+        apiQueryYakScriptGroup({All: true})
+            .then((res) => {
+                setResponse(res)
+                initialResponseRef.current = res
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            )
     })
     const onSelect = useMemoizedFn((val: GroupCount) => {
         const isExist = selectGroupList.includes(val.Value)
         if (isExist) {
-            setSelectGroupList(selectGroupList.filter((ele) => ele !== val.Value))
+            const newList = selectGroupList.filter((ele) => ele !== val.Value)
+            setSelectGroupList(newList)
+            setAllCheck(newList.length === response.Group.length)
         } else {
-            setSelectGroupList([...selectGroupList, val.Value])
+            const newList = [...selectGroupList, val.Value]
+            setSelectGroupList(newList)
+            setAllCheck(newList.length === response.Group.length)
         }
     })
     const total = useCreation(() => {
         return response.Group.length
     }, [response.Group])
+    const indeterminate: boolean = useCreation(() => {
+        if (selectGroupList.length > 0 && selectGroupList.length !== response.Group.length) return true
+        return false
+    }, [selectGroupList, response.Group])
     const onClearSelect = useMemoizedFn(() => {
+        setSelectGroupList([])
+        setAllCheck(false)
+    })
+    const onSelectAll = useMemoizedFn((e) => {
+        const {checked} = e.target
+        if (checked) {
+            setSelectGroupList(response.Group.map((ele) => ele.Value))
+        } else {
+            setSelectGroupList([])
+        }
+        setAllCheck(checked)
+    })
+    const onPressEnter = useMemoizedFn((e) => {
+        onSearch(e.target.value)
+    })
+    const onSearch = useMemoizedFn((val) => {
+        const searchData = initialResponseRef.current.Group.filter((ele) => {
+            return ele.Value.includes(val)
+        })
+        setResponse({Group: searchData})
+        setAllCheck(false)
         setSelectGroupList([])
     })
     return (
@@ -92,15 +145,24 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
             className={classNames(styles["plugin-group-wrapper"], {
                 [styles["plugin-group-wrapper-hidden"]]: hidden
             })}
+            ref={pluginGroupGridRef}
         >
             <div className={styles["filter-wrapper"]}>
                 <div className={styles["header-search"]}>
                     <span>选择插件组</span>
-                    <YakitInput.Search placeholder='请输入组名搜索' />
+                    <YakitInput.Search
+                        placeholder='请输入组名搜索'
+                        value={keywords}
+                        onChange={(e) => setKeywords(e.target.value)}
+                        onSearch={onSearch}
+                        onPressEnter={onPressEnter}
+                    />
                 </div>
                 <div className={styles["filter-body"]}>
                     <div className={styles["filter-body-left"]}>
-                        <YakitCheckbox>全选</YakitCheckbox>
+                        <YakitCheckbox indeterminate={indeterminate} checked={allCheck} onChange={onSelectAll}>
+                            全选
+                        </YakitCheckbox>
                         <span className={styles["count-num"]}>
                             Total<span className={styles["num-style"]}>{total}</span>
                         </span>
@@ -163,7 +225,6 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
         valuePropName: "hidden",
         trigger: "setHidden"
     })
-    const [selectPluginName, setSelectPluginName] = useState<string[]>([])
 
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -190,9 +251,6 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     const selectGroupNum = useCreation(() => {
         return selectGroupList.length
     }, [selectGroupList])
-    const selectPluginNum = useCreation(() => {
-        return selectPluginName.length
-    }, [selectPluginName])
     const pluginInfo = useCreation(() => {
         return {
             selectPluginName: [],
@@ -225,7 +283,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                           )
                         : !isExpand && (
                               <>
-                                  <YakitButton onClick={onStartExecute} disabled={selectPluginNum === 0}>
+                                  <YakitButton onClick={onStartExecute} disabled={selectGroupNum === 0}>
                                       执行
                                   </YakitButton>
                                   <div className={styles["divider-style"]}></div>
@@ -247,7 +305,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                     isExecuting={isExecuting}
                     isExpand={isExpand}
                     setIsExpand={setIsExpand}
-                    selectNum={selectPluginNum}
+                    selectNum={selectGroupNum}
                     setProgressList={setProgressList}
                     setIsExecuting={setIsExecuting}
                     stopLoading={stopLoading}
