@@ -26,6 +26,7 @@ import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon} from "@/assets/icon/
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {FolderColorIcon} from "@/assets/icon/colors"
 import {QueryYakScriptGroupResponse, apiQueryYakScriptGroup} from "./utils"
+import {yakitNotify} from "@/utils/notification"
 
 const getData = () => {
     let groupData: GroupCount[] = []
@@ -86,7 +87,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
 
     const getQueryYakScriptGroup = useMemoizedFn(() => {
         setLoading(true)
-        apiQueryYakScriptGroup({All: true})
+        apiQueryYakScriptGroup({All: false})
             .then((res) => {
                 setResponse(res)
                 initialResponseRef.current = res
@@ -140,6 +141,9 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         setAllCheck(false)
         setSelectGroupList([])
     })
+    const onToManageGroup = useMemoizedFn(() => {
+        yakitNotify("info", "开发中...")
+    })
     return (
         <div
             className={classNames(styles["plugin-group-wrapper"], {
@@ -172,7 +176,9 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                         </span>
                     </div>
                     <div className={styles["filter-body-right"]}>
-                        <YakitButton type='text'>管理分组</YakitButton>
+                        <YakitButton type='text' onClick={onToManageGroup}>
+                            管理分组
+                        </YakitButton>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <YakitButton type='text' danger onClick={onClearSelect}>
                             清空

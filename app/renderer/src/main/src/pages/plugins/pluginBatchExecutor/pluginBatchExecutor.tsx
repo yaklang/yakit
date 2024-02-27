@@ -9,7 +9,7 @@ import {
     HybridScanRequest,
     PluginBatchExecutorInputValueProps,
     apiCancelHybridScan,
-    apiGetPluginNameByGroup,
+    apiGetPluginByGroup,
     apiHybridScan,
     apiQueryHybridScan,
     apiQueryYakScript,
@@ -583,7 +583,9 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             let newPluginInfo = {...pluginInfo}
             if (selectPluginGroup.length > 0) {
                 try {
-                    newPluginInfo.selectPluginName = await apiGetPluginNameByGroup(selectPluginGroup)
+                    const res = await apiGetPluginByGroup(selectPluginGroup)
+                    console.log("QueryYakScriptByOnlineGroup", res)
+                    newPluginInfo.selectPluginName = res.Data.map((item) => item.ScriptName)
                 } catch (error) {
                     newPluginInfo.selectPluginName = []
                 }
@@ -591,7 +593,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             if (newPluginInfo.selectPluginName.length === 0) return
             const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(
                 params,
-                pluginInfo,
+                newPluginInfo,
                 pluginType
             )
             hybridScanStreamEvent.reset()

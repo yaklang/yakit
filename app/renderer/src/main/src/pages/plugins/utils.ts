@@ -696,9 +696,7 @@ export const apiQueryYakScript: (query?: QueryYakScriptRequest) => Promise<Query
     return new Promise((resolve, reject) => {
         try {
             apiQueryYakScriptBase(query)
-                .then((item: QueryYakScriptsResponse) => {
-                    resolve(item)
-                })
+                .then(resolve)
                 .catch((e: any) => {
                     yakitNotify("error", "获取本地插件失败:" + e)
                     reject(e)
@@ -1103,13 +1101,24 @@ export const apiCancelDebugPlugin: (token: string) => Promise<null> = (token) =>
         }
     })
 }
+interface QueryYakScriptByOnlineGroupRequest {
+    Data: YakScript[]
+}
 /**通过组名获取组内插件 */
-export const apiGetPluginNameByGroup: (groups: string[]) => Promise<string[]> = (token) => {
+export const apiGetPluginByGroup: (OnlineGroup: string[]) => Promise<QueryYakScriptByOnlineGroupRequest> = (
+    OnlineGroup
+) => {
     return new Promise((resolve, reject) => {
         try {
-            resolve([])
+            ipcRenderer
+                .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
+                .then(resolve)
+                .catch((e: any) => {
+                    yakitNotify("error", "获取组内插件出错:" + e)
+                    reject(e)
+                })
         } catch (error) {
-            yakitNotify("error", "通过组名获取组内插件出错:" + error)
+            yakitNotify("error", "获取组内插件出错:" + error)
             reject(error)
         }
     })
@@ -1252,6 +1261,7 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
                 )
                 .then(() => {
                     info(`启动成功,任务ID: ${token}`)
+                    console.log('HybridScan',executeParams)
                     // send target / plugin
                     ipcRenderer.invoke("HybridScan", executeParams, token).then(() => {
                         info("发送扫描目标与插件成功")
