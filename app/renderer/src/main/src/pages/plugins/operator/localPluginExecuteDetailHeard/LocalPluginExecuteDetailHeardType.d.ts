@@ -13,9 +13,6 @@ export interface PluginExecuteDetailHeardProps {
     plugin: YakScript
     /**头部右侧额外dom */
     extraNode: ReactNode
-    /**是否执行中 */
-    isExecuting: boolean
-    setIsExecuting: (b: boolean) => void
     debugPluginStreamEvent: {
         start: () => void
         stop: () => void

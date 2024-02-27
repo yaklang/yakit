@@ -7,11 +7,11 @@ import {LocalPluginExecuteProps} from "./PluginsLocalType"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import styles from "./PluginsLocalDetail.module.scss"
 import {ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/ExpandAndRetract"
+import {useCreation} from "ahooks"
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
     const {plugin, headExtraNode} = props
-    /**是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    /**执行状态 */
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [runtimeId, setRuntimeId] = useState<string>("")
 
@@ -28,7 +28,6 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
             debugPluginStreamEvent.stop()
             setTimeout(() => {
                 setExecuteStatus("finished")
-                setIsExecuting(false)
             }, 300)
         },
         setRuntimeId: (rId) => {
@@ -36,6 +35,10 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
             setRuntimeId(rId)
         }
     })
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
     const isShowResult = useMemo(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
@@ -46,8 +49,6 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 token={tokenRef.current}
                 plugin={plugin}
                 extraNode={headExtraNode}
-                isExecuting={isExecuting}
-                setIsExecuting={setIsExecuting}
                 debugPluginStreamEvent={debugPluginStreamEvent}
                 progressList={streamInfo.progressState}
                 runtimeId={runtimeId}
