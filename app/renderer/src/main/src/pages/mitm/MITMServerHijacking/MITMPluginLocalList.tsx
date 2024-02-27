@@ -139,7 +139,6 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             IncludedScriptNames: [],
             Type: "mitm,port-scan",
             Tag: tags,
-            ExcludeTypes: ["yak", "codec"],
             Group: {UnSetGroup: false, Group: groupNames}
         }
 
@@ -209,7 +208,6 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                         Type: "mitm,port-scan",
                         Keyword: searchKeyword,
                         Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-                        ExcludeTypes: ["yak", "codec"], // 插件组需要过滤Yak、codec
                         Group: {UnSetGroup: false, Group: groupNames}
                     }}
                     refresh={refresh}

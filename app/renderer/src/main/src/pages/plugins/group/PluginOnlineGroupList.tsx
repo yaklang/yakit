@@ -124,7 +124,7 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
 
     return (
         <>
-            {groupList.length && (
+            {!!groupList.length && (
                 <PluginGroupList
                     data={groupList}
                     editGroup={editGroup}

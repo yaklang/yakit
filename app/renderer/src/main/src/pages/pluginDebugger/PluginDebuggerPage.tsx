@@ -749,7 +749,6 @@ const PluginContList: React.FC<PluginContListProps> = React.memo(
                 IncludedScriptNames: [],
                 Type: queryPluginType + "",
                 Tag: tags,
-                ExcludeTypes: ["yak", "codec"],
                 Group: {UnSetGroup: false, Group: groupNames}
             }
     
@@ -900,7 +899,6 @@ const PluginContList: React.FC<PluginContListProps> = React.memo(
                             Type: queryPluginType + "",
                             Keyword: searchKeyword,
                             Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-                            ExcludeTypes: ["yak", "codec"], // 插件组需要过滤Yak、codec
                             Group: {UnSetGroup: false, Group: groupNames}
                         }}
                         itemHeight={44}

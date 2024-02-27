@@ -132,7 +132,7 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
 
     return (
         <>
-            {groupList.length && (
+            {!!groupList.length && (
                 <PluginGroupList
                     data={groupList}
                     editGroup={editGroup}

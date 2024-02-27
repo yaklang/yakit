@@ -735,7 +735,7 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                         全选
                     </Checkbox>
                 </div>
-                <div style={{marginLeft: 12}}>
+                {/* <div style={{marginLeft: 12}}>
                     <Dropdown overlay={<Space direction={"vertical"}>{plugInMenu()}</Space>} disabled={checkAll}>
                         <a
                             onClick={(e) => {
@@ -759,7 +759,7 @@ export const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
                     }}
                 >
                     管理分组
-                </YakitButton>
+                </YakitButton> */}
                 <div style={{marginLeft: 12}}>{settingRender && settingRender()}</div>
             </div>
             <div style={{whiteSpace: "initial"}}>
