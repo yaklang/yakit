@@ -29,7 +29,7 @@
     .filter-wrapper {
         @extend %display-column-center;
         gap: 16px;
-        padding: 0 12px;
+        padding: 0 12px 8px;
         .header-search {
             @extend %display-flex-center;
             justify-content: space-between;
@@ -58,7 +58,7 @@
         }
     }
     .group-list-wrapper {
-        padding: 8px 8px 0;
+        padding: 0px 8px 0;
         padding-right: 2px;
         .group-item-wrapper {
             @extend %display-column-center;
@@ -134,5 +134,11 @@
         display: flex;
         align-items: center;
         gap: 16px;
+    }
+    .yak-poc-executor-body {
+        display: flex;
+        flex-direction: column;
+        padding: 0 12px 16px;
+        overflow: auto;
     }
 }

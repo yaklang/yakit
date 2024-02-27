@@ -241,18 +241,20 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                     />
                 </div>
             </ExpandAndRetract>
-            <PluginBatchExecuteContent
-                ref={pluginBatchExecuteContentRef}
-                isExecuting={isExecuting}
-                isExpand={isExpand}
-                setIsExpand={setIsExpand}
-                selectNum={selectPluginNum}
-                setProgressList={setProgressList}
-                setIsExecuting={setIsExecuting}
-                stopLoading={stopLoading}
-                setStopLoading={setStopLoading}
-                pluginInfo={pluginInfo}
-            />
+            <div className={styles["yak-poc-executor-body"]}>
+                <PluginBatchExecuteContent
+                    ref={pluginBatchExecuteContentRef}
+                    isExecuting={isExecuting}
+                    isExpand={isExpand}
+                    setIsExpand={setIsExpand}
+                    selectNum={selectPluginNum}
+                    setProgressList={setProgressList}
+                    setIsExecuting={setIsExecuting}
+                    stopLoading={stopLoading}
+                    setStopLoading={setStopLoading}
+                    pluginInfo={pluginInfo}
+                />
+            </div>
         </div>
     )
 })
