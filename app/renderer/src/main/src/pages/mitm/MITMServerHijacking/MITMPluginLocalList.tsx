@@ -468,8 +468,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
             const copyGroup = structuredClone(group)
             const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
                 name: item.Value,
-                total: item.Total,
-                value: [""]
+                total: item.Total
             }))
             setPlugGroup(data)
         })
