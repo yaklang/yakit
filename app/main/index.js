@@ -51,7 +51,7 @@ const createWindow = () => {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: true,
             contextIsolation: false,
-            sandbox: false
+            sandbox: true
         },
         frame: false,
         titleBarStyle: "hidden"

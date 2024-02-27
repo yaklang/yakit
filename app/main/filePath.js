@@ -4,23 +4,35 @@ const os = require("os")
 const path = require("path")
 const process = require("process")
 const fs = require("fs")
+
 /** 软件根目录 */
 const appPath = app.isPackaged ? path.dirname(app.getPath("exe")) : app.getAppPath()
+
+/**
+ * win7系统特定逻辑,专用于映射的网络共享驱动盘情况
+ * yakit-project文件不走系统定位，使用软件文件夹下的路径信息文件定位
+ * 路径信息文件名：project_path.txt
+ */
+const projectPathFile = path.join(appPath, "project_path.txt")
+let YakitProjectPath = path.join(appPath, "yakit-projects")
+if (fs.existsSync(projectPathFile)) {
+    try {
+        const projectFolder = fs.readFileSync(projectPathFile, {encoding: "utf-8"})
+        if (fs.existsSync(projectFolder)) YakitProjectPath = projectFolder
+    } catch (error) {}
+}
+
 /** 软件关联项目相关目录路径 */
 /** 优先使用家目录下的yakit-projects
  * 在新版本中，windows自定义安装路径会将家目录的yakit-projects迁移到软件根目录下，则会使用该目录 */
-const defaultYakitProjectPath = path.join(os.homedir(), "yakit-projects")
-const currentYakitProjectPath = path.join(appPath, "yakit-projects")
-const YakitProjectPath =
-    (
-        process.platform === "win32"
-        ? (
-            fs.existsSync(currentYakitProjectPath) ? 
-            currentYakitProjectPath: 
-            process.env.YAKIT_HOME  || defaultYakitProjectPath
-        )
-        : defaultYakitProjectPath
-    )
+// const defaultYakitProjectPath = path.join(os.homedir(), "yakit-projects")
+// const currentYakitProjectPath = path.join(appPath, "yakit-projects")
+// const YakitProjectPath =
+//     process.platform === "win32"
+//         ? fs.existsSync(currentYakitProjectPath)
+//             ? currentYakitProjectPath
+//             : process.env.YAKIT_HOME || defaultYakitProjectPath
+//         : defaultYakitProjectPath
 
 /** 引擎和软件安装包路径 */
 const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
@@ -78,6 +90,7 @@ const htmlTemplateDir = loadExtraFilePath(path.join("report"))
 const windowStatePatch = path.join(basicDir)
 
 module.exports = {
+    appPath,
     YakitProjectPath,
     yaklangEngineDir,
     getLocalYaklangEngine,
