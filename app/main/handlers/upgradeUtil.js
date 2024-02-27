@@ -10,12 +10,18 @@ const request = require("request");
 
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
-const {YakitProjectPath} = require("../filePath")
+const {YakitProjectPath, enginePath} = require("../filePath")
 
 
 const secretDir = path.join(YakitProjectPath, "auth");
 
-const yakEngineDir = path.join(YakitProjectPath, "yak-engine")
+// const yakEngineDir = path.join(YakitProjectPath, "yak-engine")
+/**
+ * win7系统特定逻辑,专用于映射的网络共享驱动盘情况
+ * 引擎存放位置
+ */
+const yakEngineDir = enginePath
+
 const codeDir = path.join(YakitProjectPath, "code");
 const cacheDir = path.join(YakitProjectPath, "base");
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");

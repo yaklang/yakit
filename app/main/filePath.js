@@ -22,6 +22,12 @@ if (fs.existsSync(projectPathFile)) {
     } catch (error) {}
 }
 
+/**
+ * win7系统特定逻辑,专用于映射的网络共享驱动盘情况
+ * 引擎存放位置
+ */
+const enginePath = path.join(appPath, "engine")
+
 /** 软件关联项目相关目录路径 */
 /** 优先使用家目录下的yakit-projects
  * 在新版本中，windows自定义安装路径会将家目录的yakit-projects迁移到软件根目录下，则会使用该目录 */
@@ -35,7 +41,7 @@ if (fs.existsSync(projectPathFile)) {
 //         : defaultYakitProjectPath
 
 /** 引擎和软件安装包路径 */
-const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
+// const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
 /**
  * Yaklang引擎在本地的绝对地址
  * @returns {String} 本地绝对地址
@@ -44,9 +50,9 @@ const getLocalYaklangEngine = () => {
     switch (process.platform) {
         case "darwin":
         case "linux":
-            return path.join(yaklangEngineDir, "yak")
+            return path.join(enginePath, "yak")
         case "win32":
-            return path.join(yaklangEngineDir, "yak.exe")
+            return path.join(enginePath, "yak.exe")
     }
 }
 
@@ -92,7 +98,8 @@ const windowStatePatch = path.join(basicDir)
 module.exports = {
     appPath,
     YakitProjectPath,
-    yaklangEngineDir,
+    enginePath,
+    // yaklangEngineDir,
     getLocalYaklangEngine,
     localCachePath,
     extraLocalCachePath,
