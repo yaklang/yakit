@@ -48,7 +48,20 @@ try {
  * 在新版本中，windows自定义安装路径会将os-home目录的yakit-projects迁移到软件根目录下
  * 如果获取项目关联文件夹路径错误时，将自动设置为系统用户下面(容灾处理)
  */
-const YakitProjectPath = project_path || osHomeProjectPath
+let YakitProjectPath = project_path || osHomeProjectPath
+
+/**
+ * win7系统特定逻辑,专用于映射的网络共享驱动盘情况
+ * yakit-project文件不走系统定位，使用软件文件夹下的路径信息文件定位
+ * 路径信息文件名：project_path.txt
+ */
+const projectPathFile = path.join(appPath, "project_path.txt")
+if (fs.existsSync(projectPathFile)) {
+    try {
+        const projectFolder = fs.readFileSync(projectPathFile, {encoding: "utf-8"})
+        if (fs.existsSync(projectFolder)) YakitProjectPath = projectFolder
+    } catch (error) {}
+}
 
 console.log(`---------- Global-Path Start ----------`)
 console.log(`software-path: ${appPath}`)
@@ -120,6 +133,7 @@ const htmlTemplateDir = loadExtraFilePath(path.join("report"))
 const windowStatePatch = path.join(basicDir)
 
 module.exports = {
+    appPath,
     YakitProjectPath,
 
     yaklangEngineDir,
