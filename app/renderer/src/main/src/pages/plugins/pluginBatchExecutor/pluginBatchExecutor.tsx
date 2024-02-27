@@ -101,7 +101,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
     /**是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
     /**停止 */
@@ -298,6 +297,10 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             search
         }
     }, [selectList, search])
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
     return (
         <div className={styles["plugin-batch-executor"]} ref={batchExecuteDomRef}>
             <PluginDetails<YakScript>
@@ -403,7 +406,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             >
                 <PluginBatchExecuteContent
                     ref={pluginBatchExecuteContentRef}
-                    isExecuting={isExecuting}
                     isExpand={isExpand}
                     setIsExpand={setIsExpand}
                     selectNum={selectNum}
@@ -411,10 +413,11 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                     defaultActiveKey={pageInfo.defaultActiveKey}
                     onInitInputValueAfter={onInitInputValueAfter}
                     setProgressList={setProgressList}
-                    setIsExecuting={setIsExecuting}
                     stopLoading={stopLoading}
                     setStopLoading={setStopLoading}
                     pluginInfo={pluginInfo}
+                    executeStatus={executeStatus}
+                    setExecuteStatus={setExecuteStatus}
                 />
             </PluginDetails>
         </div>
@@ -436,10 +439,6 @@ interface PluginBatchExecuteContentProps {
     /**进度条新鲜 */
     setProgressList: (s: StreamResult.Progress[]) => void
 
-    /**是否执行中 */
-    isExecuting: boolean
-    setIsExecuting: (value: boolean) => void
-
     /**停止 */
     stopLoading: boolean
     setStopLoading: (value: boolean) => void
@@ -447,6 +446,10 @@ interface PluginBatchExecuteContentProps {
     /**是否展开收起表单内容 */
     isExpand: boolean
     setIsExpand: (value: boolean) => void
+
+    /**执行状态 */
+    executeStatus: ExpandAndRetractExcessiveState
+    setExecuteStatus: (value: ExpandAndRetractExcessiveState) => void
 }
 export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
@@ -479,12 +482,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             ...cloneDeep(defPluginBatchExecuteExtraFormValue)
         })
 
-        /**是否在执行中 */
-        const [isExecuting, setIsExecuting] = useControllableValue<boolean>(props, {
-            defaultValue: false,
-            valuePropName: "isExecuting",
-            trigger: "setIsExecuting"
-        })
         const [stopLoading, setStopLoading] = useControllableValue<boolean>(props, {
             defaultValue: false,
             valuePropName: "stopLoading",
@@ -495,6 +492,12 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             defaultValue: false,
             valuePropName: "isExpand",
             trigger: "setIsExpand"
+        })
+        /**执行状态 */
+        const [executeStatus, setExecuteStatus] = useControllableValue<ExpandAndRetractExcessiveState>(props, {
+            defaultValue: "default",
+            valuePropName: "executeStatus",
+            trigger: "setExecuteStatus"
         })
         const [runtimeId, setRuntimeId] = useState<string>("")
 
@@ -507,7 +510,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             onEnd: () => {
                 hybridScanStreamEvent.stop()
                 setTimeout(() => {
-                    setIsExecuting(false)
+                    setExecuteStatus("finished")
                     setStopLoading(false)
                 }, 200)
             },
@@ -531,7 +534,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 hybridScanStreamEvent.reset()
                 apiQueryHybridScan(runtimeId, tokenRef.current)
                     .then(() => {
-                        setIsExecuting(true)
+                        setExecuteStatus("process")
                         hybridScanStreamEvent.start()
                         resolve(null)
                     })
@@ -598,7 +601,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             )
             hybridScanStreamEvent.reset()
             apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
-                setIsExecuting(true)
+                setExecuteStatus("process")
                 setIsExpand(false)
                 hybridScanStreamEvent.start()
             })
@@ -616,7 +619,10 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             setStopLoading(true)
             apiStopHybridScan(runtimeId, tokenRef.current)
         })
-
+        const isExecuting = useCreation(() => {
+            if (executeStatus === "process") return true
+            return false
+        }, [executeStatus])
         const isShowResult = useCreation(() => {
             return isExecuting || runtimeId
         }, [isExecuting, runtimeId])

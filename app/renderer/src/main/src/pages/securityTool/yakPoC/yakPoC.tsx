@@ -19,7 +19,7 @@ import {
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon} from "@/assets/icon/outline"
@@ -153,13 +153,15 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         >
             <div className={styles["filter-wrapper"]}>
                 <div className={styles["header-search"]}>
-                    <span>选择插件组</span>
+                    <span className={styles["header-search-text"]}>选择插件组</span>
                     <YakitInput.Search
                         placeholder='请输入组名搜索'
                         value={keywords}
                         onChange={(e) => setKeywords(e.target.value)}
                         onSearch={onSearch}
                         onPressEnter={onPressEnter}
+                        size='large'
+                        wrapperStyle={{width: 280}}
                     />
                 </div>
                 <div className={styles["filter-body"]}>
@@ -234,9 +236,8 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
 
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
-    /**是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     /**停止 */
     const [stopLoading, setStopLoading] = useState<boolean>(false)
 
@@ -263,9 +264,13 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             selectPluginGroup: selectGroupList
         }
     }, [selectGroupList])
+    const isExecuting=useCreation(()=>{
+        if(executeStatus==='process')return true
+        return false
+    },[executeStatus])
     return (
         <div className={styles["yak-poc-execute-wrapper"]}>
-            <ExpandAndRetract isExpand={isExpand} onExpand={onExpand}>
+            <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                 <div className={styles["yak-poc-executor-title"]}>
                     <span className={styles["yak-poc-executor-title-text"]}>已选插件组</span>
                     {selectGroupNum > 0 && (
@@ -308,15 +313,15 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             <div className={styles["yak-poc-executor-body"]}>
                 <PluginBatchExecuteContent
                     ref={pluginBatchExecuteContentRef}
-                    isExecuting={isExecuting}
                     isExpand={isExpand}
                     setIsExpand={setIsExpand}
                     selectNum={selectGroupNum}
                     setProgressList={setProgressList}
-                    setIsExecuting={setIsExecuting}
                     stopLoading={stopLoading}
                     setStopLoading={setStopLoading}
                     pluginInfo={pluginInfo}
+                    executeStatus={executeStatus}
+                    setExecuteStatus={setExecuteStatus}
                 />
             </div>
         </div>
