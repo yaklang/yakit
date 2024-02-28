@@ -130,14 +130,26 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             return realFilters
         }
-        const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
+        const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>(() => {
+            const group: YakFilterRemoteObj[] = cloneDeep(defaultFilter).plugin_group?.map(
+                (item: API.PluginsSearchData) => ({
+                    name: item.value,
+                    total: item.count
+                })
+            )
+            return group
+        })
         const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
         const onSearch = useMemoizedFn((value: PluginSearchParams) => {
             onDetailSearch(value, getRealFilters(filters, {group: selectGroup}))
             setSelectList([])
             setAllcheck(false)
         })
-        const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
+        const [filters, setFilters] = useState<PluginFilterParams>(() => {
+            const relFilter: PluginFilterParams = cloneDeep(defaultFilter)
+            delete relFilter.plugin_group
+            return relFilter
+        })
         const onFilter = useMemoizedFn((value: PluginFilterParams) => {
             setFilters(value)
             onDetailSearch(searchs, getRealFilters(value, {group: selectGroup}))
@@ -572,13 +584,13 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             return statusTag[`${data.status}`]
         })
 
-        if (!plugin) return null
-
         /** 管理分组展示状态 */
         const magGroupState = useMemo(() => {
             if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
             else return false
         }, [userInfo.role])
+
+        if (!plugin) return null
 
         return (
             <PluginDetails<YakitPluginOnlineDetail>

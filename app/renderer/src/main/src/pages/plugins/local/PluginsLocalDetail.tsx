@@ -39,6 +39,7 @@ import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
 import {onToEditPlugin} from "../utils"
 import classNames from "classnames"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -74,12 +75,24 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         privateDomain
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
-    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
+    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>(() => {
+        const group: YakFilterRemoteObj[] = cloneDeep(defaultFilter).plugin_group?.map(
+            (item: API.PluginsSearchData) => ({
+                name: item.value,
+                total: item.count
+            })
+        )
+        return group
+    })
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [selectList, setSelectList] = useState<YakScript[]>(defaultSelectList)
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
 
-    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
+    const [filters, setFilters] = useState<PluginFilterParams>(() => {
+        const relFilter: PluginFilterParams = cloneDeep(defaultFilter)
+        delete relFilter.plugin_group
+        return relFilter
+    })
 
     const [plugin, setPlugin] = useState<YakScript>()
     // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
