@@ -52,3 +52,63 @@
         }
     }
 }
+
+.engine-help {
+    color: var(--yakit-helper-text-color);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px; /* 133.333% */
+    .engine-help-zoomeye {
+        margin-left: 8px;
+        color: var(--yakit-primary-5);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+.zoomeye-help-body {
+    height: 100%;
+    overflow: auto;
+    max-height: 70vh;
+    h1 {
+        color: var(--yakit-header-color);
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+    }
+    li,
+    p {
+        color: var(--yakit-body-text-color);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        margin-bottom: 4px;
+    }
+    ol,
+    p {
+        margin-bottom: 16px;
+        li:last-child {
+            margin-bottom: 0;
+        }
+    }
+    ol:last-child {
+        margin-bottom: 0;
+    }
+    p {
+        padding-inline-start: 25px;
+    }
+    img {
+        width: 100%;
+        margin: 4px 0 8px;
+    }
+    .text-red {
+        color: var(--yakit-danger-5);
+        font-weight: 500;
+    }
+}
