@@ -27,7 +27,7 @@ import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
-import styles from "./PluginLocalList.module.scss"
+import styles from "./LocalPluginList.module.scss"
 
 const defaultFilters = {
     plugin_type: [],
@@ -38,7 +38,7 @@ interface PluginLocalGroupsListProps {
     pluginsGroupsInViewport: boolean
     activeGroup: GroupListItem
 }
-export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo((props) => {
+export const LocalPluginList: React.FC<PluginLocalGroupsListProps> = React.memo((props) => {
     const {pluginsGroupsInViewport, activeGroup} = props
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])

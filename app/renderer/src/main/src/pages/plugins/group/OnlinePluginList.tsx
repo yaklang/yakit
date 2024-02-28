@@ -27,7 +27,7 @@ import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import {YakScript} from "@/pages/invoker/schema"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
-import styles from "./PluginOnlineList.module.scss"
+import styles from "./OnlinePluginList.module.scss"
 import {API} from "@/services/swagger/resposeType"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 
@@ -40,7 +40,7 @@ interface PluginOnlineGroupsListProps {
     pluginsGroupsInViewport: boolean
     activeGroup: GroupListItem
 }
-export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.memo((props) => {
+export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.memo((props) => {
     const {pluginsGroupsInViewport, activeGroup} = props
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<string[]>([])

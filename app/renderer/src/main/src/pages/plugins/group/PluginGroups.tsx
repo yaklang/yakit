@@ -1,6 +1,6 @@
 import React, {useMemo, useRef, useState} from "react"
-import {PluginLocalList} from "./PluginLocalList"
-import {PluginOnlineList} from "./PluginOnlineList"
+import {LocalPluginList} from "./LocalPluginList"
+import {OnlinePluginList} from "./OnlinePluginList"
 import {useStore} from "@/store"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {PluginOnlineGroupList} from "./PluginOnlineGroupList"
@@ -140,10 +140,10 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                     }}
                 >
                     {judgeOnlineStatus && activeOnlineGroup && (
-                        <PluginOnlineList
+                        <OnlinePluginList
                             pluginsGroupsInViewport={inViewport}
                             activeGroup={activeOnlineGroup}
-                        ></PluginOnlineList>
+                        ></OnlinePluginList>
                     )}
                 </div>
                 <div
@@ -153,10 +153,10 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                     }}
                 >
                     {activeLocalGroup && (
-                        <PluginLocalList
+                        <LocalPluginList
                             pluginsGroupsInViewport={inViewport}
                             activeGroup={activeLocalGroup}
-                        ></PluginLocalList>
+                        ></LocalPluginList>
                     )}
                 </div>
             </div>
