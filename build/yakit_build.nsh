@@ -143,7 +143,8 @@ FunctionEnd
         CopyFiles /SILENT "$TEMP\temp-yakit-projects\*.*" "$INSTDIR\yakit-projects"
         RMDir /r "$TEMP\temp-yakit-projects"
     ${EndIf}
-    
+    ; 删除桌面快捷方式
+    Delete "$DESKTOP\$EXE_NAME.lnk"
     ; 非更新时才删除以下的东西
     ${If} $IS_UPDATED != "true"
         ; 删除开始菜单快捷方式
@@ -151,8 +152,6 @@ FunctionEnd
         Delete "$SMPROGRAMS\$StartMenuFolder\$EXE_NAME.lnk"
         RMDir "$SMPROGRAMS\$EXE_NAME"
 
-        ; 删除桌面快捷方式
-        Delete "$DESKTOP\$EXE_NAME.lnk"
 
         ; 删除注册表项
         DeleteRegValue HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
