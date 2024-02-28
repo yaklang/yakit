@@ -211,7 +211,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         }, 300)
     })
     const yakitUpdate = useMemoizedFn(() => {
-        ipcRenderer.invoke("open-yakit-path")
+        ipcRenderer.invoke("open-yakit-or-yaklang")
         setTimeout(() => {
             ipcRenderer.invoke("UIOperate", "close")
         }, 100)

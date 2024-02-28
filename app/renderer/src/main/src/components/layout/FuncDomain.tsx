@@ -1301,7 +1301,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     {isSimple ? (
                         <></>
                     ) : isUpdateWait ? (
-                        <YakitButton onClick={() => ipcRenderer.invoke("open-yakit-path")}>{`安装 `}</YakitButton>
+                        <YakitButton onClick={() => ipcRenderer.invoke("open-yakit-or-yaklang")}>{`安装 `}</YakitButton>
                     ) : isUpdate ? (
                         <div className={styles["update-btn"]} onClick={() => onDownload("yakit")}>
                             <UpdateSvgIcon style={{marginRight: 4}} />

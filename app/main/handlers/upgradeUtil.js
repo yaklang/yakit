@@ -10,7 +10,7 @@ const request = require("request");
 
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
-const {yakitDownloadDir,YakitProjectPath} = require("../filePath")
+const {YakitProjectPath} = require("../filePath")
 
 
 const secretDir = path.join(YakitProjectPath, "auth");
@@ -368,12 +368,13 @@ module.exports = {
         }
 
         const downloadYakitByDownloadUrl = (resolve,reject,downloadUrl) => {
-            const dest = path.join(yakitDownloadDir(), path.basename(downloadUrl));
+            const dest = path.join(yakEngineDir, path.basename(downloadUrl));
             try {
                 fs.unlinkSync(dest)
             } catch (e) {
 
             }
+
             // https://github.com/IndigoUnited/node-request-progress
             // The options argument is optional so you can omit it
             requestProgress(
