@@ -29,7 +29,7 @@ import {YakScript} from "@/pages/invoker/schema"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import styles from "./PluginOnlineList.module.scss"
 import {API} from "@/services/swagger/resposeType"
-import { isEnpriTraceAgent } from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 const defaultFilters = {
     plugin_type: [],
@@ -252,7 +252,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             if (isEnpriTraceAgent()) {
                 const index = copySetGroup.findIndex((name) => name === "基础扫描")
                 const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
-                
+
                 if (index === -1 && index2 === -1) {
                     copyAllGroup = [...copyAllGroup, "基础扫描"]
                 }
@@ -304,27 +304,29 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     // 单项额外操作
     const optExtraNode = useMemoizedFn((data, index) => {
         return (
-            <YakitPopover
-                overlayClassName={styles["add-group-popover"]}
-                placement='bottomRight'
-                trigger='click'
-                content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
-                onVisibleChange={(visible) => {
-                    if (visible) {
-                        getYakScriptGroupOnline([data.uuid])
-                    } else {
-                        updateGroupList()
-                    }
-                }}
-            >
-                <OutlinePluscircleIcon
-                    className={styles["add-group-icon"]}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        optClick(data, index)
+            <div onClick={(e) => e.stopPropagation()}>
+                <YakitPopover
+                    overlayClassName={styles["add-group-popover"]}
+                    placement='bottomRight'
+                    trigger='click'
+                    content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
+                    onVisibleChange={(visible) => {
+                        if (visible) {
+                            getYakScriptGroupOnline([data.uuid])
+                        } else {
+                            updateGroupList()
+                        }
                     }}
-                />
-            </YakitPopover>
+                >
+                    <OutlinePluscircleIcon
+                        className={styles["add-group-icon"]}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            optClick(data, index)
+                        }}
+                    />
+                </YakitPopover>
+            </div>
         )
     })
 

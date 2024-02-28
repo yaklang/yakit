@@ -307,27 +307,29 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     // 单项额外操作
     const optExtraNode = useMemoizedFn((data, index) => {
         return (
-            <YakitPopover
-                overlayClassName={styles["add-group-popover"]}
-                placement='bottomRight'
-                trigger='click'
-                content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
-                onVisibleChange={(visible) => {
-                    if (visible) {
-                        getYakScriptGroupLocal([data.ScriptName])
-                    } else {
-                        updateGroupList()
-                    }
-                }}
-            >
-                <OutlinePluscircleIcon
-                    className={styles["add-group-icon"]}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        optClick(data, index)
+            <div onClick={(e) => e.stopPropagation()}>
+                <YakitPopover
+                    overlayClassName={styles["add-group-popover"]}
+                    placement='bottomRight'
+                    trigger='click'
+                    content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
+                    onVisibleChange={(visible) => {
+                        if (visible) {
+                            getYakScriptGroupLocal([data.ScriptName])
+                        } else {
+                            updateGroupList()
+                        }
                     }}
-                />
-            </YakitPopover>
+                >
+                    <OutlinePluscircleIcon
+                        className={styles["add-group-icon"]}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            optClick(data, index)
+                        }}
+                    />
+                </YakitPopover>
+            </div>
         )
     })
 

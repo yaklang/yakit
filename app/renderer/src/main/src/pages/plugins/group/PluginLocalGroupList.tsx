@@ -98,12 +98,15 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
     // 点击删除
     const onClickBtn = (groupItem: GroupListItem) => {
         setDelGroup(groupItem)
-        if (!pluginGroupDelNoPrompt) {
-            setDelGroupConfirmPopVisible(true)
-        } else {
-            setDelGroup(undefined)
-            onGroupDel(groupItem)
-        }
+        getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
+            const flag = result === "true"
+            if (flag) {
+                setDelGroup(undefined)
+                onGroupDel(groupItem)
+            } else {
+                setDelGroupConfirmPopVisible(true)
+            }
+        })
     }
 
     // 插件组删除

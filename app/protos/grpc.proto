@@ -1961,6 +1961,7 @@ message DeleteLocalPluginsByWhereRequest {
   string UserName = 4;
   repeated int64 Ids = 5;
   string Tags = 6;
+  repeated string Groups = 7;
 }
 
 message DownloadOnlinePluginProgress {

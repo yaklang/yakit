@@ -71,9 +71,12 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
             // 便携版 若未返回基础扫描 前端自己筛一个进去
             if (isEnpriTraceAgent()) {
                 const findBasicScanningIndex = copyGroup.findIndex((item) => item.value === "基础扫描")
+                const findNotGroupIndex = copyGroup.findIndex((item) => item.value === "未分组" && item.default)
                 if (findBasicScanningIndex === -1) {
-                    const findNotGroupIndex = copyGroup.findIndex((item) => item.value === "未分组" && item.default)
                     copyGroup.splice(findNotGroupIndex + 1, 0, {value: "基础扫描", total: 0, default: false})
+                } else {
+                    const removedItem = copyGroup.splice(findBasicScanningIndex, 1)
+                    copyGroup.splice(findNotGroupIndex + 1, 0, removedItem[0])
                 }
             }
             const arr = copyGroup.map((item) => {
@@ -114,12 +117,15 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
     // 点击删除
     const onClickBtn = (groupItem: GroupListItem) => {
         setDelGroup(groupItem)
-        if (!pluginGroupDelNoPrompt) {
-            setDelGroupConfirmPopVisible(true)
-        } else {
-            setDelGroup(undefined)
-            onGroupDel(groupItem)
-        }
+        getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
+            const flag = result === "true"
+            if (flag) {
+                setDelGroup(undefined)
+                onGroupDel(groupItem)
+            } else {
+                setDelGroupConfirmPopVisible(true)
+            }
+        })
     }
 
     // 插件组删除

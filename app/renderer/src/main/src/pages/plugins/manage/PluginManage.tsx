@@ -730,8 +730,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={onFilter}
                     groupList={pluginFilters.map((item) => {
-                        if (item.groupKey === "plugin_group" && magGroupState) {
-                            item.groupExtraOptBtn = (
+                        if (item.groupKey === "plugin_group") {
+                            item.groupExtraOptBtn = magGroupState ? (
                                 <>
                                     <YakitButton
                                         type='text'
@@ -746,6 +746,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     </YakitButton>
                                     <div className={styles["divider-style"]} />
                                 </>
+                            ) : (
+                                <></>
                             )
                         }
                         return item

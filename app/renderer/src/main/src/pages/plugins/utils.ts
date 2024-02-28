@@ -288,7 +288,7 @@ export const apiFetchGroupStatisticsMine: (query?: API.PluginsSearchRequest) => 
     })
 }
 
-/**插件审核左侧统计 */
+/**插件审核 插件管理 左侧统计 */
 export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (
     query
 ) => {
@@ -300,33 +300,12 @@ export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) =>
             }
             apiFetchGroupStatistics(newQuery)
                 .then((res: API.PluginsSearchResponse) => {
-                    // 插件组（线上分组，只有便携版才有）
-                    if (!isEnpriTraceAgent()) {
-                        // 插件类型、Tag、审核状态
-                        const newData = (res.data || []).filter((ele) => ele.groupName !== "插件分组")
-                        resolve({
-                            ...res,
-                            data: newData
-                        })
-                    } else {
-                        // 插件类型、Tag、审核状态、插件组（线上分组）
-                        const newData = (res.data || []).map((ele) => {
-                            if (ele.groupName === "插件分组") {
-                                const newList = (ele.data || []).map((n) => ({
-                                    ...n,
-                                    label: n.label.replace(/^"+|"+$/g, "")
-                                }))
-                                return {
-                                    ...ele,
-                                    data: newList
-                                }
-                            }
-                            return ele
-                        })
-                        resolve({
-                            data: newData
-                        })
-                    }
+                    // 插件类型、Tag、审核状态 插件分组
+                    const newData = (res.data || [])
+                    resolve({
+                        ...res,
+                        data: newData
+                    })
                 })
                 .catch((err) => {
                     yakitNotify("error", "获取插件审核统计数据失败:" + err)
@@ -812,6 +791,7 @@ export interface DeleteLocalPluginsByWhereRequestProps {
     Type: string
     UserName: string
     Tags: string
+    Groups: string[]
 }
 /**
  * @name DeleteLocalPluginsByWhere 接口参数转换(前端数据转接口参数)
@@ -827,7 +807,8 @@ export const convertDeleteLocalPluginsByWhereRequestParams = (
 
         // filter
         Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
-        Tags: (filter.tags?.map((ele) => ele.value) || []).join(",")
+        Tags: (filter.tags?.map((ele) => ele.value) || []).join(","),
+        Groups: (filter.plugin_group?.map((ele) => ele.value) || []),
     }
     return toolDelInvalidKV(data)
 }
@@ -835,6 +816,7 @@ export const convertDeleteLocalPluginsByWhereRequestParams = (
 export const apiDeleteLocalPluginsByWhere: (query: DeleteLocalPluginsByWhereRequestProps) => Promise<null> = (
     query
 ) => {
+    console.log('批量删除条件：', query);
     return new Promise((resolve, reject) => {
         try {
             ipcRenderer
