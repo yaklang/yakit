@@ -264,7 +264,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             startMITMServer(host, port, downstreamProxy, enableHttp2, certs, extra)
             let tip = ""
             if (downstreamProxy) {
-                tip += `下游代理:${downstreamProxy}`
+                tip += `下游代理：${downstreamProxy}`
             }
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
@@ -312,6 +312,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         logs={logs}
                         statusCards={statusCards}
                         tip={tip}
+                        onSetTip={setTip}
                     />
                 )
         }

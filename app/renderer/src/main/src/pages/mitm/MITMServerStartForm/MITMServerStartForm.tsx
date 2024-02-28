@@ -462,6 +462,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
             title='配置代理认证'
             width={506}
             maskClosable={false}
+            destroyOnClose={true}
             closable
             centered
             okText='确认'
