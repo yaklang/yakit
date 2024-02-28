@@ -82,7 +82,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 total: item.count
             })
         )
-        return group
+        return group || []
     })
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [selectList, setSelectList] = useState<YakScript[]>(defaultSelectList)

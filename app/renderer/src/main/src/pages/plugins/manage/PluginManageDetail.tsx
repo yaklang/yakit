@@ -137,7 +137,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     total: item.count
                 })
             )
-            return group
+            return group || []
         })
         const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
         const onSearch = useMemoizedFn((value: PluginSearchParams) => {

@@ -57,7 +57,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                 total: item.count
             })
         )
-        return group
+        return group || []
     })
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
