@@ -22,8 +22,26 @@ const YakitProjectPath =
         : defaultYakitProjectPath
     )
 
-/** 引擎和软件安装包路径 */
+/** 引擎路径 */
 const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
+/** 安装包路径 */
+const yakitDownloadDir = () => {
+    switch (process.platform) {
+        case "darwin":
+            if (process.arch === "arm64") {
+                return path.join(os.homedir(), 'Downloads')
+            } else {
+                return path.join(os.homedir(), 'Downloads')
+            }
+        case "win32":
+            return path.join(os.homedir(), 'Downloads')
+        case "linux":
+            return path.join(os.homedir(), 'Downloads')
+        default:
+            return path.join(os.homedir(), 'Downloads')
+    }
+}
+
 /**
  * Yaklang引擎在本地的绝对地址
  * @returns {String} 本地绝对地址
@@ -80,6 +98,7 @@ const windowStatePatch = path.join(basicDir)
 module.exports = {
     YakitProjectPath,
     yaklangEngineDir,
+    yakitDownloadDir,
     getLocalYaklangEngine,
     localCachePath,
     extraLocalCachePath,
