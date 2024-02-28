@@ -90,6 +90,7 @@ export interface HTTPFlow {
     Url: string
     Request: Uint8Array
     Response: Uint8Array
+    BareResponse?: Uint8Array
     StatusCode: number
     BodyLength: number
     BodySizeVerbose?: string

@@ -401,6 +401,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             hideSearch={true}
                                             noHex={true}
                                             noHeader={true}
+                                            bareValue={flow.BareResponse}
                                             originValue={new Buffer(flow.Response)}
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
@@ -1328,6 +1329,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
                         loading={flowResponseLoad}
+                        bareValue={flow.BareResponse}
                         originValue={originRspValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}

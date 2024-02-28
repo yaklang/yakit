@@ -758,7 +758,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         <NewHTTPPacketEditor
                             language={currentSelectItem?.DisableRenderStyles ? "text" : undefined}
                             isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
-                            title={
+                            title={ 
                                 <div className={styles["second-node-title-wrapper"]}>
                                     <span className={styles["second-node-title-text"]}>快速预览</span>
                                     <div className={styles["second-node-title-btns"]}>
@@ -794,6 +794,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             hideSearch={true}
                             noHex={true}
                             // noHeader={true}
+                            bareValue={currentSelectItem?.BareResponse || new Buffer([])}
                             originValue={
                                 (currentSelectShowType === "request"
                                     ? currentSelectItem?.RequestRaw

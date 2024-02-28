@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
     OtherMenuListProps,
     YakitEditorExtraRightMenuType,
@@ -6,23 +6,24 @@ import {
     YakitEditorProps,
     YakitIMonacoEditor
 } from "./YakitEditorType"
-import {YakitEditor} from "./YakitEditor"
-import {failed, info} from "@/utils/notification"
-import {newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
-import {StringToUint8Array} from "@/utils/str"
-import {callCopyToClipboard} from "@/utils/basic"
-import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import {saveABSFileToOpen} from "@/utils/openWebsite"
-import {Modal} from "antd"
-import {execAutoDecode} from "@/utils/encodec"
-import {YakitSystem} from "@/yakitGVDefine"
+import { YakitEditor } from "./YakitEditor"
+import { failed, info } from "@/utils/notification"
+import { newWebFuzzerTab } from "@/pages/fuzzer/HTTPFuzzerPage"
+import { generateCSRFPocByRequest } from "@/pages/invoker/fromPacketToYakCode"
+import { StringToUint8Array } from "@/utils/str"
+import { callCopyToClipboard } from "@/utils/basic"
+import { showResponseViaResponseRaw } from "@/components/ShowInBrowser"
+import { saveABSFileToOpen } from "@/utils/openWebsite"
+import { Modal } from "antd"
+import { execAutoDecode } from "@/utils/encodec"
+import { YakitSystem } from "@/yakitGVDefine"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     defaultHttps?: boolean
     originValue: Uint8Array
+    bareValue?: Uint8Array
     noPacketModifier?: boolean
     extraEditorProps?: YakitEditorProps | any
     webFuzzerValue?: string
@@ -32,6 +33,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
     const {
         defaultHttps = false,
+        bareValue,
         originValue,
         noPacketModifier = false,
         extraEditorProps,
@@ -63,7 +65,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             ...(contextMenu || {}),
             copyCSRF: {
                 menu: [
-                    {type: "divider"},
+                    { type: "divider" },
                     {
                         key: "csrfpoc",
                         label: "复制为 CSRF PoC"
@@ -119,8 +121,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     try {
                         if (readOnly && originValue) {
                             ipcRenderer
-                                .invoke("GetHTTPPacketBody", {PacketRaw: originValue})
-                                .then((bytes: {Raw: Uint8Array}) => {
+                                .invoke("GetHTTPPacketBody", { PacketRaw: bareValue ? bareValue : originValue })
+                                .then((bytes: { Raw: Uint8Array }) => {
                                     saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                 })
                                 .catch((e) => {
@@ -136,7 +138,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             })
                             return
                         }
-                        ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text}).then((bytes: {Raw: Uint8Array}) => {
+                        ipcRenderer.invoke("GetHTTPPacketBody", { Packet: text }).then((bytes: { Raw: Uint8Array }) => {
                             saveABSFileToOpen("packet-body.txt", bytes.Raw)
                         })
                     } catch (e) {
@@ -197,7 +199,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         <YakitEditor
             menuType={["code", "decode", ...rightMenuType]}
             readOnly={readOnly}
-            contextMenu={{...rightContextMenu}}
+            contextMenu={{ ...rightContextMenu }}
             {...restProps}
             {...extraEditorProps}
         />

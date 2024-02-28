@@ -1091,6 +1091,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     /** 扩展属性 */
     originValue: Uint8Array
+    bareValue?: Uint8Array
     defaultStringValue?: string
     onChange?: (i: Buffer) => any
     disableFullscreen?: boolean
@@ -1158,6 +1159,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const isResponse = props.isResponse
     const {
         originValue,
+        bareValue,
         isShowBeautifyRender = true,
         showDefaultExtra = true,
         dataCompare,
@@ -1729,6 +1731,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             noMiniMap={props.noMinimap}
                             type={props.language || (isResponse ? "html" : "http")}
                             originValue={showValue}
+                            bareValue={bareValue}
                             value={
                                 props.readOnly && showValue.length > 0
                                     ? new Buffer(showValue).toString(getEncoding())

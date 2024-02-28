@@ -4112,6 +4112,8 @@ message FuzzerResponse {
   string TooLargeResponseHeaderFile = 50;
   string TooLargeResponseBodyFile = 51;
   bool DisableRenderStyles = 52;
+
+  bytes BareResponse = 53;
 }
 
 message RedirectHTTPFlow {
@@ -4290,6 +4292,8 @@ message HTTPFlow {
   string TooLargeResponseHeaderFile = 44;
   string TooLargeResponseBodyFile = 45;
   bool DisableRenderStyles = 46;
+
+  bytes BareResponse = 47; // 原始响应
 }
 
 message FuzzableParam {

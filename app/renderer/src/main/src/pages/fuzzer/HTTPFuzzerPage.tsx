@@ -169,6 +169,7 @@ export interface FuzzerResponse {
     ContentType: string
     Headers: HTTPHeader[]
     ResponseRaw: Uint8Array
+    BareResponse: Uint8Array
     BodyLength: number
     DurationMs: number
     UUID: string
@@ -455,6 +456,7 @@ export const emptyFuzzer: FuzzerResponse = {
     Reason: "",
     RequestRaw: new Uint8Array(),
     ResponseRaw: new Uint8Array(),
+    BareResponse: new Uint8Array(),
     StatusCode: 0,
     Timestamp: 0,
     UUID: "",
@@ -464,7 +466,6 @@ export const emptyFuzzer: FuzzerResponse = {
     ExtractedResults: [],
     MatchedByMatcher: false,
     HitColor: "",
-
     IsTooLargeResponse: false,
     TooLargeResponseHeaderFile: "",
     TooLargeResponseBodyFile: "",
@@ -2753,6 +2754,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
+                            bareValue={fuzzerResponse.BareResponse}
                             originValue={fuzzerResponse.ResponseRaw}
                             hideSearch={true}
                             isResponse={true}
