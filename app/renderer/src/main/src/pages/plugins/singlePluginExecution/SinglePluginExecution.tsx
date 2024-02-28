@@ -1,21 +1,113 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useReducer, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab} from "../local/PluginsLocalDetail"
-import {YakScript} from "@/pages/invoker/schema"
+import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
-import {apiGetYakScriptById, onToEditPlugin} from "../utils"
+import {apiGetYakScriptById, apiQueryYakScript, convertLocalPluginsRequestParams, onToEditPlugin} from "../utils"
 
 import styles from "./SinglePluginExecution.module.scss"
+import {PluginDetails, PluginDetailsListItem, defaultFilter, defaultSearch} from "../baseTemplate"
+import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
+import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import emiter from "@/utils/eventBus/eventBus"
+import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import cloneDeep from "lodash/cloneDeep"
+import "../plugins.scss"
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const {yakScriptId} = props
+    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [loading, setLoading] = useState<boolean>(false)
     const [plugin, setPlugin] = useState<YakScript>()
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(true)
+    const [selectList, setSelectList] = useState<YakScript[]>([])
+    const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
+
+    const privateDomainRef = useRef<string>("") // 私有域地址
+    const singlePluginExecutionRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(singlePluginExecutionRef)
+    /** 是否为初次加载 */
+    const isLoadingRef = useRef<boolean>(true)
+
     useEffect(() => {
         getPluginById()
     }, [yakScriptId])
+    useEffect(() => {
+        getPrivateDomainAndRefList()
+    }, [])
+    useEffect(() => {
+        if (inViewport) {
+            emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+        }
+        return () => {
+            emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+        }
+    }, [inViewport])
+
+    /**获取最新的私有域,并刷新列表 */
+    const getPrivateDomainAndRefList = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+            if (setting) {
+                const values = JSON.parse(setting)
+                privateDomainRef.current = values.BaseUrl
+                setTimeout(() => {
+                    fetchList(true)
+                }, 200)
+            }
+        })
+    })
+
+    const fetchList = useDebounceFn(
+        useMemoizedFn(async (reset?: boolean) => {
+            if (reset) {
+                isLoadingRef.current = true
+            }
+            setLoading(true)
+            const params: PluginListPageMeta = !!reset
+                ? {page: 1, limit: 20}
+                : {
+                      page: +response.Pagination.Page + 1,
+                      limit: +response.Pagination.Limit || 20
+                  }
+            const query: QueryYakScriptRequest = {
+                ...convertLocalPluginsRequestParams({plugin_type: [], tags: []}, search, params)
+            }
+            try {
+                const res = await apiQueryYakScript(query)
+                if (!res.Data) res.Data = []
+                const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
+                setHasMore(length < +res.Total)
+                const newData = res.Data.map((ele) => ({
+                    ...ele,
+                    isLocalPlugin: privateDomainRef.current !== ele.OnlineBaseUrl
+                }))
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: {
+                            ...res,
+                            Data: newData
+                        }
+                    }
+                })
+                if (+res.Pagination.Page === 1) {
+                    setAllCheck(false)
+                    setSelectList([])
+                }
+            } catch (error) {}
+            setTimeout(() => {
+                isLoadingRef.current = false
+                setLoading(false)
+            }, 200)
+        }),
+        {wait: 200, leading: true}
+    ).run
+
     const getPluginById = useMemoizedFn(() => {
         setLoading(true)
         apiGetYakScriptById(yakScriptId)
@@ -26,28 +118,121 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 }, 200)
             })
     })
-    const onEdit = useMemoizedFn((e) => {
-        e.stopPropagation()
-        if (!plugin) return
-        onToEditPlugin(plugin)
+    const onClearSelect = useMemoizedFn(() => {
+        setSelectList([])
     })
-    const headExtraNode = useCreation(() => {
-        return (
-            <>
-                <YakitButton type='text2' icon={<OutlinePencilaltIcon onClick={onEdit} />} />
-            </>
-        )
-    }, [])
+    /**全选 */
+    const onCheck = useMemoizedFn((value: boolean) => {
+        setSelectList([])
+        setAllCheck(value)
+    })
+    // 滚动更多加载
+    const loadMoreData = useMemoizedFn(() => {
+        fetchList()
+    })
+    /** 单项勾选|取消勾选 */
+    const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
+        // 全选情况时的取消勾选
+        if (allCheck) {
+            setSelectList(response.Data.filter((item) => item.ScriptName !== data.ScriptName))
+            setAllCheck(false)
+            return
+        }
+        // 单项勾选回调
+        if (value) setSelectList([...selectList, data])
+        else setSelectList(selectList.filter((item) => item.ScriptName !== data.ScriptName))
+    })
+    const onPluginClick = useMemoizedFn((data: YakScript) => {
+        const value = allCheck || checkList.includes(data.ScriptName)
+        optCheck(data, !value)
+    })
+    /** 单项副标题组件 */
+    const optExtra = useMemoizedFn((data: YakScript) => {
+        if (privateDomainRef.current !== data.OnlineBaseUrl) return <></>
+        if (data.OnlineIsPrivate) {
+            return <SolidPrivatepluginIcon className='icon-svg-16' />
+        } else {
+            return <SolidCloudpluginIcon className='icon-svg-16' />
+        }
+    })
+    const onSearch = useMemoizedFn((val) => {
+        setSearch(val)
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
+    })
+    // 选中插件的数量
+    const selectNum = useCreation(() => {
+        if (allCheck) return response.Total
+        else return selectList.length
+    }, [allCheck, selectList, response.Total])
+    const checkList = useCreation(() => {
+        return selectList.map((ele) => ele.ScriptName)
+    }, [selectList])
     if (!plugin) return null
     return (
         <>
-            <PluginDetailsTab
-                executorShow={!loading}
-                plugin={plugin}
-                headExtraNode={null}
-                wrapperClassName={styles["single-plugin-execution-wrapper"]}
-                hiddenLogIssue={true}
-            />
+            <PluginDetails<YakScript>
+                title='本地插件'
+                filterNode={<></>}
+                filterExtra={
+                    <div className={"filter-extra-wrapper"} ref={singlePluginExecutionRef}>
+                        <YakitButton type='text' danger onClick={onClearSelect}>
+                            清空
+                        </YakitButton>
+                    </div>
+                }
+                checked={allCheck}
+                onCheck={onCheck}
+                total={response.Total}
+                selected={selectNum}
+                listProps={{
+                    rowKey: "ScriptName",
+                    data: response.Data,
+                    loadMoreData: loadMoreData,
+                    classNameRow: "plugin-details-opt-wrapper",
+                    renderRow: (info, i) => {
+                        const check = allCheck || checkList.includes(info.ScriptName)
+                        return (
+                            <PluginDetailsListItem<YakScript>
+                                order={i}
+                                plugin={info}
+                                selectUUId={plugin.ScriptName} //本地用的ScriptName代替uuid
+                                check={check}
+                                headImg={info.HeadImg || ""}
+                                pluginUUId={info.ScriptName} //本地用的ScriptName代替uuid
+                                pluginName={info.ScriptName}
+                                help={info.Help}
+                                content={info.Content}
+                                optCheck={optCheck}
+                                official={!!info.OnlineOfficial}
+                                isCorePlugin={!!info.IsCorePlugin}
+                                pluginType={info.Type}
+                                onPluginClick={onPluginClick}
+                                extra={optExtra}
+                            />
+                        )
+                    },
+                    page: response.Pagination.Page,
+                    hasMore: +response.Total !== response.Data.length,
+                    loading: loading,
+                    defItemHeight: 46,
+                    isRef: loading && isLoadingRef.current
+                }}
+                onBack={() => {}}
+                search={search}
+                setSearch={setSearch}
+                onSearch={onSearch}
+                spinLoading={loading && isLoadingRef.current}
+            >
+                <PluginDetailsTab
+                    executorShow={!loading}
+                    plugin={plugin}
+                    headExtraNode={null}
+                    wrapperClassName={styles["single-plugin-execution-wrapper"]}
+                    hiddenLogIssue={true}
+                />
+            </PluginDetails>
         </>
     )
 })
