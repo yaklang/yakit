@@ -23,6 +23,7 @@ import {
 import {API} from "@/services/swagger/resposeType"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import styles from "./PluginOnlineGroupList.module.scss"
+import { isEnpriTraceAgent } from "@/utils/envfile"
 
 interface PluginOnlineGroupListProps {
     pluginsGroupsInViewport: boolean
@@ -67,6 +68,14 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
     const getGroupList = () => {
         apiFetchQueryYakScriptGroupOnline().then((res: API.GroupResponse) => {
             const copyGroup = structuredClone(res.data)
+            // 便携版 若未返回基础扫描 前端自己筛一个进去
+            if (isEnpriTraceAgent()) {
+                const findBasicScanningIndex = copyGroup.findIndex((item) => item.value === "基础扫描")
+                if (findBasicScanningIndex === -1) {
+                    const findNotGroupIndex = copyGroup.findIndex((item) => item.value === "未分组" && item.default)
+                    copyGroup.splice(findNotGroupIndex + 1, 0, {value: "基础扫描", total: 0, default: false})
+                }
+            }
             const arr = copyGroup.map((item) => {
                 const obj = {
                     id: item.default ? item.value : item.value + "_group",
@@ -76,6 +85,10 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
                     iconColor: assemblyExtraField(item.default, item.value, "iconColor"),
                     showOptBtns: assemblyExtraField(item.default, item.value, "showOptBtns"),
                     default: item.default
+                }
+                // 便携版 基础扫描不允许编辑删除操作
+                if (isEnpriTraceAgent() && item.value === "基础扫描") {
+                    obj.showOptBtns = false
                 }
                 return obj
             })

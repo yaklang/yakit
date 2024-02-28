@@ -27,7 +27,6 @@ import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
-import {isEnpriTraceAgent} from "@/utils/envfile"
 import styles from "./PluginLocalList.module.scss"
 
 const defaultFilters = {
@@ -260,15 +259,6 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 checked: true
             }))
             let copyAllGroup = [...res.AllGroup]
-            // 便携版 如果没有基础扫描 塞基础扫描
-            if (isEnpriTraceAgent()) {
-                const index = copySetGroup.findIndex((name) => name === "基础扫描")
-                const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
-                
-                if (index === -1 && index2 === -1) {
-                    copyAllGroup = [...copyAllGroup, "基础扫描"]
-                }
-            }
             const newAllGroup = copyAllGroup.map((name) => ({
                 groupName: name,
                 checked: false

@@ -29,6 +29,7 @@ import {YakScript} from "@/pages/invoker/schema"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import styles from "./PluginOnlineList.module.scss"
 import {API} from "@/services/swagger/resposeType"
+import { isEnpriTraceAgent } from "@/utils/envfile"
 
 const defaultFilters = {
     plugin_type: [],
@@ -247,6 +248,15 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                 checked: true
             }))
             let copyAllGroup = Array.isArray(res.allGroup) ? [...res.allGroup] : []
+            // 便携版 如果没有基础扫描 塞基础扫描
+            if (isEnpriTraceAgent()) {
+                const index = copySetGroup.findIndex((name) => name === "基础扫描")
+                const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
+                
+                if (index === -1 && index2 === -1) {
+                    copyAllGroup = [...copyAllGroup, "基础扫描"]
+                }
+            }
             const newAllGroup = copyAllGroup.map((name) => ({
                 groupName: name,
                 checked: false

@@ -65,14 +65,6 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
     const getGroupList = () => {
         apiFetchQueryYakScriptGroupLocal().then((group: GroupCount[]) => {
             const copyGroup = structuredClone(group)
-            // 便携版 若未返回基础扫描 前端自己筛一个进去
-            if (isEnpriTraceAgent()) {
-                const findBasicScanningIndex = copyGroup.findIndex((item) => item.Value === "基础扫描")
-                if (findBasicScanningIndex === -1) {
-                    const findNotGroupIndex = copyGroup.findIndex((item) => item.Value === "未分组" && item.Default)
-                    copyGroup.splice(findNotGroupIndex + 1, 0, {Value: "基础扫描", Total: 0, Default: false})
-                }
-            }
             const arr = copyGroup.map((item) => {
                 const obj = {
                     id: item.Default ? item.Value : item.Value + "_group",
@@ -82,10 +74,6 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
                     iconColor: assemblyExtraField(item.Default, item.Value, "iconColor"),
                     showOptBtns: assemblyExtraField(item.Default, item.Value, "showOptBtns"),
                     default: item.Default
-                }
-                // 便携版 基础扫描不允许编辑删除操作
-                if (isEnpriTraceAgent() && item.Value === "基础扫描") {
-                    obj.showOptBtns = false
                 }
                 return obj
             })
