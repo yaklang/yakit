@@ -3,7 +3,7 @@ const OS = require("os")
 const {execFile, exec} = require("child_process")
 const path = require("path")
 const process = require("process")
-const {yaklangEngineDir, remoteLinkDir} = require("../filePath")
+const {yaklangEngineDir,yakitDownloadDir, remoteLinkDir} = require("../filePath")
 
 module.exports = (win, getClient) => {
     // CPU瞬时使用均值
@@ -109,10 +109,16 @@ module.exports = (win, getClient) => {
         return `${process.platform}-${process.arch}`
     })
 
-    /** 打开 yaklang 或 yakit 文件所在文件夹 */
+    /** 打开 yaklang 或 yakit 文件所在文件夹 (ps:随着yakit下载移动至下载文件夹中，此方法仅打开yaklang)*/
     ipcMain.handle("open-yakit-or-yaklang", (e) => {
         return shell.openPath(yaklangEngineDir)
     })
+
+    /** 打开 yakit 文件所在文件夹 */
+    ipcMain.handle("open-yakit-path", (e) => {
+        return shell.openPath(yakitDownloadDir())
+    })
+
     /** 打开远程连接配置信息文件夹 */
     ipcMain.handle("open-remote-link", (e) => {
         return shell.openPath(remoteLinkDir)
