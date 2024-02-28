@@ -22,6 +22,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -76,6 +77,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             .invoke("mitm-set-filter", filter)
             .then(() => {
                 setMITMFilter(filter)
+                // 是否配置过过滤器白名单文案
+                const flag =
+                    !!filter.includeHostname.length || !!filter.includeUri.length || !!filter.includeSuffix.length
+                emiter.emit("onSetFilterWhiteListEvent", flag + "")
                 setVisible(false)
                 info("更新 MITM 过滤器状态")
             })
@@ -95,12 +100,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     })
     const onClearFilters = () => {
         filtersRef.current.clearFormValue()
-        if(_mitmFilter?.excludeMethod?.includes("CONNECT")){
-           filtersRef.current.setFormValue({
-                excludeMethod:["CONNECT"]
-           })
+        if (_mitmFilter?.excludeMethod?.includes("CONNECT")) {
+            filtersRef.current.setFormValue({
+                excludeMethod: ["CONNECT"]
+            })
         }
-        
     }
 
     // 判断对象内的属性是否为空
@@ -231,9 +235,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     <YakitButton type='text' onClick={() => onClearFilters()}>
                         清除
                     </YakitButton>
-                    {isStartMITM &&<YakitButton type='text' onClick={() => onResetFilters()}>
-                        重置过滤器
-                    </YakitButton>}
+                    {isStartMITM && (
+                        <YakitButton type='text' onClick={() => onResetFilters()}>
+                            重置过滤器
+                        </YakitButton>
+                    )}
                 </div>
             }
             className={styles["mitm-filters-modal"]}
@@ -340,7 +346,6 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
                             className={classNames(styles["list-item"], {
                                 [styles["list-item-border"]]: index !== mitmSaveData.length - 1,
                                 [styles["list-item-border-top"]]: index === 0
-
                             })}
                             onClick={() => {
                                 onSelectItem(item.filter)
