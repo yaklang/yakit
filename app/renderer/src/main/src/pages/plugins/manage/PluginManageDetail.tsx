@@ -563,7 +563,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
         // 返回
         const onPluginBack = useMemoizedFn(() => {
-            onBack({allCheck, selectList, search: searchs, filter: filters})
+            onBack({allCheck, selectList, search: searchs, filter: getRealFilters(filters, {group: selectGroup})})
         })
 
         const optExtra = useMemoizedFn((data: API.YakitPluginDetail) => {

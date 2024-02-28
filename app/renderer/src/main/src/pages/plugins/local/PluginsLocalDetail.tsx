@@ -114,7 +114,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     const onPluginBack = useMemoizedFn(() => {
         onBack({
             search,
-            filter: filters,
+            filter: getRealFilters(filters, {group: selectGroup}),
             selectList,
             allCheck
         })
