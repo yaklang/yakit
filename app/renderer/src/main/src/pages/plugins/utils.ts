@@ -30,8 +30,42 @@ import {
 } from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch} from "./baseTemplate"
+import { PluginGroupList } from "./local/PluginsLocalType"
 
 const {ipcRenderer} = window.require("electron")
+
+/**
+ * 本地插件、插件商店、插件管理页面
+ * 当filters过滤条件被其他页面或者意外删掉，插件列表却带了该过滤条件的情况，切换到该页面时需要把被删掉的过滤条件排除
+ * @param oldfilters 页面上此时的鼓过滤条件
+ * @param newfilters 接口获取的最新过滤条件
+ * @returns realFilter - 页面上此时真正的过滤条件 updateFilterFlag - 是否需要更新页面的filters
+ */
+export interface ExcludeNoExistfilter {
+    realFilter: PluginFilterParams
+    updateFilterFlag: boolean
+}
+export const excludeNoExistfilter = (oldfilters: PluginFilterParams, newfilters: PluginGroupList[]): ExcludeNoExistfilter => {
+    let updateFilterFlag = false
+    let realFilter: PluginFilterParams = structuredClone(oldfilters)
+    Object.keys(oldfilters).forEach((key) => {
+        oldfilters[key].forEach((item: API.PluginsSearchData) => {
+            const value = item.value
+            newfilters.forEach((item2) => {
+                if (item2.groupKey === key) {
+                    updateFilterFlag = item2.data.findIndex((item3) => item3.value === value) === -1
+                    if (updateFilterFlag) {
+                        realFilter = {
+                            ...realFilter,
+                            [key]: realFilter[key].filter((item4: API.PluginsSearchData) => item4.value !== value)
+                        }
+                    }
+                }
+            })
+        })
+    })
+    return {realFilter, updateFilterFlag}
+}
 
 /**
  * @name http接口公共参数转换(前端数据转接口参数)
