@@ -38,6 +38,7 @@ import {PluginDebug} from "../pluginDebug/PluginDebug"
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {useStore} from "@/store"
 
 const {TabPane} = PluginTabs
 
@@ -120,6 +121,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             loadMoreData,
             onDetailSearch
         } = props
+        const userInfo = useStore((s) => s.userInfo)
         /**获取传到接口所需的filters*/
         const getRealFilters = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
             const realFilters: PluginFilterParams = {
@@ -572,6 +574,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
         if (!plugin) return null
 
+        /** 管理分组展示状态 */
+        const magGroupState = useMemo(() => {
+            if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
+            else return false
+        }, [userInfo.role])
+
         return (
             <PluginDetails<YakitPluginOnlineDetail>
                 pageWrapId='plugin-manage-detail'
@@ -582,7 +590,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 onSearch={onSearch}
                 filterNode={
                     <>
-                        <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
+                        <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={onGroupSearch} isShowGroupMagBtn={magGroupState} />
                         <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
                     </>
                 }
