@@ -223,7 +223,6 @@ export const extraMenuLists: OtherMenuListProps = {
         ],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
             try {
-
                 customMutateRequest(key, editor.getModel()?.getValue(), editor)
             } catch (e) {
                 failed(`custom mutate request failed: ${e}`)
