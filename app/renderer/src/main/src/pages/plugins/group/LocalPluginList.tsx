@@ -344,7 +344,7 @@ export const LocalPluginList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 isList={isList}
                 setIsList={setIsList}
                 extraHeader={
-                    <div className='extra-header-wrapper'>
+                    <div className='extra-header-wrapper' onClick={(e) => e.stopPropagation()}>
                         <YakitPopover
                             overlayClassName={styles["add-group-popover"]}
                             placement='bottomRight'

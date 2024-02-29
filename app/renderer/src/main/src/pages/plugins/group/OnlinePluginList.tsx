@@ -341,7 +341,7 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
                 isList={isList}
                 setIsList={setIsList}
                 extraHeader={
-                    <div className='extra-header-wrapper'>
+                    <div className='extra-header-wrapper' onClick={(e) => e.stopPropagation()}>
                         <YakitPopover
                             overlayClassName={styles["add-group-popover"]}
                             placement='bottomRight'
