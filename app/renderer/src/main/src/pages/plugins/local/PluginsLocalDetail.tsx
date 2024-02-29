@@ -260,9 +260,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         return realFilters
     }
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
-        if (value.plugin_group === undefined) {
-            value.plugin_group = filters.plugin_group || []
-        }
         setFilters(value)
         onDetailSearch(search, value)
         setAllCheck(false)

@@ -138,9 +138,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
         const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
         const onFilter = useMemoizedFn((value: PluginFilterParams) => {
-            if (value.plugin_group === undefined) {
-                value.plugin_group = filters.plugin_group || []
-            }
             setFilters(value)
             onDetailSearch(searchs, value)
             setSelectList([])

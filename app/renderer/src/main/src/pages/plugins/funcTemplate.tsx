@@ -1438,9 +1438,9 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
 export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) => {
     const {defaultFilter, onFilter, refresh, type = "online"} = props
 
-    const excludeFilterName = useMemo(()=>{
+    const excludeFilterName = useMemo(() => {
         return ["tags", "plugin_group"]
-    },[])
+    }, [])
 
     const [visible, setVisible] = useState<boolean>(false)
     const [filterList, setFilterList] = useState<API.PluginsSearch[]>([])
@@ -1482,20 +1482,22 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         form.setFieldsValue({...defaultFilter})
         onSetIsActive(defaultFilter)
     }, [defaultFilter])
-
+    /**需求：详情的搜索会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
     const onFinish = useMemoizedFn((value) => {
-        for(let name of excludeFilterName){
+        for (let name of excludeFilterName) {
             if (value?.hasOwnProperty(name)) delete value[name]
         }
-        onFilter(value)
+        onFilter({...value, plugin_group: defaultFilter.plugin_group})
         setVisible(false)
         onSetIsActive(value)
     })
+    /**需求：详情的重置会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
     const onReset = useMemoizedFn(() => {
         const value = {
             plugin_type: [],
             status: [],
-            plugin_private: []
+            plugin_private: [],
+            plugin_group: defaultFilter.plugin_group
         }
         form.setFieldsValue({
             ...value
@@ -1506,7 +1508,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     })
     /** 显示激活状态判断 */
     const onSetIsActive = useMemoizedFn((value: PluginFilterParams) => {
-        const valueArr = (Object.keys(value) || []).filter(item => !excludeFilterName.includes(item))
+        const valueArr = (Object.keys(value) || []).filter((item) => !excludeFilterName.includes(item))
         if (valueArr.length > 0) {
             let isActive = false
             valueArr.forEach((key) => {
