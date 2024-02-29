@@ -14,8 +14,6 @@ export interface LocalExtraOperateProps {
     onRemovePlugin: () => void
     /**导出插件 */
     onExportPlugin: () => void
-    /**编辑 */
-    onEditPlugin: () => void
     /**上传 */
     onUploadPlugin: () => void
 }

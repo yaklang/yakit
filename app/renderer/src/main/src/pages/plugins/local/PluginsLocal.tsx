@@ -454,7 +454,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 isOwn={userInfo.user_id === +data.UserId || +data.UserId === 0}
                 onRemovePlugin={() => onRemovePluginBefore(data)}
                 onExportPlugin={() => onExportPlugin(data)}
-                onEditPlugin={() => onEditPlugin(data)}
                 onUploadPlugin={() => onUploadPlugin(data)}
             />
         )
@@ -492,22 +491,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             })
         }
     })
-    /**编辑 */
-    const onEditPlugin = useMemoizedFn((data: YakScript) => {
-        if (data?.Id && +data.Id) {
-            if (data.ScriptName === "综合目录扫描与爆破") {
-                yakitNotify("warning", "暂不可编辑")
-                return
-            }
-            emiter.emit(
-                "openPage",
-                JSON.stringify({
-                    route: YakitRoute.ModifyYakitScript,
-                    params: {source: YakitRoute.Plugin_Local, id: +data.Id}
-                })
-            )
-        }
-    })
+
     /**导出 */
     const onExportPlugin = useMemoizedFn((data: YakScript) => {
         onExport([data.Id])
@@ -1017,7 +1001,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 })
 
 export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
-    const {data, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
+    const {data, isOwn, onRemovePlugin, onExportPlugin, onUploadPlugin} = props
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const onRemove = useMemoizedFn(async (e) => {
