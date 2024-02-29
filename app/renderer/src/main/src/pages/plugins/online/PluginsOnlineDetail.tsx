@@ -50,23 +50,10 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         currentIndex,
         setCurrentIndex
     } = props
-    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>(() => {
-        const group: YakFilterRemoteObj[] = cloneDeep(defaultFilter).plugin_group?.map(
-            (item: API.PluginsSearchData) => ({
-                name: item.value,
-                total: item.count
-            })
-        )
-        return group || []
-    })
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
-    const [filters, setFilters] = useState<PluginFilterParams>(() => {
-        const relFilter: PluginFilterParams = cloneDeep(defaultFilter)
-        delete relFilter.plugin_group
-        return relFilter
-    })
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
 
     // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
     const [scrollTo, setScrollTo] = useState<number>(0)
@@ -99,7 +86,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const onPluginBack = useMemoizedFn(() => {
         onBack({
             search,
-            filter: getRealFilters(filters, {group: selectGroup}),
+            filter: filters,
             allCheck,
             selectList
         })
@@ -162,8 +149,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             onCheck(false)
         })
     })
-    /**获取传到接口所需的filters*/
-    const getRealFilters = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+    /**转换group参数*/
+    const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
         const realFilters: PluginFilterParams = {
             ...filter,
             plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
@@ -171,8 +158,11 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         return realFilters
     }
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+        if (value.plugin_group === undefined) {
+            value.plugin_group = filters.plugin_group || []
+        }
         setFilters(value)
-        onDetailSearch(search, getRealFilters(value, {group: selectGroup}))
+        onDetailSearch(search, value)
         setAllCheck(false)
         setSelectList([])
     })
@@ -185,18 +175,19 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     })
     /**搜索需要清空勾选 */
     const onSearch = useMemoizedFn(() => {
-        onDetailSearch(search, getRealFilters(filters, {group: selectGroup}))
+        onDetailSearch(search, filters)
         setAllCheck(false)
         setSelectList([])
     })
 
-    /** 插件组查询 */
-    const onGroupSearch = useMemoizedFn((group: YakFilterRemoteObj[]) => {
-        setSelectGroup(group)
-        onDetailSearch(search, getRealFilters(filters, {group}))
-        setAllCheck(false)
-        setSelectList([])
-    })
+    /**选中组 */
+    const selectGroup = useMemo(() => {
+        const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
+            name: item.value,
+            total: item.count
+        }))
+        return group || []
+    }, [filters])
 
     if (!plugin) return null
     return (
@@ -204,8 +195,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             title='插件商店'
             filterNode={
                 <>
-                    <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={onGroupSearch} isShowGroupMagBtn={false} />
-                    <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
+                    <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} isShowGroupMagBtn={false} />
+                    <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} />
                 </>
             }
             filterExtra={

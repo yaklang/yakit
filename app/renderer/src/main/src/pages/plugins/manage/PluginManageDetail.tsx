@@ -130,40 +130,31 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             return realFilters
         }
-        const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>(() => {
-            const group: YakFilterRemoteObj[] = cloneDeep(defaultFilter).plugin_group?.map(
-                (item: API.PluginsSearchData) => ({
-                    name: item.value,
-                    total: item.count
-                })
-            )
-            return group || []
-        })
         const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
         const onSearch = useMemoizedFn((value: PluginSearchParams) => {
-            onDetailSearch(value, getRealFilters(filters, {group: selectGroup}))
+            onDetailSearch(value, filters)
             setSelectList([])
             setAllcheck(false)
         })
-        const [filters, setFilters] = useState<PluginFilterParams>(() => {
-            const relFilter: PluginFilterParams = cloneDeep(defaultFilter)
-            delete relFilter.plugin_group
-            return relFilter
-        })
+        const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
         const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+            if (value.plugin_group === undefined) {
+                value.plugin_group = filters.plugin_group || []
+            }
             setFilters(value)
-            onDetailSearch(searchs, getRealFilters(value, {group: selectGroup}))
+            onDetailSearch(searchs, value)
             setSelectList([])
             setAllcheck(false)
         })
 
-        /** 插件组查询 */
-        const onGroupSearch = useMemoizedFn((group: YakFilterRemoteObj[]) => {
-            setSelectGroup(group)
-            onDetailSearch(searchs, getRealFilters(filters, {group}))
-            setSelectList([])
-            setAllcheck(false)
-        })
+        /**转换group参数*/
+        const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+            const realFilters: PluginFilterParams = {
+                ...filter,
+                plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+            }
+            return realFilters
+        }
 
         // 获取插件详情
         const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
@@ -577,7 +568,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
         // 返回
         const onPluginBack = useMemoizedFn(() => {
-            onBack({allCheck, selectList, search: searchs, filter: getRealFilters(filters, {group: selectGroup})})
+            onBack({allCheck, selectList, search: searchs, filter: filters})
         })
 
         const optExtra = useMemoizedFn((data: API.YakitPluginDetail) => {
@@ -589,6 +580,15 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
             else return false
         }, [userInfo.role])
+
+        /**选中组 */
+        const selectGroup = useMemo(() => {
+            const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
+                name: item.value,
+                total: item.count
+            }))
+            return group || []
+        }, [filters])
 
         if (!plugin) return null
 
@@ -602,8 +602,16 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 onSearch={onSearch}
                 filterNode={
                     <>
-                        <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={onGroupSearch} isShowGroupMagBtn={magGroupState} />
-                        <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={onGroupSearch} />
+                        <PluginGroup
+                            isOnline={true}
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                            isShowGroupMagBtn={magGroupState}
+                        />
+                        <TagsAndGroupRender
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                        />
                     </>
                 }
                 filterExtra={
