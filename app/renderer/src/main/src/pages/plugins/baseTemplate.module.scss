@@ -459,6 +459,24 @@
             color: #31343f;
             font-size: 14px;
             line-height: 20px;
+            .switch-text {
+                display: inline-flex;
+                min-width: fit-content;
+            }
+            .switch-text-error {
+                color: var(--yakit-danger-5);
+                font-size: 14px;
+            }
+        }
+        .switch-type-wrapper {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 8px;
+            .select-wrapper {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
         }
     }
 }

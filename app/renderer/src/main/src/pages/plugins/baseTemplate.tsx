@@ -55,6 +55,7 @@ import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -641,14 +642,20 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
             Content: ""
         })
 
+        const [selectStatus, setSelectStatus] = useState<YakitSelectProps["status"]>()
+
         // 获取当前表单的内容
         const getValues = useMemoizedFn(() => {
             return {...getData()}
         })
         // 验证是否可以进行信息的提交
-        const onFinish: () => Promise<PluginSettingParamProps> = useMemoizedFn(() => {
+        const onFinish: () => Promise<PluginSettingParamProps | undefined> = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
-                resolve({...getData()})
+                if (onValidateFields()) {
+                    resolve({...getData()})
+                } else {
+                    resolve(undefined)
+                }
             })
         })
         useImperativeHandle(
@@ -663,7 +670,23 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
         useEffect(() => {
             if (oldData) setData({...oldData})
         }, [oldData])
-
+        const onValidateFields = useMemoizedFn(() => {
+            if (data.EnablePluginSelector && !data.PluginSelectorTypes) {
+                setSelectStatus("error")
+                return false
+            } else {
+                setSelectStatus(undefined)
+                return true
+            }
+        })
+        const onSelectChange = useMemoizedFn((value: string[]) => {
+            if (value.length === 0) {
+                setSelectStatus("error")
+            } else {
+                setSelectStatus(undefined)
+            }
+            setData({...data, PluginSelectorTypes: `${value}`})
+        })
         return (
             <div className={styles["plugin-modify-setting-wrapper"]}>
                 {type === "yak" && (
@@ -677,22 +700,30 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                                 启用插件联动 UI
                             </div>
                             {data.EnablePluginSelector && (
-                                <div className={styles[".switch-wrapper"]}>
-                                    联动插件类型 :
-                                    <YakitSelect
-                                        size='large'
-                                        value={
-                                            data.PluginSelectorTypes ? data.PluginSelectorTypes.split(",") : undefined
-                                        }
-                                        mode='multiple'
-                                        allowClear
-                                        onChange={(value: string[]) =>
-                                            setData({...data, PluginSelectorTypes: `${value}`})
-                                        }
-                                    >
-                                        <YakitSelect.Option value='mitm'>MITM</YakitSelect.Option>
-                                        <YakitSelect.Option value='port_scan'>端口扫描</YakitSelect.Option>
-                                    </YakitSelect>
+                                <div className={classNames(styles["switch-wrapper"], styles["switch-type-wrapper"])}>
+                                    <span className={styles["switch-text"]}>
+                                        联动插件类型<span className='plugins-item-required'>*</span> :
+                                    </span>
+                                    <div className={styles["select-wrapper"]}>
+                                        <YakitSelect
+                                            size='large'
+                                            value={
+                                                data.PluginSelectorTypes
+                                                    ? data.PluginSelectorTypes.split(",")
+                                                    : undefined
+                                            }
+                                            mode='multiple'
+                                            allowClear
+                                            onChange={onSelectChange}
+                                            status={selectStatus}
+                                        >
+                                            <YakitSelect.Option value='mitm'>MITM</YakitSelect.Option>
+                                            <YakitSelect.Option value='port_scan'>端口扫描</YakitSelect.Option>
+                                        </YakitSelect>
+                                        {selectStatus === "error" && (
+                                            <span className={styles["switch-text-error"]}>联动插件类型必填</span>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
