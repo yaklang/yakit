@@ -51,7 +51,8 @@ import {
     apiQueryYakScriptTotal,
     convertDeleteLocalPluginsByWhereRequestParams,
     convertLocalPluginsRequestParams,
-    excludeNoExistfilter
+    excludeNoExistfilter,
+    onToEditPlugin
 } from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -1035,15 +1036,7 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
-        if (data.IsCorePlugin) {
-            yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
-            return
-        }
-        if (data.Type === "packet-hack") {
-            yakitNotify("error", "该类型已下架，不可编辑")
-            return
-        }
-        onEditPlugin()
+        onToEditPlugin(data)
     })
     const onUpload = useMemoizedFn(async (e) => {
         e.stopPropagation()
