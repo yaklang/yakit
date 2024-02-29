@@ -1438,6 +1438,10 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
 export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) => {
     const {defaultFilter, onFilter, refresh, type = "online"} = props
 
+    const excludeFilterName = useMemo(()=>{
+        return ["tags", "plugin_group"]
+    },[])
+
     const [visible, setVisible] = useState<boolean>(false)
     const [filterList, setFilterList] = useState<API.PluginsSearch[]>([])
     const [isActive, setIsActive] = useState<boolean>(false)
@@ -1446,25 +1450,25 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     useEffect(() => {
         if (type === "online") {
             apiFetchGroupStatisticsOnline().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
         if (type === "check") {
             apiFetchGroupStatisticsCheck().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
         if (type === "user") {
             apiFetchGroupStatisticsMine().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
         if (type === "local") {
             apiFetchGroupStatisticsLocal().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
@@ -1480,8 +1484,9 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     }, [defaultFilter])
 
     const onFinish = useMemoizedFn((value) => {
-        if (value?.hasOwnProperty("tags")) delete value["tags"]
-        if (value?.hasOwnProperty("plugin_group")) delete value["plugin_group"]
+        for(let name of excludeFilterName){
+            if (value?.hasOwnProperty(name)) delete value[name]
+        }
         onFilter(value)
         setVisible(false)
         onSetIsActive(value)
@@ -1501,10 +1506,10 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     })
     /** 显示激活状态判断 */
     const onSetIsActive = useMemoizedFn((value: PluginFilterParams) => {
-        const valueArr = Object.keys(value) || []
+        const valueArr = (Object.keys(value) || []).filter(item => !excludeFilterName.includes(item))
         if (valueArr.length > 0) {
             let isActive = false
-            Object.keys(value)?.forEach((key) => {
+            valueArr.forEach((key) => {
                 if (value[key] && value[key].length > 0) {
                     isActive = true
                 }
