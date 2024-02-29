@@ -1,13 +1,17 @@
-import React, { useState } from "react";
-import { ThirdPartyApplicationConfig } from "@/components/configNetwork/ConfigNetworkPage";
-import { Form, Space } from "antd";
-import { InputItem } from "@/utils/inputUtil";
-import { DemoItemSelectOne } from "@/demoComponents/itemSelect/ItemSelect";
-import { DemoItemSwitch } from "@/demoComponents/itemSwitch/ItemSwitch";
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton";
+import React, {useState} from "react";
+import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage";
+import {Form, Space} from "antd";
+import {InputItem} from "@/utils/inputUtil";
+import {DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect";
+import {DemoItemSwitch} from "@/demoComponents/itemSwitch/ItemSwitch";
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import { DefaultOptionType } from "antd/lib/select";
+import { SelectOptionsProps } from "@/demoComponents/itemSelect/ItemSelectType";
+import { YakitAutoComplete } from "../yakitUI/YakitAutoComplete/YakitAutoComplete";
 import { KVPair } from "@/models/kv";
 
 export interface ThirdPartyApplicationConfigProp {
+    isCanInput?: boolean
     data?: ThirdPartyApplicationConfig
     onAdd: (i: ThirdPartyApplicationConfig) => void;
     onCancel:()=>void
@@ -38,32 +42,47 @@ export function setThirdPartyAppExtraParamValue(config: ThirdPartyApplicationCon
 }
 
 export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConfigProp> = (props) => {
-    const [existed, setExisted] = useState(props.data !== undefined);
+    const {isCanInput = true} = props
+    const [existed, setExisted] = useState(props.data !== undefined)
     const [params, setParams] = useState<ThirdPartyApplicationConfig>(props?.data || {
         APIKey: "", Domain: "", Namespace: "", Type: "", UserIdentifier: "", UserSecret: "", WebhookURL: "", ExtraParams: [] as KVPair[],
     })
-    const [advanced, setAdvanced] = useState((params.ExtraParams?.length || 0) > 0 ? true : false);
+    const [advanced, setAdvanced] = useState(false);
+    const [options, setOptions] = useState<DefaultOptionType[] | SelectOptionsProps[]>([
+        {label: "ZoomEye", value: "zoomeye"},
+        {label: "Shodan", value: "shodan"},
+        {label: "Hunter", value: "hunter"},
+        {label: "Quake", value: "quake"},
+        {label: "Fofa", value: "fofa"}
+    ])
     return <Form
-        layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}
-        onSubmitCapture={e => {
+            layout={"horizontal"}
+            labelCol={{span: 4}}
+            wrapperCol={{span: 20}}
+            onSubmitCapture={(e) => {
             e.preventDefault()
         }}
     >
-        <DemoItemSelectOne
-            label={"类型"}
-            data={[
-                { label: "ZoomEye", value: "zoomeye" },
-                { label: "Shodan", value: "shodan" },
-                { label: "Hunter", value: "hunter" },
-                { label: "Quake", value: "quake" },
-                { label: "Fofa", value: "fofa" },
-                { label: "OpenAI", value: "openai" },
-            ]}
-            value={params.Type} disabled={existed}
-            setValue={val => setParams({ ...params, Type: val })}
-            required={true}
-        />
-        <InputItem
+            {isCanInput ? (
+                <Form.Item label={"类型"} required={true}>
+                    <YakitAutoComplete
+                        options={options}
+                        value={params.Type}
+                        onChange={(val) => setParams({...params, Type: val})}
+                        disabled={existed}
+                    />
+                </Form.Item>
+            ) : (
+                <DemoItemSelectOne
+                    label={"类型"}
+                    data={options as SelectOptionsProps[]}
+                    value={params.Type}
+                    disabled={existed}
+                    setValue={(val) => setParams({...params, Type: val})}
+                    required={true}
+                />
+            )}
+       <InputItem
             label={"API Key"}
             value={params.APIKey} setValue={val => setParams({ ...params, APIKey: val })}
             help={"APIKey / Token"} required={true}
