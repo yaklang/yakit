@@ -30,11 +30,11 @@ import {
     showUnfinishedSimpleDetectTaskList,
     UnfinishedSimpleDetectBatchTask
 } from "../invoker/batch/UnfinishedBatchTaskList"
-import {useGetState, useMemoizedFn, useDebounceEffect} from "ahooks"
+import {useGetState, useMemoizedFn, useDebounceEffect, useInViewport} from "ahooks"
 import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams} from "../portscan/PortScanPage"
-import {ExecResult, YakScript} from "../invoker/schema"
+import {ExecResult, GroupCount, YakScript} from "../invoker/schema"
 import {useStore} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
@@ -54,11 +54,11 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoute} from "@/routes/newRoute"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
 import emiter from "@/utils/eventBus/eventBus"
+import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal} from "../plugins/utils"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
-const plainOptions = ["操作系统类漏洞","WEB中间件漏洞","WEB应用漏洞","网络安全设备漏洞","OA产品漏洞","CMS产品漏洞","弱口令", "CVE合规漏洞"]
 const layout = {
     labelCol: {span: 6},
     wrapperCol: {span: 16}
@@ -163,7 +163,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         ExcludeHosts: "",
         ExcludePorts: "",
         Proxy: [],
-        HostAliveConcurrent:200
+        HostAliveConcurrent: 200
     })
 
     const [bruteParams, setBruteParams, getBruteParams] = useGetState<StartBruteParams>({
@@ -190,7 +190,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         passwordValue: ""
     })
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
-    const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令", "CVE合规漏洞"])
+    const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令"])
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
     const isInputValue = useRef<boolean>(false)
     // 是否已经修改速度
@@ -239,12 +239,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 switch (item) {
                     case "弱口令":
                         selectArr.push("弱口令")
-                        break
-                    case "网络设备扫描":
-                        selectArr.push("网络设备扫描")
-                        break
-                    case "合规检测":
-                        selectArr.push("合规检测")
                         break
                     default:
                         setScanType(item)
@@ -431,7 +425,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
 
         const OnlineGroup: string =
-            getScanType() !== "专项扫描" ? getScanType() : [...checkedList].filter((name) => name !== "弱口令").join(",")
+            getScanType() !== "专项扫描"
+                ? getScanType()
+                : [...checkedList].filter((name) => name !== "弱口令").join(",")
         // 继续任务 参数拦截
         if (Uid) {
             recoverRun()
@@ -441,8 +437,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             run(OnlineGroup, TaskName)
         }
         // 只勾选了爆破弱口令的选项
-        else if (OnlineGroup.length === 0){
-            setPortParams({...getPortParams(),ScriptNames:[]})
+        else if (OnlineGroup.length === 0) {
+            setPortParams({...getPortParams(), ScriptNames: []})
             run(OnlineGroup, TaskName)
         } else {
             ipcRenderer
@@ -481,8 +477,27 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         return str
     }
 
+    const simpleDetectRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(simpleDetectRef)
+    const [plainOptions, setPlainOptions] = useState<string[]>([])
+    useEffect(() => {
+        apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
+            const copyGroup = structuredClone(group)
+            const groups: string[] = copyGroup.map((item) => item.Value)
+            if (groups.includes("基础扫描")) {
+                setPlainOptions(groups.filter((item) => item !== "基础扫描"))
+                return
+            }
+            if (groups.includes("弱口令")) {
+                setPlainOptions(groups.filter((item) => item !== "弱口令"))
+                return
+            }
+            setPlainOptions(groups)
+        })
+    }, [inViewport])
+
     return (
-        <div className={styles["simple-detect-form"]} style={{marginTop: 20}}>
+        <div className={styles["simple-detect-form"]} style={{marginTop: 20}} ref={simpleDetectRef}>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Spin spinning={uploadLoading}>
                     <ContentUploadInput
@@ -658,20 +673,19 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
                             <Radio.Button value='专项扫描'>专项扫描</Radio.Button>
                         </Radio.Group>
-                        
                     </Form.Item>
-                    
+
                     {getScanType() === "专项扫描" && (
-                        <Form.Item label=" " colon={false} style={{marginTop:"-16px"}}>
+                        <Form.Item label=' ' colon={false} style={{marginTop: "-16px"}}>
                             <CheckboxGroup
                                 disabled={shield}
-                                options={plainOptions}
+                                options={[...plainOptions, "弱口令"]}
                                 value={checkedList}
                                 onChange={(list) => setCheckedList(list)}
                             />
-                         </Form.Item>       
-                        )}
-                    
+                        </Form.Item>
+                    )}
+
                     <div style={{display: "none"}}>
                         <Form.Item name='TaskName' label='任务名称'>
                             <Input
@@ -869,18 +883,19 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
     }
 
     /** 区分继续任务与新任务 获取扫描主机数 Ping存活主机数 */
-    const getCardByJudgeOld = (v:"扫描主机数"|"Ping存活主机数") => {
-        if(oldRunParams && oldRunParams.LastRecord.ExtraInfo){
+    const getCardByJudgeOld = (v: "扫描主机数" | "Ping存活主机数") => {
+        if (oldRunParams && oldRunParams.LastRecord.ExtraInfo) {
             let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
-            const oldItem:StatusCardInfoProps[] = oldCards.filter((item) =>["存活主机数/扫描主机数"].includes(item.tag))
-            if(oldItem.length>0){
-                let strArr:string[] = oldItem[0].info[0].Data.split("/")
-                if(v==="Ping存活主机数") return strArr[0]
+            const oldItem: StatusCardInfoProps[] = oldCards.filter((item) =>
+                ["存活主机数/扫描主机数"].includes(item.tag)
+            )
+            if (oldItem.length > 0) {
+                let strArr: string[] = oldItem[0].info[0].Data.split("/")
+                if (v === "Ping存活主机数") return strArr[0]
                 else return strArr[strArr.length - 1]
             }
             return getCardForId(v)
-        }
-        else{
+        } else {
             return getCardForId(v)
         }
     }
@@ -1098,9 +1113,9 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         // 全部添加
         setAddLoading(true)
         setDownloadPlugin && setDownloadPlugin(true)
-        let addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
+        const addParams: DownloadOnlinePluginsRequest = {ListType: ""}
         ipcRenderer
-            .invoke("DownloadOnlinePluginAll", addParams, taskToken)
+            .invoke("DownloadOnlinePlugins", addParams, taskToken)
             .then(() => {})
             .catch((e) => {
                 failed(`添加失败:${e}`)
@@ -1190,7 +1205,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                     cancelText='No'
                     placement={"left"}
                 >
-                    <YakitButton type='text' colors="danger" className={styles["clean-local-plugin"]}>
+                    <YakitButton type='text' colors='danger' className={styles["clean-local-plugin"]}>
                         一键清除插件
                     </YakitButton>
                 </Popconfirm>
@@ -1225,7 +1240,7 @@ interface CacheReportParamsProps {
 }
 
 export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
-    const {tabId ,Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
+    const {tabId, Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
     // console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup, TaskName)
     const [percent, setPercent] = useState(0)
     const [executing, setExecuting] = useState<boolean>(false)
@@ -1285,11 +1300,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
             return Array.isArray(oldCards) ? oldCards : []
         }
         // 继续任务运行时 保持之前的 存活主机数/扫描主机数 数据
-        else if(oldRunParams && oldRunParams.LastRecord.ExtraInfo){
+        else if (oldRunParams && oldRunParams.LastRecord.ExtraInfo) {
             let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
-            const oldItem:StatusCardInfoProps[] = oldCards.filter((item) =>["存活主机数/扫描主机数"].includes(item.tag))
-            const nowStatusCards:StatusCardInfoProps [] = statusCards.filter((item) => item.tag !== "存活主机数/扫描主机数")
-            return [...oldItem,...nowStatusCards]
+            const oldItem: StatusCardInfoProps[] = oldCards.filter((item) =>
+                ["存活主机数/扫描主机数"].includes(item.tag)
+            )
+            const nowStatusCards: StatusCardInfoProps[] = statusCards.filter(
+                (item) => item.tag !== "存活主机数/扫描主机数"
+            )
+            return [...oldItem, ...nowStatusCards]
         }
         return statusCards
     }, [statusCards, showOldCard, oldRunParams])
@@ -1341,7 +1360,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 .then(({LastRecord, PortScanRequest}) => {
                     setIsLastReport(true)
                     setShowOldCard(true)
-                    const {ScriptNames,TaskName} = PortScanRequest
+                    const {ScriptNames, TaskName} = PortScanRequest
                     setOldRunParams({
                         LastRecord,
                         PortScanRequest
@@ -1372,8 +1391,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                 tabId,
                 status
             }
-            !!status &&
-                emiter.emit("simpleDetectTabEvent",JSON.stringify(obj))
+            !!status && emiter.emit("simpleDetectTabEvent", JSON.stringify(obj))
         }
     }, [percent, executing, tabId])
 
