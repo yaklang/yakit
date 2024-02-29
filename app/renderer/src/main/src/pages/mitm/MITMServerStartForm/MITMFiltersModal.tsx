@@ -277,6 +277,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             }}
             bodyStyle={{padding: 0}}
         >
+            <div className={styles.infoBox}>
+                大部分过滤器（除了文件后缀与Content-Type）支持以兼容模式进行匹配，即先尝试以正则模式匹配 &rarr; glob
+                模式匹配 &rarr; 关键字匹配。文件后缀与Content-Type仅支持 glob 模式匹配 &rarr; 关键字匹配。
+            </div>
             <MITMFilters filter={_mitmFilter} onFinished={() => onSetFilter()} ref={filtersRef} />
         </YakitModal>
     )
