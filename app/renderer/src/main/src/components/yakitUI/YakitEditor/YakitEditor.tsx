@@ -56,6 +56,8 @@ import { GetPluginLanguage, PluginGV } from "@/pages/plugins/builtInData"
 import { createRoot } from "react-dom/client"
 import { setEditorContext } from "@/utils/monacoSpec/yakEditor"
 import { YakParamProps } from "@/pages/plugins/pluginsType"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 interface CodecTypeProps {
     key?: string
@@ -287,6 +289,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         keyToOnRunRef.current = { ...keyToRun }
     }, [contextMenu])
 
+    const {getCurrentSelectPageId} = usePageInfo((s) => ({getCurrentSelectPageId:s.getCurrentSelectPageId}),shallow)
+
+
     /** 菜单功能点击处理事件 */
     const { run: menuItemHandle } = useDebounceFn(
         useMemoizedFn((key: string, keyPath: string[]) => {
@@ -300,7 +305,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
                         const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
-                        allMenu[name].onRun(editor, menuItemName)
+                        allMenu[name].onRun(editor, menuItemName,getCurrentSelectPageId)
                         executeFunc = true
                         onRightContextMenu(menuItemName)
                         break
@@ -312,7 +317,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
                         const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
-                        allMenu[name].onRun(editor, menuName)
+                        allMenu[name].onRun(editor, menuName,getCurrentSelectPageId)
                         executeFunc = true
                         onRightContextMenu(menuName)
                         break

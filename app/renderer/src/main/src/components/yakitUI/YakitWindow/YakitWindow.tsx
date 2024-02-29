@@ -35,6 +35,7 @@ const DefaultCacheSize: YakitWindowCacheSizes = {
  * @description 不建议设置默认初始的停靠位置，因为有保存尺寸的情况
  * @description 暂时不支持别的场景使用，需要用先问问
  * @description 因紧急改动，导致组件业务化，无法适用公共场景
+ * @description 目前在向下展示的时候，left不应从0开始，存在左部占据情况
  */
 export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
     const {
@@ -49,6 +50,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
         minHeight = 200,
         onResize,
         cacheSizeKey,
+        firstDockSide="right",
         ...rest
     } = props
 
@@ -61,6 +63,10 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
     // 窗体挂靠节点的top位置
     const dockSideTop = useMemo(() => {
         return container?.getBoundingClientRect()?.top || 37
+    }, [container])
+    // 窗体挂靠节点的left位置
+    const dockSideLeft = useMemo(() => {
+        return container?.getBoundingClientRect()?.left || 0
     }, [container])
     // 窗体挂靠节点的可视宽高(用于计算窗体能改变的最大宽高值)
     const containerWH = useSize(container)
@@ -124,7 +130,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
 
     /** -------------------- 窗体停靠模式及大小改变的相关逻辑 End -------------------- */
     // 窗体停靠模式
-    const [dockSide, setDockSide, getDockSide] = useGetState<WindowPositionType>("right")
+    const [dockSide, setDockSide, getDockSide] = useGetState<WindowPositionType>(firstDockSide)
     const onDockSide = useMemoizedFn((side: WindowPositionType) => {
         if (!defaultDockSide.includes(side)) return
         if (side === getDockSide()) return
@@ -371,7 +377,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 className={classNames({
                     [styles["yakit-window-hidden-wrapper"]]: !visible
                 })}
-                style={{position: "fixed", bottom: 0, left: 0, zIndex: 1002}}
+                style={{position: "fixed", bottom: 0, left: dockSideLeft, zIndex: 1002}}
                 defaultSize={{width: winMaxWidth.show, height: cacheSize.current["bottom"]?.height || height}}
                 minWidth={winMaxWidth.show}
                 minHeight={minHeight}

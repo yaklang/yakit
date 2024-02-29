@@ -8,4 +8,5 @@ export type WebFuzzerEventProps = {
     onGetExportFuzzer: string
     onGetExportFuzzerCallBack: string
     onOpenMatchingAndExtractionCard: string
+    onOpenFuzzerModal: string
 }

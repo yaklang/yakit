@@ -12,7 +12,8 @@ import { useEffect, useRef, useState } from "react"
 import { AutoSpin } from "@/components/AutoSpin"
 import { YakitSpin } from "../YakitSpin/YakitSpin"
 import { showYakitModal } from "../YakitModal/YakitModalConfirm"
-
+import { YakitRoute } from "@/routes/newRoute"
+import emiter from "@/utils/eventBus/eventBus"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -222,6 +223,7 @@ export const extraMenuLists: OtherMenuListProps = {
         ],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
             try {
+
                 customMutateRequest(key, editor.getModel()?.getValue(), editor)
             } catch (e) {
                 failed(`custom mutate request failed: ${e}`)
@@ -237,9 +239,20 @@ export const extraMenuLists: OtherMenuListProps = {
                 children: [],
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string) => {
+        onRun: (editor: YakitIMonacoEditor, scriptName: string,getCurrentSelectPageId: (routeKey: string) => string) => {
             try {
-                customContextMenuExecute(key, editor)
+                const model = editor.getModel();
+                const selection = editor.getSelection()
+                let text = model?.getValue()
+                if (selection) {
+                    let selectText = model?.getValueInRange(selection)||""
+                    if (selectText.length > 0) {
+                        text = selectText
+                    }
+                }
+                // 获取页面唯一标识符
+                const pageId = getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
+                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,pageId}))
             } catch (e) {
                 failed(`custom context menu execute failed: ${e}`)
             }
@@ -346,56 +359,5 @@ const customMutateRequest = (key: string, text?: string, editor?: YakitIMonacoEd
         })
 }
 
-/** @name 自定义右键菜单执行处理函数 */
-const customContextMenuExecute = (key: string, editor: YakitIMonacoEditor) => {
-    showYakitModal({
-        title: "执行结果",
-        width: "50%",
-        content: (
-            <ContextMenuExecutor scriptName={key} editor={editor}  />
-        )
-    })
-}
 
-export interface ContextMenuProp {
-    editor: YakitIMonacoEditor
-    scriptName: string
-}
-
-export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
-    const {scriptName,editor} = props
-
-    const [loading, setLoading] = useState<boolean>(true)
-    const [value, setValue] = useState<string>("")
-    useEffect(() => {
-        const model = editor.getModel();
-        const selection = editor.getSelection()
-        let text = model?.getValue()
-        if (selection) {
-            let selectText = model?.getValueInRange(selection)||""
-            if (selectText.length > 0) {
-                text = selectText
-            }
-        }
-        ipcRenderer.invoke("Codec", { Text: text, ScriptName: scriptName }).then((result: { Result: string }) => {
-            setValue(result.Result)
-        }).catch((e) => {
-            yakitNotify('error',e)
-        }).finally(() => {
-          setTimeout(() => {
-            setLoading(false)
-          }, 200);
-        })
-    }, [])
-    
-    return (
-        <YakitSpin spinning={loading} style={{ width: "100%" }}>
-            <Space style={{ width: "100%" }} direction={"vertical"}>
-                <div style={{ height: 300 }}>
-                    <YakitEditor  fontSize={14} type={"text"} readOnly={true} value={value} />
-                </div>
-            </Space>
-        </YakitSpin>
-    )
-}
 
