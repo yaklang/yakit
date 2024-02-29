@@ -73,6 +73,15 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     }, [visible])
     const onSetFilter = useMemoizedFn(() => {
         const filter = filtersRef.current.getFormValue()
+        if (!filter.includeHostname) filter.includeHostname = []
+        if (!filter.excludeHostname) filter.excludeHostname = []
+        if (!filter.includeSuffix) filter.includeSuffix = []
+        if (!filter.excludeSuffix) filter.excludeSuffix = []
+        if (!filter.excludeMethod) filter.excludeMethod = []
+        if (!filter.excludeContentTypes) filter.excludeContentTypes = []
+        if (!filter.excludeUri) filter.excludeUri = []
+        if (!filter.includeUri) filter.includeUri = []
+        console.log('传参', filter);
         ipcRenderer
             .invoke("mitm-set-filter", filter)
             .then(() => {
