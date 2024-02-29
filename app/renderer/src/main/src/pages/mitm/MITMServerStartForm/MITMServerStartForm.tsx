@@ -56,6 +56,7 @@ export interface ClientCertificate {
 }
 
 const defHost = "127.0.0.1"
+const defPort = "8083"
 export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo((props) => {
     const [hostHistoryList, setHostHistoryList] = useState<string[]>([])
 
@@ -85,12 +86,16 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         })
         getRemoteValue(MITMConsts.MITMDefaultServer).then((e) => {
             if (!!e) {
-                form.setFieldsValue({host: e || defHost})
+                form.setFieldsValue({host: e})
+            } else {
+                form.setFieldsValue({host: defHost})
             }
         })
         getRemoteValue(MITMConsts.MITMDefaultPort).then((e) => {
             if (!!e) {
                 form.setFieldsValue({port: e})
+            } else {
+                form.setFieldsValue({port: defPort})
             }
         })
         getRemoteValue(MITMConsts.MITMDefaultEnableHTTP2).then((e) => {
