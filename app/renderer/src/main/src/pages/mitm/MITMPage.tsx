@@ -318,29 +318,29 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         }
     })
 
-    useEffect(() => {
-        if (status !== "idle") {
-            getRules()
-        }
-    }, [status, visible])
-    const getRules = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("GetCurrentRules", {})
-            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                const findOpenRepRule = newRules.find(
-                    (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
-                )
-                if (findOpenRepRule !== undefined) {
-                    if (tip.indexOf("启用替换规则") === -1) {
-                        setTip(tip + "|启用替换规则")
-                    }
-                } else {
-                    setTip(tip.replace("|启用替换规则", ""))
-                }
-            })
-            .catch((e) => yakitFailed("获取规则列表失败:" + e))
-    })
+    // useEffect(() => {
+    //     if (status !== "idle") {
+    //         getRules()
+    //     }
+    // }, [status, visible])
+    // const getRules = useMemoizedFn(() => {
+    //     ipcRenderer
+    //         .invoke("GetCurrentRules", {})
+    //         .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+    //             const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+    //             const findOpenRepRule = newRules.find(
+    //                 (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
+    //             )
+    //             if (findOpenRepRule !== undefined) {
+    //                 if (tip.indexOf("启用替换规则") === -1) {
+    //                     setTip(tip + "|启用替换规则")
+    //                 }
+    //             } else {
+    //                 setTip(tip.replace("|启用替换规则", ""))
+    //             }
+    //         })
+    //         .catch((e) => yakitFailed("获取规则列表失败:" + e))
+    // })
 
     return (
         <>

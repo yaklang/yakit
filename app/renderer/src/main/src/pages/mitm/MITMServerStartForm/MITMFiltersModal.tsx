@@ -73,6 +73,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     }, [visible])
     const onSetFilter = useMemoizedFn(() => {
         const filter = filtersRef.current.getFormValue()
+        // 这里后端没有处理字段不存在的情况 会提示报错
         if (!filter.includeHostname) filter.includeHostname = []
         if (!filter.excludeHostname) filter.excludeHostname = []
         if (!filter.includeSuffix) filter.includeSuffix = []
