@@ -850,7 +850,6 @@ export const convertDeleteLocalPluginsByWhereRequestParams = (
 export const apiDeleteLocalPluginsByWhere: (query: DeleteLocalPluginsByWhereRequestProps) => Promise<null> = (
     query
 ) => {
-    console.log('批量删除条件：', query);
     return new Promise((resolve, reject) => {
         try {
             ipcRenderer
