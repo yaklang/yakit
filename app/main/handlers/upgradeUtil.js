@@ -351,6 +351,8 @@ module.exports = {
         }
 
         const downloadYakitByDownloadUrl = (resolve,reject,downloadUrl) => {
+            // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
+            if(!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
             const dest = path.join(yakitInstallDir, path.basename(downloadUrl));
             try {
                 fs.unlinkSync(dest)
