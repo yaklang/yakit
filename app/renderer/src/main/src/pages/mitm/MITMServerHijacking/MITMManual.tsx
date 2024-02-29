@@ -3,16 +3,18 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {HTTPPacketEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {Divider} from "antd"
-import React, {useEffect, useImperativeHandle, useRef, useState,useMemo} from "react"
+import React, {useEffect, useImperativeHandle, useRef, useState, useMemo} from "react"
 import {allowHijackedResponseByRequest, MITMStatus} from "./MITMHijackedContent"
 import styles from "./MITMServerHijacking.module.scss"
 import * as monaco from "monaco-editor"
 import classNames from "classnames"
 import {useResponsive} from "ahooks"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
-import { OtherMenuListProps, YakitEditorKeyCode } from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import { availableColors } from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
+import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -62,19 +64,25 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                 })}
             >
                 <div className={styles["manual-select"]}>
-                    <div className={styles["manual-select-label"]} style={{ minWidth: 60 }}>标注颜色:</div>
+                    <div className={styles["manual-select-label"]} style={{minWidth: 60}}>
+                        标注颜色:
+                    </div>
                     <YakitSelect
-                        size="small"
+                        size='small'
                         value={calloutColor}
                         wrapperStyle={{width: 100}}
                         onChange={(value) => {
                             onSetCalloutColor(value || "")
                         }}
                     >
-                        <YakitSelect.Option value={""}><div style={{ paddingLeft: 20 }}>无</div></YakitSelect.Option>
-                        {
-                            availableColors.map(item => <YakitSelect.Option value={item.searchWord} key={item.searchWord}>{item.render}</YakitSelect.Option>)
-                        }
+                        <YakitSelect.Option value={""}>
+                            <div style={{paddingLeft: 20}}>无</div>
+                        </YakitSelect.Option>
+                        {availableColors.map((item) => (
+                            <YakitSelect.Option value={item.searchWord} key={item.searchWord}>
+                                {item.render}
+                            </YakitSelect.Option>
+                        ))}
                     </YakitSelect>
                 </div>
                 <div className={styles["manual-select"]}>
@@ -99,16 +107,17 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                             }
                         ]}
                     /> */}
-                    <YakitSwitch 
-                        checked={hijackResponseType==="all"}
+                    <YakitSwitch
+                        checked={hijackResponseType === "all"}
                         onChange={(val: boolean) => {
-                            if(val)setHijackResponseType("all")
+                            if (val) setHijackResponseType("all")
                             else setHijackResponseType("never")
-                    }}/>
+                        }}
+                    />
                 </div>
                 <YakitButton
                     type='outline1'
-                    colors="danger"
+                    colors='danger'
                     disabled={status === "hijacking"}
                     onClick={() => onDiscardRequest()}
                 >
@@ -192,6 +201,8 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
     )
 })
 interface MITMManualEditorProps {
+    isHttp: boolean
+    currentIsWebsocket: boolean
     currentPacket: Uint8Array
     setModifiedPacket: (u: Uint8Array) => void
     forResponse: boolean
@@ -208,6 +219,8 @@ interface MITMManualEditorProps {
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
     const {
+        isHttp,
+        currentIsWebsocket,
         currentPacket,
         setModifiedPacket,
         forResponse,
@@ -229,36 +242,45 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
 
-    const mitmManualRightMenu: OtherMenuListProps  = useMemo(() => {
-        if(forResponse){
+    const mitmManualRightMenu: OtherMenuListProps = useMemo(() => {
+        if (forResponse) {
+            const menu: EditorMenuItemType[] = [
+                {type: "divider"},
+                {
+                    key: "trigger-auto-hijacked",
+                    label: "切换为自动劫持模式",
+                    keybindings: [
+                        YakitEditorKeyCode.Shift,
+                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
+                        YakitEditorKeyCode.KEY_T
+                    ]
+                },
+                {
+                    key: "forward-response",
+                    label: "放行该 HTTP Response"
+                },
+                {
+                    key: "drop-response",
+                    label: "丢弃该 HTTP Response"
+                }
+            ]
+            if (currentIsWebsocket) {
+                menu.push({
+                    key: "send-to-web-socket",
+                    label: "发送到 WebSocket"
+                })
+            }
             return {
-                forResponseMITMMenu:{
-                    menu: [
-                        {type: "divider"},
-                        {
-                            key:"trigger-auto-hijacked",
-                            label: "切换为自动劫持模式",
-                            keybindings: [
-                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_T
-                            ],
-                        },
-                        {
-                            key:"forward-response",
-                            label: "放行该 HTTP Response",
-                        },
-                        {
-                            key:"drop-response",
-                            label: "丢弃该 HTTP Response",
-                        }
-                    ],
-                    onRun: (editor, key) => {
+                forResponseMITMMenu: {
+                    menu: menu,
+                    onRun: (editor: any, key) => {
                         switch (key) {
                             case "trigger-auto-hijacked":
                                 handleAutoForward(autoForward === "manual" ? "log" : "manual")
-                                break;
+                                break
                             case "forward-response":
                                 forward()
-                                break;
+                                break
                             case "drop-response":
                                 hijacking()
                                 dropResponse(currentPacketId).finally(() => {
@@ -267,60 +289,80 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                     //     300
                                     // )
                                 })
-                                break;
+                                break
+                            case "send-to-web-socket":
+                                newWebsocketFuzzerTab(isHttp, editor.getModel().getValue())
+                                break
                             default:
-                                break;
+                                break
                         }
                     }
                 }
             }
-        }
-        else{
+        } else {
+            const menu: EditorMenuItemType[] = [
+                {type: "divider"},
+                {
+                    key: "trigger-auto-hijacked",
+                    label: "切换为自动劫持模式",
+                    keybindings: [
+                        YakitEditorKeyCode.Shift,
+                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
+                        YakitEditorKeyCode.KEY_T
+                    ]
+                },
+                {
+                    key: "send-to-fuzzer",
+                    label: "发送到 Web Fuzzer",
+                    keybindings: [
+                        YakitEditorKeyCode.Shift,
+                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
+                        YakitEditorKeyCode.KEY_R
+                    ]
+                },
+                {
+                    key: "forward-response",
+                    label: "放行该 HTTP Response",
+                    keybindings: [
+                        YakitEditorKeyCode.Shift,
+                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
+                        YakitEditorKeyCode.KEY_F
+                    ]
+                },
+                {
+                    key: "drop-response",
+                    label: "丢弃该 HTTP Response"
+                },
+                {
+                    key: "hijack-current-response",
+                    label: "劫持该 Request 对应的响应"
+                }
+            ]
+
+            if (currentIsWebsocket) {
+                menu.push({
+                    key: "send-to-web-socket",
+                    label: "发送到 WebSocket"
+                })
+            }
+
             return {
-                forResponseMITMMenu:{
-                    menu: [
-                        {type: "divider"},
-                        {
-                            key:"trigger-auto-hijacked",
-                            label: "切换为自动劫持模式",
-                            keybindings: [
-                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_T
-                            ],
-                        },
-                        {
-                            key:"send-to-fuzzer",
-                            label: "发送到 Web Fuzzer",
-                            keybindings: [
-                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_R
-                            ],
-                        },
-                        {
-                            key:"forward-response",
-                            label: "放行该 HTTP Response",
-                            keybindings: [
-                                YakitEditorKeyCode.Shift,system === "Darwin"?YakitEditorKeyCode.Meta:YakitEditorKeyCode.Control,YakitEditorKeyCode.KEY_F
-                            ],
-                        },
-                        {
-                            key:"drop-response",
-                            label: "丢弃该 HTTP Response",
-                        },
-                        {
-                            key:"hijack-current-response",
-                            label: "劫持该 Request 对应的响应",
-                        }
-                    ],
-                    onRun: (editor:any, key) => {
+                forResponseMITMMenu: {
+                    menu: menu,
+                    onRun: (editor: any, key) => {
                         switch (key) {
                             case "trigger-auto-hijacked":
                                 handleAutoForward(autoForward === "manual" ? "log" : "manual")
-                                break;
+                                break
                             case "send-to-fuzzer":
                                 execFuzzer(editor.getModel().getValue())
-                                break;
+                                break
+                            case "send-to-web-socket":
+                                newWebsocketFuzzerTab(isHttp, editor.getModel().getValue())
+                                break
                             case "forward-response":
                                 forward()
-                                break;
+                                break
                             case "drop-response":
                                 hijacking()
                                 dropResponse(currentPacketId).finally(() => {
@@ -329,19 +371,21 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                     //     300
                                     // )
                                 })
-                                break;
+                                break
                             case "hijack-current-response":
                                 onSetHijackResponseType("onlyOne")
-                                setTimeout(()=>{forward()},200)
-                                break;
+                                setTimeout(() => {
+                                    forward()
+                                }, 200)
+                                break
                             default:
-                                break;
+                                break
                         }
                     }
                 }
             }
         }
-    }, [forResponse])
+    }, [forResponse, isHttp, currentIsWebsocket])
     return (
         <NewHTTPPacketEditor
             originValue={currentPacket}
@@ -353,8 +397,8 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             readOnly={status === "hijacking"}
             refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
             contextMenu={mitmManualRightMenu}
-            editorOperationRecord="MITM_Manual_EDITOR_RECORF"
-            webFuzzerValue={currentIsForResponse?requestPacket:undefined}
+            editorOperationRecord='MITM_Manual_EDITOR_RECORF'
+            webFuzzerValue={currentIsForResponse ? requestPacket : undefined}
             extraEditorProps={{
                 isShowSelectRangeMenu: true
             }}

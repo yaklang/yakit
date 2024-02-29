@@ -385,6 +385,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         )}
                         <div className={styles["mitm-hijacked-manual-content-editor"]}>
                             <MITMManualEditor
+                                isHttp={isHttp}
+                                currentIsWebsocket={currentIsWebsocket}
                                 currentPacket={currentPacket}
                                 setModifiedPacket={setModifiedPacket}
                                 forResponse={forResponse}

@@ -52,7 +52,7 @@ import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "../yakitUI/YakitTag/YakitCheckableTag"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
 import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -71,6 +71,7 @@ import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2122,14 +2123,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
 
     const getPageSize = useMemo(() => {
-        if(total>5000){
+        if (total > 5000) {
             return 500
-        }
-        else if(total<1000){
+        } else if (total < 1000) {
             return 100
-        }
-        else {
-            return Math.round(total / 1000) * 100;
+        } else {
+            return Math.round(total / 1000) * 100
         }
     }, [total])
 
@@ -2270,8 +2269,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         .catch((e) => {
                             reject(e)
                         })
-                        .finally(() => {
-                        })
+                        .finally(() => {})
                 })
             })
             Promise.allSettled(promiseList).then((results) => {
@@ -2280,17 +2278,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     Pagination: {...pagination, Page: 1, OrderBy: "id", Order: ""},
                     Total: parseInt(total + "")
                 }
-                let message:string = ""
+                let message: string = ""
                 results.forEach((item) => {
                     if (item.status === "fulfilled") {
                         const value = item.value as YakQueryHTTPFlowResponse
                         rsp.Data = [...rsp.Data, ...value.Data]
-                    }
-                    else{
+                    } else {
                         message = item.reason?.message
                     }
                 })
-                if(message.length>0){
+                if (message.length > 0) {
                     yakitNotify("warning", `部分导出内容缺失:${message}`)
                 }
                 initExcelData(resolve, rsp.Data, rsp)
@@ -2328,8 +2325,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "发送到 Web Fuzzer",
             label: "发送到 Web Fuzzer",
             number: 10,
+            webSocket: true,
             onClickSingle: (v) => onSendToTab(v),
             onClickBatch: (_, number) => onBatch(onSendToTab, number, selectedRowKeys.length === total)
+        },
+        {
+            key: "发送到 WebSocket",
+            label: "发送到 WebSocket",
+            webSocket: true,
+            onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request),
+            // onClickBatch: (list, n) => {
+            //     list.forEach(el => {
+            //         newWebsocketFuzzerTab(el.IsHTTPS, el.Request)
+            //     })
+            // }
         },
         {
             key: "数据包扫描",
@@ -2346,6 +2355,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "复制 URL",
             label: "复制 URL",
             number: 30,
+            webSocket: true,
             onClickSingle: (v) => callCopyToClipboard(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length === 0) {
@@ -2445,6 +2455,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "屏蔽",
             label: "屏蔽",
+            webSocket: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2464,6 +2475,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "删除",
             label: "删除",
+            webSocket: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             all: true,
@@ -2528,13 +2540,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         showByRightContext(
             {
                 width: 180,
-                data: menuData.map((ele) => {
-                    return {
-                        label: ele.label,
-                        key: ele.key,
-                        children: ele.children || []
-                    }
-                }),
+                data: menuData
+                    .filter((item) => (rowData.IsWebsocket ? item.webSocket : true))
+                    .map((ele) => {
+                        return {
+                            label: ele.label,
+                            key: ele.key,
+                            children: ele.children || []
+                        }
+                    }),
                 // openKeys:['复制为 Yak PoC 模版',],
                 onClick: ({key, keyPath}) => {
                     if (keyPath.includes("数据包扫描")) {
