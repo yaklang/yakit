@@ -17,17 +17,20 @@ import emiter from "@/utils/eventBus/eventBus"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import cloneDeep from "lodash/cloneDeep"
 import "../plugins.scss"
+import {yakitNotify} from "@/utils/notification"
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const {yakScriptId} = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [loading, setLoading] = useState<boolean>(false)
+    const [pluginLoading, setPluginLoading] = useState<boolean>(true)
     const [plugin, setPlugin] = useState<YakScript>()
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [selectList, setSelectList] = useState<YakScript[]>([])
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
 
+    const pluginTypeRef = useRef<string>("")
     const privateDomainRef = useRef<string>("") // 私有域地址
     const singlePluginExecutionRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(singlePluginExecutionRef)
@@ -37,9 +40,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     useEffect(() => {
         getPluginById()
     }, [yakScriptId])
-    useEffect(() => {
-        getPrivateDomainAndRefList()
-    }, [])
+
     useEffect(() => {
         if (inViewport) {
             emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
@@ -75,7 +76,8 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                       limit: +response.Pagination.Limit || 20
                   }
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams({plugin_type: [], tags: []}, search, params)
+                ...convertLocalPluginsRequestParams({plugin_type: [], tags: []}, search, params),
+                Type: pluginTypeRef.current
             }
             try {
                 const res = await apiQueryYakScript(query)
@@ -107,19 +109,34 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         }),
         {wait: 200, leading: true}
     ).run
-
+    /**获取插件详情，设置插件联动类型，查询私有域,刷新插件列表 */
     const getPluginById = useMemoizedFn(() => {
-        setLoading(true)
+        setPluginLoading(true)
         apiGetYakScriptById(yakScriptId)
-            .then(setPlugin)
+            .then((res) => {
+                setPlugin(res)
+                if (res.Type !== "yak") return
+                pluginTypeRef.current = res.PluginSelectorTypes || ""
+                if (privateDomainRef.current) {
+                    setTimeout(() => {
+                        fetchList(true)
+                    }, 200)
+                } else {
+                    getPrivateDomainAndRefList()
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取插件详情失败:" + e)
+            })
             .finally(() => {
                 setTimeout(() => {
-                    setLoading(false)
+                    setPluginLoading(false)
                 }, 200)
             })
     })
     const onClearSelect = useMemoizedFn(() => {
         setSelectList([])
+        setAllCheck(false)
     })
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
@@ -173,8 +190,9 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     return (
         <>
             <PluginDetails<YakScript>
-                title='本地插件'
+                title={plugin.ScriptName}
                 filterNode={<></>}
+                rightHeardNode={<></>}
                 filterExtra={
                     <div className={"filter-extra-wrapper"} ref={singlePluginExecutionRef}>
                         <YakitButton type='text' danger onClick={onClearSelect}>
@@ -214,7 +232,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                         )
                     },
                     page: response.Pagination.Page,
-                    hasMore: +response.Total !== response.Data.length,
+                    hasMore,
                     loading: loading,
                     defItemHeight: 46,
                     isRef: loading && isLoadingRef.current
@@ -224,9 +242,10 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 setSearch={setSearch}
                 onSearch={onSearch}
                 spinLoading={loading && isLoadingRef.current}
+                hidden={plugin.Type !== "yak"}
             >
                 <PluginDetailsTab
-                    executorShow={!loading}
+                    executorShow={!pluginLoading}
                     plugin={plugin}
                     headExtraNode={null}
                     wrapperClassName={styles["single-plugin-execution-wrapper"]}
