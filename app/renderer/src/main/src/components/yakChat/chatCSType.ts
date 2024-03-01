@@ -61,4 +61,6 @@ export interface ChatCSAnswerProps {
     id: string
     role: string
     result: string
+    // 加载中的字符
+    loadResult?: string
 }

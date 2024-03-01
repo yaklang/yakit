@@ -136,6 +136,11 @@ export interface ScriptsProps {
     Fields: YakParamProps[]
 }
 
+export interface LoadObjProps {
+    result: string
+    id: string
+}
+
 export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const {visible, setVisible} = props
 
@@ -421,6 +426,20 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const analysisFlowData: (flow: string) => ChatCSAnswerProps | undefined = useMemoizedFn((flow) => {
         const objects: ChatCSAnswerProps[] = []
         let answer: ChatCSAnswerProps | undefined = undefined
+        let loadObj:any = undefined
+        // 获取加载中的字符
+        flow.split("state:")
+        .filter((item) => item.length !== 0)
+        .forEach((itemIn,indexIn) => {
+            try {
+                if(indexIn===0){
+                    loadObj = JSON.parse(itemIn) as LoadObjProps
+                }
+            } catch (error) {}
+        })
+        if(loadObj){
+            answer = {id:loadObj.id,role:"",result:"",loadResult:loadObj.result}
+        }
         flow.split("data:")
             .filter((item) => item.length !== 0)
             .forEach((itemIn) => {
@@ -544,7 +563,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content: "",
                 id: ""
             }
-
+            let result:string = ""
             return await new Promise((resolve, reject) => {
                 chatCS({
                     ...params,
@@ -557,11 +576,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
 
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
-                        if (answer && answer.result.length !== 0) {
-                            if (cs.content === answer.result) return
+                        if (answer && answer?.loadResult && answer.loadResult.length !== 0) {
+                            if (cs.content === answer.loadResult) return
                             if (!cs.id) cs.id = answer.id
-                            cs.content = answer.result
+                            cs.content = answer.loadResult
                             setContentList(cs, contents, group)
+                        }
+                        if(answer && answer.result.length !== 0){
+                            result = answer.result
                         }
                     }
                 })
@@ -578,6 +600,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         /** 流式输出逻辑 */
                         if (!cs.content) {
                             cs.content = "暂无可用解答"
+                            setContentList(cs, contents, group)
+                        }
+                        else{
+                            cs.content = result
                             setContentList(cs, contents, group)
                         }
                         resolve(`${params.is_bing && "bing|"}success`)
