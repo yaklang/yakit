@@ -65,7 +65,6 @@
     "js-base64": "^3.7.5",
     "node-stream-zip": "^1.15.0",
     "node-xlsx": "^0.21.0",
-    "numeral": "^2.0.6",
     "process": "^0.11.10",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",

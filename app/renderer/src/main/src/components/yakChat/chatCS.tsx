@@ -178,12 +178,22 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         setRemoteValue(RemoteGV.ChatCSStorage, cache)
     })
 
-    const [width, setWidth] = useState<number | string>(481)
+    const [width, setWidth] = useState<number>(481)
     const divRef = useRef<any>()
     const modalWidth = useMemo(() => {
         if (!+width) return 448
         return +width - 40 > 448 ? 448 : +width - 40
     }, [width])
+
+    const [expand,setExpand] = useState<boolean>(true)
+    useEffect(()=>{
+        if(Math.abs(window.innerWidth*0.95 - width)<=1){
+            setExpand(false)
+        }
+        if(width<=481){
+            setExpand(true)
+        }
+    },[width])
 
     const [history, setHistroy] = useState<CacheChatCSProps[]>([])
     const [active, setActive] = useState<string>("")
@@ -935,7 +945,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     useUpdateEffect(() => {
         if (isShowPrompt) {
-            setWidth("95vw")
+            const maxWitdh = Math.floor(window.innerWidth*0.95)-1
+            setWidth(maxWitdh)
         }
     }, [isShowPrompt])
 
@@ -963,6 +974,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     setShowPrompt(false)
                 }
                 setWidth(elementRef.clientWidth)
+
             }}
         >
             <div ref={divRef} className={styles["yak-chat-layout"]}>
@@ -1006,13 +1018,17 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             <div
                                 className={classNames(styles["small-btn"], styles["btn-style"], styles["expand-icon"])}
                                 onClick={() => {
-                                    if (width === "95vw") {
+                                    if(expand){
+                                        const maxWitdh = Math.floor(window.innerWidth*0.95)-1
+                                        setWidth(maxWitdh)
+                                    }
+                                    else{
                                         setShowPrompt(false)
                                         setWidth(481)
-                                    } else setWidth("95vw")
+                                    }
                                 }}
                             >
-                                {width === "95vw" ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                {expand?<ArrowsExpandIcon />:<ArrowsRetractIcon />}
                             </div>
                             <div
                                 className={classNames(styles["big-btn"], styles["btn-style"], styles["close-icon"])}
@@ -2294,9 +2310,9 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             case "RedTeam_vuln":
                 return isActive ? <UIKitOutlineBugActiveIcon /> : <UIKitOutlineBugIcon />
             case "BlueTeam_com":
-                return isActive ? <OutlineYakRunnerActiveIcon /> : <OutlineYakRunnerIcon />
-            case "RedTeam_code":
                 return isActive ? <OutlineWebFuzzerActiveIcon /> : <OutlineWebFuzzerIcon />
+            case "RedTeam_code":
+                return isActive ? <OutlineYakRunnerActiveIcon /> : <OutlineYakRunnerIcon />
             case "BlueTeam_code":
                 return isActive ? <OutlineChartPieActiveIcon /> : <OutlineChartPieIcon />
             case "yak_memo":

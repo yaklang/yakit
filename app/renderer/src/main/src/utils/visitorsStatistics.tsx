@@ -37,16 +37,14 @@ const visitorsStatisticsOperation = () => {
 }
 
 /** 游客信息统计 */
-export const visitorsStatisticsFun = async (type?: "close") => {
+export const visitorsStatisticsFun = async () => {
     return new Promise(async (resolve, reject) => {
-        if (!isCommunityEdition()) resolve(true)
-        if (type === "close" && MachineID.length === 0) resolve(true)
         try {
             if (MachineID.length === 0) {
                 await getMachineIDOperation()
             }
             visitorsStatisticsOperation()
             resolve(true)
-        } catch (error) {}
+        } catch (error) {resolve(false)}
     })
 }

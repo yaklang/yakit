@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {ForwardedRef, useEffect, useRef, useState} from "react"
 import {Row, Col} from "antd"
 import {ArrowRightOutlined} from "@ant-design/icons"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
@@ -41,24 +41,44 @@ import {DownloadOnlinePluginByScriptNamesResponse} from "../layout/publicMenu/ut
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./newHome.module.scss"
 import classNames from "classnames"
+import {apiFetchGroupStatistics} from "../plugins/utils"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
 interface RouteTitleProps {
     title: string
     echartsError?: boolean
+    increLoading?: boolean
+    echartsLoading?: boolean
+    onRefresh?: () => void
 }
 
 const RouteTitle: React.FC<RouteTitleProps> = (props) => {
-    const {title, echartsError = false} = props
+    const {title, echartsError, increLoading, echartsLoading, onRefresh} = props
     return (
         <div className={styles["home-page-title"]}>
             {title}
-            {echartsError && (
+            {(echartsLoading || increLoading) && (
                 <div className={styles["spin-wrapper"]}>
                     加载中...
                     <div className={styles["spin-style"]}>
                         <YakitSpin size='small' spinning={true} />
+                    </div>
+                </div>
+            )}
+            {echartsError && (
+                <div className={styles["spin-wrapper"]}>
+                    加载失败
+                    <div className={styles["spin-style"]}>
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineRefreshIcon />}
+                            onClick={() => {
+                                onRefresh && onRefresh()
+                            }}
+                        />
                     </div>
                 </div>
             )}
@@ -215,19 +235,23 @@ const RouteList: React.FC<RouteListProps> = (props) => {
 interface PieChartProps {
     goStoreRoute: (v: any) => void
     inViewport?: boolean
-    setEchartsError?: (flag: boolean) => any
+    echartsError: boolean
+    setEchartsError: (flag: boolean) => void
+    echartsLoading: boolean
+    setEchartsLoading: (v: boolean) => void
+    ref: ForwardedRef<any>
 }
 interface echartListProps {
     name: string
     value: number
 }
-const PieEcharts: React.FC<PieChartProps> = (props) => {
-    const {goStoreRoute, inViewport, setEchartsError} = props
+
+const PieEcharts: React.FC<PieChartProps> = React.forwardRef((props, ref) => {
+    const {goStoreRoute, inViewport, echartsError, setEchartsError, echartsLoading, setEchartsLoading} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     // 全局登录状态
     const {userInfo} = useStore()
     const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
-    const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const colorList = ["#FFB660", "#4A94F8", "#5F69DD", "#56C991", "#8863F7", "#35D8EE"]
     const optionRef = useRef<any>({
         color: colorList,
@@ -340,13 +364,13 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     useEffect(() => {
         if (inViewport) {
             echartsRef.current && echartsRef.current.resize()
-            if (setEchartsError) setEchartsError(false)
+            setEchartsError(false)
             getPluginSearch()
         }
     }, [inViewport])
 
     useEffect(() => {
-        if (setEchartsError) setEchartsError(false)
+        setEchartsError(false)
         getPluginSearch()
         //先解绑事件，防止事件重复触发
         echartsRef.current.off("click")
@@ -365,24 +389,21 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     }, [])
 
     const getPluginSearch = useMemoizedFn(() => {
-        let url = "plugin/search/unlogged"
-        if (isEnterpriseEdition() || userInfo.isLogin) {
-            url = "plugin/search"
+        setEchartsError(false)
+        setEchartsLoading(true)
+        const newQuery: API.PluginsSearchRequest = {}
+        if (userInfo.token && userInfo.token.length > 0) {
+            newQuery.token = userInfo.token
         }
-        NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
-            method: "get",
-            url,
-            params: {
-                bind_me: false
-            }
-        })
-            .then((res: API.YakitSearch) => {
-                if (res.plugin_type) {
-                    const chartListCache = res.plugin_type.map((item) => ({
+        apiFetchGroupStatistics(newQuery)
+            .then((res: API.PluginsSearchResponse) => {
+                const list = (res?.data || []).filter((item) => ["plugin_type"].includes(item.groupKey))
+                if (list.length > 0) {
+                    const data = list[0].data
+                    const chartListCache = data.map((item) => ({
                         name: PluginType[item.value] ?? "未识别",
                         value: item.count
                     }))
-                    // console.log("chartListCache",chartListCache,res.plugin_type)
                     // @ts-ignore
                     optionRef.current.series[0].data = chartListCache
                     optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
@@ -392,13 +413,17 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
                 }
             })
             .catch((err) => {
-                if (setEchartsError) setEchartsError(true)
-                // failed("线上统计数据获取失败:" + err)
+                // failed("失败getPluginSearch：" + err)
+                setEchartsError(true)
             })
             .finally(() => {
-                setIsShowEcharts(true)
+                setEchartsLoading(false)
             })
     })
+
+    React.useImperativeHandle(ref, () => ({
+        getPluginSearch: () => getPluginSearch()
+    }))
 
     const onSendToTab = useMemoizedFn((pluginType: string) => {
         let plugin_type: string = ""
@@ -420,15 +445,17 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     return (
         <div
             id='main-home-pie'
-            className={classNames(styles["echarts-box"], isShowEcharts && styles["echarts-box-show"])}
-        ></div>
+            className={classNames(
+                styles["echarts-box"],
+                !echartsLoading && !echartsError && styles["echarts-box-show"]
+            )}
+        />
     )
-}
+})
 
 interface PlugInShopProps {
     setOpenPage: (param: RouteToPageProps) => void
     inViewport?: boolean
-    setEchartsError?: (flag: boolean) => any
 }
 
 export interface DataParams {
@@ -448,18 +475,23 @@ interface countAddObjProps {
 }
 interface PlugInShopNewIncreProps {}
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
-    const {setOpenPage, inViewport, setEchartsError} = props
+    const {setOpenPage, inViewport} = props
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
     const [hotError, setHotError] = useState<boolean>(false)
-    const [hotLoading, setHotLoading] = useState<boolean>(true)
+    const [hotLoading, setHotLoading] = useState<boolean>(false)
+    const [increLoading, setIncreLoading] = useState<boolean>(false)
+    /** 判断插件图标接口是否请求成功 */
+    const [echartsLoading, setEchartsLoading] = useState<boolean>(false)
+    const [echartsError, setEchartsError] = useState<boolean>(false)
+    const childRef = useRef<any>(null)
     const listHeightRef = useRef<any>()
 
     useEffect(() => {
         if (inViewport) {
             setHotError(false)
             getPlugInShopHot()
-            isCommunityEdition() && getPlugInShopNewIncre()
+            onRefresh()
         }
     }, [inViewport])
 
@@ -467,13 +499,15 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         ipcRenderer.on("refresh-new-home", (e, res: any) => {
             setHotError(false)
             getPlugInShopHot()
-            isCommunityEdition() && getPlugInShopNewIncre()
+            onRefresh()
         })
         return () => {
             ipcRenderer.removeAllListeners("refresh-new-home")
         }
     }, [])
     const getPlugInShopHot = () => {
+        setHotLoading(true)
+        setHotError(false)
         NetWorkApi<PlugInShopHotProps, API.PluginTopSearchResponse>({
             method: "get",
             url: "plugin/topSearch"
@@ -488,7 +522,8 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
             })
             .catch((err) => {
                 setHotError(true)
-                // failed("失败：" + err)
+                setHotArr([])
+                // failed("失败getPlugInShopHot：" + err)
             })
             .finally(() => {
                 setHotLoading(false)
@@ -502,6 +537,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     }
 
     const getPlugInShopNewIncre = () => {
+        setIncreLoading(true)
         NetWorkApi<PlugInShopNewIncreProps, API.PluginIncreResponse>({
             method: "get",
             url: "plugin/newIncre"
@@ -520,7 +556,11 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                 }
             })
             .catch((err) => {
-                // failed("失败：" + err)
+                setCountAddObj(undefined)
+                // failed("失败plugin/newIncre：" + err)
+            })
+            .finally(() => {
+                setIncreLoading(false)
             })
     }
     /**
@@ -541,110 +581,148 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     const openStoreRoute = useMemoizedFn(() => {
         setOpenPage({route: YakitRoute.Plugin_Store})
     })
+
+    const onRefresh = useMemoizedFn(() => {
+        isCommunityEdition() && getPlugInShopNewIncre()
+        if (childRef && childRef.current) {
+            childRef.current.getPluginSearch()
+        }
+    })
     return (
-        <div className={styles["plug-in-shop"]}>
-            <div className={styles["show-top-box"]}>
-                <div
-                    className={classNames({
-                        [styles["add-box-show"]]: isCommunityEdition(),
-                        [styles["add-box-hidden"]]: isEnterpriseEdition()
-                    })}
-                >
-                    <div className={styles["add-count-box"]}>
-                        {countAddObj && (
-                            <>
-                                <div
-                                    className={classNames(styles["common-count"], {
-                                        [styles["keep-border-left"]]: countAddObj?.day_incre === "=",
-                                        [styles["add-border-left"]]: countAddObj?.day_incre === ">",
-                                        [styles["reduce-border-left"]]: countAddObj?.day_incre === "<"
-                                    })}
-                                    style={{cursor: "pointer"}}
-                                    onClick={() => openStoreRoute()}
-                                >
-                                    <div className={styles["add-title"]}>今日新增数</div>
-                                    <div className={styles["add-content"]}>
-                                        <span>
-                                            <CountUp
-                                                start={0}
-                                                end={countAddObj.day_incre_num}
-                                                duration={1}
-                                                style={{padding: "0px"}}
-                                            />
-                                        </span>
-                                        {selectIconShow(countAddObj.day_incre)}
+        <>
+            <RouteTitle
+                title='插件商店'
+                echartsError={echartsError}
+                increLoading={increLoading}
+                echartsLoading={echartsLoading}
+                onRefresh={onRefresh}
+            />
+            <div className={styles["plug-in-shop"]}>
+                <div className={styles["show-top-box"]}>
+                    <div
+                        className={classNames({
+                            [styles["add-box-show"]]: isCommunityEdition(),
+                            [styles["add-box-hidden"]]: isEnterpriseEdition()
+                        })}
+                    >
+                        <div className={styles["add-count-box"]}>
+                            {countAddObj && (
+                                <>
+                                    <div
+                                        className={classNames(styles["common-count"], {
+                                            [styles["keep-border-left"]]: countAddObj?.day_incre === "=",
+                                            [styles["add-border-left"]]: countAddObj?.day_incre === ">",
+                                            [styles["reduce-border-left"]]: countAddObj?.day_incre === "<"
+                                        })}
+                                        style={{cursor: "pointer"}}
+                                        onClick={() => openStoreRoute()}
+                                    >
+                                        <div className={styles["add-title"]}>今日新增数</div>
+                                        <div className={styles["add-content"]}>
+                                            <span>
+                                                <CountUp
+                                                    start={0}
+                                                    end={countAddObj.day_incre_num}
+                                                    duration={1}
+                                                    style={{padding: "0px"}}
+                                                />
+                                            </span>
+                                            {selectIconShow(countAddObj.day_incre)}
+                                        </div>
                                     </div>
-                                </div>
-                                <div
-                                    className={classNames(styles["common-count"], {
-                                        [styles["keep-border-left"]]: countAddObj?.week_incre === "=",
-                                        [styles["add-border-left"]]: countAddObj?.week_incre === ">",
-                                        [styles["reduce-border-left"]]: countAddObj?.week_incre === "<"
-                                    })}
-                                    style={{cursor: "pointer"}}
-                                    onClick={() => openStoreRoute()}
-                                >
-                                    <div className={styles["add-title"]}>本周新增数</div>
-                                    <div className={styles["add-content"]}>
-                                        <span>
-                                            <CountUp
-                                                start={0}
-                                                end={countAddObj.week_incre_num}
-                                                duration={1}
-                                                style={{padding: "0px"}}
-                                            />
-                                        </span>
-                                        {selectIconShow(countAddObj.week_incre)}
+                                    <div
+                                        className={classNames(styles["common-count"], {
+                                            [styles["keep-border-left"]]: countAddObj?.week_incre === "=",
+                                            [styles["add-border-left"]]: countAddObj?.week_incre === ">",
+                                            [styles["reduce-border-left"]]: countAddObj?.week_incre === "<"
+                                        })}
+                                        style={{cursor: "pointer"}}
+                                        onClick={() => openStoreRoute()}
+                                    >
+                                        <div className={styles["add-title"]}>本周新增数</div>
+                                        <div className={styles["add-content"]}>
+                                            <span>
+                                                <CountUp
+                                                    start={0}
+                                                    end={countAddObj.week_incre_num}
+                                                    duration={1}
+                                                    style={{padding: "0px"}}
+                                                />
+                                            </span>
+                                            {selectIconShow(countAddObj.week_incre)}
+                                        </div>
                                     </div>
-                                </div>
-                            </>
-                        )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                    <div
+                        className={classNames({
+                            [styles["chart-box-show"]]: isCommunityEdition(),
+                            [styles["chart-box-hidden"]]: isEnterpriseEdition()
+                        })}
+                        ref={listHeightRef}
+                    >
+                        {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
+                        <PieEcharts
+                            ref={childRef}
+                            goStoreRoute={goStoreRoute}
+                            inViewport={inViewport}
+                            echartsError={echartsError}
+                            setEchartsError={setEchartsError}
+                            echartsLoading={echartsLoading}
+                            setEchartsLoading={setEchartsLoading}
+                        />
                     </div>
                 </div>
-                <div
-                    className={classNames({
-                        [styles["chart-box-show"]]: isCommunityEdition(),
-                        [styles["chart-box-hidden"]]: isEnterpriseEdition()
-                    })}
-                    ref={listHeightRef}
-                >
-                    {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
-                    <PieEcharts goStoreRoute={goStoreRoute} inViewport={inViewport} setEchartsError={setEchartsError} />
-                </div>
-            </div>
-            <div className={styles["show-bottom-box"]}>
-                <div className={styles["bottom-box-title"]}>
-                    热搜词
-                    {hotError && hotArr.length === 0 && (
-                        <div className={styles["spin-wrapper"]}>
-                            加载中...
-                            <div className={styles["spin-style"]}>
-                                <YakitSpin size='small' spinning={true} />
+                <div className={styles["show-bottom-box"]}>
+                    <div className={styles["bottom-box-title"]}>
+                        热搜词
+                        {hotLoading && (
+                            <div className={styles["spin-wrapper"]}>
+                                加载中...
+                                <div className={styles["spin-style"]}>
+                                    <YakitSpin size='small' spinning={true} />
+                                </div>
                             </div>
+                        )}
+                        {hotError && (
+                            <div className={styles["spin-wrapper"]}>
+                                加载失败
+                                <div className={styles["spin-style"]}>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={() => {
+                                            getPlugInShopHot()
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {!hotLoading && (
+                        <div className={styles["label-box"]}>
+                            {hotArr.length > 0 ? (
+                                hotArr.slice(0, 10).map((item) => {
+                                    return (
+                                        <div
+                                            key={item}
+                                            className={styles["label-item"]}
+                                            onClick={() => goStoreRoute({keyword: item})}
+                                        >
+                                            {item}
+                                        </div>
+                                    )
+                                })
+                            ) : (
+                                <div className={styles["hot-no-data"]}>暂无数据</div>
+                            )}
                         </div>
                     )}
                 </div>
-                {!hotLoading && (
-                    <div className={styles["label-box"]}>
-                        {hotArr.length > 0 ? (
-                            hotArr.slice(0, 10).map((item) => {
-                                return (
-                                    <div
-                                        key={item}
-                                        className={styles["label-item"]}
-                                        onClick={() => goStoreRoute({keyword: item})}
-                                    >
-                                        {item}
-                                    </div>
-                                )
-                            })
-                        ) : (
-                            <div className={styles["hot-no-data"]}>暂无数据</div>
-                        )}
-                    </div>
-                )}
             </div>
-        </div>
+        </>
     )
 }
 
@@ -836,9 +914,6 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
         getCustomizeMenus()
     }, [inViewport])
 
-    /** 判断插件图标接口是否请求成功 */
-    const [echartsError, setEchartsError] = useState<boolean>(false)
-
     const setOpenPage = (param: RouteToPageProps) => {
         ipcRenderer.invoke("open-route-page", param)
     }
@@ -903,8 +978,7 @@ const NewHome: React.FC<NewHomeProps> = (props) => {
                     <RouteList data={newHomeData[5]} colLimit={3} setOpenPage={setOpenPage} />
                 </div>
                 <div className={classNames(styles["bottom-small-block"], styles["plug-in-main"])}>
-                    <RouteTitle title='插件商店' echartsError={echartsError} />
-                    <PlugInShop setOpenPage={setOpenPage} inViewport={inViewport} setEchartsError={setEchartsError} />
+                    <PlugInShop setOpenPage={setOpenPage} inViewport={inViewport} />
                 </div>
             </div>
         </div>

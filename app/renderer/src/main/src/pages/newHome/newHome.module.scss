@@ -65,6 +65,8 @@
         .spin-style {
             width: 14px;
             height: 14px;
+            display: flex;
+            align-items: center;
         }
     }
 }
@@ -291,13 +293,14 @@
         padding: 3px 0;
         display: flex;
         gap: 4px;
-
         font-size: 12px;
         line-height: 14px;
         color: var(--yakit-primary-5);
         .spin-style {
             width: 14px;
             height: 14px;
+            display: flex;
+            align-items: center;
         }
     }
 }

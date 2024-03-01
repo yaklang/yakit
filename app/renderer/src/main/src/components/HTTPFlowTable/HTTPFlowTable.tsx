@@ -1677,7 +1677,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     // 这里重置过后的 tagsFilter 不一定是最新的
                                     setParams({
                                         ...getParams(),
-                                        Tags: [],
+                                        Tags: []
                                     })
                                     setTimeout(() => {
                                         updateData()
@@ -2121,6 +2121,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     }
 
+    const getPageSize = useMemo(() => {
+        if(total>5000){
+            return 500
+        }
+        else if(total<1000){
+            return 100
+        }
+        else {
+            return Math.round(total / 1000) * 100;
+        }
+    }, [total])
+
     // 数据导出
     const initExcelData = (resolve, newExportData: HTTPFlow[], rsp) => {
         let exportData: any = []
@@ -2150,27 +2162,28 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const getExcelData = useMemoizedFn((pagination, list: HTTPFlow[]) => {
         return new Promise((resolve) => {
             const l = data.length
-            const query = {
+            const query: any = {
                 ...params,
                 Tags: params.Tags,
                 Pagination: {...pagination},
-                OffsetId:
-                    pagination.Page == 1
-                        ? undefined
-                        : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
+                // OffsetId:
+                //     pagination.Page === 1
+                //         ? undefined
+                //         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
+                OffsetId: undefined,
                 AfterBodyLength: params.AfterBodyLength
                     ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
                     : undefined,
                 BeforeBodyLength: params.BeforeBodyLength
                     ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
                     : undefined,
-                Full: true
+                Full: false
             }
 
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-            const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
+            let exportParams: any = {}
             // 这里的key值 不一定和表格的key对应的上
             const arrList = [
                 {
@@ -2231,13 +2244,60 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             ]
             const FieldName = arrList.filter((item) => exportTitle.includes(item.title)).map((item) => item.key)
-            ipcRenderer
-                .invoke("ExportHTTPFlows", {ExportWhere: query, Ids, FieldName})
-                .then((rsp: YakQueryHTTPFlowResponse) => {
-                    initExcelData(resolve, rsp.Data, rsp)
+
+            const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
+            // 最大请求条数
+            let pageSize = getPageSize
+            // 需要多少次请求
+            let count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
+            const resultArray: number[] = []
+            for (let i = 1; i <= count; i++) {
+                resultArray.push(i)
+            }
+            const promiseList = resultArray.map((item) => {
+                query.Pagination.Limit = pageSize
+                query.Pagination.Page = item
+                exportParams = {ExportWhere: query, FieldName}
+                if (!isAllSelect) {
+                    exportParams.Ids = Ids
+                }
+                return new Promise((resolve, reject) => {
+                    ipcRenderer
+                        .invoke("ExportHTTPFlows", exportParams)
+                        .then((rsp: YakQueryHTTPFlowResponse) => {
+                            resolve(rsp)
+                        })
+                        .catch((e) => {
+                            reject(e)
+                        })
+                        .finally(() => {
+                        })
                 })
+            })
+            Promise.allSettled(promiseList).then((results) => {
+                let rsp: YakQueryHTTPFlowResponse = {
+                    Data: [],
+                    Pagination: {...pagination, Page: 1, OrderBy: "id", Order: ""},
+                    Total: parseInt(total + "")
+                }
+                let message:string = ""
+                results.forEach((item) => {
+                    if (item.status === "fulfilled") {
+                        const value = item.value as YakQueryHTTPFlowResponse
+                        rsp.Data = [...rsp.Data, ...value.Data]
+                    }
+                    else{
+                        message = item.reason?.message
+                    }
+                })
+                if(message.length>0){
+                    yakitNotify("warning", `部分导出内容缺失:${message}`)
+                }
+                initExcelData(resolve, rsp.Data, rsp)
+            })
         })
     })
+
     const onExcelExport = (list) => {
         const titleValue = columns.filter((item) => !["序号", "操作"].includes(item.title)).map((item) => item.title)
         const exportValue = [...titleValue, "请求包", "响应包"]
@@ -2258,7 +2318,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setSelectedRows([])
             },
             width: 650,
-            footer: null
+            footer: null,
+            maskClosable: false
         })
     }
 

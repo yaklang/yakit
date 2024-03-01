@@ -21,7 +21,6 @@ import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {ProjectDescription} from "./pages/softwareSettings/ProjectManage"
 import {useRunNodeStore} from "./store/runNode"
-import { visitorsStatisticsFun } from "./utils/visitorsStatistics"
 
 /** 快捷键目录 */
 const InterceptKeyword = [
@@ -282,9 +281,7 @@ function NewApp() {
             const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
             // 关闭前的所有接口调用都放到allSettled里面
             try {
-                await Promise.allSettled([handleKillAllRunNode(), delTemporaryProject()
-                    // , visitorsStatisticsFun("close")
-                ])
+                await Promise.allSettled([handleKillAllRunNode(), delTemporaryProject()])
             } catch (error) {
             }
             // 通知应用退出
@@ -296,9 +293,7 @@ function NewApp() {
                 ipcRenderer.invoke("app-exit", {showCloseMessageBox})
             }
         })
-        ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
-            // visitorsStatisticsFun()
-        })
+        ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {})
         return () => {
             ipcRenderer.removeAllListeners("close-windows-renderer")
             ipcRenderer.removeAllListeners("minimize-windows-renderer")
