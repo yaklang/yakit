@@ -1360,6 +1360,7 @@ export const apiFetchQueryYakScriptGroupLocal: (All?: boolean) => Promise<GroupC
                 resolve(res.Group)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "获取本地插件组：" + e)
             })
     })
@@ -1377,6 +1378,7 @@ export const apiFetchRenameYakScriptGroupLocal: (Group: string, NewGroup: string
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "修改本地插件组名：" + e)
             })
     })
@@ -1391,6 +1393,7 @@ export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null>
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "删除本地插件组：" + e)
             })
     })
@@ -1407,6 +1410,7 @@ export const apiFetchGetYakScriptGroupLocal: (params: QueryYakScriptRequest) => 
                 resolve(res)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "" + e)
             })
     })
@@ -1421,6 +1425,7 @@ export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "更新本地插件所在组：" + e)
             })
     })
@@ -1435,6 +1440,7 @@ export const apiFetchResetYakScriptGroup: (params: ResetYakScriptGroupRequest) =
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "重置失败：" + e)
             })
     })
