@@ -84,8 +84,9 @@ import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
-import {PageNodeItemProps, PageProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, PageProps, defPage, usePageInfo} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
+import cloneDeep from "lodash/cloneDeep"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -375,6 +376,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const route: YakitRoute = isModify ? YakitRoute.ModifyYakitScript : YakitRoute.AddYakitScript
 
         const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
             pageList: [
                 {
                     id: randomString(8),
@@ -488,6 +490,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 sortFieId: 0
             }
             const pages: PageProps = {
+                ...cloneDeep(defPage),
                 routeKey: YakitRoute.Plugin_Local,
                 singleNode: true,
                 pageList: [newPageNode]
@@ -523,6 +526,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 sortFieId: 0
             }
             const pages: PageProps = {
+                ...cloneDeep(defPage),
                 routeKey: YakitRoute.Plugin_Store,
                 singleNode: true,
                 pageList: [newPageNode]
@@ -1316,9 +1320,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
                     const tabName = routeKeyToLabel.get(key) || menuName
                     let pageNodeInfo: PageProps = {
-                        pageList: [],
+                        ...cloneDeep(defPage),
                         routeKey: YakitRoute.HTTPFuzzer,
-                        singleNode: false
                     }
                     let multipleNodeListLength: number = 0
                     const multipleNodeList: MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
@@ -1524,9 +1527,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
                 const oldPageList = pages.get(YakitRoute.HTTPFuzzer)?.pageList
                 let pageNodeInfo: PageProps = {
+                    ...cloneDeep(defPage),
                     pageList: oldPageList || [],
                     routeKey: YakitRoute.HTTPFuzzer,
-                    singleNode: false
                 }
                 pageNodeInfo.pageList = [...pageNodeInfo.pageList, ...pageList]
 
@@ -1984,6 +1987,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const subTabsRef = useRef<any>()
     const [inViewport = true] = useInViewport(tabsRef)
 
+    const {setCurrentSelectPageId} = usePageInfo(
+        (s) => ({
+            setCurrentSelectPageId: s.setCurrentSelectPageId
+        }),
+        shallow
+    )
+
     useEffect(() => {
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             ipcRenderer.on("fetch-webFuzzer-setType", onSetType)
@@ -2174,7 +2184,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             removeCurrentSelectGroupId,
             removePagesDataCacheById,
             setPageNodeInfoByPageGroupId,
-            addPagesDataCache
+            addPagesDataCache,
+            setCurrentSelectPageId
         } = usePageInfo(
             (s) => ({
                 setPagesData: s.setPagesData,
@@ -2185,7 +2196,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 removeCurrentSelectGroupId: s.removeCurrentSelectGroupId,
                 removePagesDataCacheById: s.removePagesDataCacheById,
                 setPageNodeInfoByPageGroupId: s.setPageNodeInfoByPageGroupId,
-                addPagesDataCache: s.addPagesDataCache
+                addPagesDataCache: s.addPagesDataCache,
+                setCurrentSelectPageId: s.setCurrentSelectPageId
             }),
             shallow
         )
@@ -2260,6 +2272,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     }
                     setSelectGroupId(currentTabKey, selectSubMenu.groupId)
                 }
+                setCurrentSelectPageId(currentTabKey,selectSubMenu.id)
             }
         }, [selectSubMenu])
         useLongPress(
@@ -3123,9 +3136,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                         )
                         if (current) {
                             const pages: PageProps = {
+                                ...cloneDeep(defPage),
                                 pageList: [{...current, sortFieId: 1}],
                                 routeKey: currentTabKey,
-                                singleNode: false
                             }
                             setPagesData(currentTabKey, pages)
                         }
@@ -3303,9 +3316,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 }
             })
             const pages: PageProps = {
+                ...cloneDeep(defPage),
                 pageList: pageList,
                 routeKey: currentRouteKey,
-                singleNode: false
             }
             setPagesData(currentRouteKey, pages)
         })
@@ -3370,9 +3383,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     if (currentGroupList && currentGroupItem) {
                         const newPageList = currentGroupList.map((ele, index) => ({...ele, sortFieId: index + 1}))
                         let pageNodeInfo: PageProps = {
+                            ...cloneDeep(defPage),
                             pageList: [...newPageList, {...currentGroupItem, sortFieId: 1}],
                             routeKey: currentTabKey,
-                            singleNode: false
+                            singleNode: false,
                         }
                         setPagesData(currentTabKey, pageNodeInfo)
                     }

@@ -11,7 +11,7 @@ export type YakitITextModel = monacoEditor.editor.ITextModel
 export type YakitIModelDecoration = monacoEditor.editor.IModelDecoration
 
 /** @name 自带的菜单组可选项 */
-export type YakitEditorExtraRightMenuType = "code" | "decode" | "http" | "customhttp"
+export type YakitEditorExtraRightMenuType = "code" | "decode" | "http" | "customhttp" | "customcontextmenu"
 
 export interface YakitEditorProps {
     /** @name 是否每次更新菜单 */
@@ -84,7 +84,7 @@ export interface YakitEditorProps {
 export interface OtherMenuListProps {
     [key: string]: {
         menu: EditorMenuItemType[]
-        onRun: (editor: YakitIMonacoEditor, key: string) => any
+        onRun: (editor: YakitIMonacoEditor, key: string,getCurrentSelectPageId: (routeKey: string) => string) => any
         /** Order菜单权重排序 0为第一个 1为第二个... 负数统一放最后 */
         order?: number
     }

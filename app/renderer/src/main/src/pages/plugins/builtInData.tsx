@@ -117,6 +117,8 @@ export enum PluginGV {
     PluginYakDNSLogSwitch = "custom-dnslog-platform",
     /** @name 插件信息-codec类型额外参数(用于自定义HTTP数据包变形)对应tag值 */
     PluginCodecHttpSwitch = "allow-custom-http-packet-mutate",
+    /** @name 插件信息-codec类型额外参数(用于自定义右键菜单执行)对应tag值 */
+    PluginCodecContextMenuExecuteSwitch = "allow-custom-context-menu-execute",
 
     /**
      * @name 本地插件组缓存字段 filter_cache_list_common_data

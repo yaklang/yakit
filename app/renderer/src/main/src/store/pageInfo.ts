@@ -19,6 +19,7 @@ export interface PageProps {
     pageList: PageNodeItemProps[]
     routeKey: string
     singleNode: boolean
+    currentSelectPageId:string
 }
 
 export interface PageNodeItemProps {
@@ -94,11 +95,16 @@ interface PageInfoStoreProps {
     clearDataByRoute: (key: string) => void
     /**只保留routeKey的数据，删除除此routeKey之外的数据 */
     clearOtherDataByRoute: (routeKey: string) => void
+    /** 设置当前激活的页面id */
+    setCurrentSelectPageId: (routeKey: string,pageId:string) => void
+    /** 获取当前激活的页面id */
+    getCurrentSelectPageId: (routeKey: string) => string
 }
-const defPage: PageProps = {
+export const defPage: PageProps = {
     pageList: [],
     routeKey: "",
-    singleNode: false
+    singleNode: false,
+    currentSelectPageId:''
 }
 export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(
@@ -248,6 +254,23 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                         pages: new Map().set(key, newPages),
                         selectGroupId: new Map().set(key, newSelectGroupId)
                     })
+                },
+                setCurrentSelectPageId: (key,pageId) => {
+                    const newPages = get().pages
+                    const currentPage = newPages.get(key) || cloneDeep(defPage)
+                    newPages.set(key,{
+                        ...currentPage,
+                        currentSelectPageId:pageId
+                    })
+                    set({
+                        ...get(),
+                       pages: newPages
+                    })
+                },
+                getCurrentSelectPageId:(key)=>{
+                    const {pages} = get()
+                    const current = pages.get(key) || cloneDeep(defPage)
+                    return current.currentSelectPageId
                 }
             }),
             {

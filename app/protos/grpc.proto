@@ -1066,7 +1066,7 @@ message AuthInfo {
 }
 
 message ThirdPartyApplicationConfig {
-  // zoomeye / hunter / shodan / fofa / github / token
+  // zoomeye / hunter / shodan / fofa / github / openai / token
   string Type = 1;
   string APIKey = 2;
   string UserIdentifier = 3;
@@ -1074,6 +1074,7 @@ message ThirdPartyApplicationConfig {
   string Namespace = 5;
   string Domain = 6;
   string WebhookURL = 7;
+  repeated KVPair ExtraParams = 8;
 }
 
 message DiagnoseNetworkRequest {

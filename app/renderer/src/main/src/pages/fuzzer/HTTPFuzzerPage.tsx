@@ -60,7 +60,7 @@ import {
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
-import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps, YakitIMonacoEditor} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
@@ -108,6 +108,11 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
 import {createRoot} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
+import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
+import { YakitWindow } from "@/components/yakitUI/YakitWindow/YakitWindow"
+import { apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from "../spaceEngine/utils"
+import { GlobalNetworkConfig } from "@/components/configNetwork/ConfigNetworkPage"
+import { ThirdPartyApplicationConfigForm } from "@/components/configNetwork/ThirdPartyApplicationConfig"
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
@@ -598,7 +603,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
-    const fuzzerRef = useRef<any>()
+    const fuzzerRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(fuzzerRef)
 
     const hotPatchCodeRef = useRef<string>("")
@@ -1110,6 +1115,67 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         )
         return () => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
+        }
+    }, [])
+
+    const [yakitWindowVisible,setYakitWindowVisible] = useState<boolean>(false)
+    const [menuExecutorParams,setMenuExecutorParams] = useState<({text?:string,scriptName:string})>()
+    // 判断打开 YakitWindow执行框/全局网络配置第三方应用框
+    const onFuzzerModal = useMemoizedFn((value)=>{
+        const val:{text?:string,scriptName:string,pageId:string} = JSON.parse(value)
+        // apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
+            if(props.id===val.pageId){
+            // 如若已配置 则打开执行框
+            // if(obj.AppConfigs.length>0){
+                    setYakitWindowVisible(true)
+                    setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
+            // }
+            // else{
+            //     let m = showYakitModal({
+            //         title: "添加第三方应用",
+            //         width: 600,
+            //         footer: null,
+            //         closable: true,
+            //         maskClosable: false,
+            //         content: (
+            //             <div style={{ margin: 24 }}>
+            //                 <ThirdPartyApplicationConfigForm
+            //                     onAdd={(e) => {
+            //                         let existed = false
+            //                         const existedResult = (obj.AppConfigs || []).map(
+            //                             (i) => {
+            //                                 if (i.Type === e.Type) {
+            //                                     existed = true
+            //                                     return { ...i, ...e }
+            //                                 }
+            //                                 return { ...i }
+            //                             }
+            //                         )
+            //                         if (!existed) {
+            //                             existedResult.push(e)
+            //                         }
+            //                         const params = {...obj, AppConfigs: existedResult}
+            //                         apiSetGlobalNetworkConfig(params).then(() => {
+            //                             setYakitWindowVisible(true)
+            //                             setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
+            //                             m.destroy()
+            //                         })
+            //                     }}
+            //                     onCancel={() => m.destroy()}
+            //                 />
+            //             </div>
+            //         )
+            //     })
+            // }
+        }
+        // })
+    })
+
+    useEffect(() => {
+        // YakitWindow
+        emiter.on("onOpenFuzzerModal", onFuzzerModal)
+        return () => {
+            emiter.off("onOpenFuzzerModal", onFuzzerModal)
         }
     }, [])
 
@@ -1912,10 +1978,58 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                 />
             </div>
+            {fuzzerRef.current&&<YakitWindow
+                getContainer={fuzzerRef.current}
+                title='执行结果'
+                visible={yakitWindowVisible}
+                contentStyle={{padding: 0}}
+                width={600}
+                footerStyle={{flexDirection: "row-reverse", justifyContent: "center"}}
+                defaultDockSide = {["shrink", "left", "right", "bottom"]}
+                firstDockSide="shrink"
+                onCancel={()=>{
+                    setYakitWindowVisible(false)
+                    setMenuExecutorParams(undefined)
+                }}
+                onOk={()=>{}}
+            >
+                {menuExecutorParams&&<ContextMenuExecutor scriptName={menuExecutorParams.scriptName} text={menuExecutorParams.text}/>}
+            </YakitWindow>}
         </div>
     )
 }
 export default HTTPFuzzerPage
+
+export interface ContextMenuProp {
+    text?: string
+    scriptName: string
+}
+/** @name 自定义右键菜单执行组件 */
+export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
+    const {scriptName,text} = props
+
+    const [loading, setLoading] = useState<boolean>(true)
+    const [value, setValue] = useState<string>("")
+    useEffect(() => {
+        ipcRenderer.invoke("Codec", { Text: text, ScriptName: scriptName }).then((result: { Result: string }) => {
+            setValue(result.Result)
+        }).catch((e) => {
+            yakitNotify("error", `Codec ${e}`)
+        }).finally(() => {
+          setTimeout(() => {
+            setLoading(false)
+          }, 200);
+        })
+    }, [])
+    
+    return (
+        <YakitSpin spinning={loading} style={{ width: "100%",height:"100%" }}>
+            <div style={{ height: "100%" }}>
+                <YakitEditor  fontSize={14} type={"text"} readOnly={true} value={value} />
+            </div>
+        </YakitSpin>
+    )
+}
 
 interface FuzzerExtraShowProps {
     droppedCount: number

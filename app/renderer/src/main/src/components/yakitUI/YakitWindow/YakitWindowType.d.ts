@@ -34,6 +34,8 @@ export interface YakitWindowProps
     onResize?: (info: {type: WindowPositionType; size: YakitWindowCacheSizeProps}) => any
     /** 窗体缓存宽高的标识字段(键值对中的键名)(设置此字段则默认开启宽高缓存) */
     cacheSizeKey?: string
+    /** 第一次进入时的停靠位置 */
+    firstDockSide?:WindowPositionType
 }
 
 export interface YakitWindowContentProps extends WindowPositionOPProps {

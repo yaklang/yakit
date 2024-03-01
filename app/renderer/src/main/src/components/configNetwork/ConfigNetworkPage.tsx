@@ -1,37 +1,38 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
-import {AutoCard} from "@/components/AutoCard"
-import {ManyMultiSelectForString, SelectOne, SwitchItem} from "@/utils/inputUtil"
-import {Divider, Form, Modal, Popconfirm, Space, Upload} from "antd"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {yakitInfo, warn, failed, yakitNotify, success} from "@/utils/notification"
-import {AutoSpin} from "@/components/AutoSpin"
+import React, { useEffect, useMemo, useRef, useState } from "react"
+import { AutoCard } from "@/components/AutoCard"
+import { ManyMultiSelectForString, SelectOne, SwitchItem } from "@/utils/inputUtil"
+import { Divider, Form, Modal, Popconfirm, Space, Upload } from "antd"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import { yakitInfo, warn, failed, yakitNotify, success } from "@/utils/notification"
+import { AutoSpin } from "@/components/AutoSpin"
 import update from "immutability-helper"
-import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import { useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect } from "ahooks"
 import styles from "./ConfigNetworkPage.module.scss"
-import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {InputCertificateForm} from "@/pages/mitm/MITMServerStartForm/MITMAddTLS"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import { YakitInput } from "../yakitUI/YakitInput/YakitInput"
+import { YakitRadioButtons } from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
+import { InputCertificateForm } from "@/pages/mitm/MITMServerStartForm/MITMAddTLS"
+import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
-import {CloseIcon, RectangleFailIcon, RectangleSucceeIcon, UnionIcon} from "./icon"
-import {SolidCheckCircleIcon, SolidLockClosedIcon} from "@/assets/icon/colors"
-import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import { CloseIcon, RectangleFailIcon, RectangleSucceeIcon, UnionIcon } from "./icon"
+import { SolidCheckCircleIcon, SolidLockClosedIcon } from "@/assets/icon/colors"
+import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
 import classNames from "classnames"
-import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
-import {BanIcon, CogIcon, PencilAltIcon, RemoveIcon, TrashIcon} from "@/assets/newIcon"
-import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
-import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps} from "../TableVirtualResize/TableVirtualResizeType"
-import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
-import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-import {v4 as uuidv4} from "uuid"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
-import {DemoItemSelectMultiForString} from "@/demoComponents/itemSelect/ItemSelect";
-import {PcapMetadata} from "@/models/Traffic";
-import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
+import { YakitSwitch } from "../yakitUI/YakitSwitch/YakitSwitch"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { ThirdPartyApplicationConfigForm } from "@/components/configNetwork/ThirdPartyApplicationConfig"
+import { BanIcon, CogIcon, PencilAltIcon, RemoveIcon, TrashIcon } from "@/assets/newIcon"
+import { YakitDrawer } from "../yakitUI/YakitDrawer/YakitDrawer"
+import { TableVirtualResize } from "../TableVirtualResize/TableVirtualResize"
+import { ColumnsTypeProps } from "../TableVirtualResize/TableVirtualResizeType"
+import { YakitModal } from "../yakitUI/YakitModal/YakitModal"
+import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
+import { v4 as uuidv4 } from "uuid"
+import { ExclamationCircleOutlined } from "@ant-design/icons"
+import { DemoItemSelectMultiForString } from "@/demoComponents/itemSelect/ItemSelect";
+import { PcapMetadata } from "@/models/Traffic";
+import { SelectOptionProps } from "@/pages/fuzzer/HTTPFuzzerPage";
+import { KVPair } from "@/models/kv";
 
 export interface ConfigNetworkPageProp {
 }
@@ -75,6 +76,7 @@ export interface ThirdPartyApplicationConfig {
     Namespace?: string
     Domain?: string
     WebhookURL?: string
+    ExtraParams?: KVPair[]
 }
 
 export interface IsSetGlobalNetworkConfig {
@@ -103,7 +105,7 @@ interface ClientCertificates {
     Pkcs12Password: Uint8Array
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export const defaultParams: GlobalNetworkConfig = {
     DisableSystemDNS: false,
@@ -140,7 +142,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         // setParams(defaultParams)
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
             console.log("GetGlobalNetworkConfig", rsp)
-            const {ClientCertificates, SynScanNetInterface} = rsp
+            const { ClientCertificates, SynScanNetInterface } = rsp
             console.log("SynScanNetInterface", SynScanNetInterface)
             ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
                 if (!data || data.AvailablePcapDevices.length == 0) {
@@ -148,22 +150,22 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 }
                 const interfaceList = data.AvailablePcapDevices.map(
                     (item) => (
-                        {label: `${item.NetInterfaceName}-(${item.IP})`, value: item.Name})
+                        { label: `${item.NetInterfaceName}-(${item.IP})`, value: item.Name })
                 )
                 if (SynScanNetInterface.length === 0) {
-                    setParams({...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName})
+                    setParams({ ...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName })
                 }
                 setNetInterfaceList(interfaceList)
             })
             if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0 && format === 1) {
                 let newArr = ClientCertificates.map((item, index) => {
-                    const {Pkcs12Bytes, Pkcs12Password} = item
-                    return {Pkcs12Bytes, Pkcs12Password, name: `证书${index + 1}`}
+                    const { Pkcs12Bytes, Pkcs12Password } = item
+                    return { Pkcs12Bytes, Pkcs12Password, name: `证书${index + 1}` }
                 })
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
             }
-            setParams({...params, ...rsp})
+            setParams({ ...params, ...rsp })
             setLoading(false)
         })
     })
@@ -251,8 +253,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             }
             const certificate = (certificateParams || []).filter((item) => item.password !== true)
             const ClientCertificates = certificate.map((item) => {
-                const {Pkcs12Bytes, Pkcs12Password} = item
-                return {Pkcs12Bytes, Pkcs12Password, ...obj}
+                const { Pkcs12Bytes, Pkcs12Password } = item
+                return { Pkcs12Bytes, Pkcs12Password, ...obj }
             })
             const newParams: GlobalNetworkConfig = {
                 ...params,
@@ -272,7 +274,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 }
                 const newParams: GlobalNetworkConfig = {
                     ...params,
-                    ClientCertificates: [{...obj, Pkcs12Bytes: new Uint8Array(), Pkcs12Password: new Uint8Array()}]
+                    ClientCertificates: [{ ...obj, Pkcs12Bytes: new Uint8Array(), Pkcs12Password: new Uint8Array() }]
                 }
                 ipcSubmit(newParams, isNtml)
             })
@@ -290,7 +292,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         return (
             <div key={key} className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
                 <div className={styles["decorate"]}>
-                    <RectangleFailIcon/>
+                    <RectangleFailIcon />
                 </div>
                 <div className={styles["card-hide"]}></div>
                 <div className={styles["fail-main"]}>
@@ -300,10 +302,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             closeCard(item)
                         }}
                     >
-                        <CloseIcon/>
+                        <CloseIcon />
                     </div>
                     <div className={styles["title"]}>{item.name}</div>
-                    <SolidLockClosedIcon/>
+                    <SolidLockClosedIcon />
                     <div className={styles["content"]}>未解密</div>
                     <YakitButton
                         type='outline2'
@@ -311,12 +313,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             const m = showYakitModal({
                                 title: "密码解锁",
                                 content: (
-                                    <div style={{padding: 20}}>
+                                    <div style={{ padding: 20 }}>
                                         <YakitInput.Password
                                             placeholder='请输入证书密码'
                                             allowClear
                                             onChange={(e) => {
-                                                const {value} = e.target
+                                                const { value } = e.target
                                                 if (Array.isArray(certificateParams)) {
                                                     certificateParams[key].Pkcs12Password =
                                                         value.length > 0 ? StringToUint8Array(value) : new Uint8Array()
@@ -364,10 +366,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         return (
             <div key={key} className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
                 <div className={styles["decorate"]}>
-                    <RectangleSucceeIcon/>
+                    <RectangleSucceeIcon />
                 </div>
                 <div className={styles["union"]}>
-                    <UnionIcon/>
+                    <UnionIcon />
                 </div>
                 <div className={styles["card-hide"]}></div>
 
@@ -378,10 +380,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             closeCard(item)
                         }}
                     >
-                        <CloseIcon/>
+                        <CloseIcon />
                     </div>
                     <div className={styles["title"]}>{item.name}</div>
-                    <SolidCheckCircleIcon/>
+                    <SolidCheckCircleIcon />
                     <div className={styles["content"]}>可用</div>
                     <div className={styles["password"]}>******</div>
                 </div>
@@ -403,28 +405,28 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     return (
         <>
             <div ref={configRef}>
-                <AutoCard style={{height: "auto"}}>
+                <AutoCard style={{ height: "auto" }}>
                     <AutoSpin spinning={loading} tip='网络配置加载中...'>
                         {params && (
                             <Form
                                 size={"small"}
-                                labelCol={{span: 5}}
-                                wrapperCol={{span: 14}}
+                                labelCol={{ span: 5 }}
+                                wrapperCol={{ span: 14 }}
                                 onSubmitCapture={() => submit()}
                             >
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                                <Divider orientation={"left"} style={{ marginTop: "0px" }}>
                                     DNS 配置
                                 </Divider>
                                 <SwitchItem
                                     label={"禁用系统 DNS"}
-                                    setValue={(DisableSystemDNS) => setParams({...params, DisableSystemDNS})}
+                                    setValue={(DisableSystemDNS) => setParams({ ...params, DisableSystemDNS })}
                                     value={params.DisableSystemDNS}
                                     oldTheme={false}
                                 />
                                 <ManyMultiSelectForString
                                     label={"备用 DNS"}
                                     setValue={(CustomDNSServers) =>
-                                        setParams({...params, CustomDNSServers: CustomDNSServers.split(",")})
+                                        setParams({ ...params, CustomDNSServers: CustomDNSServers.split(",") })
                                     }
                                     value={params.CustomDNSServers.join(",")}
                                     data={[]}
@@ -432,26 +434,26 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 />
                                 <SwitchItem
                                     label={"启用 TCP DNS"}
-                                    setValue={(DNSFallbackTCP) => setParams({...params, DNSFallbackTCP})}
+                                    setValue={(DNSFallbackTCP) => setParams({ ...params, DNSFallbackTCP })}
                                     value={params.DNSFallbackTCP}
                                     oldTheme={false}
                                 />
                                 <SwitchItem
                                     label={"启用 DoH 抗污染"}
-                                    setValue={(DNSFallbackDoH) => setParams({...params, DNSFallbackDoH})}
+                                    setValue={(DNSFallbackDoH) => setParams({ ...params, DNSFallbackDoH })}
                                     value={params.DNSFallbackDoH}
                                     oldTheme={false}
                                 />
                                 {params.DNSFallbackDoH && (
                                     <ManyMultiSelectForString
                                         label={"备用 DoH"}
-                                        setValue={(data) => setParams({...params, CustomDoHServers: data.split(",")})}
+                                        setValue={(data) => setParams({ ...params, CustomDoHServers: data.split(",") })}
                                         value={params.CustomDoHServers.join(",")}
                                         data={[]}
                                         mode={"tags"}
                                     />
                                 )}
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                                <Divider orientation={"left"} style={{ marginTop: "0px" }}>
                                     TLS 客户端证书（双向认证）
                                 </Divider>
                                 <Form.Item label={"选择格式"}>
@@ -499,12 +501,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         ref={cerFormRef}
                                         isShowCerName={false}
                                         formProps={{
-                                            labelCol: {span: 5},
-                                            wrapperCol: {span: 14}
+                                            labelCol: { span: 5 },
+                                            wrapperCol: { span: 14 }
                                         }}
                                     />
                                 )}
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                                <Divider orientation={"left"} style={{ marginTop: "0px" }}>
                                     第三方应用配置
                                 </Divider>
                                 <Form.Item label={"第三方应用"}>
@@ -520,7 +522,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                         maskClosable: false,
                                                         footer: null,
                                                         content: (
-                                                            <div style={{margin: 24}}>
+                                                            <div style={{ margin: 24 }}>
                                                                 <ThirdPartyApplicationConfigForm
                                                                     data={i}
                                                                     onAdd={(e) => {
@@ -531,7 +533,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                                     if (i.Type === e.Type) {
                                                                                         i = e
                                                                                     }
-                                                                                    return {...i}
+                                                                                    return { ...i }
                                                                                 }
                                                                             )
                                                                         })
@@ -540,6 +542,15 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                     onCancel={() => m.destroy()}
                                                                 />
                                                             </div>
+                                                        )
+                                                    })
+                                                }}
+                                                closable
+                                                onClose={()=>{
+                                                    setParams({
+                                                        ...params,
+                                                        AppConfigs: (params.AppConfigs || []).filter(
+                                                            (e) => i.Type !== e.Type
                                                         )
                                                     })
                                                 }}
@@ -558,7 +569,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 closable: true,
                                                 maskClosable: false,
                                                 content: (
-                                                    <div style={{margin: 24}}>
+                                                    <div style={{ margin: 24 }}>
                                                         <ThirdPartyApplicationConfigForm
                                                             onAdd={(e) => {
                                                                 let existed = false
@@ -566,15 +577,15 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                     (i) => {
                                                                         if (i.Type === e.Type) {
                                                                             existed = true
-                                                                            return {...i, ...e}
+                                                                            return { ...i, ...e }
                                                                         }
-                                                                        return {...i}
+                                                                        return { ...i }
                                                                     }
                                                                 )
                                                                 if (!existed) {
                                                                     existedResult.push(e)
                                                                 }
-                                                                setParams({...params, AppConfigs: existedResult})
+                                                                setParams({ ...params, AppConfigs: existedResult })
                                                                 m.destroy()
                                                             }}
                                                             onCancel={() => m.destroy()}
@@ -587,7 +598,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         添加第三方应用
                                     </YakitButton>
                                 </Form.Item>
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                                <Divider orientation={"left"} style={{ marginTop: "0px" }}>
                                     其他配置
                                 </Divider>
                                 <Form.Item label={"HTTP认证全局配置"}>
@@ -597,7 +608,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 现有配置 {params.AuthInfos.filter((item) => !item.Forbidden).length} 条
                                             </div>
                                             <div className={styles["form-rule-icon"]}>
-                                                <CogIcon/>
+                                                <CogIcon />
                                             </div>
                                         </div>
                                     </div>
@@ -607,13 +618,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     tooltip='配置禁用IP后，yakit将会过滤不会访问，配置多个IP用逗号分隔'
                                 >
                                     <YakitInput.TextArea
-                                        autoSize={{minRows: 1, maxRows: 3}}
+                                        autoSize={{ minRows: 1, maxRows: 3 }}
                                         allowClear
                                         size='small'
                                         value={params.DisallowIPAddress.join(",")}
                                         onChange={(e) => {
-                                            const {value} = e.target
-                                            setParams({...params, DisallowIPAddress: value.split(",")})
+                                            const { value } = e.target
+                                            setParams({ ...params, DisallowIPAddress: value.split(",") })
                                         }}
                                     />
                                 </Form.Item>
@@ -622,13 +633,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     tooltip='配置禁用域名后，yakit将会过滤不会访问，配置多个域名用逗号分隔'
                                 >
                                     <YakitInput.TextArea
-                                        autoSize={{minRows: 1, maxRows: 3}}
+                                        autoSize={{ minRows: 1, maxRows: 3 }}
                                         allowClear
                                         size='small'
                                         value={params.DisallowDomain.join(",")}
                                         onChange={(e) => {
-                                            const {value} = e.target
-                                            setParams({...params, DisallowDomain: value.split(",")})
+                                            const { value } = e.target
+                                            setParams({ ...params, DisallowDomain: value.split(",") })
                                         }}
                                     />
                                 </Form.Item>
@@ -638,8 +649,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         size='small'
                                         value={params.GlobalProxy.join(",")}
                                         onChange={(e) => {
-                                            const {value} = e.target
-                                            setParams({...params, GlobalProxy: value.split(",")})
+                                            const { value } = e.target
+                                            setParams({ ...params, GlobalProxy: value.split(",") })
                                         }}
                                     />
                                 </Form.Item>
@@ -650,17 +661,17 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     <YakitSwitch
                                         checked={params.EnableSystemProxyFromEnv}
                                         onChange={(EnableSystemProxyFromEnv) =>
-                                            setParams({...params, EnableSystemProxyFromEnv})
+                                            setParams({ ...params, EnableSystemProxyFromEnv })
                                         }
                                     />
                                 </Form.Item>
                                 <Form.Item label={"保存HTTP流量"} tooltip='打开则会保存MITM以外的流量数据到History表中'>
                                     <YakitSwitch
                                         checked={!params.SkipSaveHTTPFlow}
-                                        onChange={(val) => setParams({...params, SkipSaveHTTPFlow: !val})}
+                                        onChange={(val) => setParams({ ...params, SkipSaveHTTPFlow: !val })}
                                     />
                                 </Form.Item>
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                                <Divider orientation={"left"} style={{ marginTop: "0px" }}>
                                     SYN 扫描网卡配置
                                 </Divider>
                                 <Form.Item label={"网卡"} tooltip='为SYN扫描选择网卡'>
@@ -671,7 +682,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         size='small'
                                         value={params.SynScanNetInterface}
                                         onChange={(netInterface) => {
-                                            setParams({...params, SynScanNetInterface: netInterface})
+                                            setParams({ ...params, SynScanNetInterface: netInterface })
                                         }}
                                         maxTagCount={100}
                                     />
@@ -728,7 +739,7 @@ interface DataProps extends AuthInfo {
 }
 
 export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
-    const {visible, setVisible, getContainer, params, setParams, onNtmlSave} = props
+    const { visible, setVisible, getContainer, params, setParams, onNtmlSave } = props
     const [data, setData] = useState<DataProps[]>([])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
@@ -739,7 +750,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
     const initData = useRef<DataProps[]>([])
 
     useEffect(() => {
-        const newData = params.AuthInfos.map((item) => ({id: uuidv4(), Disabled: item.Forbidden, ...item}))
+        const newData = params.AuthInfos.map((item) => ({ id: uuidv4(), Disabled: item.Forbidden, ...item }))
         initData.current = newData
         setData(newData)
     }, [params.AuthInfos])
@@ -753,7 +764,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
             Forbidden: item.Forbidden
         }))
 
-        setParams({...params, AuthInfos})
+        setParams({ ...params, AuthInfos })
         setTimeout(() => {
             onNtmlSave()
         }, 200)
@@ -763,7 +774,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         if (JSON.stringify(initData.current) !== JSON.stringify(data)) {
             Modal.confirm({
                 title: "温馨提示",
-                icon: <ExclamationCircleOutlined/>,
+                icon: <ExclamationCircleOutlined />,
                 content: "请问是否要保存HTTP认证全局配置并关闭弹框？",
                 okText: "保存",
                 cancelText: "不保存",
@@ -776,7 +787,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                         }}
                         className='modal-remove-icon'
                     >
-                        <RemoveIcon/>
+                        <RemoveIcon />
                     </div>
                 ),
                 onOk: () => {
@@ -785,8 +796,8 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                 onCancel: () => {
                     setVisible(false)
                 },
-                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
-                okButtonProps: {size: "small", className: "modal-ok-button"}
+                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
+                okButtonProps: { size: "small", className: "modal-ok-button" }
             })
         } else {
             setVisible(false)
@@ -801,7 +812,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         (rowDate) => {
             setCurrentItem(rowDate)
         },
-        {wait: 200}
+        { wait: 200 }
     ).run
 
     const onRemove = useMemoizedFn((rowDate: DataProps) => {
@@ -950,7 +961,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                 maskClosable={false}
                 // style={{height: visible ? heightDrawer : 0}}
                 className={classNames(styles["ntlm-config-drawer"])}
-                contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
+                contentWrapperStyle={{ boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)" }}
                 title={
                     <div className={styles["heard-title"]}>
                         <div className={styles["title"]}>HTTP认证全局配置</div>
@@ -972,7 +983,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                             保存
                         </YakitButton>
                         <div onClick={() => onClose()} className={styles["icon-remove"]}>
-                            <RemoveIcon/>
+                            <RemoveIcon />
                         </div>
                     </div>
                 }
@@ -1034,12 +1045,12 @@ interface NTMLConfigModalProps {
 }
 
 export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
-    const {onClose, modalStatus, onSubmit, isEdit, currentItem} = props
+    const { onClose, modalStatus, onSubmit, isEdit, currentItem } = props
     const [form] = Form.useForm()
 
     useEffect(() => {
         if (isEdit && currentItem) {
-            const {Host, AuthUsername, AuthPassword, AuthType} = currentItem
+            const { Host, AuthUsername, AuthPassword, AuthType } = currentItem
             form.setFieldsValue({
                 Host,
                 AuthUsername,
@@ -1093,24 +1104,24 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
             okType='primary'
             width={480}
             onOk={() => onOk()}
-            bodyStyle={{padding: "24px 16px"}}
+            bodyStyle={{ padding: "24px 16px" }}
         >
             <Form
                 form={form}
-                labelCol={{span: 5}}
-                wrapperCol={{span: 16}}
+                labelCol={{ span: 5 }}
+                wrapperCol={{ span: 16 }}
                 className={styles["modal-from"]}
             >
-                <Form.Item label='Host' name='Host' rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}>
-                    <YakitInput placeholder='请输入...'/>
+                <Form.Item label='Host' name='Host' rules={[{ required: true, message: "该项为必填" }, ...judgeUrl()]}>
+                    <YakitInput placeholder='请输入...' />
                 </Form.Item>
-                <Form.Item label='用户名' name='AuthUsername' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput placeholder='请输入...'/>
+                <Form.Item label='用户名' name='AuthUsername' rules={[{ required: true, message: "该项为必填" }]}>
+                    <YakitInput placeholder='请输入...' />
                 </Form.Item>
-                <Form.Item label='密码' name='AuthPassword' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput placeholder='请输入...'/>
+                <Form.Item label='密码' name='AuthPassword' rules={[{ required: true, message: "该项为必填" }]}>
+                    <YakitInput placeholder='请输入...' />
                 </Form.Item>
-                <Form.Item label='认证类型' name='AuthType' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item label='认证类型' name='AuthType' rules={[{ required: true, message: "该项为必填" }]}>
                     <YakitSelect placeholder='请选择...'>
                         <YakitSelect value='ntlm'>ntlm</YakitSelect>
                         <YakitSelect value='any'>any</YakitSelect>
