@@ -82,7 +82,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         if (!filter.excludeContentTypes) filter.excludeContentTypes = []
         if (!filter.excludeUri) filter.excludeUri = []
         if (!filter.includeUri) filter.includeUri = []
-        console.log('传参', filter);
         ipcRenderer
             .invoke("mitm-set-filter", filter)
             .then(() => {
