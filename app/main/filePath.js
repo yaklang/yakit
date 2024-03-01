@@ -4,30 +4,62 @@ const os = require("os")
 const path = require("path")
 const process = require("process")
 const fs = require("fs")
+
 /** 软件根目录 */
 const appPath = app.isPackaged ? path.dirname(app.getPath("exe")) : app.getAppPath()
-/** 软件关联项目相关目录路径 */
-/** 优先使用家目录下的yakit-projects
- * 在新版本中，windows自定义安装路径会将家目录的yakit-projects迁移到软件根目录下，则会使用该目录 */
-const defaultYakitProjectPath = path.join(os.homedir(), "yakit-projects")
-const currentYakitProjectPath = path.join(appPath, "yakit-projects")
-const YakitProjectPath =
-    (
-        process.platform === "win32"
-        ? (
-            fs.existsSync(currentYakitProjectPath) ? 
-            currentYakitProjectPath: 
-            process.env.YAKIT_HOME  || defaultYakitProjectPath
-        )
-        : defaultYakitProjectPath
-    )
+/** 系统用户根路径 */
+const osHome = os.homedir()
+/** 软件关联数据文件夹名 */
+const projectName = "yakit-projects"
 
-/** 引擎和软件安装包路径 */
-const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
+console.log(`software: ${appPath}\n osHome: ${osHome}\n projectName: ${projectName}`)
+
+/** 软件关联数据路径设置逻辑 Start */
+// 数据文件夹路径
+let project_path = ""
+// os-home环境 项目文件夹路径
+const osHomeProjectPath = path.join(osHome, projectName)
+// 软件环境 项目文件夹路径
+const appProjectPath = path.join(appPath, projectName)
+
+try {
+    /**
+     * 开发环境，win系统会优先查找环境变量的指定地址，mac和linux指定为os-home
+     * 发布环境，win系统指定为软件根目录下，mac和linux指定为os-home
+     */
+    if (process.platform === "win32") {
+        if (electronIsDev) {
+            project_path = process.env.YAKIT_HOME
+                ? fs.existsSync(process.env.YAKIT_HOME)
+                    ? process.env.YAKIT_HOME
+                    : osHomeProjectPath
+                : osHomeProjectPath
+        } else {
+            project_path = appProjectPath
+        }
+    } else {
+        project_path = osHomeProjectPath
+    }
+} catch (error) {
+    console.log(`读取项目数据文件夹失败，${error}`)
+}
+/** 软件关联数据路径设置逻辑 End */
+
 /**
- * Yaklang引擎在本地的绝对地址
- * @returns {String} 本地绝对地址
+ * @name 软件关联项目相关目录路径
+ * 在新版本中，windows自定义安装路径会将os-home目录的yakit-projects迁移到软件根目录下
+ * 如果获取项目关联文件夹路径错误时，将自动设置为系统用户下面(容灾处理)
  */
+const YakitProjectPath = project_path || osHomeProjectPath
+console.log(`yakit-projects-path: ${YakitProjectPath}`)
+
+/** 引擎文件夹路径 */
+const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
+
+/** yakit安装包路径 */
+const yakitInstallDir = path.join(os.homedir(), "Downloads")
+
+/** 引擎文件路径 */
 const getLocalYaklangEngine = () => {
     switch (process.platform) {
         case "darwin":
@@ -38,6 +70,7 @@ const getLocalYaklangEngine = () => {
     }
 }
 
+/** 生成软件根目录+参数的完成路径 */
 const loadExtraFilePath = (s) => {
     if (electronIsDev) {
         return s
@@ -55,7 +88,7 @@ const loadExtraFilePath = (s) => {
     }
 }
 
-/** 所有缓存数据文件夹 */
+/** 基础缓存数据文件夹 */
 const basicDir = path.join(YakitProjectPath, "base")
 /** 本地缓存数据文件地址 */
 const localCachePath = path.join(basicDir, "yakit-local.json")
@@ -69,6 +102,9 @@ const remoteLinkDir = path.join(YakitProjectPath, "auth")
 /** 远程连接引擎配置数据文件地址 */
 const remoteLinkFile = path.join(remoteLinkDir, "yakit-remote.json")
 
+/** yak code文件夹路径 */
+const codeDir = path.join(YakitProjectPath, "code")
+
 /** Html模板文件地址 */
 // const yakitDir = path.join(os.homedir(), "AppData","Local","Programs","yakit")
 // const htmlTemplateDir = path.join(yakitDir, "report")
@@ -79,13 +115,22 @@ const windowStatePatch = path.join(basicDir)
 
 module.exports = {
     YakitProjectPath,
+
     yaklangEngineDir,
+    yakitInstallDir,
     getLocalYaklangEngine,
+    loadExtraFilePath,
+
+    basicDir,
     localCachePath,
     extraLocalCachePath,
     engineLog,
+
     remoteLinkDir,
     remoteLinkFile,
+
+    codeDir,
+
     htmlTemplateDir,
     windowStatePatch
 }
