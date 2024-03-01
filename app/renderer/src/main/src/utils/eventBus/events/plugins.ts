@@ -15,4 +15,12 @@ export type PluginsEventProps = {
     onSwitchPrivateDomain: string
     /** 导入刷新本地插件列表 */
     onImportRefLocalPluginList: string
+    /** 刷新插件组管理本地插件组列表 */
+    onRefPluginGroupMagLocalQueryYakScriptGroup: string
+    /** 刷新插件组管理本地插件列表 */
+    onRefPluginGroupMagLocalPluginList: string
+    /** 刷新插件组管理线上插件组列表 */
+    onRefPluginGroupMagOnlineQueryYakScriptGroup: string
+    /** 刷新插件组管理线上插件列表 */
+    onRefPluginGroupMagOnlinePluginList: string
 }

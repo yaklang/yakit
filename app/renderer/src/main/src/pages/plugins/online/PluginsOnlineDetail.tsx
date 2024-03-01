@@ -22,6 +22,8 @@ import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import { API } from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -147,6 +149,14 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             onCheck(false)
         })
     })
+    /**转换group参数*/
+    const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+        const realFilters: PluginFilterParams = {
+            ...filter,
+            plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+        }
+        return realFilters
+    }
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
         setFilters(value)
         onDetailSearch(search, value)
@@ -166,10 +176,26 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         setAllCheck(false)
         setSelectList([])
     })
+
+    /**选中组 */
+    const selectGroup = useMemo(() => {
+        const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
+            name: item.value,
+            total: item.count
+        }))
+        return group || []
+    }, [filters])
+
     if (!plugin) return null
     return (
         <PluginDetails<YakitPluginOnlineDetail>
             title='插件商店'
+            filterNode={
+                <>
+                    <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} isShowGroupMagBtn={false} />
+                    <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} />
+                </>
+            }
             filterExtra={
                 <div className={"details-filter-extra-wrapper"}>
                     <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='online' />

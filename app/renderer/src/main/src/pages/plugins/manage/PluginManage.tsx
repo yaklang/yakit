@@ -41,7 +41,8 @@ import {
     apiFetchCheckList,
     apiFetchGroupStatisticsCheck,
     convertDownloadOnlinePluginBatchRequestParams,
-    convertPluginsRequestParams
+    convertPluginsRequestParams,
+    excludeNoExistfilter
 } from "../utils"
 import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
@@ -56,6 +57,9 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
+import {PluginGroupList} from "../local/PluginsLocalType"
 
 interface PluginManageProps {}
 
@@ -169,7 +173,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         {wait: 300}
     ).run
 
-    const [pluginFilters, setPluginFilters] = useState<API.PluginsSearch[]>([])
+    const [pluginFilters, setPluginFilters] = useState<PluginGroupList[]>([])
     // 获取所有过滤条件统计数据
     const fetchPluginFilters = useMemoizedFn(() => {
         apiFetchGroupStatisticsCheck().then((res) => {
@@ -200,6 +204,14 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const onKeywordAndUser = useMemoizedFn((value: PluginSearchParams) => {
         fetchList(true)
     })
+
+    // 当filters过滤条件被其他页面或者意外删掉，插件列表却带了该过滤条件的情况，切换到该页面时需要把被删掉的过滤条件排除
+    useEffect(() => {
+        const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, pluginFilters)
+        if (updateFilterFlag) {
+            setFilters(realFilter)
+        }
+    }, [filters, pluginFilters])
 
     // 过滤条件搜索
     useUpdateEffect(() => {
@@ -460,6 +472,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         if (userInfo.role === "admin") return true
         else return false
     }, [userInfo.role])
+
+    /** 管理分组展示状态 */
+    const magGroupState = useMemo(() => {
+        if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
+        else return false
+    }, [userInfo.role])
     // 插件分组
     const onGroupMenu = useMemoizedFn((key: string) => {
         switch (key) {
@@ -694,7 +712,29 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={onFilter}
-                    groupList={pluginFilters}
+                    groupList={pluginFilters.map((item) => {
+                        if (item.groupKey === "plugin_group") {
+                            item.groupExtraOptBtn = magGroupState ? (
+                                <>
+                                    <YakitButton
+                                        type='text'
+                                        onClick={() =>
+                                            emiter.emit(
+                                                "menuOpenPage",
+                                                JSON.stringify({route: YakitRoute.Plugin_Groups})
+                                            )
+                                        }
+                                    >
+                                        管理分组
+                                    </YakitButton>
+                                    <div className={styles["divider-style"]} />
+                                </>
+                            ) : (
+                                <></>
+                            )
+                        }
+                        return item
+                    })}
                 >
                     <PluginsList
                         checked={allCheck}

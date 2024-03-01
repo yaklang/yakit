@@ -1,5 +1,11 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
-import {ExportParamsProps, LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
+import {
+    ExportParamsProps,
+    LocalExtraOperateProps,
+    PluginGroupList,
+    PluginLocalBackProps,
+    PluginsLocalProps
+} from "./PluginsLocalType"
 import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useUpdateEffect, useThrottleFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
@@ -44,10 +50,11 @@ import {
     apiQueryYakScriptByYakScriptName,
     apiQueryYakScriptTotal,
     convertDeleteLocalPluginsByWhereRequestParams,
-    convertLocalPluginsRequestParams
+    convertLocalPluginsRequestParams,
+    excludeNoExistfilter,
+    onToEditPlugin
 } from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {AddLocalPluginGroup} from "@/pages/mitm/MITMPage"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -68,7 +75,7 @@ import styles from "./PluginsLocal.module.scss"
 import {PluginLocalExport, initExportLocalParams} from "./PluginLocalExportProps"
 
 const {ipcRenderer} = window.require("electron")
-const defaultFilters = {plugin_type: [], tags: []}
+const defaultFilters = {plugin_type: [], tags: [], plugin_group: []}
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -90,8 +97,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])
 
-    const [pluginGroupList, setPluginGroupList] = useState<API.PluginsSearch[]>([])
-    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
+    const [pluginGroupList, setPluginGroupList] = useState<PluginGroupList[]>([])
 
     const [pluginRemoveCheck, setPluginRemoveCheck] = useState<boolean>(false)
     const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
@@ -158,6 +164,14 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useUpdateEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, filters])
+
+    // 当filters过滤条件被其他页面或者意外删掉，插件列表却带了该过滤条件的情况，切换到该页面时需要把被删掉的过滤条件排除
+    useEffect(() => {
+        const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, pluginGroupList)
+        if (updateFilterFlag) {
+            setFilters(realFilter)
+        }
+    }, [filters, pluginGroupList])
 
     const {pluginLocalPageData, clearDataByRoute} = usePageInfo(
         (s) => ({
@@ -440,7 +454,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 isOwn={userInfo.user_id === +data.UserId || +data.UserId === 0}
                 onRemovePlugin={() => onRemovePluginBefore(data)}
                 onExportPlugin={() => onExportPlugin(data)}
-                onEditPlugin={() => onEditPlugin(data)}
                 onUploadPlugin={() => onUploadPlugin(data)}
             />
         )
@@ -478,22 +491,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             })
         }
     })
-    /**编辑 */
-    const onEditPlugin = useMemoizedFn((data: YakScript) => {
-        if (data?.Id && +data.Id) {
-            if(data.ScriptName==="综合目录扫描与爆破"){
-                yakitNotify("warning","暂不可编辑")
-                return
-            }
-            emiter.emit(
-                "openPage",
-                JSON.stringify({
-                    route: YakitRoute.ModifyYakitScript,
-                    params: {source: YakitRoute.Plugin_Local, id: +data.Id}
-                })
-            )
-        }
-    })
+
     /**导出 */
     const onExportPlugin = useMemoizedFn((data: YakScript) => {
         onExport([data.Id])
@@ -549,10 +547,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             })) || []
         )
     }, [filters.plugin_type])
-    /**打开添加至分组的弹窗 */
-    const onAddToGroup = useMemoizedFn(() => {
-        setAddGroupVisible(true)
-    })
     /**批量删除插件之前操作  */
     const onRemovePluginBatchBefore = useMemoizedFn(() => {
         if (pluginRemoveCheck) {
@@ -818,7 +812,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                         {key: "export", label: "导出"},
                                         {key: "upload", label: "上传", disabled: allCheck},
                                         {key: "remove", label: "删除"}
-                                        // {key: "addToGroup", label: "添加至分组", disabled: allCheck} //第二版放出来
                                     ],
                                     onClick: ({key}) => {
                                         switch (key) {
@@ -832,9 +825,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                                 break
                                             case "remove":
                                                 onRemovePluginBatchBefore()
-                                                break
-                                            case "addToGroup":
-                                                onAddToGroup()
                                                 break
                                             default:
                                                 return
@@ -860,7 +850,27 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
-                    groupList={pluginGroupList}
+                    groupList={pluginGroupList.map((item) => {
+                        if (item.groupKey === "plugin_group") {
+                            item.groupExtraOptBtn = (
+                                <>
+                                    <YakitButton
+                                        type='text'
+                                        onClick={() =>
+                                            emiter.emit(
+                                                "menuOpenPage",
+                                                JSON.stringify({route: YakitRoute.Plugin_Groups})
+                                            )
+                                        }
+                                    >
+                                        管理分组
+                                    </YakitButton>
+                                    <div className={styles["divider-style"]} />
+                                </>
+                            )
+                        }
+                        return item
+                    })}
                 >
                     <PluginsList
                         checked={allCheck}
@@ -960,7 +970,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
-            <AddLocalPluginGroup visible={addGroupVisible} setVisible={setAddGroupVisible} checkList={checkList} />
             <YakitHint
                 visible={removeCheckVisible}
                 title='是否要删除插件'
@@ -992,7 +1001,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 })
 
 export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
-    const {data, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
+    const {data, isOwn, onRemovePlugin, onExportPlugin, onUploadPlugin} = props
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const onRemove = useMemoizedFn(async (e) => {
@@ -1011,15 +1020,7 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
-        if (data.IsCorePlugin) {
-            yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
-            return
-        }
-        if (data.Type === "packet-hack") {
-            yakitNotify("error", "该类型已下架，不可编辑")
-            return
-        }
-        onEditPlugin()
+        onToEditPlugin(data)
     })
     const onUpload = useMemoizedFn(async (e) => {
         e.stopPropagation()

@@ -112,9 +112,9 @@ import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
-import {WebShellViewer} from "@/pages/webShell/WebShellViewer";
-import {WebShellDetail} from "@/pages/webShell/models";
-import {WebShellDetailOpt} from "@/pages/webShell/WebShellDetailOpt";
+import {WebShellViewer} from "@/pages/webShell/WebShellViewer"
+import {WebShellDetail} from "@/pages/webShell/models"
+import {WebShellDetailOpt} from "@/pages/webShell/WebShellDetailOpt"
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps
@@ -126,6 +126,7 @@ import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 import {PluginsLocal} from "@/pages/plugins/local/PluginsLocal"
 import {PluginUser} from "@/pages/plugins/user/PluginUser"
 import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
+import {PluginGroups} from "@/pages/plugins/group/PluginGroups"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
 import { NewPayload } from "@/pages/payloadManager/newPayload"
@@ -159,6 +160,7 @@ export enum YakitRoute {
     Plugin_Store = "plugin-store",
     Plugin_Owner = "plugin-owner",
     Plugin_Local = "plugin-local",
+    Plugin_Groups = "plugin-groups",
     BatchExecutorPage = "batch-executor-page-ex",
     /** 反连 */
     DNSLog = "dnslog",
@@ -261,6 +263,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "plugin-store": {label: "插件商店", describe: "目前插件为6大类型，可根据需要灵活编写插件，支持从插件商店下载插件"},
     "plugin-owner": {label: "我的插件"},
     "plugin-local": {label: "本地插件"},
+    "plugin-groups": {label: "插件组管理"},
     "batch-executor-page-ex": {label: "批量执行", describe: "自由选择需要的 POC 进行批量漏洞检测"},
     dnslog: {label: "DNSLog", describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"},
     "icmp-sizelog": {label: "ICMP-SizeLog", describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"},
@@ -322,6 +325,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
+    YakitRoute.Plugin_Groups,
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
@@ -363,6 +367,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
+    YakitRoute.Plugin_Groups,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
     YakitRoute.DNSLog,
@@ -388,7 +393,7 @@ export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.M
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 /** 用户退出登录后，需自动关闭的页面 */
-export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit,YakitRoute.Data_Statistics]
+export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
     // Route.HTTPFuzzer 参数
@@ -539,8 +544,10 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             )
         case YakitRoute.Plugin_Local:
             return <PluginsLocal />
+        case YakitRoute.Plugin_Groups:
+            return <PluginGroups />
         case YakitRoute.BatchExecutorPage:
-            return <PluginBatchExecutor id={params?.id || ""}/>
+            return <PluginBatchExecutor id={params?.id || ""} />
         case YakitRoute.DNSLog:
             return <DNSLogPage />
         case YakitRoute.ICMPSizeLog:
@@ -648,7 +655,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_WebShellManager:
             return <WebShellViewer />
         case YakitRoute.Beta_WebShellOpt:
-            return <WebShellDetailOpt id={(params?.id||"") + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
+            return (
+                <WebShellDetailOpt id={(params?.id || "") + ""} webshellInfo={params?.webshellInfo as WebShellDetail} />
+            )
         case YakitRoute.Data_Statistics:
             return <DataStatistics />
         case YakitRoute.Space_Engine:

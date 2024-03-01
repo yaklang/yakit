@@ -37,6 +37,8 @@ import {PluginDebug} from "../pluginDebug/PluginDebug"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {useStore} from "@/store"
 
 const {TabPane} = PluginTabs
 
@@ -119,16 +121,37 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             loadMoreData,
             onDetailSearch
         } = props
-
+        const userInfo = useStore((s) => s.userInfo)
+        /**获取传到接口所需的filters*/
+        const getRealFilters = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+            const realFilters: PluginFilterParams = {
+                ...filter,
+                plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+            }
+            return realFilters
+        }
         const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
         const onSearch = useMemoizedFn((value: PluginSearchParams) => {
-            onDetailSearch(searchs, filters)
+            onDetailSearch(value, filters)
+            setSelectList([])
+            setAllcheck(false)
         })
         const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
         const onFilter = useMemoizedFn((value: PluginFilterParams) => {
             setFilters(value)
             onDetailSearch(searchs, value)
+            setSelectList([])
+            setAllcheck(false)
         })
+
+        /**转换group参数*/
+        const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+            const realFilters: PluginFilterParams = {
+                ...filter,
+                plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+            }
+            return realFilters
+        }
 
         // 获取插件详情
         const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
@@ -549,6 +572,21 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             return statusTag[`${data.status}`]
         })
 
+        /** 管理分组展示状态 */
+        const magGroupState = useMemo(() => {
+            if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
+            else return false
+        }, [userInfo.role])
+
+        /**选中组 */
+        const selectGroup = useMemo(() => {
+            const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
+                name: item.value,
+                total: item.count
+            }))
+            return group || []
+        }, [filters])
+
         if (!plugin) return null
 
         return (
@@ -559,6 +597,20 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 search={searchs}
                 setSearch={setSearchs}
                 onSearch={onSearch}
+                filterNode={
+                    <>
+                        <PluginGroup
+                            isOnline={true}
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                            isShowGroupMagBtn={magGroupState}
+                        />
+                        <TagsAndGroupRender
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                        />
+                    </>
+                }
                 filterExtra={
                     <div className={"details-filter-extra-wrapper"}>
                         <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='check' />

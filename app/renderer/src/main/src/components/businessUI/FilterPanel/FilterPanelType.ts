@@ -5,6 +5,8 @@ export interface FilterPanelGroupItem {
     groupKey: string
     /** 单项过滤条件展示名 */
     groupName: string
+    /** 单选过滤额外操作按钮 */
+    groupExtraOptBtn?: React.ReactElement
     /** 单项过滤条件-过滤内容列表 */
     data: {
         /** 选项展示内容 */

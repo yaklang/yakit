@@ -547,7 +547,6 @@ export declare namespace API {
      * 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year
      */
     time_search?: string;
-    group?: string[];
     /**
      * 默认首页 mine 个人, recycle 回收站 check 审核页面
      */
@@ -560,6 +559,12 @@ export declare namespace API {
      * 根据插件名批量搜索
      */
     script_name?: string[];
+    pluginGroup?: PluginsWherePluginGroup;
+    excludePluginTypes?: string[];
+  }
+  export interface PluginsWherePluginGroup {
+    unSetGroup?: boolean;
+    group?: string[];
   }
   export interface PluginsWhereIsPrivate {}
   export interface PluginsSearchResponse {
@@ -629,6 +634,21 @@ export declare namespace API {
   }
   export interface PluginsListResponse extends Paging {
     data: PluginsDetail[];
+  }
+  export interface PluginsGroupWhere {
+    uuid?: string[];
+  }
+  export interface PluginsGroupResponse {
+    setGroup: string[];
+    allGroup: string[];
+  }
+  export interface PluginsGroupRequest
+    extends PluginsWhere,
+      PluginsGroupWhere {}
+  export interface PluginsGroup {
+    uuid: string[];
+    saveGroup: string[];
+    removeGroup: string[];
   }
   export interface PluginsEditRequest extends PluginsRequest, PluginsEdit {}
   export interface PluginsEdit {
@@ -989,6 +1009,15 @@ export declare namespace API {
   export interface IsExtractCodeResponse {
     is_extract_code: boolean;
   }
+  export interface GroupResponseDetail {
+    value: string;
+    total: number;
+    default: boolean;
+  }
+  export interface GroupResponse {
+    data: GroupResponseDetail[];
+  }
+  export interface GroupRequest extends PluginsWhere, PluginsGroup {}
   export interface GormBaseModel {
     id: number;
     created_at: number;

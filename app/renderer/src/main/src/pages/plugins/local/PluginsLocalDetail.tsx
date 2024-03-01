@@ -16,7 +16,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
 import {FilterPopoverBtn, FuncFilterPopover} from "../funcTemplate"
-import {YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {PluginDetailsTabProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
@@ -39,6 +39,7 @@ import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
 import {onToEditPlugin} from "../utils"
 import classNames from "classnames"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -74,7 +75,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         privateDomain
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
-    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [selectList, setSelectList] = useState<YakScript[]>(defaultSelectList)
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
@@ -251,6 +251,14 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 })
         })
     })
+    /**转换group参数*/
+    const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+        const realFilters: PluginFilterParams = {
+            ...filter,
+            plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+        }
+        return realFilters
+    }
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
         setFilters(value)
         onDetailSearch(search, value)
@@ -350,6 +358,16 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             </>
         )
     }, [removeLoading, isShowUpload])
+
+    /**选中组 */
+    const selectGroup = useMemo(() => {
+        const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
+            name: item.value,
+            total: item.count
+        }))
+        return group || []
+    }, [filters])
+
     if (!plugin) return null
     return (
         <>
@@ -358,13 +376,14 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 title='本地插件'
                 filterNode={
                     <>
-                        {/* 第二版放出来 */}
-                        {/* <PluginGroup
-                        checkList={checkList}
-                        selectGroup={selectGroup}
-                        setSelectGroup={setSelectGroup}
-                        isSelectAll={allCheck}
-                    /> */}
+                        <PluginGroup
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                        />
+                        <TagsAndGroupRender
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                        />
                     </>
                 }
                 filterExtra={

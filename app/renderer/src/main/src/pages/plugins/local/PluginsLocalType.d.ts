@@ -14,8 +14,6 @@ export interface LocalExtraOperateProps {
     onRemovePlugin: () => void
     /**导出插件 */
     onExportPlugin: () => void
-    /**编辑 */
-    onEditPlugin: () => void
     /**上传 */
     onUploadPlugin: () => void
 }
@@ -125,4 +123,7 @@ export interface PluginDetailsTabProps {
 
     /** 是否隐藏日志和问题 */
     hiddenLogIssue?: boolean
+}
+export interface PluginGroupList extends API.PluginsSearch {
+    groupExtraOptBtn?: React.ReactElement
 }

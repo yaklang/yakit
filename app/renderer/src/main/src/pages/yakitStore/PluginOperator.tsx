@@ -52,6 +52,7 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
 import {DatabaseFirstMenuProps, YakitRoute} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import { onToEditPlugin } from "../plugins/utils"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -981,27 +982,7 @@ export const LocalPluginExecutor: React.FC<LocalPluginExecutorProps> = React.mem
                                             // setMonitorEdit && setMonitorEdit(true)
                                             // setIsEdit(true)
                                             if (!script) return
-                                            if (script.IsCorePlugin) {
-                                                yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
-                                                return
-                                            }
-                                            if (script.Type === "packet-hack") {
-                                                yakitNotify("error", "该类型已下架，不可编辑")
-                                                return
-                                            }
-                                            if (script.Id && +script.Id) {
-                                                if(script.ScriptName==="综合目录扫描与爆破"){
-                                                    yakitNotify("warning","暂不可编辑")
-                                                    return
-                                                }
-                                                emiter.emit(
-                                                    "openPage",
-                                                    JSON.stringify({
-                                                        route: YakitRoute.ModifyYakitScript,
-                                                        params: {source: YakitRoute.Plugin_Local, id: +script.Id}
-                                                    })
-                                                )
-                                            }
+                                            onToEditPlugin(script)
                                         }}
                                     />
                                 </Tooltip>

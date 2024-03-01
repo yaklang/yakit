@@ -120,12 +120,6 @@ export enum PluginGV {
     /** @name 插件信息-codec类型额外参数(用于自定义右键菜单执行)对应tag值 */
     PluginCodecContextMenuExecuteSwitch = "allow-custom-context-menu-execute",
 
-    /**
-     * @name 本地插件组缓存字段 filter_cache_list_common_data
-     * @description 第一版本地插件组还是在本地，第二版后端给接口
-     */
-    Fetch_Local_Plugin_Group = "FILTER_CACHE_LIST_COMMON_DATA",
-
     /** @name 审核页左侧筛选条件栏是否关闭 */
     AuditFilterCloseStatus = "audit-filter-close-status",
     /** @name 商店页左侧筛选条件栏是否关闭 */

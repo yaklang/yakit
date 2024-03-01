@@ -136,6 +136,9 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     // 展示信息中，插件商店的顺序和本地顺序不应该一样
     IgnoreGeneralModuleOrder?: boolean
     UUID?: string
+    // 插件组
+    Group?: { UnSetGroup: boolean, Group: string[] }
+    ExcludeTypes?: string[]
 }
 
 /*
@@ -167,4 +170,30 @@ export interface TagsAndType {
 export interface GetYakScriptTagsAndTypeResponse {
     Type: TagsAndType[]
     Tag: TagsAndType[]
+    Group: TagsAndType[]
+}
+
+export interface GroupCount {
+    Value: string
+    Total: number
+    Default: boolean
+}
+
+export interface QueryYakScriptGroupResponse {
+    Group: GroupCount[]
+}
+
+export interface GetYakScriptGroupResponse {
+    SetGroup: string[]
+    AllGroup: string[]
+}
+
+export interface SaveYakScriptGroupRequest {
+    Filter: QueryYakScriptRequest
+    SaveGroup: string[]
+    RemoveGroup: string[]
+}
+
+export interface ResetYakScriptGroupRequest {
+    Token: string
 }

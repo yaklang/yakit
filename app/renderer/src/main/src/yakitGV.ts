@@ -69,7 +69,9 @@ export enum RemoteGV {
     /** @name history页面左侧tabs */
     HistoryLeftTabs = "history_left_tabs",
     /** @name 临时项目记录是否记住不给提示 */
-    TemporaryProjectNoPrompt = "temporary_project_no_prompt"
+    TemporaryProjectNoPrompt = "temporary_project_no_prompt",
+    /** @name 插件组删除是否记住不给提示 */
+    PluginGroupDelNoPrompt = "plugin_group_del_no_prompt"
 }
 
 /** 项目逻辑全局变量 */

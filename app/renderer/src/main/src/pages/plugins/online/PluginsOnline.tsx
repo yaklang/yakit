@@ -67,7 +67,8 @@ import {
     apiFetchGroupStatisticsOnline,
     apiFetchOnlineList,
     convertDownloadOnlinePluginBatchRequestParams,
-    convertPluginsRequestParams
+    convertPluginsRequestParams,
+    excludeNoExistfilter
 } from "../utils"
 import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -286,6 +287,14 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useEffect(() => {
         fetchList(true)
     }, [refresh, filters, otherSearch])
+
+    // 当filters过滤条件被其他页面或者意外删掉，插件列表却带了该过滤条件的情况，切换到该页面时需要把被删掉的过滤条件排除
+    useEffect(() => {
+        const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, pluginGroupList)
+        if (updateFilterFlag) {
+            setFilters(realFilter)
+        }
+    }, [filters, pluginGroupList])
 
     useEffect(() => {
         emiter.on("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)

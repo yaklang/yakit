@@ -1,0 +1,25 @@
+.dot-icon {
+    svg {
+        color: #fff;
+        width: 16px;
+        height: 16px;
+    }
+}
+.extra-opt-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .extra-opt-name {
+        font-size: 12px;
+    }
+}
+
+.plugin-local-empty {
+    height: 100%;
+    overflow-y: scroll;
+    .plugin-local-buttons {
+        text-align: center;
+        margin-top: 10px;
+    }
+}

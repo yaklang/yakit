@@ -176,6 +176,15 @@ service Yak {
 
   rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
 
+  // YakScript Group
+  rpc QueryYakScriptGroup(QueryYakScriptGroupRequest) returns (QueryYakScriptGroupResponse);
+  rpc SaveYakScriptGroup(SaveYakScriptGroupRequest) returns (Empty);
+  rpc RenameYakScriptGroup(RenameYakScriptGroupRequest) returns (Empty);
+  rpc DeleteYakScriptGroup(DeleteYakScriptGroupRequest) returns (Empty);
+  rpc GetYakScriptGroup(QueryYakScriptRequest) returns (GetYakScriptGroupResponse);
+  rpc ResetYakScriptGroup(ResetYakScriptGroupRequest) returns (Empty);
+
+
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
   rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
@@ -1953,6 +1962,7 @@ message DeleteLocalPluginsByWhereRequest {
   string UserName = 4;
   repeated int64 Ids = 5;
   string Tags = 6;
+  repeated string Groups = 7;
 }
 
 message DownloadOnlinePluginProgress {
@@ -3519,6 +3529,13 @@ message QueryYakScriptRequest {
   bool IgnoreGeneralModuleOrder = 15;
   repeated string Family = 16;
   string UUID = 17;
+  PluginGroup Group = 18;
+  repeated string ExcludeTypes = 19;
+}
+
+message PluginGroup {
+  bool UnSetGroup = 1;
+  repeated string Group = 2;
 }
 
 message QueryYakScriptResponse {
@@ -3668,9 +3685,49 @@ message ImportYakScriptResult {
   string MessageType = 3;
 }
 
+message QueryYakScriptGroupRequest {
+  bool All = 1;
+}
+
+message QueryYakScriptGroupResponse {
+  repeated GroupCount Group = 1;
+}
+
+message GroupCount {
+  string Value = 1;
+  int32 Total = 2;
+  bool Default = 3;
+}
+
+message SaveYakScriptGroupRequest {
+  QueryYakScriptRequest Filter = 1;
+  repeated string SaveGroup = 2;
+  repeated string RemoveGroup = 3;
+}
+
+message RenameYakScriptGroupRequest {
+  string Group = 1;
+  string NewGroup = 2;
+}
+
+message DeleteYakScriptGroupRequest {
+  string Group = 1;
+}
+
+
+message GetYakScriptGroupResponse {
+  repeated string SetGroup = 1;
+  repeated string AllGroup = 2;
+}
+
+message ResetYakScriptGroupRequest {
+  string Token = 1;
+}
+
 message GetYakScriptTagsAndTypeResponse {
   repeated TagsAndType Type = 1;
   repeated TagsAndType Tag = 2;
+  repeated TagsAndType Group = 3;
 }
 
 message TagsAndType {

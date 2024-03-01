@@ -830,7 +830,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
     })
     // 组件点击回调
     const onclick = useMemoizedFn(() => {
-        if (onClick) return onClick(data, order)
+        if (onClick) return onClick(data, order, !checked)
         return null
     })
 
@@ -1057,7 +1057,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
     })
     // 组件点击回调
     const onclick = useMemoizedFn(() => {
-        if (onClick) return onClick(data, order)
+        if (onClick) return onClick(data, order, !checked)
         return null
     })
 
@@ -1438,6 +1438,10 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
 export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) => {
     const {defaultFilter, onFilter, refresh, type = "online"} = props
 
+    const excludeFilterName = useMemo(() => {
+        return ["tags", "plugin_group"]
+    }, [])
+
     const [visible, setVisible] = useState<boolean>(false)
     const [filterList, setFilterList] = useState<API.PluginsSearch[]>([])
     const [isActive, setIsActive] = useState<boolean>(false)
@@ -1446,25 +1450,25 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     useEffect(() => {
         if (type === "online") {
             apiFetchGroupStatisticsOnline().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
         if (type === "check") {
             apiFetchGroupStatisticsCheck().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
         if (type === "user") {
             apiFetchGroupStatisticsMine().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
         if (type === "local") {
             apiFetchGroupStatisticsLocal().then((res) => {
-                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
                 setFilterList(list)
             })
         }
@@ -1478,19 +1482,22 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         form.setFieldsValue({...defaultFilter})
         onSetIsActive(defaultFilter)
     }, [defaultFilter])
-
+    /**需求：详情的搜索会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
     const onFinish = useMemoizedFn((value) => {
-        if (value?.hasOwnProperty("tags")) delete value["tags"]
-        if (value?.hasOwnProperty("plugin_group")) delete value["plugin_group"]
-        onFilter(value)
+        for (let name of excludeFilterName) {
+            if (value?.hasOwnProperty(name)) delete value[name]
+        }
+        onFilter({...value, plugin_group: defaultFilter.plugin_group})
         setVisible(false)
         onSetIsActive(value)
     })
+    /**需求：详情的重置会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
     const onReset = useMemoizedFn(() => {
         const value = {
             plugin_type: [],
             status: [],
-            plugin_private: []
+            plugin_private: [],
+            plugin_group: defaultFilter.plugin_group
         }
         form.setFieldsValue({
             ...value
@@ -1501,10 +1508,10 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     })
     /** 显示激活状态判断 */
     const onSetIsActive = useMemoizedFn((value: PluginFilterParams) => {
-        const valueArr = Object.keys(value) || []
+        const valueArr = (Object.keys(value) || []).filter((item) => !excludeFilterName.includes(item))
         if (valueArr.length > 0) {
             let isActive = false
-            Object.keys(value)?.forEach((key) => {
+            valueArr.forEach((key) => {
                 if (value[key] && value[key].length > 0) {
                     isActive = true
                 }

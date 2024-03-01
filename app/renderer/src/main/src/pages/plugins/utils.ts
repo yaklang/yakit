@@ -6,9 +6,14 @@ import {info, yakitNotify} from "@/utils/notification"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
 import {
+    GetYakScriptGroupResponse,
     GetYakScriptTagsAndTypeResponse,
+    GroupCount,
+    QueryYakScriptGroupResponse,
     QueryYakScriptRequest,
     QueryYakScriptsResponse,
+    ResetYakScriptGroupRequest,
+    SaveYakScriptGroupRequest,
     YakScript,
     genDefaultPagination
 } from "../invoker/schema"
@@ -25,8 +30,42 @@ import {
 } from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch} from "./baseTemplate"
+import { PluginGroupList } from "./local/PluginsLocalType"
 
 const {ipcRenderer} = window.require("electron")
+
+/**
+ * 本地插件、插件商店、插件管理页面
+ * 当filters过滤条件被其他页面或者意外删掉，插件列表却带了该过滤条件的情况，切换到该页面时需要把被删掉的过滤条件排除
+ * @param oldfilters 页面上此时的鼓过滤条件
+ * @param newfilters 接口获取的最新过滤条件
+ * @returns realFilter - 页面上此时真正的过滤条件 updateFilterFlag - 是否需要更新页面的filters
+ */
+export interface ExcludeNoExistfilter {
+    realFilter: PluginFilterParams
+    updateFilterFlag: boolean
+}
+export const excludeNoExistfilter = (oldfilters: PluginFilterParams, newfilters: PluginGroupList[]): ExcludeNoExistfilter => {
+    let updateFilterFlag = false
+    let realFilter: PluginFilterParams = structuredClone(oldfilters)
+    Object.keys(oldfilters).forEach((key) => {
+        oldfilters[key].forEach((item: API.PluginsSearchData) => {
+            const value = item.value
+            newfilters.forEach((item2) => {
+                if (item2.groupKey === key) {
+                    updateFilterFlag = item2.data.findIndex((item3) => item3.value === value) === -1
+                    if (updateFilterFlag) {
+                        realFilter = {
+                            ...realFilter,
+                            [key]: realFilter[key].filter((item4: API.PluginsSearchData) => item4.value !== value)
+                        }
+                    }
+                }
+            })
+        })
+    })
+    return {realFilter, updateFilterFlag}
+}
 
 /**
  * @name http接口公共参数转换(前端数据转接口参数)
@@ -51,7 +90,7 @@ export const convertPluginsRequestParams = (
         status: filter.status?.map((ele) => Number(ele.value)) || [],
         tags: filter.tags?.map((ele) => ele.value) || [],
         is_private: filter.plugin_private?.map((ele) => ele.value === "true") || [],
-        group: filter.plugin_group?.map((ele) => ele.value) || []
+        pluginGroup: {unSetGroup: false, group: filter.plugin_group?.map((ele) => ele.value) || []}
     }
     return toolDelInvalidKV(data)
 }
@@ -283,7 +322,7 @@ export const apiFetchGroupStatisticsMine: (query?: API.PluginsSearchRequest) => 
     })
 }
 
-/**插件审核左侧统计 */
+/**插件审核 插件管理 左侧统计 */
 export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (
     query
 ) => {
@@ -295,33 +334,12 @@ export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) =>
             }
             apiFetchGroupStatistics(newQuery)
                 .then((res: API.PluginsSearchResponse) => {
-                    // 插件组（线上分组，只有便携版才有）
-                    if (!isEnpriTraceAgent()) {
-                        // 插件类型、Tag、审核状态
-                        const newData = (res.data || []).filter((ele) => ele.groupName !== "插件分组")
-                        resolve({
-                            ...res,
-                            data: newData
-                        })
-                    } else {
-                        // 插件类型、Tag、审核状态、插件组（线上分组）
-                        const newData = (res.data || []).map((ele) => {
-                            if (ele.groupName === "插件分组") {
-                                const newList = (ele.data || []).map((n) => ({
-                                    ...n,
-                                    label: n.label.replace(/^"+|"+$/g, "")
-                                }))
-                                return {
-                                    ...ele,
-                                    data: newList
-                                }
-                            }
-                            return ele
-                        })
-                        resolve({
-                            data: newData
-                        })
-                    }
+                    // 插件类型、Tag、审核状态 插件分组
+                    const newData = (res.data || [])
+                    resolve({
+                        ...res,
+                        data: newData
+                    })
                 })
                 .catch((err) => {
                     yakitNotify("error", "获取插件审核统计数据失败:" + err)
@@ -651,7 +669,8 @@ export const convertLocalPluginsRequestParams = (
 
         // filter
         Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
-        Tag: filter.tags?.map((ele) => ele.value) || []
+        Tag: filter.tags?.map((ele) => ele.value) || [],
+        Group: {UnSetGroup: false, Group: filter.plugin_group?.map((ele) => ele.value) || []}
     }
     return toolDelInvalidKV(data)
 }
@@ -735,16 +754,32 @@ export const apiFetchGroupStatisticsLocal: () => Promise<API.PluginsSearchRespon
                             }))
                         },
                         {
+                            groupKey: "plugin_group",
+                            groupName: "插件组",
+                            sort: 2,
+                            data: (res["Group"] || []).map((ele) => ({
+                                label: ele.Value,
+                                value: ele.Value,
+                                count: ele.Total
+                            }))
+                        },
+                        {
                             groupKey: "tags",
                             groupName: "Tag",
-                            sort: 2,
+                            sort: 3,
                             data: (res["Tag"] || []).map((ele) => ({
                                 label: ele.Value,
                                 value: ele.Value,
                                 count: ele.Total
                             }))
                         }
-                    ].filter((ele) => ele.data.length > 0)
+                    ].filter((ele) => {
+                        if (ele.groupKey === "plugin_group") {
+                            return true
+                        } else {
+                            return ele.data.length > 0
+                        }
+                    })
                     resolve({data})
                 })
                 .catch((e) => {
@@ -790,6 +825,7 @@ export interface DeleteLocalPluginsByWhereRequestProps {
     Type: string
     UserName: string
     Tags: string
+    Groups: string[]
 }
 /**
  * @name DeleteLocalPluginsByWhere 接口参数转换(前端数据转接口参数)
@@ -805,7 +841,8 @@ export const convertDeleteLocalPluginsByWhereRequestParams = (
 
         // filter
         Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
-        Tags: (filter.tags?.map((ele) => ele.value) || []).join(",")
+        Tags: (filter.tags?.map((ele) => ele.value) || []).join(","),
+        Groups: (filter.plugin_group?.map((ele) => ele.value) || []),
     }
     return toolDelInvalidKV(data)
 }
@@ -1311,5 +1348,221 @@ export const onToEditPlugin = (plugin: YakScript) => {
 export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = (Id) => {
     return new Promise((resolve, reject) => {
         ipcRenderer.invoke("GetYakScriptById", {Id}).then(resolve).catch(reject)
+    })
+}
+
+/**本地获取插件组数据 */
+export const apiFetchQueryYakScriptGroupLocal: (All?: boolean) => Promise<GroupCount[]> = (All = true) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryYakScriptGroup", {All})
+            .then((res: QueryYakScriptGroupResponse) => {
+                resolve(res.Group)
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取本地插件组：" + e)
+            })
+    })
+}
+
+/**本地插件组名字修改 */
+export const apiFetchRenameYakScriptGroupLocal: (Group: string, NewGroup: string) => Promise<null> = (
+    Group,
+    NewGroup
+) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("RenameYakScriptGroup", {Group, NewGroup})
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "修改本地插件组名：" + e)
+            })
+    })
+}
+
+/**本地插件组删除 */
+export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null> = (Group) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteYakScriptGroup", {Group})
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "删除本地插件组：" + e)
+            })
+    })
+}
+
+/**本地获取插件所在插件组和其他插件组 */
+export const apiFetchGetYakScriptGroupLocal: (params: QueryYakScriptRequest) => Promise<GetYakScriptGroupResponse> = (
+    params
+) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetYakScriptGroup", params)
+            .then((res: GetYakScriptGroupResponse) => {
+                resolve(res)
+            })
+            .catch((e) => {
+                yakitNotify("error", "" + e)
+            })
+    })
+}
+
+/**本地更新插件所在组&新增插件组 */
+export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest) => Promise<null> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("SaveYakScriptGroup", params)
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "更新本地插件所在组：" + e)
+            })
+    })
+}
+
+/**本地插件组重置为线上插件组 */
+export const apiFetchResetYakScriptGroup: (params: ResetYakScriptGroupRequest) => Promise<null> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("ResetYakScriptGroup", params)
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "重置失败：" + e)
+            })
+    })
+}
+
+/** 线上获取插件组数据 */
+export const apiFetchQueryYakScriptGroupOnline: () => Promise<API.GroupResponse> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<any, API.GroupResponse>({
+                method: "get",
+                url: "group"
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取插件组失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取插件组失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上插件组名字修改 */
+export interface PluginGroupRename {
+    group: string
+    newGroup: string
+}
+export const apiFetchRenameYakScriptGroupOnline: (query: PluginGroupRename) => Promise<API.ActionSucceeded> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<PluginGroupRename, API.ActionSucceeded>({
+                method: "get",
+                url: "rename/group",
+                params: query
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "修改插件组名失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "修改插件组名失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上插件组删除 */
+export interface PluginGroupDel {
+    group: string
+}
+export const apiFetchDeleteYakScriptGroupOnline: (query: PluginGroupDel) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<PluginGroupDel, API.ActionSucceeded>({
+                method: "delete",
+                url: "group",
+                params: query
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "删除插件组失败1：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "删除插件组失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/** 线上获取插件所在插件组和其他插件组 */
+export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsGroupRequest) => Promise<API.PluginsGroupResponse> = (
+    params
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsGroupRequest, API.PluginsGroupResponse>({
+                method: "get",
+                url: "plugins/group",
+                data: params
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上更新插件所在组&新增插件组 */
+export const apiFetchSaveYakScriptGroupOnline: (params: API.GroupRequest) => Promise<API.ActionSucceeded> = (
+    params
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.GroupRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "group",
+                data: params
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "更新失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "更新失败：" + error)
+            reject(error)
+        }
     })
 }
