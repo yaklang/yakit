@@ -1123,52 +1123,52 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // 判断打开 YakitWindow执行框/全局网络配置第三方应用框
     const onFuzzerModal = useMemoizedFn((value)=>{
         const val:{text?:string,scriptName:string,pageId:string} = JSON.parse(value)
-        apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
+        // apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
             if(props.id===val.pageId){
             // 如若已配置 则打开执行框
-            if(obj.AppConfigs.length>0){
+            // if(obj.AppConfigs.length>0){
                     setYakitWindowVisible(true)
                     setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
-            }
-            else{
-                let m = showYakitModal({
-                    title: "添加第三方应用",
-                    width: 600,
-                    footer: null,
-                    closable: true,
-                    maskClosable: false,
-                    content: (
-                        <div style={{ margin: 24 }}>
-                            <ThirdPartyApplicationConfigForm
-                                onAdd={(e) => {
-                                    let existed = false
-                                    const existedResult = (obj.AppConfigs || []).map(
-                                        (i) => {
-                                            if (i.Type === e.Type) {
-                                                existed = true
-                                                return { ...i, ...e }
-                                            }
-                                            return { ...i }
-                                        }
-                                    )
-                                    if (!existed) {
-                                        existedResult.push(e)
-                                    }
-                                    const params = {...obj, AppConfigs: existedResult}
-                                    apiSetGlobalNetworkConfig(params).then(() => {
-                                        setYakitWindowVisible(true)
-                                        setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
-                                        m.destroy()
-                                    })
-                                }}
-                                onCancel={() => m.destroy()}
-                            />
-                        </div>
-                    )
-                })
-            }
+            // }
+            // else{
+            //     let m = showYakitModal({
+            //         title: "添加第三方应用",
+            //         width: 600,
+            //         footer: null,
+            //         closable: true,
+            //         maskClosable: false,
+            //         content: (
+            //             <div style={{ margin: 24 }}>
+            //                 <ThirdPartyApplicationConfigForm
+            //                     onAdd={(e) => {
+            //                         let existed = false
+            //                         const existedResult = (obj.AppConfigs || []).map(
+            //                             (i) => {
+            //                                 if (i.Type === e.Type) {
+            //                                     existed = true
+            //                                     return { ...i, ...e }
+            //                                 }
+            //                                 return { ...i }
+            //                             }
+            //                         )
+            //                         if (!existed) {
+            //                             existedResult.push(e)
+            //                         }
+            //                         const params = {...obj, AppConfigs: existedResult}
+            //                         apiSetGlobalNetworkConfig(params).then(() => {
+            //                             setYakitWindowVisible(true)
+            //                             setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
+            //                             m.destroy()
+            //                         })
+            //                     }}
+            //                     onCancel={() => m.destroy()}
+            //                 />
+            //             </div>
+            //         )
+            //     })
+            // }
         }
-        })
+        // })
     })
 
     useEffect(() => {
