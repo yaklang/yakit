@@ -23,7 +23,7 @@ import {
 import {API} from "@/services/swagger/resposeType"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import styles from "./PluginOnlineGroupList.module.scss"
-import { isEnpriTraceAgent } from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 interface PluginOnlineGroupListProps {
     pluginsGroupsInViewport: boolean
@@ -38,14 +38,10 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
     const [editGroup, setEditGroup] = useState<GroupListItem>() // 编辑插件组
     const [delGroup, setDelGroup] = useState<GroupListItem>() // 删除插件组
     const [delGroupConfirmPopVisible, setDelGroupConfirmPopVisible] = useState<boolean>(false)
-    const [pluginGroupDelNoPrompt, setPluginGroupDelNoPrompt] = useState<boolean>(false)
     const delGroupConfirmPopRef = useRef<any>()
 
     useEffect(() => {
         getGroupList()
-        getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
-            setPluginGroupDelNoPrompt(result === "true")
-        })
     }, [pluginsGroupsInViewport])
 
     useEffect(() => {

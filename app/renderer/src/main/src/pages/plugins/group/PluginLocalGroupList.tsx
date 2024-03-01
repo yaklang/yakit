@@ -18,9 +18,11 @@ import {
 } from "../utils"
 import {GroupCount} from "@/pages/invoker/schema"
 import emiter from "@/utils/eventBus/eventBus"
-import {isEnpriTraceAgent} from "@/utils/envfile"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import styles from "./PluginLocalGroupList.module.scss"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {CloudDownloadIcon} from "@/assets/newIcon"
+import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 interface PluginLocalGroupListProps {
     pluginsGroupsInViewport: boolean
@@ -35,14 +37,11 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
     const [editGroup, setEditGroup] = useState<GroupListItem>() // 编辑插件组
     const [delGroup, setDelGroup] = useState<GroupListItem>() // 删除插件组
     const [delGroupConfirmPopVisible, setDelGroupConfirmPopVisible] = useState<boolean>(false)
-    const [pluginGroupDelNoPrompt, setPluginGroupDelNoPrompt] = useState<boolean>(false)
     const delGroupConfirmPopRef = useRef<any>()
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
     useEffect(() => {
         getGroupList()
-        getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
-            setPluginGroupDelNoPrompt(result === "true")
-        })
     }, [pluginsGroupsInViewport])
 
     useEffect(() => {
@@ -123,88 +122,114 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
 
     return (
         <>
-            {!!groupList.length && (
-                <PluginGroupList
-                    data={groupList}
-                    editGroup={editGroup}
-                    onEditInputBlur={onEditGroupNameBlur}
-                    extraOptBtn={(groupItem) => {
-                        return (
-                            <>
-                                <YakitButton
-                                    icon={<OutlinePencilaltIcon />}
-                                    type='text2'
-                                    onClick={(e) => setEditGroup(groupItem)}
-                                ></YakitButton>
-                                <YakitButton
-                                    icon={<OutlineTrashIcon />}
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) => onClickBtn(groupItem)}
-                                ></YakitButton>
-                            </>
-                        )
+            {groupList.length > 0 && (
+                <div
+                    style={{
+                        display: groupList.length > 2 ? "block" : "none",
+                        height: "100%"
                     }}
-                    extraHideMenu={(groupItem) => {
-                        return (
-                            <YakitDropdownMenu
-                                menu={{
-                                    data: [
-                                        {
-                                            key: "rename",
-                                            label: (
-                                                <div className={styles["extra-opt-menu"]}>
-                                                    <OutlinePencilaltIcon />
-                                                    <div className={styles["extra-opt-name"]}>重命名</div>
-                                                </div>
-                                            )
-                                        },
-                                        {
-                                            key: "delete",
-                                            label: (
-                                                <div className={styles["extra-opt-menu"]}>
-                                                    <OutlineTrashIcon />
-                                                    <div className={styles["extra-opt-name"]}>删除</div>
-                                                </div>
-                                            ),
-                                            type: "danger"
+                >
+                    <PluginGroupList
+                        data={groupList}
+                        editGroup={editGroup}
+                        onEditInputBlur={onEditGroupNameBlur}
+                        extraOptBtn={(groupItem) => {
+                            return (
+                                <>
+                                    <YakitButton
+                                        icon={<OutlinePencilaltIcon />}
+                                        type='text2'
+                                        onClick={(e) => setEditGroup(groupItem)}
+                                    ></YakitButton>
+                                    <YakitButton
+                                        icon={<OutlineTrashIcon />}
+                                        type='text'
+                                        colors='danger'
+                                        onClick={(e) => onClickBtn(groupItem)}
+                                    ></YakitButton>
+                                </>
+                            )
+                        }}
+                        extraHideMenu={(groupItem) => {
+                            return (
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: [
+                                            {
+                                                key: "rename",
+                                                label: (
+                                                    <div className={styles["extra-opt-menu"]}>
+                                                        <OutlinePencilaltIcon />
+                                                        <div className={styles["extra-opt-name"]}>重命名</div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                key: "delete",
+                                                label: (
+                                                    <div className={styles["extra-opt-menu"]}>
+                                                        <OutlineTrashIcon />
+                                                        <div className={styles["extra-opt-name"]}>删除</div>
+                                                    </div>
+                                                ),
+                                                type: "danger"
+                                            }
+                                        ],
+                                        onClick: ({key}) => {
+                                            setMenuOpen(false)
+                                            switch (key) {
+                                                case "rename":
+                                                    setEditGroup(groupItem)
+                                                    break
+                                                case "delete":
+                                                    onClickBtn(groupItem)
+                                                    break
+                                                default:
+                                                    break
+                                            }
                                         }
-                                    ],
-                                    onClick: ({key}) => {
-                                        setMenuOpen(false)
-                                        switch (key) {
-                                            case "rename":
-                                                setEditGroup(groupItem)
-                                                break
-                                            case "delete":
-                                                onClickBtn(groupItem)
-                                                break
-                                            default:
-                                                break
-                                        }
-                                    }
-                                }}
-                                dropdown={{
-                                    trigger: ["click"],
-                                    placement: "bottomRight",
-                                    onVisibleChange: (v) => {
-                                        setMenuOpen(v)
-                                    },
-                                    visible: menuOpen
-                                }}
-                            >
-                                <SolidDotsverticalIcon
-                                    className={styles["dot-icon"]}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
                                     }}
-                                />
-                            </YakitDropdownMenu>
-                        )
-                    }}
-                    onActiveGroup={onActiveGroup}
-                ></PluginGroupList>
+                                    dropdown={{
+                                        trigger: ["click"],
+                                        placement: "bottomRight",
+                                        onVisibleChange: (v) => {
+                                            setMenuOpen(v)
+                                        },
+                                        visible: menuOpen
+                                    }}
+                                >
+                                    <SolidDotsverticalIcon
+                                        className={styles["dot-icon"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    />
+                                </YakitDropdownMenu>
+                            )
+                        }}
+                        onActiveGroup={onActiveGroup}
+                    ></PluginGroupList>
+                </div>
             )}
+            {groupList.length <= 2 && (
+                <div className={styles["plugin-local-empty"]}>
+                    <YakitEmpty
+                        title='暂无数据'
+                        description='可一键获取官方默认分组，或勾选插件新建分组'
+                        style={{marginTop: 80}}
+                    />
+                    <div className={styles["plugin-local-buttons"]}>
+                        <YakitButton
+                            type='outline1'
+                            icon={<CloudDownloadIcon />}
+                            onClick={() => setVisibleOnline(true)}
+                        >
+                            一键下载
+                        </YakitButton>
+                    </div>
+                </div>
+            )}
+            {visibleOnline && <YakitGetOnlinePlugin visible={visibleOnline} setVisible={setVisibleOnline} refreshCallBack={getGroupList} />}
             {/* 删除确认框 */}
             <DelGroupConfirmPop
                 ref={delGroupConfirmPopRef}
