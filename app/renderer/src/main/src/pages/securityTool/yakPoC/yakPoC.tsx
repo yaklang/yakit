@@ -19,14 +19,20 @@ import {
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {
+    ExpandAndRetract,
+    ExpandAndRetractExcessiveState
+} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon} from "@/assets/icon/outline"
+import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineCogIcon} from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {FolderColorIcon} from "@/assets/icon/colors"
 import {QueryYakScriptGroupResponse, apiQueryYakScriptGroup} from "./utils"
 import {yakitNotify} from "@/utils/notification"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {CloudDownloadIcon} from "@/assets/newIcon"
+import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 const getData = () => {
     let groupData: GroupCount[] = []
@@ -75,6 +81,8 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
     const [response, setResponse] = useState<QueryYakScriptGroupResponse>({
         Group: []
     })
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+
     const pluginGroupGridRef = useRef<HTMLDivElement>(null)
     const initialResponseRef = useRef<QueryYakScriptGroupResponse>({
         Group: []
@@ -188,21 +196,49 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     </div>
                 </div>
             </div>
-            <RollingLoadList<GroupCount>
-                data={response.Group}
-                loadMoreData={() => {}}
-                renderRow={(rowData: GroupCount, index: number) => {
-                    const checked = selectGroupList.includes(rowData.Value)
-                    return <PluginGroupGridItem item={rowData} onSelect={onSelect} selected={checked} />
+            {initialResponseRef.current.Group.length === 0 ? (
+                <div className={styles["yak-poc-empty"]}>
+                    <YakitEmpty title='暂无数据' description='可一键获取默认分组与插件,或点击管理分组手动新建' />
+                    <div className={styles["yak-poc-buttons"]}>
+                        <YakitButton
+                            type='outline1'
+                            icon={<CloudDownloadIcon />}
+                            onClick={() => setVisibleOnline(true)}
+                        >
+                            一键下载
+                        </YakitButton>
+                        <YakitButton icon={<OutlineCogIcon />} onClick={onToManageGroup}>
+                            管理分组
+                        </YakitButton>
+                    </div>
+                </div>
+            ) : (
+                <RollingLoadList<GroupCount>
+                    data={response.Group}
+                    loadMoreData={() => {}}
+                    renderRow={(rowData: GroupCount, index: number) => {
+                        const checked = selectGroupList.includes(rowData.Value)
+                        return <PluginGroupGridItem item={rowData} onSelect={onSelect} selected={checked} />
+                    }}
+                    page={1}
+                    hasMore={false}
+                    loading={loading}
+                    defItemHeight={114}
+                    isGridLayout
+                    defCol={3}
+                    classNameList={styles["group-list-wrapper"]}
+                    rowKey='Value'
+                />
+            )}
+            <YakitGetOnlinePlugin
+                visible={visibleOnline}
+                setVisible={(v) => {
+                    setVisibleOnline(v)
+                    setTimeout(() => {
+                        getQueryYakScriptGroup()
+                    }, 200)
                 }}
-                page={1}
-                hasMore={false}
-                loading={loading}
-                defItemHeight={114}
-                isGridLayout
-                defCol={3}
-                classNameList={styles["group-list-wrapper"]}
-                rowKey='Value'
+                listType='online'
             />
         </div>
     )
@@ -264,10 +300,10 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             selectPluginGroup: selectGroupList
         }
     }, [selectGroupList])
-    const isExecuting=useCreation(()=>{
-        if(executeStatus==='process')return true
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
         return false
-    },[executeStatus])
+    }, [executeStatus])
     return (
         <div className={styles["yak-poc-execute-wrapper"]}>
             <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>

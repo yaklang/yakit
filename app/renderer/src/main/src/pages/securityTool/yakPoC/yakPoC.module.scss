@@ -150,3 +150,13 @@
         height: 100%;
     }
 }
+
+.yak-poc-empty {
+    margin-top: 48px;
+    .yak-poc-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 16px;
+    }
+}
