@@ -45,6 +45,7 @@ import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {menuBodyHeight} from "@/pages/globalVariable"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -572,6 +573,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                 replacers: newRules
                             })
                             .then((val) => {
+                                emiter.emit("onOpenRepRuleEvent", true + "")
                                 setVisible(false)
                                 success("保存成功")
                             })
@@ -586,6 +588,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         replacers: newRules
                     })
                     .then((val) => {
+                        emiter.emit("onOpenRepRuleEvent", false + "")
                         setVisible(false)
                         success("保存成功")
                     })

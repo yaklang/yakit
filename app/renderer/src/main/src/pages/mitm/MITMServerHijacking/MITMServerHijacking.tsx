@@ -102,14 +102,14 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     <div className={classNames(style["mitm-server-heard-addr"], "content-ellipsis")}>
                         <span style={{marginRight: 8}}>{addr}</span>
                         {tip
-                            .split("|").filter(item => item)
-                            .map(
-                                (item) =>
-                                    (!item.startsWith("下游代理") ? (
-                                        <YakitTag color='success'>{item}</YakitTag>
-                                    ) : (
-                                        <YakitTag>{item}</YakitTag>
-                                    ))
+                            .split("|")
+                            .filter((item) => item)
+                            .map((item) =>
+                                !item.startsWith("下游代理") ? (
+                                    <YakitTag color='success'>{item}</YakitTag>
+                                ) : (
+                                    <YakitTag>{item}</YakitTag>
+                                )
                             )}
                     </div>
                 </div>

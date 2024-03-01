@@ -22,6 +22,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -72,10 +73,23 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     }, [visible])
     const onSetFilter = useMemoizedFn(() => {
         const filter = filtersRef.current.getFormValue()
+        // 这里后端没有处理字段不存在的情况 会提示报错
+        if (!filter.includeHostname) filter.includeHostname = []
+        if (!filter.excludeHostname) filter.excludeHostname = []
+        if (!filter.includeSuffix) filter.includeSuffix = []
+        if (!filter.excludeSuffix) filter.excludeSuffix = []
+        if (!filter.excludeMethod) filter.excludeMethod = []
+        if (!filter.excludeContentTypes) filter.excludeContentTypes = []
+        if (!filter.excludeUri) filter.excludeUri = []
+        if (!filter.includeUri) filter.includeUri = []
         ipcRenderer
             .invoke("mitm-set-filter", filter)
             .then(() => {
                 setMITMFilter(filter)
+                // 是否配置过过滤器白名单文案
+                const flag =
+                    !!filter.includeHostname.length || !!filter.includeUri.length || !!filter.includeSuffix.length
+                emiter.emit("onSetFilterWhiteListEvent", flag + "")
                 setVisible(false)
                 info("更新 MITM 过滤器状态")
             })
@@ -95,12 +109,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     })
     const onClearFilters = () => {
         filtersRef.current.clearFormValue()
-        if(_mitmFilter?.excludeMethod?.includes("CONNECT")){
-           filtersRef.current.setFormValue({
-                excludeMethod:["CONNECT"]
-           })
+        if (_mitmFilter?.excludeMethod?.includes("CONNECT")) {
+            filtersRef.current.setFormValue({
+                excludeMethod: ["CONNECT"]
+            })
         }
-        
     }
 
     // 判断对象内的属性是否为空
@@ -231,9 +244,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     <YakitButton type='text' onClick={() => onClearFilters()}>
                         清除
                     </YakitButton>
-                    {isStartMITM &&<YakitButton type='text' onClick={() => onResetFilters()}>
-                        重置过滤器
-                    </YakitButton>}
+                    {isStartMITM && (
+                        <YakitButton type='text' onClick={() => onResetFilters()}>
+                            重置过滤器
+                        </YakitButton>
+                    )}
                 </div>
             }
             className={styles["mitm-filters-modal"]}
@@ -271,6 +286,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             }}
             bodyStyle={{padding: 0}}
         >
+            <div className={styles.infoBox}>
+                大部分过滤器（除了文件后缀与Content-Type）支持以兼容模式进行匹配，即先尝试以正则模式匹配 &rarr; glob
+                模式匹配 &rarr; 关键字匹配。文件后缀与Content-Type仅支持 glob 模式匹配 &rarr; 关键字匹配。
+            </div>
             <MITMFilters filter={_mitmFilter} onFinished={() => onSetFilter()} ref={filtersRef} />
         </YakitModal>
     )
@@ -340,7 +359,6 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
                             className={classNames(styles["list-item"], {
                                 [styles["list-item-border"]]: index !== mitmSaveData.length - 1,
                                 [styles["list-item-border-top"]]: index === 0
-
                             })}
                             onClick={() => {
                                 onSelectItem(item.filter)

@@ -2,11 +2,11 @@ import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {failed, info, yakitFailed} from "@/utils/notification"
 import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {MITMResponse} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
-import { MITMLogHeardExtra} from "./MITMLog"
+import {MITMLogHeardExtra} from "./MITMLog"
 import {HTTP_FLOW_TABLE_SHIELD_DATA, ShieldData} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
@@ -16,8 +16,14 @@ import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useStore} from "@/store/mitmState"
-import { HTTPHistory } from "@/components/HTTPHistory"
-import { RemoteGV } from "@/yakitGV"
+import {HTTPHistory} from "@/components/HTTPHistory"
+import {RemoteGV} from "@/yakitGV"
+import {Alert} from "antd"
+import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
+import emiter from "@/utils/eventBus/eventBus"
+import {MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineXIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -29,8 +35,7 @@ interface MITMHijackedContentProps {
     setIsFullScreen: (f: boolean) => void
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
-}
-
+      }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
     const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards} = props
@@ -62,7 +67,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         isHttp: true,
         isResponse: false
     })
-    const {currentPacket, currentPacketId, isHttp,requestPacket,isResponse} = currentPacketInfo
+    const {currentPacket, currentPacketId, isHttp, requestPacket, isResponse} = currentPacketInfo
 
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]))
 
@@ -71,6 +76,73 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const {setIsRefreshHistory} = useStore()
 
     const [calloutColor, setCalloutColor] = useState<string>("")
+
+    const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
+    const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
+    const [alertVisible, setAlertVisible] = useState<boolean>(false)
+
+    const getMITMFilter = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("mitm-get-filter")
+            .then((val: MITMFilterSchema) => {
+                const includeHostnameFlag = val?.includeHostname ? !!val?.includeHostname.length : false
+                const includeUriFlag = val?.includeUri ? !!val?.includeUri.length : false
+                const includeSuffixFlag = val?.includeSuffix ? !!val?.includeSuffix.length : false
+                const flag = includeHostnameFlag || includeUriFlag || includeSuffixFlag
+                setWhiteListFlag(flag)
+                if (flag) {
+                    setAlertVisible(true)
+                }
+            })
+            .catch((err) => {
+                yakitFailed("获取 MITM 过滤器失败:" + err)
+            })
+    })
+    useEffect(() => {
+        getMITMFilter()
+        const onSetFilterWhiteListEvent = (flag: string) => {
+            const val = flag === "true"
+            setWhiteListFlag(val)
+            if (val) {
+                setAlertVisible(true)
+            }
+        }
+        emiter.on("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
+        return () => {
+            emiter.off("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
+        }
+    }, [])
+
+    const getRules = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("GetCurrentRules", {})
+            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                const findOpenRepRule = newRules.find(
+                    (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
+                )
+                const flag = findOpenRepRule !== undefined
+                setOpenRepRuleFlag(flag)
+                if (flag) {
+                    setAlertVisible(true)
+                }
+            })
+            .catch((e) => yakitFailed("获取规则列表失败:" + e))
+    })
+    useEffect(() => {
+        getRules()
+        const onOpenRepRuleEvent = (flag: string) => {
+            const val = flag === "true"
+            setOpenRepRuleFlag(val)
+            if (val) {
+                setAlertVisible(true)
+            }
+        }
+        emiter.on("onOpenRepRuleEvent", onOpenRepRuleEvent)
+        return () => {
+            emiter.off("onOpenRepRuleEvent", onOpenRepRuleEvent)
+        }
+    }, [])
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
@@ -194,11 +266,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 // setTimeout(() => setLoading(false))
             })
         } else {
-            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId, [calloutColor]).finally(() => {
-                clearCurrentPacket()
-                setCalloutColor("")
-                // setTimeout(() => setLoading(false))
-            })
+            ipcRenderer
+                .invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId, [calloutColor])
+                .finally(() => {
+                    clearCurrentPacket()
+                    setCalloutColor("")
+                    // setTimeout(() => setLoading(false))
+                })
         }
     })
     const hijacking = useMemoizedFn(() => {
@@ -332,7 +406,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             case "log":
                 return (
                     <>
-                        <HTTPHistory pageType="MITM" />
+                        <HTTPHistory pageType='MITM' />
                     </>
                 )
             // 被动日志
@@ -346,6 +420,20 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 break
         }
     })
+
+    // 提示文案
+    const alertMsg = useMemo(() => {
+        if (whiteListFlag && openRepRuleFlag) return "检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭"
+        if (whiteListFlag) return "检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭"
+        if (openRepRuleFlag) return "检测到配置替换规则，如抓包有问题可先将替换关闭"
+        return ""
+    }, [openRepRuleFlag, whiteListFlag])
+    useEffect(() => {
+        if (alertMsg === "") {
+            setAlertVisible(false)
+        }
+    }, [alertMsg])
+
     return (
         <div className={styles["mitm-hijacked-content"]}>
             <ReactResizeDetector
@@ -388,6 +476,19 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         />
                     )}
                 </div>
+            </div>
+            <div
+                className={styles["mitm-alert-msg"]}
+                style={{display: alertVisible ? "block" : "none"}}
+            >
+                {alertMsg}
+                <YakitButton
+                    style={{float: "right"}}
+                    type='text2'
+                    size={"middle"}
+                    icon={<OutlineXIcon />}
+                    onClick={() => setAlertVisible(false)}
+                />
             </div>
             {onRenderContent()}
         </div>
