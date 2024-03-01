@@ -589,7 +589,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             if (selectPluginGroup.length > 0) {
                 try {
                     const res = await apiGetPluginByGroup(selectPluginGroup)
-                    console.log("QueryYakScriptByOnlineGroup", res)
                     newPluginInfo.selectPluginName = res.Data.map((item) => item.ScriptName)
                 } catch (error) {
                     newPluginInfo.selectPluginName = []
