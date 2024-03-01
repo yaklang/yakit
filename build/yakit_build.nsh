@@ -13,6 +13,7 @@ Var /Global IS_UPDATED
 Var /Global INSTALL_PATH
 Var /Global INSTALL_PATH_REG_KEY_NAME 
 Var /Global EXE_NAME
+Var /Global KEEP_FOLDER
 
 
 Function ShouldShowDirectoryPage
@@ -66,7 +67,6 @@ FunctionEnd
 
 
 !macro checkInstalled
-    ; 设置用户一开始的安装路径
     ReadRegStr $INSTALL_PATH HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
     ${If} $INSTALL_PATH != "" 
         ; set install path
@@ -76,7 +76,7 @@ FunctionEnd
     ; 判断是否已安装
     ${If} ${FileExists} `$INSTDIR\$EXE_NAME.exe`
         StrCpy $IS_INSTALLED "true"
-    ${EndIf}     
+    ${EndIf}
 !macroend
 
 !macro checkIsUpdated
@@ -103,6 +103,9 @@ FunctionEnd
             StrCpy $EXE_NAME "EnpriTrace"
         ${EndIf}
     ${EndIf}
+
+    ; 设置用户一开始的安装路径
+    StrCpy $INSTDIR "C:\Program Files\$EXE_NAME"
     
     !insertmacro checkInstalled
     !insertmacro checkIsUpdated
@@ -136,12 +139,15 @@ FunctionEnd
     cancelUninstall:
         Quit
     continue:
-    RMDir /r "$INSTDIR"
     ; 如果保留了yakit-projects文件夹，将其从临时位置移回原始位置
-    ${If} ${FileExists} `$TEMP\temp-yakit-projects\*.*`
-        CreateDirectory "$INSTDIR"
-        CopyFiles /SILENT "$TEMP\temp-yakit-projects\*.*" "$INSTDIR\yakit-projects"
-        RMDir /r "$TEMP\temp-yakit-projects"
+    ${If} $KEEP_FOLDER == "true"
+        Push "$INSTDIR"
+        Push "yakit-projects"
+        Call un.DeleteFoldersWithExclusion
+        
+        DELETE "$INSTDIR\$EXE_NAME.exe"
+    ${Else}
+        RMDir /r "$INSTDIR"
     ${EndIf}
     ; 删除桌面快捷方式
     Delete "$DESKTOP\$EXE_NAME.lnk"
@@ -199,10 +205,87 @@ Section "Uninstall"
     ${EndIf}
     MessageBox MB_YESNO "卸载时是否保留yakit-projects文件夹？" IDYES keepFolder IDNO continueUninstall
  keepFolder:
-    DetailPrint "保留yakit-projects文件夹..."
-    SetOutPath $TEMP
-    CopyFiles /SILENT "$INSTDIR\yakit-projects\*.*" "$TEMP\temp-yakit-projects"
+    StrCpy $KEEP_FOLDER "true"
+    ; DetailPrint "保留yakit-projects文件夹..."
+    ; SetOutPath $TEMP
+    ; CopyFiles /SILENT "$INSTDIR\yakit-projects\*.*" "$TEMP\temp-yakit-projects"
     Goto continueUninstall
  continueUninstall:
-
 SectionEnd
+
+
+Function un.DeleteFoldersWithExclusion
+ Exch $R0 ; exclude dir
+ Exch
+ Exch $R1 ; route dir
+ Push $R2
+ Push $R3
+ 
+ 
+  ClearErrors
+  FindFirst $R3 $R2 "$R1\*.*"
+ 
+ 
+  Top:
+   StrCmp $R2 "." Next
+   StrCmp $R2 ".." Next
+   StrCmp $R2 $R0 Exit
+   IfFileExists "$R1\$R2\*.*" Jump DeleteFile
+ 
+   Jump:
+    Push '$R1\$R2'
+    Push '$R0'
+    Call un.DeleteFoldersWithExclusion
+ 
+    Push "$R1\$R2" 
+    Call un.isEmptyDir
+    Pop $0    
+    StrCmp $0 1 RmD Next
+ 
+   RmD:
+    RMDir /r $R1\$R2
+    Goto Next
+ 
+   DeleteFile:
+    Delete '$R1\$R2'
+ 
+   Next:
+    ClearErrors
+    FindNext $R3 $R2
+    IfErrors Exit
+   Goto Top
+ 
+  Exit:
+  FindClose $R3
+ 
+ Pop $R3
+ Pop $R2
+ Pop $R1
+ Pop $R0
+ 
+FunctionEnd
+ 
+ 
+Function un.isEmptyDir
+  # Stack ->                    # Stack: <directory>
+  Exch $0                       # Stack: $0
+  Push $1                       # Stack: $1, $0
+  FindFirst $0 $1 "$0\*.*"
+  strcmp $1 "." 0 _notempty
+    FindNext $0 $1
+    strcmp $1 ".." 0 _notempty
+      ClearErrors
+      FindNext $0 $1
+      IfErrors 0 _notempty
+        FindClose $0
+        Pop $1                  # Stack: $0
+        StrCpy $0 1
+        Exch $0                 # Stack: 1 (true)
+        goto _end
+     _notempty:
+       FindClose $0
+       Pop $1                   # Stack: $0
+       StrCpy $0 0
+       Exch $0                  # Stack: 0 (false)
+  _end:
+FunctionEnd
