@@ -865,8 +865,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
 
     // 企业版-连接引擎后验证license=>展示企业登录
-    // const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(false)
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
     const [_, setLocalInfo, getLocalInfo] = useGetState<LocalInfoProps>()
     useEffect(() => {
         // 获取操作系统、架构、Yakit 版本、Yak 版本
