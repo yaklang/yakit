@@ -343,7 +343,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
     }, [])
 
-    const run = (OnlineGroup: string, TaskName: string) => {
+    const run = (TaskName: string) => {
         setPercent(0)
         setRunPluginCount(getPortParams().ScriptNames.length)
 
@@ -424,29 +424,40 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             return
         }
 
-        const OnlineGroup: string =
-            getScanType() !== "专项扫描"
-                ? getScanType()
-                : [...checkedList].filter((name) => name !== "弱口令").join(",")
+        let OnlineGroup: string = ""
+        if (getScanType() !== "专项扫描") {
+            OnlineGroup = getScanType()
+        } else {
+            // 当插件组内部没有弱口令的时候，查询插件需要排除爆破弱口令
+            if (!groupWeakPwdFlag) {
+                OnlineGroup = [...checkedList].filter((name) => name !== "弱口令").join(",")
+            } else {
+                OnlineGroup = [...checkedList].join(",")
+            }
+        }
+
+        // 是否仅勾选的弱口令仅代表爆破弱口令
+        const blastingWeakPwdFlag = checkedList.length === 1 && checkedList.includes("弱口令") && !groupWeakPwdFlag
+
         // 继续任务 参数拦截
         if (Uid) {
             recoverRun()
         }
         // 当为跳转带参
         else if (Array.isArray(openScriptNames)) {
-            run(OnlineGroup, TaskName)
+            run(TaskName)
         }
         // 只勾选了爆破弱口令的选项
-        else if (OnlineGroup.length === 0) {
+        else if (blastingWeakPwdFlag) {
             setPortParams({...getPortParams(), ScriptNames: []})
-            run(OnlineGroup, TaskName)
+            run(TaskName)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {
                     const ScriptNames: string[] = data.Data.map((item) => item.OnlineScriptName)
                     setPortParams({...getPortParams(), ScriptNames})
-                    run(OnlineGroup, TaskName)
+                    run(TaskName)
                 })
                 .catch((e) => {
                     failed(`查询扫描模式错误:${e}`)
@@ -480,15 +491,20 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const simpleDetectRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(simpleDetectRef)
     const [plainOptions, setPlainOptions] = useState<string[]>([])
+    const [groupWeakPwdFlag, setGroupWeakPwdFlag] = useState<boolean>(false) // 标识弱口令是否是分组里面的弱口令还是固定的爆破弱口令
     useEffect(() => {
         apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
             const copyGroup = structuredClone(group)
             let groups: string[] = copyGroup.map((item) => item.Value)
+            groups.push("弱口令")
             if (groups.includes("基础扫描")) {
                 groups = groups.filter((item) => item !== "基础扫描")
             }
             if (!groups.includes("弱口令")) {
-                groups.push("弱口令")
+                setGroupWeakPwdFlag(false)
+                groups.push("弱口令") // 塞一个固定的爆破弱口令
+            } else {
+                setGroupWeakPwdFlag(true)
             }
             setPlainOptions(groups)
         })
