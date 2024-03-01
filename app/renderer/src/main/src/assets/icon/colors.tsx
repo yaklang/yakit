@@ -496,102 +496,128 @@ export const SolidYakCattleNoBackColorIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidYakCattleNoBackColor} {...props} />
 }
 
-const FolderColor = () => (
-    <svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48' fill='none'>
-        <path
-            d='M44.5 41H3.5C2.119 41 1 39.881 1 38.5V7.5C1 6.119 2.119 5 3.5 5H15.097C16.616 5 18.052 5.69 19.001 6.877L21.5 10H44.5C45.881 10 47 11.119 47 12.5V38.5C47 39.881 45.881 41 44.5 41Z'
-            fill='url(#paint0_linear_26685_237703)'
-        />
-        <path d='M2 25H22V11H4C2.895 11 2 11.895 2 13V25Z' fill='url(#paint1_linear_26685_237703)' />
-        <path d='M2 26H22V12H4C2.895 12 2 12.895 2 14V26Z' fill='url(#paint2_linear_26685_237703)' />
-        <path
-            d='M1 37.875V38.5C1 39.881 2.119 41 3.5 41H44.5C45.881 41 47 39.881 47 38.5V37.875H1Z'
-            fill='url(#paint3_linear_26685_237703)'
-        />
-        <path
-            d='M44.5 11H21.5L20.263 11.824C19.114 12.591 17.763 13 16.381 13H3.5C2.119 13 1 14.119 1 15.5V37.5C1 38.881 2.119 40 3.5 40H44.5C45.881 40 47 38.881 47 37.5V13.5C47 12.119 45.881 11 44.5 11Z'
-            fill='url(#paint4_linear_26685_237703)'
-        />
-        <path
-            d='M44.5 40H3.5C2.119 40 1 38.881 1 37.5V16.5C1 15.119 2.119 14 3.5 14H16.756C18.138 14 19.489 13.591 20.639 12.824L21.875 12H44.5C45.881 12 47 13.119 47 14.5V37.5C47 38.881 45.881 40 44.5 40Z'
-            fill='url(#paint5_radial_26685_237703)'
-        />
-        <defs>
-            <linearGradient
-                id='paint0_linear_26685_237703'
-                x1='-7.018'
-                y1='9.308'
-                x2='39.387'
-                y2='33.533'
-                gradientUnits='userSpaceOnUse'
-            >
-                <stop stopColor='#FAC017' />
-                <stop offset='0.909' stopColor='#E1AB2D' />
-            </linearGradient>
-            <linearGradient
-                id='paint1_linear_26685_237703'
-                x1='5.851'
-                y1='9.254'
-                x2='18.601'
-                y2='27.39'
-                gradientUnits='userSpaceOnUse'
-            >
-                <stop stopColor='#FBFEF3' />
-                <stop offset='0.909' stopColor='#E2E4E3' />
-            </linearGradient>
-            <linearGradient
-                id='paint2_linear_26685_237703'
-                x1='2'
-                y1='19'
-                x2='22'
-                y2='19'
-                gradientUnits='userSpaceOnUse'
-            >
-                <stop stopColor='#FBFEF3' />
-                <stop offset='0.909' stopColor='#E2E4E3' />
-            </linearGradient>
-            <linearGradient
-                id='paint3_linear_26685_237703'
-                x1='16.865'
-                y1='39.287'
-                x2='44.965'
-                y2='39.792'
-                gradientUnits='userSpaceOnUse'
-            >
-                <stop stopColor='#E3A917' />
-                <stop offset='0.464' stopColor='#D79C1E' />
-            </linearGradient>
-            <linearGradient
-                id='paint4_linear_26685_237703'
-                x1='-4.879'
-                y1='12.764'
-                x2='35.968'
-                y2='30.778'
-                gradientUnits='userSpaceOnUse'
-            >
-                <stop offset='0.34' stopColor='#FFEFB2' />
-                <stop offset='0.485' stopColor='#FFEDAD' />
-                <stop offset='0.652' stopColor='#FFE99F' />
-                <stop offset='0.828' stopColor='#FEE289' />
-                <stop offset='1' stopColor='#FED86B' />
-            </linearGradient>
-            <radialGradient
-                id='paint5_radial_26685_237703'
-                cx='0'
-                cy='0'
-                r='1'
-                gradientUnits='userSpaceOnUse'
-                gradientTransform='translate(37.836 49.317) scale(53.875 53.875)'
-            >
-                <stop offset='0.199' stopColor='#FEC832' />
-                <stop offset='0.601' stopColor='#FCD667' />
-                <stop offset='0.68' stopColor='#FDDA75' />
-                <stop offset='0.886' stopColor='#FEE496' />
-                <stop offset='1' stopColor='#FFE8A2' />
-            </radialGradient>
-        </defs>
-    </svg>
-)
+const FolderColor = () => {
+    const id1 = uuidv4()
+    const id2 = uuidv4()
+    const id3 = uuidv4()
+    const id4 = uuidv4()
+    const id5 = uuidv4()
+    const id6 = uuidv4()
+    return (
+        <svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48' fill='none'>
+            <path
+                d='M44.5 41H3.5C2.119 41 1 39.881 1 38.5V7.5C1 6.119 2.119 5 3.5 5H15.097C16.616 5 18.052 5.69 19.001 6.877L21.5 10H44.5C45.881 10 47 11.119 47 12.5V38.5C47 39.881 45.881 41 44.5 41Z'
+                // fill='url(#paint0_linear_26685_237703)'
+                fill={`url(#${id1})`}
+            />
+            <path
+                d='M2 25H22V11H4C2.895 11 2 11.895 2 13V25Z'
+                // fill='url(#paint1_linear_26685_237703)'
+                fill={`url(#${id2})`}
+            />
+            <path
+                d='M2 26H22V12H4C2.895 12 2 12.895 2 14V26Z'
+                // fill='url(#paint2_linear_26685_237703)'
+                fill={`url(#${id3})`}
+            />
+            <path
+                d='M1 37.875V38.5C1 39.881 2.119 41 3.5 41H44.5C45.881 41 47 39.881 47 38.5V37.875H1Z'
+                // fill='url(#paint3_linear_26685_237703)'
+                fill={`url(#${id4})`}
+            />
+            <path
+                d='M44.5 11H21.5L20.263 11.824C19.114 12.591 17.763 13 16.381 13H3.5C2.119 13 1 14.119 1 15.5V37.5C1 38.881 2.119 40 3.5 40H44.5C45.881 40 47 38.881 47 37.5V13.5C47 12.119 45.881 11 44.5 11Z'
+                // fill='url(#paint4_linear_26685_237703)'
+                fill={`url(#${id5})`}
+            />
+            <path
+                d='M44.5 40H3.5C2.119 40 1 38.881 1 37.5V16.5C1 15.119 2.119 14 3.5 14H16.756C18.138 14 19.489 13.591 20.639 12.824L21.875 12H44.5C45.881 12 47 13.119 47 14.5V37.5C47 38.881 45.881 40 44.5 40Z'
+                // fill='url(#paint5_radial_26685_237703)'
+                fill={`url(#${id6})`}
+            />
+            <defs>
+                <linearGradient
+                    // id='paint0_linear_26685_237703'
+                    id={id1}
+                    x1='-7.018'
+                    y1='9.308'
+                    x2='39.387'
+                    y2='33.533'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#FAC017' />
+                    <stop offset='0.909' stopColor='#E1AB2D' />
+                </linearGradient>
+                <linearGradient
+                    // id='paint1_linear_26685_237703'
+                    id={id2}
+                    x1='5.851'
+                    y1='9.254'
+                    x2='18.601'
+                    y2='27.39'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#FBFEF3' />
+                    <stop offset='0.909' stopColor='#E2E4E3' />
+                </linearGradient>
+                <linearGradient
+                    // id='paint2_linear_26685_237703'
+                    id={id3}
+                    x1='2'
+                    y1='19'
+                    x2='22'
+                    y2='19'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#FBFEF3' />
+                    <stop offset='0.909' stopColor='#E2E4E3' />
+                </linearGradient>
+                <linearGradient
+                    // id='paint3_linear_26685_237703'
+                    id={id4}
+                    x1='16.865'
+                    y1='39.287'
+                    x2='44.965'
+                    y2='39.792'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop stopColor='#E3A917' />
+                    <stop offset='0.464' stopColor='#D79C1E' />
+                </linearGradient>
+                <linearGradient
+                    // id='paint4_linear_26685_237703'
+                    id={id5}
+                    x1='-4.879'
+                    y1='12.764'
+                    x2='35.968'
+                    y2='30.778'
+                    gradientUnits='userSpaceOnUse'
+                >
+                    <stop offset='0.34' stopColor='#FFEFB2' />
+                    <stop offset='0.485' stopColor='#FFEDAD' />
+                    <stop offset='0.652' stopColor='#FFE99F' />
+                    <stop offset='0.828' stopColor='#FEE289' />
+                    <stop offset='1' stopColor='#FED86B' />
+                </linearGradient>
+                <radialGradient
+                    // id='paint5_radial_26685_237703'
+                    id={id6}
+                    cx='0'
+                    cy='0'
+                    r='1'
+                    gradientUnits='userSpaceOnUse'
+                    gradientTransform='translate(37.836 49.317) scale(53.875 53.875)'
+                >
+                    <stop offset='0.199' stopColor='#FEC832' />
+                    <stop offset='0.601' stopColor='#FCD667' />
+                    <stop offset='0.68' stopColor='#FDDA75' />
+                    <stop offset='0.886' stopColor='#FEE496' />
+                    <stop offset='1' stopColor='#FFE8A2' />
+                </radialGradient>
+            </defs>
+        </svg>
+    )
+}
 /**
  * @description  文件夹 icons8-folder 1
  */
