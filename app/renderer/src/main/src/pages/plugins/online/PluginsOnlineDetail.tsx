@@ -192,8 +192,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             title='插件商店'
             filterNode={
                 <>
-                    <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} isShowGroupMagBtn={false} />
-                    <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} />
+                    {/* <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} isShowGroupMagBtn={false} />
+                    <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} /> */}
                 </>
             }
             filterExtra={
