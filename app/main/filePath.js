@@ -48,8 +48,9 @@ try {
 /**
  * @name 软件关联项目相关目录路径
  * 在新版本中，windows自定义安装路径会将os-home目录的yakit-projects迁移到软件根目录下
+ * 如果获取项目关联文件夹路径错误时，将自动设置为系统用户下面(容灾处理)
  */
-const YakitProjectPath = project_path
+const YakitProjectPath = project_path || osHomeProjectPath
 console.log(`yakit-projects-path: ${YakitProjectPath}`)
 
 /** 引擎文件夹路径 */
