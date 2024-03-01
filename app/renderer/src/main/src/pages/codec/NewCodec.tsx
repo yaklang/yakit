@@ -62,13 +62,13 @@ interface NewCodecRightEditorBoxProps {
     isExpand: boolean
     setExpand: (v: boolean) => void
     inputEditor: string
+    outputEditorByte?: Uint8Array
     setInputEditor: (v: string) => void
     outputEditor: string
-    setOutputEditor: (v: string) => void
 }
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
-    const {isExpand, setExpand, inputEditor, setInputEditor, outputEditor, setOutputEditor} = props
+    const {isExpand, setExpand, outputEditorByte, inputEditor, setInputEditor, outputEditor} = props
     const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
     const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
     const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
@@ -139,7 +139,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     // 保存
     const onSave = useMemoizedFn(() => {
-        if (outputEditor.length === 0) {
+        if (!outputEditorByte) {
             warn("暂无保存内容")
             return
         }
@@ -154,7 +154,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                     const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
                     ipcRenderer
                         .invoke("SaveCodecOutputToTxt", {
-                            data: outputEditor,
+                            data: Buffer.from(outputEditorByte),
                             outputDir: absolutePath,
                             fileName: `Output-${new Date().getTime()}.txt`
                         })
@@ -470,9 +470,6 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                 readOnly={true}
                                 type='plaintext'
                                 value={outPutObj.value}
-                                setValue={(content: string) => {
-                                    setOutputEditor(content)
-                                }}
                                 noWordWrap={noOutputWordwrap}
                                 // loading={loading}
                             />
@@ -785,6 +782,7 @@ interface NewCodecMiddleRunListProps {
     setRightItems: (v: RightItemsProps[]) => void
     inputEditor: string
     setOutputEditor: (v: string) => void
+    setOutputEditorByte: (v: Uint8Array) => void
     isClickToRunList: React.MutableRefObject<boolean>
 }
 
@@ -814,7 +812,17 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
-    const {id, fold, setFold, rightItems, setRightItems, inputEditor, setOutputEditor, isClickToRunList} = props
+    const {
+        id,
+        fold,
+        setFold,
+        rightItems,
+        setRightItems,
+        inputEditor,
+        setOutputEditor,
+        setOutputEditorByte,
+        isClickToRunList
+    } = props
 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [_, setFilterName, getFilterName] = useGetState<string>("")
@@ -978,8 +986,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
 
         ipcRenderer
             .invoke("NewCodec", newCodecParams)
-            .then((data: {Result: string}) => {
+            .then((data: {Result: string; RawResult: Uint8Array}) => {
                 // 执行完成后 更改Output值
+                setOutputEditorByte(data.RawResult)
                 setOutputEditor(data.Result)
             })
             .catch((e) => {
@@ -1216,7 +1225,7 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
         // 使用正则表达式匹配 translate 函数中的两个参数
         const match = transform.match(/translate\((-?\d+)px, (-?\d+)px\)/)
         if (match) {
-            lastIsDragging=true
+            lastIsDragging = true
             // 提取匹配到的两个值，并将它们转换为数字
             const [value1, value2] = match.slice(1).map(Number)
             // 判断值是否小于 0
@@ -1228,16 +1237,13 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
                 )
                 transform = modifiedString
             }
-        }
-        else{
-            if(!lastIsDragging){
+        } else {
+            if (!lastIsDragging) {
                 // 解决拖拽送松开时,样式溢出（屏蔽异常样式）
-                transform = `translate(0px, 0px)`  
+                transform = `translate(0px, 0px)`
             }
-            
         }
-    }
-    else{
+    } else {
         lastIsDragging = false
     }
     return {
@@ -1710,6 +1716,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     // Input/Output编辑器内容
     const [inputEditor, setInputEditor] = useState<string>("")
     const [outputEditor, setOutputEditor] = useState<string>("")
+    const [outputEditorByte, setOutputEditorByte] = useState<Uint8Array>()
     // 是否为点击添加至执行列表
     const isClickToRunList = useRef<boolean>(false)
     // 构造页面左边列表数据
@@ -1970,6 +1977,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         setRightItems={setRightItems}
                         inputEditor={inputEditor}
                         setOutputEditor={setOutputEditor}
+                        setOutputEditorByte={setOutputEditorByte}
                         isClickToRunList={isClickToRunList}
                     />
                 </DragDropContext>
@@ -1980,7 +1988,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                 inputEditor={inputEditor}
                 setInputEditor={setInputEditor}
                 outputEditor={outputEditor}
-                setOutputEditor={setOutputEditor}
+                outputEditorByte={outputEditorByte}
             />
         </div>
     )
