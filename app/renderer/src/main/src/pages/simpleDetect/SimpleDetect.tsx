@@ -483,14 +483,12 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     useEffect(() => {
         apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
             const copyGroup = structuredClone(group)
-            const groups: string[] = copyGroup.map((item) => item.Value)
+            let groups: string[] = copyGroup.map((item) => item.Value)
             if (groups.includes("基础扫描")) {
-                setPlainOptions(groups.filter((item) => item !== "基础扫描"))
-                return
+                groups = groups.filter((item) => item !== "基础扫描")
             }
-            if (groups.includes("弱口令")) {
-                setPlainOptions(groups.filter((item) => item !== "弱口令"))
-                return
+            if (!groups.includes("弱口令")) {
+                groups.push("弱口令")
             }
             setPlainOptions(groups)
         })
@@ -679,7 +677,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                         <Form.Item label=' ' colon={false} style={{marginTop: "-16px"}}>
                             <CheckboxGroup
                                 disabled={shield}
-                                options={[...plainOptions, "弱口令"]}
+                                options={plainOptions}
                                 value={checkedList}
                                 onChange={(list) => setCheckedList(list)}
                             />
