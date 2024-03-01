@@ -229,7 +229,15 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
                     </div>
                 </div>
             )}
-            {visibleOnline && <YakitGetOnlinePlugin visible={visibleOnline} setVisible={setVisibleOnline} refreshCallBack={getGroupList} />}
+            {visibleOnline && (
+                <YakitGetOnlinePlugin
+                    visible={visibleOnline}
+                    setVisible={(v) => {
+                        setVisibleOnline(v)
+                        getGroupList()
+                    }}
+                />
+            )}
             {/* 删除确认框 */}
             <DelGroupConfirmPop
                 ref={delGroupConfirmPopRef}

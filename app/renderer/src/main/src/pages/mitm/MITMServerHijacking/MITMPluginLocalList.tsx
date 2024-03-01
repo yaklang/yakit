@@ -266,7 +266,6 @@ export interface YakitGetOnlinePluginProps {
     listType?: "online" | "mine" | "recycle" | "check"
     visible: boolean
     setVisible: (b: boolean) => void
-    refreshCallBack?: () => void
 }
 /**
  * 额外使用该组件的组件:
@@ -274,7 +273,7 @@ export interface YakitGetOnlinePluginProps {
  * 2、PluginDebuggerPage
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
-    const {listType = "online", visible, setVisible, refreshCallBack = () => {}} = props
+    const {listType = "online", visible, setVisible} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -291,12 +290,10 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
                 setVisible(false)
                 ipcRenderer.invoke("change-main-menu")
                 onRefLocalPluginList()
-                refreshCallBack()
             }, 200)
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
             onRefLocalPluginList()
-            refreshCallBack()
             yakitNotify("error", "下载失败:" + e)
         })
         return () => {
@@ -320,7 +317,6 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
             failed(`停止下载:${e}`)
             onRefLocalPluginList()
-            refreshCallBack()
         })
     }
     /**下载插件后需要更新 本地插件列表 */
