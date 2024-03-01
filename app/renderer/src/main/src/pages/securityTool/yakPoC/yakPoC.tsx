@@ -33,36 +33,51 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/routes/newRoute"
 
-const getData = () => {
-    let groupData: GroupCount[] = []
-    for (let index = 0; index < 50; index++) {
-        const element = {
-            Value: `插件组名${index + 1}`,
-            Total: index + 1,
-            Default: index % 2 === 0
-        }
-        groupData.push(element)
-    }
-    return groupData
+export const onToManageGroup = () => {
+    yakitNotify("info", "开发中...")
 }
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
+    const {pageId} = props
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.PoC, pageId)
+        if (currentItem && currentItem.pageParamsInfo.pocPageInfo) {
+            return currentItem.pageParamsInfo.pocPageInfo
+        }
+        return {
+            selectGroup: [],
+            formValue: {}
+        }
+    })
+    const [pageInfo, setPageInfo] = useState<PocPageInfoProps>(initPageInfo())
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
-    const [selectGroupList, setSelectGroupList] = useState<string[]>([])
+    const onSetSelectGroupList = useMemoizedFn((groups) => {
+        setPageInfo({...pageInfo, selectGroup: groups})
+    })
     return (
         <div className={styles["yak-poc-wrapper"]}>
             <PluginGroupGrid
                 hidden={hidden}
-                selectGroupList={selectGroupList}
-                setSelectGroupList={setSelectGroupList}
+                selectGroupList={pageInfo.selectGroup || []}
+                setSelectGroupList={onSetSelectGroupList}
             />
             <YakPoCExecuteContent
                 hidden={hidden}
                 setHidden={setHidden}
-                selectGroupList={selectGroupList}
-                setSelectGroupList={setSelectGroupList}
+                selectGroupList={pageInfo.selectGroup || []}
+                setSelectGroupList={onSetSelectGroupList}
+                defaultFormValue={pageInfo.formValue}
             />
         </div>
     )
@@ -148,9 +163,6 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         setResponse({Group: searchData})
         setAllCheck(false)
         setSelectGroupList([])
-    })
-    const onToManageGroup = useMemoizedFn(() => {
-        yakitNotify("info", "开发中...")
     })
     return (
         <div
@@ -261,7 +273,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-    const {selectGroupList, setSelectGroupList} = props
+    const {selectGroupList, setSelectGroupList, defaultFormValue} = props
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -276,6 +288,13 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     /**停止 */
     const [stopLoading, setStopLoading] = useState<boolean>(false)
+
+    useEffect(() => {
+        if (defaultFormValue) {
+            const value = JSON.stringify(defaultFormValue)
+            pluginBatchExecuteContentRef.current?.onInitInputValue(value)
+        }
+    }, [])
 
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()

@@ -133,7 +133,7 @@ import { NewPayload } from "@/pages/payloadManager/newPayload"
 import { NewCodec } from "@/pages/codec/NewCodec";
 import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
+import { PluginBatchExecutorPageInfoProps, PocPageInfoProps } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import { SinglePluginExecution } from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 import {YakPoC} from "@/pages/securityTool/yakPoC/yakPoC"
@@ -464,6 +464,7 @@ export interface ComponentParams {
     webshellInfo?: WebShellDetail
     /**批量执行页面参数 */
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
+    pocPageInfo?:PocPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -524,7 +525,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <PortScanPage sendTarget={params?.scanportParams} />
         case YakitRoute.PoC:
             // return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
-            return <YakPoC />
+            return <YakPoC pageId={params?.id || ""}/>
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
             // return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />

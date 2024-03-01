@@ -87,6 +87,10 @@ import {RemoteGV} from "@/yakitGV"
 import {PageNodeItemProps, PageProps, defPage, usePageInfo} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
+import {apiQueryYakScriptGroup} from "@/pages/securityTool/yakPoC/utils"
+import {GroupCount} from "@/pages/securityTool/yakPoC/yakPoCType"
+import {onToManageGroup} from "@/pages/securityTool/yakPoC/yakPoC"
+import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -304,7 +308,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const {routeKeyToLabel} = props
 
     const [loading, setLoading] = useState(false)
-    const [tabMenuHeight, setTabMenuHeight] = useState<number>(0)
 
     const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, updatePagesDataCacheById} =
         usePageInfo(
@@ -325,8 +328,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     // 发送到专项漏洞检测modal-show变量
     const [bugTestShow, setBugTestShow] = useState<boolean>(false)
-    const [bugList, setBugList] = useState<BugInfoProps[]>([])
-    const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
+    const [bugList, setBugList] = useState<GroupCount[]>([])
+    const [bugTestValue, setBugTestValue] = useState<string>()
     const [bugUrl, setBugUrl] = useState<string>("")
 
     // 在组件启动的时候，执行一次，用于初始化服务端推送（DuplexConnection）
@@ -728,29 +731,33 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const {URL = ""} = res || {}
         if (type === 1 && URL) {
             setBugUrl(URL)
-            getLocalValue(CustomBugList)
-                .then((res: any) => {
-                    setBugList(res ? JSON.parse(res) : [])
+            apiQueryYakScriptGroup({All: false})
+                .then((res) => {
+                    setBugList(res.Group)
                     setBugTestShow(true)
                 })
-                .catch(() => {})
+                .catch((err) => yakitNotify("error", "获取插件组失败:" + err))
         }
         if (type === 2) {
-            const filter = pageCache.filter((item) => item.route === YakitRoute.PoC)
-            if (filter.length === 0) {
-                openMenuPage({route: YakitRoute.PoC})
-                setTimeout(() => {
-                    ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
-                    setBugTestValue([])
-                    setBugUrl("")
-                }, 300)
-            } else {
-                ipcRenderer.invoke("send-to-bug-test", {type: bugTestValue, data: bugUrl})
-                setCurrentTabKey(YakitRoute.PoC)
-                setBugTestValue([])
+            openMenuPage(
+                {route: YakitRoute.PoC},
+                {
+                    pageParams: {
+                        pocPageInfo: {
+                            selectGroup: bugTestValue ? [bugTestValue] : [],
+                            formValue: {
+                                Targets: {
+                                    ...cloneDeep(defPluginBatchExecuteExtraFormValue),
+                                    Input: bugUrl ? JSON.parse(bugUrl).join(",") : ""
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+            setBugTestValue("")
                 setBugUrl("")
             }
-        }
     })
     const addYakRunning = useMemoizedFn((res: any) => {
         const {name = "", code = ""} = res || {}
@@ -1016,6 +1023,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.Space_Engine:
                             onSetSpaceEngineData(node, order)
                             break
+                        case YakitRoute.PoC:
+                            onSetPocData(node, order)
+                            break
                         default:
                             break
                     }
@@ -1033,6 +1043,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.Space_Engine:
                             onSetSpaceEngineData(node, 1)
+                            break
+                        case YakitRoute.PoC:
+                            onSetPocData(node, 1)
                             break
                         default:
                             break
@@ -1582,6 +1595,25 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         addPagesDataCache(YakitRoute.Space_Engine, newPageNode)
     })
+    /**
+     * @description 设置专项漏洞
+     */
+    const onSetPocData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.PoC,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                pocPageInfo: {
+                    ...node.pageParams?.pocPageInfo
+                }
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.PoC, newPageNode)
+    })
     // 新增数据对比页面
     useEffect(() => {
         ipcRenderer.on("main-container-add-compare", (e, params) => {
@@ -1618,7 +1650,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 visible={bugTestShow}
                 onCancel={() => setBugTestShow(false)}
                 onOk={() => {
-                    if ((bugTestValue || []).length === 0) return yakitNotify("error", "请选择类型后再次提交")
+                    if (!bugTestValue) {
+                        yakitNotify("error", "请选择类型后再次提交")
+                        return
+                    }
                     addBugTest(2)
                     setBugTestShow(false)
                 }}
@@ -1628,28 +1663,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 bodyStyle={{padding: 0}}
             >
                 <div style={{padding: "0 24px"}}>
-                    <Form.Item label='专项漏洞类型'>
+                    <Form.Item
+                        label='专项漏洞类型'
+                        help={
+                            bugList.length === 0 && (
+                                <span className={styles["bug-test-help"]}>
+                                    点击管理分组新建分组
+                                    <span className={styles["bug-test-help-active"]} onClick={onToManageGroup}>
+                                        管理分组
+                                    </span>
+                                </span>
+                            )
+                        }
+                    >
                         <YakitSelect
                             allowClear={true}
                             onChange={(value, option: any) => {
-                                const {record} = option
-                                setBugTestValue(
-                                    value
-                                        ? [
-                                              {
-                                                  filter: record?.filter,
-                                                  key: record?.key,
-                                                  title: record?.title
-                                              }
-                                          ]
-                                        : []
-                                )
+                                setBugTestValue(value)
                             }}
-                            value={(bugTestValue || [])[0]?.key}
+                            value={bugTestValue}
                         >
-                            {(BugList.concat(bugList) || []).map((item) => (
-                                <YakitSelect.Option key={item.key} value={item.key} record={item}>
-                                    {item.title}
+                            {bugList.map((item) => (
+                                <YakitSelect.Option key={item.Value} value={item.Value}>
+                                    {item.Value}
                                 </YakitSelect.Option>
                             ))}
                         </YakitSelect>

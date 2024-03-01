@@ -1,4 +1,8 @@
-export interface YakPoCProps {}
+import { HybridScanControlAfterRequest } from "@/models/HybridScan"
+
+export interface YakPoCProps {
+    pageId:string
+}
 
 export interface PluginGroupGridProps {
     hidden: boolean
@@ -13,6 +17,7 @@ export interface YakPoCExecuteContentProps {
     /**选择的插件组列表 */
     selectGroupList: string[]
     setSelectGroupList: (s: string[]) => void
+    defaultFormValue?:HybridScanControlAfterRequest
 }
 
 export interface GroupCount {

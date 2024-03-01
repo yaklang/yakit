@@ -106,7 +106,7 @@ export interface YakBatchExecutorsProp {
     verbose?: string
     sendTarget?: string
 }
-
+/**@deprecated 已下架择日删除 */
 export const YakBatchExecutors: React.FC<YakBatchExecutorsProp> = (props) => {
     const [tabList, setTabList] = useState<BugInfoProps[]>([
         {

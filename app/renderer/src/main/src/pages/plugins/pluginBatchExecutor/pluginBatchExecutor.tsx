@@ -455,6 +455,7 @@ export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
     onStopExecute: () => void
     onStartExecute: () => void
+    onInitInputValue:(v:string)=>void
 }
 export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
@@ -472,7 +473,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         .catch((e) => {
                             setIsExpand(true)
                         })
-                }
+                },
+                onInitInputValue
             }),
             [form]
         )

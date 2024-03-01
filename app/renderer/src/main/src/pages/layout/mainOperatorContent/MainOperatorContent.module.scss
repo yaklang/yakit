@@ -636,6 +636,17 @@ $keyColor: map-keys($colors);
     }
 }
 
+.bug-test-help {
+    font-size: 12px;
+    color: var(--yakit-helper-text-color);
+    line-height: 16px;
+    &-active {
+        color: var(--yakit-primary-5);
+        cursor: pointer;
+        margin-left: 4px;
+    }
+}
+
 @keyframes showActive {
     0% {
         opacity: 0.5;
