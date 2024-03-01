@@ -1,4 +1,5 @@
 import { HybridScanControlAfterRequest } from "@/models/HybridScan"
+import { GroupCount } from "@/pages/invoker/schema"
 
 export interface YakPoCProps {
     pageId:string
@@ -20,11 +21,6 @@ export interface YakPoCExecuteContentProps {
     defaultFormValue?:HybridScanControlAfterRequest
 }
 
-export interface GroupCount {
-    Value: string
-    Total: number
-    Default: boolean
-}
 export interface PluginGroupGridItemProps {
     item: GroupCount
     selected:boolean

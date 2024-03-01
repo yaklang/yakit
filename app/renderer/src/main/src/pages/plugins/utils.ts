@@ -1261,7 +1261,6 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
                 )
                 .then(() => {
                     info(`启动成功,任务ID: ${token}`)
-                    console.log('HybridScan',executeParams)
                     // send target / plugin
                     ipcRenderer.invoke("HybridScan", executeParams, token).then(() => {
                         info("发送扫描目标与插件成功")

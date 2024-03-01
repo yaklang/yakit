@@ -1,14 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
-import {
-    GroupCount,
-    PluginGroupGridItemProps,
-    PluginGroupGridProps,
-    YakPoCExecuteContentProps,
-    YakPoCProps
-} from "./yakPoCType"
+import {PluginGroupGridItemProps, PluginGroupGridProps, YakPoCExecuteContentProps, YakPoCProps} from "./yakPoCType"
 import classNames from "classnames"
 import styles from "./yakPoC.module.scss"
-import {FuncSearch} from "@/pages/plugins/funcTemplate"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Divider} from "antd"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -28,17 +21,18 @@ import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecute
 import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineCogIcon} from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {FolderColorIcon} from "@/assets/icon/colors"
-import {QueryYakScriptGroupResponse, apiQueryYakScriptGroup} from "./utils"
-import {yakitNotify} from "@/utils/notification"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
+import {GroupCount} from "@/pages/invoker/schema"
+import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
+import emiter from "@/utils/eventBus/eventBus"
 
 export const onToManageGroup = () => {
-    yakitNotify("info", "开发中...")
+    emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
 }
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
@@ -93,15 +87,11 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
     const [keywords, setKeywords] = useState<string>("")
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    const [response, setResponse] = useState<QueryYakScriptGroupResponse>({
-        Group: []
-    })
+    const [response, setResponse] = useState<GroupCount[]>([])
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
     const pluginGroupGridRef = useRef<HTMLDivElement>(null)
-    const initialResponseRef = useRef<QueryYakScriptGroupResponse>({
-        Group: []
-    }) // 用来做搜索
+    const initialResponseRef = useRef<GroupCount[]>([]) // 用来做搜索
     const [inViewport = true] = useInViewport(pluginGroupGridRef)
 
     useEffect(() => {
@@ -110,7 +100,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
 
     const getQueryYakScriptGroup = useMemoizedFn(() => {
         setLoading(true)
-        apiQueryYakScriptGroup({All: false})
+        apiFetchQueryYakScriptGroupLocal(false)
             .then((res) => {
                 setResponse(res)
                 initialResponseRef.current = res
@@ -126,20 +116,20 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         if (isExist) {
             const newList = selectGroupList.filter((ele) => ele !== val.Value)
             setSelectGroupList(newList)
-            setAllCheck(newList.length === response.Group.length)
+            setAllCheck(newList.length === response.length)
         } else {
             const newList = [...selectGroupList, val.Value]
             setSelectGroupList(newList)
-            setAllCheck(newList.length === response.Group.length)
+            setAllCheck(newList.length === response.length)
         }
     })
     const total = useCreation(() => {
-        return response.Group.length
-    }, [response.Group])
+        return response.length
+    }, [response])
     const indeterminate: boolean = useCreation(() => {
-        if (selectGroupList.length > 0 && selectGroupList.length !== response.Group.length) return true
+        if (selectGroupList.length > 0 && selectGroupList.length !== response.length) return true
         return false
-    }, [selectGroupList, response.Group])
+    }, [selectGroupList, response])
     const onClearSelect = useMemoizedFn(() => {
         setSelectGroupList([])
         setAllCheck(false)
@@ -147,7 +137,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
     const onSelectAll = useMemoizedFn((e) => {
         const {checked} = e.target
         if (checked) {
-            setSelectGroupList(response.Group.map((ele) => ele.Value))
+            setSelectGroupList(response.map((ele) => ele.Value))
         } else {
             setSelectGroupList([])
         }
@@ -157,10 +147,10 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         onSearch(e.target.value)
     })
     const onSearch = useMemoizedFn((val) => {
-        const searchData = initialResponseRef.current.Group.filter((ele) => {
+        const searchData = initialResponseRef.current.filter((ele) => {
             return ele.Value.includes(val)
         })
-        setResponse({Group: searchData})
+        setResponse([...searchData])
         setAllCheck(false)
         setSelectGroupList([])
     })
@@ -208,7 +198,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     </div>
                 </div>
             </div>
-            {initialResponseRef.current.Group.length === 0 ? (
+            {initialResponseRef.current.length === 0 ? (
                 <div className={styles["yak-poc-empty"]}>
                     <YakitEmpty title='暂无数据' description='可一键获取默认分组与插件,或点击管理分组手动新建' />
                     <div className={styles["yak-poc-buttons"]}>
@@ -226,7 +216,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                 </div>
             ) : (
                 <RollingLoadList<GroupCount>
-                    data={response.Group}
+                    data={response}
                     loadMoreData={() => {}}
                     renderRow={(rowData: GroupCount, index: number) => {
                         const checked = selectGroupList.includes(rowData.Value)

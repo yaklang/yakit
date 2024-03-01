@@ -52,7 +52,7 @@ import {useStore} from "@/store"
 import {getLocalValue, getRemoteProjectValue, getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {BugInfoProps, BugList, CustomBugList} from "@/pages/invoker/batch/YakBatchExecutors"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
-import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
+import {GroupCount, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -87,10 +87,9 @@ import {RemoteGV} from "@/yakitGV"
 import {PageNodeItemProps, PageProps, defPage, usePageInfo} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
-import {apiQueryYakScriptGroup} from "@/pages/securityTool/yakPoC/utils"
-import {GroupCount} from "@/pages/securityTool/yakPoC/yakPoCType"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/yakPoC"
 import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
+import { apiFetchQueryYakScriptGroupLocal } from "@/pages/plugins/utils"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -731,9 +730,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const {URL = ""} = res || {}
         if (type === 1 && URL) {
             setBugUrl(URL)
-            apiQueryYakScriptGroup({All: false})
+            apiFetchQueryYakScriptGroupLocal(false)
                 .then((res) => {
-                    setBugList(res.Group)
+                    setBugList(res)
                     setBugTestShow(true)
                 })
                 .catch((err) => yakitNotify("error", "获取插件组失败:" + err))
