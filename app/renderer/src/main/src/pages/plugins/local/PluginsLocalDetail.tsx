@@ -45,6 +45,15 @@ const {ipcRenderer} = window.require("electron")
 
 const {TabPane} = PluginTabs
 
+/**转换group参数*/
+export const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+    const realFilters: PluginFilterParams = {
+        ...filter,
+        plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+    }
+    return realFilters
+}
+
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
     const {
         pageWrapId = "",
@@ -251,14 +260,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 })
         })
     })
-    /**转换group参数*/
-    const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
-        const realFilters: PluginFilterParams = {
-            ...filter,
-            plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
-        }
-        return realFilters
-    }
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
         setFilters(value)
         onDetailSearch(search, value)
