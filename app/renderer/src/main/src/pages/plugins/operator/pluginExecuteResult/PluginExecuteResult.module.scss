@@ -11,7 +11,16 @@
         @extend %display-column-center;
         gap: 12px;
     }
+    .table-renderTitle {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 14px 12px 10px;
 
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px; /* 133.333% */
+    }
     .plugin-execute-result-tabBar {
         display: inline-block;
         margin-left: 4px;
