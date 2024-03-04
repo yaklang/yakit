@@ -317,6 +317,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                             }
                         }}
                         onCancel={() => m.destroy()}
+                        isCanInput={false}
                     />
                 </div>
             )
