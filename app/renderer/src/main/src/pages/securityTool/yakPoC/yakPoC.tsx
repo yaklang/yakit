@@ -148,7 +148,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
     })
     const onSearch = useMemoizedFn((val) => {
         const searchData = initialResponseRef.current.filter((ele) => {
-            return ele.Value.includes(val)
+            return ele.Value.toUpperCase().includes(val.toUpperCase())
         })
         setResponse([...searchData])
         setAllCheck(false)
