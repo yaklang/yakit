@@ -71,6 +71,28 @@ function NewApp() {
     /** 私有域是否设置成功 */
     const [onlineProfileStatus, setOnlineProfileStatus] = useState<boolean>(false)
 
+    useEffect(() => {
+        // 错误信息收集监听逻辑
+        const unhandledrejectionError = (e) => {
+            const content = e?.reason?.stack || ""
+            if (content) ipcRenderer.invoke("render-error-log", content)
+        }
+        const errorLog = (err) => {
+            const content = err?.error?.stack || ""
+            if (content) ipcRenderer.invoke("render-error-log", content)
+        }
+        ipcRenderer.invoke("is-dev").then((flag: boolean) => {
+            if (!flag) {
+                window.addEventListener("unhandledrejection", unhandledrejectionError)
+                window.addEventListener("error", errorLog)
+            }
+        })
+        return () => {
+            window.removeEventListener("unhandledrejection", unhandledrejectionError)
+            window.removeEventListener("error", errorLog)
+        }
+    }, [])
+
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
     const coordinateTimer = useRef<any>(null)
     useEffect(() => {
@@ -94,7 +116,7 @@ function NewApp() {
     // 全局监听change事件 input & textrea 都去掉浏览器校验
     useEffect(() => {
         const handleInputEvent = (event) => {
-            const { target } = event
+            const {target} = event
             const isInput = target && (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)
             if (isInput) {
                 const spellCheck = target.getAttribute("spellCheck")
@@ -103,7 +125,7 @@ function NewApp() {
                 }
             }
         }
-        document.addEventListener('change', handleInputEvent)
+        document.addEventListener("change", handleInputEvent)
         return () => {
             document.removeEventListener("change", handleInputEvent)
         }
@@ -282,8 +304,7 @@ function NewApp() {
             // 关闭前的所有接口调用都放到allSettled里面
             try {
                 await Promise.allSettled([handleKillAllRunNode(), delTemporaryProject()])
-            } catch (error) {
-            }
+            } catch (error) {}
             // 通知应用退出
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")

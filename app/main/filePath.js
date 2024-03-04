@@ -94,8 +94,11 @@ const basicDir = path.join(YakitProjectPath, "base")
 const localCachePath = path.join(basicDir, "yakit-local.json")
 /** 本地缓存数据(扩展数据)文件地址 */
 const extraLocalCachePath = path.join(basicDir, "yakit-extra-local.json")
-/** 本地引擎启动日志 */
-const engineLog = path.join(basicDir, "engine.log")
+
+/** 引擎错误日志 */
+const engineLog = path.join(YakitProjectPath, "engine-log")
+/** 渲染端错误日志 */
+const renderLog = path.join(YakitProjectPath, "render-log")
 
 /** 远程连接配置信息储存文件夹 */
 const remoteLinkDir = path.join(YakitProjectPath, "auth")
@@ -125,6 +128,7 @@ module.exports = {
     localCachePath,
     extraLocalCachePath,
     engineLog,
+    renderLog,
 
     remoteLinkDir,
     remoteLinkFile,

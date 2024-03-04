@@ -262,5 +262,8 @@ module.exports = {
 
         // new plugins store
         require("./handlers/plugins")(win, getClient)
+
+        // render-error-log
+        require("./errorCollection")(win, getClient)
     }
 }

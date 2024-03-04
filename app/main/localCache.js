@@ -64,7 +64,7 @@ function setCloeseExtraLocalCache(key, value){
                 value.push({key: k, value: v})
             })
             value.sort((a, b) => `${a.key}`.localeCompare(`${b.key}`))
-            syncLocalCacheFile(type, JSON.stringify(value))
+            syncLocalCacheFile("extraCache", JSON.stringify(value))
         } catch (e) {
             console.info(e)
         } finally {

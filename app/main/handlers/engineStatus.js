@@ -6,10 +6,13 @@ const {testRemoteClient} = require("../ipc")
 const {getLocalYaklangEngine, engineLog, YakitProjectPath} = require("../filePath")
 const net = require("net")
 const fs = require("fs")
+const path = require("path")
+const { getNowTime } = require("../toolsFunc")
 
-/** 本地引擎启动日志 */
+/** 引擎错误日志 */
+const logPath = path.join(engineLog, `engine-log-${getNowTime()}.txt`)
 let out = null
-fs.open(engineLog, "a", (err, fd) => {
+fs.open(logPath, "a", (err, fd) => {
     if (err) {
         console.log("获取本地引擎日志错误：", err)
     } else {
@@ -46,20 +49,20 @@ function isPortOpen(port) {}
 const isWindows = process.platform === "win32"
 
 /** @name 生成windows系统的管理员权限命令 */
-function generateWindowsSudoCommand(file, args) {
-    const cmds = args === "" ? `"'${file}'"` : `"'${file}'" "'${args}'"`
-    return `powershell.exe start-process -verb runas -WindowStyle hidden -filepath ${cmds}`
-}
+// function generateWindowsSudoCommand(file, args) {
+//     const cmds = args === "" ? `"'${file}'"` : `"'${file}'" "'${args}'"`
+//     return `powershell.exe start-process -verb runas -WindowStyle hidden -filepath ${cmds}`
+// }
 /** @name 以管理员权限执行命令 */
-function sudoExec(cmd, opt, callback) {
-    if (isWindows) {
-        childProcess.exec(cmd, {maxBuffer: 1000 * 1000 * 1000}, (err, stdout, stderr) => {
-            callback(err)
-        })
-    } else {
-        _sudoPrompt.exec(cmd, {...opt, env: {YAKIT_HOME: YakitProjectPath}}, callback)
-    }
-}
+// function sudoExec(cmd, opt, callback) {
+//     if (isWindows) {
+//         childProcess.exec(cmd, {maxBuffer: 1000 * 1000 * 1000}, (err, stdout, stderr) => {
+//             callback(err)
+//         })
+//     } else {
+//         _sudoPrompt.exec(cmd, {...opt, env: {YAKIT_HOME: YakitProjectPath}}, callback)
+//     }
+// }
 
 const engineStdioOutputFactory = (win) => (buf) => {
     if (win) {
@@ -81,18 +84,6 @@ module.exports = (win, callback, getClient, newClient) => {
     const toStdout = engineStdioOutputFactory(win)
     // 输出到日志中
     const toLog = engineLogOutputFactory(win)
-    // 异步执行 Echo
-    const asyncEcho = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().Echo(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
 
     /** 获取本地引擎版本号 */
     ipcMain.handle("fetch-yak-version", () => {

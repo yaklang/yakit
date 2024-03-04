@@ -612,21 +612,6 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamDuplexConnectionMap, token)
     })
 
-    const asyncInspectYaklangInformation = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().YaklangInspectInformation(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    ipcMain.handle("YaklangInspectInformation", async (e, params) => {
-        return await asyncInspectYaklangInformation(params)
-    })
-
     // asyncGetSpaceEngineStatus wrapper
     const asyncGetSpaceEngineStatus = (params) => {
         return new Promise((resolve, reject) => {
