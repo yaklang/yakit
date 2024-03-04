@@ -241,16 +241,16 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const rulesRangeList = useCreation(() => {
         return [
             {
-                label: "URI",
-                value: "EnableForURI"
-            },
-            {
                 label: "请求",
                 value: "EnableForRequest"
             },
             {
                 label: "响应",
                 value: "EnableForResponse"
+            },
+            {
+                label: "URI",
+                value: "EnableForURI"
             },
             {
                 label: "Header",
@@ -424,8 +424,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         record[item.value] = checked
         const first = item.value === "EnableForRequest" || item.value === "EnableForResponse"
         const firstChecked = record["EnableForRequest"] || record["EnableForResponse"]
-        const second = item.value === "EnableForHeader" || item.value === "EnableForBody"
-        const secondChecked = record["EnableForHeader"] || record["EnableForBody"]
+        const second = item.value === "EnableForHeader" || item.value === "EnableForBody" || item.value === "EnableForURI"
+        const secondChecked = record["EnableForHeader"] || record["EnableForBody"] || record["EnableForURI"]
         // 请求和响应其中一个为true,那么 Header和Body必须要选中一个
         // 请求和响应都为false,那么 Header和Body都为 false
         if (first) {
@@ -433,10 +433,12 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 if (!secondChecked) {
                     record["EnableForHeader"] = true
                     record["EnableForBody"] = true
+                    record["EnableForURI"] = true
                 }
             } else {
                 record["EnableForHeader"] = false
                 record["EnableForBody"] = false
+                record["EnableForURI"] = false
             }
         }
         if (second) {
