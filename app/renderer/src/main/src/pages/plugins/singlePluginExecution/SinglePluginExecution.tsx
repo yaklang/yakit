@@ -1,7 +1,7 @@
 import React, {useEffect, useReducer, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {PluginDetailsTab} from "../local/PluginsLocalDetail"
+import {PluginDetailsTab, convertGroupParam} from "../local/PluginsLocalDetail"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
@@ -18,10 +18,12 @@ import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors
 import cloneDeep from "lodash/cloneDeep"
 import "../plugins.scss"
 import {yakitNotify} from "@/utils/notification"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const {yakScriptId} = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
     const [loading, setLoading] = useState<boolean>(false)
     const [pluginLoading, setPluginLoading] = useState<boolean>(true)
     const [plugin, setPlugin] = useState<YakScript>()
@@ -76,7 +78,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                       limit: +response.Pagination.Limit || 20
                   }
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams({plugin_type: [], tags: []}, search, params),
+                ...convertLocalPluginsRequestParams(filters, search, params),
                 Type: pluginTypeRef.current
             }
             try {
@@ -186,12 +188,40 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     const checkList = useCreation(() => {
         return selectList.map((ele) => ele.ScriptName)
     }, [selectList])
+    /**选中组 */
+    const selectGroup = useCreation(() => {
+        const group: YakFilterRemoteObj[] =
+            filters?.plugin_group?.map((item) => ({
+                name: item.value,
+                total: item.count
+            })) || []
+        return group
+    }, [filters])
+    const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+        setFilters(value)
+        setAllCheck(false)
+        setSelectList([])
+        setTimeout(() => {
+            fetchList(true)
+        }, 100)
+    })
     if (!plugin) return null
     return (
         <>
             <PluginDetails<YakScript>
                 title={plugin.ScriptName}
-                filterNode={<></>}
+                filterNode={
+                    <>
+                        <PluginGroup
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                        />
+                        <TagsAndGroupRender
+                            selectGroup={selectGroup}
+                            setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                        />
+                    </>
+                }
                 rightHeardNode={<></>}
                 filterExtra={
                     <div className={"filter-extra-wrapper"} ref={singlePluginExecutionRef}>
