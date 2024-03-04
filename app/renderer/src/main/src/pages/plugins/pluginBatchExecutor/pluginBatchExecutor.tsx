@@ -594,7 +594,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                     newPluginInfo.selectPluginName = []
                 }
             }
-            if (newPluginInfo.selectPluginName.length === 0) return
+            // if (newPluginInfo.selectPluginName.length === 0) return
             const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(
                 params,
                 newPluginInfo,
