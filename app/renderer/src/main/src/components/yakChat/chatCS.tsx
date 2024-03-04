@@ -58,7 +58,8 @@ import {
     ChatCSSingleInfoProps,
     ChatInfoProps,
     ChatMeInfoProps,
-    ChatPluginListProps
+    ChatPluginListProps,
+    LoadObjProps
 } from "./chatCSType"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
@@ -74,7 +75,7 @@ import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import {OutlineInformationcircleIcon, OutlinePaperairplaneIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {
     SolidCheckCircleIcon,
     SolidPlayIcon,
@@ -117,7 +118,7 @@ import {addToTab} from "@/pages/MainTabs"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
-import {SettingOutlined} from "@ant-design/icons"
+import {CheckOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 const {ipcRenderer} = window.require("electron")
 
@@ -134,11 +135,6 @@ export interface YakChatCSProps {
 export interface ScriptsProps {
     script_name: string
     Fields: YakParamProps[]
-}
-
-export interface LoadObjProps {
-    result: string
-    id: string
 }
 
 export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
@@ -190,15 +186,15 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         return +width - 40 > 448 ? 448 : +width - 40
     }, [width])
 
-    const [expand,setExpand] = useState<boolean>(true)
-    useEffect(()=>{
-        if(Math.abs(window.innerWidth*0.95 - width)<=1){
+    const [expand, setExpand] = useState<boolean>(true)
+    useEffect(() => {
+        if (Math.abs(window.innerWidth * 0.95 - width) <= 1) {
             setExpand(false)
         }
-        if(width<=481){
+        if (width <= 481) {
             setExpand(true)
         }
-    },[width])
+    }, [width])
 
     const [history, setHistroy] = useState<CacheChatCSProps[]>([])
     const [active, setActive] = useState<string>("")
@@ -223,6 +219,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         const lists: CacheChatCSProps = {
             token: randomString(10),
             name: `临时对话窗-${randomString(4)}`,
+            isRename: false,
             is_bing: isBing,
             is_plugin: isPlugin,
             history: [],
@@ -426,19 +423,18 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const analysisFlowData: (flow: string) => ChatCSAnswerProps | undefined = useMemoizedFn((flow) => {
         const objects: ChatCSAnswerProps[] = []
         let answer: ChatCSAnswerProps | undefined = undefined
-        let loadObj:any = undefined
-        // 获取加载中的字符
-        flow.split("state:")
-        .filter((item) => item.length !== 0)
-        .forEach((itemIn,indexIn) => {
+        let loadObj: LoadObjProps[] = []
+        // 获取加载中的字符 使用正则表达式匹配
+        const regex = /state:\{([^}]+)\}/g
+        let match
+        while ((match = regex.exec(flow)) !== null) {
             try {
-                if(indexIn===0){
-                    loadObj = JSON.parse(itemIn) as LoadObjProps
-                }
+                loadObj.push(JSON.parse(`{${match[1]}}`) as LoadObjProps)
             } catch (error) {}
-        })
-        if(loadObj){
-            answer = {id:loadObj.id,role:"",result:"",loadResult:loadObj.result}
+        }
+
+        if (loadObj.length > 0) {
+            answer = {id: loadObj[loadObj.length - 1].id, role: "", result: "", loadResult: loadObj}
         }
         flow.split("data:")
             .filter((item) => item.length !== 0)
@@ -451,10 +447,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         objects.map((item, index) => {
             const {id = "", role = "", result = ""} = item
             resultAll += result
-            if (objects.length === index + 1) {
+            if (answer && objects.length === index + 1) {
+                answer = {...answer, id, role, result: resultAll}
+            }
+            if (!answer && objects.length === index + 1) {
                 answer = {id, role, result: resultAll}
             }
         })
+
         return answer
         // if (!flow) return undefined
         // const lastIndex = flow.lastIndexOf("data:")
@@ -504,7 +504,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 is_bing: params.is_bing,
                 is_plugin: params.is_plugin,
                 content: "",
-                id: ""
+                id: "",
+                load_content: [],
+                end: true
             }
             return await new Promise((resolve, reject) => {
                 chatCSPlugin({
@@ -561,9 +563,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 is_bing: params.is_bing,
                 is_plugin: params.is_plugin,
                 content: "",
-                id: ""
+                id: "",
+                load_content: [],
+                end: false
             }
-            let result:string = ""
+            let result: string = ""
             return await new Promise((resolve, reject) => {
                 chatCS({
                     ...params,
@@ -575,16 +579,19 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
                         let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
 
+                        // console.log("answer---", event.target.responseText, answer)
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
-                        if (answer && answer?.loadResult && answer.loadResult.length !== 0) {
-                            if (cs.content === answer.loadResult) return
+                        if (answer && answer.result.length !== 0) {
+                            if (cs.content === answer.result) return
                             if (!cs.id) cs.id = answer.id
-                            cs.content = answer.loadResult
-                            setContentList(cs, contents, group)
+                            cs.content = answer.result
                         }
-                        if(answer && answer.result.length !== 0){
-                            result = answer.result
+                        if (answer && answer?.loadResult && answer.loadResult.length !== 0) {
+                            if (JSON.stringify(cs.load_content) === JSON.stringify(answer.loadResult)) return
+                            if (!cs.id) cs.id = answer.id
+                            cs.load_content = answer.loadResult
                         }
+                        setContentList(cs, contents, group)
                     }
                 })
                     .then((res: any) => {
@@ -597,13 +604,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         //     cs.id = answer.id
                         //     setContentList(cs, contents, group)
                         // }
-                        /** 流式输出逻辑 */
-                        if (!cs.content) {
+
+                        // /** 流式输出逻辑 */
+                        if (cs.content.length === 0) {
                             cs.content = "暂无可用解答"
+                            cs.end = true
                             setContentList(cs, contents, group)
-                        }
-                        else{
-                            cs.content = result
+                        } else {
+                            cs.end = true
                             setContentList(cs, contents, group)
                         }
                         resolve(`${params.is_bing && "bing|"}success`)
@@ -611,6 +619,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     .catch((e) => {
                         if (!cs.content) {
                             cs.content = "该类型请求异常，请稍后重试"
+                            cs.end = true
                             setContentList(cs, contents, group)
                         }
                         resolve(`${params.is_bing && "bing|"}error|${e}`)
@@ -619,20 +628,31 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
     )
     const onSubmit = useMemoizedFn(async (info: ChatInfoProps) => {
+        // 缓存的会话历史名称
+        // @ts-ignore
+        const cacheName: string = (info.info?.content || info.info?.input || "临时对话窗").slice(0, 45)
         const group = [...history]
         const filterIndex = group.findIndex((item) => item.token === active)
+
         // 定位当前对话数据历史对象
         const lists: CacheChatCSProps =
             filterIndex > -1
                 ? group[filterIndex]
                 : {
                       token: randomString(10),
-                      name: `临时对话窗-${randomString(4)}`,
+                      name: `${cacheName}-${randomString(4)}`,
+                      isRename: true,
                       is_bing: isBing,
                       is_plugin: isPlugin,
                       history: [],
                       time: formatDate(+new Date())
                   }
+
+        // 如若未改名 则自动改为第一个问答
+        if (!lists.isRename) {
+            lists.isRename = true
+            lists.name = `${cacheName}-${randomString(4)}`
+        }
         lists.history.push(info)
         if (filterIndex === -1) group.push(lists)
         else lists.time = formatDate(+new Date())
@@ -868,6 +888,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             const info = {...item}
             if (info.token === editInfo?.token) {
                 info.name = name
+                info.isRename = true
                 info.time = formatDate(+new Date())
             }
             return info
@@ -971,7 +992,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     useUpdateEffect(() => {
         if (isShowPrompt) {
-            const maxWitdh = Math.floor(window.innerWidth*0.95)-1
+            const maxWitdh = Math.floor(window.innerWidth * 0.95) - 1
             setWidth(maxWitdh)
         }
     }, [isShowPrompt])
@@ -1000,7 +1021,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     setShowPrompt(false)
                 }
                 setWidth(elementRef.clientWidth)
-
             }}
         >
             <div ref={divRef} className={styles["yak-chat-layout"]}>
@@ -1044,17 +1064,16 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             <div
                                 className={classNames(styles["small-btn"], styles["btn-style"], styles["expand-icon"])}
                                 onClick={() => {
-                                    if(expand){
-                                        const maxWitdh = Math.floor(window.innerWidth*0.95)-1
+                                    if (expand) {
+                                        const maxWitdh = Math.floor(window.innerWidth * 0.95) - 1
                                         setWidth(maxWitdh)
-                                    }
-                                    else{
+                                    } else {
                                         setShowPrompt(false)
                                         setWidth(481)
                                     }
                                 }}
                             >
-                                {expand?<ArrowsExpandIcon />:<ArrowsRetractIcon />}
+                                {expand ? <ArrowsExpandIcon /> : <ArrowsRetractIcon />}
                             </div>
                             <div
                                 className={classNames(styles["big-btn"], styles["btn-style"], styles["close-icon"])}
@@ -1425,9 +1444,9 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
         overscan: 5
     })
 
-    useEffect(()=>{
-        setVListHeight(infoList.length>10?280:28*infoList.length)
-    },[infoList])
+    useEffect(() => {
+        setVListHeight(infoList.length > 10 ? 280 : 28 * infoList.length)
+    }, [infoList])
 
     const onDetail = useMemoizedFn(() => {
         let defaultActiveKey: string = ""
@@ -2025,7 +2044,27 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                             className={styles["content-type-title"]}
                                                         >{`# ${"插件调试执行"}`}</div>
                                                     )}
-                                                    <ChatMarkdown content={item.content} />
+                                                    {item.end ? (
+                                                        <ChatMarkdown content={item.content} />
+                                                    ) : (
+                                                        <div className={styles["load-content-box"]}>
+                                                            {item.load_content.map((itemIn, IndexIn) => (
+                                                                <div
+                                                                    className={styles["load-content-item"]}
+                                                                    key={IndexIn + itemIn.id + "load"}
+                                                                >
+                                                                    {IndexIn + 1 === item.load_content.length ? (
+                                                                        <YakChatLoading />
+                                                                    ) : (
+                                                                        <CheckOutlined
+                                                                            className={styles["load-content-check"]}
+                                                                        />
+                                                                    )}
+                                                                    <div>{itemIn.result}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </React.Fragment>
                                             )
                                         })}
@@ -2052,15 +2091,42 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                                 className={styles["content-type-title"]}
                                                             >{`# ${"插件调试执行"}`}</div>
                                                         )}
-                                                        {renderType === "plugin-list" ? (
-                                                            <PluginListContent
-                                                                setPluginRun={setPluginRun}
-                                                                onStartExecute={onStartExecute}
-                                                                data={item.content}
-                                                            />
-                                                        ) : (
-                                                            <ChatMarkdown content={item.content} />
-                                                        )}
+                                                        <>
+                                                            {item.end ? (
+                                                                <>
+                                                                    {renderType === "plugin-list" ? (
+                                                                        <PluginListContent
+                                                                            setPluginRun={setPluginRun}
+                                                                            onStartExecute={onStartExecute}
+                                                                            data={item.content}
+                                                                        />
+                                                                    ) : (
+                                                                        <ChatMarkdown content={item.content} />
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <div className={styles["load-content-box"]}>
+                                                                    {item.load_content.map((itemIn, IndexIn) => (
+                                                                        <div
+                                                                            className={styles["load-content-item"]}
+                                                                            key={IndexIn + itemIn.id + "load"}
+                                                                        >
+                                                                            {IndexIn + 1 ===
+                                                                            item.load_content.length ? (
+                                                                                <YakChatLoading />
+                                                                            ) : (
+                                                                                <CheckOutlined
+                                                                                    className={
+                                                                                        styles["load-content-check"]
+                                                                                    }
+                                                                                />
+                                                                            )}
+                                                                            <div>{itemIn.result}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </>
                                                     </React.Fragment>
                                                 )
                                             })}
@@ -2696,3 +2762,21 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
         </YakitModal>
     )
 })
+
+interface YakChatLoadingProps {}
+
+export const YakChatLoading: React.FC<YakChatLoadingProps> = (props) => {
+    return (
+        <div className={styles["yakit-chat-loading"]}>
+            <div>
+                <span></span>
+            </div>
+            <div>
+                <span></span>
+            </div>
+            <div>
+                <span></span>
+            </div>
+        </div>
+    )
+}
