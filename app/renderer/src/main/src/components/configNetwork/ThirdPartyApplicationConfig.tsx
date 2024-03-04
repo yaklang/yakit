@@ -6,16 +6,17 @@ import { DemoItemSelectOne } from "@/demoComponents/itemSelect/ItemSelect";
 import { DemoItemSwitch } from "@/demoComponents/itemSwitch/ItemSwitch";
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton";
 import { KVPair } from "@/models/kv";
-import { DefaultOptionType } from "antd/lib/select";
 import { SelectOptionsProps } from "@/demoComponents/itemSelect/ItemSelectType";
+import { DefaultOptionType } from "antd/lib/select";
 import { YakitAutoComplete } from "../yakitUI/YakitAutoComplete/YakitAutoComplete";
 import { KVPair } from "@/models/kv";
 
 export interface ThirdPartyApplicationConfigProp {
-    isCanInput?: boolean
     data?: ThirdPartyApplicationConfig
     onAdd: (i: ThirdPartyApplicationConfig) => void;
     onCancel:()=>void
+    /**是否可输入 @default true */
+    isCanInput?:boolean
 }
 
 export function getThirdPartyAppExtraParams(type: string) {
@@ -44,17 +45,18 @@ export function setThirdPartyAppExtraParamValue(config: ThirdPartyApplicationCon
 
 export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConfigProp> = (props) => {
     const {isCanInput = true} = props
-    const [existed, setExisted] = useState(props.data !== undefined)
+    const [existed, setExisted] = useState(props.data !== undefined);
     const [params, setParams] = useState<ThirdPartyApplicationConfig>(props?.data || {
         APIKey: "", Domain: "", Namespace: "", Type: "", UserIdentifier: "", UserSecret: "", WebhookURL: "", ExtraParams: [] as KVPair[],
     })
-    const [advanced, setAdvanced] = useState(false);
+    const [advanced, setAdvanced] = useState((params.ExtraParams?.length || 0) > 0 ? true : false);
     const [options, setOptions] = useState<DefaultOptionType[] | SelectOptionsProps[]>([
         {label: "ZoomEye", value: "zoomeye"},
         {label: "Shodan", value: "shodan"},
         {label: "Hunter", value: "hunter"},
         {label: "Quake", value: "quake"},
-        {label: "Fofa", value: "fofa"}
+        {label: "Fofa", value: "fofa"},
+        { label: "OpenAI", value: "openai" },
     ])
     return <Form
             layout={"horizontal"}
@@ -64,7 +66,7 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
             e.preventDefault()
         }}
     >
-            {isCanInput ? (
+         {isCanInput ? (
                 <Form.Item label={"类型"} required={true}>
                     <YakitAutoComplete
                         options={options}
@@ -83,7 +85,7 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
                     required={true}
                 />
             )}
-       <InputItem
+        <InputItem
             label={"API Key"}
             value={params.APIKey} setValue={val => setParams({ ...params, APIKey: val })}
             help={"APIKey / Token"} required={true}
