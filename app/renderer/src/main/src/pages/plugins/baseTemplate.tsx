@@ -166,7 +166,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
             <div className={classNames(styles["filter-wrapper"], {[styles["filter-hidden-wrapper"]]: hidden})}>
                 <div className={styles["filter-header"]}>
                     <div className={styles["header-search"]}>
-                        <div className={styles["title-style"]}>{title}</div>
+                        {title && <div className={styles["title-style"]}>{title}</div>}
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch.run} />
                     </div>
                     {filterNode || null}

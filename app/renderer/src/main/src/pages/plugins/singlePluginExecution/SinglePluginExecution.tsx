@@ -47,8 +47,8 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     const isLoadingRef = useRef<boolean>(true)
 
     useEffect(() => {
-        getPluginById()
-    }, [yakScriptId])
+        if (inViewport) getPluginById()
+    }, [inViewport, yakScriptId])
 
     useEffect(() => {
         if (inViewport) {
@@ -231,7 +231,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     return (
         <>
             <PluginDetails<YakScript>
-                title={plugin.ScriptName}
+                title=''
                 filterNode={
                     <>
                         <PluginGroup
