@@ -3,7 +3,7 @@ import {YakitPluginListOnlineResponse} from "./online/PluginsOnlineType"
 import {NetWorkApi, requestConfig} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {info, yakitNotify} from "@/utils/notification"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTraceAgent} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
 import {
     GetYakScriptGroupResponse,
@@ -23,14 +23,14 @@ import {pluginTypeToName} from "./builtInData"
 import {YakitRoute} from "@/routes/newRoute"
 import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
-import {HybridScanControlAfterRequest, HybridScanControlRequest} from "@/models/HybridScan"
+import {HybridScanControlAfterRequest, HybridScanControlRequest, HybridScanPluginConfig} from "@/models/HybridScan"
 import {
     PluginBatchExecutorTaskProps,
     defPluginBatchExecuteExtraFormValue
 } from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch} from "./baseTemplate"
-import { PluginGroupList } from "./local/PluginsLocalType"
+import {PluginGroupList} from "./local/PluginsLocalType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,7 +45,10 @@ export interface ExcludeNoExistfilter {
     realFilter: PluginFilterParams
     updateFilterFlag: boolean
 }
-export const excludeNoExistfilter = (oldfilters: PluginFilterParams, newfilters: PluginGroupList[]): ExcludeNoExistfilter => {
+export const excludeNoExistfilter = (
+    oldfilters: PluginFilterParams,
+    newfilters: PluginGroupList[]
+): ExcludeNoExistfilter => {
     let updateFilterFlag = false
     let realFilter: PluginFilterParams = structuredClone(oldfilters)
     Object.keys(oldfilters).forEach((key) => {
@@ -245,7 +248,9 @@ export const apiFetchCheckList: (query: PluginsQueryProps) => Promise<YakitPlugi
 }
 
 /**线上插件左侧统计接口基础版 */
-export const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (query) => {
+export const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (
+    query
+) => {
     return new Promise((resolve, reject) => {
         try {
             PluginNetWorkApi<API.PluginsSearchRequest, API.PluginsSearchResponse>({
@@ -335,7 +340,7 @@ export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) =>
             apiFetchGroupStatistics(newQuery)
                 .then((res: API.PluginsSearchResponse) => {
                     // 插件类型、Tag、审核状态 插件分组
-                    const newData = (res.data || [])
+                    const newData = res.data || []
                     resolve({
                         ...res,
                         data: newData
@@ -424,7 +429,8 @@ export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Pr
         ipcRenderer
             .invoke("DownloadOnlinePluginBatch", query)
             .then((res) => {
-                ipcRenderer.invoke("change-main-menu")
+                if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
+                else ipcRenderer.invoke("change-main-menu")
                 // 插件商店、我的插件、插件管理页面 下载插件后需要更新 本地插件列表
                 emiter.emit("onRefLocalPluginList", "")
                 resolve(res)
@@ -803,7 +809,8 @@ export const apiDeleteYakScriptByIds: (query: DeleteYakScriptRequestByIdsProps) 
             ipcRenderer
                 .invoke("DeleteLocalPluginsByWhere", newQuery)
                 .then(() => {
-                    ipcRenderer.invoke("change-main-menu")
+                    if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
+                    else ipcRenderer.invoke("change-main-menu")
                     resolve(null)
                 })
                 .catch((e: any) => {
@@ -840,7 +847,7 @@ export const convertDeleteLocalPluginsByWhereRequestParams = (
         // filter
         Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
         Tags: (filter.tags?.map((ele) => ele.value) || []).join(","),
-        Groups: (filter.plugin_group?.map((ele) => ele.value) || []),
+        Groups: filter.plugin_group?.map((ele) => ele.value) || []
     }
     return toolDelInvalidKV(data)
 }
@@ -853,7 +860,8 @@ export const apiDeleteLocalPluginsByWhere: (query: DeleteLocalPluginsByWhereRequ
             ipcRenderer
                 .invoke("DeleteLocalPluginsByWhere", query)
                 .then(() => {
-                    ipcRenderer.invoke("change-main-menu")
+                    if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
+                    else ipcRenderer.invoke("change-main-menu")
                     resolve(null)
                 })
                 .catch((e: any) => {
@@ -1032,6 +1040,12 @@ export interface DebugPluginRequest {
     Input: string
     HTTPRequestTemplate: HTTPRequestBuilderParams
     ExecParams: KVPair[]
+    /**插件UI联动相关参数*/
+    LinkPluginConfig?: HybridScanPluginConfig
+}
+export const defaultLinkPluginConfig = {
+    PluginNames: [],
+    Filter: undefined
 }
 /**
  * @description 本地插件详情执行方法
@@ -1151,12 +1165,20 @@ export const convertHybridScanParams = (
                 selectPluginName.length > 0
                     ? undefined
                     : {
-                          // search
-                          Keyword: search.type === "keyword" ? search.keyword : "",
-                          UserName: search.type === "userName" ? search.userName : "",
-                          Type: pluginType,
-                          /* Pagination is ignore for hybrid scan */
-                          Pagination: genDefaultPagination()
+                          //   /* Pagination is ignore for hybrid scan */
+                          //   Pagination: genDefaultPagination()
+                          ...convertLocalPluginsRequestParams(
+                              {
+                                  plugin_type: [
+                                      {
+                                          label: pluginType,
+                                          value: pluginType,
+                                          count: 0
+                                      }
+                                  ]
+                              },
+                              search
+                          )
                       }
         },
         Targets: {
