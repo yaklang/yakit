@@ -264,7 +264,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                     label: "丢弃该 HTTP Response"
                 }
             ]
-            if (currentIsWebsocket) {
+            if (currentIsWebsocket && status !== "hijacking") {
                 menu.push({
                     key: "send-to-web-socket",
                     label: "发送到 WebSocket"
@@ -339,7 +339,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             ]
 
-            if (currentIsWebsocket) {
+            if (currentIsWebsocket && status !== "hijacking") {
                 menu.push({
                     key: "send-to-web-socket",
                     label: "发送到 WebSocket"
@@ -385,7 +385,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             }
         }
-    }, [forResponse, isHttp, currentIsWebsocket])
+    }, [forResponse, isHttp, currentIsWebsocket, status])
     return (
         <NewHTTPPacketEditor
             originValue={currentPacket}
