@@ -164,6 +164,8 @@
 }
 // -------------------- FuncSearch ↓↓↓ --------------------
 .func-search-wrapper {
+    display: flex;
+    flex: 1;
     .search-body {
         display: block;
     }
