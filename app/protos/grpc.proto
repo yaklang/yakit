@@ -1186,6 +1186,7 @@ message DebugPluginRequest {
   string Input = 3;
   HTTPRequestBuilderParams HTTPRequestTemplate = 4;
   repeated KVPair ExecParams = 5;
+  HybridScanPluginConfig LinkPluginConfig = 6;
 }
 
 message HTTPRequestBuilderResult {
