@@ -718,7 +718,7 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                                             status={selectStatus}
                                         >
                                             <YakitSelect.Option value='mitm'>MITM</YakitSelect.Option>
-                                            <YakitSelect.Option value='port_scan'>端口扫描</YakitSelect.Option>
+                                            <YakitSelect.Option value='port-scan'>端口扫描</YakitSelect.Option>
                                         </YakitSelect>
                                         {selectStatus === "error" && (
                                             <span className={styles["switch-text-error"]}>联动插件类型必填</span>
