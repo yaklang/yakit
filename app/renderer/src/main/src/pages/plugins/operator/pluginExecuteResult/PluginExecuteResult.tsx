@@ -137,7 +137,6 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 })
 const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo((props) => {
     const {runtimeId} = props
-    const [total, setTotal] = useState<number>(0)
     const [params, setParams] = useState<QueryPortsRequest>({
         ...cloneDeep(defQueryPortsRequest),
         RuntimeId: runtimeId
@@ -152,14 +151,6 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
         <PortTable
             query={params}
             setQuery={setParams}
-            tableTitle={
-                <div className={styles["plugin-execute-port-table"]}>
-                    <span>开放端口 / Open Ports</span>
-                    <span className={styles["table-title"]}>
-                        Total<span className={styles["table-title-number"]}>{total}</span>
-                    </span>
-                </div>
-            }
             tableTitleExtraOperate={
                 <>
                     <YakitButton type='primary' icon={<SolidViewgridIcon />} size='small' onClick={onJumpPort}>
@@ -169,7 +160,6 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
             }
             containerClassName={styles["plugin-execute-port-table-container"]}
             btnSize='small'
-            setTotal={setTotal}
             detailBodyClassName={styles["plugin-execute-port-table-detail-body"]}
         />
     )

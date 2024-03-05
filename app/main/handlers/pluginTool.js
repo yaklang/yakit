@@ -252,7 +252,6 @@ module.exports = (win, getClient) => {
         return await asyncDeleteLocalPluginsByWhere(params)
     })
 
-
     const asyncQueryYakScriptGroup = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryYakScriptGroup(params, (err, data) => {

@@ -471,7 +471,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         onChange,
         help,
         showDefHelp,
-        fileLimit = 500,
+        fileLimit = 1024,
         valueSeparator = ",",
         ...restProps
     } = props
@@ -518,6 +518,19 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
             </Spin>
         )
     })
+    /**符合条件的文件，读取文件内容 */
+    const onHandlerFile = useMemoizedFn((item: {size: number; path: string}) => {
+        if (item.size / 1024 > fileLimit) {
+            yakitNotify("error", `文件大小不能超过${fileLimit}KB`)
+            return
+        }
+        const path = item.path.replace(/\\/g, "\\")
+        if (isAcceptEligible(path, props.accept || ".*")) {
+            onGetContent(path)
+        } else {
+            yakitNotify("error", "文件类型不支持")
+        }
+    })
     /**拖拽文件后的处理 */
     const afterFileDrop = useMemoizedFn((e) => {
         if (disabled) return
@@ -528,16 +541,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         }
         if (filesLength > 0) {
             const item = files[0]
-            if (item.size / 1024 > fileLimit) {
-                yakitNotify("error", `文件大小不能超过${fileLimit}KB`)
-                return
-            }
-            const path = item.path.replace(/\\/g, "\\")
-            if (isAcceptEligible(path, props.accept || ".*")) {
-                onGetContent(path)
-            } else {
-                yakitNotify("error", "文件类型不支持")
-            }
+            onHandlerFile(item)
         }
     })
     /**选择文件 */
@@ -553,11 +557,17 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
                     const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    if (isAcceptEligible(path, props.accept || ".*")) {
-                        onGetContent(path)
-                    } else {
-                        yakitNotify("error", "文件类型不支持")
-                    }
+                    ipcRenderer
+                        .invoke("fetch-file-info-by-path", path)
+                        .then((fileInfo) => {
+                            onHandlerFile({
+                                size: fileInfo.size,
+                                path
+                            })
+                        })
+                        .catch((err) => {
+                            yakitNotify("error", "文件数据读取异常:" + err)
+                        })
                 } else if (filesLength > 1) {
                     yakitNotify("error", "只支持单文件上传")
                 }

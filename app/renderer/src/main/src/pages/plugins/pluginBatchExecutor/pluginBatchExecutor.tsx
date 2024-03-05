@@ -1,7 +1,7 @@
-import React, {useRef, useState, useReducer, useEffect} from "react"
+import React, {useRef, useState, useReducer, useEffect, forwardRef, useImperativeHandle} from "react"
 import {PluginDetails, PluginDetailsListItem, defaultSearch} from "../baseTemplate"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {useMemoizedFn, useCreation, useDebounceFn, useUpdateEffect, useInViewport} from "ahooks"
+import {useMemoizedFn, useCreation, useDebounceFn, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
 import {PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
@@ -9,6 +9,7 @@ import {
     HybridScanRequest,
     PluginBatchExecutorInputValueProps,
     apiCancelHybridScan,
+    apiGetPluginByGroup,
     apiHybridScan,
     apiQueryHybridScan,
     apiQueryYakScript,
@@ -44,6 +45,7 @@ import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../operator/expa
 import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -99,17 +101,10 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
     /**是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+    const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
+    /**停止 */
     const [stopLoading, setStopLoading] = useState<boolean>(false)
-    const [runtimeId, setRuntimeId] = useState<string>("")
-
-    /**额外参数弹出框 */
-    const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
-    const [extraParamsValue, setExtraParamsValue] = useState<PluginBatchExecuteExtraFormValue>({
-        ...cloneDeep(defPluginBatchExecuteExtraFormValue)
-    })
-
     // const [privateDomain, setPrivateDomain] = useState<string>("") // 私有域地址
     const userInfo = useStore((s) => s.userInfo)
 
@@ -117,30 +112,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const isLoadingRef = useRef<boolean>(true)
     const privateDomainRef = useRef<string>("") // 私有域地址
     const typeRef = useRef<string>("mitm,port-scan,nuclei")
-    const tokenRef = useRef<string>(randomString(40))
+    const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
     const batchExecuteDomRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(batchExecuteDomRef)
-
-    const [form] = Form.useForm()
-    const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
-
-    const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
-        taskName: "hybrid-scan",
-        apiKey: "HybridScan",
-        token: tokenRef.current,
-        onEnd: () => {
-            hybridScanStreamEvent.stop()
-            setTimeout(() => {
-                setExecuteStatus("finished")
-                setIsExecuting(false)
-                setStopLoading(false)
-            }, 200)
-        },
-        setRuntimeId: (rId) => {
-            setRuntimeId(rId)
-        },
-        onGetInputValue: (v) => onInitInputValue(v)
-    })
 
     useEffect(() => {
         getPrivateDomainAndRefList()
@@ -159,11 +133,11 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         }
     }, [inViewport])
-    /**设置输入模块的初始值 */
-    const onInitInputValue = useMemoizedFn((value: string) => {
+    /**设置输入模块的初始值后，根据value刷新列表相关数据 */
+    const onInitInputValueAfter = useMemoizedFn((value: string) => {
         try {
             const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
-            const {pluginInfo, params} = inputValue
+            const {pluginInfo} = inputValue
             // 插件数据
             if (pluginInfo.selectPluginName.length > 0) {
                 setSelectList(pluginInfo.selectPluginName)
@@ -174,30 +148,13 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                     fetchList(true, true)
                 }, 200)
             }
-            // form表单数据
-            const extraForm = {
-                ...params.HTTPRequestTemplate,
-                Proxy: params.Proxy,
-                Concurrent: params.Concurrent,
-                TotalTimeoutSecond: params.TotalTimeoutSecond
-            }
-            form.setFieldsValue({
-                Input: params.Input,
-                IsHttps: params.HTTPRequestTemplate.IsHttps,
-                IsRawHTTPRequest: !!params.HTTPRequestTemplate.IsRawHTTPRequest,
-                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest
-            })
-            setExtraParamsValue(extraForm)
         } catch (error) {}
     })
     /** 通过runtimeId查询该条记录详情 */
     const onQueryHybridScanByRuntimeId = useMemoizedFn((runtimeId: string) => {
         if (!runtimeId) return
-        hybridScanStreamEvent.reset()
-        apiQueryHybridScan(runtimeId, tokenRef.current).then(() => {
-            setIsExecuting(true)
+        pluginBatchExecuteContentRef.current?.onQueryHybridScanByRuntimeId(runtimeId).then(() => {
             setIsExpand(false)
-            hybridScanStreamEvent.start()
             onClearPageInfo()
         })
     })
@@ -322,78 +279,28 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         if (allCheck) return response.Total
         else return selectList.length
     }, [allCheck, selectList, response.Total])
-    const isShowResult = useCreation(() => {
-        return isExecuting || runtimeId
-    }, [isExecuting, runtimeId])
-    /**开始执行 */
-    const onStartExecute = useMemoizedFn((value) => {
-        // 任务配置参数
-        const taskParams: PluginBatchExecutorTaskProps = {
-            Concurrent: extraParamsValue.Concurrent,
-            TotalTimeoutSecond: extraParamsValue.TotalTimeoutSecond,
-            Proxy: extraParamsValue.Proxy
-        }
-        const params: HybridScanRequest = {
-            Input: value.Input,
-            ...taskParams,
-            HTTPRequestTemplate: {
-                ...extraParamsValue,
-                IsHttps: !!value.IsHttps,
-                IsRawHTTPRequest: value.IsRawHTTPRequest,
-                RawHTTPRequest: value.RawHTTPRequest
-                    ? Buffer.from(value.RawHTTPRequest, "utf8")
-                    : Buffer.from("", "utf8")
-            }
-        }
-        const pluginInfo = {
-            selectPluginName: selectList,
-            search
-        }
-        const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(
-            params,
-            pluginInfo,
-            typeRef.current
-        )
-        hybridScanStreamEvent.reset()
-        setRuntimeId("")
-        setExecuteStatus("process")
-        apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
-            setIsExecuting(true)
-            setIsExpand(false)
-            hybridScanStreamEvent.start()
-        })
-    })
-    /**取消执行 */
-    const onStopExecute = useMemoizedFn((e) => {
-        e.stopPropagation()
-        setStopLoading(true)
-        apiStopHybridScan(runtimeId, tokenRef.current)
-    })
-    /**在顶部的执行按钮 */
-    const onExecuteInTop = useMemoizedFn((e) => {
-        e.stopPropagation()
-        form.validateFields()
-            .then(onStartExecute)
-            .catch(() => {
-                setIsExpand(true)
-            })
-    })
-    const openExtraPropsDrawer = useMemoizedFn(() => {
-        setExtraParamsVisible(true)
-    })
-    /**保存额外参数 */
-    const onSaveExtraParams = useMemoizedFn((v: PluginBatchExecuteExtraFormValue) => {
-        setExtraParamsValue({...v} as PluginBatchExecuteExtraFormValue)
-        setExtraParamsVisible(false)
-    })
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()
         setIsExpand(!isExpand)
     })
-    const progressList = useCreation(() => {
-        return streamInfo.progressState
-    }, [streamInfo.progressState])
-
+    const onStopExecute = useMemoizedFn(() => {
+        pluginBatchExecuteContentRef.current?.onStopExecute()
+    })
+    /**在顶部的执行按钮 */
+    const onExecuteInTop = useMemoizedFn((e) => {
+        e.stopPropagation()
+        pluginBatchExecuteContentRef.current?.onStartExecute()
+    })
+    const pluginInfo = useCreation(() => {
+        return {
+            selectPluginName: selectList,
+            search
+        }
+    }, [selectList, search])
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
     return (
         <div className={styles["plugin-batch-executor"]} ref={batchExecuteDomRef}>
             <PluginDetails<YakScript>
@@ -476,7 +383,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                                   )
                                 : !isExpand && (
                                       <>
-                                          <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                          <YakitButton onClick={onExecuteInTop} disabled={selectNum === 0}>
+                                              执行
+                                          </YakitButton>
                                           <div className={styles["divider-style"]}></div>
                                       </>
                                   )}
@@ -495,6 +404,232 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 setHidden={setHidden}
                 bodyClassName={styles["plugin-batch-executor-body"]}
             >
+                <PluginBatchExecuteContent
+                    ref={pluginBatchExecuteContentRef}
+                    isExpand={isExpand}
+                    setIsExpand={setIsExpand}
+                    selectNum={selectNum}
+                    pluginType={typeRef.current}
+                    defaultActiveKey={pageInfo.defaultActiveKey}
+                    onInitInputValueAfter={onInitInputValueAfter}
+                    setProgressList={setProgressList}
+                    stopLoading={stopLoading}
+                    setStopLoading={setStopLoading}
+                    pluginInfo={pluginInfo}
+                    executeStatus={executeStatus}
+                    setExecuteStatus={setExecuteStatus}
+                />
+            </PluginDetails>
+        </div>
+    )
+})
+
+interface PluginBatchExecuteContentProps {
+    ref?: React.ForwardedRef<PluginBatchExecuteContentRefProps>
+    /** 如果同时传了 pluginInfo.selectPluginName,以pluginInfo.selectPluginGroup查询回来的插件为主 */
+    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams; selectPluginGroup?: string[]}
+    /**选择插件得数量 */
+    selectNum: number
+    /**插件类型 */
+    pluginType?: string
+    /**插件执行输出结果默认选择得tabKey */
+    defaultActiveKey?: string
+    /** 设置输入模块的初始值后得回调事件，例如：插件批量执行页面(设置完初始值后，刷新左侧得插件列表页面) */
+    onInitInputValueAfter?: (value: string) => void
+    /**进度条新鲜 */
+    setProgressList: (s: StreamResult.Progress[]) => void
+
+    /**停止 */
+    stopLoading: boolean
+    setStopLoading: (value: boolean) => void
+
+    /**是否展开收起表单内容 */
+    isExpand: boolean
+    setIsExpand: (value: boolean) => void
+
+    /**执行状态 */
+    executeStatus: ExpandAndRetractExcessiveState
+    setExecuteStatus: (value: ExpandAndRetractExcessiveState) => void
+}
+export interface PluginBatchExecuteContentRefProps {
+    onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
+    onStopExecute: () => void
+    onStartExecute: () => void
+    onInitInputValue:(v:string)=>void
+}
+export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {selectNum, pluginType = "", pluginInfo, defaultActiveKey, onInitInputValueAfter, setProgressList} = props
+        const [form] = Form.useForm()
+        const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+        useImperativeHandle(
+            ref,
+            () => ({
+                onQueryHybridScanByRuntimeId,
+                onStopExecute,
+                onStartExecute: () => {
+                    form.validateFields()
+                        .then(onStartExecute)
+                        .catch((e) => {
+                            setIsExpand(true)
+                        })
+                },
+                onInitInputValue
+            }),
+            [form]
+        )
+        /**额外参数弹出框 */
+        const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+        const [extraParamsValue, setExtraParamsValue] = useState<PluginBatchExecuteExtraFormValue>({
+            ...cloneDeep(defPluginBatchExecuteExtraFormValue)
+        })
+
+        const [stopLoading, setStopLoading] = useControllableValue<boolean>(props, {
+            defaultValue: false,
+            valuePropName: "stopLoading",
+            trigger: "setStopLoading"
+        })
+        /**是否展开/收起 */
+        const [isExpand, setIsExpand] = useControllableValue<boolean>(props, {
+            defaultValue: false,
+            valuePropName: "isExpand",
+            trigger: "setIsExpand"
+        })
+        /**执行状态 */
+        const [executeStatus, setExecuteStatus] = useControllableValue<ExpandAndRetractExcessiveState>(props, {
+            defaultValue: "default",
+            valuePropName: "executeStatus",
+            trigger: "setExecuteStatus"
+        })
+        const [runtimeId, setRuntimeId] = useState<string>("")
+
+        const tokenRef = useRef<string>(randomString(40))
+
+        const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
+            taskName: "hybrid-scan",
+            apiKey: "HybridScan",
+            token: tokenRef.current,
+            onEnd: () => {
+                hybridScanStreamEvent.stop()
+                setTimeout(() => {
+                    setExecuteStatus("finished")
+                    setStopLoading(false)
+                }, 200)
+            },
+            setRuntimeId: (rId) => {
+                setRuntimeId(rId)
+            },
+            onGetInputValue: (v) => onInitInputValue(v)
+        })
+        const progressList = useCreation(() => {
+            return streamInfo.progressState
+        }, [streamInfo.progressState])
+
+        useEffect(() => {
+            setProgressList(progressList)
+        }, [progressList])
+
+        /** 通过runtimeId查询该条记录详情 */
+        const onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null> = useMemoizedFn((runtimeId) => {
+            return new Promise((resolve, reject) => {
+                if (!runtimeId) reject("未设置正常得 runtimeId")
+                hybridScanStreamEvent.reset()
+                apiQueryHybridScan(runtimeId, tokenRef.current)
+                    .then(() => {
+                        setExecuteStatus("process")
+                        hybridScanStreamEvent.start()
+                        resolve(null)
+                    })
+                    .catch(reject)
+            })
+        })
+        /**设置输入模块的初始值 */
+        const onInitInputValue = useMemoizedFn((value) => {
+            const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
+            const {params} = inputValue
+            // form表单数据
+            const extraForm = {
+                ...params.HTTPRequestTemplate,
+                Proxy: params.Proxy,
+                Concurrent: params.Concurrent,
+                TotalTimeoutSecond: params.TotalTimeoutSecond
+            }
+            form.setFieldsValue({
+                Input: params.Input,
+                IsHttps: params.HTTPRequestTemplate.IsHttps,
+                IsRawHTTPRequest: !!params.HTTPRequestTemplate.IsRawHTTPRequest,
+                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest
+            })
+            setExtraParamsValue(extraForm)
+            if (onInitInputValueAfter) onInitInputValueAfter(value)
+        })
+
+        /**开始执行 */
+        const onStartExecute = useMemoizedFn(async (value) => {
+            const {selectPluginGroup = []} = pluginInfo
+            // 任务配置参数
+            const taskParams: PluginBatchExecutorTaskProps = {
+                Concurrent: extraParamsValue.Concurrent,
+                TotalTimeoutSecond: extraParamsValue.TotalTimeoutSecond,
+                Proxy: extraParamsValue.Proxy
+            }
+            const params: HybridScanRequest = {
+                Input: value.Input,
+                ...taskParams,
+                HTTPRequestTemplate: {
+                    ...extraParamsValue,
+                    IsHttps: !!value.IsHttps,
+                    IsRawHTTPRequest: value.IsRawHTTPRequest,
+                    RawHTTPRequest: value.RawHTTPRequest
+                        ? Buffer.from(value.RawHTTPRequest, "utf8")
+                        : Buffer.from("", "utf8")
+                }
+            }
+            let newPluginInfo = {...pluginInfo}
+            if (selectPluginGroup.length > 0) {
+                try {
+                    const res = await apiGetPluginByGroup(selectPluginGroup)
+                    newPluginInfo.selectPluginName = res.Data.map((item) => item.ScriptName)
+                } catch (error) {
+                    newPluginInfo.selectPluginName = []
+                }
+            }
+            // if (newPluginInfo.selectPluginName.length === 0) return
+            const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(
+                params,
+                newPluginInfo,
+                pluginType
+            )
+            hybridScanStreamEvent.reset()
+            apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
+                setExecuteStatus("process")
+                setIsExpand(false)
+                hybridScanStreamEvent.start()
+            })
+        })
+        const openExtraPropsDrawer = useMemoizedFn(() => {
+            setExtraParamsVisible(true)
+        })
+        /**保存额外参数 */
+        const onSaveExtraParams = useMemoizedFn((v: PluginBatchExecuteExtraFormValue) => {
+            setExtraParamsValue({...v} as PluginBatchExecuteExtraFormValue)
+            setExtraParamsVisible(false)
+        })
+        /**取消执行 */
+        const onStopExecute = useMemoizedFn(() => {
+            setStopLoading(true)
+            apiStopHybridScan(runtimeId, tokenRef.current)
+        })
+        const isExecuting = useCreation(() => {
+            if (executeStatus === "process") return true
+            return false
+        }, [executeStatus])
+        const isShowResult = useCreation(() => {
+            return isExecuting || runtimeId
+        }, [isExecuting, runtimeId])
+
+        return (
+            <>
                 <div
                     className={classNames(styles["plugin-batch-execute-form-wrapper"], {
                         [styles["plugin-batch-execute-form-wrapper-hidden"]]: !isExpand
@@ -545,20 +680,20 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         streamInfo={streamInfo}
                         runtimeId={runtimeId}
                         loading={isExecuting}
-                        pluginType={typeRef.current}
-                        defaultActiveKey={pageInfo.defaultActiveKey}
+                        pluginType={pluginType}
+                        defaultActiveKey={defaultActiveKey}
                     />
                 )}
-            </PluginDetails>
-            <React.Suspense fallback={<div>loading...</div>}>
-                <PluginBatchExecuteExtraParamsDrawer
-                    isRawHTTPRequest={isRawHTTPRequest}
-                    extraParamsValue={extraParamsValue}
-                    visible={extraParamsVisible}
-                    setVisible={setExtraParamsVisible}
-                    onSave={onSaveExtraParams}
-                />
-            </React.Suspense>
-        </div>
-    )
-})
+                <React.Suspense fallback={<div>loading...</div>}>
+                    <PluginBatchExecuteExtraParamsDrawer
+                        isRawHTTPRequest={isRawHTTPRequest}
+                        extraParamsValue={extraParamsValue}
+                        visible={extraParamsVisible}
+                        setVisible={setExtraParamsVisible}
+                        onSave={onSaveExtraParams}
+                    />
+                </React.Suspense>
+            </>
+        )
+    })
+)

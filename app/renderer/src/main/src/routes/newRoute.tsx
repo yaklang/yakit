@@ -133,9 +133,10 @@ import { NewPayload } from "@/pages/payloadManager/newPayload"
 import { NewCodec } from "@/pages/codec/NewCodec";
 import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
+import { PluginBatchExecutorPageInfoProps, PocPageInfoProps } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import { SinglePluginExecution } from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
+import {YakPoC} from "@/pages/securityTool/yakPoC/yakPoC"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -321,7 +322,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
 export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.HTTPHacker,
-    YakitRoute.PoC,
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
@@ -386,7 +386,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.BatchExecutorPage,
     YakitRoute.Codec,
     YakitRoute.Space_Engine,
-    YakitRoute.Plugin_OP
+    YakitRoute.Plugin_OP,
+    YakitRoute.PoC
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -463,6 +464,7 @@ export interface ComponentParams {
     webshellInfo?: WebShellDetail
     /**批量执行页面参数 */
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
+    pocPageInfo?:PocPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -522,7 +524,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Mod_ScanPort:
             return <PortScanPage sendTarget={params?.scanportParams} />
         case YakitRoute.PoC:
-            return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
+            // return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
+            return <YakPoC pageId={params?.id || ""}/>
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
             // return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />

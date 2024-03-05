@@ -13,7 +13,7 @@ import {
 } from "./LocalPluginExecuteDetailHeardType"
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {Divider, Form, Progress} from "antd"
 import {PluginParamDataEditorProps, YakParamProps} from "../../pluginsType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -59,8 +59,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         token,
         plugin,
         extraNode,
-        isExecuting,
-        setIsExecuting,
         debugPluginStreamEvent,
         progressList,
         setRuntimeId,
@@ -100,6 +98,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             form.resetFields()
         }
     }, [plugin.Params, plugin.ScriptName, plugin.Type])
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
     /**初始表单初始值 */
     const initFormValue = useMemoizedFn(() => {
         initRequiredFormValue()
@@ -195,9 +197,9 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")
-        setExecuteStatus("process")
+
         apiDebugPlugin(executeParams, token).then(() => {
-            setIsExecuting(true)
+            setExecuteStatus("process")
             setIsExpand(false)
             debugPluginStreamEvent.start()
         })
@@ -207,7 +209,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         e.stopPropagation()
         apiCancelDebugPlugin(token).then(() => {
             debugPluginStreamEvent.stop()
-            setIsExecuting(false)
+            setExecuteStatus("finished")
         })
     })
     /**在顶部的执行按钮 */

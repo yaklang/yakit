@@ -16,7 +16,7 @@ export interface PortTableProps {
     query: QueryPortsRequest
     setQuery: (t: QueryPortsRequest) => void
     /**表格头部 */
-    tableTitle: ReactNode
+    tableTitle?: ReactNode
     /**表格头部右侧操作区 */
     tableTitleExtraOperate: ReactNode
     /**表格部分的body类 */

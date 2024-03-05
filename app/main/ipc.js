@@ -260,6 +260,12 @@ module.exports = {
             require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
         })
 
+        // 工具类 例如node文件处理
+        const utils = fs.readdirSync(path.join(__dirname, "./utils"))
+        utils.forEach((item) => {
+            require(path.join(__dirname, `./utils/${item}`))(win, getClient)
+        })
+
         // new plugins store
         require("./handlers/plugins")(win, getClient)
     }

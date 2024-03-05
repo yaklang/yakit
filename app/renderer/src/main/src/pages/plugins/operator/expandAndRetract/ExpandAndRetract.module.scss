@@ -15,7 +15,6 @@
             width: 76px;
             border: 1px solid var(--yakit-primary-3);
             color: var(--yakit-primary-5);
-            font-size: 12px;
             .expand-and-retract-header-icon-text {
                 width: 48px;
                 opacity: 1;
@@ -42,7 +41,6 @@
 .expand-and-retract-header-icon-body {
     display: flex;
     align-items: center;
-    justify-content: center;
     position: absolute;
     right: 50%;
     left: 50%;
@@ -56,11 +54,16 @@
     height: 24px;
     border-radius: 12px;
     transition: width 0.2s ease;
+    font-size: 12px;
+
+    .expand-and-retract-icon {
+        margin-left: 1px;
+        margin-right: 4px;
+    }
 
     .expand-and-retract-header-icon-text {
         display: flex;
         align-items: center;
-        justify-content: center;
         word-break: keep-all;
         width: 0;
         opacity: 0;

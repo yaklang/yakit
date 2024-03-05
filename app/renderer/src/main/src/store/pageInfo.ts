@@ -8,6 +8,7 @@ import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
 import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
+import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 
 /**
  * @description 页面暂存数据
@@ -45,6 +46,8 @@ interface PageParamsInfoProps {
     /**YakitRoute.Plugin_Store 插件商店页面 */
     pluginOnlinePageInfo?: {keyword: string; plugin_type: string}
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
+    /**专项漏洞页面 */
+    pocPageInfo?: PocPageInfoProps
 }
 
 export interface PluginBatchExecutorPageInfoProps {
@@ -57,6 +60,11 @@ export interface WebFuzzerPageInfoProps {
     pageId: string
     advancedConfigValue: AdvancedConfigValueProps
     request: string
+}
+
+export interface PocPageInfoProps {
+    selectGroup?: string[]
+    formValue?: HybridScanControlAfterRequest
 }
 
 interface PageInfoStoreProps {

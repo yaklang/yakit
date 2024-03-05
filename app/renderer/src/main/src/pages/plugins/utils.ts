@@ -696,9 +696,7 @@ export const apiQueryYakScript: (query?: QueryYakScriptRequest) => Promise<Query
     return new Promise((resolve, reject) => {
         try {
             apiQueryYakScriptBase(query)
-                .then((item: QueryYakScriptsResponse) => {
-                    resolve(item)
-                })
+                .then(resolve)
                 .catch((e: any) => {
                     yakitNotify("error", "获取本地插件失败:" + e)
                     reject(e)
@@ -1103,16 +1101,38 @@ export const apiCancelDebugPlugin: (token: string) => Promise<null> = (token) =>
         }
     })
 }
+interface QueryYakScriptByOnlineGroupRequest {
+    Data: YakScript[]
+}
+/**通过组名获取组内插件 */
+export const apiGetPluginByGroup: (OnlineGroup: string[]) => Promise<QueryYakScriptByOnlineGroupRequest> = (
+    OnlineGroup
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
+                .then(resolve)
+                .catch((e: any) => {
+                    yakitNotify("error", "获取组内插件出错:" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取组内插件出错:" + error)
+            reject(error)
+        }
+    })
+}
 /**
  * @name HybridScan接口参数转换(前端数据转接口参数)
  * @description HybridScan
  */
 export const convertHybridScanParams = (
     params: HybridScanRequest,
-    pluginInfo: {selectPluginName: string[]; search: PluginSearchParams},
+    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams; selectPluginGroup?: string[]},
     pluginType: string
 ): HybridScanControlAfterRequest => {
-    const {selectPluginName, search} = pluginInfo
+    const {selectPluginName, search = {...cloneDeep(defaultSearch)}} = pluginInfo
     const hTTPRequestTemplate = {
         ...cloneDeep(params.HTTPRequestTemplate)
     }
@@ -1360,6 +1380,7 @@ export const apiFetchQueryYakScriptGroupLocal: (All?: boolean) => Promise<GroupC
                 resolve(res.Group)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "获取本地插件组：" + e)
             })
     })
@@ -1377,6 +1398,7 @@ export const apiFetchRenameYakScriptGroupLocal: (Group: string, NewGroup: string
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "修改本地插件组名：" + e)
             })
     })
@@ -1391,6 +1413,7 @@ export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null>
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "删除本地插件组：" + e)
             })
     })
@@ -1407,6 +1430,7 @@ export const apiFetchGetYakScriptGroupLocal: (params: QueryYakScriptRequest) => 
                 resolve(res)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "" + e)
             })
     })
@@ -1421,6 +1445,7 @@ export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "更新本地插件所在组：" + e)
             })
     })
@@ -1435,6 +1460,7 @@ export const apiFetchResetYakScriptGroup: (params: ResetYakScriptGroupRequest) =
                 resolve(null)
             })
             .catch((e) => {
+                reject(e)
                 yakitNotify("error", "重置失败：" + e)
             })
     })
