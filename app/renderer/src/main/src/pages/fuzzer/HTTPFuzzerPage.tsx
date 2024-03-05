@@ -108,11 +108,11 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
 import {createRoot} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
-import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
-import { YakitWindow } from "@/components/yakitUI/YakitWindow/YakitWindow"
-import { apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from "../spaceEngine/utils"
-import { GlobalNetworkConfig } from "@/components/configNetwork/ConfigNetworkPage"
-import { ThirdPartyApplicationConfigForm } from "@/components/configNetwork/ThirdPartyApplicationConfig"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {YakitWindow} from "@/components/yakitUI/YakitWindow/YakitWindow"
+import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "../spaceEngine/utils"
+import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
@@ -245,6 +245,7 @@ export interface FuzzerRequestProps {
     FuzzTagSyncIndex: boolean
     Proxy: string
     PerRequestTimeoutSeconds: number
+    BatchTarget?: Uint8Array
     ActualAddr: string
     NoFollowRedirect: boolean
     // NoFollowMetaRedirect: boolean
@@ -350,6 +351,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         IsGmTLS: value.isGmTLS,
         Concurrent: value.concurrent,
         PerRequestTimeoutSeconds: value.timeout,
+        BatchTarget: value.batchTarget || new Uint8Array(),
         NoFixContentLength: value.noFixContentLength,
         NoSystemProxy: value.noSystemProxy,
         Proxy: value.proxy ? value.proxy.join(",") : "",
@@ -491,6 +493,8 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     noSystemProxy: false,
     actualHost: "",
     timeout: 30.0,
+    // 批量目标
+    batchTarget: new Uint8Array(),
     // 发包配置
     concurrent: 20,
     proxy: [],
@@ -1118,17 +1122,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
-    const [yakitWindowVisible,setYakitWindowVisible] = useState<boolean>(false)
-    const [menuExecutorParams,setMenuExecutorParams] = useState<({text?:string,scriptName:string})>()
+    const [yakitWindowVisible, setYakitWindowVisible] = useState<boolean>(false)
+    const [menuExecutorParams, setMenuExecutorParams] = useState<{text?: string; scriptName: string}>()
     // 判断打开 YakitWindow执行框/全局网络配置第三方应用框
-    const onFuzzerModal = useMemoizedFn((value)=>{
-        const val:{text?:string,scriptName:string,pageId:string} = JSON.parse(value)
+    const onFuzzerModal = useMemoizedFn((value) => {
+        const val: {text?: string; scriptName: string; pageId: string} = JSON.parse(value)
         // apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
-            if(props.id===val.pageId){
+        if (props.id === val.pageId) {
             // 如若已配置 则打开执行框
             // if(obj.AppConfigs.length>0){
-                    setYakitWindowVisible(true)
-                    setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
+            setYakitWindowVisible(true)
+            setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
             // }
             // else{
             //     let m = showYakitModal({
@@ -1720,7 +1724,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     type={"primary"}
                                     colors='danger'
                                     size='large'
-                                    style={{ marginLeft: -8 }}
+                                    style={{marginLeft: -8}}
                                 >
                                     停止
                                 </YakitButton>
@@ -1978,23 +1982,30 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                 />
             </div>
-            {fuzzerRef.current&&<YakitWindow
-                getContainer={fuzzerRef.current}
-                title='执行结果'
-                visible={yakitWindowVisible}
-                contentStyle={{padding: 0}}
-                width={600}
-                footerStyle={{flexDirection: "row-reverse", justifyContent: "center"}}
-                defaultDockSide = {["shrink", "left", "right", "bottom"]}
-                firstDockSide="shrink"
-                onCancel={()=>{
-                    setYakitWindowVisible(false)
-                    setMenuExecutorParams(undefined)
-                }}
-                onOk={()=>{}}
-            >
-                {menuExecutorParams&&<ContextMenuExecutor scriptName={menuExecutorParams.scriptName} text={menuExecutorParams.text}/>}
-            </YakitWindow>}
+            {fuzzerRef.current && (
+                <YakitWindow
+                    getContainer={fuzzerRef.current}
+                    title='执行结果'
+                    visible={yakitWindowVisible}
+                    contentStyle={{padding: 0}}
+                    width={600}
+                    footerStyle={{flexDirection: "row-reverse", justifyContent: "center"}}
+                    defaultDockSide={["shrink", "left", "right", "bottom"]}
+                    firstDockSide='shrink'
+                    onCancel={() => {
+                        setYakitWindowVisible(false)
+                        setMenuExecutorParams(undefined)
+                    }}
+                    onOk={() => {}}
+                >
+                    {menuExecutorParams && (
+                        <ContextMenuExecutor
+                            scriptName={menuExecutorParams.scriptName}
+                            text={menuExecutorParams.text}
+                        />
+                    )}
+                </YakitWindow>
+            )}
         </div>
     )
 }
@@ -2006,26 +2017,30 @@ export interface ContextMenuProp {
 }
 /** @name 自定义右键菜单执行组件 */
 export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
-    const {scriptName,text} = props
+    const {scriptName, text} = props
 
     const [loading, setLoading] = useState<boolean>(true)
     const [value, setValue] = useState<string>("")
     useEffect(() => {
-        ipcRenderer.invoke("Codec", { Text: text, ScriptName: scriptName }).then((result: { Result: string }) => {
-            setValue(result.Result)
-        }).catch((e) => {
-            yakitNotify("error", `Codec ${e}`)
-        }).finally(() => {
-          setTimeout(() => {
-            setLoading(false)
-          }, 200);
-        })
+        ipcRenderer
+            .invoke("Codec", {Text: text, ScriptName: scriptName})
+            .then((result: {Result: string}) => {
+                setValue(result.Result)
+            })
+            .catch((e) => {
+                yakitNotify("error", `Codec ${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
     }, [])
-    
+
     return (
-        <YakitSpin spinning={loading} style={{ width: "100%",height:"100%" }}>
-            <div style={{ height: "100%" }}>
-                <YakitEditor  fontSize={14} type={"text"} readOnly={true} value={value} />
+        <YakitSpin spinning={loading} style={{width: "100%", height: "100%"}}>
+            <div style={{height: "100%"}}>
+                <YakitEditor fontSize={14} type={"text"} readOnly={true} value={value} />
             </div>
         </YakitSpin>
     )

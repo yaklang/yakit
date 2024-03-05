@@ -23,7 +23,7 @@ import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQuer
 import {SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {StringToUint8Array} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     ColorSelect,
     ExtractorItem,
@@ -51,6 +51,8 @@ import {CopyableField} from "@/utils/inputUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -117,6 +119,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const queryRef = useRef(null)
     const [inViewport = true] = useInViewport(queryRef)
 
+    const [batchTargetModalVisible, setBatchTargetModalVisible] = useState<boolean>(false)
+
     // 是否通过仅匹配打开的弹窗
     const [isOpenByMacth, setOpenByMacth] = useState<boolean>(false)
 
@@ -131,6 +135,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     )
     const filterMode = useMemo(() => advancedConfigValue.filterMode, [advancedConfigValue.filterMode])
     const hitColor = useMemo(() => advancedConfigValue.hitColor || "red", [advancedConfigValue.hitColor])
+    const batchTarget = useMemo(
+        () => advancedConfigValue.batchTarget || new Uint8Array(),
+        [advancedConfigValue.batchTarget]
+    )
 
     useEffect(() => {
         setHttpResponse(defaultHttpResponse)
@@ -561,8 +569,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <YakitSwitch />
                         </Form.Item>
 
-                        <Form.Item label='超时时长' name='timeout' style={{marginBottom: 0}}>
+                        <Form.Item label='超时时长' name='timeout' style={{marginBottom: 12}}>
                             <YakitInputNumber type='horizontal' size='small' />
+                        </Form.Item>
+                        <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
+                            <YakitButton
+                                size='small'
+                                type='text'
+                                onClick={() => setBatchTargetModalVisible(true)}
+                                icon={<PlusSmIcon />}
+                            >
+                                {Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array())
+                                    ? "已配置"
+                                    : "配置"}
+                                批量目标
+                            </YakitButton>
                         </Form.Item>
                     </YakitPanel>
                     <YakitPanel
@@ -1016,7 +1037,89 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     })
                 }}
             ></AgentConfigModal>
+            <BatchTargetModal
+                batchTargetModalVisible={batchTargetModalVisible}
+                onCloseModal={() => setBatchTargetModalVisible(false)}
+                batchTarget={batchTarget}
+                getBatchTarget={(batchTarget) => {
+                    const v = form.getFieldsValue()
+                    onSetValue({
+                        ...v,
+                        batchTarget
+                    })
+                }}
+            ></BatchTargetModal>
         </div>
+    )
+})
+
+interface BatchTargetModalProp {
+    batchTargetModalVisible: boolean
+    onCloseModal: () => void
+    batchTarget: Uint8Array
+    getBatchTarget: (batchTarget: Uint8Array) => void
+}
+
+// 批量目标
+const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
+    const {batchTargetModalVisible, onCloseModal, batchTarget, getBatchTarget} = props
+    const [form] = Form.useForm()
+
+    const onOKFun = useMemoizedFn(async () => {
+        form.validateFields().then((values) => {
+            getBatchTarget(StringToUint8Array(values.BatchTarget) || new Uint8Array())
+            onCloseModal()
+        })
+    })
+
+    const onClose = useMemoizedFn(() => {
+        form.resetFields()
+        onCloseModal()
+    })
+
+    return (
+        <YakitModal
+            visible={batchTargetModalVisible}
+            title='配置批量目标'
+            width={600}
+            maskClosable={false}
+            destroyOnClose={true}
+            closable
+            centered
+            okText='确认'
+            onCancel={onClose}
+            onOk={onOKFun}
+            bodyStyle={{padding: 0}}
+        >
+            <div style={{padding: 15}}>
+                <Form
+                    form={form}
+                    colon={false}
+                    onSubmitCapture={(e) => e.preventDefault()}
+                    labelCol={{span: 6}}
+                    wrapperCol={{span: 18}}
+                    style={{height: "100%"}}
+                    initialValues={{BatchTarget: Uint8ArrayToString(batchTarget)}}
+                >
+                    <YakitFormDraggerContent
+                        style={{width: "100%"}}
+                        formItemProps={{
+                            name: "BatchTarget",
+                            label: "扫描目标",
+                            rules: [{required: false}]
+                        }}
+                        accept='.txt,.xlsx,.xls,.csv'
+                        textareaProps={{
+                            placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+                            rows: 3
+                        }}
+                        help='可将TXT、Excel文件拖入框内或'
+                        valueSeparator={"\r\n"}
+                        fileLimit={1024}
+                    />
+                </Form>
+            </div>
+        </YakitModal>
     )
 })
 
