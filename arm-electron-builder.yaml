@@ -45,6 +45,7 @@ linux:
     - target: AppImage
       arch:
         - arm64
+  icon: "app/assets/yakitlogo.icns"
 
 
 #publish:

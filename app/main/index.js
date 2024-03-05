@@ -1,4 +1,4 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, screen} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
 const url = require("url")
@@ -6,10 +6,11 @@ const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
 const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const {engineLog,windowStatePatch} = require("./filePath")
+const {windowStatePatch, engineLog, renderLog} = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
+const {clearFolder} = require("./toolsFunc")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -97,12 +98,7 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
-    try {
-        fs.unlinkSync(engineLog)
-    } catch (e) {
-        console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
-    }
-
+    // 截图功能的注册(功能和全局快捷键的注册)
     if (["darwin", "win32"].includes(process.platform)) {
         const screenshots = new Screenshots({
             singleWindow: true
@@ -141,6 +137,23 @@ app.whenReady().then(() => {
         })
     }
 
+    /**
+     * error-log:
+     * 存在则检查文件数量是否超过10个，超过则只保留最近10个文件
+     * 不存在则新建文件夹
+     */
+    if (fs.existsSync(engineLog)) {
+        clearFolder(engineLog, 9)
+    } else {
+        fs.mkdirSync(engineLog, {recursive: true})
+    }
+    if (fs.existsSync(renderLog)) {
+        clearFolder(renderLog, 5)
+    } else {
+        fs.mkdirSync(renderLog, {recursive: true})
+    }
+
+    // 软件退出的逻辑
     ipcMain.handle("app-exit", async (e, params) => {
         const showCloseMessageBox = params.showCloseMessageBox
         if (closeFlag && showCloseMessageBox) {
@@ -180,7 +193,7 @@ app.whenReady().then(() => {
             app.exit()
         }
     })
-    
+
     // 协议
     protocol.registerFileProtocol("atom", (request, callback) => {
         const filePath = url.fileURLToPath("file://" + request.url.slice("atom://".length))
@@ -199,7 +212,6 @@ app.whenReady().then(() => {
     // autoUpdater.signals.updateDownloaded(info => {
     //     console.info(info.downloadedFile)
     // })
-    
 
     app.on("activate", function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
