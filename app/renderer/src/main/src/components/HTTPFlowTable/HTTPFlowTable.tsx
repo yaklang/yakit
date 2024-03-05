@@ -2326,6 +2326,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "发送到 Web Fuzzer",
             number: 10,
             webSocket: true,
+            default: true,
             onClickSingle: (v) => onSendToTab(v),
             onClickBatch: (_, number) => onBatch(onSendToTab, number, selectedRowKeys.length === total)
         },
@@ -2333,17 +2334,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "发送到 WebSocket",
             label: "发送到 WebSocket",
             webSocket: true,
-            onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request),
-            // onClickBatch: (list, n) => {
-            //     list.forEach(el => {
-            //         newWebsocketFuzzerTab(el.IsHTTPS, el.Request)
-            //     })
-            // }
+            default: false,
+            onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request)
         },
         {
             key: "数据包扫描",
             label: "数据包扫描",
             number: 10,
+            default: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
@@ -2356,6 +2354,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "复制 URL",
             number: 30,
             webSocket: true,
+            default: true,
             onClickSingle: (v) => callCopyToClipboard(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length === 0) {
@@ -2374,6 +2373,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "下载 Response Body",
             label: "下载 Response Body",
+            default: true,
             onClickSingle: (v) => {
                 ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
@@ -2383,6 +2383,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "浏览器中打开",
             label: "浏览器中打开",
+            default: true,
             onClickSingle: (v) => {
                 showResponseViaHTTPFlowID(v)
             }
@@ -2390,6 +2391,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "复制为 CSRF Poc",
             label: "复制为 CSRF Poc",
+            default: true,
             onClickSingle: (v) => {
                 const flow = v as HTTPFlow
                 if (!flow) return
@@ -2401,6 +2403,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "复制为 Yak PoC 模版",
             label: "复制为 Yak PoC 模版",
+            default: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2416,6 +2419,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "标注颜色",
             label: "标注颜色",
+            default: true,
             number: 20,
             onClickSingle: () => {},
             onClickBatch: () => {},
@@ -2431,6 +2435,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "移除颜色",
             label: "移除颜色",
+            default: true,
             number: 20,
             onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
             onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
@@ -2438,6 +2443,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "发送到对比器",
             label: "发送到对比器",
+            default: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2456,6 +2462,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "屏蔽",
             label: "屏蔽",
             webSocket: true,
+            default: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2476,6 +2483,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "删除",
             label: "删除",
             webSocket: true,
+            default: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             all: true,
@@ -2520,6 +2528,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "分享数据包",
             label: "分享数据包",
             number: 30,
+            default: true,
             onClickSingle: (v) => onShareData([v.Id], 50),
             onClickBatch: (list, n) => {
                 const ids: string[] = list.map((ele) => ele.Id)
@@ -2529,6 +2538,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "导出数据",
             label: "导出数据",
+            default: true,
             onClickSingle: (v) => onExcelExport([v]),
             onClickBatch: (list, n) => onExcelExport(list)
         }
@@ -2541,7 +2551,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 width: 180,
                 data: menuData
-                    .filter((item) => (rowData.IsWebsocket ? item.webSocket : true))
+                    .filter((item) => (rowData.IsWebsocket ? item.webSocket : item.default))
                     .map((ele) => {
                         return {
                             label: ele.label,
