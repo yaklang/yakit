@@ -2,10 +2,16 @@ import React, {useEffect, useReducer, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab, convertGroupParam} from "../local/PluginsLocalDetail"
-import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
+import {QueryYakScriptRequest, YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
-import {apiGetYakScriptById, apiQueryYakScript, convertLocalPluginsRequestParams, onToEditPlugin} from "../utils"
+import {
+    apiGetYakScriptById,
+    apiQueryYakScript,
+    convertLocalPluginsRequestParams,
+    defaultLinkPluginConfig,
+    onToEditPlugin
+} from "../utils"
 
 import styles from "./SinglePluginExecution.module.scss"
 import {PluginDetails, PluginDetailsListItem, defaultFilter, defaultSearch} from "../baseTemplate"
@@ -19,6 +25,7 @@ import cloneDeep from "lodash/cloneDeep"
 import "../plugins.scss"
 import {yakitNotify} from "@/utils/notification"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {HybridScanPluginConfig} from "@/models/HybridScan"
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const {yakScriptId} = props
@@ -205,6 +212,21 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
             fetchList(true)
         }, 100)
     })
+    /**插件UI联动相关参数 */
+    const linkPluginConfig: HybridScanPluginConfig = useCreation(() => {
+        const selectPluginName = selectList.map((item) => item.ScriptName)
+        const config = {
+            PluginNames: selectPluginName,
+            Filter:
+                selectPluginName.length > 0
+                    ? undefined
+                    : {
+                          ...convertLocalPluginsRequestParams(filters, search),
+                          Type: pluginTypeRef.current
+                      }
+        }
+        return allCheck ? config : cloneDeep(defaultLinkPluginConfig)
+    }, [selectList, search, filters, allCheck])
     if (!plugin) return null
     return (
         <>
@@ -280,6 +302,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                     headExtraNode={null}
                     wrapperClassName={styles["single-plugin-execution-wrapper"]}
                     hiddenLogIssue={true}
+                    linkPluginConfig={linkPluginConfig}
                 />
             </PluginDetails>
         </>
