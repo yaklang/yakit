@@ -47,6 +47,8 @@ export interface PluginDetailsProps<T> {
     onSearch: (value: PluginSearchParams) => any
     /** 搜索栏额外操作元素 */
     filterNode?: ReactNode
+    /** 搜索条件下边操作元素 */
+    filterBodyBottomNode?: ReactNode
     /** 搜索栏额外过滤组件 */
     filterExtra?: ReactNode
     /** 全选框状态 */

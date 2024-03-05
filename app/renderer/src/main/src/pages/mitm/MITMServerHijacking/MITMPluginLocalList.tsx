@@ -389,12 +389,14 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
 interface TagsAndGroupRenderProps {
     // tags: string[]
     // setTags: (s: string[]) => void
+    wrapStyle?: React.CSSProperties
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
 }
 export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo((props) => {
     const {
         // tags, setTags,
+        wrapStyle = {},
         selectGroup,
         setSelectGroup
     } = props
@@ -402,7 +404,7 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
         <>
             {/* tags.length > 0 || */}
             {selectGroup.length > 0 && (
-                <div className={style["mitm-plugin-query-show"]}>
+                <div className={style["mitm-plugin-query-show"]} style={wrapStyle}>
                     {/* {tags.map((i) => {
                         return (
                             <YakitTag

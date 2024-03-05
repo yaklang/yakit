@@ -381,11 +381,16 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                             selectGroup={selectGroup}
                             setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
                         />
+                    </>
+                }
+                filterBodyBottomNode={
+                    <div style={{marginTop: 8}}>
                         <TagsAndGroupRender
+                            wrapStyle={{marginBottom: 0}}
                             selectGroup={selectGroup}
                             setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
                         />
-                    </>
+                    </div>
                 }
                 filterExtra={
                     <div className={"details-filter-extra-wrapper"}>
