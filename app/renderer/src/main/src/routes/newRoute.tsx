@@ -16,7 +16,6 @@ import {fuzzerInfoProp} from "../pages/MainOperator"
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
-import {BatchExecutorPageEx} from "../pages/invoker/batch/BatchExecutorPageEx"
 import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 import {
     ReadOnlyBatchExecutorByMenuItem,
