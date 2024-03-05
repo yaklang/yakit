@@ -9,7 +9,6 @@ import { KVPair } from "@/models/kv";
 import { SelectOptionsProps } from "@/demoComponents/itemSelect/ItemSelectType";
 import { DefaultOptionType } from "antd/lib/select";
 import { YakitAutoComplete } from "../yakitUI/YakitAutoComplete/YakitAutoComplete";
-import { KVPair } from "@/models/kv";
 
 export interface ThirdPartyApplicationConfigProp {
     data?: ThirdPartyApplicationConfig
