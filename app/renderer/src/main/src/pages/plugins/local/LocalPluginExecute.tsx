@@ -10,7 +10,7 @@ import {ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/Expan
 import {useCreation} from "ahooks"
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
-    const {plugin, headExtraNode} = props
+    const {plugin, headExtraNode, linkPluginConfig} = props
     /**执行状态 */
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [runtimeId, setRuntimeId] = useState<string>("")
@@ -55,6 +55,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 setRuntimeId={setRuntimeId}
                 executeStatus={executeStatus}
                 setExecuteStatus={setExecuteStatus}
+                linkPluginConfig={linkPluginConfig}
             />
             {isShowResult && (
                 <PluginExecuteResult

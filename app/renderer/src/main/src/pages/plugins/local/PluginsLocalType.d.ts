@@ -95,6 +95,8 @@ export interface PluginExecutorProps {
 export interface LocalPluginExecuteProps {
     plugin: YakScript
     headExtraNode: ReactNode
+    /**插件UI联动相关参数*/
+    linkPluginConfig?: HybridScanPluginConfig
 }
 
 export interface ExportParamsProps {
@@ -120,6 +122,8 @@ export interface PluginDetailsTabProps {
     plugin: YakScript
     headExtraNode: ReactNode
     wrapperClassName?: string
+    /**插件UI联动相关参数*/
+    linkPluginConfig?: HybridScanPluginConfig
 
     /** 是否隐藏日志和问题 */
     hiddenLogIssue?: boolean

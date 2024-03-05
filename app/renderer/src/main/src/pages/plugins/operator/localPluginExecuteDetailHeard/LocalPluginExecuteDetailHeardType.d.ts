@@ -24,6 +24,8 @@ export interface PluginExecuteDetailHeardProps {
     setRuntimeId: (b: string) => void
     executeStatus: ExpandAndRetractExcessiveState
     setExecuteStatus:(b:ExpandAndRetractExcessiveState)=>void
+    /**插件UI联动相关参数*/
+    linkPluginConfig?:HybridScanPluginConfig
 }
 
 export interface YakExtraParamProps {
