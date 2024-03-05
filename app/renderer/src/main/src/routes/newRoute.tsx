@@ -4,7 +4,6 @@ import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
 import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
-import {PluginOperator} from "../pages/yakitStore/PluginOperator"
 import {failed} from "../utils/notification"
 import {BrutePage} from "../pages/brute/BrutePage"
 import {DataCompare} from "../pages/compare/DataCompare"
@@ -534,7 +533,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakPoC pageId={params?.id || ""}/>
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
-            // return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />
             return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
         case YakitRoute.Mod_Brute:
             return <BrutePage sendTarget={params?.bruteParams} />
@@ -1433,12 +1431,14 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
     }
 ]
 // 要全部删除，但是里面的内容还没确定好
+/**@deprecated */
 export enum Route {
     WebsocketHistory = "websocket-history",
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output"
 }
 // 要全部删除，但是里面的内容还没确定好
+/**@deprecated */
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
     const routeStr = `${r}`
     // 处理社区插件（以插件 ID 添加的情况）
@@ -1451,7 +1451,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <PluginOperator yakScriptId={yakScriptId || id} yakScriptName='' size={"big"} fromMenu={true} />
+        return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
     }
 
     if (routeStr.startsWith("batch:")) {

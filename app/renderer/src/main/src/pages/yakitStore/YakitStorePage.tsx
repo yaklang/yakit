@@ -52,7 +52,6 @@ import {genDefaultPagination, GroupCount, QueryYakScriptRequest, QueryYakScripts
 import {failed, success, warn, info, yakitFailed} from "../../utils/notification"
 import {CopyableField, InputItem, ManySelectOne, SelectOne} from "../../utils/inputUtil"
 import {formatDate} from "../../utils/timeUtil"
-import {PluginOperator} from "./PluginOperator"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoCard} from "../../components/AutoCard"
 import {UserInfoProps, useStore} from "@/store"
