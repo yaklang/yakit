@@ -574,6 +574,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         </Form.Item>
                         <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
                             <YakitButton
+                                style={{marginTop: 2}}
                                 size='small'
                                 type='text'
                                 onClick={() => setBatchTargetModalVisible(true)}
