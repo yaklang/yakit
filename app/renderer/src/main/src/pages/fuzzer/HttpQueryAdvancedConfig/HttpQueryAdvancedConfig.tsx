@@ -53,6 +53,7 @@ import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStart
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
+import { OutlineBadgecheckIcon } from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -574,15 +575,23 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         </Form.Item>
                         <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
                             <YakitButton
-                                style={{marginTop: 2}}
+                                style={{marginTop: 3}}
                                 size='small'
                                 type='text'
                                 onClick={() => setBatchTargetModalVisible(true)}
-                                icon={<PlusSmIcon />}
+                                icon={
+                                    Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
+                                        <OutlineBadgecheckIcon style={{color: "#56C991"}}/>
+                                    ) : (
+                                        <PlusSmIcon />
+                                    )
+                                }
                             >
-                                {Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array())
-                                    ? "已配置"
-                                    : "配置"}
+                                {Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
+                                    <div style={{color: "#56C991"}}>已配置</div>
+                                ) : (
+                                    "配置"
+                                )}
                                 批量目标
                             </YakitButton>
                         </Form.Item>
