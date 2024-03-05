@@ -30,7 +30,7 @@ import {getReleaseEditionName, isCommunityEdition, isEnpriTraceAgent} from "@/ut
 import {
     DownloadOnlinePluginsRequest,
     apiFetchQueryYakScriptGroupLocal,
-    apiFetchQueryYakScriptGroupOnline,
+    apiFetchQueryYakScriptGroupOnlineNotLoggedIn,
     apiQueryYakScript
 } from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
@@ -472,7 +472,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     useEffect(() => {
         // 获取插件组
         if (isOnline) {
-            apiFetchQueryYakScriptGroupOnline().then((res: API.GroupResponse) => {
+            apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
                 const copyGroup = structuredClone(res.data)
                 const data: YakFilterRemoteObj[] = copyGroup
                     .filter((item) => !item.default)

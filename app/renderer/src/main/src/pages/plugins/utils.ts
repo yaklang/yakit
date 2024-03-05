@@ -1614,3 +1614,25 @@ export const apiFetchSaveYakScriptGroupOnline: (params: API.GroupRequest) => Pro
         }
     })
 }
+
+/** 插件商店 获取线上组 不需要登录*/
+export const apiFetchQueryYakScriptGroupOnlineNotLoggedIn: () => Promise<API.GroupResponse> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<any, API.GroupResponse>({
+                method: "get",
+                url: "group/search"
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取插件组失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取插件组失败：" + error)
+            reject(error)
+        }
+    })
+}
