@@ -4,9 +4,13 @@
     align-items: center;
     padding: 12px 16px;
     border-bottom: 1px solid #eaecf3;
-    position: relative;
+    // position: relative;
     transition: background-color 0.3s ease;
     background-color: #fff;
+
+    position: sticky;
+    top: 0;
+    z-index: 12;
     &:hover {
         cursor: pointer;
         background-color: var(--yakit-card-background-color);
