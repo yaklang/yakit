@@ -310,7 +310,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-debug-monaco-editor": {label: "插件编辑器"},
     "beta-vulinbox-manager": {label: "Vulinbox 管理器"},
     "beta-diagnose-network": {label: "网络异常诊断"},
-    "beta-config-network": {label: "全局网络配置"},
+    "beta-config-network": {label: "全局配置"},
     "plugin-audit": {label: "插件管理"},
     "**beta-debug-traffic-analize": {label: "流量分析"},
     "beta-webshell-manager": {label: "网站管理"},
