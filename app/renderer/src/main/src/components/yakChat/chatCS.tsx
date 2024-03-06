@@ -2044,7 +2044,8 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                             className={styles["content-type-title"]}
                                                         >{`# ${"插件调试执行"}`}</div>
                                                     )}
-                                                    {item.end ? (
+                                                    {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
+                                                    {(typeof item.end === "boolean"? item.end :true) ? (
                                                         <ChatMarkdown content={item.content} />
                                                     ) : (
                                                         <div className={styles["load-content-box"]}>
@@ -2092,7 +2093,8 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                             >{`# ${"插件调试执行"}`}</div>
                                                         )}
                                                         <>
-                                                            {item.end ? (
+                                                            {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
+                                                            {(typeof item.end === "boolean"? item.end :true) ? (
                                                                 <>
                                                                     {renderType === "plugin-list" ? (
                                                                         <PluginListContent
