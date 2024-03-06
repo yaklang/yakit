@@ -1,0 +1,29 @@
+@use "../securityTool.scss" as securityTool;
+
+.port-scan-execute-wrapper{
+    @include securityTool.execute-title("port-scan");
+}
+
+.divider-style {
+    @extend %divider-style;
+}
+.port-scan-form-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: all 0.3s ease;
+    padding-top: 16px;
+    :global {
+        .ant-form {
+            overflow: hidden;
+        }
+    }
+    .plugin-execute-form-item {
+        width: 100%;
+    }
+    .plugin-execute-form-operate {
+        @extend %display-flex-center;
+        .plugin-execute-form-operate-start {
+            margin-right: 8px;
+        }
+    }
+}

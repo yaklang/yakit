@@ -135,6 +135,7 @@ import { PluginBatchExecutorPageInfoProps, PocPageInfoProps } from "@/store/page
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import { SinglePluginExecution } from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 import {YakPoC} from "@/pages/securityTool/yakPoC/yakPoC"
+import {NewPortScan} from "@/pages/securityTool/newPortScan/newPortScan"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -385,7 +386,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Codec,
     YakitRoute.Space_Engine,
     YakitRoute.Plugin_OP,
-    YakitRoute.PoC
+    YakitRoute.PoC,
+    YakitRoute.Mod_ScanPort
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -526,9 +528,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DataCompare:
             return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
-            return <PortScanPage sendTarget={params?.scanportParams} />
+            // return <PortScanPage sendTarget={params?.scanportParams} />
+            return <NewPortScan />
         case YakitRoute.PoC:
-            // return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
             return <YakPoC pageId={params?.id || ""}/>
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
