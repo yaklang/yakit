@@ -93,6 +93,9 @@
 
 .expand-retract {
     padding-top: 0;
+    position: sticky;
+    top: 0;
+    z-index: 12;
     .expand-retract-animation-wrapper {
         top: 85%;
     }
