@@ -590,9 +590,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 {Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
                                     <div style={{color: "#56C991"}}>已配置</div>
                                 ) : (
-                                    "配置"
+                                    "配置批量目标"
                                 )}
-                                批量目标
                             </YakitButton>
                         </Form.Item>
                     </YakitPanel>
