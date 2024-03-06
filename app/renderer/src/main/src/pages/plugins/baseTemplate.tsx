@@ -237,7 +237,8 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         updated_at,
         prImgs = [],
         type,
-        basePluginName
+        basePluginName,
+        wrapperClassName
     } = props
 
     const tagList = useMemo(() => {
@@ -260,7 +261,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         }
     }, [prImgs])
     return (
-        <div className={styles["plugin-detail-header-wrapper"]}>
+        <div className={classNames(styles['plugin-detail-header-wrapper'], wrapperClassName)}>
             <div className={styles["header-wrapper"]}>
                 <div className={styles["header-info"]}>
                     <div className={styles["info-title"]}>

@@ -759,6 +759,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                             userName: ele.user_name
                                         }))}
                                         type={plugin.type}
+                                        wrapperClassName={styles['plugin-info-header']}
                                     />
 
                                     {+plugin.status === 0 ? (

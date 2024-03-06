@@ -63,6 +63,9 @@
         height: 100%;
         padding: 0 12px 12px;
         overflow: hidden overlay;
+        .plugin-info-header{
+            background-color: #fff;
+        }
         .plugin-info-extra-header {
             display: flex;
             align-items: center;

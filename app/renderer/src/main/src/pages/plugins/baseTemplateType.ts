@@ -98,10 +98,10 @@ export interface PluginDetailHeaderProps {
     prImgs?: CollaboratorInfoProps[]
     /**插件类型 */
     type: string
-    /**
-     * 复制源插件
-     */
+    /** 复制源插件 */
     basePluginName?: string
+    /** wrapper classname */
+    wrapperClassName?: string
 }
 /**协作者信息 */
 export interface CollaboratorInfoProps {
