@@ -76,6 +76,7 @@ const marks: SliderMarks = {
 }
 
 interface SimpleDetectFormProps {
+    refreshPluginGroup: number
     setPercent: (v: number) => void
     percent: number
     setExecuting: (v: boolean) => void
@@ -104,6 +105,7 @@ interface SimpleDetectFormProps {
 
 export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const {
+        refreshPluginGroup,
         percent,
         setPercent,
         setExecuting,
@@ -448,7 +450,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             run(TaskName)
         }
         // 只勾选了爆破弱口令的选项
-        else if (blastingWeakPwdFlag) {
+        else if (blastingWeakPwdFlag && OnlineGroup !== "基础扫描") {
             setPortParams({...getPortParams(), ScriptNames: []})
             run(TaskName)
         } else {
@@ -492,26 +494,50 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const [inViewport = true] = useInViewport(simpleDetectRef)
     const [plainOptions, setPlainOptions] = useState<string[]>([])
     const [groupWeakPwdFlag, setGroupWeakPwdFlag] = useState<boolean>(false) // 标识弱口令是否是分组里面的弱口令还是固定的爆破弱口令
+    const getPluginGroup = (callBack?: () => void) => {
+        apiFetchQueryYakScriptGroupLocal(false)
+            .then((group: GroupCount[]) => {
+                const copyGroup = structuredClone(group)
+                let groups: string[] = copyGroup.map((item) => item.Value)
+                if (groups.includes("基础扫描")) {
+                    groups = groups.filter((item) => item !== "基础扫描")
+                }
+                if (!groups.includes("弱口令")) {
+                    setGroupWeakPwdFlag(false)
+                    groups.push("弱口令") // 塞一个固定的爆破弱口令
+                } else {
+                    setGroupWeakPwdFlag(true)
+                }
+                const checked = checkedList.filter((item) => groups.includes(item + ""))
+                setCheckedList(checked)
+                setPlainOptions(groups)
+            })
+            .finally(() => {
+                callBack && callBack()
+            })
+    }
     useEffect(() => {
-        apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
-            const copyGroup = structuredClone(group)
-            let groups: string[] = copyGroup.map((item) => item.Value)
-            if (groups.includes("基础扫描")) {
-                groups = groups.filter((item) => item !== "基础扫描")
-            }
-            if (!groups.includes("弱口令")) {
-                setGroupWeakPwdFlag(false)
-                groups.push("弱口令") // 塞一个固定的爆破弱口令
-            } else {
-                setGroupWeakPwdFlag(true)
-            }
-            setPlainOptions(groups)
-        })
-    }, [inViewport])
+        getPluginGroup()
+    }, [inViewport, refreshPluginGroup])
 
     return (
         <div className={styles["simple-detect-form"]} style={{marginTop: 20}} ref={simpleDetectRef}>
-            <Form {...layout} form={form} onFinish={onFinish}>
+            <Form
+                {...layout}
+                form={form}
+                onFinish={(values) => {
+                    onFinish(values)
+                    // if (getScanType() === "基础扫描") {
+                    //     onFinish(values)
+                    // } else {
+                    //     getPluginGroup(() => {
+                    //         setTimeout(() => {
+                    //             onFinish(values)
+                    //         }, 100)
+                    //     })
+                    // }
+                }}
+            >
                 <Spin spinning={uploadLoading}>
                     <ContentUploadInput
                         type='textarea'
@@ -1083,10 +1109,11 @@ interface DownloadAllPluginProps {
     type?: "modal" | "default"
     setDownloadPlugin?: (v: boolean) => void
     onClose?: () => void
+    delAllPlugins?: () => void
 }
 
 export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
-    const {setDownloadPlugin, onClose} = props
+    const {setDownloadPlugin, onClose, delAllPlugins} = props
     const type = props.type || "default"
     // 全局登录状态
     const {userInfo} = useStore()
@@ -1146,6 +1173,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         ipcRenderer
             .invoke("DeleteLocalPluginsByWhere", {})
             .then(() => {
+                delAllPlugins && delAllPlugins()
                 success("全部删除成功")
             })
             .catch((e) => {
@@ -1295,6 +1323,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     // 是否显示之前的卡片
     const [showOldCard, setShowOldCard] = useState<boolean>(false)
 
+    // 下载完插件 需要刷新获取插件组接口
+    const [refreshPluginGroup, setRefreshPluginGroup] = useState<number>(Math.random())
+
     const statusErrorCards = infoState.statusState.filter((item) => ["加载插件失败", "SYN扫描失败"].includes(item.tag))
     const statusSucceeCards = infoState.statusState.filter((item) =>
         ["加载插件", "漏洞/风险/指纹", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
@@ -1423,7 +1454,19 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                         <AutoCard
                             size={"small"}
                             bordered={false}
-                            title={!executing ? <DownloadAllPlugin setDownloadPlugin={setDownloadPlugin} /> : null}
+                            title={
+                                !executing ? (
+                                    <DownloadAllPlugin
+                                        setDownloadPlugin={setDownloadPlugin}
+                                        delAllPlugins={() => {
+                                            setRefreshPluginGroup(Math.random())
+                                        }}
+                                        onClose={() => {
+                                            setRefreshPluginGroup(Math.random())
+                                        }}
+                                    />
+                                ) : null
+                            }
                             bodyStyle={{display: "flex", flexDirection: "column", padding: "0 5px", overflow: "hidden"}}
                         >
                             <Row>
@@ -1455,6 +1498,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
                                 )}
                                 <Col span={percent > 0 || executing ? 18 : 24}>
                                     <SimpleDetectForm
+                                        refreshPluginGroup={refreshPluginGroup}
                                         executing={executing}
                                         setPercent={setPercent}
                                         percent={percent}
