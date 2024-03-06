@@ -238,7 +238,7 @@ export const extraMenuLists: OtherMenuListProps = {
                 children: [],
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, scriptName: string,getCurrentSelectPageId: (routeKey: string) => string) => {
+        onRun: (editor: YakitIMonacoEditor, scriptName: string,pageId) => {
             try {
                 const model = editor.getModel();
                 const selection = editor.getSelection()
@@ -249,8 +249,6 @@ export const extraMenuLists: OtherMenuListProps = {
                         text = selectText
                     }
                 }
-                // 获取页面唯一标识符
-                const pageId = getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
                 emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,pageId}))
             } catch (e) {
                 failed(`custom context menu execute failed: ${e}`)

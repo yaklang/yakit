@@ -1982,30 +1982,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                 />
             </div>
-            {fuzzerRef.current && (
-                <YakitWindow
-                    getContainer={fuzzerRef.current}
-                    title='执行结果'
-                    visible={yakitWindowVisible}
-                    contentStyle={{padding: 0}}
-                    width={600}
-                    footerStyle={{flexDirection: "row-reverse", justifyContent: "center"}}
-                    defaultDockSide={["shrink", "left", "right", "bottom"]}
-                    firstDockSide='shrink'
-                    onCancel={() => {
-                        setYakitWindowVisible(false)
-                        setMenuExecutorParams(undefined)
-                    }}
-                    onOk={() => {}}
-                >
-                    {menuExecutorParams && (
-                        <ContextMenuExecutor
-                            scriptName={menuExecutorParams.scriptName}
-                            text={menuExecutorParams.text}
-                        />
-                    )}
-                </YakitWindow>
-            )}
+            {fuzzerRef.current&&<YakitWindow
+                getContainer={fuzzerRef.current}
+                title='执行结果'
+                visible={yakitWindowVisible}
+                contentStyle={{padding: 0}}
+                width={600}
+                footerStyle={{display:"none"}}
+                defaultDockSide = {["shrink", "left", "right", "bottom"]}
+                firstDockSide="shrink"
+                onCancel={()=>{
+                    setYakitWindowVisible(false)
+                    setMenuExecutorParams(undefined)
+                }}
+                onOk={()=>{}}
+            >
+                {menuExecutorParams&&<ContextMenuExecutor scriptName={menuExecutorParams.scriptName} text={menuExecutorParams.text}/>}
+            </YakitWindow>}
         </div>
     )
 }

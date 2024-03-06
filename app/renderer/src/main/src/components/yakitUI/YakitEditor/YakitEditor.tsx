@@ -58,6 +58,7 @@ import { setEditorContext } from "@/utils/monacoSpec/yakEditor"
 import { YakParamProps } from "@/pages/plugins/pluginsType"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import { YakitRoute } from "@/routes/newRoute"
 
 interface CodecTypeProps {
     key?: string
@@ -305,7 +306,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
                         const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
-                        allMenu[name].onRun(editor, menuItemName,getCurrentSelectPageId)
+                        let pageId:string|undefined
+                        // 获取页面唯一标识符
+                        if(keyPath.includes("customcontextmenu")){
+                            pageId = getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
+                        }
+                        allMenu[name].onRun(editor, menuItemName,pageId)
                         executeFunc = true
                         onRightContextMenu(menuItemName)
                         break
@@ -319,7 +325,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
                         const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
-                        allMenu[name].onRun(editor, menuName,getCurrentSelectPageId)
+                        allMenu[name].onRun(editor, menuName)
                         executeFunc = true
                         onRightContextMenu(menuName)
                         break
