@@ -91,6 +91,8 @@ const fuzzTagModeOptions = [
     }
 ]
 
+type fields = keyof AdvancedConfigValueProps
+
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
     const {
         advancedConfigValue,
@@ -107,8 +109,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     } = props
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
-
-    const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const [defActiveKey, setDefActiveKey] = useState<string>("")
@@ -342,16 +342,68 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
 
     const variableRef = useRef<any>()
-    /** 变量重置 */
-    const handleVariableReset = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    const methodGetRef = useRef<any>()
+    const methodPostRef = useRef<any>()
+    const headersRef = useRef<any>()
+    const cookieRef = useRef<any>()
+    // 添加
+    const handleVariableAdd = (
+        e: React.MouseEvent<HTMLElement, MouseEvent>,
+        field: fields,
+        actKey: string,
+        val: any,
+        ref: React.MutableRefObject<any>
+    ) => {
         e.stopPropagation()
-        onReset({
-            params: [{Key: "", Value: "", Type: "raw"}]
-        })
-        if (variableRef && variableRef.current) {
-            variableRef.current?.setVariableActiveKey(["0"])
+        const v = form.getFieldsValue()
+        const variables = v[field] || []
+        const index = variables.findIndex((ele: {Key: string; Value: string}) => !ele || (!ele.Key && !ele.Value))
+        if (index === -1) {
+            form.setFieldsValue({
+                [field]: [...variables, {...val}]
+            })
+            onSetValue({
+                ...v,
+                [field]: [...variables, {...val}]
+            })
+            if (ref.current) {
+                ref.current.setVariableActiveKey([
+                    ...(ref.current.variableActiveKey || []),
+                    `${variables?.length || 0}`
+                ])
+            }
+        } else {
+            yakitFailed(`请将已添加【变量${index}】设置完成后再进行添加`)
         }
-    })
+        if (activeKey?.findIndex((ele) => ele === actKey) === -1) {
+            setActiveKey([...activeKey, actKey])
+        }
+    }
+    // 删除
+    const handleVariableDel = (i: number, field: fields) => {
+        const v = form.getFieldsValue()
+        const variables = v[field] || []
+        variables.splice(i, 1)
+        form.setFieldsValue({
+            [field]: [...variables]
+        })
+        onSetValue({
+            ...v,
+            [field]: [...variables]
+        })
+    }
+    // 重置
+    const handleVariableReset = useMemoizedFn(
+        (e: React.MouseEvent<HTMLElement, MouseEvent>, field: fields, val: any, ref: React.MutableRefObject<any>) => {
+            e.stopPropagation()
+            onReset({
+                [field]: [{...val}]
+            })
+            if (ref.current) {
+                ref.current.setVariableActiveKey(["0"])
+            }
+        }
+    )
     /** @description 变量预览 */
     const onRenderVariables = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
         e.stopPropagation()
@@ -387,43 +439,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             .catch((err) => {
                 yakitNotify("error", "预览失败:" + err)
             })
-    })
-    /** 变量添加 */
-    const handleVariableAdd = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
-        e.stopPropagation()
-        const v = form.getFieldsValue()
-        const variables = v.params || []
-        const index = variables.findIndex((ele) => !ele || (!ele.Key && !ele.Value))
-        if (index === -1) {
-            form.setFieldsValue({
-                params: [...variables, {Key: "", Value: "", Type: "raw"}]
-            })
-            onSetValue({
-                ...v,
-                params: [...variables, {Key: "", Value: "", Type: "raw"}]
-            })
-            if (variableRef && variableRef.current) {
-                variableRef.current?.setVariableActiveKey([...(variableActiveKey || []), `${variables?.length || 0}`])
-            }
-        } else {
-            yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
-        }
-        if (activeKey?.findIndex((ele) => ele === "设置变量") === -1) {
-            onSwitchCollapse([...activeKey, "设置变量"])
-        }
-    })
-    /** 变量删除 */
-    const handleVariableDel = useMemoizedFn((i: number) => {
-        const v = form.getFieldsValue()
-        const variables = v.params || []
-        variables.splice(i, 1)
-        form.setFieldsValue({
-            params: [...variables]
-        })
-        onSetValue({
-            ...v,
-            params: [...variables]
-        })
     })
 
     return (
@@ -979,7 +994,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         key='设置变量'
                         extra={
                             <>
-                                <YakitButton type='text' colors='danger' onClick={handleVariableReset} size='small'>
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    onClick={(e) =>
+                                        handleVariableReset(e, "params", {Key: "", Value: "", Type: "raw"}, variableRef)
+                                    }
+                                    size='small'
+                                >
                                     重置
                                 </YakitButton>
                                 <Divider type='vertical' style={{margin: 0}} />
@@ -989,7 +1011,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <Divider type='vertical' style={{margin: 0}} />
                                 <YakitButton
                                     type='text'
-                                    onClick={handleVariableAdd}
+                                    onClick={(e) =>
+                                        handleVariableAdd(
+                                            e,
+                                            "params",
+                                            "设置变量",
+                                            {Key: "", Value: "", Type: "raw"},
+                                            variableRef
+                                        )
+                                    }
                                     className={styles["btn-padding-right-0"]}
                                     size='small'
                                 >
@@ -1002,7 +1032,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <VariableList
                             ref={variableRef}
                             field='params'
-                            onDel={handleVariableDel}
+                            onDel={(i) => handleVariableDel(i, "params")}
                             extra={(i, info) => (
                                 <Form.Item name={[info.name, "Type"]} noStyle wrapperCol={{span: 24}}>
                                     <YakitRadioButtons
@@ -1013,6 +1043,158 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     />
                                 </Form.Item>
                             )}
+                        ></VariableList>
+                    </YakitPanel>
+                    <YakitPanel
+                        header='GET 参数'
+                        key='GET 参数'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    onClick={(e) =>
+                                        handleVariableReset(e, "methodGet", {Key: "", Value: ""}, variableRef)
+                                    }
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) =>
+                                        handleVariableAdd(e, "methodGet", "GET 参数", {Key: "", Value: ""}, variableRef)
+                                    }
+                                    className={styles["btn-padding-right-0"]}
+                                    size='small'
+                                >
+                                    添加
+                                    <PlusIcon />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <VariableList
+                            ref={methodGetRef}
+                            field='methodGet'
+                            onDel={(i) => handleVariableDel(i, "methodGet")}
+                        ></VariableList>
+                    </YakitPanel>
+                    <YakitPanel
+                        header='POST 参数'
+                        key='POST 参数'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    onClick={(e) =>
+                                        handleVariableReset(e, "methodPost", {Key: "", Value: ""}, variableRef)
+                                    }
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) =>
+                                        handleVariableAdd(
+                                            e,
+                                            "methodPost",
+                                            "POST 参数",
+                                            {Key: "", Value: ""},
+                                            variableRef
+                                        )
+                                    }
+                                    className={styles["btn-padding-right-0"]}
+                                    size='small'
+                                >
+                                    添加
+                                    <PlusIcon />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <VariableList
+                            ref={methodPostRef}
+                            field='methodPost'
+                            onDel={(i) => handleVariableDel(i, "methodPost")}
+                        ></VariableList>
+                    </YakitPanel>
+                    <YakitPanel
+                        header='Cookie'
+                        key='Cookie'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    onClick={(e) => handleVariableReset(e, "cookie", {Key: "", Value: ""}, variableRef)}
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) =>
+                                        handleVariableAdd(e, "cookie", "Cookie", {Key: "", Value: ""}, variableRef)
+                                    }
+                                    className={styles["btn-padding-right-0"]}
+                                    size='small'
+                                >
+                                    添加
+                                    <PlusIcon />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <VariableList
+                            ref={cookieRef}
+                            field='cookie'
+                            onDel={(i) => handleVariableDel(i, "cookie")}
+                        ></VariableList>
+                    </YakitPanel>
+                    <YakitPanel
+                        header='Header'
+                        key='Header'
+                        extra={
+                            <>
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    onClick={(e) =>
+                                        handleVariableReset(e, "headers", {Key: "", Value: ""}, variableRef)
+                                    }
+                                    size='small'
+                                >
+                                    重置
+                                </YakitButton>
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <Divider type='vertical' style={{margin: 0}} />
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) =>
+                                        handleVariableAdd(e, "headers", "Header", {Key: "", Value: ""}, variableRef)
+                                    }
+                                    className={styles["btn-padding-right-0"]}
+                                    size='small'
+                                >
+                                    添加
+                                    <PlusIcon />
+                                </YakitButton>
+                            </>
+                        }
+                    >
+                        <VariableList
+                            ref={headersRef}
+                            field='headers'
+                            onDel={(i) => handleVariableDel(i, "headers")}
                         ></VariableList>
                     </YakitPanel>
                 </YakitCollapse>

@@ -31,6 +31,9 @@ import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorC
 const {ipcRenderer} = window.require("electron")
 
 const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
+    const a = value.MutateMethods.find((item) => item.Type === "Cookie")
+    a?.Value
+
     const resProps: AdvancedConfigValueProps = {
         isHttps: value.IsHTTPS,
         isGmTLS: value.IsGmTLS,
@@ -70,6 +73,10 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         matchers: value.Matchers,
         extractors: value.Extractors,
         params: value.Params,
+        cookie: value.MutateMethods.find((item) => item.Type === "Cookie")?.Value || [],
+        headers: value.MutateMethods.find((item) => item.Type === "Headers")?.Value || [],
+        methodGet: value.MutateMethods.find((item) => item.Type === "Get")?.Value || [],
+        methodPost: value.MutateMethods.find((item) => item.Type === "Post")?.Value || [],
         inheritCookies: value.InheritCookies,
         inheritVariables: value.InheritVariables
     }

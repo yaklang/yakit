@@ -236,9 +236,14 @@ export interface HistoryHTTPFuzzerTask {
     Verbose?: string
 }
 
+interface MutateMethod {
+    Type: string
+    Value: KVPair[]
+}
 export interface FuzzerRequestProps {
     // Request: string
     Params: FuzzerParamItem[]
+    MutateMethods: MutateMethod[]
     Concurrent: number
     IsHTTPS: boolean
     FuzzTagMode: FuzzTagMode
@@ -385,6 +390,24 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
                 Value: ele.Value,
                 Type: ele.Type
             })),
+        MutateMethods: [
+            {
+                Type: "Get",
+                Value: value.methodGet
+            },
+            {
+                Type: "Post",
+                Value: value.methodPost
+            },
+            {
+                Type: "Headers",
+                Value: value.headers
+            },
+            {
+                Type: "Cookie",
+                Value: value.cookie
+            }
+        ],
         //匹配器
         Matchers: value.matchers,
         MatchersCondition: value.matchersCondition,
@@ -392,6 +415,8 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         //提取器
         Extractors: value.extractors
     }
+
+    console.log(123, fuzzerRequests);
     return fuzzerRequests
 }
 
@@ -532,6 +557,30 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     etcHosts: [],
     // 设置变量
     params: [{Key: "", Value: "", Type: "raw"}],
+    methodGet: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    methodPost: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    cookie: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    headers: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
     // 匹配器
     filterMode: "onlyMatch",
     matchers: [],
