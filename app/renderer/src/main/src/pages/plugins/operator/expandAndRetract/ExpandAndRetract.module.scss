@@ -4,9 +4,13 @@
     align-items: center;
     padding: 12px 16px;
     border-bottom: 1px solid #eaecf3;
-    position: relative;
+    // position: relative;
     transition: background-color 0.3s ease;
     background-color: #fff;
+
+    position: sticky;
+    top: 0;
+    z-index: 12;
     &:hover {
         cursor: pointer;
         background-color: var(--yakit-card-background-color);
@@ -28,14 +32,14 @@
 }
 
 .expand-and-retract-header-process {
-    background-color: var(--yakit-primary-1);
+    background-color: #fff9f2;
 }
 .expand-and-retract-header-finished {
-    background-color: var(--yakit-success-1);
+    background-color: #f1fbf6;
 }
 
 .expand-and-retract-header-error {
-    background-color: var(--yakit-danger-1);
+    background-color: #fef1f1;
 }
 
 .expand-and-retract-header-icon-body {
@@ -55,6 +59,7 @@
     border-radius: 12px;
     transition: width 0.2s ease;
     font-size: 12px;
+    z-index: 12;
 
     .expand-and-retract-icon {
         margin-left: 1px;

@@ -153,7 +153,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         { label: `${item.NetInterfaceName}-(${item.IP})`, value: item.Name })
                 )
                 if (SynScanNetInterface.length === 0) {
-                    setParams({ ...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName })
+                    setParams((v)=>({ ...v, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName }))
                 }
                 setNetInterfaceList(interfaceList)
             })
@@ -165,7 +165,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
             }
-            setParams({ ...params, ...rsp })
+            setParams((v)=>({ ...v, ...rsp }))
             setLoading(false)
         })
     })

@@ -77,15 +77,6 @@
 // -------------------- form组件样式 ↓↓↓ --------------------
 .plugins-form {
     width: 100%;
-
-    .plugins-item-required {
-        margin: 0 4px;
-        padding-top: 4px;
-        color: #f4736b;
-        font-size: 14px;
-        line-height: 14px;
-    }
-
     .ant-row.ant-form-item {
         gap: 2px;
         .ant-form-item-label {
@@ -95,6 +86,13 @@
             display: none;
         }
     }
+}
+.plugins-item-required {
+    margin: 0 4px;
+    padding-top: 4px;
+    color: #f4736b;
+    font-size: 14px;
+    line-height: 14px;
 }
 // -------------------- radio组件样式 ↓↓↓ --------------------
 .plugins-radio-wrapper {
@@ -182,6 +180,7 @@
         align-items: center;
         border-radius: 4px;
         border: 1px solid transparent;
+        cursor: pointer;
         &:hover {
             background-color: #f0f1f3;
             .plugin-details-item {

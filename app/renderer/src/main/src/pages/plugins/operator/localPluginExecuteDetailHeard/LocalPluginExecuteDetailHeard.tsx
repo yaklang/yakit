@@ -29,12 +29,13 @@ import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType
 import {OutlineChevrondownIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
-import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
+import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, defaultLinkPluginConfig} from "../../utils"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {GetPluginLanguage} from "../../builtInData"
 import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam} from "../../editDetails/utils"
 import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
+import cloneDeep from "lodash/cloneDeep"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -64,7 +65,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         setRuntimeId,
         runtimeId,
         executeStatus,
-        setExecuteStatus
+        setExecuteStatus,
+        linkPluginConfig
     } = props
 
     const [form] = Form.useForm()
@@ -193,7 +195,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     ? Buffer.from(value.RawHTTPRequest, "utf8")
                     : Buffer.from("", "utf8")
             },
-            ExecParams: yakExecutorParams
+            ExecParams: yakExecutorParams,
+            LinkPluginConfig: linkPluginConfig || cloneDeep(defaultLinkPluginConfig),
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")

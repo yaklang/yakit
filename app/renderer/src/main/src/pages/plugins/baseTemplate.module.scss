@@ -107,6 +107,7 @@
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 16px;
+                gap: 64px;// 搜索框没有拉满的时候与左边文字的间距，目前需求最多只有两个元素
                 .title-style {
                     color: #31343f;
                     font-size: 12px;
@@ -459,6 +460,24 @@
             color: #31343f;
             font-size: 14px;
             line-height: 20px;
+            .switch-text {
+                display: inline-flex;
+                min-width: fit-content;
+            }
+            .switch-text-error {
+                color: var(--yakit-danger-5);
+                font-size: 14px;
+            }
+        }
+        .switch-type-wrapper {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 8px;
+            .select-wrapper {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
         }
     }
 }

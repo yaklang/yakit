@@ -987,7 +987,7 @@ const GetUIOpSettingMenu = () => {
                 {key: "agent", label: "系统代理"},
                 // { key: "engineAgent",label: "引擎扫描代理" },
                 // { key: "engineVar",label: "引擎环境变量" },
-                {key: "config-network", label: "全局网络配置"}
+                {key: "config-network", label: "全局配置"}
             ]
         },
         {

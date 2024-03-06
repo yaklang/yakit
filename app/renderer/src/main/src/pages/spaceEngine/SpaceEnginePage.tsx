@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
 import styles from "./SpaceEnginePage.module.scss"
-import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {OutlineInformationcircleIcon, OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
@@ -32,11 +32,12 @@ import {OutputFormComponentsByType} from "../plugins/operator/localPluginExecute
 import {YakParamProps} from "../plugins/pluginsType"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {SpaceEngineStartParams, getDefaultSpaceEngineStartParams} from "@/models/SpaceEngine"
+import {SpaceEngineStartParams, SpaceEngineStatus, getDefaultSpaceEngineStartParams} from "@/models/SpaceEngine"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import classNames from "classnames"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {ZoomeyeHelp} from "./ZoomeyeHelp"
 
 interface SpaceEnginePageProps {
     /**页面id */
@@ -233,6 +234,7 @@ interface SpaceEngineFormContentProps {
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
     const {disabled, inViewport} = props
     const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
+    const [engineStatus, setEngineStatus] = useState<SpaceEngineStatus>()
     useEffect(() => {
         onGetGlobalNetworkConfig()
     }, [inViewport])
@@ -249,6 +251,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                     onSetGlobalNetworkConfig(key)
                     break
             }
+            setEngineStatus(value)
         })
     })
     /**获取全局网络配置 */
@@ -314,6 +317,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                             }
                         }}
                         onCancel={() => m.destroy()}
+                        isCanInput={false}
                     />
                 </div>
             )
@@ -329,9 +333,35 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             Help: ""
         }
     }, [])
+    const engineExtra: ReactNode = useCreation(() => {
+        if (!engineStatus) return null
+        return (
+            <span className={styles["engine-help"]}>
+                {engineStatus.Info ? `${engineStatus.Info}，` : ""}
+                剩余额度：{Number(engineStatus.Remain) === -1 ? "无限制" : engineStatus.Remain}
+                {engineStatus.Type === "zoomeye" && (
+                    <span className={styles["engine-help-zoomeye"]} onClick={() => onOpenHelpModal()}>
+                        <span>ZoomEye 基础语法</span> <OutlineQuestionmarkcircleIcon />
+                    </span>
+                )}
+            </span>
+        )
+    }, [engineStatus])
+    const onOpenHelpModal = useMemoizedFn(() => {
+        const m = showYakitModal({
+            title: "ZoomEye 基础语法",
+            type: "white",
+            width:'60vw',
+            cancelButtonProps: {style: {display: "none"}},
+            onOkText: "我知道了",
+            onOk: () => m.destroy(),
+            bodyStyle: {padding: '8px 24px'},
+            content: <ZoomeyeHelp />
+        })
+    })
     return (
         <>
-            <Form.Item name='Type' label='引擎' rules={[{required: true}]}>
+            <Form.Item name='Type' label='引擎' rules={[{required: true}]} extra={engineExtra}>
                 <YakitSelect
                     options={[
                         {label: "ZoomEye", value: "zoomeye"},

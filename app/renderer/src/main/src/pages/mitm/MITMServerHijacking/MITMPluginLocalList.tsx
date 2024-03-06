@@ -26,7 +26,7 @@ import {ImportLocalPlugin} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
-import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTraceAgent} from "@/utils/envfile"
 import {
     DownloadOnlinePluginsRequest,
     apiFetchQueryYakScriptGroupLocal,
@@ -288,7 +288,8 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             setTimeout(() => {
                 setPercent(0)
                 setVisible(false)
-                ipcRenderer.invoke("change-main-menu")
+                if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
+                else ipcRenderer.invoke("change-main-menu")
                 onRefLocalPluginList()
             }, 200)
         })

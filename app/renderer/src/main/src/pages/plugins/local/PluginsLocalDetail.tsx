@@ -45,6 +45,15 @@ const {ipcRenderer} = window.require("electron")
 
 const {TabPane} = PluginTabs
 
+/**转换group参数*/
+export const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+    const realFilters: PluginFilterParams = {
+        ...filter,
+        plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+    }
+    return realFilters
+}
+
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
     const {
         pageWrapId = "",
@@ -251,14 +260,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 })
         })
     })
-    /**转换group参数*/
-    const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
-        const realFilters: PluginFilterParams = {
-            ...filter,
-            plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
-        }
-        return realFilters
-    }
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
         setFilters(value)
         onDetailSearch(search, value)
@@ -464,14 +465,14 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
 }
 
 export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((props) => {
-    const {executorShow, plugin, headExtraNode, wrapperClassName = "", hiddenLogIssue} = props
+    const {executorShow, plugin, headExtraNode, wrapperClassName = "", hiddenLogIssue,linkPluginConfig} = props
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
             <PluginTabs defaultActiveKey='execute' tabPosition='right'>
                 <TabPane tab='执行' key='execute'>
                     <div className={styles["plugin-execute-wrapper"]}>
                         {executorShow ? (
-                            <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} />
+                            <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} linkPluginConfig={linkPluginConfig}/>
                         ) : (
                             <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
                         )}
