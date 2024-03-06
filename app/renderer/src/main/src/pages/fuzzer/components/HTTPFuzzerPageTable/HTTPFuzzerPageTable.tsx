@@ -30,7 +30,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import { openABSFileLocated } from "@/utils/openWebsite"
+import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -85,21 +85,22 @@ export interface HTTPFuzzerPageTableQuery {
 // 判断数组值是否是数字 字符串类型数字也算
 const isNumericArray = (arr) => {
     // 利用正则表达式进行匹配
-    var regex = /^\d+$/;
+    var regex = /^\d+$/
     for (var i = 0; i < arr.length; i++) {
         if (!regex.test(arr[i])) {
-            return false;
+            return false
         }
     }
-    return true;
+    return true
 }
 
 export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
     // ------------  排序 开始  ------------
     let newList = list
     // 判断当前排序列是否既有数字又有字母的情况
-    const isNumber = isNumericArray(list.map(item => item[sorterTable?.orderBy] + ""))
-    
+    const isNumber = isNumericArray(
+        list.map((item) => (sorterTable?.orderBy == "" ? item[defSorter] + "" : item[sorterTable?.orderBy] + ""))
+    )
     // 重置
     if (sorterTable?.order === "none") {
         newList = list.sort((a, b) => compareAsc(a, b, defSorter, isNumber))
@@ -132,8 +133,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             pageId
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
+        const listTableRef = useRef<FuzzerResponse[]>([])
         const [loading, setLoading] = useState<boolean>(false)
         const [sorterTable, setSorterTable] = useState<SortProps>()
+        const sorterTableRef = useRef<SortProps>()
 
         const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
         const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
@@ -149,11 +152,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
 
+        useEffect(() => {
+            sorterTableRef.current = sorterTable
+        }, [sorterTable])
+        useEffect(() => {
+            listTableRef.current = listTable
+        }, [listTable])
+
         // useThrottleEffect(
-        //     () => {         
+        //     () => {
         //             setListTable([...data]);
         //             const dataLength = data.length
-        //             if(dataLength>0){scrollUpdate(dataLength)}  
+        //             if(dataLength>0){scrollUpdate(dataLength)}
         //     },
         //     [data],
         //     {
@@ -161,19 +171,19 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         //     },
         //   );
 
-          const scrollUpdate = useMemoizedFn((dataLength) => {
+        const scrollUpdate = useMemoizedFn((dataLength) => {
             const scrollTop = tableRef.current?.containerRef?.scrollTop
             const clientHeight = tableRef.current?.containerRef?.clientHeight
             const scrollHeight = tableRef.current?.containerRef?.scrollHeight
-            let scrollBottom: number|undefined = undefined
+            let scrollBottom: number | undefined = undefined
             if (typeof scrollTop === "number" && typeof clientHeight === "number" && typeof scrollHeight === "number") {
                 scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
-                const isScroll:boolean = scrollHeight>clientHeight
-                if(scrollBottom <= 2 && isScroll){
+                const isScroll: boolean = scrollHeight > clientHeight
+                if (scrollBottom <= 2 && isScroll) {
                     setScrollToIndex(dataLength)
                 }
             }
-          })
+        })
 
         useImperativeHandle(
             ref,
@@ -561,6 +571,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const queryData = useMemoizedFn(() => {
             try {
                 // ------------  搜索 开始  ------------
+                const copyData = structuredClone(data)
+                copyData.forEach((item, index) => {
+                    item.Count = index
+                })
                 // 有搜索条件才循环
                 if (
                     query?.keyWord ||
@@ -569,7 +583,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     query?.beforeBodyLength ||
                     isHaveData
                 ) {
-                    const newDataTable = sorterFunction(data, sorterTable) || []
+                    const newDataTable = sorterFunction(copyData, sorterTable) || []
                     const l = newDataTable.length
                     const searchList: FuzzerResponse[] = []
                     for (let index = 0; index < l; index++) {
@@ -632,12 +646,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                     setExportData && setExportData([...searchList])
                     setListTable([...searchList])
-                    if(searchList.length>0){scrollUpdate(searchList.length)} 
+                    if (searchList.length > 0) {
+                        scrollUpdate(searchList.length)
+                    }
                 } else {
-                    const newData = sorterFunction(data, sorterTable) || []
+                    const newData = sorterFunction(copyData, sorterTable) || []
                     setExportData && setExportData([...newData])
                     setListTable([...newData])
-                    if(newData.length>0){scrollUpdate(newData.length)} 
+                    if (newData.length > 0) {
+                        scrollUpdate(newData.length)
+                    }
                 }
                 // ------------  搜索 结束  ------------
             } catch (error) {
@@ -647,19 +665,20 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
             try {
-                const obj:{pageId:string,type:"all" | "payload"} = JSON.parse(v)
-                if(pageId===obj.pageId){
+                const obj: {pageId: string; type: "all" | "payload"} = JSON.parse(v)
+                if (pageId === obj.pageId) {
                     // 处理Uint8Array经过JSON.parse(JSON.stringify())导致数据损失和变形
-                    const newListTable = listTable.map((item)=>({
+                    const newListTable = listTable.map((item) => ({
                         ...item,
-                        RequestRaw:Uint8ArrayToString(item.RequestRaw),
-                        ResponseRaw:Uint8ArrayToString(item.ResponseRaw)
+                        RequestRaw: Uint8ArrayToString(item.RequestRaw),
+                        ResponseRaw: Uint8ArrayToString(item.ResponseRaw)
                     }))
-                    emiter.emit("onGetExportFuzzerCallBack", JSON.stringify({listTable:newListTable, type:obj.type ,pageId})) 
+                    emiter.emit(
+                        "onGetExportFuzzerCallBack",
+                        JSON.stringify({listTable: newListTable, type: obj.type, pageId})
+                    )
                 }
             } catch (error) {}
-            
-            
         })
 
         // 获取最新table值 用于筛选
@@ -724,9 +743,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 onViewExecResults(currentSelectItem.ExtractedResults)
             }
         })
-        
+
         return (
-            <div className={styles['http-fuzzer-page-table']} style={{overflowY: "hidden", height: "100%"}}>
+            <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
                     isVer={true}
                     lineDirection='bottom'
@@ -820,10 +839,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                 switch (key) {
                                                     case "tooLargeResponseHeaderFile":
                                                         ipcRenderer
-                                                            .invoke("is-file-exists", currentSelectItem.TooLargeResponseHeaderFile)
+                                                            .invoke(
+                                                                "is-file-exists",
+                                                                currentSelectItem.TooLargeResponseHeaderFile
+                                                            )
                                                             .then((flag: boolean) => {
                                                                 if (flag) {
-                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseHeaderFile)
+                                                                    openABSFileLocated(
+                                                                        currentSelectItem.TooLargeResponseHeaderFile
+                                                                    )
                                                                 } else {
                                                                     failed("目标文件已不存在!")
                                                                 }
@@ -832,10 +856,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                         break
                                                     case "tooLargeResponseBodyFile":
                                                         ipcRenderer
-                                                            .invoke("is-file-exists", currentSelectItem.TooLargeResponseBodyFile)
+                                                            .invoke(
+                                                                "is-file-exists",
+                                                                currentSelectItem.TooLargeResponseBodyFile
+                                                            )
                                                             .then((flag: boolean) => {
                                                                 if (flag) {
-                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseBodyFile)
+                                                                    openABSFileLocated(
+                                                                        currentSelectItem.TooLargeResponseBodyFile
+                                                                    )
                                                                 } else {
                                                                     failed("目标文件已不存在!")
                                                                 }
