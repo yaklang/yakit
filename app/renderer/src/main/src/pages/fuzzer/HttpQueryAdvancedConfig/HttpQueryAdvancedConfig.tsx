@@ -351,7 +351,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         e: React.MouseEvent<HTMLElement, MouseEvent>,
         field: fields,
         actKey: string,
-        val: any,
+        val: object,
         ref: React.MutableRefObject<any>
     ) => {
         e.stopPropagation()
@@ -394,7 +394,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }
     // 重置
     const handleVariableReset = useMemoizedFn(
-        (e: React.MouseEvent<HTMLElement, MouseEvent>, field: fields, val: any, ref: React.MutableRefObject<any>) => {
+        (e: React.MouseEvent<HTMLElement, MouseEvent>, field: fields, val: object, ref: React.MutableRefObject<any>) => {
             e.stopPropagation()
             onReset({
                 [field]: [{...val}]
