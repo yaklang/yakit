@@ -1054,7 +1054,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     type='text'
                                     colors='danger'
                                     onClick={(e) =>
-                                        handleVariableReset(e, "methodGet", {Key: "", Value: ""}, variableRef)
+                                        handleVariableReset(e, "methodGet", {Key: "", Value: ""}, methodGetRef)
                                     }
                                     size='small'
                                 >
@@ -1065,7 +1065,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     onClick={(e) =>
-                                        handleVariableAdd(e, "methodGet", "GET 参数", {Key: "", Value: ""}, variableRef)
+                                        handleVariableAdd(e, "methodGet", "GET 参数", {Key: "", Value: ""}, methodGetRef)
                                     }
                                     className={styles["btn-padding-right-0"]}
                                     size='small'
@@ -1091,7 +1091,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     type='text'
                                     colors='danger'
                                     onClick={(e) =>
-                                        handleVariableReset(e, "methodPost", {Key: "", Value: ""}, variableRef)
+                                        handleVariableReset(e, "methodPost", {Key: "", Value: ""}, methodPostRef)
                                     }
                                     size='small'
                                 >
@@ -1107,7 +1107,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             "methodPost",
                                             "POST 参数",
                                             {Key: "", Value: ""},
-                                            variableRef
+                                            methodPostRef
                                         )
                                     }
                                     className={styles["btn-padding-right-0"]}
@@ -1133,7 +1133,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     colors='danger'
-                                    onClick={(e) => handleVariableReset(e, "cookie", {Key: "", Value: ""}, variableRef)}
+                                    onClick={(e) => handleVariableReset(e, "cookie", {Key: "", Value: ""}, cookieRef)}
                                     size='small'
                                 >
                                     重置
@@ -1143,7 +1143,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     onClick={(e) =>
-                                        handleVariableAdd(e, "cookie", "Cookie", {Key: "", Value: ""}, variableRef)
+                                        handleVariableAdd(e, "cookie", "Cookie", {Key: "", Value: ""}, cookieRef)
                                     }
                                     className={styles["btn-padding-right-0"]}
                                     size='small'
@@ -1169,7 +1169,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     type='text'
                                     colors='danger'
                                     onClick={(e) =>
-                                        handleVariableReset(e, "headers", {Key: "", Value: ""}, variableRef)
+                                        handleVariableReset(e, "headers", {Key: "", Value: ""}, headersRef)
                                     }
                                     size='small'
                                 >
@@ -1180,7 +1180,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     onClick={(e) =>
-                                        handleVariableAdd(e, "headers", "Header", {Key: "", Value: ""}, variableRef)
+                                        handleVariableAdd(e, "headers", "Header", {Key: "", Value: ""}, headersRef)
                                     }
                                     className={styles["btn-padding-right-0"]}
                                     size='small'
