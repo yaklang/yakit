@@ -393,19 +393,39 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         MutateMethods: [
             {
                 Type: "Get",
-                Value: value.methodGet
+                Value: (value.methodGet || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
             },
             {
                 Type: "Post",
-                Value: value.methodPost
+                Value: (value.methodPost || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
             },
             {
                 Type: "Headers",
-                Value: value.headers
+                Value: (value.headers || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
             },
             {
                 Type: "Cookie",
-                Value: value.cookie
+                Value: (value.cookie || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
             }
         ],
         //匹配器
@@ -416,7 +436,6 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         Extractors: value.extractors
     }
 
-    console.log(123, fuzzerRequests);
     return fuzzerRequests
 }
 
