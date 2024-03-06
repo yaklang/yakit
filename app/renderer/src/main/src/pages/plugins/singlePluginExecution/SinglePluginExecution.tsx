@@ -4,7 +4,7 @@ import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab, convertGroupParam} from "../local/PluginsLocalDetail"
 import {QueryYakScriptRequest, YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {OutlinePencilaltIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {
     apiGetYakScriptById,
     apiQueryYakScript,
@@ -26,6 +26,7 @@ import "../plugins.scss"
 import {yakitNotify} from "@/utils/notification"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
+import {Tooltip} from "antd"
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const {yakScriptId} = props
@@ -47,8 +48,8 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     const isLoadingRef = useRef<boolean>(true)
 
     useEffect(() => {
-        if (inViewport) getPluginById()
-    }, [inViewport, yakScriptId])
+        getPluginById()
+    }, [yakScriptId])
 
     useEffect(() => {
         if (inViewport) {
@@ -58,6 +59,11 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         }
     }, [inViewport])
+
+    const onRefresh = useMemoizedFn((e) => {
+        e.stopPropagation()
+        getPluginById()
+    })
 
     /**获取最新的私有域,并刷新列表 */
     const getPrivateDomainAndRefList = useMemoizedFn(() => {
@@ -233,6 +239,15 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         if (plugin.Type !== "yak") return true
         return !plugin.EnablePluginSelector
     }, [plugin])
+    const headExtraNode = useCreation(() => {
+        return (
+            <>
+                <Tooltip title='刷新插件数据'>
+                    <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
+                </Tooltip>
+            </>
+        )
+    }, [])
     if (!plugin) return null
     return (
         <>
@@ -305,7 +320,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 <PluginDetailsTab
                     executorShow={!pluginLoading}
                     plugin={plugin}
-                    headExtraNode={null}
+                    headExtraNode={headExtraNode}
                     wrapperClassName={styles["single-plugin-execution-wrapper"]}
                     hiddenLogIssue={true}
                     linkPluginConfig={linkPluginConfig}
