@@ -3267,8 +3267,8 @@ message PortScanRequest {
   // 上传扫描目标为文件
   string TargetsFile = 10;
 
-  // 联动插件的配置
-  HybridScanPluginConfig LinkPluginConfig = 11;
+  // 设置上传的文件
+  repeated string ScriptNames = 11;
 
   // TCPProxy
   repeated string Proxy = 12;
@@ -3306,6 +3306,9 @@ message PortScanRequest {
   bool EnableBrute = 26;
 
   string SynScanNetInterface = 27;
+
+  // 联动插件的配置
+  HybridScanPluginConfig LinkPluginConfig = 28;
 }
 
 message DeletePortsRequest {
