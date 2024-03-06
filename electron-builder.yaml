@@ -65,6 +65,7 @@ linux:
     - target: AppImage
       arch:
         - x64
+  icon: "app/assets/yakitlogo.ico"
 
 win:
   artifactName: ${productName}-${version}-windows-amd64.${ext}
@@ -85,7 +86,7 @@ win:
 
 nsis:
   oneClick: false 
-  perMachine: true
+  perMachine: false
   deleteAppDataOnUninstall: true
   allowToChangeInstallationDirectory: true 
   installerIcon: app/assets/yakitlogo.ico 

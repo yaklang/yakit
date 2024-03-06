@@ -105,7 +105,7 @@ FunctionEnd
     ${EndIf}
 
     ; 设置用户一开始的安装路径
-    StrCpy $INSTDIR "C:\Program Files\$EXE_NAME"
+    StrCpy $INSTDIR ""
     
     !insertmacro checkInstalled
     !insertmacro checkIsUpdated
