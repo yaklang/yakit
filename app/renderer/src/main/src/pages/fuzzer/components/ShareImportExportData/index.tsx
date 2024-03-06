@@ -31,8 +31,6 @@ import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorC
 const {ipcRenderer} = window.require("electron")
 
 const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
-    const a = value.MutateMethods.find((item) => item.Type === "Cookie")
-    a?.Value
 
     const resProps: AdvancedConfigValueProps = {
         isHttps: value.IsHTTPS,
