@@ -125,6 +125,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
             .then((res) => {
                 setPlugin(res)
                 if (res.Type !== "yak") return
+                if (!res.EnablePluginSelector) return
                 pluginTypeRef.current = res.PluginSelectorTypes || ""
                 if (privateDomainRef.current) {
                     setTimeout(() => {
@@ -225,8 +226,13 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                           Type: pluginTypeRef.current
                       }
         }
-        return allCheck ? config : cloneDeep(defaultLinkPluginConfig)
+        return config
     }, [selectList, search, filters, allCheck])
+    const hidden = useCreation(() => {
+        if (!plugin) return true
+        if (plugin.Type !== "yak") return true
+        return !plugin.EnablePluginSelector
+    }, [plugin])
     if (!plugin) return null
     return (
         <>
@@ -294,7 +300,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 setSearch={setSearch}
                 onSearch={onSearch}
                 spinLoading={loading && isLoadingRef.current}
-                hidden={plugin.Type !== "yak"}
+                hidden={hidden}
             >
                 <PluginDetailsTab
                     executorShow={!pluginLoading}

@@ -586,6 +586,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 }
             }
             let newPluginInfo = {...pluginInfo}
+            // 如果有插件组的话，需要查询插件组中的插件做为selectPluginName传给后端
             if (selectPluginGroup.length > 0) {
                 try {
                     const res = await apiGetPluginByGroup(selectPluginGroup)
