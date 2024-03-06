@@ -496,7 +496,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
             const copyGroup = structuredClone(group)
             let groups: string[] = copyGroup.map((item) => item.Value)
-            groups.push("弱口令")
             if (groups.includes("基础扫描")) {
                 groups = groups.filter((item) => item !== "基础扫描")
             }
