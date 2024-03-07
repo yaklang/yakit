@@ -134,7 +134,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     const [portParams, setPortParams, getPortParams] = useGetState<PortScanParams>({
         Ports: "",
-        Mode: "fingerprint",
+        Mode: "all",
         Targets: "",
         TargetsFile: "",
         ScriptNames: openScriptNames || [],
