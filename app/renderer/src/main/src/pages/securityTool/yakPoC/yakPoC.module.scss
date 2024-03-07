@@ -28,12 +28,6 @@
         .header-search {
             @extend %display-flex-center;
             justify-content: space-between;
-            .header-search-text {
-                color: var(--yakit-header-color);
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 16px; /* 133.333% */
-            }
         }
         .filter-body {
             @extend %display-flex-center;

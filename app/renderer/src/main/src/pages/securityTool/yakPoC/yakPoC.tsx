@@ -163,7 +163,6 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         >
             <div className={styles["filter-wrapper"]}>
                 <div className={styles["header-search"]}>
-                    <span className={styles["header-search-text"]}>选择插件组</span>
                     <YakitInput.Search
                         placeholder='请输入组名搜索'
                         value={keywords}
@@ -171,7 +170,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                         onSearch={onSearch}
                         onPressEnter={onPressEnter}
                         size='large'
-                        wrapperStyle={{width: 280}}
+                        wrapperStyle={{flex:1}}
                     />
                 </div>
                 <div className={styles["filter-body"]}>
