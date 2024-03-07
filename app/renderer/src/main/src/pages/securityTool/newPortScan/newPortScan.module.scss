@@ -1,6 +1,11 @@
 @use "../securityTool.scss" as securityTool;
 
-.port-scan-execute-wrapper{
+.new-port-scan-wrapper {
+    // @extend %display-column-center;
+    // overflow: hidden;
+    // height: 100%;
+}
+.port-scan-execute-wrapper {
     @include securityTool.execute-title("port-scan");
 }
 
@@ -26,4 +31,25 @@
             margin-right: 8px;
         }
     }
+}
+.port-scan-form-wrapper-hidden {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+}
+
+.preset-port-group-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    background: var(--yakit-card-background-color);
+}
+
+.ports-form-extra {
+    @extend %display-flex-center;
+}
+.form-extra {
+    @extend %display-flex-center;
+    gap: 16px;
 }

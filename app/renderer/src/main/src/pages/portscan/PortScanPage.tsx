@@ -33,7 +33,7 @@ import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 
 const {ipcRenderer} = window.require("electron")
-const ScanPortTemplate = "scan-port-template"
+export const ScanPortTemplate = "scan-port-template"
 
 export interface PortScanPageProp {
     sendTarget?: string
@@ -70,12 +70,12 @@ export interface PortScanParams {
     HostAliveConcurrent?: number
 }
 
-const ScanKind: { [key: string]: string } = {
+export const ScanKind: { [key: string]: string } = {
     syn: "SYN",
     fingerprint: "指纹",
     all: "SYN+指纹"
 }
-const ScanKindKeys: string[] = Object.keys(ScanKind)
+export const ScanKindKeys: string[] = Object.keys(ScanKind)
 
 export const defaultPorts =
     "21,22,443,445,80,8000-8004,3306,3389,5432,6379,8080-8084,7000-7005,9000-9002,8443,7443,9443,7080,8070"
