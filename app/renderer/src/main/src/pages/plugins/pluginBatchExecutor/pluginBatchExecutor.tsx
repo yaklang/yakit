@@ -1,28 +1,20 @@
-import React, {useRef, useState, useReducer, useEffect, forwardRef, useImperativeHandle} from "react"
-import {PluginDetails, PluginDetailsListItem, defaultSearch} from "../baseTemplate"
-import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {useMemoizedFn, useCreation, useDebounceFn, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
+import React, {useRef, useState, useEffect, forwardRef, useImperativeHandle} from "react"
+import {defaultSearch} from "../baseTemplate"
+import {useMemoizedFn, useCreation, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
-import {PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
+import {PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
     PluginBatchExecutorInputValueProps,
-    apiCancelHybridScan,
     apiGetPluginByGroup,
     apiHybridScan,
     apiQueryHybridScan,
-    apiQueryYakScript,
     apiStopHybridScan,
     convertHybridScanParams,
-    convertLocalPluginsRequestParams,
     hybridScanParamsConvertToInputValue
 } from "../utils"
-import {getRemoteValue} from "@/utils/kv"
-import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {useStore} from "@/store"
-import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {Form} from "antd"
 
 import "../plugins.scss"
@@ -46,6 +38,7 @@ import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -89,12 +82,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     })
     const [pageInfo, setPageInfo] = useState<PluginBatchExecutorPageInfoProps>(initPluginBatchExecutorPageInfo())
 
-    const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [loading, setLoading] = useState<boolean>(false)
-
     const [selectList, setSelectList] = useState<string[]>([])
-    const [allCheck, setAllCheck] = useState<boolean>(false)
 
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
@@ -105,34 +94,32 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
     /**停止 */
     const [stopLoading, setStopLoading] = useState<boolean>(false)
-    // const [privateDomain, setPrivateDomain] = useState<string>("") // 私有域地址
+
+    const [refreshList, setRefreshList] = useState<boolean>(false)
+    const [selectNum, setSelectNum] = useState<number>(0)
+
     const userInfo = useStore((s) => s.userInfo)
 
     /** 是否为初次加载 */
-    const isLoadingRef = useRef<boolean>(true)
-    const privateDomainRef = useRef<string>("") // 私有域地址
     const typeRef = useRef<string>("mitm,port-scan,nuclei")
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
+
     const batchExecuteDomRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(batchExecuteDomRef)
 
-    useEffect(() => {
-        getPrivateDomainAndRefList()
-    }, [])
-    // userInfo.isLogin, filters发生变化的时候触发；初始请求数据在 getPrivateDomainAndRefList
+    // userInfo.isLogin, filters发生变化的时候触发；
     useUpdateEffect(() => {
-        fetchList(true)
+        setRefreshList(!refreshList)
     }, [userInfo.isLogin])
     useEffect(() => {
         if (inViewport) {
             emiter.on("onRefLocalPluginList", onRefLocalPluginList)
-            emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         }
         return () => {
             emiter.off("onRefLocalPluginList", onRefLocalPluginList)
-            emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         }
     }, [inViewport])
+
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
     const onInitInputValueAfter = useMemoizedFn((value: string) => {
         try {
@@ -145,10 +132,13 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 setSelectList([])
                 setSearch(pluginInfo.search)
                 setTimeout(() => {
-                    fetchList(true, true)
+                    setRefreshList(!refreshList)
                 }, 200)
             }
         } catch (error) {}
+    })
+    const fetchListInPageFirstAfter = useMemoizedFn(() => {
+        onQueryHybridScanByRuntimeId(pageInfo.runtimeId)
     })
     /** 通过runtimeId查询该条记录详情 */
     const onQueryHybridScanByRuntimeId = useMemoizedFn((runtimeId: string) => {
@@ -165,120 +155,15 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
 
     const onRefLocalPluginList = useMemoizedFn(() => {
         setTimeout(() => {
-            fetchList(true)
+            setRefreshList(!refreshList)
         }, 200)
     })
 
-    /**获取最新的私有域,并刷新列表 */
-    const getPrivateDomainAndRefList = useMemoizedFn(() => {
-        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
-            if (setting) {
-                const values = JSON.parse(setting)
-                privateDomainRef.current = values.BaseUrl
-                setTimeout(() => {
-                    fetchList(true)
-                }, 200)
-            }
-        })
-    })
-
-    const fetchList = useDebounceFn(
-        useMemoizedFn(async (reset?: boolean, isAllCheck: boolean = false) => {
-            if (reset) {
-                isLoadingRef.current = true
-            }
-            setLoading(true)
-
-            const params: PluginListPageMeta = !!reset
-                ? {page: 1, limit: 20}
-                : {
-                      page: +response.Pagination.Page + 1,
-                      limit: +response.Pagination.Limit || 20
-                  }
-            const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams({}, search, params),
-                Type: typeRef.current
-            }
-            try {
-                const res = await apiQueryYakScript(query)
-                if (!res.Data) res.Data = []
-                const newData = res.Data.map((ele) => ({
-                    ...ele,
-                    isLocalPlugin: privateDomainRef.current !== ele.OnlineBaseUrl
-                }))
-                dispatch({
-                    type: "add",
-                    payload: {
-                        response: {
-                            ...res,
-                            Data: newData
-                        }
-                    }
-                })
-                if (+res.Pagination.Page === 1) {
-                    setAllCheck(isAllCheck)
-                    setSelectList([])
-                    onQueryHybridScanByRuntimeId(pageInfo.runtimeId)
-                }
-            } catch (error) {}
-            setTimeout(() => {
-                isLoadingRef.current = false
-                setLoading(false)
-            }, 200)
-        }),
-        {wait: 200, leading: true}
-    ).run
-    /**全选 */
-    const onCheck = useMemoizedFn((value: boolean) => {
-        setSelectList([])
-        setAllCheck(value)
-    })
-    /** 单项勾选|取消勾选 */
-    const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
-        // 全选情况时的取消勾选
-        if (allCheck) {
-            setSelectList(
-                response.Data.filter((item) => item.ScriptName !== data.ScriptName).map((item) => item.ScriptName)
-            )
-            setAllCheck(false)
-            return
-        }
-        // 单项勾选回调
-        if (value) setSelectList([...selectList, data.ScriptName])
-        else setSelectList(selectList.filter((item) => item !== data.ScriptName))
-    })
-    const onPluginClick = useMemoizedFn((data: YakScript) => {
-        const value = allCheck || selectList.includes(data.ScriptName)
-        optCheck(data, !value)
-    })
-    // 滚动更多加载
-    const onUpdateList = useMemoizedFn(() => {
-        fetchList()
-    })
-    /** 单项副标题组件 */
-    const optExtra = useMemoizedFn((data: YakScript) => {
-        if (privateDomainRef.current !== data.OnlineBaseUrl) return <></>
-        if (data.OnlineIsPrivate) {
-            return <SolidPrivatepluginIcon className='icon-svg-16' />
-        } else {
-            return <SolidCloudpluginIcon className='icon-svg-16' />
-        }
-    })
-    const onSearch = useMemoizedFn((val) => {
-        setSearch(val)
-        setTimeout(() => {
-            fetchList(true)
-        }, 200)
-    })
     const onRemove = useMemoizedFn((e) => {
         e.stopPropagation()
         setSelectList([])
     })
-    // 选中插件的数量
-    const selectNum = useCreation(() => {
-        if (allCheck) return response.Total
-        else return selectList.length
-    }, [allCheck, selectList, response.Total])
+
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()
         setIsExpand(!isExpand)
@@ -302,125 +187,83 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         return false
     }, [executeStatus])
     return (
-        <div className={styles["plugin-batch-executor"]} ref={batchExecuteDomRef}>
-            <PluginDetails<YakScript>
-                title='选择插件'
-                filterNode={
+        <PluginLocalListDetails
+            hidden={hidden}
+            selectList={selectList}
+            setSelectList={setSelectList}
+            search={search}
+            setSearch={setSearch}
+            pluginDetailsProps={{
+                title: "选择插件",
+                bodyClassName: styles["plugin-batch-executor-body"],
+                rightHeardNode: (
                     <>
-                        {/* <PluginGroup
-                            checkList={selectList}
-                            selectGroup={selectGroup}
-                            setSelectGroup={setSelectGroup}
-                            isSelectAll={allCheck}
-                        /> */}
+                        <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
+                            <div className={styles["plugin-batch-executor-title"]} ref={batchExecuteDomRef}>
+                                <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
+                                {selectNum > 0 && (
+                                    <YakitTag closable onClose={onRemove} color='info'>
+                                        {selectNum}
+                                    </YakitTag>
+                                )}
+                            </div>
+                            <div className={styles["plugin-batch-executor-btn"]}>
+                                {progressList.length === 1 && (
+                                    <PluginExecuteProgress
+                                        percent={progressList[0].progress}
+                                        name={progressList[0].id}
+                                    />
+                                )}
+                                {isExecuting
+                                    ? !isExpand && (
+                                          <>
+                                              <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
+                                                  停止
+                                              </YakitButton>
+                                              <div className={styles["divider-style"]}></div>
+                                          </>
+                                      )
+                                    : !isExpand && (
+                                          <>
+                                              <YakitButton onClick={onExecuteInTop} disabled={selectNum === 0}>
+                                                  执行
+                                              </YakitButton>
+                                              <div className={styles["divider-style"]}></div>
+                                          </>
+                                      )}
+                                <YakitButton
+                                    type='text2'
+                                    icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setHidden(!hidden)
+                                    }}
+                                />
+                            </div>
+                        </ExpandAndRetract>
                     </>
-                }
-                checked={allCheck}
-                onCheck={onCheck}
-                total={response.Total}
-                selected={selectNum}
-                listProps={{
-                    rowKey: "ScriptName",
-                    data: response.Data,
-                    loadMoreData: onUpdateList,
-                    classNameRow: "plugin-details-opt-wrapper",
-                    renderRow: (info, i) => {
-                        const check = allCheck || selectList.includes(info.ScriptName)
-                        return (
-                            <PluginDetailsListItem<YakScript>
-                                order={i}
-                                plugin={info}
-                                selectUUId={""} //本地用的ScriptName代替uuid
-                                check={check}
-                                headImg={info.HeadImg || ""}
-                                pluginUUId={info.ScriptName} //本地用的ScriptName代替uuid
-                                pluginName={info.ScriptName}
-                                help={info.Help}
-                                content={info.Content}
-                                optCheck={optCheck}
-                                official={!!info.OnlineOfficial}
-                                isCorePlugin={!!info.IsCorePlugin}
-                                pluginType={info.Type}
-                                onPluginClick={onPluginClick}
-                                extra={optExtra}
-                            />
-                        )
-                    },
-                    page: response.Pagination.Page,
-                    hasMore: +response.Total !== response.Data.length,
-                    loading: loading,
-                    defItemHeight: 46,
-                    isRef: loading && isLoadingRef.current
-                }}
-                onBack={() => {}}
-                search={search}
-                setSearch={setSearch}
-                onSearch={onSearch}
-                // spinLoading={spinLoading || removeLoading}
-                spinLoading={loading && isLoadingRef.current}
-                rightHeardNode={
-                    <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
-                        <div className={styles["plugin-batch-executor-title"]}>
-                            <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
-                            {selectNum > 0 && (
-                                <YakitTag closable onClose={onRemove} color='info'>
-                                    {selectNum}
-                                </YakitTag>
-                            )}
-                        </div>
-                        <div className={styles["plugin-batch-executor-btn"]}>
-                            {progressList.length === 1 && (
-                                <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
-                            )}
-                            {isExecuting
-                                ? !isExpand && (
-                                      <>
-                                          <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
-                                              停止
-                                          </YakitButton>
-                                          <div className={styles["divider-style"]}></div>
-                                      </>
-                                  )
-                                : !isExpand && (
-                                      <>
-                                          <YakitButton onClick={onExecuteInTop} disabled={selectNum === 0}>
-                                              执行
-                                          </YakitButton>
-                                          <div className={styles["divider-style"]}></div>
-                                      </>
-                                  )}
-                            <YakitButton
-                                type='text2'
-                                icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setHidden(!hidden)
-                                }}
-                            />
-                        </div>
-                    </ExpandAndRetract>
-                }
-                hidden={hidden}
-                setHidden={setHidden}
-                bodyClassName={styles["plugin-batch-executor-body"]}
-            >
-                <PluginBatchExecuteContent
-                    ref={pluginBatchExecuteContentRef}
-                    isExpand={isExpand}
-                    setIsExpand={setIsExpand}
-                    selectNum={selectNum}
-                    pluginType={typeRef.current}
-                    defaultActiveKey={pageInfo.defaultActiveKey}
-                    onInitInputValueAfter={onInitInputValueAfter}
-                    setProgressList={setProgressList}
-                    stopLoading={stopLoading}
-                    setStopLoading={setStopLoading}
-                    pluginInfo={pluginInfo}
-                    executeStatus={executeStatus}
-                    setExecuteStatus={setExecuteStatus}
-                />
-            </PluginDetails>
-        </div>
+                )
+            }}
+            fetchListInPageFirstAfter={fetchListInPageFirstAfter}
+            selectNum={selectNum}
+            setSelectNum={setSelectNum}
+        >
+            <PluginBatchExecuteContent
+                ref={pluginBatchExecuteContentRef}
+                selectNum={selectNum}
+                isExpand={isExpand}
+                setIsExpand={setIsExpand}
+                pluginType={typeRef.current}
+                defaultActiveKey={pageInfo.defaultActiveKey}
+                onInitInputValueAfter={onInitInputValueAfter}
+                setProgressList={setProgressList}
+                stopLoading={stopLoading}
+                setStopLoading={setStopLoading}
+                pluginInfo={pluginInfo}
+                executeStatus={executeStatus}
+                setExecuteStatus={setExecuteStatus}
+            />
+        </PluginLocalListDetails>
     )
 })
 
@@ -455,7 +298,7 @@ export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
     onStopExecute: () => void
     onStartExecute: () => void
-    onInitInputValue:(v:string)=>void
+    onInitInputValue: (v: string) => void
 }
 export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {

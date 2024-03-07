@@ -39,7 +39,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
 
     const [pluginLoading, setPluginLoading] = useState<boolean>(true)
     const [plugin, setPlugin] = useState<YakScript>()
-    const [selectList, setSelectList] = useState<YakScript[]>([])
+    const [selectList, setSelectList] = useState<string[]>([])
 
     const pluginTypeRef = useRef<string>("")
 
@@ -84,16 +84,15 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
 
     /**插件UI联动相关参数 */
     const linkPluginConfig: HybridScanPluginConfig = useCreation(() => {
-        const selectPluginName = selectList.map((item) => item.ScriptName)
         const config = {
-            PluginNames: selectPluginName,
+            PluginNames: selectList,
             Filter:
-                (allCheck)
-                    ? {
-                        ...convertLocalPluginsRequestParams(filters, search),
-                        Type: pluginTypeRef.current
-                    }
-                    : undefined
+                selectList.length > 0
+                    ? undefined
+                    : {
+                          ...convertLocalPluginsRequestParams(filters, search),
+                          Type: pluginTypeRef.current
+                      }
         }
         return config
     }, [selectList, search, filters])
