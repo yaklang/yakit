@@ -19,6 +19,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {ReloadOutlined} from "@ant-design/icons"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import { DnslogMenuToPage } from "../layout/publicMenu/MenuDNSLog"
 
 export interface DNSLogPageProp {
 }
@@ -51,7 +52,17 @@ export interface DNSLogEvent {
 
 const {Option} = Select
 
+export interface SendMenuDnslogProps {
+    dnsLogType: "builtIn" | "custom",
+    token: string;
+    domain: string;
+    onlyARecord: boolean,
+    DNSMode?: string,
+    UseLocal?: boolean
+}
+
 export const DNS_LOG_PAGE_UPDATE_TOKEN = "DNS_LOG_PAGE_UPDATE_TOKEN"
+export const DNS_LOG_COMMON_CACHE = "DNS_LOG_COMMON_CACHE"
 
 export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [token, setToken, getToken] = useGetState("")
@@ -75,8 +86,13 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         // 获取菜单发送的配置参数
         ipcRenderer.on(
             "dnslog-menu-to-page-callback",
-            (e, data: { token: string; domain: string; onlyARecord: boolean, dnsMode: string, useLocal: boolean }) => {
-                setOnlyARecord(data.onlyARecord)
+            (e, data: DnslogMenuToPage) => {
+                if(data.isReset){
+                    // 重置
+                    reset()
+                }
+                else{
+                  setOnlyARecord(data.onlyARecord)
                 if (getToken() !== data.token || getDomain() !== data.domain) {
                     setToken(data.token || "")
                     setDomain(data.domain || "")
@@ -84,14 +100,21 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     setSelectedMode(data.dnsMode)
                     setIsLocal(data.useLocal)
                     queryDNSLogByToken()
+                }  
                 }
+                
             }
         )
         // 查看单条数据的详情
         ipcRenderer.on("dnslog-info-details-callback", (e, info: DNSLogEvent) => {
             openDetails.current = info
-            if (getRecords().length !== 0) {
+            if(getRecords().length>0){
                 openDetailsItem()
+            }
+            else{
+                if(token){
+                    dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
+                }
             }
         })
 
@@ -99,6 +122,17 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             ipcRenderer.removeAllListeners("dnslog-menu-to-page-callback")
         }
     }, [])
+
+    // 重置
+    const reset = useMemoizedFn(()=>{
+        setToken("")
+        setDomain("")
+        setRecords([])
+        setLoading(false)
+        setBtnLoading(false)
+        setDnsLogType("builtIn")
+        setExpandRows([])
+    })
 
     // 打开单条数据
     const openDetailsItem = useMemoizedFn(() => {
@@ -116,14 +150,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     })
 
     // 同步给菜单里dnslog新的参数
-    const sendMenuDnslog = useMemoizedFn((data: {
-        dnsLogType: "builtIn" | "custom",
-        token: string;
-        domain: string;
-        onlyARecord: boolean,
-        DNSMode?: string,
-        UseLocal?: boolean
-    }) => {
+    const sendMenuDnslog = useMemoizedFn((data:SendMenuDnslogProps) => {
         ipcRenderer.invoke("dnslog-page-change-menu", data)
     })
 
@@ -157,7 +184,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         type: "builtIn",
                         Addr: "",
                         DNSMode,
-                        UseLocal: DNSMode === "内置" ? false : UseLocal
+                        UseLocal: DNSMode === "内置" ? false : UseLocal,
                     })
                 )
                 // 用于缓存历史勾选项
@@ -264,6 +291,18 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             ["custom-dnslog-platform"]
         )
     }, [])
+
+    useEffect(()=>{
+        getRemoteValue(DNS_LOG_COMMON_CACHE).then((data) => {
+            if (!data) return
+            else{
+                try {
+                    let obj = JSON.parse(data)
+                    setAutoQuery(obj.autoQuery)
+                } catch (error) {}
+            }
+        })
+    },[])
 
     const updateTokenByScript = useMemoizedFn(() => {
         setLoading(true)
@@ -501,7 +540,10 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                 }}
                                 label={"自动刷新记录"}
                             >
-                                <YakitSwitch checked={autoQuery} onChange={setAutoQuery}/>
+                                <YakitSwitch checked={autoQuery} onChange={(val)=>{
+                                    setAutoQuery(val)
+                                    setRemoteValue(DNS_LOG_COMMON_CACHE,JSON.stringify({autoQuery:val}))
+                                    }}/>
                             </Form.Item>
                         </div>
 
