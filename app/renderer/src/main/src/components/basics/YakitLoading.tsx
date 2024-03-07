@@ -200,6 +200,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             getEngineReady() > 0 &&
             !!readyTime.current
         ) {
+            if(!isCommunityEdition()) return false
             setTimeout(() => {
                 clearInterval(readyTime.current)
             }, 300)
@@ -213,6 +214,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             getEngineReady() > 0 &&
             !!readyTime.current
         ) {
+            if(!isCommunityEdition()) return false
             setTimeout(() => {
                 clearInterval(readyTime.current)
             }, 300)
