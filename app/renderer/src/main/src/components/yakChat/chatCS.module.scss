@@ -510,7 +510,6 @@
                         border-color: #fbc6a1;
                         background: rgba(242, 139, 68, 0.06);
                     }
-                    
                 }
                 .footer-type-mini {
                     display: flex;
@@ -1390,14 +1389,89 @@
         flex-direction: row;
     }
 }
-.plugin-run-max-number-box{
+.plugin-run-max-number-box {
     margin-top: 4px;
     display: flex;
     flex-direction: row;
-    .title{
+    .title {
         color: #31343f;
         font-size: 12px;
         line-height: 24px;
     }
-    
+}
+.load-content-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    .load-content-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        .load-content-check{
+            color: var(--yakit-success-5);
+            font-size: 16px;
+        }
+    }
+}
+
+.yakit-chat-loading {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    animation: load 3s linear infinite;
+    div {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    }
+    span {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ffecd6;
+        position: absolute;
+        left: 50%;
+        margin-top: 0px;
+        margin-left: -2px;
+        animation: changeBgColor 3s ease infinite;
+    }
+    div:nth-child(2) {
+        transform: rotate(120deg);
+    }
+    div:nth-child(3) {
+        transform: rotate(240deg);
+    }
+    div:nth-child(2) span {
+        animation-delay: 1s;
+    }
+    div:nth-child(3) span {
+        animation-delay: 2s;
+    }
+    @keyframes load {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+        33.3% {
+            -webkit-transform: rotate(120deg);
+        }
+        66.6% {
+            -webkit-transform: rotate(240deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+    @keyframes changeBgColor {
+        0%,
+        100% {
+            background: #ffecd6;
+        }
+        33.3% {
+            background: #f69c5d;
+        }
+        66.6% {
+            background: #e27122;
+        }
+    }
 }

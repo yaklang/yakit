@@ -7,6 +7,8 @@ export interface CacheChatCSProps {
     token: string
     /** 对话名称 */
     name: string
+    /** 对话名是否已经修改（自动修改/手动修改） */
+    isRename: boolean
     /** 搜索引擎增强 */
     is_bing: boolean
     /** 插件调试执行 */
@@ -54,6 +56,10 @@ export interface ChatCSSingleInfoProps {
     status?: "succee" | "fail" | "info"
     runtimeId?: string
     riskState?: StreamResult.Risk[]
+    /** 响应中的展示内容 */
+    load_content: LoadObjProps[]
+    /** 接口响应是否结束 */
+    end: boolean
 }
 
 /** 后端返回的数据结构 */
@@ -61,4 +67,12 @@ export interface ChatCSAnswerProps {
     id: string
     role: string
     result: string
+    // 加载中的字符
+    loadResult?: LoadObjProps[]
+}
+
+/** 后端返回的响应中数据结构 */
+export interface LoadObjProps {
+    result: string
+    id: string
 }
