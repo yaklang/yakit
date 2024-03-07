@@ -72,6 +72,7 @@ import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
+import { YakitEditorKeyCode } from "../yakitUI/YakitEditor/YakitEditorType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2325,17 +2326,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "发送到 Web Fuzzer",
             label: "发送到 Web Fuzzer",
             number: 10,
-            webSocket: true,
             default: true,
-            onClickSingle: (v) => onSendToTab(v),
-            onClickBatch: (_, number) => onBatch(onSendToTab, number, selectedRowKeys.length === total)
+            children: [
+                {
+                    key: "发送并跳转",
+                    label: "发送并跳转"
+                },
+                {
+                    key: "仅发送",
+                    label: "仅发送"
+                }
+            ],
+            onClickBatch: () => {}
         },
         {
-            key: "发送到 WebSocket",
-            label: "发送到 WebSocket",
+            key: "发送到WS Fuzzer",
+            label: "发送到WS Fuzzer",
+            number: 10,
             webSocket: true,
             default: false,
-            onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request)
+            onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request),
+            onClickBatch: () => {}
         },
         {
             key: "数据包扫描",
@@ -2609,6 +2620,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 content: new Buffer(rowData.Request).toString("utf8"),
                                 language: "http"
                             })
+                            break
+                        case "发送并跳转":
+                            onSendToTab(rowData)
+                            break
+                        case "仅发送":
+                            onSendToTab(rowData, false)
                             break
                         default:
                             const currentItem = menuData.find((f) => f.key === key)
@@ -3045,6 +3062,52 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                                         IncludeInUrl: hosts
                                                                                     }
                                                                                 })
+                                                                                break
+                                                                            case "发送到WS Fuzzer":
+                                                                                const currentItemToSocket =
+                                                                                    menuData.find(
+                                                                                        (f) =>
+                                                                                            f.onClickBatch &&
+                                                                                            f.key ===
+                                                                                                "发送到WS Fuzzer"
+                                                                                    )
+                                                                                if (!currentItemToSocket) return
+                                                                                
+                                                                                onBatch(
+                                                                                    (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
+                                                                                    currentItemToSocket?.number || 0,
+                                                                                    selectedRowKeys.length === total
+                                                                                )
+                                                                                break
+                                                                            case "发送并跳转":
+                                                                                const currentItemToFuzzer =
+                                                                                    menuData.find(
+                                                                                        (f) =>
+                                                                                            f.onClickBatch &&
+                                                                                            f.key ===
+                                                                                                "发送到 Web Fuzzer"
+                                                                                    )
+                                                                                if (!currentItemToFuzzer) return
+                                                                                onBatch(
+                                                                                    onSendToTab,
+                                                                                    currentItemToFuzzer?.number || 0,
+                                                                                    selectedRowKeys.length === total
+                                                                                )
+                                                                                break
+                                                                            case "仅发送":
+                                                                                const currentItemFuzzer =
+                                                                                    menuData.find(
+                                                                                        (f) =>
+                                                                                            f.onClickBatch &&
+                                                                                            f.key ===
+                                                                                                "发送到 Web Fuzzer"
+                                                                                    )
+                                                                                if (!currentItemFuzzer) return
+                                                                                onBatch(
+                                                                                    (el) => onSendToTab(el, false),
+                                                                                    currentItemFuzzer?.number || 0,
+                                                                                    selectedRowKeys.length === total
+                                                                                )
                                                                                 break
                                                                             default:
                                                                                 const currentItem = menuData.find(
@@ -3567,10 +3630,11 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 })
 
 // 发送web fuzzer const
-export const onSendToTab = (rowData) => {
+export const onSendToTab = (rowData, openFlag?: boolean) => {
     ipcRenderer.invoke("send-to-tab", {
         type: "fuzzer",
         data: {
+            openFlag,
             isHttps: rowData.IsHTTPS,
             request: rowData.InvalidForUTF8Request
                 ? rowData.SafeHTTPRequest!

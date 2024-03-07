@@ -267,7 +267,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             if (currentIsWebsocket && status !== "hijacking") {
                 menu.push({
                     key: "send-to-web-socket",
-                    label: "发送到 WebSocket"
+                    label: "发送到WS Fuzzer"
                 })
             }
             return {
@@ -342,7 +342,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             if (currentIsWebsocket && status !== "hijacking") {
                 menu.push({
                     key: "send-to-web-socket",
-                    label: "发送到 WebSocket"
+                    label: "发送到WS Fuzzer"
                 })
             }
 

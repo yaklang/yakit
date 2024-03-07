@@ -172,7 +172,18 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     {
                         key: "new-web-fuzzer-tab",
                         label: "发送到 WebFuzzer",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                        children: [
+                            {
+                                key: "发送并跳转",
+                                label: "发送并跳转",
+                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R],
+                            },
+                            {
+                                key: "仅发送",
+                                label: "仅发送",
+                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R],
+                            }
+                        ],
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -182,9 +193,15 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             info("数据包为空")
                             return
                         }
-                        newWebFuzzerTab(defaultHttps || false, text).finally(() => {
-                            webFuzzerCallBack && webFuzzerCallBack()
-                        })
+                        if (key === "发送并跳转") {
+                            newWebFuzzerTab(defaultHttps || false, text).finally(() => {
+                                webFuzzerCallBack && webFuzzerCallBack()
+                            })
+                        } else if (key === "仅发送") {
+                            newWebFuzzerTab(defaultHttps || false, text, false).finally(() => {
+                                webFuzzerCallBack && webFuzzerCallBack()
+                            })
+                        }
                     } catch (e) {
                         failed("editor exec new-open-fuzzer failed")
                     }

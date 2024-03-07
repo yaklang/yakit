@@ -676,11 +676,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, isGmTLS, request, advancedConfigValue} = res || {}
+        const {isHttps, isGmTLS, request, advancedConfigValue, openFlag = true} = res || {}
         if (request) {
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
                 {
+                    openFlag,
                     pageParams: {
                         isHttps: isHttps || false,
                         isGmTLS: isGmTLS || false,
@@ -956,12 +957,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         (
             routeInfo: RouteToPageProps,
             nodeParams?: {
+                openFlag?: boolean
                 verbose?: string
                 hideAdd?: boolean
                 pageParams?: ComponentParams
             }
         ) => {
             const {route, pluginId = 0, pluginName = ""} = routeInfo
+            // 默认会打开新菜单
+            let openFlag = true
+            if (nodeParams?.openFlag !== undefined) {
+                openFlag = nodeParams?.openFlag
+            }
             // 菜单在代码内的名字
             const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""
             if (!menuName) return
@@ -972,7 +979,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const key = routeConvertKey(route, pluginName)
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
-                    setCurrentTabKey(key)
+                    openFlag && setCurrentTabKey(key)
                     return
                 }
                 const tabName = routeKeyToLabel.get(key) || menuName
@@ -988,7 +995,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         pageParams: nodeParams?.pageParams
                     }
                 ])
-                setCurrentTabKey(key)
+                openFlag && setCurrentTabKey(key)
             } else {
                 // 多开页面
                 const key = routeConvertKey(route, pluginName)
@@ -1049,7 +1056,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         onBatchExecutorPage(node, order)
                     }
                     setPageCache([...pages])
-                    setCurrentTabKey(key)
+                    openFlag && setCurrentTabKey(key)
                 } else {
                     //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
 
@@ -1084,7 +1091,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             hideAdd: nodeParams?.hideAdd
                         }
                     ])
-                    setCurrentTabKey(key)
+                    openFlag && setCurrentTabKey(key)
                 }
             }
         }

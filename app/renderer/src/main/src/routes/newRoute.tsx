@@ -397,6 +397,8 @@ export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
+    // 是否跳转到新开页面 默认跳转
+    openFlag?: boolean
     // Route.HTTPFuzzer 参数
     isHttps?: boolean
     isGmTLS?: boolean

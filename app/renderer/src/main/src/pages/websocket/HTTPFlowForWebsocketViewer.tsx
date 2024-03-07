@@ -5,10 +5,9 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {ThunderboltOutlined} from "@ant-design/icons"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {callCopyToClipboard} from "@/utils/basic"
 import {yakitNotify} from "@/utils/notification"
-import {newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -128,41 +127,14 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
         }
     }, [flow.Url])
 
-    // 发送到 WebFuzzer
-    const sendWebFuzzerMenuItem: OtherMenuListProps = useMemo(() => {
-        return {
-            newFuzzer: {
-                menu: [
-                    {
-                        key: "new-web-fuzzer-tab",
-                        label: "发送到 WebFuzzer",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
-                    }
-                ],
-                onRun: (editor, key) => {
-                    try {
-                        const text = Uint8ArrayToString(flow.Request) || editor.getModel()?.getValue() || ""
-                        if (!text) {
-                            yakitNotify("info", "数据包为空")
-                            return
-                        }
-                        newWebFuzzerTab(flow.IsHTTPS, text)
-                    } catch (e) {
-                        yakitNotify("error", "editor exec new-open-fuzzer failed")
-                    }
-                }
-            }
-        }
-    }, [flow.Request, flow.IsHTTPS])
-
-    // 发送到 WebSocket
+    // 发送到WS Fuzzer
     const sendWebSocketMenuItem: OtherMenuListProps = useMemo(() => {
         return {
             newSocket: {
                 menu: [
                     {
                         key: "new-web-socket-tab",
-                        label: "发送到 WebSocket"
+                        label: "发送到WS Fuzzer"
                     }
                 ],
                 onRun: (editor, key) => {
@@ -190,7 +162,6 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
             contextMenu={{
                 ...contextMenu,
                 ...copyUrlMenuItem,
-                ...sendWebFuzzerMenuItem,
                 ...sendWebSocketMenuItem
             }}
         />
