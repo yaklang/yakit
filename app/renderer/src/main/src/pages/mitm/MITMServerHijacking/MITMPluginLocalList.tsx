@@ -30,7 +30,7 @@ import {getReleaseEditionName, isCommunityEdition, isEnpriTraceAgent} from "@/ut
 import {
     DownloadOnlinePluginsRequest,
     apiFetchQueryYakScriptGroupLocal,
-    apiFetchQueryYakScriptGroupOnline,
+    apiFetchQueryYakScriptGroupOnlineNotLoggedIn,
     apiQueryYakScript
 } from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
@@ -389,12 +389,14 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
 interface TagsAndGroupRenderProps {
     // tags: string[]
     // setTags: (s: string[]) => void
+    wrapStyle?: React.CSSProperties
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
 }
 export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo((props) => {
     const {
         // tags, setTags,
+        wrapStyle = {},
         selectGroup,
         setSelectGroup
     } = props
@@ -402,7 +404,7 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
         <>
             {/* tags.length > 0 || */}
             {selectGroup.length > 0 && (
-                <div className={style["mitm-plugin-query-show"]}>
+                <div className={style["mitm-plugin-query-show"]} style={wrapStyle}>
                     {/* {tags.map((i) => {
                         return (
                             <YakitTag
@@ -470,7 +472,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     useEffect(() => {
         // 获取插件组
         if (isOnline) {
-            apiFetchQueryYakScriptGroupOnline().then((res: API.GroupResponse) => {
+            apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
                 const copyGroup = structuredClone(res.data)
                 const data: YakFilterRemoteObj[] = copyGroup
                     .filter((item) => !item.default)
@@ -479,6 +481,9 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                         total: item.total
                     }))
                 setPlugGroup(data)
+                let groupNameSet = new Set(data.map(obj => obj.name))
+                const newSelectGroup = selectGroup.filter(item => groupNameSet.has(item.name))
+                setSelectGroup(newSelectGroup)
             })
         } else {
             apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
@@ -488,6 +493,9 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     total: item.Total
                 }))
                 setPlugGroup(data)
+                let groupNameSet = new Set(data.map(obj => obj.name))
+                const newSelectGroup = selectGroup.filter(item => groupNameSet.has(item.name))
+                setSelectGroup(newSelectGroup)
             })
         }
     }, [inViewport])

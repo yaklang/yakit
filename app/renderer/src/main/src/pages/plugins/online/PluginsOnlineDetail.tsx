@@ -23,7 +23,7 @@ import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import { API } from "@/services/swagger/resposeType"
+import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -192,9 +192,22 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             title='插件商店'
             filterNode={
                 <>
-                    {/* <PluginGroup isOnline={true} selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} isShowGroupMagBtn={false} />
-                    <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))} /> */}
+                    <PluginGroup
+                        isOnline={true}
+                        selectGroup={selectGroup}
+                        setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                        isShowGroupMagBtn={false}
+                    />
                 </>
+            }
+            filterBodyBottomNode={
+                <div style={{marginTop: 8}}>
+                    <TagsAndGroupRender
+                        wrapStyle={{marginBottom: 0}}
+                        selectGroup={selectGroup}
+                        setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                    />
+                </div>
             }
             filterExtra={
                 <div className={"details-filter-extra-wrapper"}>

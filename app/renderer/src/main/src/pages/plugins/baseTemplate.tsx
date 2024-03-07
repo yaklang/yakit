@@ -122,6 +122,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         setSearch,
         onSearch: onsearch,
         filterNode,
+        filterBodyBottomNode,
         filterExtra,
         checked,
         onCheck,
@@ -190,6 +191,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                         </div>
                         {filterExtra || null}
                     </div>
+                    {filterBodyBottomNode || null}
                 </div>
                 <YakitSpin spinning={!!spinLoading} wrapperClassName={styles["filter-list"]}>
                     <RollingLoadList {...listProps} />
