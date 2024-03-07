@@ -658,7 +658,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                     />
                 </>
             )}
-            {!isSimpleDetectShow && (params.Mode === "all" || params.Mode === "syn") && (
+            {(params.Mode === "all" || params.Mode === "syn") && (
                 <>
                     <Divider orientation={"left"}>网卡配置</Divider>
                     <Form.Item label={<span>网卡选择</span>}>
