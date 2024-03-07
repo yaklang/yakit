@@ -525,18 +525,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             <Form
                 {...layout}
                 form={form}
-                onFinish={(values) => {
-                    onFinish(values)
-                    // if (getScanType() === "基础扫描") {
-                    //     onFinish(values)
-                    // } else {
-                    //     getPluginGroup(() => {
-                    //         setTimeout(() => {
-                    //             onFinish(values)
-                    //         }, 100)
-                    //     })
-                    // }
-                }}
+                onFinish={onFinish}
             >
                 <Spin spinning={uploadLoading}>
                     <ContentUploadInput
