@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon, QuitIcon} from "@/assets/newIcon"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN, SendMenuDnslogProps} from "@/pages/dnslog/DNSLogPage"
@@ -239,7 +239,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         setLoading(false)
         setTokenLoading(false)
         isQueryDNSLogLoad.current = false
-        sendPageDnslog({...generateData(),isReset:true})
+        sendPageDnslog({...generateData(), isReset: true})
     })
 
     // 是否隐藏 dnslog 列表框
@@ -324,14 +324,19 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             <div className={styles["dnslog-generate-host"]}>
                 <div className={!!domain ? styles["generated-wrapper"] : styles["generate-wrapper"]}>
                     <div className={styles["title-style"]}>使用 Yakit 自带 DNSLog 反连服务</div>
-                    <YakitButton size='small' loading={tokenLoading} onClick={update}>
-                        生成域名
-                    </YakitButton>
+                    {!!domain ? (
+                        <YakitButton key={"close"} danger size='small' icon={<QuitIcon />} onClick={reset}>
+                            关闭
+                        </YakitButton>
+                    ) : (
+                        <YakitButton key={"create"} size='small' loading={tokenLoading} onClick={update}>
+                            生成域名
+                        </YakitButton>
+                    )}
                 </div>
                 {!!domain && (
-                    <YakitTag className={styles["dnslog-yakit-tag"]} color='info' closable={true} onClose={reset}>
+                    <YakitTag className={styles["dnslog-yakit-tag"]} color='info' copyText={domain} enableCopy={true}>
                         {domain}
-                        <CopyComponents className={styles["copy-components"]} copyText={domain || ""} />
                     </YakitTag>
                 )}
                 {/* 显示条件：已生成域名 & 有历史数据 & 宽度过小 */}

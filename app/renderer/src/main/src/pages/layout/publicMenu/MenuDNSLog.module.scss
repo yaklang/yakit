@@ -176,27 +176,14 @@
 .dnslog-yakit-tag {
     :global {
         .ant-tag-close-icon {
-            margin-left: 4px ;
-            span {
-                height: 14px !important;
-                svg {
-                    height: 14px;
-                    width: 14px;
-                }
-            }
-        }
-    }
-    .copy-components {
-        svg {
-            height: 14px;
-            width: 14px;
+            justify-content: center;
         }
     }
 }
 
-.dnslog-list-spin{
-    :global{
-        .ant-spin-container{
+.dnslog-list-spin {
+    :global {
+        .ant-spin-container {
             display: flex;
             flex-direction: row;
         }
