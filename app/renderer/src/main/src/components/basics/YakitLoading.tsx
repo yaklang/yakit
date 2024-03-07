@@ -588,17 +588,18 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 onRemoreLink={() => selectEngineMode("remote")}
             />
 
-            <UpdateYakitAndYaklang
-                currentYakit={currentYakit}
-                latestYakit={latestYakit}
-                setLatestYakit={setLatestYakit}
-                currentYaklang={currentYaklang}
-                latestYaklang={latestYaklang}
-                setLatestYaklang={setLatestYaklang}
-                isShow={isShowUpdate}
-                onCancel={() => yakitStatusCallback("update")}
-            />
-
+            {isCommunityEdition() && (
+                <UpdateYakitAndYaklang
+                    currentYakit={currentYakit}
+                    latestYakit={latestYakit}
+                    setLatestYakit={setLatestYakit}
+                    currentYaklang={currentYaklang}
+                    latestYaklang={latestYaklang}
+                    setLatestYaklang={setLatestYaklang}
+                    isShow={isShowUpdate}
+                    onCancel={() => yakitStatusCallback("update")}
+                />
+            )}
             <DatabaseErrorHint visible={yakitStatus === "database"} onSuccess={() => yakitStatusCallback("database")} />
         </div>
     )
