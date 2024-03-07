@@ -102,6 +102,14 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             reload(1, limit)
         }, 200)
     })
+
+    useEffect(() => {
+        if (!tasks.length) {
+            setShowAll(true)
+        } else {
+            setShowAll(false)
+        }
+    }, [tasks])
     return (
         <Card
             size={"small"}
