@@ -15,6 +15,7 @@ export interface AdvancedConfigValueProps {
     noSystemProxy: boolean
     actualHost: string
     timeout: number
+    batchTarget?: Uint8Array
     // 发包配置
     concurrent: number
     proxy: string[]

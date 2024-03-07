@@ -41,6 +41,7 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         fuzzTagSyncIndex: value.FuzzTagSyncIndex,
         noFixContentLength: value.NoFixContentLength,
         timeout: value.PerRequestTimeoutSeconds,
+        batchTarget: value.BatchTarget || new Uint8Array(),
         repeatTimes: value.RepeatTimes,
         concurrent: value.Concurrent,
         minDelaySeconds: value.DelayMinSeconds,
