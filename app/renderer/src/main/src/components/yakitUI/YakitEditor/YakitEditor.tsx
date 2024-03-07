@@ -816,6 +816,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             monaco.editor.setModelMarkers(model, "owner", [])
                         }
                     })
+            } else {
+                monaco.editor.setModelMarkers(model, "owner", [])
             }
         }),
         { wait: 300 }
