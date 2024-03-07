@@ -481,6 +481,9 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                         total: item.total
                     }))
                 setPlugGroup(data)
+                let groupNameSet = new Set(data.map(obj => obj.name))
+                const newSelectGroup = selectGroup.filter(item => groupNameSet.has(item.name))
+                setSelectGroup(newSelectGroup)
             })
         } else {
             apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
@@ -490,6 +493,9 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     total: item.Total
                 }))
                 setPlugGroup(data)
+                let groupNameSet = new Set(data.map(obj => obj.name))
+                const newSelectGroup = selectGroup.filter(item => groupNameSet.has(item.name))
+                setSelectGroup(newSelectGroup)
             })
         }
     }, [inViewport])
