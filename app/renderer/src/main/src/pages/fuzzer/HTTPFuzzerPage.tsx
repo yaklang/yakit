@@ -446,7 +446,7 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string, openFlag?: bo
             data: {isHttps: isHttps, request: request, openFlag}
         })
         .then(() => {
-            info("新开 WebFuzzer Tab")
+            openFlag === false && info("新开 WebFuzzer Tab")
         })
 }
 

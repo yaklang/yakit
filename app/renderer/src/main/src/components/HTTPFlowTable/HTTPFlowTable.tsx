@@ -5,7 +5,7 @@ import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {yakitNotify} from "../../utils/notification"
+import {info, yakitNotify} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -3640,6 +3640,8 @@ export const onSendToTab = (rowData, openFlag?: boolean) => {
                 ? rowData.SafeHTTPRequest!
                 : new Buffer(rowData.Request).toString("utf8")
         }
+    }).then(() => {
+        openFlag === false && info("新开 WebFuzzer Tab")
     })
 }
 
