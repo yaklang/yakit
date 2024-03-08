@@ -47,7 +47,18 @@ module.exports = (win, getClient) => {
         })
     }
     ipcMain.handle("QueryHTTPFlows", async (e, params) => {
+        console.log("QueryHTTPFlows---",Math.random());
         return await asyncQueryHTTPFlows(params)
+    })
+
+    const handlerHelper = require("./handleStreamWithContext")
+    // 监听history数据库是否有变化
+    const streamQueryHTTPFlowsNotifyMap = new Map();
+    ipcMain.handle("cancel-QueryHTTPFlowsNotify", handlerHelper.cancelHandler(streamQueryHTTPFlowsNotifyMap));
+    ipcMain.handle("QueryHTTPFlowsNotify", (e, params, token) => {
+        console.info("QueryHTTPFlowsNotify task start")
+        let stream = getClient().QueryHTTPFlowsNotify(params);
+        handlerHelper.registerHandler(win, stream, streamQueryHTTPFlowsNotifyMap, token)
     })
 
     // asyncQueryHTTPFlowByIds wrapper

@@ -633,6 +633,8 @@ service Yak {
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
 
+  // Notify
+  rpc QueryHTTPFlowsNotify(Empty) returns (stream Empty);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
