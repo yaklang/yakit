@@ -634,8 +634,13 @@ service Yak {
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
 
   // Notify
-  rpc QueryHTTPFlowsNotify(Empty) returns (stream Empty);
+  rpc RegisterNotify(RegisterNotifyRequest) returns (stream Empty);
 }
+
+message RegisterNotifyRequest{
+  string Type = 1; // httpflow | yakscript | risk
+}
+
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
   string Key = 2;
