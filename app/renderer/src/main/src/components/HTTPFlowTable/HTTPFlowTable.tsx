@@ -1340,6 +1340,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             setIsRefresh(!isRefresh)
             getDataByGrpc(query, "update")
+        } else{
+            setIsLoop(true)
         }
     })
 
@@ -1464,8 +1466,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useEffect(()=>{
         // 监听history数据库是否有变化(此接口的出现是因为轮询频率太高，导致数据库被锁死)
         ipcRenderer.invoke(
-            "QueryHTTPFlowsNotify",
-            {},
+            "RegisterNotify",
+            {
+                Type: "httpflow"
+            },
             token
         )
         ipcRenderer.on(`${token}-data`, async (e: any, data: any) => {
@@ -1480,7 +1484,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             console.log("end---",data);
         })
         return () => {
-            ipcRenderer.invoke("cancel-QueryHTTPFlowsNotify", token)
+            ipcRenderer.invoke("cancel-RegisterNotify", token)
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
@@ -1488,7 +1492,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     },[token])
     // 取消监听history数据库
     const cancelSavePayload = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-QueryHTTPFlowsNotify", token)
+        ipcRenderer.invoke("cancel-RegisterNotify", token)
     })
 
     useEffect(()=>{
