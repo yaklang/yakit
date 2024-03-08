@@ -84,7 +84,7 @@ win:
 
 nsis:
   oneClick: false 
-  perMachine: true
+  perMachine: false
   deleteAppDataOnUninstall: true
   allowToChangeInstallationDirectory: true 
   installerIcon: app/assets/yakiteelogo.ico 
