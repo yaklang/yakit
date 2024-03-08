@@ -84,7 +84,7 @@ export interface YakitEditorProps {
 export interface OtherMenuListProps {
     [key: string]: {
         menu: EditorMenuItemType[]
-        onRun: (editor: YakitIMonacoEditor, key: string,getCurrentSelectPageId: (routeKey: string) => string) => any
+        onRun: (editor: YakitIMonacoEditor, key: string, pageId?: string) => any
         /** Order菜单权重排序 0为第一个 1为第二个... 负数统一放最后 */
         order?: number
     }

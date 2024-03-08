@@ -1,10 +1,10 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
+import {ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon, QuitIcon} from "@/assets/newIcon"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN} from "@/pages/dnslog/DNSLogPage"
+import {DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN, SendMenuDnslogProps} from "@/pages/dnslog/DNSLogPage"
 import {yakitNotify} from "@/utils/notification"
 import {formatTime} from "@/utils/timeUtil"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -13,7 +13,8 @@ import {YakitRoute} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./MenuDNSLog.module.scss"
-import { getRemoteValue } from "@/utils/kv"
+import {getRemoteValue} from "@/utils/kv"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -25,6 +26,15 @@ interface UpdateTokenParams {
     UseLocal: boolean
 }
 
+export interface DnslogMenuToPage {
+    token: string
+    domain: string
+    onlyARecord: boolean
+    dnsMode: string
+    useLocal: boolean
+    isReset?: boolean
+}
+
 export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     const [token, setToken, getToken] = useGetState("")
     const [domain, setDomain, getDomain] = useGetState("")
@@ -32,8 +42,9 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     const [records, setRecords] = useState<DNSLogEvent[]>([])
     const [total, setTotal] = useState<number>(0)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
-    const [dnsMode,setDNSMode,getDNSMode] = useGetState<string>("")
-    const [useLocal,setUseLocal,getUseLocal] = useGetState<boolean>(true)
+    const [dnsMode, setDNSMode, getDNSMode] = useGetState<string>("")
+    const [useLocal, setUseLocal, getUseLocal] = useGetState<boolean>(true)
+    const [loading, setLoading] = useState<boolean>(false)
     // 生成传递给页面的配置信息
     const generateData = useMemoizedFn(() => {
         return {
@@ -41,11 +52,11 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             domain,
             onlyARecord,
             dnsMode,
-            useLocal,
+            useLocal
         }
     })
     // 同步给页面里dnslog新的参数
-    const sendPageDnslog = useMemoizedFn((data: {token: string; domain: string; onlyARecord: boolean,dnsMode:string,useLocal:boolean}) => {
+    const sendPageDnslog = useMemoizedFn((data: DnslogMenuToPage) => {
         ipcRenderer.invoke("dnslog-menu-to-page", data)
     })
 
@@ -55,24 +66,21 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             sendPageDnslog(generateData())
         })
         // 接收dnslog页面改变参数后的新参数
-        ipcRenderer.on(
-            "dnslog-page-change-menu-callback",
-            (e, data: {dnsLogType:"builtIn"|"custom",token: string; domain: string; onlyARecord: boolean,DNSMode?:string,UseLocal?:boolean}) => {
-                const {dnsLogType,onlyARecord,token,domain,DNSMode,UseLocal} = data
-                if(dnsLogType==="builtIn"){
-                    setOnlyARecord(onlyARecord)
-                    if (getToken() !== token || getDomain() !== domain) {
-                        setToken(token || "")
-                        setDomain(domain || "")
-                        DNSMode&&setDNSMode(DNSMode)
-                        UseLocal!==undefined&&setUseLocal(UseLocal)
-                        setLastRecords([])
-                        setRecords([])
-                        setTotal(0)
-                    }
+        ipcRenderer.on("dnslog-page-change-menu-callback", (e, data: SendMenuDnslogProps) => {
+            const {dnsLogType, onlyARecord, token, domain, DNSMode, UseLocal} = data
+            if (dnsLogType === "builtIn") {
+                setOnlyARecord(onlyARecord)
+                if (getToken() !== token || getDomain() !== domain) {
+                    setToken(token || "")
+                    setDomain(domain || "")
+                    DNSMode && setDNSMode(DNSMode)
+                    UseLocal !== undefined && setUseLocal(UseLocal)
+                    setLastRecords([])
+                    setRecords([])
+                    setTotal(0)
                 }
             }
-        )
+        })
 
         return () => {
             ipcRenderer.removeAllListeners("dnslog-page-to-menu-callback")
@@ -81,18 +89,18 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
 
     const [tokenLoading, setTokenLoading] = useState<boolean>(false)
 
-    const updateToken = (params?:UpdateTokenParams) => {
-        let paramsObj:any = {
-            Addr:""
+    const updateToken = (params?: UpdateTokenParams) => {
+        let paramsObj: any = {
+            Addr: ""
         }
-        if(params){
+        if (params) {
             paramsObj.Addr = params.Addr
             paramsObj.DNSMode = params.DNSMode
             paramsObj.UseLocal = params.UseLocal
             setDNSMode(params.DNSMode)
             setUseLocal(params.UseLocal)
         }
-        
+
         setTokenLoading(true)
         ipcRenderer
             .invoke("RequireDNSLogDomain", paramsObj)
@@ -100,7 +108,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 setLastRecords([])
-                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord,dnsMode,useLocal,})
+                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord, dnsMode, useLocal})
             })
             .catch((e) => {
                 yakitNotify("error", `error: ${e}`)
@@ -122,7 +130,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 setLastRecords([])
-                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord,dnsMode,useLocal,})
+                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord, dnsMode, useLocal})
             })
             .catch((e) => {
                 yakitNotify("error", `error: ${e}`)
@@ -139,32 +147,29 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             if (!data) {
                 // 默认内置
                 updateToken()
-            }
-            else{
+            } else {
                 let obj = JSON.parse(data)
                 // 内置
-                if(obj.type==="builtIn"){
+                if (obj.type === "builtIn") {
                     updateToken(obj)
                 }
                 // 自定义
-                else if(obj.type==="custom"&&obj.ScriptName.length>0){
+                else if (obj.type === "custom" && obj.ScriptName.length > 0) {
                     updateTokenByScript(obj)
-                }
-                else{
+                } else {
                     updateToken()
                 }
             }
         })
     })
 
-    useEffect(() => {
-        if (!token) {
-            return
-        }
-
-        const id = setInterval(() => {
-
-            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token,DNSMode:getDNSMode(),UseLocal:getUseLocal()}).then((rsp: {Events: DNSLogEvent[]}) => {
+    const isQueryDNSLogLoad = useRef<boolean>(false)
+    const getQueryDNSLogByToken = useMemoizedFn(() => {
+        setLoading(true)
+        isQueryDNSLogLoad.current = true
+        ipcRenderer
+            .invoke("QueryDNSLogByToken", {Token: token, DNSMode: getDNSMode(), UseLocal: getUseLocal()})
+            .then((rsp: {Events: DNSLogEvent[]}) => {
                 setTotal(rsp.Events.length)
                 const lists = rsp.Events.filter((i) => {
                     if (getOnlyARecord()) {
@@ -183,7 +188,25 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                     setLastRecords(lists.slice(lists.length - 3, lists.length))
                 }
                 setRecords(lists)
+                lists.length > 0 && setLoading(false)
             })
+            .catch(() => {
+                setLoading(false)
+            })
+            .finally(() => {
+                isQueryDNSLogLoad.current = false
+            })
+    })
+
+    useEffect(() => {
+        if (!token) {
+            return
+        }
+        getQueryDNSLogByToken()
+        const id = setInterval(() => {
+            if (!isQueryDNSLogLoad.current) {
+                getQueryDNSLogByToken()
+            }
         }, 5000)
         return () => {
             clearInterval(id)
@@ -204,6 +227,19 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             type: YakitRoute.DNSLog,
             data: {}
         })
+    })
+
+    // 重置
+    const reset = useMemoizedFn(() => {
+        setToken("")
+        setDomain("")
+        setLastRecords([])
+        setRecords([])
+        setTotal(0)
+        setLoading(false)
+        setTokenLoading(false)
+        isQueryDNSLogLoad.current = false
+        sendPageDnslog({...generateData(), isReset: true})
     })
 
     // 是否隐藏 dnslog 列表框
@@ -227,7 +263,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                             checked={onlyARecord}
                             onChange={(val: boolean) => {
                                 setOnlyARecord(val)
-                                sendPageDnslog({token, domain, onlyARecord: val,dnsMode,useLocal,})
+                                sendPageDnslog({token, domain, onlyARecord: val, dnsMode, useLocal})
                             }}
                         />
                     </div>
@@ -288,12 +324,18 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             <div className={styles["dnslog-generate-host"]}>
                 <div className={!!domain ? styles["generated-wrapper"] : styles["generate-wrapper"]}>
                     <div className={styles["title-style"]}>使用 Yakit 自带 DNSLog 反连服务</div>
-                    <YakitButton size='small' loading={tokenLoading} onClick={update}>
-                        生成域名
-                    </YakitButton>
+                    {!!domain ? (
+                        <YakitButton key={"close"} danger size='small' icon={<QuitIcon />} onClick={reset}>
+                            关闭
+                        </YakitButton>
+                    ) : (
+                        <YakitButton key={"create"} size='small' loading={tokenLoading} onClick={update}>
+                            生成域名
+                        </YakitButton>
+                    )}
                 </div>
                 {!!domain && (
-                    <YakitTag color='info' copyText={domain} enableCopy={true}>
+                    <YakitTag className={styles["dnslog-yakit-tag"]} color='info' copyText={domain} enableCopy={true}>
                         {domain}
                     </YakitTag>
                 )}
@@ -315,44 +357,53 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             </div>
 
             <div className={styles["dnslog-list-wrapper"]}>
-                <div className={styles["dnslog-list-body"]}>
-                    {lastRecords.map((item) => {
-                        return (
-                            <div key={`${item.RemoteAddr}-${item.Timestamp}`} className={styles["list-opt-wrapper"]}>
-                                <div className={classNames(styles["opt-style"], styles["opt-type"])}>
-                                    {item.DNSType}
-                                </div>
-                                <div className={classNames(styles["opt-style"], styles["opt-ip"])}>{item.RemoteIP}</div>
-                                <div className={classNames(styles["opt-style"], styles["opt-time"])}>
-                                    {formatTime(item.Timestamp)}
-                                </div>
+                <YakitSpin spinning={loading} wrapperClassName={styles["dnslog-list-spin"]}>
+                    <div className={styles["dnslog-list-body"]}>
+                        {lastRecords.map((item) => {
+                            return (
                                 <div
-                                    className={classNames(styles["opt-style"], styles["opt-btn"])}
-                                    onClick={() => onInfoDetails(item)}
+                                    key={`${item.RemoteAddr}-${item.Timestamp}`}
+                                    className={styles["list-opt-wrapper"]}
                                 >
-                                    详情
+                                    <div className={classNames(styles["opt-style"], styles["opt-type"])}>
+                                        {item.DNSType}
+                                    </div>
+                                    <div className={classNames(styles["opt-style"], styles["opt-ip"])}>
+                                        {item.RemoteIP}
+                                    </div>
+                                    <div className={classNames(styles["opt-style"], styles["opt-time"])}>
+                                        {formatTime(item.Timestamp)}
+                                    </div>
+                                    <div
+                                        className={classNames(styles["opt-style"], styles["opt-btn"])}
+                                        onClick={() => onInfoDetails(item)}
+                                    >
+                                        详情
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                    })}
-                </div>
-                <div
-                    className={classNames(styles["expand-func-wrapper"], {
-                        [styles["active-expand-style"]]: listShow
-                    })}
-                >
-                    <YakitPopover
-                        overlayClassName={styles["dnslog-list-popover"]}
-                        overlayStyle={{paddingTop: 2}}
-                        placement='bottomRight'
-                        trigger={"click"}
-                        content={listDom}
-                        visible={listShow}
-                        onVisibleChange={(visible) => setListShow(visible)}
+                            )
+                        })}
+                    </div>
+                    <div
+                        className={classNames(styles["expand-func-wrapper"], {
+                            [styles["active-expand-style"]]: listShow
+                        })}
                     >
-                        <div className={styles["body-style"]}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
-                    </YakitPopover>
-                </div>
+                        <YakitPopover
+                            overlayClassName={styles["dnslog-list-popover"]}
+                            overlayStyle={{paddingTop: 2}}
+                            placement='bottomRight'
+                            trigger={"click"}
+                            content={listDom}
+                            visible={listShow}
+                            onVisibleChange={(visible) => setListShow(visible)}
+                        >
+                            <div className={styles["body-style"]}>
+                                {listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                            </div>
+                        </YakitPopover>
+                    </div>
+                </YakitSpin>
             </div>
         </div>
     )

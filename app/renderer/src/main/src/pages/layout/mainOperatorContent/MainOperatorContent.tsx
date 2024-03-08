@@ -308,7 +308,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     const [loading, setLoading] = useState(false)
 
-    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, updatePagesDataCacheById} =
+    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, updatePagesDataCacheById,getCurrentSelectPageId} =
         usePageInfo(
             (s) => ({
                 setPagesData: s.setPagesData,
@@ -316,7 +316,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 addPagesDataCache: s.addPagesDataCache,
                 pages: s.pages,
                 clearAllData: s.clearAllData,
-                updatePagesDataCacheById: s.updatePagesDataCacheById
+                updatePagesDataCacheById: s.updatePagesDataCacheById,
+                getCurrentSelectPageId:s.getCurrentSelectPageId
             }),
             shallow
         )
@@ -1333,6 +1334,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     const tabName = routeKeyToLabel.get(key) || menuName
                     let pageNodeInfo: PageProps = {
                         ...cloneDeep(defPage),
+                        currentSelectPageId:getCurrentSelectPageId(YakitRoute.HTTPFuzzer)||'',
                         routeKey: YakitRoute.HTTPFuzzer,
                     }
                     let multipleNodeListLength: number = 0
@@ -2021,13 +2023,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const tabsRef = useRef(null)
     const subTabsRef = useRef<any>()
     const [inViewport = true] = useInViewport(tabsRef)
-
-    const {setCurrentSelectPageId} = usePageInfo(
-        (s) => ({
-            setCurrentSelectPageId: s.setCurrentSelectPageId
-        }),
-        shallow
-    )
 
     useEffect(() => {
         if (currentTabKey === YakitRoute.HTTPFuzzer) {

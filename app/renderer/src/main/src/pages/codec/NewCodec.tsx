@@ -53,6 +53,7 @@ import {EnterOutlined} from "@ant-design/icons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import { pluginTypeToName } from "../plugins/builtInData"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -65,10 +66,11 @@ interface NewCodecRightEditorBoxProps {
     outputEditorByte?: Uint8Array
     setInputEditor: (v: string) => void
     outputEditor: string
+    runLoading: boolean
 }
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
-    const {isExpand, setExpand, outputEditorByte, inputEditor, setInputEditor, outputEditor} = props
+    const {isExpand, setExpand, outputEditorByte, inputEditor, setInputEditor, outputEditor,runLoading} = props
     const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
     const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
     const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
@@ -374,6 +376,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 }
                 secondNode={
                     <div className={classNames(styles["output-box"], styles["editor-box"])}>
+                        <YakitSpin spinning={runLoading}>
                         <div className={styles["header"]}>
                             <div className={styles["title"]}>
                                 <span className={styles["text"]}>Output</span>
@@ -474,6 +477,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                 // loading={loading}
                             />
                         </div>
+                        </YakitSpin>
                     </div>
                 }
             />
@@ -784,6 +788,7 @@ interface NewCodecMiddleRunListProps {
     setOutputEditor: (v: string) => void
     setOutputEditorByte: (v: Uint8Array) => void
     isClickToRunList: React.MutableRefObject<boolean>
+    setRunLoading: (v: boolean) => void
 }
 
 interface CheckFailProps {
@@ -821,7 +826,8 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         inputEditor,
         setOutputEditor,
         setOutputEditorByte,
-        isClickToRunList
+        isClickToRunList,
+        setRunLoading
     } = props
 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
@@ -983,7 +989,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             }
             newCodecParams.WorkFlow.push(obj)
         })
-
+        setRunLoading(true)
         ipcRenderer
             .invoke("NewCodec", newCodecParams)
             .then((data: {Result: string; RawResult: Uint8Array}) => {
@@ -994,7 +1000,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             .catch((e) => {
                 failed(`newCodec failed ${e}`)
             })
-            .finally(() => {})
+            .finally(() => {
+                setRunLoading(false)
+            })
     })
 
     // 执行校验
@@ -1717,15 +1725,27 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     const [inputEditor, setInputEditor] = useState<string>("")
     const [outputEditor, setOutputEditor] = useState<string>("")
     const [outputEditorByte, setOutputEditorByte] = useState<Uint8Array>()
+    // 是否正在执行
+    const [runLoading,setRunLoading] = useState<boolean>(false)
     // 是否为点击添加至执行列表
     const isClickToRunList = useRef<boolean>(false)
+
+    // 计算编码值总和
+    const differentiate = useMemoizedFn((str: string) => {
+        let sum = 0
+        for (let i = 0; i < str.length; i++) {
+            sum += str.charCodeAt(i)
+        }
+        return sum
+    })
+
     // 构造页面左边列表数据
     const initLeftData = useMemoizedFn((Methods: CodecMethod[]) => {
         // 分类的类名
         let tagList: string[] = []
         let data: LeftDataProps[] = []
         // 固定顺序
-        const NewMethods = Methods.sort((a, b) => a.CodecName.charCodeAt(0) - b.CodecName.charCodeAt(0))
+        const NewMethods = Methods.sort((a, b) => differentiate(a.CodecName) - differentiate(b.CodecName))
         NewMethods.forEach((item) => {
             if (tagList.includes(item.Tag)) {
                 const newData = data.map((itemIn) => {
@@ -1857,7 +1877,8 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         type: "editor",
                         title: Label,
                         name: Name,
-                        require: Required
+                        require: Required,
+                        value: pluginTypeToName["codec"]?.content
                     } as RightItemsEditorProps
                 case "search":
                     // search控件的selectArr来源于接口请求
@@ -1979,6 +2000,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         setOutputEditor={setOutputEditor}
                         setOutputEditorByte={setOutputEditorByte}
                         isClickToRunList={isClickToRunList}
+                        setRunLoading={setRunLoading}
                     />
                 </DragDropContext>
             )}
@@ -1989,6 +2011,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                 setInputEditor={setInputEditor}
                 outputEditor={outputEditor}
                 outputEditorByte={outputEditorByte}
+                runLoading={runLoading}
             />
         </div>
     )

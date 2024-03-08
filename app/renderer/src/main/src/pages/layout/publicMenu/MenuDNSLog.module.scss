@@ -173,6 +173,23 @@
     }
 }
 
+.dnslog-yakit-tag {
+    :global {
+        .ant-tag-close-icon {
+            justify-content: center;
+        }
+    }
+}
+
+.dnslog-list-spin {
+    :global {
+        .ant-spin-container {
+            display: flex;
+            flex-direction: row;
+        }
+    }
+}
+
 .dnslog-list-popover {
     :global {
         .ant-popover-inner {
