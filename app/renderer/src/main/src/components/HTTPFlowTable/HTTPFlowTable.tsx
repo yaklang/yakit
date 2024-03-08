@@ -15,6 +15,7 @@ import {
     useDebounceFn,
     useGetState,
     useMemoizedFn,
+    useThrottleEffect,
     useUpdateEffect,
     useVirtualList
 } from "ahooks"
@@ -75,6 +76,7 @@ import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
+import { randomString } from "@/utils/randomUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1107,6 +1109,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
+        console.log("getDataByGrpc---",type,query);
+        
         // 插件执行中流量数据必有runTimeId
         if (toPlugin && !runTimeId) {
             setTimeout(() => {
@@ -1132,6 +1136,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
+                        setIsLoop(false)
                         return
                     }
 
@@ -1148,6 +1153,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 } else if (type === "bottom") {
                     if (newData.length <= 0) {
                         // 没有数据
+                        setIsLoop(false)
                         return
                     }
                     const arr = [...data, ...newData]
@@ -1161,6 +1167,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 } else if (type === "offset") {
                     if (resData.length <= 0) {
                         // 没有数据
+                        setIsLoop(false)
                         return
                     }
                     if (["desc", "none"].includes(query.Pagination.Order)) {
@@ -1170,6 +1177,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 } else {
                     // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
+                    if (resData.length <= 0) {
+                        // 没有数据
+                        setIsLoop(false)
+                    }
                     setSelectedRowKeys([])
                     setSelectedRows([])
                     setIsRefresh(!isRefresh)
@@ -1187,7 +1198,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (extraTimerRef.current) {
                         clearInterval(extraTimerRef.current)
                     }
-                    extraTimerRef.current = setInterval(() => getAddDataByGrpc(query), 1000)
+                    // extraTimerRef.current = setInterval(() => getAddDataByGrpc(query), 1000)
                 }
             })
             .catch((e: any) => {
@@ -1209,7 +1220,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Order: "desc",
             OrderBy: "Id"
         }
-
         ipcRenderer.invoke("QueryHTTPFlows", copyQuery).then((rsp: YakQueryHTTPFlowResponse) => {
             const resData = rsp?.Data || []
             if (resData.length) {
@@ -1405,7 +1415,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const scrollUpdate = useMemoizedFn(() => {
         if (isGrpcRef.current) return
-
+        console.log("开始轮询");
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         const scrollHeight = tableRef.current?.containerRef?.scrollHeight
@@ -1448,14 +1458,66 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         props.onSelected && props.onSelected(selected)
     }, [selected])
 
+    const [token, setToken] = useState(randomString(20))
+    // 是否循环接口
+    const [isLoop,setIsLoop] = useState<boolean>(false)
+    useEffect(()=>{
+        // 监听history数据库是否有变化(此接口的出现是因为轮询频率太高，导致数据库被锁死)
+        ipcRenderer.invoke(
+            "QueryHTTPFlowsNotify",
+            {},
+            token
+        )
+        ipcRenderer.on(`${token}-data`, async (e: any, data: any) => {
+            // 通知定时器开启
+            console.log("data---",data);
+            setIsLoop(true)
+        })
+        ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
+            console.log("error---",error);
+        })
+        ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+            console.log("end---",data);
+        })
+        return () => {
+            ipcRenderer.invoke("cancel-QueryHTTPFlowsNotify", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    },[token])
+    // 取消监听history数据库
+    const cancelSavePayload = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-QueryHTTPFlowsNotify", token)
+    })
+
+    useEffect(()=>{
+        let sTop,cHeight,sHeight
+        let id = setInterval(()=>{
+            const scrollTop = tableRef.current?.containerRef?.scrollTop
+            const clientHeight = tableRef.current?.containerRef?.clientHeight
+            const scrollHeight = tableRef.current?.containerRef?.scrollHeight
+            if(sTop!==scrollTop||cHeight!==clientHeight||sHeight!==scrollHeight){
+                setIsLoop(true)
+            }
+            sTop = scrollTop
+            cHeight = clientHeight
+            sHeight = scrollHeight
+        }, 1000)
+        return () => clearInterval(id)
+    },[])
+
     // 设置是否自动刷新
     useEffect(() => {
+        let id
         if (inViewport) {
             scrollUpdate()
-            let id = setInterval(scrollUpdate, 1000)
-            return () => clearInterval(id)
+            if(isLoop){
+                id = setInterval(scrollUpdate, 1000)
+            }
         }
-    }, [inViewport])
+        return () => clearInterval(id)
+    }, [inViewport,isLoop,scrollUpdate])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
