@@ -62,7 +62,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     const page = useMemo(() => paging.Page, [paging.Page])
     const limit = useMemo(() => paging.Limit, [paging.Limit])
     useEffect(() => {
-        reload(1, limit)
+        reload(1, limit, true)
     }, [])
     const deleteAll = useMemoizedFn(() => {
         setLoading(true)
@@ -79,7 +79,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
-    const reload = useMemoizedFn((pageInt: number, limitInt: number) => {
+    const reload = useMemoizedFn((pageInt: number, limitInt: number, first?: boolean) => {
         setLoading(true)
         const params = {
             Pagination: {...paging, Page: pageInt, Limit: limitInt},
@@ -92,6 +92,9 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 setTasks(data.Data)
                 setTotal(data.Total)
                 setPaging(data.Pagination)
+                if (data.Total == 0 && first) {
+                    onSwitchShowAll(true)
+                }
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -103,13 +106,6 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
         }, 200)
     })
 
-    useEffect(() => {
-        if (!tasks.length) {
-            setShowAll(true)
-        } else {
-            setShowAll(false)
-        }
-    }, [tasks])
     return (
         <Card
             size={"small"}
