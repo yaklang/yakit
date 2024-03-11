@@ -1,6 +1,7 @@
 import {ReactNode} from "react"
 import {PluginDetailsProps, PluginFilterParams, PluginSearchParams} from "../../baseTemplateType"
 import {YakScript} from "@/pages/invoker/schema"
+import { API } from "@/services/swagger/resposeType"
 
 interface PluginLocalDetailsProps extends Omit<PluginDetailsProps, "hidden", "setHidden"> {}
 export interface PluginLocalListDetailsProps {
@@ -26,6 +27,8 @@ export interface PluginLocalListDetailsProps {
     /**插件选中数 */
     selectNum?: number
     setSelectNum?: (s: number) => void
+    showFilter?:boolean
+    fixFilterList?:API.PluginsSearch[]
 }
 
 export interface PluginLocalListDetailsRefProps {}

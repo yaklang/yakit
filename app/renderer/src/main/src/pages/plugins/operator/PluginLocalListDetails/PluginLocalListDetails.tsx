@@ -14,13 +14,22 @@ import {getRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {RemoteGV} from "@/yakitGV"
 import styles from "./PluginLocalListDetails.module.scss"
+import {FilterPopoverBtn} from "../../funcTemplate"
 
 /**
  * @description 本地插件列表，左右布局，左边为插件列表右边为传入的node
  */
 export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = React.memo(
     forwardRef((props, ref) => {
-        const {refreshList = true, children, pluginDetailsProps = {}, hidden,fetchListInPageFirstAfter} = props
+        const {
+            refreshList = true,
+            children,
+            pluginDetailsProps = {},
+            hidden,
+            fetchListInPageFirstAfter,
+            showFilter,
+            fixFilterList
+        } = props
 
         const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
             defaultValue: cloneDeep(defaultSearch),
@@ -75,10 +84,10 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
             getPrivateDomainAndRefList()
         }, [])
 
-        useEffect(()=>{
-               if (allCheck) return setSelectNum(response.Total)
+        useEffect(() => {
+            if (allCheck) return setSelectNum(response.Total)
             else return setSelectNum(selectList.length)
-        },[ allCheck, selectList, response.Total])
+        }, [allCheck, selectList, response.Total])
 
         /**选中组 */
         const selectGroup = useCreation(() => {
@@ -139,7 +148,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                     if (+res.Pagination.Page === 1) {
                         setAllCheck(false)
                         setSelectList([])
-                        if(fetchListInPageFirstAfter)fetchListInPageFirstAfter()
+                        if (fetchListInPageFirstAfter) fetchListInPageFirstAfter()
                     }
                 } catch (error) {}
                 setTimeout(() => {
@@ -261,6 +270,13 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                                 setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
                                 wrapStyle={{marginBottom: 0}}
                             />
+                        </div>
+                    )
+                }
+                filterExtra={
+                    showFilter && (
+                        <div className={"details-filter-extra-wrapper"}>
+                            <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} fixFilterList={fixFilterList} />
                         </div>
                     )
                 }
