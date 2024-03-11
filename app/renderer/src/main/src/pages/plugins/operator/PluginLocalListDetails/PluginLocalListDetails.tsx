@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useReducer, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useReducer, useRef, useState} from "react"
 import {PluginLocalListDetailsProps} from "./PluginLocalListDetailsType"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {PluginDetails, PluginDetailsListItem, defaultFilter, defaultSearch} from "../../baseTemplate"
@@ -28,7 +28,8 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
             hidden,
             fetchListInPageFirstAfter,
             showFilter,
-            fixFilterList
+            fixFilterList,
+            defaultFilters
         } = props
 
         const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
@@ -125,7 +126,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                           limit: +response.Pagination.Limit || 20
                       }
                 const query: QueryYakScriptRequest = {
-                    ...convertLocalPluginsRequestParams(filters, search, params)
+                    ...convertLocalPluginsRequestParams({filter: filters, search, pageParams: params, defaultFilters})
                 }
                 try {
                     const res = await apiQueryYakScript(query)
@@ -276,7 +277,11 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                 filterExtra={
                     showFilter && (
                         <div className={"details-filter-extra-wrapper"}>
-                            <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} fixFilterList={fixFilterList} />
+                            <FilterPopoverBtn
+                                defaultFilter={filters}
+                                onFilter={onFilter}
+                                fixFilterList={fixFilterList || []}
+                            />
                         </div>
                     )
                 }

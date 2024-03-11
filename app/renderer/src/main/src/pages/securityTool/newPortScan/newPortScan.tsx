@@ -61,7 +61,7 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
     const [hidden, setHidden] = useState<boolean>(false)
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [filters, setFilters] = useState<PluginFilterParams>({
-        plugin_type: cloneDeep(pluginTypeFilterList)
+        plugin_type: []
     })
     const [selectList, setSelectList] = useState<string[]>([])
     const [selectNum, setSelectNum] = useState<number>(0)
@@ -76,6 +76,9 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
             setSelectNum={setSelectNum}
             showFilter={true}
             filters={filters}
+            defaultFilters={{
+                plugin_type: cloneDeep(pluginTypeFilterList)
+            }}
             setFilters={setFilters}
             fixFilterList={[
                 {
