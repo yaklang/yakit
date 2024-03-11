@@ -188,9 +188,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             } else {
                 setForResponse(true)
                 setStatus("hijacked")
-                console.log('劫持响应请求', Uint8ArrayToString(msg.request));
                 setCurrentPacketInfo({
-                    currentPacket: msg.response,
+                    currentPacket: !!msg?.isWebsocket ? msg.Payload : msg.response,
                     currentPacketId: msg.responseId,
                     isHttp: msg.isHttps,
                     requestPacket: msg.request,
@@ -211,7 +210,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     // setCurrentPacket(msg.request)
                     // setCurrentPacketId(msg.id)
                     setCurrentPacketInfo({
-                        currentPacket: msg.request,
+                        currentPacket: !!msg?.isWebsocket ? msg.Payload : msg.request,
                         currentPacketId: msg.id,
                         isHttp: msg.isHttps,
                         requestPacket: msg.request,

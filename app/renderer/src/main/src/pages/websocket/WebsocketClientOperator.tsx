@@ -14,6 +14,7 @@ import {SettingFilled} from "@ant-design/icons";
 import {AutoSpin} from "@/components/AutoSpin";
 
 export interface WebsocketClientOperatorProp {
+    toServer?: Uint8Array
     tls?: boolean
     request?: Uint8Array
     onToken: (i: string) => any
@@ -27,7 +28,7 @@ export const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = (p
     const [_executing, setExecuting, getExecuting] = useGetState(false);
     const [_request, setRequest, getRequest] = useGetState(props.request ? props.request : new Uint8Array);
     const [_ursp, setUpgradeResponse, getUpgradeResponse] = useGetState<string>("");
-    const [_toServer, setToServer, getToServer] = useGetState("");
+    const [_toServer, setToServer, getToServer] = useGetState(Uint8ArrayToString(props.toServer || new Uint8Array));
     const [mode, setMode] = useState<"request" | "response">("request");
 
     // 额外参数

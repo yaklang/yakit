@@ -1132,6 +1132,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     isWebSocket?: boolean
     webSocketValue?: Uint8Array
+    webSocketToServer?: Uint8Array
 
     /**@name 外部控制换行状态 */
     noWordWrapState?: boolean
@@ -1753,6 +1754,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             isWebSocket={props.isWebSocket}
                             webSocketValue={
                                 props.webSocketValue && new Buffer(props.webSocketValue).toString(getEncoding())
+                            }
+                            webSocketToServer={
+                                props.webSocketToServer && new Buffer(props.webSocketToServer).toString(getEncoding())
                             }
                             webFuzzerValue={
                                 props.webFuzzerValue && new Buffer(props.webFuzzerValue).toString(getEncoding())

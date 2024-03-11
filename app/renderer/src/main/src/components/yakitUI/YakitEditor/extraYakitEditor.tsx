@@ -29,6 +29,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     isWebSocket?: boolean
     webSocketValue?: string
     webFuzzerValue?: string
+    webSocketToServer?: string
     webFuzzerCallBack?: () => void
 }
 
@@ -43,6 +44,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         isWebSocket = false,
         webSocketValue,
         webFuzzerValue,
+        webSocketToServer,
         webFuzzerCallBack,
         ...restProps
     } = props
@@ -205,9 +207,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             return
                         }
                         if (key === "发送并跳转") {
-                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text))
+                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text), true, StringToUint8Array(webSocketToServer || ""))
                         } else if (key === "仅发送") {
-                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text), false)
+                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text), false, StringToUint8Array(webSocketToServer || ""))
                         }
                     } catch (e) {
                         failed("editor exec new-open-fuzzer failed")
@@ -261,7 +263,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }
         }
         return menuItems
-    }, [defaultHttps, system, originValue, contextMenu, readOnly, isWebSocket, webSocketValue, webFuzzerValue])
+    }, [defaultHttps, system, originValue, contextMenu, readOnly, isWebSocket, webSocketValue, webFuzzerValue, webSocketToServer])
 
     return (
         <YakitEditor

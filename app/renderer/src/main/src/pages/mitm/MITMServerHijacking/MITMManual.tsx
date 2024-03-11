@@ -368,6 +368,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             editorOperationRecord='MITM_Manual_EDITOR_RECORF'
             isWebSocket={currentIsWebsocket && status !== "hijacking"}
             webSocketValue={requestPacket}
+            webSocketToServer={currentPacket}
             webFuzzerValue={currentIsForResponse ? requestPacket : undefined}
             extraEditorProps={{
                 isShowSelectRangeMenu: true

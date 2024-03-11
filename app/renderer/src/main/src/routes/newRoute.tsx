@@ -435,6 +435,7 @@ export interface ComponentParams {
     // websocket fuzzer 相关
     wsTls?: boolean
     wsRequest?: Uint8Array
+    wsToServer?: Uint8Array
 
     // yakit 插件日志详情参数
     YakScriptJournalDetailsId?: number
@@ -521,7 +522,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 </Suspense>
             )
         case YakitRoute.WebsocketFuzzer:
-            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
+            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} toServer={params?.wsToServer}/>
         case YakitRoute.Codec:
             return <NewCodec id={params?.id || ""}/>
         case YakitRoute.DataCompare:
