@@ -16,6 +16,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {defPortScanExecuteExtraFormValue} from "./newPortScan"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -25,6 +26,45 @@ interface NewPortScanExtraParamsDrawerProps {
     visible: boolean
     setVisible: (b: boolean) => void
     onSave: (v: PortScanExecuteExtraFormValue) => void
+}
+/**其他配置 */
+const defaultOtherSetting = {
+    SaveToDB: defPortScanExecuteExtraFormValue.SaveToDB,
+    SaveClosedPorts: defPortScanExecuteExtraFormValue.SaveClosedPorts,
+    EnableCClassScan: defPortScanExecuteExtraFormValue.EnableCClassScan,
+    SkippedHostAliveScan: defPortScanExecuteExtraFormValue.SkippedHostAliveScan,
+    HostAliveConcurrent: defPortScanExecuteExtraFormValue.HostAliveConcurrent,
+    ExcludeHosts: defPortScanExecuteExtraFormValue.ExcludeHosts,
+    ExcludePorts: defPortScanExecuteExtraFormValue.ExcludePorts
+}
+/**爬虫设置 */
+const defaultReptileSetting = {
+    EnableBasicCrawler: defPortScanExecuteExtraFormValue.EnableBasicCrawler,
+    BasicCrawlerRequestMax: defPortScanExecuteExtraFormValue.BasicCrawlerRequestMax
+}
+/**指纹扫描配置 */
+const defaultFingerprintSetting = {
+    Concurrent: defPortScanExecuteExtraFormValue.Concurrent,
+    Active: defPortScanExecuteExtraFormValue.Active,
+    ProbeMax: defPortScanExecuteExtraFormValue.ProbeMax,
+    ProbeTimeout: defPortScanExecuteExtraFormValue.ProbeTimeout,
+    Proxy: defPortScanExecuteExtraFormValue.Proxy,
+    FingerprintMode: defPortScanExecuteExtraFormValue.FingerprintMode
+}
+/** SYN 配置 */
+const defaultSYNSetting = {
+    SynConcurrent: defPortScanExecuteExtraFormValue.SynConcurrent
+}
+/** 网卡配置 */
+const defaultNetworkCard = {
+    SynScanNetInterface: defPortScanExecuteExtraFormValue.SynScanNetInterface
+}
+const defaultExtraParamsFormValue = {
+    网卡配置: defaultNetworkCard,
+    "SYN 配置": defaultSYNSetting,
+    指纹扫描配置: defaultFingerprintSetting,
+    基础爬虫配置: defaultReptileSetting,
+    其他配置: defaultOtherSetting
 }
 const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> = React.memo((props) => {
     const {extraParamsValue, visible, onSave} = props
@@ -47,7 +87,7 @@ const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> 
             className={styles["port-scan-execute-extra-params-drawer"]}
             visible={visible}
             onClose={onClose}
-            width='40%'
+            width='60%'
             title='额外参数'
         >
             <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
@@ -83,6 +123,12 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
             {label: "UDP", value: "udp", disabled: mode === "syn" || mode === "all"}
         ]
     }, [mode])
+    const onReset = useMemoizedFn((key) => {
+        const value = defaultExtraParamsFormValue[key]
+        form.setFieldsValue({
+            ...value
+        })
+    })
     /**mode syn 对应的配置 */
     const synCollapseNode = useMemoizedFn(() => {
         return (
@@ -91,7 +137,15 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     header='网卡配置'
                     key='网卡配置'
                     extra={
-                        <YakitButton type='text' colors='danger' size='small'>
+                        <YakitButton
+                            type='text'
+                            colors='danger'
+                            size='small'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onReset("网卡配置")
+                            }}
+                        >
                             重置
                         </YakitButton>
                     }
@@ -114,7 +168,15 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     header='SYN 配置'
                     key='SYN 配置'
                     extra={
-                        <YakitButton type='text' colors='danger' size='small'>
+                        <YakitButton
+                            type='text'
+                            colors='danger'
+                            size='small'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onReset("SYN 配置")
+                            }}
+                        >
                             重置
                         </YakitButton>
                     }
@@ -139,7 +201,15 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     header='指纹扫描配置'
                     key='指纹扫描配置'
                     extra={
-                        <YakitButton type='text' colors='danger' size='small'>
+                        <YakitButton
+                            type='text'
+                            colors='danger'
+                            size='small'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onReset("指纹扫描配置")
+                            }}
+                        >
                             重置
                         </YakitButton>
                     }
@@ -206,7 +276,15 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     header='基础爬虫配置'
                     key='基础爬虫配置'
                     extra={
-                        <YakitButton type='text' colors='danger' size='small'>
+                        <YakitButton
+                            type='text'
+                            colors='danger'
+                            size='small'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onReset("基础爬虫配置")
+                            }}
+                        >
                             重置
                         </YakitButton>
                     }
@@ -236,7 +314,15 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     header='其他配置'
                     key='其他配置'
                     extra={
-                        <YakitButton type='text' colors='danger' size='small'>
+                        <YakitButton
+                            type='text'
+                            colors='danger'
+                            size='small'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onReset("其他配置")
+                            }}
+                        >
                             重置
                         </YakitButton>
                     }
@@ -333,7 +419,7 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     }))}
                 />
             </Form.Item>
-            <Form.Item label='扫描协议' name='Proto' initialValue='tcp'>
+            <Form.Item label='扫描协议' name='scanProtocol' initialValue='tcp'>
                 <YakitRadioButtons buttonStyle='solid' options={protoList} />
             </Form.Item>
             <YakitCollapse

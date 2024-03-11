@@ -29,6 +29,20 @@ import {HybridScanPluginConfig} from "@/models/HybridScan"
 import {Tooltip} from "antd"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
 
+export const getLinkPluginConfig = (selectList, pluginListSearchInfo) => {
+    const {filters, search} = pluginListSearchInfo
+    const linkPluginConfig = {
+        PluginNames: selectList,
+        Filter:
+            selectList.length > 0
+                ? undefined
+                : {
+                      ...convertLocalPluginsRequestParams(filters, search)
+                  }
+    }
+    return linkPluginConfig
+}
+
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
     const {yakScriptId} = props
 
@@ -84,16 +98,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
 
     /**插件UI联动相关参数 */
     const linkPluginConfig: HybridScanPluginConfig = useCreation(() => {
-        const config = {
-            PluginNames: selectList,
-            Filter:
-                selectList.length > 0
-                    ? undefined
-                    : {
-                          ...convertLocalPluginsRequestParams(filters, search),
-                          Type: pluginTypeRef.current
-                      }
-        }
+        const config = getLinkPluginConfig(selectList, {filters, search})
         return config
     }, [selectList, search, filters])
     const hidden = useCreation(() => {

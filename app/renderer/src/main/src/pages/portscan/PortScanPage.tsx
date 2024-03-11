@@ -31,6 +31,7 @@ import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {PcapMetadata} from "@/models/Traffic";
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage";
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { HybridScanPluginConfig } from "@/models/HybridScan"
 
 const {ipcRenderer} = window.require("electron")
 export const ScanPortTemplate = "scan-port-template"
@@ -68,6 +69,7 @@ export interface PortScanParams {
 
     SynScanNetInterface?: string
     HostAliveConcurrent?: number
+    LinkPluginConfig?: HybridScanPluginConfig;
 }
 
 export const ScanKind: { [key: string]: string } = {

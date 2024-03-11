@@ -1,10 +1,9 @@
 @use "../securityTool.scss" as securityTool;
 
-.new-port-scan-wrapper {
-    // @extend %display-column-center;
-    // overflow: hidden;
-    // height: 100%;
+.port-scan-body {
+    padding-right: 0 !important;
 }
+
 .port-scan-execute-wrapper {
     @include securityTool.execute-title("port-scan");
 }
@@ -39,7 +38,7 @@
 
 .preset-port-group-wrapper {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     grid-gap: 12px;
     padding: 12px;
     border-radius: 4px;
@@ -52,4 +51,5 @@
 .form-extra {
     @extend %display-flex-center;
     gap: 16px;
+    flex-wrap: wrap;
 }
