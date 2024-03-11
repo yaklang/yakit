@@ -223,12 +223,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         children: [
                             {
                                 key: "发送并跳转",
-                                label: "发送并跳转",
+                                label: "发送并跳转1",
                                 keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
                             },
                             {
                                 key: "仅发送",
-                                label: "仅发送",
+                                label: "仅发送2",
                                 keybindings: [
                                     YakitEditorKeyCode.Control,
                                     YakitEditorKeyCode.Shift,

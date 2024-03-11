@@ -1036,6 +1036,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             eleItem.multipleNode.push({...node})
                             eleItem.multipleLength = (eleItem.multipleLength || 0) + 1
                             order = eleItem.multipleNode.length
+                            eleItem.openFlag = openFlag
                         }
                         pages.push({...eleItem})
                     })
@@ -2088,7 +2089,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             if ((currentNode?.groupChildren?.length || 0) > 0) {
                 currentNode = currentNode.groupChildren[0]
             }
-            setSelectSubMenu({...currentNode})
+            if (pageItem.openFlag !== false) {
+                setSelectSubMenu({...currentNode})
+            }
         }
     }, [pageItem.multipleLength])
     useUpdateEffect(() => {
