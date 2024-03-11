@@ -37,7 +37,7 @@ export const getLinkPluginConfig = (selectList, pluginListSearchInfo) => {
             selectList.length > 0
                 ? undefined
                 : {
-                      ...convertLocalPluginsRequestParams(filters, search)
+                      ...convertLocalPluginsRequestParams({filter:filters, search})
                   }
     }
     return linkPluginConfig

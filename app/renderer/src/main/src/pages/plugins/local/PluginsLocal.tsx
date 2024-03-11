@@ -361,7 +361,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             const queryFilters = filtersDetailRef.current ? filtersDetailRef.current : filters
             const querySearch = searchDetailRef.current ? searchDetailRef.current : search
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams(queryFilters, querySearch, params)
+                ...convertLocalPluginsRequestParams({filter:queryFilters, search:querySearch, pageParams:params})
             }
             queryFetchList.current = query
             try {
