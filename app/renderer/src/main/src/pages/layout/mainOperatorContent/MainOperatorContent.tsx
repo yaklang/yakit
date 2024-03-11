@@ -695,10 +695,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
-    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array, openFlag?: boolean }) => {
         openMenuPage(
             {route: YakitRoute.WebsocketFuzzer},
             {
+                openFlag: res.openFlag,
                 pageParams: {
                     wsRequest: res.request,
                     wsTls: res.tls

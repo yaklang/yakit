@@ -29,13 +29,13 @@ export const WebsocketFuzzer: React.FC<WebsocketFuzzerProp> = (props) => {
 
 const {ipcRenderer} = window.require("electron");
 
-export const newWebsocketFuzzerTab = (isHttps: boolean, request: Uint8Array) => {
+export const newWebsocketFuzzerTab = (isHttps: boolean, request: Uint8Array, openFlag?: boolean) => {
     return ipcRenderer
         .invoke("send-to-tab", {
             type: "websocket-fuzzer",
-            data: {tls: isHttps, request: request}
+            data: {tls: isHttps, request: request, openFlag}
         })
         .then(() => {
-            info("新开 Websocket Fuzzer Tab")
+            openFlag === false && info("新开 Websocket Fuzzer Tab")
         })
 }

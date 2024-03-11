@@ -17,6 +17,7 @@ import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {Modal} from "antd"
 import {execAutoDecode} from "@/utils/encodec"
 import {YakitSystem} from "@/yakitGVDefine"
+import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -25,6 +26,8 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     originValue: Uint8Array
     noPacketModifier?: boolean
     extraEditorProps?: YakitEditorProps | any
+    isWebSocket?: boolean
+    webSocketValue?: string
     webFuzzerValue?: string
     webFuzzerCallBack?: () => void
 }
@@ -37,6 +40,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         extraEditorProps,
         contextMenu,
         readOnly,
+        isWebSocket = false,
+        webSocketValue,
         webFuzzerValue,
         webFuzzerCallBack,
         ...restProps
@@ -59,7 +64,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     }, [noPacketModifier])
 
     const rightContextMenu: OtherMenuListProps = useMemo(() => {
-        return {
+        const menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
             copyCSRF: {
                 menu: [
@@ -166,8 +171,51 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         failed("editor exec auto-decode failed")
                     }
                 }
-            },
-            newFuzzer: {
+            }
+        }
+        if (isWebSocket) {
+            menuItems.newSocket = {
+                menu: [
+                    {
+                        key: "new-web-socket-tab",
+                        label: "发送到WS Fuzzer",
+                        children: [
+                            {
+                                key: "发送并跳转",
+                                label: "发送并跳转",
+                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                            },
+                            {
+                                key: "仅发送",
+                                label: "仅发送",
+                                keybindings: [
+                                    YakitEditorKeyCode.Control,
+                                    YakitEditorKeyCode.Shift,
+                                    YakitEditorKeyCode.KEY_R
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                onRun: (editor, key) => {
+                    try {
+                        const text = webSocketValue || editor.getModel()?.getValue() || ""
+                        if (!text) {
+                            info("数据包为空")
+                            return
+                        }
+                        if (key === "发送并跳转") {
+                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text))
+                        } else if (key === "仅发送") {
+                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text), false)
+                        }
+                    } catch (e) {
+                        failed("editor exec new-open-fuzzer failed")
+                    }
+                }
+            }
+        } else {
+            menuItems.newFuzzer = {
                 menu: [
                     {
                         key: "new-web-fuzzer-tab",
@@ -176,14 +224,18 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             {
                                 key: "发送并跳转",
                                 label: "发送并跳转",
-                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R],
+                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
                             },
                             {
                                 key: "仅发送",
                                 label: "仅发送",
-                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R],
+                                keybindings: [
+                                    YakitEditorKeyCode.Control,
+                                    YakitEditorKeyCode.Shift,
+                                    YakitEditorKeyCode.KEY_R
+                                ]
                             }
-                        ],
+                        ]
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -208,7 +260,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 }
             }
         }
-    }, [defaultHttps, system, originValue, contextMenu, readOnly])
+        return menuItems
+    }, [defaultHttps, system, originValue, contextMenu, readOnly, isWebSocket, webSocketValue, webFuzzerValue])
 
     return (
         <YakitEditor

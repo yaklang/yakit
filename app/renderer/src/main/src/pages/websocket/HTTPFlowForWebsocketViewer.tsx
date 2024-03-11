@@ -5,7 +5,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {ThunderboltOutlined} from "@ant-design/icons"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {callCopyToClipboard} from "@/utils/basic"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -134,17 +134,37 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                 menu: [
                     {
                         key: "new-web-socket-tab",
-                        label: "发送到WS Fuzzer"
+                        label: "发送到WS Fuzzer",
+                        children: [
+                            {
+                                key: "发送并跳转",
+                                label: "发送并跳转",
+                                keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                            },
+                            {
+                                key: "仅发送",
+                                label: "仅发送",
+                                keybindings: [
+                                    YakitEditorKeyCode.Control,
+                                    YakitEditorKeyCode.Shift,
+                                    YakitEditorKeyCode.KEY_R
+                                ]
+                            }
+                        ]
                     }
                 ],
                 onRun: (editor, key) => {
                     try {
                         const text = flow.Request
-                        if (!text) {
+                        if (!Uint8ArrayToString(text)) {
                             yakitNotify("info", "数据包为空")
                             return
                         }
-                        newWebsocketFuzzerTab(flow.IsHTTPS, text)
+                        if (key === "发送并跳转") {
+                            newWebsocketFuzzerTab(flow.IsHTTPS, text)
+                        } else if (key === "仅发送") {
+                            newWebsocketFuzzerTab(flow.IsHTTPS, text, false)
+                        }
                     } catch (e) {
                         yakitNotify("error", "editor exec new-open-fuzzer failed")
                     }

@@ -13,8 +13,8 @@ import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented
 import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
+import { Uint8ArrayToString } from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -211,7 +211,6 @@ interface MITMManualEditorProps {
     autoForward: "manual" | "log" | "passive"
     forward: () => void
     hijacking: () => void
-    execFuzzer: (s: string) => void
     status: MITMStatus
     onSetHijackResponseType: (s: string) => void
     currentIsForResponse: boolean
@@ -229,7 +228,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         autoForward,
         forward,
         hijacking,
-        execFuzzer,
         status,
         onSetHijackResponseType,
         currentIsForResponse,
@@ -264,12 +262,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                     label: "丢弃该 HTTP Response"
                 }
             ]
-            if (currentIsWebsocket && status !== "hijacking") {
-                menu.push({
-                    key: "send-to-web-socket",
-                    label: "发送到WS Fuzzer"
-                })
-            }
             return {
                 forResponseMITMMenu: {
                     menu: menu,
@@ -290,9 +282,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                     // )
                                 })
                                 break
-                            case "send-to-web-socket":
-                                newWebsocketFuzzerTab(isHttp, editor.getModel().getValue())
-                                break
                             default:
                                 break
                         }
@@ -309,15 +298,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                         YakitEditorKeyCode.Shift,
                         system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
                         YakitEditorKeyCode.KEY_T
-                    ]
-                },
-                {
-                    key: "send-to-fuzzer",
-                    label: "发送到 Web Fuzzer",
-                    keybindings: [
-                        YakitEditorKeyCode.Shift,
-                        system === "Darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                        YakitEditorKeyCode.KEY_R
                     ]
                 },
                 {
@@ -339,13 +319,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             ]
 
-            if (currentIsWebsocket && status !== "hijacking") {
-                menu.push({
-                    key: "send-to-web-socket",
-                    label: "发送到WS Fuzzer"
-                })
-            }
-
             return {
                 forResponseMITMMenu: {
                     menu: menu,
@@ -353,12 +326,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                         switch (key) {
                             case "trigger-auto-hijacked":
                                 handleAutoForward(autoForward === "manual" ? "log" : "manual")
-                                break
-                            case "send-to-fuzzer":
-                                execFuzzer(editor.getModel().getValue())
-                                break
-                            case "send-to-web-socket":
-                                newWebsocketFuzzerTab(isHttp, editor.getModel().getValue())
                                 break
                             case "forward-response":
                                 forward()
@@ -385,7 +352,8 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             }
         }
-    }, [forResponse, isHttp, currentIsWebsocket, status])
+    }, [forResponse, isHttp])
+
     return (
         <NewHTTPPacketEditor
             originValue={currentPacket}
@@ -398,6 +366,8 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
             contextMenu={mitmManualRightMenu}
             editorOperationRecord='MITM_Manual_EDITOR_RECORF'
+            isWebSocket={currentIsWebsocket && status !== "hijacking"}
+            webSocketValue={requestPacket}
             webFuzzerValue={currentIsForResponse ? requestPacket : undefined}
             extraEditorProps={{
                 isShowSelectRangeMenu: true

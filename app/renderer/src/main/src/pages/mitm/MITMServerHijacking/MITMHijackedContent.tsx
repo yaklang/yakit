@@ -24,6 +24,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import { Uint8ArrayToString } from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -187,6 +188,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             } else {
                 setForResponse(true)
                 setStatus("hijacked")
+                console.log('劫持响应请求', Uint8ArrayToString(msg.request));
                 setCurrentPacketInfo({
                     currentPacket: msg.response,
                     currentPacketId: msg.responseId,
@@ -280,15 +282,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         clearCurrentPacket()
         // setLoading(true);
         setStatus("hijacking")
-    })
-    const execFuzzer = useMemoizedFn((value: string) => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "fuzzer",
-            data: {
-                isHttps: isHttp,
-                request: isResponse ? requestPacket : value
-            }
-        })
     })
     /**
      * @description 切换劫持类型
@@ -395,7 +388,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 autoForward={autoForward}
                                 forward={forward}
                                 hijacking={hijacking}
-                                execFuzzer={execFuzzer}
                                 status={status}
                                 onSetHijackResponseType={onSetHijackResponseType}
                                 currentIsForResponse={currentIsForResponse}
