@@ -1421,7 +1421,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const scrollUpdate = useMemoizedFn(() => {
         if (isGrpcRef.current) return
-        console.log("开始轮询");
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         const scrollHeight = tableRef.current?.containerRef?.scrollHeight
@@ -1467,13 +1466,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 是否循环接口
     const [isLoop,setIsLoop] = useState<boolean>(false)
 
-    const onRefreshHistoryTableFun = useMemoizedFn(()=>{
+    const onRefreshQueryHTTPFlowsFun = useMemoizedFn(()=>{
         setIsLoop(true)
     })
     useEffect(()=>{
-        emiter.on("onRefreshHistoryTable", onRefreshHistoryTableFun)
+        emiter.on("onRefreshQueryHTTPFlows", onRefreshQueryHTTPFlowsFun)
         return () => {
-            emiter.off("onRefreshHistoryTable", onRefreshHistoryTableFun)
+            emiter.off("onRefreshQueryHTTPFlows", onRefreshQueryHTTPFlowsFun)
         }
     },[])
 
