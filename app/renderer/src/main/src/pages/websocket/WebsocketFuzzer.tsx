@@ -37,6 +37,6 @@ export const newWebsocketFuzzerTab = (isHttps: boolean, request: Uint8Array, ope
             data: {tls: isHttps, request: request, openFlag, toServer}
         })
         .then(() => {
-            openFlag === false && info("新开 Websocket Fuzzer Tab")
+            openFlag === false && info("发送成功")
         })
 }
