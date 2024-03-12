@@ -2062,14 +2062,13 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 })
                 .catch((e) => {})
                 .finally(() => {
-                    setTimeout(() => {
-                        update()
-                        timeRef.current = setInterval(update, 5000)
-                    }, 300)
+                    update()
+                    emiter.on("onRefreshQueryYakScript", update)
                 })
 
             return () => {
                 clearInterval(timeRef.current)
+                emiter.off("onRefreshQueryYakScript", update)
             }
         } else {
             if (timeRef.current) clearInterval(timeRef.current)

@@ -31,6 +31,7 @@ import styles from "./globalState.module.scss"
 import {useRunNodeStore} from "@/store/runNode"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -129,6 +130,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     })
 
     const [pluginTotal, setPluginTotal] = useState<number>(0)
+
     /** 获取本地插件数量 */
     const updatePluginTotal = useMemoizedFn(() => {
         return new Promise((resolve, reject) => {
@@ -263,7 +265,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             updateSystemProxy(),
             updateGlobalReverse(),
             updatePcap(),
-            updatePluginTotal(),
             updateChromePath()
         ])
             .then((values) => {
@@ -288,6 +289,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             timer = setInterval(() => {
                 setRemoteValue(RemoteGV.GlobalStateTimeInterval, `${getTimeInterval()}`)
             }, 20000)
+            updatePluginTotal()
+            emiter.on("onRefreshQueryYakScript", updatePluginTotal)
+            return () => {
+                emiter.off("onRefreshQueryYakScript", updatePluginTotal)
+            }
         } else {
             // init
             setPcap({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
