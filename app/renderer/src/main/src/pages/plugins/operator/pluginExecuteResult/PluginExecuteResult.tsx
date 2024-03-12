@@ -13,16 +13,15 @@ import {
     VulnerabilitiesRisksTableProps
 } from "./PluginExecuteResultType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useCreation, useDebounceFn, useMemoizedFn, useSelections} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {YakitRoute} from "@/routes/newRoute"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {RiskDetails, TitleColor} from "@/pages/risks/RiskTable"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {Risk} from "@/pages/risks/schema"
-import {QueryGeneralResponse, genDefaultPagination} from "@/pages/invoker/schema"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {CurrentHttpFlow, formatJson} from "@/pages/yakitStore/viewers/base"
@@ -34,20 +33,16 @@ import {WebTree} from "@/components/WebTree/WebTree"
 import classNames from "classnames"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {SolidPaperairplaneIcon, SolidViewgridIcon} from "@/assets/icon/solid"
+import {SolidViewgridIcon} from "@/assets/icon/solid"
 import {ExportExcel} from "@/components/DataExport/DataExport"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {PortAsset} from "@/pages/assetViewer/models"
-import {PortTableAndDetail, QueryPortsRequest, portAssetFormatJson} from "@/pages/assetViewer/PortAssetPage"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {QueryPortsRequest} from "@/pages/assetViewer/PortAssetPage"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {PortTable} from "@/pages/assetViewer/PortTable/PortTable"
-import {PortTableRefProps} from "@/pages/assetViewer/PortTable/PortTableType"
 import {defQueryPortsRequest} from "@/pages/assetViewer/PortTable/utils"
 import cloneDeep from "lodash/cloneDeep"
+import {yakitFailed} from "@/utils/notification"
+import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -108,7 +103,6 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 
         return tab.tabName
     })
-
     return (
         <div className={classNames(styles["plugin-execute-result"], pluginExecuteResultWrapper)}>
             {streamInfo.cardState.length > 0 && (
@@ -414,6 +408,113 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
     const {
         tableInfo: {columns = [], data = [], name = ""}
     } = props
+    const [tableData, setTableData] = useState(data)
+    const [columnsData, setColumnsData] = useState(columns)
+
+    const [sorterTable, setSorterTable] = useState<SortProps>()
+
+    const [query, setQuery] = useState<any>({}) // 设置表头查询条件
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const firstItemRef = useRef<any>()
+
+    useEffect(() => {
+        setTimeout(() => {
+            const item = data[0]
+            firstItemRef.current = data[0]
+            onSetColumns(item)
+        }, 500)
+    }, [])
+    useDebounceEffect(
+        () => {
+            if (!firstItemRef.current) {
+                firstItemRef.current = data[0]
+                onSetColumns(firstItemRef.current)
+            }
+            queryData()
+        },
+        [data],
+        {wait: 300, leading: true}
+    )
+    useUpdateEffect(() => {
+        update()
+    }, [query, sorterTable])
+    const onSetColumns = useMemoizedFn((item) => {
+        if (!item) return
+        const newColumns = columns.map((ele) => ({
+            ...ele,
+            sorterProps: {
+                sorter: !isNaN(Number(item[ele.dataKey]))
+            },
+            filterProps: {
+                filtersType: "input"
+            }
+        }))
+        setColumnsData(newColumns)
+    })
+    const update = useDebounceFn(
+        () => {
+            setLoading(true)
+            new Promise((resolve, reject) => {
+                try {
+                    queryData()
+                    resolve(true)
+                } catch (error) {
+                    reject(error)
+                }
+            })
+                .catch((e) => {
+                    yakitFailed("搜索失败:" + e)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        },
+        {
+            wait: 200
+        }
+    ).run
+    // 搜索
+    const queryData = useMemoizedFn(() => {
+        try {
+            let list: any = []
+            const length = data.length
+            const queryHaveValue = {}
+            // 找出有查询条件
+            for (const key in query) {
+                const objItem = query[key]
+                if (objItem) {
+                    queryHaveValue[key] = query[key]
+                }
+            }
+            // 所有查询条件为空时，返回原始数据
+            if (Object.getOwnPropertyNames(queryHaveValue).length === 0) {
+                list = [...data]
+            } else {
+                // 搜索
+                for (let index = 0; index < length; index++) {
+                    const elementArrayItem = data[index]
+                    let isAdd: boolean[] = []
+                    for (const key in queryHaveValue) {
+                        const objItem = queryHaveValue[key]
+                        const isHave = `${elementArrayItem[key]}`.includes(objItem)
+                        isAdd.push(isHave)
+                    }
+                    // 所有条件都满足
+                    if (!isAdd.includes(false)) {
+                        list.push(elementArrayItem)
+                    }
+                    isAdd = []
+                }
+            }
+            const newDataTable = sorterTable?.order === "none" ? list : sorterFunction(list, sorterTable, "") || []
+            setTableData(newDataTable)
+        } catch (error) {
+            yakitFailed("搜索失败:" + error)
+        }
+    })
     const getData = useMemoizedFn(() => {
         return new Promise((resolve) => {
             const header = columns.map((ele) => ele.title)
@@ -431,6 +532,10 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
             }
             resolve(params)
         })
+    })
+    const onTableChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
+        setQuery(filters)
+        setSorterTable(sorter)
     })
     return (
         <PluginExecuteResultTabContent
@@ -454,9 +559,11 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
             className={styles["plugin-execute-custom-table"]}
         >
             <TableVirtualResize
+                loading={loading}
+                isRefresh={loading}
                 isShowTitle={false}
                 enableDrag={true}
-                data={data}
+                data={tableData}
                 renderKey={"uuid"}
                 pagination={{
                     page: 1,
@@ -464,8 +571,9 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
                     total: data.length,
                     onChange: () => {}
                 }}
-                columns={columns}
+                columns={columnsData}
                 containerClassName={styles["custom-table-container"]}
+                onChange={onTableChange}
             />
         </PluginExecuteResultTabContent>
     )
