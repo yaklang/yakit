@@ -632,13 +632,6 @@ service Yak {
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
-
-  // Notify
-  rpc RegisterNotify(RegisterNotifyRequest) returns (stream Empty);
-}
-
-message RegisterNotifyRequest{
-  string Type = 1; // httpflow | yakscript | risk
 }
 
 message GetSpaceEngineAccountStatusRequest {
