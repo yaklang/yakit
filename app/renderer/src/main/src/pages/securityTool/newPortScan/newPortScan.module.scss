@@ -50,7 +50,7 @@
 }
 .form-extra {
     @extend %display-flex-center;
-    gap: 16px;
+    gap: 8px 0;
     flex-wrap: wrap;
 }
 
