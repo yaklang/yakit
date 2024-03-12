@@ -53,3 +53,11 @@
     gap: 16px;
     flex-wrap: wrap;
 }
+
+.executing-progress {
+    @extend %display-flex-center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px;
+    padding-bottom: 0;
+}

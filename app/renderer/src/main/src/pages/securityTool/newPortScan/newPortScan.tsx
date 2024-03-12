@@ -1,17 +1,18 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {
     NewPortScanExecuteProps,
     NewPortScanExecuteContentProps,
     NewPortScanExecuteFormProps,
     NewPortScanProps,
-    PortScanExecuteExtraFormValue
+    PortScanExecuteExtraFormValue,
+    NewPortScanExecuteContentRefProps
 } from "./newPortScanType"
 import styles from "./newPortScan.module.scss"
 import {
     ExpandAndRetract,
     ExpandAndRetractExcessiveState
 } from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -24,7 +25,7 @@ import {
     OutlineStoreIcon
 } from "@/assets/icon/outline"
 import classNames from "classnames"
-import {Checkbox, Form} from "antd"
+import {Checkbox, Divider, Form} from "antd"
 import cloneDeep from "lodash/cloneDeep"
 import {ScanKind, ScanPortTemplate, defaultPorts} from "@/pages/portscan/PortScanPage"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
@@ -118,7 +119,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
     const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
 
-    const pluginBatchExecuteContentRef = useRef(null)
+    const executeContentRef = useRef<NewPortScanExecuteContentRefProps>(null)
 
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -132,11 +133,13 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
         if (executeStatus === "process") return true
         return false
     }, [executeStatus])
-    const onStopExecute = useMemoizedFn(() => {
-        // pluginBatchExecuteContentRef.current?.onStopExecute()
+    const onStopExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
+        executeContentRef.current?.onStopExecute()
     })
-    const onStartExecute = useMemoizedFn(() => {
-        // pluginBatchExecuteContentRef.current?.onStartExecute()
+    const onStartExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
+        executeContentRef.current?.onStartExecute()
     })
 
     return (
@@ -191,6 +194,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
             </ExpandAndRetract>
             <div className={styles["port-scan-executor-body"]}>
                 <NewPortScanExecuteContent
+                    ref={executeContentRef}
                     isExpand={isExpand}
                     setIsExpand={setIsExpand}
                     isExecuting={isExecuting}
@@ -198,6 +202,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                     selectNum={selectNum}
                     pluginListSearchInfo={pluginListSearchInfo}
                     selectList={selectList}
+                    setProgressList={setProgressList}
                 />
             </div>
         </div>
@@ -235,154 +240,194 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     scanProtocol: "tcp"
 }
 
-const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo((props) => {
-    const {isExpand, isExecuting, setExecuteStatus, setIsExpand, selectNum, pluginListSearchInfo, selectList} = props
-    const [form] = Form.useForm()
+const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {
+            isExpand,
+            isExecuting,
+            setExecuteStatus,
+            setIsExpand,
+            selectNum,
+            pluginListSearchInfo,
+            selectList,
+            setProgressList
+        } = props
+        const [form] = Form.useForm()
 
-    const [runtimeId, setRuntimeId] = useState<string>("")
-    /**额外参数弹出框 */
-    const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
-    const [extraParamsValue, setExtraParamsValue] = useState<PortScanExecuteExtraFormValue>(
-        cloneDeep(defPortScanExecuteExtraFormValue)
-    )
+        const [runtimeId, setRuntimeId] = useState<string>("")
+        /**额外参数弹出框 */
+        const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+        const [extraParamsValue, setExtraParamsValue] = useState<PortScanExecuteExtraFormValue>(
+            cloneDeep(defPortScanExecuteExtraFormValue)
+        )
 
-    const [stopLoading, setStopLoading] = useControllableValue<boolean>(props, {
-        defaultValue: false,
-        valuePropName: "stopLoading",
-        trigger: "setStopLoading"
-    })
+        const tokenRef = useRef<string>(randomString(40))
+        const newPortScanExecuteContentRef = useRef<HTMLDivElement>(null)
+        const [inViewport = true] = useInViewport(newPortScanExecuteContentRef)
 
-    const tokenRef = useRef<string>(randomString(40))
-    const newPortScanExecuteContentRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(newPortScanExecuteContentRef)
+        const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
+            taskName: "Port-Scan",
+            apiKey: "PortScan",
+            token: tokenRef.current,
+            onEnd: () => {
+                portScanStreamEvent.stop()
+                setTimeout(() => {
+                    setExecuteStatus("finished")
+                }, 200)
+            },
+            setRuntimeId: (rId) => {
+                setRuntimeId(rId)
+            }
+        })
 
-    const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
-        taskName: "Port-Scan",
-        apiKey: "PortScan",
-        token: tokenRef.current,
-        onEnd: () => {
-            portScanStreamEvent.stop()
-            setTimeout(() => {
+        useImperativeHandle(
+            ref,
+            () => ({
+                onStopExecute,
+                onStartExecute: () => {
+                    form.validateFields()
+                        .then(onStartExecute)
+                        .catch((e) => {
+                            setIsExpand(true)
+                        })
+                }
+            }),
+            [form]
+        )
+
+        useEffect(() => {
+            setProgressList(streamInfo.progressState)
+        }, [streamInfo.progressState])
+
+        /**开始执行 */
+        const onStartExecute = useMemoizedFn((value) => {
+            const linkPluginConfig = getLinkPluginConfig(selectList, pluginListSearchInfo)
+            let executeParams: PortScanExecuteExtraFormValue = {
+                ...extraParamsValue,
+                ...value,
+                Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
+                LinkPluginConfig: linkPluginConfig || cloneDeep(defaultLinkPluginConfig)
+            }
+            portScanStreamEvent.reset()
+            setRuntimeId("")
+            apiPortScan(executeParams, tokenRef.current).then(() => {
+                setExecuteStatus("process")
+                setIsExpand(false)
+                portScanStreamEvent.start()
+            })
+        })
+        /**取消执行 */
+        const onStopExecute = useMemoizedFn(() => {
+            apiCancelPortScan(tokenRef.current).then(() => {
+                portScanStreamEvent.stop()
                 setExecuteStatus("finished")
-                setStopLoading(false)
-            }, 200)
-        },
-        setRuntimeId: (rId) => {
-            setRuntimeId(rId)
-        }
-    })
-
-    /**开始执行 */
-    const onStartExecute = useMemoizedFn((value) => {
-        const linkPluginConfig = getLinkPluginConfig(selectList, pluginListSearchInfo)
-        let executeParams: PortScanExecuteExtraFormValue = {
-            ...extraParamsValue,
-            ...value,
-            Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
-            LinkPluginConfig: linkPluginConfig || cloneDeep(defaultLinkPluginConfig)
-        }
-        portScanStreamEvent.reset()
-        setRuntimeId("")
-        apiPortScan(executeParams, tokenRef.current).then(() => {
-            setExecuteStatus("process")
-            setIsExpand(false)
-            portScanStreamEvent.start()
+            })
         })
-    })
-    /**取消执行 */
-    const onStopExecute = useMemoizedFn((e) => {
-        e.stopPropagation()
-        apiCancelPortScan(tokenRef.current).then(() => {
-            portScanStreamEvent.stop()
-            setExecuteStatus("finished")
+        const openExtraPropsDrawer = useMemoizedFn(() => {
+            setExtraParamsValue({
+                ...extraParamsValue,
+                SkippedHostAliveScan: form.getFieldValue("SkippedHostAliveScan")
+            })
+            setExtraParamsVisible(true)
         })
-    })
-    const openExtraPropsDrawer = useMemoizedFn(() => {
-        setExtraParamsValue({
-            ...extraParamsValue,
-            SkippedHostAliveScan: form.getFieldValue("SkippedHostAliveScan")
+        /**保存额外参数 */
+        const onSaveExtraParams = useMemoizedFn((v: PortScanExecuteExtraFormValue) => {
+            setExtraParamsValue({...v} as PortScanExecuteExtraFormValue)
+            setExtraParamsVisible(false)
+            form.setFieldsValue({
+                SkippedHostAliveScan: v.SkippedHostAliveScan
+            })
         })
-        setExtraParamsVisible(true)
-    })
-    /**保存额外参数 */
-    const onSaveExtraParams = useMemoizedFn((v: PortScanExecuteExtraFormValue) => {
-        setExtraParamsValue({...v} as PortScanExecuteExtraFormValue)
-        setExtraParamsVisible(false)
-        form.setFieldsValue({
-            SkippedHostAliveScan: v.SkippedHostAliveScan
-        })
-    })
-    const isShowResult = useCreation(() => {
-        return isExecuting || runtimeId
-    }, [isExecuting, runtimeId])
-    return (
-        <>
-            <div
-                className={classNames(styles["port-scan-form-wrapper"], {
-                    [styles["port-scan-form-wrapper-hidden"]]: !isExpand
-                })}
-                ref={newPortScanExecuteContentRef}
-            >
-                <Form
-                    form={form}
-                    onFinish={onStartExecute}
-                    labelCol={{span: 6}}
-                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                    validateMessages={{
-                        /* eslint-disable no-template-curly-in-string */
-                        required: "${label} 是必填字段"
-                    }}
-                    labelWrap={true}
+        const isShowResult = useCreation(() => {
+            return isExecuting || runtimeId
+        }, [isExecuting, runtimeId])
+        const progressList = useCreation(() => {
+            return streamInfo.progressState
+        }, [streamInfo.progressState])
+        return (
+            <>
+                <div
+                    className={classNames(styles["port-scan-form-wrapper"], {
+                        [styles["port-scan-form-wrapper-hidden"]]: !isExpand
+                    })}
+                    ref={newPortScanExecuteContentRef}
                 >
-                    <NewPortScanExecuteForm
-                        inViewport={inViewport}
+                    <Form
                         form={form}
-                        disabled={isExecuting}
-                        extraParamsValue={extraParamsValue}
-                    />
-                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                        <div className={styles["plugin-execute-form-operate"]}>
-                            {isExecuting ? (
-                                <YakitButton danger onClick={onStopExecute} size='large'>
-                                    停止
-                                </YakitButton>
-                            ) : (
+                        onFinish={onStartExecute}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                        labelWrap={true}
+                    >
+                        <NewPortScanExecuteForm
+                            inViewport={inViewport}
+                            form={form}
+                            disabled={isExecuting}
+                            extraParamsValue={extraParamsValue}
+                        />
+                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                            <div className={styles["plugin-execute-form-operate"]}>
+                                {isExecuting ? (
+                                    <YakitButton danger onClick={onStopExecute} size='large'>
+                                        停止
+                                    </YakitButton>
+                                ) : (
+                                    <YakitButton
+                                        className={styles["plugin-execute-form-operate-start"]}
+                                        htmlType='submit'
+                                        size='large'
+                                        disabled={selectNum === 0}
+                                    >
+                                        开始执行
+                                    </YakitButton>
+                                )}
                                 <YakitButton
-                                    className={styles["plugin-execute-form-operate-start"]}
-                                    htmlType='submit'
+                                    type='text'
+                                    onClick={openExtraPropsDrawer}
+                                    disabled={isExecuting}
                                     size='large'
-                                    disabled={selectNum === 0}
                                 >
-                                    开始执行
+                                    额外参数
                                 </YakitButton>
-                            )}
-                            <YakitButton type='text' onClick={openExtraPropsDrawer} disabled={isExecuting} size='large'>
-                                额外参数
-                            </YakitButton>
-                        </div>
-                    </Form.Item>
-                </Form>
-            </div>
-            {isShowResult && (
-                <PluginExecuteResult
-                    streamInfo={streamInfo}
-                    runtimeId={runtimeId}
-                    loading={isExecuting}
-                    pluginType={"yak"} // 算yak类型的插件，可以传空字符串
-                    defaultActiveKey={""}
-                />
-            )}
-            <React.Suspense fallback={<div>loading...</div>}>
-                <NewPortScanExtraParamsDrawer
-                    extraParamsValue={extraParamsValue}
-                    visible={extraParamsVisible}
-                    setVisible={setExtraParamsVisible}
-                    onSave={onSaveExtraParams}
-                />
-            </React.Suspense>
-        </>
-    )
-})
+                            </div>
+                        </Form.Item>
+                    </Form>
+                </div>
+                {progressList.length > 1 && (
+                    <div className={styles["executing-progress"]}>
+                        {progressList.map((ele, index) => (
+                            <>
+                                {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
+                                <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+                            </>
+                        ))}
+                    </div>
+                )}
+                {isShowResult && (
+                    <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        pluginType={""} // 算yak类型的插件，可以传空字符串
+                        defaultActiveKey={""}
+                    />
+                )}
+                <React.Suspense fallback={<div>loading...</div>}>
+                    <NewPortScanExtraParamsDrawer
+                        extraParamsValue={extraParamsValue}
+                        visible={extraParamsVisible}
+                        setVisible={setExtraParamsVisible}
+                        onSave={onSaveExtraParams}
+                    />
+                </React.Suspense>
+            </>
+        )
+    })
+)
 
 const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo((props) => {
     const {inViewport, disabled, form, extraParamsValue} = props

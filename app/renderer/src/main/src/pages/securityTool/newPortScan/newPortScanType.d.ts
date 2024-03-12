@@ -1,3 +1,4 @@
+import { StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakScript} from "@/pages/invoker/schema"
 import {PluginFilterParams, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
@@ -11,7 +12,7 @@ interface PluginListSearchInfoProps {
     filters: PluginFilterParams
 }
 export interface NewPortScanExecuteProps {
-    selectNum:number
+    selectNum: number
     hidden: boolean
     setHidden: (b: boolean) => void
     selectList: string[]
@@ -19,6 +20,7 @@ export interface NewPortScanExecuteProps {
     pluginListSearchInfo: PluginListSearchInfoProps
 }
 export interface NewPortScanExecuteContentProps {
+    ref?: React.ForwardedRef<NewPortScanExecuteContentRefProps>
     isExpand: boolean
     isExecuting: boolean
     setIsExpand: (b: boolean) => void
@@ -26,13 +28,19 @@ export interface NewPortScanExecuteContentProps {
     selectNum: number
     pluginListSearchInfo: PluginListSearchInfoProps
     selectList: string[]
+    setProgressList: (s: StreamResult.Progress[]) => void
+}
+
+export interface NewPortScanExecuteContentRefProps {
+    onStopExecute: () => void
+    onStartExecute: () => void
 }
 
 export interface NewPortScanExecuteFormProps {
-    inViewport:boolean
+    inViewport: boolean
     form: FormInstance<any>
     disabled: boolean
-    extraParamsValue:PortScanExecuteExtraFormValue
+    extraParamsValue: PortScanExecuteExtraFormValue
 }
 
 export interface PortScanExecuteExtraFormValue extends PortScanParams {

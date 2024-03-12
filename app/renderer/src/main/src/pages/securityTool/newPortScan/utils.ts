@@ -13,17 +13,16 @@ export const apiPortScan: (params: PortScanExecuteExtraFormValue, token: string)
         let executeParams: PortScanExecuteExtraFormValue = {
             ...params
         }
-        console.log("PortScan", executeParams)
-        // ipcRenderer
-        //     .invoke("PortScan", executeParams, token)
-        //     .then(() => {
-        //         yakitNotify("info", "启动任务成功")
-        //         resolve(null)
-        //     })
-        //     .catch((e: any) => {
-        //         yakitNotify("error", "端口扫描执行出错:" + e)
-        //         reject(e)
-        //     })
+        ipcRenderer
+            .invoke("PortScan", executeParams, token)
+            .then(() => {
+                yakitNotify("info", "启动任务成功")
+                resolve(null)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "端口扫描执行出错:" + e)
+                reject(e)
+            })
     })
 }
 
