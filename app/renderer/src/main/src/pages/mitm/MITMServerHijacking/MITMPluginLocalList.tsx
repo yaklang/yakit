@@ -468,37 +468,56 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
 
     const pluginGroupRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(pluginGroupRef)
+    const refreshSelectGroupRef = useRef<boolean>(false)
 
     useEffect(() => {
-        // 获取插件组
-        if (isOnline) {
-            apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
-                const copyGroup = structuredClone(res.data)
-                const data: YakFilterRemoteObj[] = copyGroup
-                    .filter((item) => !item.default)
-                    .map((item) => ({
-                        name: item.value,
-                        total: item.total
+        if (inViewport) {
+            // 获取插件组
+            if (isOnline) {
+                apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
+                    const copyGroup = structuredClone(res.data)
+                    const data: YakFilterRemoteObj[] = copyGroup
+                        .filter((item) => !item.default)
+                        .map((item) => ({
+                            name: item.value,
+                            total: item.total
+                        }))
+                    setPlugGroup(data)
+                    filterSelectGroup(data)
+                })
+            } else {
+                apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
+                    const copyGroup = structuredClone(group)
+                    const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
+                        name: item.Value,
+                        total: item.Total
                     }))
-                setPlugGroup(data)
-                let groupNameSet = new Set(data.map(obj => obj.name))
-                const newSelectGroup = selectGroup.filter(item => groupNameSet.has(item.name))
-                setSelectGroup(newSelectGroup)
-            })
+                    setPlugGroup(data)
+                    filterSelectGroup(data)
+                })
+            }
         } else {
-            apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
-                const copyGroup = structuredClone(group)
-                const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
-                    name: item.Value,
-                    total: item.Total
-                }))
-                setPlugGroup(data)
-                let groupNameSet = new Set(data.map(obj => obj.name))
-                const newSelectGroup = selectGroup.filter(item => groupNameSet.has(item.name))
-                setSelectGroup(newSelectGroup)
-            })
+            refreshSelectGroupRef.current = false
         }
     }, [inViewport])
+
+    const filterSelectGroup = (data: YakFilterRemoteObj[]) => {
+        if (!refreshSelectGroupRef.current) return
+        let groupNameSet = new Set(data.map((obj) => obj.name))
+        const newSelectGroup = selectGroup.filter((item) => groupNameSet.has(item.name))
+        setSelectGroup(newSelectGroup)
+    }
+
+    useEffect(() => {
+        const onRefpluginGroupSelectGroup = (flag: string) => {
+            refreshSelectGroupRef.current = flag === "true"
+        }
+        emiter.on("onRefpluginGroupSelectGroup", onRefpluginGroupSelectGroup)
+        return () => {
+            emiter.off("onRefpluginGroupSelectGroup", onRefpluginGroupSelectGroup)
+        }
+    }, [])
+
     return (
         <div className={classNames(style["mitm-plugin-group"], wrapperClassName)} ref={pluginGroupRef}>
             <Dropdown
