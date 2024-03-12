@@ -1168,7 +1168,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (extraTimerRef.current) {
                         clearInterval(extraTimerRef.current)
                     }
-                    // extraTimerRef.current = setInterval(() => getAddDataByGrpc(query), 1000)
+                    extraTimerRef.current = setInterval(() => getAddDataByGrpc(query), 1000)
                 }
             })
             .catch((e: any) => {
@@ -1183,6 +1183,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const getAddDataByGrpc = useMemoizedFn((query) => {
+        if(!isLoop) return
+        const clientHeight = tableRef.current?.containerRef?.clientHeight
+        // 解决页面未显示时 此接口轮询导致接口锁死
+        if(clientHeight === 0) return
         const copyQuery = structuredClone(query)
         copyQuery.Pagination = {
             Page: 1,
@@ -1430,40 +1434,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         props.onSelected && props.onSelected(selected)
     }, [selected])
 
-    const [token, setToken] = useState(randomString(20))
     // 是否循环接口
     const [isLoop,setIsLoop] = useState<boolean>(false)
-    useEffect(()=>{
-        // 监听history数据库是否有变化(此接口的出现是因为轮询频率太高，导致数据库被锁死)
-        ipcRenderer.invoke(
-            "RegisterNotify",
-            {
-                Type: "httpflow"
-            },
-            token
-        )
-        ipcRenderer.on(`${token}-data`, async (e: any, data: any) => {
-            // 通知定时器开启
-            console.log("data---",data);
-            setIsLoop(true)
-        })
-        ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            console.log("error---",error);
-        })
-        ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-            console.log("end---",data);
-        })
-        return () => {
-            ipcRenderer.invoke("cancel-RegisterNotify", token)
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-        }
-    },[token])
-    // 取消监听history数据库
-    const cancelSavePayload = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-RegisterNotify", token)
+
+    const onRefreshHistoryTableFun = useMemoizedFn(()=>{
+        setIsLoop(true)
     })
+    useEffect(()=>{
+        emiter.on("onRefreshHistoryTable", onRefreshHistoryTableFun)
+        return () => {
+            emiter.off("onRefreshHistoryTable", onRefreshHistoryTableFun)
+        }
+    },[])
 
     useEffect(()=>{
         let sTop,cHeight,sHeight

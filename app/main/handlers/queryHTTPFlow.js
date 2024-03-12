@@ -51,16 +51,6 @@ module.exports = (win, getClient) => {
         return await asyncQueryHTTPFlows(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext")
-    // 监听history数据库是否有变化
-    const streamRegisterNotifyMap = new Map();
-    ipcMain.handle("cancel-RegisterNotify", handlerHelper.cancelHandler(streamRegisterNotifyMap));
-    ipcMain.handle("RegisterNotify", (e, params, token) => {
-        console.info(`${params.Type} task start`)
-        let stream = getClient().RegisterNotify(params);
-        handlerHelper.registerHandler(win, stream, streamRegisterNotifyMap, token)
-    })
-
     // asyncQueryHTTPFlowByIds wrapper
     const asyncQueryHTTPFlowByIds = (params) => {
         return new Promise((resolve, reject) => {
