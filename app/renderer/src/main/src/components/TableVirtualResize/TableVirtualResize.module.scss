@@ -1,3 +1,4 @@
+@use "../../assets/global.scss" as global;
 .virtual-table {
     height: 100%;
 
@@ -392,15 +393,20 @@
                     color: var(--yakit-table-text-color);
                 }
 
-                .virtual-table-hover-row-red {
-                    background-color: var(--yakit-table-hover-row-bg-color-red);
-                    &:hover {
-                        background-color: var(--yakit-table-hover-row-bg-color-red);
+                $colors: global.$colors;
+                $keyColor: map-keys($colors);
+                @for $c from 1 through length($keyColor) {
+                    $name: nth($keyColor, $c);
+                    .virtual-table-hover-row-#{"" + $name} {
+                        background-color: var(--yakit-table-hover-row-bg-color-#{"" + $name});
+                        &:hover {
+                            background-color: var(--yakit-table-hover-row-bg-color-#{"" + $name});
+                        }
                     }
-                }
-
-                .virtual-table-active-row-red {
-                    background-color: var(--yakit-table-active-row-bg-color-red) !important;
+    
+                    .virtual-table-active-row-#{"" + $name} {
+                        background-color: var(--yakit-table-active-row-bg-color-#{"" + $name}) !important;
+                    }
                 }
 
                 .virtual-table-active-row + .virtual-table-row-cell {

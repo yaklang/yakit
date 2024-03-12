@@ -43,9 +43,28 @@ html {
 
     // 表格移入背景颜色
     --yakit-table-hover-row-bg-color-red: rgba(235, 73, 63, 1);
+    --yakit-table-hover-row-bg-color-green: rgba(86, 201, 145, 0.3);
+    --yakit-table-hover-row-bg-color-blue: rgba(74, 148, 248, 0.3);
+    --yakit-table-hover-row-bg-color-yellow: rgba(255, 213, 131, 0.3);
+    --yakit-table-hover-row-bg-color-orange: rgba(255, 182, 96, 0.3);
+    --yakit-table-hover-row-bg-color-purple: rgba(136, 99, 247, 0.3);
+    --yakit-table-hover-row-bg-color-lakeBlue: rgba(41, 188, 208, 0.3);
+    --yakit-table-hover-row-bg-color-cyan: rgba(53, 216, 238, 0.3);
+    --yakit-table-hover-row-bg-color-bluePurple: rgba(218, 95, 221, 0.3);
+    --yakit-table-hover-row-bg-color-grey: rgba(180, 187, 202, 0.3);
 
     // 表格行选中背景颜色
     --yakit-table-active-row-bg-color-red: rgba(211, 58, 48, 1);
+    --yakit-table-active-row-bg-color-green: rgba(86, 201, 145, 0.4);
+    --yakit-table-active-row-bg-color-blue: rgba(74, 148, 248, 0.4);
+    --yakit-table-active-row-bg-color-yellow: rgba(255, 213, 131, 0.4);
+    --yakit-table-active-row-bg-color-orange: rgba(255, 182, 96, 0.4);
+    --yakit-table-active-row-bg-color-purple: rgba(136, 99, 247, 0.4);
+    --yakit-table-active-row-bg-color-lakeBlue: rgba(41, 188, 208, 0.4);
+    --yakit-table-active-row-bg-color-cyan: rgba(53, 216, 238, 0.4);
+    --yakit-table-active-row-bg-color-bluePurple: rgba(218, 95, 221, 0.4);
+    --yakit-table-active-row-bg-color-grey: rgba(180, 187, 202, 0.4);
+
     // 表格字体颜色
     --yakit-table-text-color: rgba(0, 0, 0, 0.85);
 }
