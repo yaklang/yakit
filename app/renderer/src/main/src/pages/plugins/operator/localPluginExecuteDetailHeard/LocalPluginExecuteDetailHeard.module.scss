@@ -71,6 +71,13 @@
         .ant-progress-line {
             min-width: 120px;
         }
+        .ant-progress-show-info .ant-progress-outer {
+            margin-right: calc(-2.5em - 8px);
+            padding-right: calc(2.5em + 8px);
+        }
+        .ant-progress-text {
+            width: 2.5em;
+        }
     }
     .plugin-execute-progress-name {
         color: var(--yakit-body-text-color);
