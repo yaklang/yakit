@@ -395,6 +395,10 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
         setCodeRefresh(!codeRefresh)
     })
 
+    useEffect(() => {
+        console.log(123, classRequest);
+    }, [classRequest])
+
     return (
         <div className='start-reverse-server-wrapper'>
             <div className={`payload-${isExtra ? (codeExtra ? "extra-" : "") : "hidden-"}wrapper payload-container`}>
@@ -458,7 +462,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                         HTTP反连地址&nbsp;&nbsp;
                                         <CopyableField
                                             width={"80%"}
-                                            text={`http://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                                            text={`http://${reverseAddr}/${classRequest?.className ? classRequest?.className + '.class' : ""}`}
                                             style={{color: "blue"}}
                                         />
                                     </div>
@@ -466,7 +470,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                         RMI反连地址&nbsp;&nbsp;
                                         <CopyableField
                                             width={"80%"}
-                                            text={`rmi://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                                            text={`rmi://${reverseAddr}/${classRequest?.className || ""}`}
                                             style={{color: "blue"}}
                                         />
                                     </div>
@@ -474,7 +478,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                         LDAP反连地址&nbsp;&nbsp;
                                         <CopyableField
                                             width={"80%"}
-                                            text={`ldap://${reverseAddr}/${classRequest?.ClassName || ""}`}
+                                            text={`ldap://${reverseAddr}/${classRequest?.className || ""}`}
                                             style={{color: "blue"}}
                                         />
                                     </div>
