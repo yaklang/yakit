@@ -32,7 +32,6 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
     const [activeOnlineGroup, setActiveOnlineGroup] = useState<GroupListItem>() // 当前选中线上插件组
 
     useEffect(() => {
-        console.log(123, groupType);
         setPluginGroupType(groupType)
     }, [groupType])
 
