@@ -102,6 +102,10 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         setLoading(true)
         apiFetchQueryYakScriptGroupLocal(false)
             .then((res) => {
+                if (initialResponseRef.current.length !== res.length) {
+                    const newSelectGroupList = selectGroupList.filter((item) => res.some((ele) => ele.Value === item))
+                    setSelectGroupList(newSelectGroupList)
+                }
                 setResponse(res)
                 initialResponseRef.current = res
             })
