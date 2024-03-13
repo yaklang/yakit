@@ -32,6 +32,7 @@ import {useRunNodeStore} from "@/store/runNode"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import emiter from "@/utils/eventBus/eventBus"
+import { serverPushStatus } from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -261,10 +262,16 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (isRunRef.current) return
 
         isRunRef.current = true
-        Promise.allSettled([
+        Promise.allSettled(serverPushStatus?[
             updateSystemProxy(),
             updateGlobalReverse(),
             updatePcap(),
+            updateChromePath()
+        ]:[
+            updateSystemProxy(),
+            updateGlobalReverse(),
+            updatePcap(),
+            updatePluginTotal(),
             updateChromePath()
         ])
             .then((values) => {
