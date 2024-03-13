@@ -34,6 +34,7 @@
         "cross-env": "7.0.3",
         "customize-cra": "^1.0.0",
         "echarts": "^5.4.2",
+        "file-loader": "^6.2.0",
         "file-saver": "^2.0.5",
         "hint.css": "^2.7.0",
         "html-docx-js": "^0.3.1",

@@ -38,7 +38,8 @@ import {
     SearchIcon,
     StopIcon,
     ArrowsRetractIcon,
-    ArrowsExpandIcon
+    ArrowsExpandIcon,
+    QuestionMarkCircleIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
@@ -113,6 +114,10 @@ import {YakitWindow} from "@/components/yakitUI/YakitWindow/YakitWindow"
 import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "../spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
+import blastingIdmp4 from "@/assets/blasting-id.mp4"
+import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
+import blastingCountmp4 from "@/assets/blasting-count.mp4"
+
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
@@ -1845,6 +1850,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </YakitButton>
                             </Popover>
                         </div>
+                        <div
+                            className={styles["blasting-example"]}
+                            onClick={() => {
+                                const m = showYakitModal({
+                                    type: "white",
+                                    title: "WebFuzzer 爆破动画演示",
+                                    width: 650,
+                                    content: <BlastingAnimationAemonstration></BlastingAnimationAemonstration>,
+                                    footer: null,
+                                    centered: true,
+                                    destroyOnClose: true
+                                })
+                            }}
+                        >
+                            爆破示例
+                            <QuestionMarkCircleIcon />
+                        </div>
                         {loading && (
                             <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
                                 <YakitSpin size={"small"} style={{width: "auto"}} />
@@ -2050,23 +2072,30 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                 />
             </div>
-            {fuzzerRef.current&&<YakitWindow
-                getContainer={fuzzerRef.current}
-                title='执行结果'
-                visible={yakitWindowVisible}
-                contentStyle={{padding: 0}}
-                width={600}
-                footerStyle={{display:"none"}}
-                defaultDockSide = {["shrink", "left", "right", "bottom"]}
-                firstDockSide="shrink"
-                onCancel={()=>{
-                    setYakitWindowVisible(false)
-                    setMenuExecutorParams(undefined)
-                }}
-                onOk={()=>{}}
-            >
-                {menuExecutorParams&&<ContextMenuExecutor scriptName={menuExecutorParams.scriptName} text={menuExecutorParams.text}/>}
-            </YakitWindow>}
+            {fuzzerRef.current && (
+                <YakitWindow
+                    getContainer={fuzzerRef.current}
+                    title='执行结果'
+                    visible={yakitWindowVisible}
+                    contentStyle={{padding: 0}}
+                    width={600}
+                    footerStyle={{display: "none"}}
+                    defaultDockSide={["shrink", "left", "right", "bottom"]}
+                    firstDockSide='shrink'
+                    onCancel={() => {
+                        setYakitWindowVisible(false)
+                        setMenuExecutorParams(undefined)
+                    }}
+                    onOk={() => {}}
+                >
+                    {menuExecutorParams && (
+                        <ContextMenuExecutor
+                            scriptName={menuExecutorParams.scriptName}
+                            text={menuExecutorParams.text}
+                        />
+                    )}
+                </YakitWindow>
+            )}
         </div>
     )
 }
@@ -3093,6 +3122,52 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
                 </Descriptions>
 
                 {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
+            </div>
+        </div>
+    )
+})
+
+// 爆破动画演示
+interface BlastingAnimationAemonstrationProps {}
+const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstrationProps> = React.memo((props) => {
+    const [animationType, setAnimationType] = useState<string>("id")
+
+    const [animationResources, setAnimationResources] = useState<string>(blastingIdmp4)
+
+    useEffect(() => {
+        if (animationType === "id") {
+            setAnimationResources(blastingIdmp4)
+        } else if (animationType === "pwd") {
+            setAnimationResources(blastingPwdmp4)
+        } else if (animationType === "count") {
+            setAnimationResources(blastingCountmp4)
+        }
+    }, [animationType])
+
+    return (
+        <div className={styles["blasting-animation-aemonstration"]}>
+            <YakitRadioButtons
+                size="large"
+                buttonStyle='solid'
+                value={animationType}
+                options={[
+                    {
+                        value: "id",
+                        label: "爆破 ID"
+                    },
+                    {
+                        value: "pwd",
+                        label: "爆破密码"
+                    },
+                    {
+                        value: "count",
+                        label: "爆破账号"
+                    }
+                ]}
+                onChange={(e) => setAnimationType(e.target.value)}
+            />
+            <div className={styles["animation-cont-wrap"]}>
+                <video src={animationResources} autoPlay loop></video>
             </div>
         </div>
     )

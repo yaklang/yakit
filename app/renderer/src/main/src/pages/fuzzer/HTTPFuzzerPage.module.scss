@@ -58,6 +58,17 @@
                 display: inline-block;
                 line-height: 16px;
             }
+            .blasting-example {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                color: var(--yakit-body-text-color);
+                text-decoration: underline;
+                cursor: pointer;
+                svg {
+                    width: 12px;
+                }
+            }
         }
         &-right {
             display: flex;
@@ -347,4 +358,20 @@
 
 .resize-card-second {
     border-radius: 0 4px 4px 0;
+}
+
+.blasting-animation-aemonstration {
+    padding: 16px;
+    .animation-cont-wrap {
+        margin-top: 16px;
+        width: 100%;
+        height: 410px;
+        border-radius: 10px;
+        border: 1px solid var(--yakit-border-color);
+        overflow: hidden;
+        img, video {
+            width: 100%;
+            height: 410px;
+        }
+    }
 }
