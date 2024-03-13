@@ -59,6 +59,17 @@
             width: 300px;
             flex-shrink: 0;
 
+            &-text {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                cursor: pointer;
+                svg {
+                    color: var(--yakit-body-text-color);
+                    width: 14px;
+                }
+            }
+
             &-extra {
                 @extend .display-flex-center;
 
@@ -462,4 +473,38 @@
 
 .resize-card-second {
     border-radius: 0 4px 4px 0;
+}
+
+.sequence-animation-pop-title {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .help-doc {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--yakit-body-text-color);
+        text-decoration: underline;
+        cursor: pointer;
+        svg {
+            width: 16px;
+            color: var(--yakit-body-text-color);
+        }
+    }
+}
+
+.sequence-animation-aemonstration {
+    padding: 16px;
+    .animation-cont-wrap {
+        width: 100%;
+        height: 410px;
+        border-radius: 10px;
+        border: 1px solid var(--yakit-border-color);
+        overflow: hidden;
+        video {
+            width: 100%;
+            height: 410px;
+        }
+    }
 }

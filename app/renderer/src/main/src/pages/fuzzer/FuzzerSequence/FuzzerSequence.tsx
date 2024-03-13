@@ -77,7 +77,7 @@ import {
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {InheritLineIcon, InheritArrowIcon} from "./icon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon, QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {shallow} from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
@@ -90,6 +90,7 @@ import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {ShareImportExportData} from "../components/ShareImportExportData"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import sequencemp4 from "@/assets/sequence.mp4"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
@@ -241,9 +242,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 disabled: false
             }))
             setSequenceList([...newSequenceList])
-            setTimeout(()=>{
-               onClearRef() 
-            },1000)
+            setTimeout(() => {
+                onClearRef()
+            }, 1000)
         }
     }, [loading])
     useEffect(() => {
@@ -370,8 +371,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     failedBufferRef.current.set(FuzzerIndex, [r])
                 }
             }
-            
-            if(!fuzzerIndexArr.current.includes(FuzzerIndex)){
+
+            if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
                 fuzzerIndexArr.current.push(FuzzerIndex)
             }
             // updateData(FuzzerIndex)
@@ -418,23 +419,23 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     })
 
-    useEffect(()=>{
-        const id = setInterval(()=> {
-            fuzzerIndexArr.current.map((fuzzerIndex)=>{
+    useEffect(() => {
+        const id = setInterval(() => {
+            fuzzerIndexArr.current.map((fuzzerIndex) => {
                 let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
                 let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
                 let lastSuccessCount = getResponse(fuzzerIndex)?.successCount || 0
                 let lastFailedCount = getResponse(fuzzerIndex)?.failedCount || 0
                 // 判断是否有更新
-                if(currentSuccessCount!==lastSuccessCount||currentFailedCount!==lastFailedCount){
+                if (currentSuccessCount !== lastSuccessCount || currentFailedCount !== lastFailedCount) {
                     updateData(fuzzerIndex)
                 }
             })
-        },500)
+        }, 500)
         return () => {
             clearInterval(id)
         }
-    },[])
+    }, [])
 
     const updateData = useThrottleFn(
         (fuzzerIndex: string) => {
@@ -782,7 +783,31 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             >
                 <div className={styles["fuzzer-sequence-left"]}>
                     <div className={styles["fuzzer-sequence-left-heard"]}>
-                        <span>序列配置</span>
+                        <span
+                            className={styles["fuzzer-sequence-left-heard-text"]}
+                            onClick={() => {
+                                const m = showYakitModal({
+                                    type: "white",
+                                    title: (
+                                        <div className={styles['sequence-animation-pop-title']}>
+                                            WebFuzzer 序列动画演示
+                                            <span className={styles['help-doc']} onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")}>
+                                                官方帮助文档
+                                                <QuestionMarkCircleIcon />
+                                            </span>
+                                        </div>
+                                    ),
+                                    width: 650,
+                                    content: <SequenceAnimationAemonstration></SequenceAnimationAemonstration>,
+                                    footer: null,
+                                    centered: true,
+                                    destroyOnClose: true
+                                })
+                            }}
+                        >
+                            序列配置
+                            <QuestionMarkCircleIcon />
+                        </span>
                         <div className={styles["fuzzer-sequence-left-heard-extra"]}>
                             <YakitButton type='text' disabled={loading} onClick={() => onAddSequenceNode()}>
                                 添加节点
@@ -1754,3 +1779,15 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         )
     })
 )
+
+// 序列动画演示
+interface SequenceAnimationAemonstrationProps {}
+const SequenceAnimationAemonstration: React.FC<SequenceAnimationAemonstrationProps> = React.memo((props) => {
+    return (
+        <div className={styles["sequence-animation-aemonstration"]}>
+            <div className={styles["animation-cont-wrap"]}>
+                <video src={sequencemp4} autoPlay loop></video>
+            </div>
+        </div>
+    )
+})
