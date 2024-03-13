@@ -817,10 +817,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const boxHeightRef = useRef<number>()
 
+    useHotkeys("ctrl+shift+r", (e) => {
+        const selected = getSelected()
+        if (selected) {
+            selected.IsWebsocket
+                ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
+                : onSendToTab(selected, false)
+        }
+    })
+
     const ref = useHotkeys("ctrl+r, enter", (e) => {
         const selected = getSelected()
         if (selected) {
-            onSendToTab(selected)
+            selected.IsWebsocket ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request) : onSendToTab(selected)
         }
     })
 
@@ -1509,7 +1518,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelected(rowDate)
             setOnlyShowFirstNode && setOnlyShowFirstNode(false)
         } else {
-            // setSelected(undefined)
+            setSelected(undefined)
             setOnlyShowFirstNode && setOnlyShowFirstNode(!onlyShowFirstNode)
         }
     })
@@ -2330,7 +2339,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     }, [])
 
-    // 这里的快捷键其实只是个假提示 其实真正执行快捷键跳转的逻辑是编辑器里面对应的菜单项
     const menuData = [
         {
             key: "发送到 Web Fuzzer",
