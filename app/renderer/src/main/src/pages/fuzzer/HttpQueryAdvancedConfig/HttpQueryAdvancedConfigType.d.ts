@@ -65,6 +65,10 @@ export interface AdvancedConfigValueProps {
     etcHosts: KVPair[]
     // 设置变量
     params: FuzzerParamItem[]
+    methodGet: KVPair[]
+    methodPost: KVPair[]
+    headers: KVPair[]
+    cookie: KVPair[]
     // 匹配器
     filterMode: FilterMode
     matchers: HTTPResponseMatcher[]

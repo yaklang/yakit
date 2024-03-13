@@ -236,9 +236,14 @@ export interface HistoryHTTPFuzzerTask {
     Verbose?: string
 }
 
+interface MutateMethod {
+    Type: string
+    Value: KVPair[]
+}
 export interface FuzzerRequestProps {
     // Request: string
     Params: FuzzerParamItem[]
+    MutateMethods: MutateMethod[]
     Concurrent: number
     IsHTTPS: boolean
     FuzzTagMode: FuzzTagMode
@@ -385,6 +390,44 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
                 Value: ele.Value,
                 Type: ele.Type
             })),
+        MutateMethods: [
+            {
+                Type: "Get",
+                Value: (value.methodGet || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
+            },
+            {
+                Type: "Post",
+                Value: (value.methodPost || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
+            },
+            {
+                Type: "Headers",
+                Value: (value.headers || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
+            },
+            {
+                Type: "Cookie",
+                Value: (value.cookie || [])
+                    .filter((ele) => ele.Key || ele.Value)
+                    .map((ele) => ({
+                        Key: ele.Key,
+                        Value: ele.Value
+                    }))
+            }
+        ],
         //匹配器
         Matchers: value.matchers,
         MatchersCondition: value.matchersCondition,
@@ -392,6 +435,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         //提取器
         Extractors: value.extractors
     }
+
     return fuzzerRequests
 }
 
@@ -532,6 +576,30 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     etcHosts: [],
     // 设置变量
     params: [{Key: "", Value: "", Type: "raw"}],
+    methodGet: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    methodPost: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    cookie: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    headers: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
     // 匹配器
     filterMode: "onlyMatch",
     matchers: [],
