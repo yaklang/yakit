@@ -71,6 +71,7 @@ import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
+import { serverPushStatus } from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
 const {Dragger} = Upload
@@ -2064,6 +2065,17 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 .finally(() => {
                     update()
                     emiter.on("onRefreshQueryYakScript", update)
+                    // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
+                    if(!serverPushStatus){
+                        timeRef.current = setInterval(()=>{
+                            if(serverPushStatus){
+                                if (timeRef.current) clearInterval(timeRef.current)
+                                timeRef.current = null
+                                return
+                            }
+                            update()
+                        }, 5000)
+                    }
                 })
 
             return () => {
