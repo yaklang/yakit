@@ -791,7 +791,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                     title: (
                                         <div className={styles['sequence-animation-pop-title']}>
                                             WebFuzzer 序列动画演示
-                                            <span className={styles['help-doc']} onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")}>
+                                            <span className={styles['help-doc']} onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/products/Web%20Fuzzer/fuzz-sequence")}>
                                                 官方帮助文档
                                                 <QuestionMarkCircleIcon />
                                             </span>
