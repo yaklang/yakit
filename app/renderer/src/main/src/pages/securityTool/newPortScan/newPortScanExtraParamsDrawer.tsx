@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {PortScanExecuteExtraFormValue} from "./newPortScanType"
 import {Form, FormInstance} from "antd"
 import {useCreation, useMemoizedFn} from "ahooks"
@@ -10,13 +10,16 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {GlobalNetworkConfig, defaultParams} from "@/components/configNetwork/ConfigNetworkPage"
 import {PcapMetadata} from "@/models/Traffic"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {defPortScanExecuteExtraFormValue} from "./newPortScan"
+import {yakitInfo} from "@/utils/notification"
+import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import cloneDeep from "lodash/cloneDeep"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -91,7 +94,7 @@ const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> 
             title='额外参数'
         >
             <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
-                <NewPortScanExtraParams form={form} />
+                <NewPortScanExtraParams form={form} visible={visible} />
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>
         </YakitDrawer>
@@ -101,9 +104,10 @@ export default NewPortScanExtraParamsDrawer
 
 interface NewPortScanExtraParamsProps {
     form: FormInstance<PortScanExecuteExtraFormValue>
+    visible: boolean
 }
 const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo((props) => {
-    const {form} = props
+    const {form, visible} = props
 
     const [activeKey, setActiveKey] = useState<string[]>([
         "网卡配置",
@@ -112,10 +116,37 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
         "基础爬虫配置",
         "其他配置"
     ])
+    const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
+
+    const globalNetworkConfig = useRef<GlobalNetworkConfig | undefined>(cloneDeep(defaultParams))
 
     const mode = Form.useWatch("Mode", form)
     const skippedHostAliveScan = Form.useWatch("SkippedHostAliveScan", form)
     const saveToDB = Form.useWatch("SaveToDB", form)
+
+    useEffect(() => {
+        if (!visible) return
+        apiGetGlobalNetworkConfig()
+            .then((rsp: GlobalNetworkConfig) => {
+                globalNetworkConfig.current = rsp
+                form.setFieldsValue({
+                    SynScanNetInterface: rsp.SynScanNetInterface
+                })
+                ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
+                    if (!data || data.AvailablePcapDevices.length === 0) {
+                        return
+                    }
+                    const interfaceList = data.AvailablePcapDevices.map((item) => ({
+                        label: `${item.NetInterfaceName}-(${item.IP})`,
+                        value: item.Name
+                    }))
+                    setNetInterfaceList(interfaceList)
+                })
+            })
+            .catch(() => {
+                globalNetworkConfig.current = undefined
+            })
+    }, [visible])
 
     const protoList = useCreation(() => {
         return [
@@ -127,6 +158,18 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
         const value = defaultExtraParamsFormValue[key]
         form.setFieldsValue({
             ...value
+        })
+    })
+    const updateGlobalNetworkConfig = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (!globalNetworkConfig.current) return
+        const synScanNetInterface = form.getFieldValue("SynScanNetInterface")
+        const params: GlobalNetworkConfig = {
+            ...globalNetworkConfig.current,
+            SynScanNetInterface: synScanNetInterface
+        }
+        apiSetGlobalNetworkConfig(params).then(() => {
+            yakitInfo("更新配置成功")
         })
     })
     /**mode syn 对应的配置 */
@@ -154,14 +197,14 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     <Form.Item
                         label='网卡选择'
                         extra={
-                            <YakitButton type='text' style={{paddingLeft: 0}}>
+                            <YakitButton type='text' style={{paddingLeft: 0}} onClick={updateGlobalNetworkConfig}>
                                 同步到全局配置
                             </YakitButton>
                         }
                         name='SynScanNetInterface'
                         style={{marginBottom: 0}}
                     >
-                        <YakitSelect allowClear placeholder='请选择...' />
+                        <YakitSelect allowClear placeholder='请选择...' options={netInterfaceList} />
                     </Form.Item>
                 </YakitPanel>
                 <YakitPanel
