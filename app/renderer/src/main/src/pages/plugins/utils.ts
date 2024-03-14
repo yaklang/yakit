@@ -1042,6 +1042,7 @@ export interface DebugPluginRequest {
     ExecParams: KVPair[]
     /**插件UI联动相关参数*/
     LinkPluginConfig?: HybridScanPluginConfig
+    PluginName: string
 }
 export const defaultLinkPluginConfig = {
     PluginNames: [],
@@ -1076,7 +1077,6 @@ export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Prom
                 default:
                     break
             }
-            // console.log("插件执行时的参数", executeParams)
             ipcRenderer
                 .invoke("DebugPlugin", executeParams, token)
                 .then(() => {

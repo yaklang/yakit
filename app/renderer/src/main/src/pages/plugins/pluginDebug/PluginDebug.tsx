@@ -347,7 +347,8 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
                         PluginType: pluginType,
                         Input: value["Input"] || "",
                         HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-                        ExecParams: []
+                        ExecParams: [],
+                        PluginName: "",
                     }
 
                     switch (pluginType) {
