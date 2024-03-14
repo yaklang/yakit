@@ -41,10 +41,12 @@ import {PluginFilterParams, PluginSearchParams} from "@/pages/plugins/baseTempla
 import {pluginTypeToName} from "@/pages/plugins/builtInData"
 import {defaultLinkPluginConfig} from "@/pages/plugins/utils"
 import {getLinkPluginConfig} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
-import {apiCancelPortScan, apiPortScan} from "./utils"
+import {RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPortScan, apiSimpleDetect} from "./utils"
 import {CheckboxValueType} from "antd/es/checkbox/Group"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {yakitNotify} from "@/utils/notification"
+import {onCreateReportModal} from "@/pages/portscan/CreateReport"
+import {v4 as uuidv4} from "uuid"
 
 const NewPortScanExtraParamsDrawer = React.lazy(() => import("./newPortScanExtraParamsDrawer"))
 
@@ -141,7 +143,10 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
         e.stopPropagation()
         executeContentRef.current?.onStartExecute()
     })
-
+    const onCreateReport = useMemoizedFn((e) => {
+        e.stopPropagation()
+        executeContentRef.current?.onCreateReport()
+    })
     return (
         <div className={styles["port-scan-execute-wrapper"]}>
             <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
@@ -176,7 +181,11 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                           )}
                     {isEnpriTrace() && (
                         <>
-                            <YakitButton icon={<OutlineClipboardlistIcon />} disabled={executeStatus === "default"}>
+                            <YakitButton
+                                icon={<OutlineClipboardlistIcon />}
+                                disabled={executeStatus === "default"}
+                                onClick={onCreateReport}
+                            >
                                 生成报告
                             </YakitButton>
                             <div className={styles["divider-style"]}></div>
@@ -197,7 +206,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                     ref={executeContentRef}
                     isExpand={isExpand}
                     setIsExpand={setIsExpand}
-                    isExecuting={isExecuting}
+                    executeStatus={executeStatus}
                     setExecuteStatus={setExecuteStatus}
                     selectNum={selectNum}
                     pluginListSearchInfo={pluginListSearchInfo}
@@ -244,7 +253,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
     forwardRef((props, ref) => {
         const {
             isExpand,
-            isExecuting,
+            executeStatus,
             setExecuteStatus,
             setIsExpand,
             selectNum,
@@ -261,13 +270,16 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             cloneDeep(defPortScanExecuteExtraFormValue)
         )
 
+        const uuidRef = useRef<string>(uuidv4())
+        const taskNameRef = useRef<string>("")
+
         const tokenRef = useRef<string>(randomString(40))
         const newPortScanExecuteContentRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(newPortScanExecuteContentRef)
 
         const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
-            taskName: "Port-Scan",
-            apiKey: "PortScan",
+            taskName: isEnpriTrace() ? "Simple-Detect" : "Port-Scan",
+            apiKey: isEnpriTrace() ? "SimpleDetect" : "PortScan",
             token: tokenRef.current,
             onEnd: () => {
                 portScanStreamEvent.stop()
@@ -290,7 +302,8 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                         .catch((e) => {
                             setIsExpand(true)
                         })
-                }
+                },
+                onCreateReport
             }),
             [form]
         )
@@ -298,6 +311,19 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         useEffect(() => {
             setProgressList(streamInfo.progressState)
         }, [streamInfo.progressState])
+        const isExecuting = useCreation(() => {
+            if (executeStatus === "process") return true
+            return false
+        }, [executeStatus])
+        /**生成报告 */
+        const onCreateReport = useMemoizedFn(() => {
+            if (executeStatus === "default") return
+            onCreateReportModal({
+                infoState: streamInfo,
+                runPluginCount: selectNum,
+                reportName: taskNameRef.current
+            })
+        })
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
@@ -310,18 +336,40 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             }
             portScanStreamEvent.reset()
             setRuntimeId("")
-            apiPortScan(executeParams, tokenRef.current).then(() => {
-                setExecuteStatus("process")
-                setIsExpand(false)
-                portScanStreamEvent.start()
-            })
+            if (isEnpriTrace()) {
+                uuidRef.current = uuidv4()
+                const taskName = `${executeParams.Targets.split(",")[0].split(/\n/)[0]}风险评估报告-${uuidRef.current}`
+                taskNameRef.current = taskName
+                let PortScanRequest = {...executeParams, TaskName: taskName}
+                const simpleDetectPrams: RecordPortScanRequest = {
+                    PortScanRequest
+                }
+                apiSimpleDetect(simpleDetectPrams, tokenRef.current).then(() => {
+                    setExecuteStatus("process")
+                    setIsExpand(false)
+                    portScanStreamEvent.start()
+                })
+            } else {
+                apiPortScan(executeParams, tokenRef.current).then(() => {
+                    setExecuteStatus("process")
+                    setIsExpand(false)
+                    portScanStreamEvent.start()
+                })
+            }
         })
         /**取消执行 */
         const onStopExecute = useMemoizedFn(() => {
-            apiCancelPortScan(tokenRef.current).then(() => {
-                portScanStreamEvent.stop()
-                setExecuteStatus("finished")
-            })
+            if (isEnpriTrace()) {
+                apiCancelSimpleDetect(tokenRef.current).then(() => {
+                    portScanStreamEvent.stop()
+                    setExecuteStatus("finished")
+                })
+            } else {
+                apiCancelPortScan(tokenRef.current).then(() => {
+                    portScanStreamEvent.stop()
+                    setExecuteStatus("finished")
+                })
+            }
         })
         const openExtraPropsDrawer = useMemoizedFn(() => {
             setExtraParamsValue({

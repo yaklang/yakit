@@ -1,13 +1,21 @@
 import React, {useEffect, memo, useRef, useState} from "react"
 import {Button, Input, Modal, Progress} from "antd"
-import {useGetState} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import styles from "./CreateReport.module.scss"
-import {warn} from "@/utils/notification"
+import {failed, warn} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {ExecResult} from "../invoker/schema"
 import {CreatReportScript} from "../simpleDetect/CreatReportScript"
 import {InfoState} from "@/hook/useHoldingIPCRStream"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {v4 as uuidv4} from "uuid"
+import {ExecParamItem, ExecRequest, apiCancelExecYakCode, apiExecYakCode} from "../securityTool/newPortScan/utils"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import emiter from "@/utils/eventBus/eventBus"
+
 const {ipcRenderer} = window.require("electron")
 export interface CreateReportProps {
     loading: boolean
@@ -19,7 +27,7 @@ export interface CreateReportProps {
     setAllowDownloadReport: (v: boolean) => void
 }
 export const CreateReport: React.FC<CreateReportProps> = memo((props) => {
-    const {loading, infoState, runPluginCount, targets,allowDownloadReport, nowUUID,setAllowDownloadReport} = props
+    const {loading, infoState, runPluginCount, targets, allowDownloadReport, nowUUID, setAllowDownloadReport} = props
 
     // 下载报告Modal
     const [reportModalVisible, setReportModalVisible] = useState<boolean>(false)
@@ -35,12 +43,12 @@ export const CreateReport: React.FC<CreateReportProps> = memo((props) => {
     // 是否展示报告生成进度
     const [showReportPercent, setShowReportPercent] = useState<boolean>(false)
 
-    useEffect(()=>{
-        if(isSetTaskName.current){
+    useEffect(() => {
+        if (isSetTaskName.current) {
             const defaultReportName = `${targets.split(",")[0].split(/\n/)[0]}风险评估报告`
             setReportName(defaultReportName)
         }
-    },[targets])
+    }, [targets])
 
     useEffect(() => {
         if (!reportModalVisible) {
@@ -80,7 +88,8 @@ export const CreateReport: React.FC<CreateReportProps> = memo((props) => {
             setShowReportPercent(false)
             setReportPercent(0)
             setReportModalVisible(false)
-            ipcRenderer.invoke("open-user-manage", YakitRoute.DB_Report)
+            // ipcRenderer.invoke("open-user-manage", YakitRoute.DB_Report)
+            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_Report}))
             setTimeout(() => {
                 ipcRenderer.invoke("simple-open-report", getReportId())
             }, 300)
@@ -182,6 +191,146 @@ export const CreateReport: React.FC<CreateReportProps> = memo((props) => {
                     </div>
                 </div>
             </Modal>
+        </div>
+    )
+})
+
+export const onCreateReportModal = (createReportContent: CreateReportContentProps) => {
+    const m = showYakitModal({
+        title: "下载报告",
+        footer: null,
+        content: <CreateReportContent {...createReportContent} onCancel={() => m.destroy()} />,
+        onCancel: () => {
+            m.destroy()
+        },
+        bodyStyle: {padding: 24}
+    })
+}
+interface CreateReportContentProps {
+    reportName: string
+    onCancel?: () => void
+    infoState: HoldGRPCStreamInfo
+    runPluginCount: number
+}
+const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((props) => {
+    const {infoState, runPluginCount, onCancel} = props
+    const [reportName, setReportName] = useState<string>(props.reportName || "默认报告名称")
+    // 是否展示报告生成进度
+    const [showReportPercent, setShowReportPercent] = useState<boolean>(false)
+    // 报告生成进度
+    const [reportPercent, setReportPercent] = useState<number>(0)
+    const [reportLoading, setReportLoading] = useState<boolean>(false)
+
+    const tokenRef = useRef<string>(randomString(40))
+    const reportIdRef = useRef<number>()
+
+    /** 下载报告 */
+    const downloadReport = () => {
+        // 脚本数据
+        const scriptData = CreatReportScript
+        const runTaskNameEx = reportName + "-" + uuidv4()
+        let Params: ExecParamItem[] = [
+            {Key: "task_name", Value: runTaskNameEx},
+            {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
+            {Key: "report_name", Value: reportName},
+            {Key: "plugins", Value: `${runPluginCount}`},
+            {Key: "host_total", Value: getCardForId("扫描主机数")},
+            {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
+            {Key: "port_total", Value: getCardForId("扫描端口数")}
+        ]
+        const reqParams: ExecRequest = {
+            Script: scriptData,
+            Params
+        }
+        apiExecYakCode(reqParams, tokenRef.current)
+    }
+    /** 获取扫描主机数 扫描端口数 */
+    const getCardForId = (id: string) => {
+        const item = infoState.cardState.filter((item) => item.tag === id)
+        if (item.length > 0) {
+            return item[0].info[0].Data
+        }
+        return ""
+    }
+    /** 获取生成报告返回结果 */
+    useEffect(() => {
+        ipcRenderer.on(`${tokenRef.current}-data`, (e, data: ExecResult) => {
+            if (data.IsMessage) {
+                const obj = JSON.parse(Buffer.from(data.Message).toString())
+                if (obj?.type === "progress") {
+                    setReportPercent(obj.content.progress)
+                }
+                reportIdRef.current = parseInt(obj.content.data)
+            }
+        })
+        ipcRenderer.on(`${tokenRef.current}-error`, (e: any, error: any) => {
+            failed(`[Mod] ExecYakCode error: ${error}`)
+        })
+        ipcRenderer.on(`${tokenRef.current}-end`, (e: any, error: any) => {
+            onOpenReport()
+        })
+
+        return () => {
+            ipcRenderer.removeAllListeners(`${tokenRef.current}-data`)
+            ipcRenderer.removeAllListeners(`${tokenRef.current}-error`)
+            ipcRenderer.removeAllListeners(`${tokenRef.current}-end`)
+        }
+    }, [])
+    const onOpenReport = useMemoizedFn(() => {
+        if (!reportIdRef.current) return
+        setReportLoading(false)
+        setShowReportPercent(false)
+        setReportPercent(0)
+        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_Report}))
+        setTimeout(() => {
+            ipcRenderer.invoke("simple-open-report", reportIdRef.current)
+        }, 300)
+        if (onCancel) onCancel()
+    })
+    return (
+        <div>
+            <div style={{textAlign: "center"}}>
+                <YakitInput
+                    placeholder='请输入任务名称'
+                    allowClear
+                    value={reportName}
+                    onChange={(e) => {
+                        setReportName(e.target.value)
+                    }}
+                />
+                {showReportPercent && (
+                    <Progress
+                        strokeColor='#F28B44'
+                        trailColor='#F0F2F5'
+                        percent={Math.trunc(reportPercent * 100)}
+                        format={(percent) => `${percent}%`}
+                        style={{marginTop: 12}}
+                    />
+                )}
+            </div>
+            <div style={{marginTop: 20, textAlign: "right"}}>
+                <YakitButton
+                    style={{marginRight: 8}}
+                    onClick={() => {
+                        apiCancelExecYakCode(tokenRef.current)
+                        if (onCancel) onCancel()
+                    }}
+                    type='outline2'
+                >
+                    取消
+                </YakitButton>
+                <YakitButton
+                    loading={reportLoading}
+                    type={"primary"}
+                    onClick={() => {
+                        setReportLoading(true)
+                        downloadReport()
+                        setShowReportPercent(true)
+                    }}
+                >
+                    确定
+                </YakitButton>
+            </div>
         </div>
     )
 })

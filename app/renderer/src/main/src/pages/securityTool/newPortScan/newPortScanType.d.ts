@@ -1,4 +1,4 @@
-import { StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakScript} from "@/pages/invoker/schema"
 import {PluginFilterParams, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
@@ -22,8 +22,8 @@ export interface NewPortScanExecuteProps {
 export interface NewPortScanExecuteContentProps {
     ref?: React.ForwardedRef<NewPortScanExecuteContentRefProps>
     isExpand: boolean
-    isExecuting: boolean
     setIsExpand: (b: boolean) => void
+    executeStatus: ExpandAndRetractExcessiveState
     setExecuteStatus: (b: ExpandAndRetractExcessiveState) => void
     selectNum: number
     pluginListSearchInfo: PluginListSearchInfoProps
@@ -34,6 +34,7 @@ export interface NewPortScanExecuteContentProps {
 export interface NewPortScanExecuteContentRefProps {
     onStopExecute: () => void
     onStartExecute: () => void
+    onCreateReport: () => void
 }
 
 export interface NewPortScanExecuteFormProps {

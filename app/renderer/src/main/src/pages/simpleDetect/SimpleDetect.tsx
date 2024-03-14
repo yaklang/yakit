@@ -1252,7 +1252,7 @@ export interface SimpleDetectProps {
     TaskName?: string
 }
 
-interface LastRecordProps {
+export interface LastRecordProps {
     ExtraInfo: string
     YakScriptOnlineGroup: string
     Percent: number

@@ -700,7 +700,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Divider>
                                 <Form.Item label={"网卡"} tooltip='为SYN扫描选择网卡'>
                                     <YakitSelect
-                                        showSearch
+                                        // showSearch
                                         options={netInterfaceList}
                                         placeholder='请选择...'
                                         size='small'
