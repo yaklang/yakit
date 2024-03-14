@@ -2064,7 +2064,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 .catch((e) => {})
                 .finally(() => {
                     update()
-                    emiter.on("onRefreshQueryYakScript", update)
+                    emiter.on("onRefreshQueryNewRisk", update)
                     // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
                     if(!serverPushStatus){
                         timeRef.current = setInterval(()=>{
@@ -2080,7 +2080,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
             return () => {
                 clearInterval(timeRef.current)
-                emiter.off("onRefreshQueryYakScript", update)
+                emiter.off("onRefreshQueryNewRisk", update)
             }
         } else {
             if (timeRef.current) clearInterval(timeRef.current)
