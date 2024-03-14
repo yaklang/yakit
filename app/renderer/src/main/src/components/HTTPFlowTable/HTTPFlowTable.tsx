@@ -817,21 +817,38 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const boxHeightRef = useRef<number>()
 
-    useHotkeys("ctrl+shift+r", (e) => {
-        const selected = getSelected()
-        if (selected) {
-            selected.IsWebsocket
-                ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
-                : onSendToTab(selected, false)
-        }
-    })
+    const ref = useRef(null)
 
-    const ref = useHotkeys("ctrl+r, enter", (e) => {
-        const selected = getSelected()
-        if (selected) {
-            selected.IsWebsocket ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request) : onSendToTab(selected)
-        }
-    })
+    useHotkeys(
+        "ctrl+r",
+        (e) => {
+            const selected = getSelected()
+            if (selected) {
+                selected.IsWebsocket ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request) : onSendToTab(selected)
+            }
+        },
+        {
+            enabled: inViewport
+        },
+        [ref]
+    )
+
+    useHotkeys(
+        "ctrl+shift+r",
+        (e) => {
+            e.stopPropagation()
+            const selected = getSelected()
+            if (selected) {
+                selected.IsWebsocket
+                    ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
+                    : onSendToTab(selected, false)
+            }
+        },
+        {
+            enabled: inViewport
+        },
+        [ref]
+    )
 
     const size = useSize(ref)
 
