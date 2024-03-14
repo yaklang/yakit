@@ -47,7 +47,6 @@ module.exports = (win, getClient) => {
         })
     }
     ipcMain.handle("QueryHTTPFlows", async (e, params) => {
-        console.log("QueryHTTPFlows---",Math.random());
         return await asyncQueryHTTPFlows(params)
     })
 
