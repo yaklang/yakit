@@ -167,7 +167,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
     const onCloseDetails = useMemoizedFn((e, res) => {
         const { type, data } = res
-        if (type === "fuzzer" && data.openFlag === false) return
+        if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
         if (props.onClose) props.onClose()
     })
 
