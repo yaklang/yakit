@@ -1856,7 +1856,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 const m = showYakitModal({
                                     type: "white",
                                     title: "WebFuzzer 爆破动画演示",
-                                    width: 650,
+                                    width: 480,
                                     content: <BlastingAnimationAemonstration></BlastingAnimationAemonstration>,
                                     footer: null,
                                     centered: true,

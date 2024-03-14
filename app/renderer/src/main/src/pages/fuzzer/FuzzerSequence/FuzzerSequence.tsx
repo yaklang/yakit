@@ -38,6 +38,7 @@ import {
     OutlineCodeIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
+    OutlineQuestionmarkcircleIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {Divider, Result, Tooltip} from "antd"
@@ -791,10 +792,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                     title: (
                                         <div className={styles['sequence-animation-pop-title']}>
                                             WebFuzzer 序列动画演示
-                                            <span className={styles['help-doc']} onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/products/Web%20Fuzzer/fuzz-sequence")}>
-                                                官方帮助文档
-                                                <QuestionMarkCircleIcon />
-                                            </span>
+                                            <div
+                                                className={styles["subtitle-help-wrapper"]}
+                                                onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/products/Web%20Fuzzer/fuzz-sequence")}
+                                            >
+                                                <span className={styles["text-style"]}>官方帮助文档</span>
+                                                <OutlineQuestionmarkcircleIcon />
+                                            </div>
                                         </div>
                                     ),
                                     width: 650,

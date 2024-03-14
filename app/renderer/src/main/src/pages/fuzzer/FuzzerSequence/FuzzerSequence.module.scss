@@ -480,17 +480,24 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    .help-doc {
+    .subtitle-help-wrapper {
         display: flex;
         align-items: center;
-        gap: 4px;
-        color: var(--yakit-body-text-color);
-        text-decoration: underline;
+        color: #b4bbca;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
         cursor: pointer;
+        .text-style {
+            text-decoration-line: underline;
+        }
         svg {
             width: 16px;
-            color: var(--yakit-body-text-color);
+            height: 16px;
         }
+    }
+    .subtitle-help-wrapper:hover {
+        color: var(--yakit-primary-5);
     }
 }
 
