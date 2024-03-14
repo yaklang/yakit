@@ -356,6 +356,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
 
     return (
         <NewHTTPPacketEditor
+            defaultHttps={isHttp}
             originValue={currentPacket}
             noHeader={true}
             isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("utf8").startsWith("HTTP/")}
