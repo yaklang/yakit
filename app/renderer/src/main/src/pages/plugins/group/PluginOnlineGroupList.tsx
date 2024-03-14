@@ -129,6 +129,8 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
         const params: PluginGroupDel = {group: groupItem.name}
         apiFetchDeleteYakScriptGroupOnline(params).then(() => {
             getGroupList()
+            // 发送事件到组件 <PluginGroup></PluginGroup>
+            emiter.emit("onRefpluginGroupSelectGroup", "true")
             // 如果当前选中组为固定的未分组 刷新右侧插件列表
             if (activeOnlineGroup?.default && activeOnlineGroup.id === "未分组") {
                 emiter.emit("onRefPluginGroupMagOnlinePluginList", "")

@@ -23,4 +23,6 @@ export type PluginsEventProps = {
     onRefPluginGroupMagOnlineQueryYakScriptGroup: string
     /** 刷新插件组管理线上插件列表 */
     onRefPluginGroupMagOnlinePluginList: string
+    /** 刷新插件组中PluginGroup选中插件组 */
+    onRefpluginGroupSelectGroup: string
 }

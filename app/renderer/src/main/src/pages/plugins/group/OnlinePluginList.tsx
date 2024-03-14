@@ -288,6 +288,7 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
         })
         if ((!saveGroup.length && !removeGroup.length) || !queryFetchList.current) return
         const params: API.GroupRequest = {
+            ...queryFetchList.current,
             uuid: pluginUuidRef.current,
             saveGroup,
             removeGroup

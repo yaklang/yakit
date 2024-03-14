@@ -720,8 +720,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         type='text'
                                         onClick={() =>
                                             emiter.emit(
-                                                "menuOpenPage",
-                                                JSON.stringify({route: YakitRoute.Plugin_Groups})
+                                                "openPage",
+                                                JSON.stringify({route: YakitRoute.Plugin_Groups, params: {pluginGroupType: "online"}})
                                             )
                                         }
                                     >

@@ -126,7 +126,7 @@ import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 import {PluginsLocal} from "@/pages/plugins/local/PluginsLocal"
 import {PluginUser} from "@/pages/plugins/user/PluginUser"
 import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
-import {PluginGroups} from "@/pages/plugins/group/PluginGroups"
+import {PluginGroupType, PluginGroups} from "@/pages/plugins/group/PluginGroups"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
 import { NewPayload } from "@/pages/payloadManager/newPayload"
@@ -460,6 +460,9 @@ export interface ComponentParams {
     // 编辑插件
     editPluginId?: number
 
+    // 插件组类型
+    pluginGroupType?: PluginGroupType
+
     // webshell info
     webshellInfo?: WebShellDetail
     /**批量执行页面参数 */
@@ -548,7 +551,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Plugin_Local:
             return <PluginsLocal />
         case YakitRoute.Plugin_Groups:
-            return <PluginGroups />
+            return <PluginGroups pluginGroupType={params?.pluginGroupType} />
         case YakitRoute.BatchExecutorPage:
             return <PluginBatchExecutor id={params?.id || ""} />
         case YakitRoute.DNSLog:

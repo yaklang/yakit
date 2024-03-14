@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {LocalPluginList} from "./LocalPluginList"
 import {OnlinePluginList} from "./OnlinePluginList"
 import {useStore} from "@/store"
@@ -15,24 +15,37 @@ import {apiFetchResetYakScriptGroup} from "../utils"
 import {InformationCircleIcon} from "@/assets/newIcon"
 import styles from "./PluginGroups.module.scss"
 
-interface PluginGroupsProps {}
+export type PluginGroupType = "online" | "local"
+interface PluginGroupsProps {
+    pluginGroupType?: PluginGroupType
+}
 
 export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
+    const {pluginGroupType: groupType = "local"} = props
     const userInfo = useStore((s) => s.userInfo)
     const pluginsGroupsRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginsGroupsRef)
-    const [pluginGroupType, setPluginGroupType] = useState<"online" | "local">("online")
+    const [pluginGroupType, setPluginGroupType] = useState<PluginGroupType>(groupType)
     const [onlineGroupLen, setOnlineGroupLen] = useState<number>(0)
     const [localGroupLen, setLocalGroupLen] = useState<number>(0)
     const [activeLocalGroup, setActiveLocalGroup] = useState<GroupListItem>() // 当前选中本地插件组
     const [activeOnlineGroup, setActiveOnlineGroup] = useState<GroupListItem>() // 当前选中线上插件组
 
+    useEffect(() => {
+        setPluginGroupType(groupType)
+    }, [groupType])
+
     // 判断是否是 管理员或者超级管理员权限
     const judgeOnlineStatus = useMemo(() => {
-        const flag = ["admin", "superAdmin"].includes(userInfo.role || "") && userInfo.isLogin
-        setPluginGroupType(flag ? "online" : "local")
+        const flag = ["admin", "superAdmin"].includes(userInfo.role || "")
         return flag
-    }, [userInfo.role, userInfo.isLogin])
+    }, [userInfo.role])
+
+    useEffect(() => {
+        if (!userInfo.isLogin) {
+            setPluginGroupType("local")
+        }
+    }, [userInfo.isLogin])
 
     return (
         <div className={styles["plugin-groups-wrapper"]} ref={pluginsGroupsRef}>
