@@ -18,7 +18,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {defPortScanExecuteExtraFormValue} from "./newPortScan"
 import {yakitInfo} from "@/utils/notification"
-import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {apiGetGlobalNetworkConfig, apiGetPcapMetadata, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import cloneDeep from "lodash/cloneDeep"
 
 const {ipcRenderer} = window.require("electron")
@@ -132,7 +132,7 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                 form.setFieldsValue({
                     SynScanNetInterface: rsp.SynScanNetInterface
                 })
-                ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
+                apiGetPcapMetadata().then((data: PcapMetadata) => {
                     if (!data || data.AvailablePcapDevices.length === 0) {
                         return
                     }

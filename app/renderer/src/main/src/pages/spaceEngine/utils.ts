@@ -1,5 +1,6 @@
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {SpaceEngineStartParams, SpaceEngineStatus} from "@/models/SpaceEngine"
+import { PcapMetadata } from "@/models/Traffic"
 import {yakitNotify} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
@@ -63,6 +64,19 @@ export const apiSetGlobalNetworkConfig: (params: GlobalNetworkConfig) => Promise
             .then(resolve)
             .catch((e: any) => {
                 yakitNotify("error", "设置全局配置错误:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** GetPcapMetadata */
+export const apiGetPcapMetadata: () => Promise<PcapMetadata> = () => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetPcapMetadata", {})
+            .then(resolve)
+            .catch((e: any) => {
+                yakitNotify("error", "GetPcapMetadata数据获取错误:" + e)
                 reject(e)
             })
     })
