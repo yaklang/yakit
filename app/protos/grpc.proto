@@ -1064,6 +1064,9 @@ message GlobalNetworkConfig {
 
   // syn扫描选择的网卡
   string SynScanNetInterface = 14;
+
+  repeated string ExcludePluginScanURIs = 15;
+  repeated string IncludePluginScanURIs = 16;
 }
 
 message AuthInfo {

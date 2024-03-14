@@ -66,6 +66,9 @@ export interface GlobalNetworkConfig {
     AuthInfos: AuthInfo[]
 
     SynScanNetInterface: string
+
+    ExcludePluginScanURIs: string[]
+    IncludePluginScanURIs: string[]
 }
 
 export interface ThirdPartyApplicationConfig {
@@ -120,7 +123,9 @@ export const defaultParams: GlobalNetworkConfig = {
     SkipSaveHTTPFlow: false,
     AppConfigs: [],
     AuthInfos: [],
-    SynScanNetInterface: ""
+    SynScanNetInterface: "",
+    ExcludePluginScanURIs: [],
+    IncludePluginScanURIs: []
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -165,7 +170,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
             }
-            setParams((v)=>({ ...v, ...rsp }))
+            setParams((v)=>({ ...v, ...rsp, DisallowDomain: rsp.DisallowDomain.filter(item => item) }))
             setLoading(false)
         })
     })
@@ -613,35 +618,52 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         </div>
                                     </div>
                                 </Form.Item>
+
                                 <Form.Item
                                     label={"禁用IP"}
-                                    tooltip='配置禁用IP后，yakit将会过滤不会访问，配置多个IP用逗号分隔'
+                                    tooltip='配置禁用IP后，yakit将会过滤不会访问'
                                 >
-                                    <YakitInput.TextArea
-                                        autoSize={{ minRows: 1, maxRows: 3 }}
-                                        allowClear
-                                        size='small'
-                                        value={params.DisallowIPAddress.join(",")}
-                                        onChange={(e) => {
-                                            const { value } = e.target
-                                            setParams({ ...params, DisallowIPAddress: value.split(",") })
+                                    <YakitSelect
+                                        mode='tags'
+                                        value={params.DisallowIPAddress}
+                                        onChange={(value) => {
+                                            setParams({ ...params, DisallowIPAddress: value })
                                         }}
-                                    />
+                                    ></YakitSelect>
                                 </Form.Item>
                                 <Form.Item
                                     label={"禁用域名"}
-                                    tooltip='配置禁用域名后，yakit将会过滤不会访问，配置多个域名用逗号分隔'
+                                    tooltip='配置禁用域名后，yakit将会过滤不会访问'
                                 >
-                                    <YakitInput.TextArea
-                                        autoSize={{ minRows: 1, maxRows: 3 }}
-                                        allowClear
-                                        size='small'
-                                        value={params.DisallowDomain.join(",")}
-                                        onChange={(e) => {
-                                            const { value } = e.target
-                                            setParams({ ...params, DisallowDomain: value.split(",") })
+                                    <YakitSelect
+                                        mode='tags'
+                                        value={params.DisallowDomain}
+                                        onChange={(value) => {
+                                            setParams({ ...params, DisallowDomain: value })
                                         }}
-                                    />
+                                    ></YakitSelect>
+                                </Form.Item>
+                                <Form.Item
+                                    label={"插件扫描白名单"}
+                                >
+                                    <YakitSelect
+                                        mode='tags'
+                                        value={params.IncludePluginScanURIs}
+                                        onChange={(value) => {
+                                            setParams({ ...params, IncludePluginScanURIs: value })
+                                        }}
+                                    ></YakitSelect>
+                                </Form.Item>
+                                <Form.Item
+                                    label={"插件扫描黑名单"}
+                                >
+                                    <YakitSelect
+                                        mode='tags'
+                                        value={params.ExcludePluginScanURIs}
+                                        onChange={(value) => {
+                                            setParams({ ...params, ExcludePluginScanURIs: value })
+                                        }}
+                                    ></YakitSelect>
                                 </Form.Item>
                                 <Form.Item label={"全局代理"}>
                                     <YakitInput
