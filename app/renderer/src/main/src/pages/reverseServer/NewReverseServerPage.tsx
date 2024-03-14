@@ -395,10 +395,6 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
         setCodeRefresh(!codeRefresh)
     })
 
-    useEffect(() => {
-        console.log(123, classRequest);
-    }, [classRequest])
-
     return (
         <div className='start-reverse-server-wrapper'>
             <div className={`payload-${isExtra ? (codeExtra ? "extra-" : "") : "hidden-"}wrapper payload-container`}>
