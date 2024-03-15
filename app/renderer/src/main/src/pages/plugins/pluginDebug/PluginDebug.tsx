@@ -519,12 +519,12 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
                                         {streamInfo.progressState.length > 1 && (
                                             <div className={styles["plugin-executing-progress"]}>
                                                 {streamInfo.progressState.map((ele, index) => (
-                                                    <>
+                                                    <React.Fragment key={ele.id}>
                                                         {index !== 0 && (
                                                             <Divider type='vertical' style={{margin: 0, top: 2}} />
                                                         )}
                                                         <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                                                    </>
+                                                    </React.Fragment>
                                                 ))}
                                             </div>
                                         )}

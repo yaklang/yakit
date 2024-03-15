@@ -448,10 +448,10 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 {progressList.length > 1 && (
                     <div className={styles["executing-progress"]}>
                         {progressList.map((ele, index) => (
-                            <>
+                            <React.Fragment key={ele.id}>
                                 {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
                                 <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                            </>
+                            </React.Fragment>
                         ))}
                     </div>
                 )}

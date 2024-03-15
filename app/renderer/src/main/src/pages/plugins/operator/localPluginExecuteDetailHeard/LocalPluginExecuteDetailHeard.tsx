@@ -377,10 +377,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             {progressList.length > 1 && (
                 <div className={styles["plugin-head-executing-progress"]}>
                     {progressList.map((ele, index) => (
-                        <>
+                        <React.Fragment key={ele.id}>
                             {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
                             <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                        </>
+                        </React.Fragment>
                     ))}
                 </div>
             )}
