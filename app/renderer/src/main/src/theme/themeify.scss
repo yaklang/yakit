@@ -29,4 +29,6 @@ $color-list: (
 }
 
 // 手动控制颜色变量,生成带透明度的颜色
-// color-mix(in srgb, var(--yakit-tag-color-orange) 20%, transparent)
+@function fetch-color-transparen($color, $alph) {
+    @return color-mix(in srgb, $color $alph, transparent);
+}
