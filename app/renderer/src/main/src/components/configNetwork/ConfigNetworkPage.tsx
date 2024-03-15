@@ -645,6 +645,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Form.Item>
                                 <Form.Item
                                     label={"插件扫描白名单"}
+                                    tooltip='配置插件扫描白名单后，插件仅会对匹配的URL进行扫描。支持以兼容模式进行匹配，即先尝试以正则模式匹配 → glob 模式匹配 → 关键字匹配。'
                                 >
                                     <YakitSelect
                                         mode='tags'
@@ -656,6 +657,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Form.Item>
                                 <Form.Item
                                     label={"插件扫描黑名单"}
+                                    tooltip="配置插件扫描黑名单后，插件不会对匹配的URL进行扫描。支持以兼容模式进行匹配，即先尝试以正则模式匹配 → glob 模式匹配 → 关键字匹配。"
                                 >
                                     <YakitSelect
                                         mode='tags'
