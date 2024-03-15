@@ -41,5 +41,4 @@ export interface PluginExecuteCustomTableProps {
 
 export interface PluginExecuteCodeProps {
     content: string
-    pluginType: string
 }
