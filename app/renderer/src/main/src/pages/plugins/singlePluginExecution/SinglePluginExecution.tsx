@@ -225,12 +225,12 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         const config = {
             PluginNames: selectPluginName,
             Filter:
-                selectPluginName.length > 0
-                    ? undefined
-                    : {
-                          ...convertLocalPluginsRequestParams(filters, search),
-                          Type: pluginTypeRef.current
-                      }
+                (allCheck)
+                    ? {
+                        ...convertLocalPluginsRequestParams(filters, search),
+                        Type: pluginTypeRef.current
+                    }
+                    : undefined
         }
         return config
     }, [selectList, search, filters, allCheck])
