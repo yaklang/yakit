@@ -1349,10 +1349,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
     })
     const getShareContent = useMemoizedFn((callback) => {
+        const advancedConfiguration = {...advancedConfigValue}
+        delete advancedConfiguration.batchTarget
         const params: ShareValueProps = {
             advancedConfig,
             request: requestRef.current,
-            advancedConfiguration: advancedConfigValue
+            advancedConfiguration: advancedConfiguration
         }
         callback(params)
     })
