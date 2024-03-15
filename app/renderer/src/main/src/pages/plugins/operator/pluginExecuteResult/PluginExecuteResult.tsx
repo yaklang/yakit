@@ -78,7 +78,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 const textInfo: HoldGRPCStreamProps.InfoText = streamInfo.tabsInfoState[ele.tabName] || {
                     content: ""
                 }
-                return <PluginExecuteCode content={textInfo.content} pluginType={pluginType} />
+                return <PluginExecuteCode content={textInfo.content} />
             default:
                 return <></>
         }
@@ -580,10 +580,10 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
 })
 
 const PluginExecuteCode: React.FC<PluginExecuteCodeProps> = React.memo((props) => {
-    const {content, pluginType} = props
+    const {content} = props
     return (
         <>
-            <YakitEditor readOnly={true} value={content} type={pluginType || "yak"} />
+            <YakitEditor readOnly={true} value={content} type='plaintext' />
         </>
     )
 })
