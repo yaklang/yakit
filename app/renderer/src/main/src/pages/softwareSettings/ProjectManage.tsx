@@ -1492,7 +1492,7 @@ interface ImportProjectProps {
     ChildFolderId?: number
 }
 /** 文件夹级联组件节点属性 */
-interface FileProjectInfoProps extends ProjectDescription {
+export interface FileProjectInfoProps extends ProjectDescription {
     children?: ProjectDescription[]
     isLeaf?: boolean
     loading?: boolean
