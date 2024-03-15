@@ -129,9 +129,6 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
         apiGetGlobalNetworkConfig()
             .then((rsp: GlobalNetworkConfig) => {
                 globalNetworkConfig.current = rsp
-                form.setFieldsValue({
-                    SynScanNetInterface: rsp.SynScanNetInterface
-                })
                 apiGetPcapMetadata().then((data: PcapMetadata) => {
                     if (!data || data.AvailablePcapDevices.length === 0) {
                         return

@@ -53,8 +53,6 @@ export interface RecordPortScanRequest {
 export const apiSimpleDetect: (params: RecordPortScanRequest, token: string) => Promise<null> = (params, token) => {
     return new Promise((resolve, reject) => {
         let executeParams = {
-            LastRecord: {},
-            StartBruteParams: {},
             ...params
         }
         ipcRenderer

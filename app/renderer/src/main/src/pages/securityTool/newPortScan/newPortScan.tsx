@@ -47,6 +47,8 @@ import {PresetPorts} from "@/pages/portscan/schema"
 import {yakitNotify} from "@/utils/notification"
 import {onCreateReportModal} from "@/pages/portscan/CreateReport"
 import {v4 as uuidv4} from "uuid"
+import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 
 const NewPortScanExtraParamsDrawer = React.lazy(() => import("./newPortScanExtraParamsDrawer"))
 
@@ -311,6 +313,16 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         useEffect(() => {
             setProgressList(streamInfo.progressState)
         }, [streamInfo.progressState])
+
+        useEffect(() => {
+            apiGetGlobalNetworkConfig().then((rsp: GlobalNetworkConfig) => {
+                setExtraParamsValue({
+                    ...extraParamsValue,
+                    SynScanNetInterface: rsp.SynScanNetInterface
+                })
+            })
+        }, [])
+
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true
             return false
@@ -480,8 +492,6 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo((props) => {
     const {inViewport, disabled, form, extraParamsValue} = props
     const [templatePort, setTemplatePort] = useState<string>()
-
-    const ports = Form.useWatch("Ports", form)
 
     useEffect(() => {
         if (inViewport) onGetTemplatePort()
