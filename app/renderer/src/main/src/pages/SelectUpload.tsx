@@ -1,10 +1,18 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Input, Form, Select, Spin, Progress} from "antd"
+import {Button, Input, Form, Select, Spin, Progress, Cascader} from "antd"
 import {useMemoizedFn, useThrottleFn, useGetState} from "ahooks"
-import {failed, success} from "@/utils/notification"
+import {failed, success, warn} from "@/utils/notification"
 import {PaginationSchema} from "./invoker/schema"
 import {randomString} from "@/utils/randomUtil"
-import { ProjectDescription, ProjectIOProgress, ProjectsResponse } from "./softwareSettings/ProjectManage"
+import {
+    FileProjectInfoProps,
+    ProjectDescription,
+    ProjectIOProgress,
+    ProjectsResponse
+} from "./softwareSettings/ProjectManage"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {ChevronDownIcon} from "@/assets/newIcon"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const {Option} = Select
 const {ipcRenderer} = window.require("electron")
@@ -12,6 +20,12 @@ const {ipcRenderer} = window.require("electron")
 export interface SelectUploadProps {
     onCancel: () => void
 }
+
+interface CascaderValueProps {
+    Id: string
+    DatabasePath: string
+}
+
 const layout = {
     labelCol: {span: 5},
     wrapperCol: {span: 16}
@@ -20,33 +34,31 @@ const layout = {
 const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     const {onCancel} = props
     const [loading, setLoading] = useState<boolean>(false)
-    const [selectLoading, setSelectLoading] = useState<boolean>(true)
-    const [pagination, setPagination, getPagination] = useGetState<PaginationSchema>({
-        Limit: 20,
-        Order: "desc",
-        OrderBy: "updated_at",
-        Page: 1
-    })
-    const [projectList, setProjectList] = useState<ProjectDescription[]>([])
-    const [allowPassword, setAllowPassword] = useState<"0" | "1">()
+    const [allowPassword, setAllowPassword] = useState<"0" | "1" | "2">()
     const [token, _] = useState(randomString(40))
+    const [uploadToken, __] = useState(randomString(40))
     const [form] = Form.useForm()
     const [percent, setPercent] = useState<number>(0.0)
     const filePath = useRef<string>()
+    const [cascaderValue, setCascaderValue] = useState<CascaderValueProps>()
+
+    const [data, setData, getData] = useGetState<FileProjectInfoProps[]>([])
 
     /** @name 导出实体项目文件过程是否产生错误(如果产生错误，阻止通道结束后的上传操作) */
     const hasErrorRef = useRef<boolean>(false)
+    // 是否取消
+    const isCancle = useRef<boolean>(false)
 
-    const uploadFile = () => {
-        ipcRenderer
-            .invoke("upload-project", {path: filePath.current})
-            .then((res) => {
-                if (res?.data?.ok) {
+    const uploadFile = useMemoizedFn(async () => {
+        if (isCancle.current) return
+        await ipcRenderer
+            .invoke("split-upload", {url: "import/project", path: filePath.current, token: uploadToken})
+            .then((TaskStatus) => {
+                if (TaskStatus) {
                     setPercent(1)
                     onCancel()
                     success("上传数据成功")
-                }
-                else{
+                } else {
                     failed(`项目上传失败`)
                 }
             })
@@ -54,8 +66,36 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 failed(`项目上传失败:${err}`)
             })
             .finally(() => {
-                setTimeout(() => setLoading(false), 200)
+                setTimeout(() => {
+                    setLoading(false)
+                    setPercent(0)
+                }, 200)
             })
+    })
+
+    useEffect(() => {
+        ipcRenderer.on(`callback-split-upload-${uploadToken}`, async (e, res: any) => {
+            const {progress} = res
+            console.log("暂不使用此处", progress)
+            let intProgress = Math.floor(progress / 100)
+            if (allowPassword === "2") {
+                setPercent(intProgress)
+            } else {
+                setPercent(intProgress * 0.5 + 0.5)
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners(`callback-split-upload-${uploadToken}`)
+        }
+    }, [])
+
+    const cancleUpload = () => {
+        ipcRenderer.invoke("cancle-split-upload").then(() => {
+            warn("取消上传成功")
+            setLoading(false)
+            setPercent(0)
+            isCancle.current = true
+        })
     }
 
     useEffect(() => {
@@ -67,8 +107,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 filePath.current = data.TargetPath.replace(/\\/g, "\\")
             }
             if (data.Percent > 0) {
-                setLoading(true)
-                setPercent(data.Percent*0.9)
+                setPercent(data.Percent * 0.5)
             }
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
@@ -77,7 +116,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
             failed(`[ExportProject] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
-            if(hasErrorRef.current) return
+            if (hasErrorRef.current) return
             uploadFile()
         })
 
@@ -89,97 +128,130 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
         }
     }, [token])
 
-    useEffect(() => {
-        getProjectData()
-    }, [])
-
     const onFinish = useMemoizedFn((values) => {
-        hasErrorRef.current = false   
+        console.log("onFinish--x", cascaderValue, values)
+        if (!cascaderValue) return
+        setLoading(true)
+        isCancle.current = false
+        if (allowPassword === "2") {
+            // 直接上传 不走ExportProject 直接读取项目 default-yakit.db
+            filePath.current = cascaderValue.DatabasePath
+            uploadFile()
+            return
+        }
+        hasErrorRef.current = false
         ipcRenderer.invoke(
             "ExportProject",
             {
-                Id: values.name,
+                Id: cascaderValue.Id,
                 Password: allowPassword === "1" ? values.password || "" : ""
             },
             token
         )
     })
 
-    const {run} = useThrottleFn(
-        () => {
-            getProjectData(getPagination().Page + 1)
-        },
-        {wait: 500}
-    )
-
-    const getProjectData = (page?: number, limit?: number) => {
-        // 加载角色列表
-        setSelectLoading(true)
-        const paginationProps = {
-            Page: page || pagination.Page,
-            Limit: limit || pagination.Limit
-        }
+    const fetchChildNode = useMemoizedFn((selectedOptions: FileProjectInfoProps[]) => {
+        const targetOption = selectedOptions[selectedOptions.length - 1]
+        targetOption.loading = true
         ipcRenderer
             .invoke("GetProjects", {
-                Type: "project",
-                Pagination: {...paginationProps, Order: pagination.Order, OrderBy: pagination.OrderBy}
+                FolderId: +targetOption.Id,
+                Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
             })
             .then((rsp: ProjectsResponse) => {
                 try {
-                    setProjectList(rsp.Projects)
-                    setPagination({...getPagination(), Limit: rsp.Pagination.Limit, Page: rsp.Pagination.Page})
+                    setTimeout(() => {
+                        if (rsp.Projects.length === 0) {
+                            targetOption.children = [] // 为空数组
+                        } else {
+                            targetOption.children = [...rsp.Projects].map((item) => {
+                                const info: FileProjectInfoProps = {...item}
+                                if (info.Type === "file") {
+                                    info.isLeaf = false
+                                } else {
+                                    info.isLeaf = true
+                                }
+                                return info
+                            })
+                        }
+                        targetOption.loading = false
+                        setData([...getData()])
+                    }, 300)
                 } catch (e) {
                     failed("处理项目数据失败: " + `${e}`)
                 }
             })
             .catch((e) => {
-                failed(`查看全部 Projects 失败：${e}`)
+                failed(`查询 Projects 失败：${e}`)
             })
-            .finally(() => setTimeout(() => setSelectLoading(false), 300))
-    }
-    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
-        return (
-            <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
-            </div>
-        )
     })
+
+    const fetchFirstList = useMemoizedFn(() => {
+        const param = {
+            Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
+        }
+
+        ipcRenderer
+            .invoke("GetProjects", param)
+            .then((rsp: ProjectsResponse) => {
+                try {
+                    setData(
+                        rsp.Projects.map((item) => {
+                            const info: FileProjectInfoProps = {...item}
+                            if (info.Type === "file") {
+                                info.isLeaf = false
+                            } else {
+                                info.isLeaf = true
+                            }
+                            return info
+                        })
+                    )
+                } catch (e) {
+                    failed("处理项目数据失败: " + `${e}`)
+                }
+            })
+            .catch((e) => {
+                failed(`查询 Projects 失败：${e}`)
+            })
+    })
+
+    useEffect(() => {
+        fetchFirstList()
+    }, [])
+
     return (
         <Form {...layout} form={form} onFinish={onFinish}>
-            <Form.Item name='allow_password' label='加密方式' rules={[{required: true, message: "该项为必填"}]}>
-                <Select placeholder='请选择加密方式' onChange={setAllowPassword}>
+            <Form.Item name='allow_password' label='上传方式' rules={[{required: true, message: "该项为必填"}]}>
+                <Select disabled={loading} placeholder='请选择加密方式' onChange={setAllowPassword}>
                     <Option value='1'>加密上传</Option>
-                    <Option value='0'>明文上传</Option>
+                    <Option value='0'>压缩上传</Option>
+                    <Option value='2'>直接上传</Option>
                 </Select>
             </Form.Item>
             {allowPassword === "1" && (
                 <Form.Item name='password' label='密码' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入密码' />
+                    <YakitInput disabled={loading} placeholder='请输入密码' />
                 </Form.Item>
             )}
             <Form.Item name='name' label='项目' rules={[{required: true, message: "该项为必填"}]}>
-                <Select
-                    showSearch
+                <Cascader
+                    disabled={loading}
+                    options={data}
                     placeholder='请选择项目'
-                    optionFilterProp='children'
-                    filterOption={(input, option) =>
-                        (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
-                    }
-                    onPopupScroll={(e) => {
-                        const {target} = e
-                        const ref: HTMLDivElement = target as unknown as HTMLDivElement
-                        if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
-                            run()
+                    fieldNames={{label: "ProjectName", value: "Id", children: "children"}}
+                    loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
+                    showCheckedStrategy='SHOW_CHILD'
+                    onChange={(value, selectedOptions) => {
+                        if (
+                            selectedOptions.length > 0 &&
+                            selectedOptions[selectedOptions.length - 1].Type === "project"
+                        ) {
+                            const item = selectedOptions[selectedOptions.length - 1]
+                            setCascaderValue({Id: item.Id, DatabasePath: item.DatabasePath})
                         }
                     }}
-                    dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
-                >
-                    {projectList.map((item) => (
-                        <Option key={item.Id} value={item.Id}>
-                            {item.ProjectName}
-                        </Option>
-                    ))}
-                </Select>
+                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                />
             </Form.Item>
             {percent > 0 && (
                 <div style={{width: 276, margin: "0 auto", paddingBottom: 14}}>
@@ -187,9 +259,15 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 </div>
             )}
             <div style={{textAlign: "center"}}>
-                <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
-                    确定
-                </Button>
+                {loading ? (
+                    <YakitButton style={{width: 200}} type='primary' onClick={cancleUpload}>
+                        取消
+                    </YakitButton>
+                ) : (
+                    <YakitButton style={{width: 200}} type='primary' htmlType='submit'>
+                        确定
+                    </YakitButton>
+                )}
             </div>
         </Form>
     )
