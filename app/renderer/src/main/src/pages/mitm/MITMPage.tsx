@@ -68,6 +68,7 @@ export interface MITMResponse extends MITMFilterSchema {
     replacers?: MITMContentReplacerRule[]
 
     isWebsocket?: boolean
+    Payload: Uint8Array
 }
 
 export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL_PLUGIN"

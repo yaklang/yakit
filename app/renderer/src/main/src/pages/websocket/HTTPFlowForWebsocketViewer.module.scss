@@ -1,0 +1,29 @@
+.hTTPFlow-websocket-viewer {
+    height: 100%;
+    width: 100%;
+    background-color: #f0f2f5;
+    :global {
+        .ant-card-head .ant-card-head-wrapper .ant-card-head-title {
+            padding: 0px;
+            display: flex;
+            align-items: center;
+        }
+    }
+    &-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        &-lable {
+            font-size: 12px;
+        }
+    }
+
+    .jump-web-tree {
+        cursor: pointer;
+        color: var(--yakit-primary-5);
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+}

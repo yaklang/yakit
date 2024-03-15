@@ -5,7 +5,7 @@ import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {yakitNotify} from "../../utils/notification"
+import {info, yakitNotify} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -52,7 +52,7 @@ import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "../yakitUI/YakitTag/YakitCheckableTag"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
 import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -71,6 +71,10 @@ import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
+import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
+import {YakitSystem} from "@/yakitGVDefine"
+import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -813,12 +817,38 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const boxHeightRef = useRef<number>()
 
-    const ref = useHotkeys("ctrl+r, enter", (e) => {
-        const selected = getSelected()
-        if (selected) {
-            onSendToTab(selected)
-        }
-    })
+    const ref = useRef(null)
+
+    useHotkeys(
+        "ctrl+r",
+        (e) => {
+            const selected = getSelected()
+            if (selected) {
+                selected.IsWebsocket ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request) : onSendToTab(selected)
+            }
+        },
+        {
+            enabled: inViewport
+        },
+        [ref]
+    )
+
+    useHotkeys(
+        "ctrl+shift+r",
+        (e) => {
+            e.stopPropagation()
+            const selected = getSelected()
+            if (selected) {
+                selected.IsWebsocket
+                    ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
+                    : onSendToTab(selected, false)
+            }
+        },
+        {
+            enabled: inViewport
+        },
+        [ref]
+    )
 
     const size = useSize(ref)
 
@@ -1505,7 +1535,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelected(rowDate)
             setOnlyShowFirstNode && setOnlyShowFirstNode(false)
         } else {
-            // setSelected(undefined)
+            setSelected(undefined)
             setOnlyShowFirstNode && setOnlyShowFirstNode(!onlyShowFirstNode)
         }
     })
@@ -2122,14 +2152,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
 
     const getPageSize = useMemo(() => {
-        if(total>5000){
+        if (total > 5000) {
             return 500
-        }
-        else if(total<1000){
+        } else if (total < 1000) {
             return 100
-        }
-        else {
-            return Math.round(total / 1000) * 100;
+        } else {
+            return Math.round(total / 1000) * 100
         }
     }, [total])
 
@@ -2270,8 +2298,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         .catch((e) => {
                             reject(e)
                         })
-                        .finally(() => {
-                        })
+                        .finally(() => {})
                 })
             })
             Promise.allSettled(promiseList).then((results) => {
@@ -2280,17 +2307,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     Pagination: {...pagination, Page: 1, OrderBy: "id", Order: ""},
                     Total: parseInt(total + "")
                 }
-                let message:string = ""
+                let message: string = ""
                 results.forEach((item) => {
                     if (item.status === "fulfilled") {
                         const value = item.value as YakQueryHTTPFlowResponse
                         rsp.Data = [...rsp.Data, ...value.Data]
-                    }
-                    else{
+                    } else {
                         message = item.reason?.message
                     }
                 })
-                if(message.length>0){
+                if (message.length > 0) {
                     yakitNotify("warning", `部分导出内容缺失:${message}`)
                 }
                 initExcelData(resolve, rsp.Data, rsp)
@@ -2323,18 +2349,58 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     }
 
+    const systemRef = useRef<YakitSystem>("Darwin")
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
+            systemRef.current = systemType
+        })
+    }, [])
+
     const menuData = [
         {
             key: "发送到 Web Fuzzer",
             label: "发送到 Web Fuzzer",
             number: 10,
-            onClickSingle: (v) => onSendToTab(v),
-            onClickBatch: (_, number) => onBatch(onSendToTab, number, selectedRowKeys.length === total)
+            default: true,
+            children: [
+                {
+                    key: "sendAndJumpToWebFuzzer",
+                    label: "发送并跳转",
+                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                },
+                {
+                    key: "sendToWebFuzzer",
+                    label: "仅发送",
+                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                }
+            ],
+            onClickBatch: () => {}
+        },
+        {
+            key: "发送到WS Fuzzer",
+            label: "发送到WS Fuzzer",
+            number: 10,
+            webSocket: true,
+            default: false,
+            children: [
+                {
+                    key: "sendAndJumpToWS",
+                    label: "发送并跳转",
+                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                },
+                {
+                    key: "sendToWS",
+                    label: "仅发送",
+                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                }
+            ],
+            onClickBatch: () => {}
         },
         {
             key: "数据包扫描",
             label: "数据包扫描",
             number: 10,
+            default: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
@@ -2346,6 +2412,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "复制 URL",
             label: "复制 URL",
             number: 30,
+            webSocket: true,
+            default: true,
             onClickSingle: (v) => callCopyToClipboard(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length === 0) {
@@ -2364,6 +2432,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "下载 Response Body",
             label: "下载 Response Body",
+            default: true,
             onClickSingle: (v) => {
                 ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
@@ -2373,6 +2442,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "浏览器中打开",
             label: "浏览器中打开",
+            default: true,
             onClickSingle: (v) => {
                 showResponseViaHTTPFlowID(v)
             }
@@ -2380,6 +2450,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "复制为 CSRF Poc",
             label: "复制为 CSRF Poc",
+            default: true,
             onClickSingle: (v) => {
                 const flow = v as HTTPFlow
                 if (!flow) return
@@ -2391,6 +2462,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "复制为 Yak PoC 模版",
             label: "复制为 Yak PoC 模版",
+            default: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2406,6 +2478,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "标注颜色",
             label: "标注颜色",
+            default: true,
             number: 20,
             onClickSingle: () => {},
             onClickBatch: () => {},
@@ -2421,6 +2494,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "移除颜色",
             label: "移除颜色",
+            default: true,
             number: 20,
             onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
             onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
@@ -2428,6 +2502,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "发送到对比器",
             label: "发送到对比器",
+            default: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2445,6 +2520,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "屏蔽",
             label: "屏蔽",
+            webSocket: true,
+            default: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2464,6 +2541,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "删除",
             label: "删除",
+            webSocket: true,
+            default: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             all: true,
@@ -2508,6 +2587,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "分享数据包",
             label: "分享数据包",
             number: 30,
+            default: true,
             onClickSingle: (v) => onShareData([v.Id], 50),
             onClickBatch: (list, n) => {
                 const ids: string[] = list.map((ele) => ele.Id)
@@ -2517,10 +2597,37 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "导出数据",
             label: "导出数据",
+            default: true,
             onClickSingle: (v) => onExcelExport([v]),
             onClickBatch: (list, n) => onExcelExport(list)
         }
     ]
+    /** 菜单自定义快捷键渲染处理事件 */
+    const contextMenuKeybindingHandle = useMemoizedFn((data) => {
+        const menus: any = []
+        for (let item of data) {
+            /** 处理带快捷键的菜单项 */
+            const info = item
+            if (info.children && info.children.length > 0) {
+                info.children = contextMenuKeybindingHandle(info.children)
+            } else {
+                if (info.keybindings && info.keybindings.length > 0) {
+                    const keysContent = convertKeyboard(systemRef.current, info.keybindings)
+
+                    info.label = keysContent ? (
+                        <div className={style["editor-context-menu-keybind-wrapper"]}>
+                            <div className={style["content-style"]}>{info.label}</div>
+                            <div className={classNames(style["keybind-style"], "keys-style")}>{keysContent}</div>
+                        </div>
+                    ) : (
+                        info.label
+                    )
+                }
+            }
+            menus.push(info)
+        }
+        return menus
+    })
     const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
         if (rowData) {
             setSelected(rowData)
@@ -2528,13 +2635,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         showByRightContext(
             {
                 width: 180,
-                data: menuData.map((ele) => {
-                    return {
-                        label: ele.label,
-                        key: ele.key,
-                        children: ele.children || []
-                    }
-                }),
+                data: contextMenuKeybindingHandle(menuData)
+                    .filter((item) => (rowData.IsWebsocket ? item.webSocket : item.default))
+                    .map((ele) => {
+                        return {
+                            label: ele.label,
+                            key: ele.key,
+                            children: ele.children || []
+                        }
+                    }),
                 // openKeys:['复制为 Yak PoC 模版',],
                 onClick: ({key, keyPath}) => {
                     if (keyPath.includes("数据包扫描")) {
@@ -2585,6 +2694,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 content: new Buffer(rowData.Request).toString("utf8"),
                                 language: "http"
                             })
+                            break
+                        case "sendAndJumpToWebFuzzer":
+                            onSendToTab(rowData)
+                            break
+                        case "sendToWebFuzzer":
+                            onSendToTab(rowData, false)
+                            break
+                        case "sendAndJumpToWS":
+                            newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request)
+                            break
+                        case "sendToWS":
+                            newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
                             break
                         default:
                             const currentItem = menuData.find((f) => f.key === key)
@@ -3021,6 +3142,75 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                                         IncludeInUrl: hosts
                                                                                     }
                                                                                 })
+                                                                                break
+                                                                            case "sendAndJumpToWebFuzzer":
+                                                                                const currentItemJumpToFuzzer =
+                                                                                    menuData.find(
+                                                                                        (f) =>
+                                                                                            f.onClickBatch &&
+                                                                                            f.key ===
+                                                                                                "发送到 Web Fuzzer"
+                                                                                    )
+                                                                                if (!currentItemJumpToFuzzer) return
+                                                                                onBatch(
+                                                                                    onSendToTab,
+                                                                                    currentItemJumpToFuzzer?.number ||
+                                                                                        0,
+                                                                                    selectedRowKeys.length === total
+                                                                                )
+
+                                                                                break
+                                                                            case "sendToWebFuzzer":
+                                                                                const currentItemToFuzzer =
+                                                                                    menuData.find(
+                                                                                        (f) =>
+                                                                                            f.onClickBatch &&
+                                                                                            f.key ===
+                                                                                                "发送到 Web Fuzzer"
+                                                                                    )
+                                                                                if (!currentItemToFuzzer) return
+                                                                                onBatch(
+                                                                                    (el) => onSendToTab(el, false),
+                                                                                    currentItemToFuzzer?.number || 0,
+                                                                                    selectedRowKeys.length === total
+                                                                                )
+                                                                                break
+                                                                            case "sendAndJumpToWS":
+                                                                                const currentItemJumpToWS =
+                                                                                    menuData.find(
+                                                                                        (f) =>
+                                                                                            f.onClickBatch &&
+                                                                                            f.key === "发送到WS Fuzzer"
+                                                                                    )
+                                                                                if (!currentItemJumpToWS) return
+                                                                                onBatch(
+                                                                                    (el) =>
+                                                                                        newWebsocketFuzzerTab(
+                                                                                            el.IsHTTPS,
+                                                                                            el.Request
+                                                                                        ),
+                                                                                    currentItemJumpToWS?.number || 0,
+                                                                                    selectedRowKeys.length === total
+                                                                                )
+
+                                                                                break
+                                                                            case "sendToWS":
+                                                                                const currentItemToWS = menuData.find(
+                                                                                    (f) =>
+                                                                                        f.onClickBatch &&
+                                                                                        f.key === "发送到WS Fuzzer"
+                                                                                )
+                                                                                if (!currentItemToWS) return
+                                                                                onBatch(
+                                                                                    (el) =>
+                                                                                        newWebsocketFuzzerTab(
+                                                                                            el.IsHTTPS,
+                                                                                            el.Request,
+                                                                                            false
+                                                                                        ),
+                                                                                    currentItemToWS?.number || 0,
+                                                                                    selectedRowKeys.length === total
+                                                                                )
                                                                                 break
                                                                             default:
                                                                                 const currentItem = menuData.find(
@@ -3543,16 +3733,21 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 })
 
 // 发送web fuzzer const
-export const onSendToTab = (rowData) => {
-    ipcRenderer.invoke("send-to-tab", {
-        type: "fuzzer",
-        data: {
-            isHttps: rowData.IsHTTPS,
-            request: rowData.InvalidForUTF8Request
-                ? rowData.SafeHTTPRequest!
-                : new Buffer(rowData.Request).toString("utf8")
-        }
-    })
+export const onSendToTab = (rowData, openFlag?: boolean) => {
+    ipcRenderer
+        .invoke("send-to-tab", {
+            type: "fuzzer",
+            data: {
+                openFlag,
+                isHttps: rowData.IsHTTPS,
+                request: rowData.InvalidForUTF8Request
+                    ? rowData.SafeHTTPRequest!
+                    : new Buffer(rowData.Request).toString("utf8")
+            }
+        })
+        .then(() => {
+            openFlag === false && info("发送成功")
+        })
 }
 
 // 标注颜色

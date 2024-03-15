@@ -7,7 +7,6 @@ import {
     Descriptions,
     Empty,
     PageHeader,
-    Radio,
     Row,
     Space,
     Spin,
@@ -17,21 +16,20 @@ import {
     Typography
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
-import {CompateData, HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
+import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
 import {HTTPHistorySourcePageType, HTTPPacketFuzzable} from "./HTTPHistory"
-import {AutoSpin} from "./AutoSpin"
 import {Buffer} from "buffer"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer"
+import {HTTPFlowForWebsocketViewer, WebSocketEditor} from "@/pages/websocket/HTTPFlowForWebsocketViewer"
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
-import {useMemoizedFn, useUpdateEffect, useDebounceEffect} from "ahooks"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
@@ -167,7 +165,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         return () => {}
     }, [props.id])
 
-    const onCloseDetails = useMemoizedFn(() => {
+    const onCloseDetails = useMemoizedFn((e, res) => {
+        const { type, data } = res
+        if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
         if (props.onClose) props.onClose()
     })
 
@@ -377,39 +377,53 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Col span={12}>
                                 <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <NewHTTPPacketEditor
-                                            readOnly={true}
-                                            hideSearch={true}
-                                            noHex={true}
-                                            noHeader={true}
-                                            originValue={new Buffer(flow.Request)}
-                                            defaultHttps={flow?.IsHTTPS}
-                                            // actions={[...actionFuzzer]}
-                                            extraEditorProps={{
-                                                isShowSelectRangeMenu: true
-                                            }}
-                                            contextMenu={{...copyUrlMenuItem, ...sendCodeCompareMenuItem("request")}}
-                                        />
+                                        {flow.IsWebsocket ? (
+                                            <WebSocketEditor flow={flow} value={Uint8ArrayToString(flow.Request)} />
+                                        ) : (
+                                            <NewHTTPPacketEditor
+                                                readOnly={true}
+                                                hideSearch={true}
+                                                noHex={true}
+                                                noHeader={true}
+                                                originValue={new Buffer(flow.Request)}
+                                                defaultHttps={flow?.IsHTTPS}
+                                                // actions={[...actionFuzzer]}
+                                                extraEditorProps={{
+                                                    isShowSelectRangeMenu: true
+                                                }}
+                                                contextMenu={{
+                                                    ...copyUrlMenuItem,
+                                                    ...sendCodeCompareMenuItem("request")
+                                                }}
+                                            />
+                                        )}
                                     </div>
                                 </Card>
                             </Col>
                             <Col span={12}>
                                 <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <NewHTTPPacketEditor
-                                            readOnly={true}
-                                            hideSearch={true}
-                                            noHex={true}
-                                            noHeader={true}
-                                            originValue={new Buffer(flow.Response)}
-                                            defaultHttps={flow?.IsHTTPS}
-                                            // actions={[...actionFuzzer]}
-                                            webFuzzerValue={new Buffer(flow.Request)}
-                                            extraEditorProps={{
-                                                isShowSelectRangeMenu: true
-                                            }}
-                                            contextMenu={{...copyUrlMenuItem, ...sendCodeCompareMenuItem("response")}}
-                                        />
+                                        {flow.IsWebsocket ? (
+                                            <WebSocketEditor flow={flow} value={Uint8ArrayToString(flow.Response)} />
+                                        ) : (
+                                            <NewHTTPPacketEditor
+                                                readOnly={true}
+                                                hideSearch={true}
+                                                noHex={true}
+                                                noHeader={true}
+                                                originValue={new Buffer(flow.Response)}
+                                                defaultHttps={flow?.IsHTTPS}
+                                                // actions={[...actionFuzzer]}
+                                                webFuzzerValue={new Buffer(flow.Request)}
+                                                extraEditorProps={{
+                                                    isShowSelectRangeMenu: true
+                                                }}
+                                                contextMenu={{
+                                                    ...copyUrlMenuItem,
+                                                    ...sendCodeCompareMenuItem("response")
+                                                }}
+                                            />
+                                        )}
                                     </div>
                                 </Card>
                             </Col>
@@ -1008,9 +1022,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 
     // 获取request内容
     const fetchSsafeHTTPRequest = useMemoizedFn(() => {
-        return (flow && (flow.InvalidForUTF8Request? new Buffer(flow.SafeHTTPRequest!):flow.Request)) || new Uint8Array()
+        return (
+            (flow && (flow.InvalidForUTF8Request ? new Buffer(flow.SafeHTTPRequest!) : flow.Request)) ||
+            new Uint8Array()
+        )
     })
-    
+
     useEffect(() => {
         // 复原数据
         setResType("current")
@@ -1112,7 +1129,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     return <Empty description={"选择想要查看的 HTTP 记录请求"} />
                 }
                 if (flow?.IsWebsocket) {
-                    return <HTTPFlowForWebsocketViewer flow={flow} />
+                    return <HTTPFlowForWebsocketViewer flow={flow} historyId={historyId} pageType={pageType} />
                 }
                 return (
                     <NewHTTPPacketEditor

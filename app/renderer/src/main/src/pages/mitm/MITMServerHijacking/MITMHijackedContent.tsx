@@ -24,6 +24,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import { Uint8ArrayToString } from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -188,7 +189,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 setForResponse(true)
                 setStatus("hijacked")
                 setCurrentPacketInfo({
-                    currentPacket: msg.response,
+                    currentPacket: !!msg?.isWebsocket ? msg.Payload : msg.response,
                     currentPacketId: msg.responseId,
                     isHttp: msg.isHttps,
                     requestPacket: msg.request,
@@ -209,7 +210,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     // setCurrentPacket(msg.request)
                     // setCurrentPacketId(msg.id)
                     setCurrentPacketInfo({
-                        currentPacket: msg.request,
+                        currentPacket: !!msg?.isWebsocket ? msg.Payload : msg.request,
                         currentPacketId: msg.id,
                         isHttp: msg.isHttps,
                         requestPacket: msg.request,
@@ -280,15 +281,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         clearCurrentPacket()
         // setLoading(true);
         setStatus("hijacking")
-    })
-    const execFuzzer = useMemoizedFn((value: string) => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "fuzzer",
-            data: {
-                isHttps: isHttp,
-                request: isResponse ? requestPacket : value
-            }
-        })
     })
     /**
      * @description 切换劫持类型
@@ -385,6 +377,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         )}
                         <div className={styles["mitm-hijacked-manual-content-editor"]}>
                             <MITMManualEditor
+                                isHttp={isHttp}
+                                currentIsWebsocket={currentIsWebsocket}
                                 currentPacket={currentPacket}
                                 setModifiedPacket={setModifiedPacket}
                                 forResponse={forResponse}
@@ -393,7 +387,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 autoForward={autoForward}
                                 forward={forward}
                                 hijacking={hijacking}
-                                execFuzzer={execFuzzer}
                                 status={status}
                                 onSetHijackResponseType={onSetHijackResponseType}
                                 currentIsForResponse={currentIsForResponse}

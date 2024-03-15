@@ -125,9 +125,9 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         return GetPluginLanguage(props.type || "http")
     }, [props.type])
 
-    useMemo(()=>{
-        if (editor ){
-            setEditorContext(editor, "plugin", props.type ||"")
+    useMemo(() => {
+        if (editor) {
+            setEditorContext(editor, "plugin", props.type || "")
         }
     }, [props.type, editor])
 
@@ -169,8 +169,6 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             }
             let current: string[] = []
 
-            
-            
             const applyContentLength = () => {
                 const text = model.getValue()
                 const match = /\nContent-Length:\s*?\d+/.exec(text)
@@ -190,20 +188,31 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             }
             const applyUnicodeDecode = () => {
                 const text = model.getValue()
-                    let match 
-                    const regex = /(\\u[\dabcdef]{4})+/ig
-    
-                    while ((match = regex.exec(text)) !== null) {
-                        const start = model.getPositionAt(match.index)
-                        const end = model.getPositionAt(match.index + match[0].length)
-                        const decoded = match[0].split("\\u").filter(Boolean).map(hex => String.fromCharCode(parseInt(hex, 16))).join("")
-                        current = model.deltaDecorations(current, [{
+                let match
+                const regex = /(\\u[\dabcdef]{4})+/gi
+
+                while ((match = regex.exec(text)) !== null) {
+                    const start = model.getPositionAt(match.index)
+                    const end = model.getPositionAt(match.index + match[0].length)
+                    const decoded = match[0]
+                        .split("\\u")
+                        .filter(Boolean)
+                        .map((hex) => String.fromCharCode(parseInt(hex, 16)))
+                        .join("")
+                    current = model.deltaDecorations(current, [
+                        {
                             id: "decode" + match.index,
                             ownerId: 0,
                             range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                            options: {className: "unicode-decode", hoverMessage: {value: decoded}, afterContentClassName: "unicode-decode", after: {content: decoded, inlineClassName: "unicode-decode-after"}}
-                        } as IModelDecoration])
-                    }
+                            options: {
+                                className: "unicode-decode",
+                                hoverMessage: {value: decoded},
+                                afterContentClassName: "unicode-decode",
+                                after: {content: decoded, inlineClassName: "unicode-decode-after"}
+                            }
+                        } as IModelDecoration
+                    ])
+                }
             }
             const applyKeywordDecoration = () => {
                 const text = model.getValue()
@@ -235,7 +244,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             applyKeywordDecoration()
         }
 
-        if (language==="yak"){
+        if (language === "yak") {
             editor.addAction({
                 contextMenuGroupId: "yaklang",
                 id: YAK_FORMATTER_COMMAND_ID,
@@ -437,7 +446,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                         enabled: true,
                                         independentColorPoolPerBracketType: true
                                     },
-                                    fixedOverflowWidgets:true
+                                    fixedOverflowWidgets: true
                                 }}
                             />
                         </div>
@@ -717,39 +726,37 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                         <Space>
                             {!props.noTitle &&
                                 (!!props.title ? props.title : <span>{isResponse ? "Response" : "Request"}</span>)}
-                            {!props.simpleMode ? (
-                                !props.noHex && (
-                                    <SelectOne
-                                        label={" "}
-                                        colon={false}
-                                        value={mode}
-                                        setValue={(e) => {
-                                            if (mode === "text" && e === "hex") {
-                                                console.info("切换到 HEX 模式")
-                                                setHexValue(StringToUint8Array(strValue, getEncoding()))
-                                            }
+                            {!props.simpleMode
+                                ? !props.noHex && (
+                                      <SelectOne
+                                          label={" "}
+                                          colon={false}
+                                          value={mode}
+                                          setValue={(e) => {
+                                              if (mode === "text" && e === "hex") {
+                                                  console.info("切换到 HEX 模式")
+                                                  setHexValue(StringToUint8Array(strValue, getEncoding()))
+                                              }
 
-                                            if (mode === "hex" && e === "text") {
-                                                console.info("切换到 TEXT 模式")
-                                                setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
-                                            }
-                                            setMode(e)
-                                        }}
-                                        data={[
-                                            {text: "TEXT", value: "text"},
-                                            {text: "HEX", value: "hex"}
-                                        ]}
-                                        size={"small"}
-                                        formItemStyle={{marginBottom: 0}}
-                                    />
-                                )
-                            ) : (
-                                !props.noModeTag && (
-                                    <Form.Item style={{marginBottom: 0}}>
-                                        <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
-                                    </Form.Item>
-                                )
-                            )}
+                                              if (mode === "hex" && e === "text") {
+                                                  console.info("切换到 TEXT 模式")
+                                                  setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
+                                              }
+                                              setMode(e)
+                                          }}
+                                          data={[
+                                              {text: "TEXT", value: "text"},
+                                              {text: "HEX", value: "hex"}
+                                          ]}
+                                          size={"small"}
+                                          formItemStyle={{marginBottom: 0}}
+                                      />
+                                  )
+                                : !props.noModeTag && (
+                                      <Form.Item style={{marginBottom: 0}}>
+                                          <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                                      </Form.Item>
+                                  )}
                             {mode === "text" && !props.hideSearch && !props.simpleMode && (
                                 <Input.Search
                                     size={"small"}
@@ -1123,6 +1130,10 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     defaultSearchKeyword?: string
 
+    isWebSocket?: boolean
+    webSocketValue?: Uint8Array
+    webSocketToServer?: Uint8Array
+
     /**@name 外部控制换行状态 */
     noWordWrapState?: boolean
     /**@name 外部控制字体大小 */
@@ -1188,7 +1199,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [typeLoading, setTypeLoading] = useState<boolean>(false)
 
     // 对比loading
-    const [compareLoading,setCompareLoading] = useState<boolean>(false)
+    const [compareLoading, setCompareLoading] = useState<boolean>(false)
 
     // 操作系统类型
     const [system, setSystem] = useState<string>()
@@ -1276,31 +1287,31 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const openCompareModal = useMemoizedFn((dataCompare) => {
         setCompareLoading(true)
         setTimeout(() => {
-        const m = showYakitModal({
-            title: null,
-            content: (
-                <DataCompareModal
-                    onClose={() => m.destroy()}
-                    rightTitle={dataCompare.rightTitle}
-                    leftTitle={dataCompare.leftTitle}
-                    leftCode={
-                        dataCompare.leftCode
-                            ? Uint8ArrayToString(dataCompare.leftCode)
-                            : Uint8ArrayToString(showValue)
-                    }
-                    rightCode={Uint8ArrayToString(dataCompare.rightCode)}
-                    loadCallBack={()=>setCompareLoading(false)} 
-                />
-            ),
-            onCancel: () => {
-                m.destroy()
-            },
-            width: 1200,
-            footer: null,
-            closable: false,
-            hiddenHeader: true
-        })
-        }, 500);
+            const m = showYakitModal({
+                title: null,
+                content: (
+                    <DataCompareModal
+                        onClose={() => m.destroy()}
+                        rightTitle={dataCompare.rightTitle}
+                        leftTitle={dataCompare.leftTitle}
+                        leftCode={
+                            dataCompare.leftCode
+                                ? Uint8ArrayToString(dataCompare.leftCode)
+                                : Uint8ArrayToString(showValue)
+                        }
+                        rightCode={Uint8ArrayToString(dataCompare.rightCode)}
+                        loadCallBack={() => setCompareLoading(false)}
+                    />
+                ),
+                onCancel: () => {
+                    m.destroy()
+                },
+                width: 1200,
+                footer: null,
+                closable: false,
+                hiddenHeader: true
+            })
+        }, 500)
     })
 
     useEffect(() => {
@@ -1392,7 +1403,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         setType(undefined)
         setRenderHTML(undefined)
         setShowValue(originValue)
-        if (originValue.length>0) {
+        if (originValue.length > 0) {
             // 默认展示 originValue
             const encoder = new TextEncoder()
             const bytes = encoder.encode(Uint8ArrayToString(originValue))
@@ -1439,8 +1450,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     }
                 ])
             }
-        }
-        else{
+        } else {
             setTypeOptions([])
         }
     }, [originValue])
@@ -1448,24 +1458,20 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const beautifyCode = async () => {
         setTypeLoading(true)
         setRenderHTML(undefined)
-        if(originValue.length>0){
+        if (originValue.length > 0) {
             let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
             setShowValue(beautifyValue as Uint8Array)
             setTypeLoading(false)
-        }
-        else{
+        } else {
             setShowValue(new Uint8Array())
             setTypeLoading(false)
         }
-        
     }
 
     const renderCode = async () => {
         setTypeLoading(true)
         let renderValue = await prettifyPacketRender(originValue)
-        setRenderHTML(
-            <iframe srcDoc={renderValue as string} style={{ width: '100%', height: '100%', border: 'none' }}/>
-        )
+        setRenderHTML(<iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />)
         setTypeLoading(false)
     }
 
@@ -1501,39 +1507,37 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 ) : (
                                     <span style={{fontSize: 12}}>{isResponse ? "Response" : "Request"}</span>
                                 ))}
-                            {!props.simpleMode ? (
-                                !props.noHex && (
-                                    <SelectOne
-                                        label={" "}
-                                        colon={false}
-                                        value={mode}
-                                        setValue={(e) => {
-                                            if (mode === "text" && e === "hex") {
-                                                console.info("切换到 HEX 模式")
-                                                setHexValue(StringToUint8Array(strValue, getEncoding()))
-                                            }
+                            {!props.simpleMode
+                                ? !props.noHex && (
+                                      <SelectOne
+                                          label={" "}
+                                          colon={false}
+                                          value={mode}
+                                          setValue={(e) => {
+                                              if (mode === "text" && e === "hex") {
+                                                  console.info("切换到 HEX 模式")
+                                                  setHexValue(StringToUint8Array(strValue, getEncoding()))
+                                              }
 
-                                            if (mode === "hex" && e === "text") {
-                                                console.info("切换到 TEXT 模式")
-                                                setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
-                                            }
-                                            setMode(e)
-                                        }}
-                                        data={[
-                                            {text: "TEXT", value: "text"},
-                                            {text: "HEX", value: "hex"}
-                                        ]}
-                                        size={"small"}
-                                        formItemStyle={{marginBottom: 0}}
-                                    />
-                                )
-                            ) : (
-                                !props.noModeTag && (
-                                    <Form.Item style={{marginBottom: 0}}>
-                                        <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
-                                    </Form.Item>
-                                )
-                            )}
+                                              if (mode === "hex" && e === "text") {
+                                                  console.info("切换到 TEXT 模式")
+                                                  setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
+                                              }
+                                              setMode(e)
+                                          }}
+                                          data={[
+                                              {text: "TEXT", value: "text"},
+                                              {text: "HEX", value: "hex"}
+                                          ]}
+                                          size={"small"}
+                                          formItemStyle={{marginBottom: 0}}
+                                      />
+                                  )
+                                : !props.noModeTag && (
+                                      <Form.Item style={{marginBottom: 0}}>
+                                          <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                                      </Form.Item>
+                                  )}
                             {mode === "text" && !props.hideSearch && !props.simpleMode && (
                                 <Input.Search
                                     size={"small"}
@@ -1747,6 +1751,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             }}
                             editorOperationRecord={editorOperationRecord}
                             defaultHttps={props.defaultHttps}
+                            isWebSocket={props.isWebSocket}
+                            webSocketValue={
+                                props.webSocketValue && new Buffer(props.webSocketValue).toString(getEncoding())
+                            }
+                            webSocketToServer={
+                                props.webSocketToServer && new Buffer(props.webSocketToServer).toString(getEncoding())
+                            }
                             webFuzzerValue={
                                 props.webFuzzerValue && new Buffer(props.webFuzzerValue).toString(getEncoding())
                             }

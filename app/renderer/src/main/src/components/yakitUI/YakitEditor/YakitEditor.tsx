@@ -730,6 +730,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useKeyPress(
         (e) => true,
         (e) => {
+            e.stopPropagation()
             const filterKey = [16, 17, 18, 93]
             if (filterKey.includes(e.keyCode)) return
 

@@ -439,14 +439,14 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
     return fuzzerRequests
 }
 
-export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
+export const newWebFuzzerTab = (isHttps: boolean, request: string, openFlag?: boolean) => {
     return ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
-            data: {isHttps: isHttps, request: request}
+            data: {isHttps: isHttps, request: request, openFlag}
         })
         .then(() => {
-            info("新开 WebFuzzer Tab")
+            openFlag === false && info("发送成功")
         })
 }
 

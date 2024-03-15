@@ -397,6 +397,8 @@ export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
+    // 是否跳转到新开页面 默认跳转
+    openFlag?: boolean
     // Route.HTTPFuzzer 参数
     isHttps?: boolean
     isGmTLS?: boolean
@@ -433,6 +435,7 @@ export interface ComponentParams {
     // websocket fuzzer 相关
     wsTls?: boolean
     wsRequest?: Uint8Array
+    wsToServer?: Uint8Array
 
     // yakit 插件日志详情参数
     YakScriptJournalDetailsId?: number
@@ -519,7 +522,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 </Suspense>
             )
         case YakitRoute.WebsocketFuzzer:
-            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
+            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} toServer={params?.wsToServer}/>
         case YakitRoute.Codec:
             return <NewCodec id={params?.id || ""}/>
         case YakitRoute.DataCompare:

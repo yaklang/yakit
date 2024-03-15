@@ -63,6 +63,7 @@ export interface PageCache {
     multipleLength?: number
     hideAdd?: boolean
     pageParams?: ComponentParams
+    openFlag?: boolean
 }
 
 // 页面的唯一标识属性

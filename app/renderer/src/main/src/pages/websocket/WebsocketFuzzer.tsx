@@ -8,6 +8,7 @@ import {info} from "@/utils/notification";
 export interface WebsocketFuzzerProp {
     tls?: boolean
     request?: Uint8Array
+    toServer?: Uint8Array
 }
 
 export const WebsocketFuzzer: React.FC<WebsocketFuzzerProp> = (props) => {
@@ -16,7 +17,7 @@ export const WebsocketFuzzer: React.FC<WebsocketFuzzerProp> = (props) => {
     return <div style={{height: "100%", width: "100%"}}>
         <ResizeBox
             firstNode={() => {
-                return <WebsocketClientOperator tls={props.tls} request={props.request} onToken={setToken}/>
+                return <WebsocketClientOperator tls={props.tls} request={props.request} onToken={setToken} toServer={props.toServer}/>
             }}
             firstRatio={'500px'}
             firstMinSize={'500px'}
@@ -29,13 +30,13 @@ export const WebsocketFuzzer: React.FC<WebsocketFuzzerProp> = (props) => {
 
 const {ipcRenderer} = window.require("electron");
 
-export const newWebsocketFuzzerTab = (isHttps: boolean, request: Uint8Array) => {
+export const newWebsocketFuzzerTab = (isHttps: boolean, request: Uint8Array, openFlag?: boolean, toServer?: Uint8Array) => {
     return ipcRenderer
         .invoke("send-to-tab", {
             type: "websocket-fuzzer",
-            data: {tls: isHttps, request: request}
+            data: {tls: isHttps, request: request, openFlag, toServer}
         })
         .then(() => {
-            info("新开 Websocket Fuzzer Tab")
+            openFlag === false && info("发送成功")
         })
 }
