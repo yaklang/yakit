@@ -9,6 +9,7 @@ import {MainOperatorEventProps} from "./events/main"
 import {PayLoadEventProps} from "./events/payload";
 import {ProjectMagEventProps} from "./events/projectMag";
 import {WebShellEventProps} from "./events/webShell";
+import {RefreshDataEventProps} from "./events/refreshData";
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -44,7 +45,8 @@ type Events = [
     MainOperatorEventProps,
     PayLoadEventProps,
     ProjectMagEventProps,
-    WebShellEventProps
+    WebShellEventProps,
+    RefreshDataEventProps
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

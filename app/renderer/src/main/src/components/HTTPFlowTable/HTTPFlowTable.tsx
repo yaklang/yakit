@@ -15,6 +15,7 @@ import {
     useDebounceFn,
     useGetState,
     useMemoizedFn,
+    useThrottleEffect,
     useUpdateEffect,
     useVirtualList
 } from "ahooks"
@@ -75,6 +76,7 @@ import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
+import { serverPushStatus } from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1132,6 +1134,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
+                        serverPushStatus&&setIsLoop(false)
                         return
                     }
 
@@ -1148,6 +1151,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 } else if (type === "bottom") {
                     if (newData.length <= 0) {
                         // 没有数据
+                        serverPushStatus&&setIsLoop(false)
                         return
                     }
                     const arr = [...data, ...newData]
@@ -1161,6 +1165,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 } else if (type === "offset") {
                     if (resData.length <= 0) {
                         // 没有数据
+                        serverPushStatus&&setIsLoop(false)
                         return
                     }
                     if (["desc", "none"].includes(query.Pagination.Order)) {
@@ -1170,6 +1175,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 } else {
                     // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
+                    if (resData.length <= 0) {
+                        // 没有数据
+                        serverPushStatus&&setIsLoop(false)
+                    }
                     setSelectedRowKeys([])
                     setSelectedRows([])
                     setIsRefresh(!isRefresh)
@@ -1202,6 +1211,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const getAddDataByGrpc = useMemoizedFn((query) => {
+        if(!isLoop) return
+        const clientHeight = tableRef.current?.containerRef?.clientHeight
+        // 解决页面未显示时 此接口轮询导致接口锁死
+        if(clientHeight === 0) return
         const copyQuery = structuredClone(query)
         copyQuery.Pagination = {
             Page: 1,
@@ -1209,7 +1222,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Order: "desc",
             OrderBy: "Id"
         }
-
         ipcRenderer.invoke("QueryHTTPFlows", copyQuery).then((rsp: YakQueryHTTPFlowResponse) => {
             const resData = rsp?.Data || []
             if (resData.length) {
@@ -1330,6 +1342,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             setIsRefresh(!isRefresh)
             getDataByGrpc(query, "update")
+        } else{
+            setIsLoop(true)
         }
     })
 
@@ -1405,7 +1419,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const scrollUpdate = useMemoizedFn(() => {
         if (isGrpcRef.current) return
-
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         const scrollHeight = tableRef.current?.containerRef?.scrollHeight
@@ -1448,14 +1461,46 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         props.onSelected && props.onSelected(selected)
     }, [selected])
 
+    // 是否循环接口
+    const [isLoop,setIsLoop] = useState<boolean>(!serverPushStatus)
+
+    const onRefreshQueryHTTPFlowsFun = useMemoizedFn(()=>{
+        setIsLoop(true)
+    })
+    useEffect(()=>{
+        emiter.on("onRefreshQueryHTTPFlows", onRefreshQueryHTTPFlowsFun)
+        return () => {
+            emiter.off("onRefreshQueryHTTPFlows", onRefreshQueryHTTPFlowsFun)
+        }
+    },[])
+
+    useEffect(()=>{
+        let sTop,cHeight,sHeight
+        let id = setInterval(()=>{
+            const scrollTop = tableRef.current?.containerRef?.scrollTop
+            const clientHeight = tableRef.current?.containerRef?.clientHeight
+            const scrollHeight = tableRef.current?.containerRef?.scrollHeight
+            if(sTop!==scrollTop||cHeight!==clientHeight||sHeight!==scrollHeight){
+                setIsLoop(true)
+            }
+            sTop = scrollTop
+            cHeight = clientHeight
+            sHeight = scrollHeight
+        }, 1000)
+        return () => clearInterval(id)
+    },[])
+
     // 设置是否自动刷新
     useEffect(() => {
+        let id
         if (inViewport) {
             scrollUpdate()
-            let id = setInterval(scrollUpdate, 1000)
-            return () => clearInterval(id)
+            if(isLoop){
+                id = setInterval(scrollUpdate, 1000)
+            }
         }
-    }, [inViewport])
+        return () => clearInterval(id)
+    }, [inViewport,isLoop,scrollUpdate])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
