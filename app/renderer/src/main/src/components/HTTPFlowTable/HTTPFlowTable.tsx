@@ -76,7 +76,6 @@ import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
-import { randomString } from "@/utils/randomUtil"
 import { serverPushStatus } from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
