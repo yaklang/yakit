@@ -184,7 +184,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         const input = value["Input"]
 
         let executeParams: DebugPluginRequest = {
-            Code: plugin.Content,
+            Code: "", 
             PluginType: plugin.Type,
             Input: input,
             HTTPRequestTemplate: {
@@ -197,6 +197,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             },
             ExecParams: yakExecutorParams,
             LinkPluginConfig: linkPluginConfig || cloneDeep(defaultLinkPluginConfig),
+            PluginName: plugin.ScriptName, 
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")

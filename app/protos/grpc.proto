@@ -1190,6 +1190,8 @@ message DebugPluginRequest {
   HTTPRequestBuilderParams HTTPRequestTemplate = 4;
   repeated KVPair ExecParams = 5;
   HybridScanPluginConfig LinkPluginConfig = 6;
+  // plugin name, if not empty, will use code
+  string PluginName  = 7;
 }
 
 message HTTPRequestBuilderResult {
