@@ -53,6 +53,7 @@ interface MITMPluginHijackContentProps {
     searchKeyword: string
     setTags: (s: string[]) => void
     setSearchKeyword: (s: string) => void
+    onSetOpenTabsFlag: (s: boolean) => void
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
@@ -90,9 +91,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         tags,
         searchKeyword,
         setTags,
-        setSearchKeyword
+        setSearchKeyword,
+        onSetOpenTabsFlag
     } = props
-    
+
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
     const [mitmTabs, setMitmTabs] = useState<Array<TabsItem>>([
         {
@@ -497,6 +499,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setMitmTabs(copyMitmTabs)
         setCurTabKey(item.key)
     }
+    useEffect(() => {
+        onSetOpenTabsFlag(mitmTabs.some((item) => item.contShow))
+    }, [mitmTabs])
 
     return (
         <div className={styles["mitm-plugin-hijack-content"]}>

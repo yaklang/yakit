@@ -428,7 +428,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     }, [alertMsg])
 
     return (
-        <div className={styles["mitm-hijacked-content"]} style={{paddingLeft: isFullScreen ? 13 : 0}}>
+        <div className={styles["mitm-hijacked-content"]} style={{paddingLeft: 13}}>
             <ReactResizeDetector
                 onResize={(w, h) => {
                     if (!w) {
