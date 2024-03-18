@@ -192,7 +192,9 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
         const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
             // 全选情况时的取消勾选
             if (allCheck) {
-                setSelectList([])
+                setSelectList(
+                    response.Data.filter((item) => item.ScriptName !== data.ScriptName).map((item) => item.ScriptName)
+                )
                 setAllCheck(false)
                 return
             }
