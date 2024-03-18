@@ -3309,6 +3309,9 @@ message PortScanRequest {
 
   // 联动插件的配置
   HybridScanPluginConfig LinkPluginConfig = 28;
+
+  // 爬虫是否启用 JS 解析
+  bool BasicCrawlerEnableJSParser = 29;
 }
 
 message DeletePortsRequest {
