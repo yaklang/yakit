@@ -478,11 +478,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         getRemoteValue(RemoteGV.MitmHijackedLeftTabs).then((setting: string) => {
             if (setting) {
                 const tabs = JSON.parse(setting)
-                setMitmTabs(tabs)
-                const findItem = tabs.find((item: TabsItem) => item.contShow)
-                if (findItem) {
-                    setCurTabKey(findItem.key)
-                }
+                setMitmTabs(tabs.mitmTabs)
+                setCurTabKey(tabs.curTabKey)
             }
         })
     }, [])
@@ -495,7 +492,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 i.contShow = false
             }
         })
-        setRemoteValue(RemoteGV.MitmHijackedLeftTabs, JSON.stringify(copyMitmTabs))
+        setRemoteValue(RemoteGV.MitmHijackedLeftTabs, JSON.stringify({ mitmTabs: copyMitmTabs, curTabKey: item.key }))
         setMitmTabs(copyMitmTabs)
         setCurTabKey(item.key)
     }
