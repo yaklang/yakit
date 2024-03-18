@@ -54,8 +54,8 @@ const NewPortScanExtraParamsDrawer = React.lazy(() => import("./newPortScanExtra
 
 const {ipcRenderer} = window.require("electron")
 
-/**端口扫描的默认查询的插件类型 */
-const pluginTypeFilterList = ["mitm", "port-scan", "nuclei"].map((ele) => ({
+/**端口扫描/批量执行的默认查询的插件类型 */
+export const pluginTypeFilterList = ["mitm", "port-scan", "nuclei"].map((ele) => ({
     label: pluginTypeToName[ele]?.name || "-",
     value: ele,
     count: 0

@@ -39,6 +39,7 @@ import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
+import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/newPortScan"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -193,6 +194,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             setSelectList={setSelectList}
             search={search}
             setSearch={setSearch}
+            defaultFilters={{
+                plugin_type: cloneDeep(pluginTypeFilterList)
+            }}
             pluginDetailsProps={{
                 title: "选择插件",
                 bodyClassName: styles["plugin-batch-executor-body"],
