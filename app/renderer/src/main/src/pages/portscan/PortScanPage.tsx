@@ -69,7 +69,10 @@ export interface PortScanParams {
 
     SynScanNetInterface?: string
     HostAliveConcurrent?: number
-    LinkPluginConfig?: HybridScanPluginConfig;
+    /**插件条件的配置 */
+    LinkPluginConfig?: HybridScanPluginConfig
+    /**爬虫是否启用 JS 解析 */
+    BasicCrawlerEnableJSParser?: boolean
 }
 
 export const ScanKind: { [key: string]: string } = {

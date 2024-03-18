@@ -252,6 +252,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     SynConcurrent: 1000,
     HostAliveConcurrent: 20,
     LinkPluginConfig: cloneDeep(defaultLinkPluginConfig),
+    BasicCrawlerEnableJSParser: false,
     /**@description 前端使用,扫描协议 */
     scanProtocol: "tcp"
 }

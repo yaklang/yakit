@@ -43,7 +43,8 @@ const defaultOtherSetting = {
 /**爬虫设置 */
 const defaultReptileSetting = {
     EnableBasicCrawler: defPortScanExecuteExtraFormValue.EnableBasicCrawler,
-    BasicCrawlerRequestMax: defPortScanExecuteExtraFormValue.BasicCrawlerRequestMax
+    BasicCrawlerRequestMax: defPortScanExecuteExtraFormValue.BasicCrawlerRequestMax,
+    BasicCrawlerEnableJSParser: defPortScanExecuteExtraFormValue.BasicCrawlerEnableJSParser
 }
 /**指纹扫描配置 */
 const defaultFingerprintSetting = {
@@ -123,6 +124,7 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
     const mode = Form.useWatch("Mode", form)
     const skippedHostAliveScan = Form.useWatch("SkippedHostAliveScan", form)
     const saveToDB = Form.useWatch("SaveToDB", form)
+    const enableBasicCrawler = Form.useWatch("EnableBasicCrawler", form)
 
     useEffect(() => {
         if (!visible) return
@@ -342,6 +344,15 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                             </Form.Item>
                         </div>
                     </Form.Item>
+                    {enableBasicCrawler && (
+                        <Form.Item
+                            label='是否开启 JSSSA 解析'
+                            name='BasicCrawlerEnableJSParser'
+                            valuePropName='checked'
+                        >
+                            <YakitSwitch />
+                        </Form.Item>
+                    )}
                 </YakitPanel>
             </>
         )
