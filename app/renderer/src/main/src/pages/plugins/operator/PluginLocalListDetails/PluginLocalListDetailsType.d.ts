@@ -31,6 +31,8 @@ export interface PluginLocalListDetailsProps {
     setSelectNum?: (s: number) => void
     showFilter?: boolean
     fixFilterList?: API.PluginsSearch[]
+    allCheck?: boolean
+    setAllCheck?: (b: boolean) => void
 }
 
 export interface PluginLocalListDetailsRefProps {}

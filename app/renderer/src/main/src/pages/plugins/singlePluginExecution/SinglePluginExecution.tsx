@@ -37,7 +37,7 @@ export const getLinkPluginConfig = (selectList, pluginListSearchInfo) => {
             selectList.length > 0
                 ? undefined
                 : {
-                      ...convertLocalPluginsRequestParams({filter:filters, search})
+                      ...convertLocalPluginsRequestParams({filter: filters, search})
                   }
     }
     return linkPluginConfig
@@ -54,6 +54,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     const [pluginLoading, setPluginLoading] = useState<boolean>(true)
     const [plugin, setPlugin] = useState<YakScript>()
     const [selectList, setSelectList] = useState<string[]>([])
+    const [allCheck, setAllCheck] = useState<boolean>(false)
 
     const pluginTypeRef = useRef<string>("")
 
@@ -97,10 +98,13 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     })
 
     /**插件UI联动相关参数 */
-    const linkPluginConfig: HybridScanPluginConfig = useCreation(() => {
+    const linkPluginConfig: HybridScanPluginConfig | undefined = useCreation(() => {
+        if (!allCheck && selectList.length === 0) {
+            return undefined
+        }
         const config = getLinkPluginConfig(selectList, {filters, search})
         return config
-    }, [selectList, search, filters])
+    }, [selectList, search, filters, allCheck])
     const hidden = useCreation(() => {
         if (!plugin) return true
         if (plugin.Type !== "yak") return true
@@ -126,6 +130,8 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 setSearch={setSearch}
                 filters={filters}
                 setFilters={setFilters}
+                allCheck={allCheck}
+                setAllCheck={setAllCheck}
             >
                 <PluginDetailsTab
                     executorShow={!pluginLoading}

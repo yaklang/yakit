@@ -56,8 +56,13 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
             trigger: "setSelectNum"
         })
 
+        const [allCheck, setAllCheck] = useControllableValue<boolean>(props, {
+            defaultValue: false,
+            valuePropName: "allCheck",
+            trigger: "setAllCheck"
+        })
+
         const [loading, setLoading] = useState<boolean>(false)
-        const [allCheck, setAllCheck] = useState<boolean>(false)
         const [hasMore, setHasMore] = useState<boolean>(true)
         const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
 
