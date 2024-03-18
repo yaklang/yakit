@@ -91,7 +91,7 @@ const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> 
             className={styles["port-scan-execute-extra-params-drawer"]}
             visible={visible}
             onClose={onClose}
-            width='60%'
+            width='65%'
             title='额外参数'
         >
             <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
@@ -346,9 +346,10 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     </Form.Item>
                     {enableBasicCrawler && (
                         <Form.Item
-                            label='是否开启 JSSSA 解析'
+                            label='JS SSA解析'
                             name='BasicCrawlerEnableJSParser'
                             valuePropName='checked'
+                            extra={"在启用爬虫时进行JS SSA解析。开启后会使用大量资源,造成cpu飙升,如无需要建议关闭"}
                         >
                             <YakitSwitch />
                         </Form.Item>
