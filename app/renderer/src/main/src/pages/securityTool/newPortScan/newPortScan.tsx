@@ -591,7 +591,12 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                             存为模块
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
-                        <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={onResetPort}>
+                        <YakitButton
+                            type='text'
+                            icon={<OutlineRefreshIcon />}
+                            onClick={onResetPort}
+                            disabled={disabled}
+                        >
                             默认配置
                         </YakitButton>
                     </div>
