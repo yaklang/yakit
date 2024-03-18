@@ -545,7 +545,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
         }
     })
     const onResetPort = useMemoizedFn(() => {
-        form.setFieldsValue({Ports: defaultPorts, presetPort: []})
+        form.setFieldsValue({Ports: defaultPorts, presetPort: undefined})
     })
     return (
         <>
@@ -563,7 +563,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                 help='可将TXT、Excel文件拖入框内或'
                 disabled={disabled}
             />
-            <Form.Item label='预设端口' name='presetPort' valuePropName='checked'>
+            <Form.Item label='预设端口' name='presetPort'>
                 <Checkbox.Group
                     className={styles["preset-port-group-wrapper"]}
                     onChange={onCheckPresetPort}
