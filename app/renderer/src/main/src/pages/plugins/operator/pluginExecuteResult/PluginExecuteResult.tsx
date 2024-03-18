@@ -45,7 +45,6 @@ import {yakitFailed} from "@/utils/notification"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 
 const {TabPane} = PluginTabs
-const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
     const {streamInfo, runtimeId, loading, pluginType, defaultActiveKey, pluginExecuteResultWrapper = ""} = props
@@ -121,9 +120,6 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                             {renderTabContent(ele)}
                         </TabPane>
                     ))}
-                    {/* <TabPane tab='扫描端口列表' key='port'>
-                        <PluginExecutePortTable />
-                    </TabPane> */}
                 </PluginTabs>
             )}
         </div>

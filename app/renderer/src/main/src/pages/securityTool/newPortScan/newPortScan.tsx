@@ -12,7 +12,7 @@ import {
     ExpandAndRetract,
     ExpandAndRetractExcessiveState
 } from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
