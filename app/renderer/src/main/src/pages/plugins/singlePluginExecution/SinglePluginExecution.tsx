@@ -1,35 +1,26 @@
-import React, {useEffect, useReducer, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {PluginDetailsTab, convertGroupParam} from "../local/PluginsLocalDetail"
-import {QueryYakScriptRequest, YakScript, genDefaultPagination} from "@/pages/invoker/schema"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {PluginDetailsTab} from "../local/PluginsLocalDetail"
+import {YakScript} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePencilaltIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
-import {
-    apiGetYakScriptById,
-    apiQueryYakScript,
-    convertLocalPluginsRequestParams,
-    defaultLinkPluginConfig,
-    onToEditPlugin
-} from "../utils"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import {apiGetYakScriptById, convertLocalPluginsRequestParams} from "../utils"
 
-import styles from "./SinglePluginExecution.module.scss"
-import {PluginDetails, PluginDetailsListItem, defaultFilter, defaultSearch} from "../baseTemplate"
-import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
-import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
-import {getRemoteValue} from "@/utils/kv"
-import {RemoteGV} from "@/yakitGV"
-import emiter from "@/utils/eventBus/eventBus"
-import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import {defaultFilter, defaultSearch} from "../baseTemplate"
+import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "lodash/cloneDeep"
 import "../plugins.scss"
 import {yakitNotify} from "@/utils/notification"
-import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
 import {Tooltip} from "antd"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
 
-export const getLinkPluginConfig = (selectList, pluginListSearchInfo) => {
+export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
+    // allCheck只有为false的时候才走该判断，undefined和true不走
+    if (allCheck === false && selectList.length === 0) {
+        return undefined
+    }
     const {filters, search} = pluginListSearchInfo
     const linkPluginConfig = {
         PluginNames: selectList,
@@ -102,7 +93,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         if (!allCheck && selectList.length === 0) {
             return undefined
         }
-        const config = getLinkPluginConfig(selectList, {filters, search})
+        const config = getLinkPluginConfig(selectList, {filters, search}, allCheck)
         return config
     }, [selectList, search, filters, allCheck])
     const hidden = useCreation(() => {

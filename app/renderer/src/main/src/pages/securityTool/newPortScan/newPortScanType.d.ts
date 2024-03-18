@@ -18,6 +18,7 @@ export interface NewPortScanExecuteProps {
     selectList: string[]
     setSelectList: (s: string[]) => void
     pluginListSearchInfo: PluginListSearchInfoProps
+    allCheck:boolean
 }
 export interface NewPortScanExecuteContentProps {
     ref?: React.ForwardedRef<NewPortScanExecuteContentRefProps>
@@ -29,6 +30,7 @@ export interface NewPortScanExecuteContentProps {
     pluginListSearchInfo: PluginListSearchInfoProps
     selectList: string[]
     setProgressList: (s: StreamResult.Progress[]) => void
+    allCheck:boolean
 }
 
 export interface NewPortScanExecuteContentRefProps {

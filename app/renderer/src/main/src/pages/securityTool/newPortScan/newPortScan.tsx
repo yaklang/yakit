@@ -70,6 +70,9 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
     })
     const [selectList, setSelectList] = useState<string[]>([])
     const [selectNum, setSelectNum] = useState<number>(0)
+
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+
     return (
         <PluginLocalListDetails
             hidden={hidden}
@@ -96,6 +99,8 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
             pluginDetailsProps={{
                 bodyClassName: styles["port-scan-body"]
             }}
+            allCheck={allCheck}
+            setAllCheck={setAllCheck}
         >
             <NewPortScanExecute
                 selectNum={selectNum}
@@ -104,13 +109,14 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
                 hidden={hidden}
                 setHidden={setHidden}
                 pluginListSearchInfo={{search, filters}}
+                allCheck={allCheck}
             />
         </PluginLocalListDetails>
     )
 })
 
 const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props) => {
-    const {selectList, setSelectList, pluginListSearchInfo, selectNum} = props
+    const {selectList, setSelectList, pluginListSearchInfo, selectNum, allCheck} = props
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
         defaultValue: false,
@@ -175,9 +181,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                           )
                         : !isExpand && (
                               <>
-                                  <YakitButton onClick={onStartExecute} disabled={selectNum === 0}>
-                                      执行
-                                  </YakitButton>
+                                  <YakitButton onClick={onStartExecute}>执行</YakitButton>
                                   <div className={styles["divider-style"]}></div>
                               </>
                           )}
@@ -214,6 +218,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                     pluginListSearchInfo={pluginListSearchInfo}
                     selectList={selectList}
                     setProgressList={setProgressList}
+                    allCheck={allCheck}
                 />
             </div>
         </div>
@@ -261,7 +266,8 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             selectNum,
             pluginListSearchInfo,
             selectList,
-            setProgressList
+            setProgressList,
+            allCheck
         } = props
         const [form] = Form.useForm()
 
@@ -339,12 +345,12 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
-            const linkPluginConfig = getLinkPluginConfig(selectList, pluginListSearchInfo)
+            const linkPluginConfig = getLinkPluginConfig(selectList, pluginListSearchInfo, allCheck)
             let executeParams: PortScanExecuteExtraFormValue = {
                 ...extraParamsValue,
                 ...value,
                 Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
-                LinkPluginConfig: linkPluginConfig || cloneDeep(defaultLinkPluginConfig)
+                LinkPluginConfig: linkPluginConfig
             }
             portScanStreamEvent.reset()
             setRuntimeId("")
@@ -440,7 +446,6 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                                         className={styles["plugin-execute-form-operate-start"]}
                                         htmlType='submit'
                                         size='large'
-                                        disabled={selectNum === 0}
                                     >
                                         开始执行
                                     </YakitButton>
