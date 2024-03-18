@@ -1,9 +1,8 @@
-import {ArrowsExpandIcon, ArrowsRetractIcon, SearchIcon, MenuIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {MITMPluginTemplateShort} from "@/pages/invoker/data/MITMPluginTamplate"
 import {YakScript, YakScriptHooks} from "@/pages/invoker/schema"
@@ -12,7 +11,6 @@ import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useMap, useMemoizedFn} from "ahooks"
-import ReactResizeDetector from "react-resize-detector"
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
@@ -25,12 +23,17 @@ import {
 } from "./MITMPluginLocalList"
 import {enableMITMPluginMode} from "./MITMServerHijacking"
 import styles from "./MITMServerHijacking.module.scss"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {Dropdown} from "antd"
+import {RemoteGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
+
+type tabKeys = "all" | "loaded" | "hot-patch"
+interface TabsItem {
+    key: tabKeys
+    label: string
+    contShow: boolean
+}
 
 interface MITMPluginHijackContentProps {
     checkList: string[]
@@ -89,7 +92,26 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setTags,
         setSearchKeyword
     } = props
-    const [mode, setMode] = useState<"hot-patch" | "loaded" | "all">("all")
+    
+    const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
+    const [mitmTabs, setMitmTabs] = useState<Array<TabsItem>>([
+        {
+            key: "all",
+            label: "全部",
+            contShow: true // 初始为true
+        },
+        {
+            key: "loaded",
+            label: "已启用",
+            contShow: false // 初始为false
+        },
+        {
+            key: "hot-patch",
+            label: "热加载",
+            contShow: false // 初始为false
+        }
+    ])
+
     const [hookScriptNameSearch, setHookScriptNameSearch] = useState<string>("")
     const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
     const [isHooksSearch, setIsHooksSearch] = useState<boolean>(false)
@@ -106,8 +128,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     // 是否允许获取默认勾选值
     const isDefaultCheck = useRef<boolean>(false)
-
-    const [visiblePluginSearch, setVisiblePluginSearch] = useState<boolean>(false)
 
     // 初始化加载 hooks，设置定时更新 hooks 状态
     useEffect(() => {
@@ -221,7 +241,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
      */
     const onSendToPatch = useMemoizedFn((s: YakScript) => {
         setScript(s)
-        setMode("hot-patch")
+        handleTabClick({
+            key: "hot-patch",
+            label: "热加载",
+            contShow: false
+        })
     })
     /**@description 保存热加载代码到本地插件 */
     const onSaveHotCode = useMemoizedFn(() => {
@@ -236,7 +260,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
     })
 
     const onRenderHeardExtra = useMemoizedFn(() => {
-        switch (mode) {
+        switch (curTabKey) {
             case "hot-patch":
                 return (
                     <div className={styles["hot-patch-heard-extra"]}>
@@ -286,92 +310,36 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             case "loaded":
                 return (
                     <>
-                        {(width > 400 && (
-                            <YakitInput.Search
-                                placeholder='请输入插件名称搜索'
-                                value={hookScriptNameSearch}
-                                onChange={(e) => setHookScriptNameSearch(e.target.value)}
-                                style={{maxWidth: 180}}
-                                onSearch={() => setIsHooksSearch(!isHooksSearch)}
-                                onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
-                            />
-                        )) || (
-                            <YakitPopover
-                                overlayClassName={styles["filter-popover"]}
-                                content={
-                                    <YakitInput.Search
-                                        placeholder='请输入插件名称搜索'
-                                        value={hookScriptNameSearch}
-                                        onChange={(e) => setHookScriptNameSearch(e.target.value)}
-                                        style={{maxWidth: 250}}
-                                        onSearch={() => setIsHooksSearch(!isHooksSearch)}
-                                        onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
-                                    />
-                                }
-                                trigger='click'
-                                onVisibleChange={setVisiblePluginSearch}
-                                placement='bottomLeft'
-                            >
-                                <YakitButton
-                                    type='outline2'
-                                    isHover={visiblePluginSearch}
-                                    style={{padding: 4}}
-                                >
-                                    <SearchIcon />
-                                </YakitButton>
-                            </YakitPopover>
-                        )}
+                        <YakitInput.Search
+                            placeholder='请输入插件名称搜索'
+                            value={hookScriptNameSearch}
+                            onChange={(e) => setHookScriptNameSearch(e.target.value)}
+                            onSearch={() => setIsHooksSearch(!isHooksSearch)}
+                            onPressEnter={() => setIsHooksSearch(!isHooksSearch)}
+                            wrapperStyle={{flex: 1}}
+                        />
                     </>
                 )
             default:
                 return (
                     <div className={styles["search-plugin-hijack-content"]}>
-                        {(width > 350 && (
-                            <PluginSearch
-                                tag={tags}
-                                setTag={setTags}
-                                searchKeyword={searchKeyword}
-                                setSearchKeyword={setSearchKeyword}
-                                onSearch={onSearch}
-                                selectSize='small'
-                                inputSize='middle'
-                                selectModuleTypeSize='small'
-                            />
-                        )) || (
-                            <YakitPopover
-                                overlayClassName={styles["filter-popover"]}
-                                content={
-                                    <PluginSearch
-                                        tag={tags}
-                                        setTag={setTags}
-                                        searchKeyword={searchKeyword}
-                                        setSearchKeyword={setSearchKeyword}
-                                        onSearch={onSearch}
-                                        selectSize='small'
-                                        inputSize='middle'
-                                        selectModuleTypeSize='small'
-                                    />
-                                }
-                                trigger='click'
-                                onVisibleChange={setVisiblePluginSearch}
-                                placement='bottomLeft'
-                            >
-                                <YakitButton
-                                    type='outline2'
-                                    isHover={visiblePluginSearch}
-                                    style={{padding: 4}}
-                                >
-                                    <SearchIcon />
-                                </YakitButton>
-                            </YakitPopover>
-                        )}
+                        <PluginSearch
+                            tag={tags}
+                            setTag={setTags}
+                            searchKeyword={searchKeyword}
+                            setSearchKeyword={setSearchKeyword}
+                            onSearch={onSearch}
+                            selectSize='small'
+                            inputSize='middle'
+                            selectModuleTypeSize='small'
+                        />
                     </div>
                 )
         }
     })
 
     const onRenderContent = useMemoizedFn(() => {
-        switch (mode) {
+        switch (curTabKey) {
             case "hot-patch":
                 return (
                     <div className={styles["hot-patch-code"]}>
@@ -399,7 +367,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                         Content: e.toString("utf8")
                                     })
                                 }
-                                language={ "mitm"}
+                                language={"mitm"}
                                 extraEditorProps={
                                     {
                                         noMiniMap: true,
@@ -503,69 +471,64 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 )
         }
     })
-    const [width, setWidth] = useState<number>(0)
+
+    useEffect(() => {
+        getRemoteValue(RemoteGV.MitmHijackedLeftTabs).then((setting: string) => {
+            if (setting) {
+                const tabs = JSON.parse(setting)
+                setMitmTabs(tabs)
+                const findItem = tabs.find((item: TabsItem) => item.contShow)
+                if (findItem) {
+                    setCurTabKey(findItem.key)
+                }
+            }
+        })
+    }, [])
+    const handleTabClick = (item: TabsItem) => {
+        const copyMitmTabs = structuredClone(mitmTabs)
+        copyMitmTabs.forEach((i) => {
+            if (i.key === item.key) {
+                i.contShow = !item.contShow
+            } else {
+                i.contShow = false
+            }
+        })
+        setRemoteValue(RemoteGV.MitmHijackedLeftTabs, JSON.stringify(copyMitmTabs))
+        setMitmTabs(copyMitmTabs)
+        setCurTabKey(item.key)
+    }
+
     return (
         <div className={styles["mitm-plugin-hijack-content"]}>
-            <ReactResizeDetector
-                onResize={(w, h) => {
-                    if (!w) {
-                        return
-                    }
-                    setWidth(w)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
-            <div className={styles["mitm-plugin-hijack-heard"]}>
-                <div className={styles["mitm-plugin-hijack-heard-left"]}>
-                    {(width > 350 && (
-                        <YakitRadioButtons
-                            buttonStyle='solid'
-                            value={mode}
-                            options={[
-                                {label: "全部", value: "all"},
-                                {label: "已启用", value: "loaded"},
-                                {label: "热加载", value: "hot-patch"}
-                            ]}
-                            onChange={(e) => setMode(e.target.value)}
-                        />
-                    )) || (
-                        <Dropdown
-                            overlay={
-                                <YakitMenu
-                                    data={[
-                                        {
-                                            key: "all",
-                                            label: "全部"
-                                        },
-                                        {
-                                            key: "loaded",
-                                            label: "已启用"
-                                        },
-                                        {
-                                            key: "hot-patch",
-                                            label: "热加载"
-                                        }
-                                    ]}
-                                    onClick={({key}) => setMode(key as "hot-patch" | "loaded" | "all")}
-                                    style={{padding: 4}}
-                                />
-                            }
+            <div className={styles["mitm-hijack-tab-wrap"]}>
+                <div className={styles["mitm-hijack-tab"]}>
+                    {mitmTabs.map((item) => (
+                        <div
+                            className={classNames(styles["mitm-hijack-tab-item"], {
+                                [styles["mitm-hijack-tab-item-active"]]: curTabKey === item.key,
+                                [styles["mitm-hijack-tab-item-unshowCont"]]: curTabKey === item.key && !item.contShow
+                            })}
+                            key={item.key}
+                            onClick={() => {
+                                handleTabClick(item)
+                            }}
                         >
-                            <YakitButton type='primary'>
-                                <MenuIcon />
-                                {mode === "all" && "全部"}
-                                {mode === "loaded" && "已启用"}
-                                {mode === "hot-patch" && "热加载"}
-                            </YakitButton>
-                        </Dropdown>
-                    )}
+                            {item.label}
+                        </div>
+                    ))}
                 </div>
-                {onRenderHeardExtra()}
+                <div
+                    className={classNames(styles["mitm-hijack-tab-cont-item"])}
+                    style={{
+                        overflowY: "hidden"
+                    }}
+                >
+                    <div className={styles["mitm-plugin-hijack-heard"]}>
+                        {onRenderHeardExtra()}
+                    </div>
+                    {onRenderContent()}
+                </div>
             </div>
-            {onRenderContent()}
         </div>
     )
 }

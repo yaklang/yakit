@@ -349,7 +349,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             <div
                 className={style["mitm-page"]}
                 ref={mitmPageRef}
-                style={status === "idle" ? {padding: "0px 16px"} : {padding: "8px 16px 13px"}}
+                style={status === "idle" ? {padding: "0px 16px"} : {padding: "8px 16px 0px 0px"}}
             >
                 {onRenderMITM()}
             </div>
@@ -697,7 +697,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstNode={() => (
                 <div
                     className={style["mitm-server-start-pre-first"]}
-                    style={{display: isFullScreenSecondNode ? "none" : ""}}
+                    style={{display: isFullScreenSecondNode ? "none" : "", marginTop: status === "idle" ? 12 : 0}}
                 >
                     {onRenderFirstNode()}
                 </div>
