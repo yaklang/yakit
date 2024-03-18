@@ -285,7 +285,17 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         const newPortScanExecuteContentRef = useRef<HTMLDivElement>(null)
         const [inViewport = true] = useInViewport(newPortScanExecuteContentRef)
 
+        const defaultTabs = useCreation(() => {
+            return [
+                {tabName: "扫描端口列表", type: "port"},
+                {tabName: "HTTP 流量", type: "http"},
+                {tabName: "漏洞与风险", type: "risk"},
+                {tabName: "日志", type: "log"},
+                {tabName: "Console", type: "console"}
+            ]
+        }, [])
         const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
+            tabs: defaultTabs,
             taskName: isEnpriTrace() ? "Simple-Detect" : "Port-Scan",
             apiKey: isEnpriTrace() ? "SimpleDetect" : "PortScan",
             token: tokenRef.current,
