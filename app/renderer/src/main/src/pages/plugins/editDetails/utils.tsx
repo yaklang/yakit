@@ -341,12 +341,12 @@ export const getYakExecutorParam = (object) => {
                 ...newValue,
                 {
                     Key: key,
-                    Value: "",
+                    Value: ""
                 }
             ]
-            return 
+            return
         }
-        if (val === false) {
+        if (val === false || val === undefined) {
             return
         }
         newValue = [
