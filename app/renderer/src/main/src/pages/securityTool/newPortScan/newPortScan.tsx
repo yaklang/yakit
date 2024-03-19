@@ -356,7 +356,11 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
-            const linkPluginConfig = getLinkPluginConfig(selectList, pluginListSearchInfo, allCheck)
+            const filters = {...pluginListSearchInfo.filters}
+            if (filters.plugin_type?.length === 0) {
+                filters.plugin_type = cloneDeep(pluginTypeFilterList)
+            }
+            const linkPluginConfig = getLinkPluginConfig(selectList, {...pluginListSearchInfo, filters}, allCheck)
             let executeParams: PortScanExecuteExtraFormValue = {
                 ...extraParamsValue,
                 ...value,
