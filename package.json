@@ -28,7 +28,7 @@
     "pack-mac-ee-arm64": "electron-builder build --mac --config ./multibuilder/electron-builder-ee.yaml --arm64",
     "pack-mac-se-arm64": "electron-builder build --mac --config ./multibuilder/electron-builder-se.yaml --arm64",
     "pack-linux": "electron-builder build --linux --x64",
-    "pack-linux-arm64": "electron-builder build --linux --config ./arm-electron-builder.yaml --arm64",
+    "pack-linux-arm64": "electron-builder build --linux --config ./multibuilder/arm-electron-builder.yaml --arm64",
     "pack-linux-ee": "electron-builder build --linux --config ./multibuilder/electron-builder-ee.yaml --x64",
     "pack-linux-ee-arm64": "electron-builder build --linux --config ./multibuilder/arm-electron-builder-ee.yaml --arm64",
     "pack-linux-se": "electron-builder build --linux --config ./multibuilder/electron-builder-se.yaml --x64",
