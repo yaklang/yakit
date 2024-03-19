@@ -3708,6 +3708,8 @@ message ImportYakScriptResult {
 message QueryYakScriptGroupRequest {
   bool All = 1;
   string PageId = 2;
+  // 默认是false， 目前中有专项漏洞这里的关键词组传 true 才会返回数据，插件管理里面不传就不会返回 poc 这边的内置组
+  bool IsPocBuiltIn = 3;
 }
 
 message QueryYakScriptGroupResponse {
