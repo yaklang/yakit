@@ -7,9 +7,9 @@ export const toolDelInvalidKV = (data: any) => {
         if (!data) return data
         if (!isObject(data)) return data
         for (const key in data) {
-            if (data[key] === undefined || data[key] === null) {
+            if (isNil(data[key])) {
                 delete data[key]
-            } else if (isArray(data[key])) {
+            } else if (isObject(data[key])) {
                 toolDelInvalidKV(data[key])
             }
         }
