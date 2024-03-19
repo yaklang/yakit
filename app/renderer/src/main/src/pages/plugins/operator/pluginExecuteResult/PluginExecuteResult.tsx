@@ -13,7 +13,7 @@ import {
     VulnerabilitiesRisksTableProps
 } from "./PluginExecuteResultType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {YakitRoute} from "@/routes/newRoute"
@@ -43,6 +43,7 @@ import {defQueryPortsRequest} from "@/pages/assetViewer/PortTable/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {yakitFailed} from "@/utils/notification"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {v4 as uuidv4} from "uuid"
 
 const {TabPane} = PluginTabs
 
@@ -244,22 +245,24 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
 /** 基础插件信息 / 日志 */
 const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
     const {loading, messageList} = props
-    const timelineItemProps = useMemo(() => {
+    const list = useCreation(() => {
         return (messageList || [])
             .filter((i) => {
-                return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
+                return (
+                    !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-")) &&
+                    i?.level !== "json-risk"
+                )
             })
             .splice(0, 25)
+            .map((ele) => ({...ele, id: uuidv4()}))
+            .reverse()
     }, [messageList])
-    const list = useMemo(() => {
-        return (timelineItemProps || []).reverse().filter((item) => item.level !== "json-risk")
-    }, [timelineItemProps])
     return (
         <PluginExecuteResultTabContent title='任务额外日志与结果'>
             <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
                 {list.map((e, index) => {
                     return (
-                        <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
+                        <Timeline.Item key={e.id} color={LogLevelToCode(e.level)}>
                             <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} onlyTime={true} />
                         </Timeline.Item>
                     )

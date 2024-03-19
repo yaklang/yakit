@@ -7,6 +7,9 @@ import 'codemirror/addon/display/fullscreen.css'
 import "./CodeMirror.css"
 import * as CM from "codemirror";
 
+// 引入自动刷新
+import 'codemirror/addon/display/autorefresh'
+
 require("codemirror/mode/go/go");
 require("codemirror/mode/php/php");
 require("codemirror/mode/shell/shell");
@@ -114,6 +117,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = (p) => {
                 tabSize: 2,
                 theme: p.theme || "zenburn",
                 lineNumbers: true,
+                autoRefresh: true,
             }}
             onBeforeChange={(editor, data, value) => {
                 p.setValue && p.setValue(value)
