@@ -7,7 +7,6 @@ import {
     OutlineLogoutIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
-    OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
@@ -21,7 +20,6 @@ import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {PluginDetailsTabProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
-import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {AddToMenuActionForm} from "@/pages/yakitStore/PluginOperator"
@@ -40,6 +38,7 @@ import styles from "./PluginsLocalDetail.module.scss"
 import {onToEditPlugin} from "../utils"
 import classNames from "classnames"
 import {API} from "@/services/swagger/resposeType"
+import {PluginLog} from "../log/PluginLog"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -470,14 +469,18 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
 }
 
 export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((props) => {
-    const {executorShow, plugin, headExtraNode, wrapperClassName = "", hiddenLogIssue,linkPluginConfig} = props
+    const {executorShow, plugin, headExtraNode, wrapperClassName = "", hiddenLogIssue, linkPluginConfig} = props
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
             <PluginTabs defaultActiveKey='execute' tabPosition='right'>
                 <TabPane tab='执行' key='execute'>
                     <div className={styles["plugin-execute-wrapper"]}>
                         {executorShow ? (
-                            <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} linkPluginConfig={linkPluginConfig}/>
+                            <LocalPluginExecute
+                                plugin={plugin}
+                                headExtraNode={headExtraNode}
+                                linkPluginConfig={linkPluginConfig}
+                            />
                         ) : (
                             <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
                         )}
@@ -507,9 +510,7 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 </TabPane>
                 {!hiddenLogIssue && (
                     <TabPane tab='日志' key='log'>
-                        <div className={styles["plugin-log-wrapper"]}>
-                            <YakitPluginOnlineJournal pluginId={+plugin.OnlineId} />
-                        </div>
+                        <PluginLog wrapperClassName={styles["plugin-log-tab-wrapper"]} uuid={plugin.UUID || ""} />
                     </TabPane>
                 )}
                 {!hiddenLogIssue && (
