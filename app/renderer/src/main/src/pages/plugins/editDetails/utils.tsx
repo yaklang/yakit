@@ -336,6 +336,19 @@ export const getYakExecutorParam = (object) => {
             ]
             return
         }
+        if (val === true) {
+            newValue = [
+                ...newValue,
+                {
+                    Key: key,
+                    Value: true
+                }
+            ]
+            return
+        }
+        if (val === false || val === undefined) {
+            return
+        }
         newValue = [
             ...newValue,
             {

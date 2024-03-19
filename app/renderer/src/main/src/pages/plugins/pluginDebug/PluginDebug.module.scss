@@ -58,6 +58,7 @@
                 :global {
                     .ant-form-item-label > label {
                         font-size: 12px;
+                        word-break: break-all;
                     }
                 }
 
