@@ -212,6 +212,8 @@ function NewApp() {
     const refreshLogin = useMemoizedFn(() => {
         // 获取引擎中的token(区分企业版与社区版)
         const TokenSource = isCommunityEdition() ? RemoteGV.TokenOnline : RemoteGV.TokenOnlineEnterprise
+        // 企业版暂时不需要自动登录功能
+        if(!isCommunityEdition()) return
         getRemoteValue(TokenSource)
             .then((resToken) => {
                 if (!resToken) {
