@@ -1464,13 +1464,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     useUpdateEffect(() => {
         setType(typeOptionVal)
         if (typeOptionVal === "beautify") {
-            if (originValue) {
+            if (originValue && isShowBeautifyRender) {
                 setTimeout(() => {
                     beautifyCode()
                 }, 200)
             }
         }
-    }, [typeOptionVal, originValue])
+    }, [typeOptionVal, originValue, isShowBeautifyRender])
 
     const beautifyCode = useDebounceFn(
         useMemoizedFn(async () => {
