@@ -3721,7 +3721,8 @@ message GroupCount {
   int32 Total = 2;
   bool Default = 3;
   // 临时组ID
-  string TemporaryId = 4;
+  string TemporaryId = 5;
+  bool IsPocBuiltIn = 6;
 }
 
 message SaveYakScriptGroupRequest {
