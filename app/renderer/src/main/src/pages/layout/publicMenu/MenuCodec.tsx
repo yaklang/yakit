@@ -95,15 +95,41 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
             yakitNotify("error", "BUG: 空的编解码类型")
             return
         }
-
         isExec.current = true
+        if (key === "fuzztag") {
+            clickExecFuzztab()
+        } else {
+            ipcRenderer
+                .invoke("Codec", {Type: key, Text: question, Params: [], ScriptName: ""})
+                .then((res) => {
+                    setAnswer(res?.Result || "")
+                })
+                .catch((err) => {
+                    yakitNotify("error", `CODEC 解码失败：${err}`)
+                })
+                .finally(() => (isExec.current = false))
+        }
+    })
+
+    const clickExecFuzztab = useMemoizedFn(() => {
+        setActiveKey("fuzztag")
+        isExec.current = true
+        const newCodecParams = {
+            Text: question,
+            WorkFlow: [
+                {
+                    CodecType: "Fuzz",
+                    Params: []
+                }
+            ]
+        }
         ipcRenderer
-            .invoke("Codec", {Type: key, Text: question, Params: [], ScriptName: ""})
-            .then((res) => {
-                setAnswer(res?.Result || "")
+            .invoke("NewCodec", newCodecParams)
+            .then((data: {Result: string; RawResult: Uint8Array}) => {
+                setAnswer(data.Result || "")
             })
-            .catch((err) => {
-                yakitNotify("error", `CODEC 解码失败：${err}`)
+            .catch((e) => {
+                yakitNotify("error", `fuzztab failed ${e}`)
             })
             .finally(() => (isExec.current = false))
     })
@@ -143,6 +169,13 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                         {decodeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
                     </YakitButton>
                 </YakitPopover>
+                <YakitButton
+                    size='small'
+                    type={avtiveKey === "fuzztag" ? "primary" : "outline2"}
+                    onClick={() => onCodec("fuzztag")}
+                >
+                    fuzztag
+                </YakitButton>
             </div>
 
             <div className={styles["input-textarea-wrapper"]}>
