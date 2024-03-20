@@ -219,7 +219,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     // 滚动到指定index
     useEffect(() => {
         if (scrollToIndex !== undefined) {
-            scrollTo(scrollToIndex)
+            if (typeof scrollToIndex === "string") {
+                const indexStr = scrollToIndex.split('_')[0]
+                scrollTo(+indexStr)
+            } else {
+                scrollTo(scrollToIndex)
+            }
         }
     }, [scrollToIndex])
 

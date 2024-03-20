@@ -790,7 +790,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
     const [currentIndex, setCurrentIndex] = useState<number>()
-    const [scrollToIndex, setScrollToIndex] = useState<number>()
+    const [scrollToIndex, setScrollToIndex] = useState<number | string>()
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
@@ -870,7 +870,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     return item.Id + "" === obj.id
                 })
                 if (scrollToIndex !== undefined) {
-                    setScrollToIndex(scrollToIndex)
+                    // 加随机值触发更新渲染执行表格跳转方法 
+                    setScrollToIndex(scrollToIndex + '_' + Math.random())
                 }
             }
         } catch (error) {}
