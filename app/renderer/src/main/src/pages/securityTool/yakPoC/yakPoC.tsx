@@ -194,7 +194,6 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                 initialResponseRef.current = res
                 if (response.length === 0) {
                     setResponse(res)
-                    setIsRef(!isRef)
                 }
             })
             .finally(() =>
@@ -243,6 +242,7 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
     const onSearch = useMemoizedFn((val) => {
         if (!val) {
             setResponse(initialResponseRef.current)
+            setIsRef(!isRef)
             return
         }
         const isHaveData = initialResponseRef.current.filter((ele) => {
