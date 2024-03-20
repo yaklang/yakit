@@ -34,7 +34,7 @@ export const YakitCollapseText: React.FC<YakitCollapseTextProps> = memo((props) 
                 setShowExpand(false)
             }
         }
-    }, [textRef.current])
+    }, [textRef.current, content])
 
     /** 是否展开的样式 */
     const expandStyle = useMemo(() => {

@@ -29,6 +29,8 @@ const {ipcRenderer} = window.require("electron")
 
 const {TabPane} = PluginTabs
 
+const wrapperId = "plugin-online-detail"
+
 export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) => {
     const {
         info,
@@ -190,7 +192,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     return (
         <PluginDetails<YakitPluginOnlineDetail>
             title='插件商店'
-            pageWrapId='plugin-online-detail'
+            pageWrapId={wrapperId}
             filterNode={
                 <>
                     <PluginGroup
@@ -327,7 +329,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                         </div>
                     </TabPane>
                     <TabPane tab='日志' key='log'>
-                        <PluginLog uuid={plugin.uuid || ""} />
+                        <PluginLog uuid={plugin.uuid || ""} getContainer={wrapperId} />
                     </TabPane>
                 </PluginTabs>
             </div>

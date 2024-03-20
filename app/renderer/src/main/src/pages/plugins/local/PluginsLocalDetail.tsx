@@ -55,7 +55,7 @@ export const convertGroupParam = (filter: PluginFilterParams, extra: {group: Yak
 
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
     const {
-        pageWrapId = "",
+        pageWrapId = "plugin-local-detail",
         info,
         defaultAllCheck,
         // onCheck,
@@ -462,14 +462,27 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 // spinLoading={spinLoading || removeLoading}
                 spinLoading={spinLoading}
             >
-                <PluginDetailsTab executorShow={executorShow} plugin={plugin} headExtraNode={headExtraNode} />
+                <PluginDetailsTab
+                    pageWrapId={pageWrapId}
+                    executorShow={executorShow}
+                    plugin={plugin}
+                    headExtraNode={headExtraNode}
+                />
             </PluginDetails>
         </>
     )
 }
 
 export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((props) => {
-    const {executorShow, plugin, headExtraNode, wrapperClassName = "", hiddenLogIssue, linkPluginConfig} = props
+    const {
+        pageWrapId = "",
+        executorShow,
+        plugin,
+        headExtraNode,
+        wrapperClassName = "",
+        hiddenLogIssue,
+        linkPluginConfig
+    } = props
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
             <PluginTabs defaultActiveKey='execute' tabPosition='right'>
@@ -510,7 +523,11 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 </TabPane>
                 {!hiddenLogIssue && (
                     <TabPane tab='日志' key='log'>
-                        <PluginLog wrapperClassName={styles["plugin-log-tab-wrapper"]} uuid={plugin.UUID || ""} />
+                        <PluginLog
+                            wrapperClassName={styles["plugin-log-tab-wrapper"]}
+                            uuid={plugin.UUID || ""}
+                            getContainer={pageWrapId}
+                        />
                     </TabPane>
                 )}
                 {!hiddenLogIssue && (

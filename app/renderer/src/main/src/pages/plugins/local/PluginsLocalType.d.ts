@@ -116,6 +116,8 @@ export interface ExportYakScriptLocalResponse {
 }
 
 export interface PluginDetailsTabProps {
+    /** 详情页最外层元素的id */
+    pageWrapId?: string
     /**显示执行模块 */
     executorShow: boolean
     /**插件数据 */

@@ -26,6 +26,8 @@ import styles from "./PluginUserDetail.module.scss"
 
 const {TabPane} = PluginTabs
 
+const wrapperId = "plugin-user-detail"
+
 export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
     forwardRef((props, ref) => {
         const {
@@ -227,6 +229,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
             <>
                 <PluginDetails<YakitPluginOnlineDetail>
                     title='我的云端插件'
+                    pageWrapId={wrapperId}
                     filterExtra={
                         <div className={"details-filter-extra-wrapper"}>
                             <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='user' />
@@ -338,7 +341,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                                 </div>
                             </TabPane>
                             <TabPane tab='日志' key='log'>
-                                <PluginLog uuid={plugin.uuid || ""} />
+                                <PluginLog uuid={plugin.uuid || ""} getContainer={wrapperId} />
                             </TabPane>
                         </PluginTabs>
                     </div>

@@ -1,4 +1,4 @@
-import React, {memo, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useDebounceEffect, useMemoizedFn, useSize} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -21,11 +21,12 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Form} from "antd"
 import {CodeScoreModule} from "../funcTemplate"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import styles from "./PluginLogDetail.module.scss"
 
 export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
-    const {getContainer, visible, onClose} = props
+    const {getContainer, uuid, info, visible, onClose, onChange} = props
 
     const getContainerSize = useSize(getContainer)
     // 抽屉展示高度
@@ -97,9 +98,14 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
         if (fetchLoading) return
 
         setFetchLoading(true)
-        apiFetchPluginDetailCheck({uuid: "", list_type: "log", up_log_id: 0})
+        apiFetchPluginDetailCheck({uuid: uuid, list_type: "log", up_log_id: info.id})
             .then(async (res) => {
                 if (res) {
+                    console.log(
+                        `method:post|api:plugins/audit/detail`,
+                        `\nrequest:${JSON.stringify({uuid: uuid, list_type: "log", up_log_id: info.id})}`,
+                        `\nresponse"${JSON.stringify(res)}`
+                    )
                     setPRInfo(res)
                     // 获取对比器-修改源码
                     setNewCode(res.content)
@@ -140,13 +146,13 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                         Params: paramsList?.CliParameter || [],
                         Content: res.content
                     })
+                    triggerDiff.current = !triggerDiff.current
                 } else {
                     yakitNotify("error", `获取修改内容为空，请重试!`)
                     onCancel()
                 }
             })
             .catch((err) => {
-                yakitNotify("error", `获取修改内容错误欧：${err}`)
                 onCancel()
             })
             .finally(() => {
@@ -155,6 +161,12 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 }, 200)
             })
     })
+
+    useEffect(() => {
+        if (visible) {
+            if (uuid && info) fetchPluginInfo()
+        }
+    }, [visible])
     /** ---------- 获取插件日志信息 End ---------- */
 
     const [modifyLoading, setModifyLoading] = useState<boolean>(false)
@@ -227,8 +239,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                     setModifyLoading(true)
                     changePRInfo(false, value.noPassReason)
                         .then(() => {
-                            // 怎么触发外界列表信息的修改
-                            // 未完成
+                            onChange(false, value.noPassReason)
                         })
                         .catch(() => {
                             onCancelNoPass()
@@ -252,11 +263,9 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
             setModifyLoading(true)
             changePRInfo(true)
                 .then(() => {
-                    // 怎么触发外界列表信息的修改
-                    // 未完成
+                    onChange(true)
                 })
-                .catch(() => {})
-                .finally(() => {
+                .catch(() => {
                     setTimeout(() => {
                         setModifyLoading(false)
                     }, 300)
@@ -279,11 +288,9 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
         setModifyLoading(true)
         changePRInfo(true)
             .then(() => {
-                // 怎么触发外界列表信息的修改
-                // 未完成
+                onChange(true)
             })
-            .catch(() => {})
-            .finally(() => {
+            .catch(() => {
                 setTimeout(() => {
                     setModifyLoading(false)
                 }, 300)
@@ -319,10 +326,21 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 }
                 extra={
                     <div className={styles["header-extra-wrapper"]}>
-                        <YakitButton type='outline1' colors='danger' icon={<SolidBanIcon />} onClick={onOpenNoPass}>
+                        <YakitButton
+                            type='outline1'
+                            colors='danger'
+                            loading={modifyLoading}
+                            icon={<SolidBanIcon />}
+                            onClick={onOpenNoPass}
+                        >
                             不合并
                         </YakitButton>
-                        <YakitButton colors='success' icon={<OutlinePuzzleIcon />} onClick={onOpenPass}>
+                        <YakitButton
+                            colors='success'
+                            loading={modifyLoading}
+                            icon={<OutlinePuzzleIcon />}
+                            onClick={onOpenPass}
+                        >
                             合并代码
                         </YakitButton>
 
@@ -331,35 +349,37 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 }
                 onClose={onCancel}
             >
-                <div className={styles["plugin-log-wrapper"]}>
-                    {activeTab === "diff" && (
-                        <div className={styles["diff-wrapper"]}>
-                            {(true || !!pluginTypeTag) && (
-                                <div className={styles["diff-header"]}>
-                                    <YakitTag color={pluginTypeTag?.color as YakitTagColor}>
-                                        {pluginTypeTag?.name || "123123"}
-                                    </YakitTag>
-                                    <div className={styles["header-title"]}>{plugin?.ScriptName || "222"}</div>
-                                </div>
-                            )}
-                            <div className={styles["diff-body"]}>
-                                {pluginLanguage && (
-                                    <YakitDiffEditor
-                                        leftDefaultCode={oldCode.current}
-                                        leftReadOnly={true}
-                                        rightDefaultCode={newCode}
-                                        setRightCode={setNewCode}
-                                        triggerUpdate={triggerDiff.current}
-                                        language={pluginLanguage}
-                                    />
+                <YakitSpin spinning={fetchLoading}>
+                    <div className={styles["plugin-log-wrapper"]}>
+                        {activeTab === "diff" && (
+                            <div className={styles["diff-wrapper"]}>
+                                {(true || !!pluginTypeTag) && (
+                                    <div className={styles["diff-header"]}>
+                                        <YakitTag color={pluginTypeTag?.color as YakitTagColor}>
+                                            {pluginTypeTag?.name || ""}
+                                        </YakitTag>
+                                        <div className={styles["header-title"]}>{plugin?.ScriptName || ""}</div>
+                                    </div>
                                 )}
+                                <div className={styles["diff-body"]}>
+                                    {pluginLanguage && (
+                                        <YakitDiffEditor
+                                            leftDefaultCode={oldCode.current}
+                                            leftReadOnly={true}
+                                            rightDefaultCode={newCode}
+                                            setRightCode={setNewCode}
+                                            triggerUpdate={triggerDiff.current}
+                                            language={pluginLanguage}
+                                        />
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                    {activeTab === "debug" && (
-                        <PluginDebugBody plugin={plugin} newCode={newCode} setNewCode={setNewCode} />
-                    )}
-                </div>
+                        )}
+                        {activeTab === "debug" && (
+                            <PluginDebugBody plugin={plugin} newCode={newCode} setNewCode={setNewCode} />
+                        )}
+                    </div>
+                </YakitSpin>
             </YakitDrawer>
 
             <YakitModal
