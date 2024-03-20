@@ -41,7 +41,11 @@ import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {GroupCount, SaveYakScriptGroupRequest} from "@/pages/invoker/schema"
-import {apiFetchQueryYakScriptGroupLocal, apiFetchSaveYakScriptGroupLocal} from "@/pages/plugins/utils"
+import {
+    apiFetchDeleteYakScriptGroupLocal,
+    apiFetchQueryYakScriptGroupLocal,
+    apiFetchSaveYakScriptGroupLocal
+} from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {apiFetchQueryYakScriptGroupLocalByPoc} from "./utils"
@@ -76,6 +80,19 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
 
     const pluginGroupRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginGroupRef)
+
+    useEffect(() => {
+        return () => {
+            // 页面被关闭得时候，需要删除该页面得临时查询组
+            apiFetchQueryYakScriptGroupLocalByPoc({PageId: pageId}).then((res) => {
+                const removeGroup = res
+                    .filter((item) => !!item.TemporaryId)
+                    .map((ele) => ele.Value)
+                    .join(",")
+                apiFetchDeleteYakScriptGroupLocal(removeGroup)
+            })
+        }
+    }, [])
 
     const onSetSelectGroupList = useMemoizedFn((groups) => {
         setPageInfo({...pageInfo, selectGroup: groups})
@@ -253,11 +270,9 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                 PageId: pageId
             }
             setLoading(true)
-            console.log("addParams", addParams)
             apiFetchSaveYakScriptGroupLocal(addParams)
                 .then(getQueryYakScriptGroup)
                 .then((res) => {
-                    console.log("res", res)
                     const searchData = res.filter((ele) => {
                         return ele.Value.toUpperCase().includes(val.toUpperCase())
                     })

@@ -22,7 +22,6 @@ export const apiFetchQueryYakScriptGroupLocalByPoc: (params: QueryYakScriptGroup
         ipcRenderer
             .invoke("QueryYakScriptGroup", queryParams)
             .then((res: QueryYakScriptGroupResponse) => {
-                console.log("queryParams", queryParams, res)
                 resolve(res.Group)
             })
             .catch((e) => {

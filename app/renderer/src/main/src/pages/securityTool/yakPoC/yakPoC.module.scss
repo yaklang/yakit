@@ -40,7 +40,7 @@
         .left-header-search {
             @extend %display-flex-center;
             justify-content: space-between;
-            padding: 0 4px;
+            padding-right: 4px;
             .header-type-wrapper {
                 @extend %display-flex-center;
                 align-items: center;
