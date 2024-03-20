@@ -1490,20 +1490,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     ).run
 
-    // 当编辑器可编辑时 点击美化按钮
-    const editEditorClickPrettifyPacketCode = useMemoizedFn(async () => {
-        setTypeLoading(true)
-        setRenderHTML(undefined)
-        if (strValue.length > 0) {
-            let beautifyValue = await prettifyPacketCode(new Buffer(strValue).toString("utf8"))
-            setStrValue(Uint8ArrayToString(beautifyValue as Uint8Array))
-            setTypeLoading(false)
-        } else {
-            setStrValue("")
-            setTypeLoading(false)
-        }
-    })
-
     const renderCode = async () => {
         setTypeLoading(true)
         let renderValue = await prettifyPacketRender(originValue)
@@ -1597,29 +1583,23 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                         <div style={{display: "flex", gap: 2, alignItems: "center"}}>
                             {props.extra}
                             {isShowBeautifyRender && (
-                                <>
-                                    {props.readOnly ? (
-                                        <div className={classNames(styles["type-options-checkable-tag"])}>
-                                            {typeOptions.map((item) => (
-                                                <YakitCheckableTag
-                                                    key={item.value}
-                                                    checked={type === item.value}
-                                                    onChange={(checked) => {
-                                                        if (checked) {
-                                                            setType(item.value)
-                                                        } else {
-                                                            setType(undefined)
-                                                        }
-                                                    }}
-                                                >
-                                                    {item.label}
-                                                </YakitCheckableTag>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <YakitButton size='small' onClick={editEditorClickPrettifyPacketCode}>美化</YakitButton>
-                                    )}
-                                </>
+                                <div className={classNames(styles["type-options-checkable-tag"])}>
+                                    {typeOptions.map((item) => (
+                                        <YakitCheckableTag
+                                            key={item.value}
+                                            checked={type === item.value}
+                                            onChange={(checked) => {
+                                                if (checked) {
+                                                    setType(item.value)
+                                                } else {
+                                                    setType(undefined)
+                                                }
+                                            }}
+                                        >
+                                            {item.label}
+                                        </YakitCheckableTag>
+                                    ))}
+                                </div>
                             )}
                             {dataCompare && dataCompare.rightCode.length > 0 && (
                                 <YakitButton

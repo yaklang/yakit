@@ -92,6 +92,8 @@ import {ShareImportExportData} from "../components/ShareImportExportData"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import sequencemp4 from "@/assets/sequence.mp4"
+import {prettifyPacketCode} from "@/utils/prettifyPacket"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
@@ -790,11 +792,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 const m = showYakitModal({
                                     type: "white",
                                     title: (
-                                        <div className={styles['sequence-animation-pop-title']}>
+                                        <div className={styles["sequence-animation-pop-title"]}>
                                             WebFuzzer 序列动画演示
                                             <div
                                                 className={styles["subtitle-help-wrapper"]}
-                                                onClick={() => ipcRenderer.invoke("open-url", "https://www.yaklang.com/products/Web%20Fuzzer/fuzz-sequence")}
+                                                onClick={() =>
+                                                    ipcRenderer.invoke(
+                                                        "open-url",
+                                                        "https://www.yaklang.com/products/Web%20Fuzzer/fuzz-sequence"
+                                                    )
+                                                }
                                             >
                                                 <span className={styles["text-style"]}>官方帮助文档</span>
                                                 <OutlineQuestionmarkcircleIcon />
@@ -1532,6 +1539,18 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
 
         const firstNodeExtra = () => (
             <>
+                <YakitButton
+                    size='small'
+                    type='primary'
+                    onClick={async () => {
+                        if (!requestHttpRef.current) return
+                        const beautifyValue = await prettifyPacketCode(requestHttpRef.current)
+                        onSetRequestHttp(Uint8ArrayToString(beautifyValue as Uint8Array, "utf8"))
+                        setRefreshTrigger(!refreshTrigger)
+                    }}
+                >
+                    美化
+                </YakitButton>
                 <YakitButton
                     size='small'
                     type='primary'
