@@ -349,7 +349,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             <div
                 className={style["mitm-page"]}
                 ref={mitmPageRef}
-                style={status === "idle" ? {padding: "0px 16px"} : {padding: "8px 16px 13px"}}
+                style={status === "idle" ? {padding: "0px 16px"} : {padding: "8px 16px 0px 0px"}}
             >
                 {onRenderMITM()}
             </div>
@@ -396,6 +396,8 @@ interface MITMServerProps {
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const {visible, setVisible, status, setStatus, logs, statusCards} = props
+
+    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
     /**
      * @description 插件勾选
      */
@@ -638,6 +640,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         }}
                         groupNames={groupNames}
                         setGroupNames={setGroupNames}
+                        onSetOpenTabsFlag={setOpenTabsFlag}
                     />
                 )
         }
@@ -682,6 +685,13 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstRatio: "25%",
             secondRatio: "50%"
         }
+
+        if (openTabsFlag) {
+            p.firstRatio = "25%"
+        } else {
+            p.firstRatio = "24px"
+        }
+
         if (isFullScreenSecondNode) {
             p.firstRatio = "0%"
         }
@@ -690,20 +700,22 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             p.firstRatio = "calc(100% + 6px)"
         }
         return p
-    }, [isFullScreenSecondNode, isFullScreenFirstNode])
+    }, [isFullScreenSecondNode, isFullScreenFirstNode, openTabsFlag])
+
     return (
         <YakitResizeBox
             isVer={false}
+            freeze={openTabsFlag}
             firstNode={() => (
                 <div
                     className={style["mitm-server-start-pre-first"]}
-                    style={{display: isFullScreenSecondNode ? "none" : ""}}
+                    style={{display: isFullScreenSecondNode ? "none" : "", marginTop: status === "idle" ? 12 : 0}}
                 >
                     {onRenderFirstNode()}
                 </div>
             )}
             lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}
-            firstMinSize={340}
+            firstMinSize={openTabsFlag ? "340px" : "24px"}
             secondMinSize={620}
             secondNode={() => (
                 <div
