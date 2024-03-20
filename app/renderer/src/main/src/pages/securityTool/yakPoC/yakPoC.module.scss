@@ -1,4 +1,5 @@
 @use "../securityTool.scss" as securityTool;
+@use "../../plugins/plugins.scss";
 
 .yak-poc-execute-wrapper {
     @include securityTool.execute-title("yak-poc");
@@ -7,27 +8,69 @@
 .divider-style {
     @extend %divider-style;
 }
+.header-icon {
+    color: var(--yakit-body-text-color);
+    width: 16px;
+    height: 16px;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+    &:hover {
+        color: var(--yakit-primary-4);
+    }
+    path {
+        stroke-width: 1.5;
+    }
+}
 .yak-poc-wrapper {
     @extend %display-flex-center;
     flex: 1;
     height: 100%;
     overflow: hidden;
+    .left-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        height: 100%;
+        overflow: hidden;
+        width: 430px;
+        border-right: 1px solid #eaecf3;
+        padding: 12px 8px;
+        .left-header-search {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            padding: 0 4px;
+            .header-type-wrapper {
+                @extend %display-flex-center;
+                align-items: center;
+                gap: 8px;
+                .header-text {
+                    color: var(--yakit-header-color);
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 16px; /* 133.333% */
+                }
+            }
+        }
+    }
+    .left-wrapper-hidden {
+        display: none;
+    }
 }
+
 .plugin-group-wrapper {
-    width: 430px;
-    border-right: 1px solid #eaecf3;
     height: 100%;
     display: flex;
     flex-direction: column;
-    // padding: 12px 12px 0 8px;
-    padding-top: 12px;
+    overflow: hidden;
     .filter-wrapper {
         @extend %display-column-center;
-        gap: 16px;
-        padding: 0 12px 8px;
+        gap: 8px;
         .header-search {
             @extend %display-flex-center;
             justify-content: space-between;
+            padding: 0 4px;
         }
         .filter-body {
             @extend %display-flex-center;
@@ -53,8 +96,7 @@
         }
     }
     .group-list-wrapper {
-        padding: 0px 8px 0;
-        padding-right: 2px;
+        // padding-right: 2px;
         .group-item-wrapper {
             @extend %display-column-center;
             align-items: center;
@@ -87,6 +129,9 @@
                     line-height: 12px; /* 120% */
                 }
             }
+        }
+        .group-keyword-item-wrapper {
+            height: 62px;
         }
         .group-item-wrapper-checked {
             background-color: var(--yakit-primary-5);

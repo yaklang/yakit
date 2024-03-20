@@ -177,6 +177,8 @@ export interface GroupCount {
     Value: string
     Total: number
     Default: boolean
+    TemporaryId?:string
+    IsPocBuiltIn?:boolean
 }
 
 export interface QueryYakScriptGroupResponse {
@@ -192,6 +194,7 @@ export interface SaveYakScriptGroupRequest {
     Filter: QueryYakScriptRequest
     SaveGroup: string[]
     RemoveGroup: string[]
+    PageId?:string
 }
 
 export interface ResetYakScriptGroupRequest {

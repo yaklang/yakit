@@ -63,7 +63,10 @@ export interface WebFuzzerPageInfoProps {
 }
 
 export interface PocPageInfoProps {
+    /**按组搜的选中 */
     selectGroup?: string[]
+    /**按关键字搜的选中/poc内置组*/
+    selectGroupListByKeyWord?:string[]
     formValue?: HybridScanControlAfterRequest
 }
 
