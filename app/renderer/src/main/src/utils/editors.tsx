@@ -1461,19 +1461,28 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     }, [originValue])
 
+    const isShowBeautifyRenderRef = useRef<boolean>()
+    useEffect(() => {
+        isShowBeautifyRenderRef.current = isShowBeautifyRender
+    }, [isShowBeautifyRender])
+
     useUpdateEffect(() => {
         setType(typeOptionVal)
         if (typeOptionVal === "beautify") {
-            if (originValue && isShowBeautifyRender) {
+            if (originValue) {
                 setTimeout(() => {
                     beautifyCode()
                 }, 200)
             }
         }
-    }, [typeOptionVal, originValue, isShowBeautifyRender])
+    }, [typeOptionVal, originValue])
 
     const beautifyCode = useDebounceFn(
         useMemoizedFn(async () => {
+            const encoder = new TextEncoder()
+            const bytes = encoder.encode(Uint8ArrayToString(originValue))
+            const mb = bytes.length / 1024 / 1024
+            if (!isShowBeautifyRenderRef.current || mb > 0.5) return
             setTypeLoading(true)
             setRenderHTML(undefined)
             if (originValue.length > 0) {
