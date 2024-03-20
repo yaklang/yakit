@@ -211,9 +211,10 @@ interface CreateReportContentProps {
     onCancel?: () => void
     infoState: HoldGRPCStreamInfo
     runPluginCount: number
+    uuid: string
 }
 const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((props) => {
-    const {infoState, runPluginCount, onCancel} = props
+    const {infoState, runPluginCount, onCancel, uuid} = props
     const [reportName, setReportName] = useState<string>(props.reportName || "默认报告名称")
     // 是否展示报告生成进度
     const [showReportPercent, setShowReportPercent] = useState<boolean>(false)
@@ -228,9 +229,8 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
     const downloadReport = () => {
         // 脚本数据
         const scriptData = CreatReportScript
-        const runTaskNameEx = reportName + "-" + uuidv4()
         let Params: ExecParamItem[] = [
-            {Key: "task_name", Value: runTaskNameEx},
+            {Key: "task_name", Value: `${reportName}-${uuid}`},
             {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
             {Key: "report_name", Value: reportName},
             {Key: "plugins", Value: `${runPluginCount}`},

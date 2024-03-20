@@ -350,7 +350,8 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             onCreateReportModal({
                 infoState: streamInfo,
                 runPluginCount: selectNum,
-                reportName: taskNameRef.current
+                reportName: taskNameRef.current,
+                uuid: uuidRef.current
             })
         })
 
@@ -371,9 +372,9 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             setRuntimeId("")
             if (isEnpriTrace()) {
                 uuidRef.current = uuidv4()
-                const taskName = `${executeParams.Targets.split(",")[0].split(/\n/)[0]}风险评估报告-${uuidRef.current}`
+                const taskName = `${executeParams.Targets.split(",")[0].split(/\n/)[0]}风险评估报告`
                 taskNameRef.current = taskName
-                let PortScanRequest = {...executeParams, TaskName: taskName}
+                let PortScanRequest = {...executeParams, TaskName: `${taskName}-${uuidRef.current}`}
                 const simpleDetectPrams: RecordPortScanRequest = {
                     PortScanRequest
                 }
