@@ -1154,10 +1154,15 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     showDefaultExtra?: boolean
     /**@name 数据对比(默认无对比) */
     dataCompare?: DataCompareProps
+    /**默认选中美化或渲染 */
+    typeOptionVal?: RenderTypeOptionVal
+    onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
 }
 
+export type RenderTypeOptionVal = "beautify" | "render"
+
 interface TypeOptionsProps {
-    value: "beautify" | "render"
+    value: RenderTypeOptionVal
     label: string
 }
 
@@ -1172,7 +1177,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         isShowBeautifyRender = true,
         showDefaultExtra = true,
         dataCompare,
-        editorOperationRecord
+        editorOperationRecord,
+        typeOptionVal,
+        onTypeOptionVal
     } = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
@@ -1400,7 +1407,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }, [props.defaultSearchKeyword, monacoEditor])
 
     useEffect(() => {
-        setType(undefined)
         setRenderHTML(undefined)
         setShowValue(originValue)
         if (originValue.length > 0) {
@@ -1455,18 +1461,48 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     }, [originValue])
 
-    const beautifyCode = async () => {
+    useUpdateEffect(() => {
+        setType(typeOptionVal)
+        if (typeOptionVal === "beautify") {
+            if (originValue) {
+                setTimeout(() => {
+                    beautifyCode()
+                }, 200)
+            }
+        }
+    }, [typeOptionVal, originValue])
+
+    const beautifyCode = useDebounceFn(
+        useMemoizedFn(async () => {
+            setTypeLoading(true)
+            setRenderHTML(undefined)
+            if (originValue.length > 0) {
+                let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
+                setShowValue(beautifyValue as Uint8Array)
+                setTypeLoading(false)
+            } else {
+                setShowValue(new Uint8Array())
+                setTypeLoading(false)
+            }
+        }),
+        {
+            wait: 300
+        }
+    ).run
+
+    // 当编辑器可编辑时 点击美化按钮
+    const editEditorClickPrettifyPacketCode = useMemoizedFn(async () => {
         setTypeLoading(true)
         setRenderHTML(undefined)
-        if (originValue.length > 0) {
-            let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
-            setShowValue(beautifyValue as Uint8Array)
+        if (strValue.length > 0) {
+            let beautifyValue = await prettifyPacketCode(new Buffer(strValue).toString("utf8"))
+            setStrValue(Uint8ArrayToString(beautifyValue as Uint8Array))
             setTypeLoading(false)
         } else {
-            setShowValue(new Uint8Array())
+            setStrValue("")
             setTypeLoading(false)
         }
-    }
+    })
 
     const renderCode = async () => {
         setTypeLoading(true)
@@ -1476,6 +1512,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }
 
     useUpdateEffect(() => {
+        onTypeOptionVal && onTypeOptionVal(type)
         if (originValue && type === undefined) {
             setRenderHTML(undefined)
             setShowValue(originValue)
@@ -1560,23 +1597,29 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                         <div style={{display: "flex", gap: 2, alignItems: "center"}}>
                             {props.extra}
                             {isShowBeautifyRender && (
-                                <div className={classNames(styles["type-options-checkable-tag"])}>
-                                    {typeOptions.map((item) => (
-                                        <YakitCheckableTag
-                                            key={item.value}
-                                            checked={type === item.value}
-                                            onChange={(checked) => {
-                                                if (checked) {
-                                                    setType(item.value)
-                                                } else {
-                                                    setType(undefined)
-                                                }
-                                            }}
-                                        >
-                                            {item.label}
-                                        </YakitCheckableTag>
-                                    ))}
-                                </div>
+                                <>
+                                    {props.readOnly ? (
+                                        <div className={classNames(styles["type-options-checkable-tag"])}>
+                                            {typeOptions.map((item) => (
+                                                <YakitCheckableTag
+                                                    key={item.value}
+                                                    checked={type === item.value}
+                                                    onChange={(checked) => {
+                                                        if (checked) {
+                                                            setType(item.value)
+                                                        } else {
+                                                            setType(undefined)
+                                                        }
+                                                    }}
+                                                >
+                                                    {item.label}
+                                                </YakitCheckableTag>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <YakitButton size='small' onClick={editEditorClickPrettifyPacketCode}>美化</YakitButton>
+                                    )}
+                                </>
                             )}
                             {dataCompare && dataCompare.rightCode.length > 0 && (
                                 <YakitButton

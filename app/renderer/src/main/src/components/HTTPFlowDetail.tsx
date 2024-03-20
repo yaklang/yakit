@@ -17,7 +17,7 @@ import {
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
+import {IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -46,6 +46,7 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
+import { RemoteGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1122,6 +1123,28 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     })
 
+    // 编辑器美化缓存
+    const [reqTypeOptionVal, setReqTypeOptionVal] = useState<RenderTypeOptionVal>()
+    const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
+    useEffect(() => {
+        if (flow) {
+            getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then(res => {
+                if (!!res) {
+                    setReqTypeOptionVal(res)
+                } else {
+                    setReqTypeOptionVal(undefined)
+                }
+            })
+            getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then(res => {
+                if (!!res) {
+                    setResTypeOptionVal(res)
+                } else {
+                    setResTypeOptionVal(undefined)
+                }
+            })
+        }
+    }, [flow])
+
     return (
         <YakitResizeBox
             firstNode={() => {
@@ -1212,6 +1235,15 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         onEditor={(Editor) => {
                             setReqEditor(Editor)
                         }}
+                        typeOptionVal={reqTypeOptionVal}
+                        onTypeOptionVal={(typeOptionVal) => {
+                            if (typeOptionVal === "beautify") {
+                                setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, typeOptionVal)
+                            } else {
+                                setReqTypeOptionVal(undefined)
+                                setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
+                            }
+                        }}
                     />
                 )
             }}
@@ -1226,6 +1258,15 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 return (
                     <NewHTTPPacketEditor
                         language={flow?.DisableRenderStyles ? "text" : undefined}
+                        typeOptionVal={resTypeOptionVal}
+                        onTypeOptionVal={(typeOptionVal) => {
+                            if (typeOptionVal === "beautify") {
+                                setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, typeOptionVal)
+                            } else {
+                                setResTypeOptionVal(undefined)
+                                setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, "")
+                            }
+                        }}
                         isShowBeautifyRender={!flow?.IsTooLargeResponse}
                         title={(() => {
                             let titleEle = [<span style={{fontSize: 12}}>Response</span>]

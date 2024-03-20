@@ -164,7 +164,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             <NewHTTPPacketEditor
                 defaultHttps={isHttps}
                 noHex={true}
-                isShowBeautifyRender={false}
+                isShowBeautifyRender={true}
                 showDefaultExtra={false}
                 refreshTrigger={refreshTrigger}
                 hideSearch={true}
