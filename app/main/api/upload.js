@@ -39,13 +39,13 @@ module.exports = (win, getClient) => {
             // 创建当前分片的读取流
             const chunkStream = fs.createReadStream(path, options)
             // 计算Hash
-            const hash = crypto.createHash("sha256")
+            const hash = crypto.createHash("sha1")
             chunkStream.on("data", (chunk) => {
                 hash.update(chunk)
             })
             chunkStream.on("end", () => {
                 // 单独一片的Hash
-                const fileChunkHash = hash.digest("hex")
+                const fileChunkHash = hash.digest("hex").slice(0, 8) // 仅保留前8个字符作为哈希值
                 resolve(fileChunkHash)
             })
 
@@ -67,7 +67,7 @@ module.exports = (win, getClient) => {
             formData.append("totalChunks", totalChunks)
             formData.append("hash", fileHash)
             formData.append("fileName", fileName)
-            console.log("参数---", chunkIndex, totalChunks, fileName,hash, fileName)
+            // console.log("参数---", fileName, fileHash)
             httpApi(
                 "post",
                 url,
@@ -77,14 +77,14 @@ module.exports = (win, getClient) => {
                 percent === 1 ? 60 * 1000 * 10 : 60 * 1000
             )
                 .then(async (res) => {
-                    console.log("res---", res)
+                    // console.log("res---", res)
                     const progress = Math.floor(percent * 100)
                     win.webContents.send(`callback-split-upload-${token}`, {
                         res,
                         progress: progress === 100 ? 99 : progress
                     })
                     if (res.code !== 200 && postPackageHistory[hash] <= 3) {
-                        console.log("重传", postPackageHistory[hash])
+                        // console.log("重传", postPackageHistory[hash])
                         // 传输失败 重传3次
                         await postPackage({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token})
                     } else if (postPackageHistory[hash] > 3) {
@@ -93,7 +93,7 @@ module.exports = (win, getClient) => {
                     resolve()
                 })
                 .catch((err) => {
-                    console.log("catch", err)
+                    // console.log("catch", err)
                     reject(err)
                 })
         })
