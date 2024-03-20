@@ -2,10 +2,13 @@ import React, {useRef, useState, useEffect, forwardRef, useImperativeHandle} fro
 import {defaultSearch} from "../baseTemplate"
 import {useMemoizedFn, useCreation, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {PluginSearchParams} from "../baseTemplateType"
+import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
+import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
     PluginBatchExecutorInputValueProps,
+    PluginInfoProps,
+    apiCancelHybridScan,
     PluginBatchExecutorTaskProps,
     apiGetPluginByGroup,
     apiHybridScan,
@@ -58,6 +61,7 @@ export const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormVal
     ...cloneDeep(defPluginExecuteFormValue),
     ...cloneDeep(defPluginExecuteTaskValue)
 }
+export const batchPluginType = "mitm,port-scan,nuclei"
 export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.memo((props) => {
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -99,7 +103,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const userInfo = useStore((s) => s.userInfo)
 
     /** 是否为初次加载 */
-    const typeRef = useRef<string>("mitm,port-scan,nuclei")
+    const isLoadingRef = useRef<boolean>(true)
+    const privateDomainRef = useRef<string>("") // 私有域地址
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
 
     const batchExecuteDomRef = useRef<HTMLDivElement>(null)
@@ -254,7 +259,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 selectNum={selectNum}
                 isExpand={isExpand}
                 setIsExpand={setIsExpand}
-                pluginType={typeRef.current}
                 defaultActiveKey={pageInfo.defaultActiveKey}
                 onInitInputValueAfter={onInitInputValueAfter}
                 setProgressList={setProgressList}
@@ -270,12 +274,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
 
 interface PluginBatchExecuteContentProps {
     ref?: React.ForwardedRef<PluginBatchExecuteContentRefProps>
-    /** 如果同时传了 pluginInfo.selectPluginName,以pluginInfo.selectPluginGroup查询回来的插件为主 */
-    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams; selectPluginGroup?: string[]}
+    pluginInfo: PluginInfoProps
     /**选择插件得数量 */
     selectNum: number
-    /**插件类型 */
-    pluginType?: string
     /**插件执行输出结果默认选择得tabKey */
     defaultActiveKey?: string
     /** 设置输入模块的初始值后得回调事件，例如：插件批量执行页面(设置完初始值后，刷新左侧得插件列表页面) */
@@ -303,7 +304,7 @@ export interface PluginBatchExecuteContentRefProps {
 }
 export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {selectNum, pluginType = "", pluginInfo, defaultActiveKey, onInitInputValueAfter, setProgressList} = props
+        const {selectNum, pluginInfo, defaultActiveKey, onInitInputValueAfter, setProgressList} = props
         const [form] = Form.useForm()
         const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
         useImperativeHandle(
@@ -410,7 +411,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value) => {
-            const {selectPluginGroup = []} = pluginInfo
             // 任务配置参数
             const taskParams: PluginBatchExecutorTaskProps = {
                 Concurrent: extraParamsValue.Concurrent,
@@ -429,22 +429,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         : Buffer.from("", "utf8")
                 }
             }
-            let newPluginInfo = {...pluginInfo}
-            // 如果有插件组的话，需要查询插件组中的插件做为selectPluginName传给后端
-            if (selectPluginGroup.length > 0) {
-                try {
-                    const res = await apiGetPluginByGroup(selectPluginGroup)
-                    newPluginInfo.selectPluginName = res.Data.map((item) => item.ScriptName)
-                } catch (error) {
-                    newPluginInfo.selectPluginName = []
-                }
-            }
-            // if (newPluginInfo.selectPluginName.length === 0) return
-            const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(
-                params,
-                newPluginInfo,
-                pluginType
-            )
+            const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo)
             hybridScanStreamEvent.reset()
             apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
                 setExecuteStatus("process")
@@ -525,7 +510,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         streamInfo={streamInfo}
                         runtimeId={runtimeId}
                         loading={isExecuting}
-                        pluginType={pluginType}
+                        pluginType={""}
                         defaultActiveKey={defaultActiveKey}
                     />
                 )}

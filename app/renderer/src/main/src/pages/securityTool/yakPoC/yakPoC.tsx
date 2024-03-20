@@ -15,7 +15,8 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     PluginBatchExecuteContent,
-    PluginBatchExecuteContentRefProps
+    PluginBatchExecuteContentRefProps,
+    batchPluginType
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -582,7 +583,10 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     const pluginInfo = useCreation(() => {
         return {
             selectPluginName: [],
-            selectPluginGroup: selectGroupList
+            filters: {
+                plugin_type: batchPluginType.split(",").map((ele) => ({value: ele, label: ele, count: 0})),
+                plugin_group: selectGroupList.map((ele) => ({value: ele, label: ele, count: 0}))
+            }
         }
     }, [selectGroupList])
     const isExecuting = useCreation(() => {
@@ -605,7 +609,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                             ></YakitButton>
                         </Tooltip>
                     )}
-                    <span className={styles["yak-poc-executor-title-text"]}>已选插件组</span>
+                    <span className={styles["yak-poc-executor-title-text"]}>插件执行</span>
                 </div>
                 <div className={styles["yak-poc-executor-btn"]}>
                     {progressList.length === 1 && (

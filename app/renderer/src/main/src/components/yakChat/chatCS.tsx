@@ -1888,7 +1888,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                 type: "keyword"
             }
         }
-        const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo, "")
+        const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo)
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setPluginRun(true)
             setPluginNameList(selectPluginName)
