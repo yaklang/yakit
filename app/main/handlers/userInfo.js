@@ -20,7 +20,10 @@ module.exports = (win, getClient) => {
             qqHeadImg: info.from_platform === "qq" ? info.head_img : null,
             role: info.role,
             user_id: info.user_id,
-            token: info.token
+            token: info.token,
+            companyName: info.name,
+            companyHeadImg: info.head_img,
+            checkPlugin: info?.checkPlugin
         }
 
         USER_INFO.isLogin = user.isLogin
@@ -33,8 +36,10 @@ module.exports = (win, getClient) => {
         USER_INFO.qqHeadImg = user.qqHeadImg
         USER_INFO.role = user.role
         USER_INFO.token = info.token
-
         USER_INFO.user_id = user.user_id
+        USER_INFO.checkPlugin = user.checkPlugin
+        USER_INFO.companyName = user.companyName
+        USER_INFO.companyHeadImg = user.companyHeadImg
         win.webContents.send("fetch-signin-token", user)
         win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
     }
@@ -283,6 +288,8 @@ module.exports = (win, getClient) => {
         USER_INFO.token = user.token
         USER_INFO.user_id = user.user_id
         USER_INFO.checkPlugin = user.checkPlugin
+        USER_INFO.companyName = user.companyName
+        USER_INFO.companyHeadImg = user.companyHeadImg
         event.returnValue = user
     })
 
