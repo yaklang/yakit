@@ -102,6 +102,8 @@ function testRemoteClient(params, callback) {
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
 
+const YAKIT_PROTOCOL = "yakitctrl"
+
 module.exports = {
     testRemoteClient,
     clearing: () => {
@@ -113,11 +115,14 @@ module.exports = {
         protocol.registerHttpProtocol(YAKIT_PROTOCOL, (request, callback) => {
             const client = getClient()
             if (!client) {
-                callback({error: "no client"})
+                console.info("NO CLIENT FOUND.")
+                callback({error: -1, message: "NO CLIENT FOUND."})
             } else {
-                callback({url: `ws://127.0.0.1:8083/?token=a`})
+                console.info("CLIENT IS CONNECTED.")
+                callback({url: "http://www.example.com"})
             }
         })
+        app.setAsDefaultProtocolClient(YAKIT_PROTOCOL)
 
         ipcMain.handle("relaunch", () => {
             app.relaunch({})

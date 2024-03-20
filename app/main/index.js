@@ -97,8 +97,6 @@ const createWindow = () => {
     // })
 }
 
-const YAKIT_PROTOCOL = "yakitctrl"
-
 app.whenReady().then(() => {
     // 截图功能的注册(功能和全局快捷键的注册)
     if (["darwin", "win32"].includes(process.platform)) {
