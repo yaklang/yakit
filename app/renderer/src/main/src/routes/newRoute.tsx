@@ -24,7 +24,6 @@ import {
 import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
-import {YakitPluginJournalDetails} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
 import {OnlinePluginRecycleBin} from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
@@ -200,8 +199,6 @@ export enum YakitRoute {
     AddYakitScript = "add-yakit-script",
     // 编辑插件页面
     ModifyYakitScript = "modify-yakit-script",
-    // 插件日志-单条详情页面
-    YakitPluginJournalDetails = "yakit-plugin-journal-details",
     // 我的插件回收站页面
     OnlinePluginRecycleBin = "online-plugin-recycle-bin",
     /** 简易版专属 */
@@ -300,7 +297,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "packet-scan-page": {label: "数据包扫描"},
     "add-yakit-script": {label: "新建插件"},
     "modify-yakit-script": {label: "编辑插件"},
-    "yakit-plugin-journal-details": {label: "插件修改详情"},
     "online-plugin-recycle-bin": {label: "线上插件回收站"},
     "simple-detect": {label: "安全检测"},
     "screen-recorder-page": {label: "录屏管理"},
@@ -618,8 +614,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <PluginEditDetails />
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />
-        case YakitRoute.YakitPluginJournalDetails:
-            return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
         case YakitRoute.OnlinePluginRecycleBin:
             return <OnlinePluginRecycleBin />
         case YakitRoute.SimpleDetect:

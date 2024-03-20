@@ -97,7 +97,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     if (data?.next) {
                         aboutLoginUpload(res.token)
                         success("企业登录成功")
-                        onCloseTab()
                         onClose && onClose()
                         onSuccee && onSuccee()
                     }
@@ -112,14 +111,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 failed("企业登录失败：" + err)
             })
             .finally(() => {})
-    })
-    // 关闭 tab
-    const onCloseTab = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("send-close-tab", {
-                router: YakitRoute.YakitPluginJournalDetails
-            })
-            .then(() => {})
     })
 
     const onFinish = useMemoizedFn((v: OnlineProfileProps) => {
@@ -143,7 +134,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     ipcRenderer.invoke("ipc-sign-out")
                     success("私有域设置成功")
                     syncLoginOut()
-                    onCloseTab()
                     onClose && onClose()
                 }
                 ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
