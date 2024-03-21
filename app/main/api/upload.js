@@ -27,6 +27,23 @@ module.exports = (win, getClient) => {
         return res
     })
 
+    ipcMain.handle("upload-group-data", async (event, params) => {
+        const {path} = params
+        // 创建数据流
+        // console.log('time1',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
+        const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
+        const formData = new FormData()
+        formData.append("file", readerStream)
+        const res = httpApi(
+            "post",
+            "update/plugins/group",
+            formData,
+            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            false
+        )
+        return res
+    })
+
     // 计算Hash（支持分片计算与整体计算）
     const hashChunk = ({path, size, chunkSize, chunkIndex}) => {
         return new Promise((resolve, reject) => {

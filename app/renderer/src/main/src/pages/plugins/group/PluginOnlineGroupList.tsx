@@ -45,6 +45,13 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
     }, [pluginsGroupsInViewport])
 
     useEffect(() => {
+        emiter.on("onRefpluginGroupList", getGroupList)
+        return () => {
+            emiter.off("onRefpluginGroupList", getGroupList)
+        }
+    }, [])
+
+    useEffect(() => {
         emiter.on("onRefPluginGroupMagOnlineQueryYakScriptGroup", getGroupList)
         return () => {
             emiter.off("onRefPluginGroupMagOnlineQueryYakScriptGroup", getGroupList)
