@@ -1,5 +1,6 @@
 const {ipcMain} = require("electron");
 const FS = require("fs")
+const path = require("path")
 const xlsx = require("node-xlsx")
 const handlerHelper = require("./handleStreamWithContext");
 module.exports = (win, getClient) => {
@@ -136,6 +137,27 @@ module.exports = (win, getClient) => {
     ipcMain.handle("RecoverSimpleDetectUnfinishedTask", (e, params, token) => {
         let stream = getClient().RecoverSimpleDetectUnfinishedTask(params)
         handlerHelper.registerHandler(win, stream, streamRecoverSimpleDetectUnfinishedTaskMap, token)
+    })
+
+    const asyncSaveSimpleDetectLogToTxt = (params) => {
+        return new Promise(async (resolve, reject) => {
+            const {outputDir, data, fileName} = params
+            const filePath = path.join(outputDir, fileName);
+            FS.writeFile(filePath, data, (err) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve({
+                        ok: true,
+                        outputDir: filePath
+                    })
+                }
+              });
+        })
+    }
+
+    ipcMain.handle("SaveSimpleDetectLogToTxt", async (e, params) => {
+        return await asyncSaveSimpleDetectLogToTxt(params)
     })
 
     // 获取URL的IP地址

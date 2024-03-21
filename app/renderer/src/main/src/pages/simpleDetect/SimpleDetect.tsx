@@ -59,6 +59,7 @@ import {YakitRoute} from "@/routes/newRoute"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
 import emiter from "@/utils/eventBus/eventBus"
 import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal} from "../plugins/utils"
+import { openABSFileLocated } from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -392,7 +393,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             stopListenLog()
         }
     }, [executing])
-    const run = (OnlineGroup: string, TaskName: string) => {
+    const run = (TaskName: string) => {
         setPercent(0)
         setRunPluginCount(getPortParams().ScriptNames.length)
 
@@ -488,7 +489,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         // 只勾选了爆破弱口令的选项
         else if (OnlineGroup.length === 0) {
             setPortParams({...getPortParams(), ScriptNames: []})
-            run(OnlineGroup, TaskName)
+            run(TaskName)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
@@ -556,6 +557,41 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         getPluginGroup()
     }, [inViewport, refreshPluginGroup])
 
+    const downloadLog = useMemoizedFn(()=>{
+        if(getLogContent().length===0){
+            warn("无导出内容")
+            return
+        }
+        ipcRenderer
+        .invoke("openDialog", {
+            title: "请选择文件夹",
+            properties: ["openDirectory"]
+        })
+        .then((data: {filePaths: string[]}) => {
+            const filesLength = data.filePaths.length
+            if (filesLength) {
+                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
+                ipcRenderer
+                    .invoke("SaveSimpleDetectLogToTxt", {
+                        data: getLogContent(),
+                        outputDir: absolutePath,
+                        fileName: `SimpleDetectLog-${new Date().getTime()}.txt`
+                    })
+                    .then((r) => {
+                        console.log(r)
+                        if (r?.ok) {
+                            success("Log导出成功")
+                            r?.outputDir && openABSFileLocated(r.outputDir)
+                        }
+                    })
+                    .catch((e) => {
+                        failed(`failed ${e}`)
+                    })
+                    .finally(() => setTimeout(() => {}, 300))
+            }
+        })
+    })
+
     return (
         <>
             <YakitModal
@@ -584,6 +620,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             </YakitModal>
             <div style={{float: "right", fontSize: 12, width: 300, height: 350}}>
                 <div style={{float: "right"}}>
+                    <YakitButton type="text" onClick={downloadLog}>下载log</YakitButton>
                     全屏查看
                     <YakitButton
                         type='text2'
