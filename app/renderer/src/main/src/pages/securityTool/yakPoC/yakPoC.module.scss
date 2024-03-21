@@ -34,13 +34,15 @@
         gap: 16px;
         height: 100%;
         overflow: hidden;
-        width: 430px;
         border-right: 1px solid #eaecf3;
         padding: 12px 8px;
+        width: 33.33333%;
+        max-width: 432px;
+        min-width: 320px;
         .left-header-search {
             @extend %display-flex-center;
             justify-content: space-between;
-            padding-right: 4px;
+            padding: 0 4px;
             .header-type-wrapper {
                 @extend %display-flex-center;
                 align-items: center;
@@ -56,6 +58,47 @@
     }
     .left-wrapper-hidden {
         display: none;
+    }
+    .midden-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        width: 300px;
+        border-right: 1px solid #eaecf3;
+        padding: 12px 8px;
+        gap: 8px;
+        .midden-heard {
+            @extend %display-flex-center;
+            gap: 4px;
+            padding: 0 4px;
+            height: 24px;
+            .heard-right {
+                @extend %display-flex-center;
+                justify-content: space-between;
+                flex: 1;
+                .heard-tip {
+                    color: var(--yakit-helper-text-color);
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 16px; /* 133.333% */
+                }
+                .heard-number {
+                    color: var(--yakit-primary-5);
+                    margin-left: 4px;
+                }
+            }
+        }
+        .plugin-list-by-group-wrapper {
+            display: flex;
+            flex: 1;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .plugin-list-by-group-wrapper-hidden {
+            display: none;
+        }
     }
 }
 
@@ -75,6 +118,7 @@
         .filter-body {
             @extend %display-flex-center;
             justify-content: space-between;
+            padding: 0 4px;
             .filter-body-left {
                 @extend %display-flex-center;
                 .count-num {
@@ -115,11 +159,17 @@
                 align-items: center;
                 gap: 4px;
                 .item-tip-name {
+                    text-align: center;
                     color: var(--yakit-header-color);
                     font-size: 12px;
                     font-style: normal;
                     font-weight: 600;
                     line-height: 16px; /* 133.333% */
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
                 }
                 .item-tip-number {
                     color: var(--yakit-body-text-color);

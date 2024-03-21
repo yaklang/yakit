@@ -1,20 +1,27 @@
-import { HybridScanControlAfterRequest } from "@/models/HybridScan"
-import { GroupCount } from "@/pages/invoker/schema"
+import {HybridScanControlAfterRequest} from "@/models/HybridScan"
+import {GroupCount} from "@/pages/invoker/schema"
 
 export interface YakPoCProps {
-    pageId:string
+    pageId: string
 }
 
-export interface PluginGroupByKeyWordProps{
-    pageId:string
-    inViewport:boolean
+export interface PluginListByGroupProps {
+    /**选择的插件组列表 */
+    selectGroupList: string[]
+    total: number
+    setTotal: (s: number) => void
+    hidden: boolean
+}
+export interface PluginGroupByKeyWordProps {
+    pageId: string
+    inViewport: boolean
     hidden: boolean
     /**选择的插件组列表 按关键词搜索的 */
     selectGroupListByKeyWord?: string[]
     setSelectGroupListByKeyWord?: (s: string[]) => void
 }
 export interface PluginGroupGridProps {
-    inViewport:boolean
+    inViewport: boolean
     hidden: boolean
     /**选择的插件组列表 */
     selectGroupList?: string[]
@@ -26,17 +33,21 @@ export interface YakPoCExecuteContentProps {
     setHidden: (b: boolean) => void
     /**选择的插件组列表 */
     selectGroupList: string[]
-    defaultFormValue?:HybridScanControlAfterRequest
+    defaultFormValue?: HybridScanControlAfterRequest
+    executeStatus: ExpandAndRetractExcessiveState
+    setExecuteStatus: (s: ExpandAndRetractExcessiveState) => void
+    /**清空所有组 */
+    onClearAll: () => void
 }
 
 export interface PluginGroupGridItemProps {
     item: GroupCount
-    selected:boolean
+    selected: boolean
     onSelect: (g: GroupCount) => void
 }
 
-export interface PluginGroupByKeyWordItemProps{
+export interface PluginGroupByKeyWordItemProps {
     item: GroupCount
-    selected:boolean
+    selected: boolean
     onSelect: (g: GroupCount) => void
 }

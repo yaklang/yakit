@@ -1,9 +1,10 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useReducer, useRef, useState} from "react"
 import {
     PluginGroupByKeyWordItemProps,
     PluginGroupByKeyWordProps,
     PluginGroupGridItemProps,
     PluginGroupGridProps,
+    PluginListByGroupProps,
     YakPoCExecuteContentProps,
     YakPoCProps
 } from "./yakPoCType"
@@ -18,7 +19,7 @@ import {
     PluginBatchExecuteContentRefProps,
     batchPluginType
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {
     ExpandAndRetract,
@@ -33,22 +34,27 @@ import {
     OutlineOpenIcon
 } from "@/assets/icon/outline"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {FolderColorIcon} from "@/assets/icon/colors"
+import {FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
-import {GroupCount, SaveYakScriptGroupRequest} from "@/pages/invoker/schema"
+import {GroupCount, QueryYakScriptRequest, SaveYakScriptGroupRequest, YakScript} from "@/pages/invoker/schema"
 import {
     apiFetchDeleteYakScriptGroupLocal,
     apiFetchQueryYakScriptGroupLocal,
-    apiFetchSaveYakScriptGroupLocal
-} from "@/pages/plugins/utils"
+    apiFetchSaveYakScriptGroupLocal,
+    apiQueryYakScript} from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {apiFetchQueryYakScriptGroupLocalByPoc} from "./utils"
+import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
+import {initialLocalState, pluginLocalReducer} from "@/pages/plugins/pluginReducer"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
@@ -78,6 +84,8 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const [hidden, setHidden] = useState<boolean>(false)
     const [type, setType] = useState<"keyword" | "group">("keyword")
 
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+    
     const pluginGroupRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginGroupRef)
 
@@ -89,7 +97,9 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                     .filter((item) => !!item.TemporaryId)
                     .map((ele) => ele.Value)
                     .join(",")
-                apiFetchDeleteYakScriptGroupLocal(removeGroup)
+                if (!!removeGroup) {
+                    apiFetchDeleteYakScriptGroupLocal(removeGroup)
+                }
             })
         }
     }, [])
@@ -106,6 +116,9 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const selectGroupListAll = useCreation(() => {
         return [...(pageInfo.selectGroup || []), ...(pageInfo.selectGroupListByKeyWord || [])]
     }, [pageInfo.selectGroup, pageInfo.selectGroupListByKeyWord])
+    const onClearAll = useMemoizedFn(() => {
+        setPageInfo({...pageInfo, selectGroup: [], selectGroupListByKeyWord: []})
+    })
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div
@@ -156,13 +169,157 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                     setSelectGroupList={onSetSelectGroupList}
                 />
             </div>
-
             <YakPoCExecuteContent
                 hidden={hidden}
                 setHidden={setHidden}
                 selectGroupList={selectGroupListAll}
                 defaultFormValue={pageInfo.formValue}
+                executeStatus={executeStatus}
+                setExecuteStatus={setExecuteStatus}
+                onClearAll={onClearAll}
             />
+        </div>
+    )
+})
+
+const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) => {
+    const {selectGroupList, setTotal, hidden} = props
+    const isLoadingRef = useRef<boolean>(true)
+    const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
+    const [loading, setLoading] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(true)
+
+    const privateDomainRef = useRef<string>("") // 私有域地址
+
+    // 获取筛选栏展示状态
+    useEffect(() => {
+        getPrivateDomainAndRefList()
+    }, [])
+
+    /**获取最新的私有域,并刷新列表 */
+    const getPrivateDomainAndRefList = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+            if (setting) {
+                const values = JSON.parse(setting)
+                privateDomainRef.current = values.BaseUrl
+            }
+        })
+    })
+
+    useUpdateEffect(() => {
+        fetchList(true)
+    }, [selectGroupList])
+
+    const fetchList = useDebounceFn(
+        useMemoizedFn(async (reset?: boolean) => {
+            if (selectGroupList.length === 0) return
+            if (reset) {
+                isLoadingRef.current = true
+            }
+            setLoading(true)
+
+            const params: PluginListPageMeta = !!reset
+                ? {page: 1, limit: 20}
+                : {
+                      page: +response.Pagination.Page + 1,
+                      limit: +response.Pagination.Limit || 20
+                  }
+            const query: QueryYakScriptRequest = {
+                Pagination: {
+                    Limit: params?.limit || 10,
+                    Page: params?.page || 1,
+                    OrderBy: "updated_at",
+                    Order: "desc"
+                },
+                Type: batchPluginType,
+                Group: {UnSetGroup: false, Group: selectGroupList}
+            }
+            try {
+                const res = await apiQueryYakScript(query)
+                if (!res.Data) res.Data = []
+                const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
+                setHasMore(length < +res.Total)
+                const newData = res.Data.map((ele) => ({
+                    ...ele,
+                    isLocalPlugin: privateDomainRef.current !== ele.OnlineBaseUrl
+                }))
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: {
+                            ...res,
+                            Data: newData
+                        }
+                    }
+                })
+                if (+res.Pagination.Page === 1) {
+                    setTotal(+res.Total)
+                }
+            } catch (error) {}
+            setTimeout(() => {
+                isLoadingRef.current = false
+                setLoading(false)
+            }, 200)
+        }),
+        {wait: 200, leading: true}
+    ).run
+    // 滚动更多加载
+    const onUpdateList = useMemoizedFn(() => {
+        fetchList()
+    })
+    /** 单项副标题组件 */
+    const optExtra = useMemoizedFn((data: YakScript) => {
+        if (privateDomainRef.current !== data.OnlineBaseUrl) return <></>
+        if (data.OnlineIsPrivate) {
+            return <SolidPrivatepluginIcon className='icon-svg-16' />
+        } else {
+            return <SolidCloudpluginIcon className='icon-svg-16' />
+        }
+    })
+    return (
+        <div
+            className={classNames(styles["plugin-list-by-group-wrapper"], {
+                [styles["plugin-list-by-group-wrapper-hidden"]]: hidden
+            })}
+        >
+            {selectGroupList.length === 0 || +response.Total === 0 ? (
+                <YakitEmpty title='请选择关键词或插件组进行扫描' style={{paddingTop: 48}} />
+            ) : (
+                <RollingLoadList<YakScript>
+                    data={response.Data}
+                    loadMoreData={onUpdateList}
+                    renderRow={(info: YakScript, i: number) => {
+                        return (
+                            <PluginDetailsListItem<YakScript>
+                                order={i}
+                                plugin={info}
+                                selectUUId={""} //本地用的ScriptName代替uuid
+                                check={false}
+                                headImg={info.HeadImg || ""}
+                                pluginUUId={info.ScriptName} //本地用的ScriptName代替uuid
+                                pluginName={info.ScriptName}
+                                help={info.Help}
+                                content={info.Content}
+                                optCheck={() => {}}
+                                official={!!info.OnlineOfficial}
+                                isCorePlugin={!!info.IsCorePlugin}
+                                pluginType={info.Type}
+                                onPluginClick={() => {}}
+                                extra={optExtra}
+                                enableClick={false}
+                                enableCheck={false}
+                            />
+                        )
+                    }}
+                    page={response.Pagination.Page}
+                    hasMore={hasMore}
+                    loading={loading}
+                    defItemHeight={46}
+                    rowKey='ScriptName'
+                    isRef={loading && isLoadingRef.current}
+                    classNameRow='plugin-details-opt-wrapper'
+                />
+            )}
         </div>
     )
 })
@@ -559,7 +716,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-    const {selectGroupList, defaultFormValue} = props
+    const {selectGroupList, defaultFormValue, onClearAll} = props
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -571,9 +728,15 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
-    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+    const [executeStatus, setExecuteStatus] = useControllableValue<ExpandAndRetractExcessiveState>(props, {
+        defaultValue: "default",
+        valuePropName: "executeStatus",
+        trigger: "setExecuteStatus"
+    })
     /**停止 */
     const [stopLoading, setStopLoading] = useState<boolean>(false)
+    const [total, setTotal] = useState<number>(0)
+    const [showType, setShowType] = useState<"plugin" | "log">("plugin")
 
     useEffect(() => {
         if (defaultFormValue) {
@@ -604,73 +767,116 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             }
         }
     }, [selectGroupList])
+
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         return false
     }, [executeStatus])
     return (
-        <div className={styles["yak-poc-execute-wrapper"]}>
-            <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
-                <div className={styles["yak-poc-executor-title"]}>
-                    {hidden && (
-                        <Tooltip title='展开' placement='top' overlayClassName='plugins-tooltip'>
-                            <YakitButton
-                                type='text2'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setHidden(false)
-                                }}
-                                icon={<OutlineOpenIcon className={styles["header-icon"]} />}
-                            ></YakitButton>
-                        </Tooltip>
-                    )}
-                    <span className={styles["yak-poc-executor-title-text"]}>插件执行</span>
-                </div>
-                <div className={styles["yak-poc-executor-btn"]}>
-                    {progressList.length === 1 && (
-                        <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
-                    )}
-                    {isExecuting
-                        ? !isExpand && (
-                              <>
-                                  <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
-                                      停止
-                                  </YakitButton>
-                                  <div className={styles["divider-style"]}></div>
-                              </>
-                          )
-                        : !isExpand && (
-                              <>
-                                  <YakitButton onClick={onStartExecute} disabled={selectGroupNum === 0}>
-                                      执行
-                                  </YakitButton>
-                                  <div className={styles["divider-style"]}></div>
-                              </>
-                          )}
-                    <YakitButton
-                        type='text2'
-                        icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            setHidden(!hidden)
-                        }}
+        <>
+            {executeStatus === "default" && (
+                <div className={styles["midden-wrapper"]}>
+                    <div className={styles["midden-heard"]}>
+                        <YakitRadioButtons
+                            size='small'
+                            value={showType}
+                            onChange={(e) => {
+                                setShowType(e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: "plugin",
+                                    label: "已选插件"
+                                },
+                                {
+                                    value: "log",
+                                    label: "插件日志"
+                                }
+                            ]}
+                        />
+                        {showType === "plugin" && (
+                            <div className={styles["heard-right"]}>
+                                <span className={styles["heard-tip"]}>
+                                    已选插件<span className={styles["heard-number"]}>{total}</span>
+                                </span>
+                                <YakitButton type='text' danger onClick={onClearAll}>
+                                    清空
+                                </YakitButton>
+                            </div>
+                        )}
+                    </div>
+                    <PluginListByGroup
+                        hidden={showType !== "plugin"}
+                        selectGroupList={selectGroupList}
+                        total={total}
+                        setTotal={setTotal}
                     />
                 </div>
-            </ExpandAndRetract>
-            <div className={styles["yak-poc-executor-body"]}>
-                <PluginBatchExecuteContent
-                    ref={pluginBatchExecuteContentRef}
-                    isExpand={isExpand}
-                    setIsExpand={setIsExpand}
-                    selectNum={selectGroupNum}
-                    setProgressList={setProgressList}
-                    stopLoading={stopLoading}
-                    setStopLoading={setStopLoading}
-                    pluginInfo={pluginInfo}
-                    executeStatus={executeStatus}
-                    setExecuteStatus={setExecuteStatus}
-                />
+            )}
+            <div className={styles["yak-poc-execute-wrapper"]}>
+                <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
+                    <div className={styles["yak-poc-executor-title"]}>
+                        {hidden && (
+                            <Tooltip title='展开' placement='top' overlayClassName='plugins-tooltip'>
+                                <YakitButton
+                                    type='text2'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setHidden(false)
+                                    }}
+                                    icon={<OutlineOpenIcon className={styles["header-icon"]} />}
+                                ></YakitButton>
+                            </Tooltip>
+                        )}
+                        <span className={styles["yak-poc-executor-title-text"]}>插件执行</span>
+                    </div>
+                    <div className={styles["yak-poc-executor-btn"]}>
+                        {progressList.length === 1 && (
+                            <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+                        )}
+                        {isExecuting
+                            ? !isExpand && (
+                                  <>
+                                      <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
+                                          停止
+                                      </YakitButton>
+                                      <div className={styles["divider-style"]}></div>
+                                  </>
+                              )
+                            : !isExpand && (
+                                  <>
+                                      <YakitButton onClick={onStartExecute} disabled={selectGroupNum === 0}>
+                                          执行
+                                      </YakitButton>
+                                      <div className={styles["divider-style"]}></div>
+                                  </>
+                              )}
+                        <YakitButton
+                            type='text2'
+                            icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setHidden(!hidden)
+                            }}
+                        />
+                    </div>
+                </ExpandAndRetract>
+                <div className={styles["yak-poc-executor-body"]}>
+                    <PluginBatchExecuteContent
+                        ref={pluginBatchExecuteContentRef}
+                        isExpand={isExpand}
+                        setIsExpand={setIsExpand}
+                        selectNum={selectGroupNum}
+                        setProgressList={setProgressList}
+                        stopLoading={stopLoading}
+                        setStopLoading={setStopLoading}
+                        pluginInfo={pluginInfo}
+                        executeStatus={executeStatus}
+                        setExecuteStatus={setExecuteStatus}
+                    />
+                </div>
             </div>
-        </div>
+        </>
     )
 })

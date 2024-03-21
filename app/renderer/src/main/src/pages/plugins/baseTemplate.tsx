@@ -889,10 +889,12 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         content,
         optCheck,
         extra,
-        onPluginClick
+        onPluginClick,
+        enableCheck = true,
+        enableClick = true
     } = props
     const onCheck = useMemoizedFn((e: CheckboxChangeEvent) => {
-        optCheck(plugin, e.target.checked)
+        if (enableCheck) optCheck(plugin, e.target.checked)
     })
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
@@ -901,7 +903,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, headImg, pluginType, official])
     const onClick = useMemoizedFn((e) => {
-        onPluginClick(plugin, order)
+        if (enableClick) onPluginClick(plugin, order)
     })
     // 副标题组件
     const extraNode = useMemoizedFn(() => {
@@ -911,7 +913,8 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
     return (
         <div
             className={classNames("plugin-details-item-wrapper", {
-                "plugin-details-item-wrapper-active": selectUUId === pluginUUId
+                "plugin-details-item-wrapper-active": selectUUId === pluginUUId,
+                "plugin-details-item-wrapper-enableClick": enableClick
             })}
             onClick={onClick}
         >
@@ -921,6 +924,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                 })}
             >
                 <div className={"plugin-details-item-info"}>
+                    {enableCheck && (
                     <YakitCheckbox
                         checked={check}
                         onClick={(e) => {
@@ -928,6 +932,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                         }}
                         onChange={onCheck}
                     />
+                    )}
                     {authorImgNode}
                     <div
                         className={classNames("plugin-details-item-info-text-style", "yakit-content-single-ellipsis")}
