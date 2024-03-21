@@ -395,44 +395,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
                 Value: ele.Value,
                 Type: ele.Type
             })),
-        MutateMethods: [
-            {
-                Type: "Get",
-                Value: (value.methodGet || [])
-                    .filter((ele) => ele.Key || ele.Value)
-                    .map((ele) => ({
-                        Key: ele.Key,
-                        Value: ele.Value
-                    }))
-            },
-            {
-                Type: "Post",
-                Value: (value.methodPost || [])
-                    .filter((ele) => ele.Key || ele.Value)
-                    .map((ele) => ({
-                        Key: ele.Key,
-                        Value: ele.Value
-                    }))
-            },
-            {
-                Type: "Headers",
-                Value: (value.headers || [])
-                    .filter((ele) => ele.Key || ele.Value)
-                    .map((ele) => ({
-                        Key: ele.Key,
-                        Value: ele.Value
-                    }))
-            },
-            {
-                Type: "Cookie",
-                Value: (value.cookie || [])
-                    .filter((ele) => ele.Key || ele.Value)
-                    .map((ele) => ({
-                        Key: ele.Key,
-                        Value: ele.Value
-                    }))
-            }
-        ],
+        MutateMethods: [],
         //匹配器
         Matchers: value.matchers,
         MatchersCondition: value.matchersCondition,
@@ -441,6 +404,49 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         Extractors: value.extractors
     }
 
+    let mutateMethods: any[] = []
+    const getArr = (value.methodGet || []).filter((ele) => ele.Key || ele.Value)
+    const postArr = (value.methodPost || []).filter((ele) => ele.Key || ele.Value)
+    const headersArr = (value.headers || []).filter((ele) => ele.Key || ele.Value)
+    const cookieArr = (value.cookie || []).filter((ele) => ele.Key || ele.Value)
+    if (getArr.length) {
+        mutateMethods.push({
+            Type: "Get",
+            Value: getArr.map((ele) => ({
+                Key: ele.Key,
+                Value: ele.Value
+            }))
+        })
+    }
+    if (postArr.length) {
+        mutateMethods.push({
+            Type: "Post",
+            Value: postArr.map((ele) => ({
+                Key: ele.Key,
+                Value: ele.Value
+            }))
+        })
+    }
+    if (headersArr.length) {
+        mutateMethods.push({
+            Type: "Headers",
+            Value: headersArr.map((ele) => ({
+                Key: ele.Key,
+                Value: ele.Value
+            }))
+        })
+    }
+    if (cookieArr.length) {
+        mutateMethods.push({
+            Type: "Cookie",
+            Value: cookieArr.map((ele) => ({
+                Key: ele.Key,
+                Value: ele.Value
+            }))
+        })
+    }
+
+    fuzzerRequests.MutateMethods = mutateMethods
     return fuzzerRequests
 }
 
@@ -3149,7 +3155,7 @@ const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstrationPro
     return (
         <div className={styles["blasting-animation-aemonstration"]}>
             <YakitRadioButtons
-                size="large"
+                size='large'
                 buttonStyle='solid'
                 value={animationType}
                 options={[
