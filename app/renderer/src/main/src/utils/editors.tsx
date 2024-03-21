@@ -1408,6 +1408,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     useEffect(() => {
         setRenderHTML(undefined)
+        setTypeOptions([])
         setShowValue(originValue)
         if (originValue.length > 0) {
             // 默认展示 originValue

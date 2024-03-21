@@ -907,6 +907,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             typeOptionVal={typeOptionVal}
                             onTypeOptionVal={(typeOptionVal) => {
                                 if (typeOptionVal === "beautify") {
+                                    setTypeOptionVal(typeOptionVal)
                                     setRemoteValue(RemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
                                 } else {
                                     setTypeOptionVal(undefined)
