@@ -30,6 +30,7 @@ import {
 import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch} from "./baseTemplate"
 import {PluginGroupList} from "./local/PluginsLocalType"
+import {HTTPRequestParameters} from "@/types/http-api"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -921,7 +922,7 @@ export const apiFetchPluginDetailCheck: (
 export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            // console.log("method:post|api:plugins/audit", JSON.stringify(query))
+            console.log("插件日志是否合并 method:post|api:plugins/audit", JSON.stringify(query))
             NetWorkApi<API.PluginsAuditRequest, API.ActionSucceeded>({
                 method: "post",
                 url: "plugins/audit",
@@ -936,6 +937,84 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
                 })
         } catch (error) {
             yakitNotify("error", "操作失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 获取指定插件的详情(线上)
+ */
+export const apiFetchOnlinePluginInfo: (uuid: string) => Promise<API.PluginsDetail> = (uuid) => {
+    return new Promise(async (resolve, reject) => {
+        const params: {uuid: string; token?: string} = {
+            uuid: uuid
+        }
+        // try {
+        //     const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
+        //     if (userInfo.isLogin) {
+        //         params.token = userInfo.token || undefined
+        //     }
+        // } catch (error) {}
+
+        try {
+            NetWorkApi<{uuid: string}, API.PluginsDetail>({
+                method: "post",
+                url: "plugins/detail",
+                data: {...params}
+            })
+                .then(resolve)
+                .catch((err) => {
+                    yakitNotify("error", "获取插件详情失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取插件详情失败:" + error)
+            reject(error)
+        }
+    })
+}
+
+export interface PluginLogsRequest extends HTTPRequestParameters, API.LogsRequest {}
+/**
+ * @name 获取插件的日志
+ */
+export const apiFetchPluginLogs: (query: {
+    uuid: string
+    Page: number
+    Limit?: number
+}) => Promise<API.PluginsLogsResponse> = (query) => {
+    return new Promise(async (resolve, reject) => {
+        const params: HTTPRequestParameters = {
+            page: query.Page,
+            limit: query.Limit || 20,
+            order_by: "created_at",
+            order: "desc"
+        }
+        const data: API.LogsRequest = {
+            uuid: query.uuid
+        }
+        try {
+            const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
+            if (userInfo.isLogin) {
+                data.token = userInfo.token || undefined
+            }
+        } catch (error) {}
+
+        try {
+            NetWorkApi<PluginLogsRequest, API.PluginsLogsResponse>({
+                method: "get",
+                url: "plugins/logs",
+                params: {...params} as any,
+                data: {...data}
+            })
+                .then(resolve)
+                .catch((err) => {
+                    yakitNotify("error", "获取日志失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取日志失败:" + error)
             reject(error)
         }
     })

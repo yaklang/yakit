@@ -632,6 +632,43 @@ export declare namespace API {
      */
     dumpType: string;
   }
+  export interface PluginsLogsResponse extends Paging {
+    data: PluginsLogsDetail[];
+  }
+  export interface PluginsLogsDetail extends GormBaseModel {
+    /**
+     * 操作人名称
+     */
+    userName: string;
+    /**
+     * 操作人头像
+     */
+    headImg: string;
+    /**
+     * 作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
+     */
+    userRole: string;
+    /**
+     * 操作人是否是作者 true 是   false否
+     */
+    isAuthors: boolean;
+    /**
+     * 审核状态
+     */
+    checkStatus: number;
+    /**
+     * 日志类型 submit:新增 delete:删除  update:修改  check:审核 recover:恢复 applyMerge: 合并申请
+     */
+    logType: string;
+    /**
+     * 描述
+     */
+    description: string;
+    /**
+     * 登陆用户是否是插件作者
+     */
+    loginIsPluginUser: boolean;
+  }
   export interface PluginsListResponse extends Paging {
     data: PluginsDetail[];
   }
@@ -1005,6 +1042,10 @@ export declare namespace API {
     enable_plugin_selector?: boolean;
     plugin_selector_types?: string;
     is_general_module?: boolean;
+  }
+  export interface LogsRequest {
+    uuid: string;
+    token?: string;
   }
   export interface IsExtractCodeResponse {
     is_extract_code: boolean;
