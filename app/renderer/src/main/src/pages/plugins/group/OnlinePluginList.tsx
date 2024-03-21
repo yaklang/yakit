@@ -30,7 +30,12 @@ import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors
 import styles from "./OnlinePluginList.module.scss"
 import {API} from "@/services/swagger/resposeType"
 import {isEnpriTraceAgent} from "@/utils/envfile"
-
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {RcFile} from "antd/lib/upload"
+import {Spin} from "antd"
+import Dragger from "antd/lib/upload/Dragger"
+import {PropertyIcon} from "@/pages/payloadManager/icon"
+const {ipcRenderer} = window.require("electron")
 const defaultFilters = {
     plugin_type: [],
     plugin_group: []
@@ -64,6 +69,9 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([]) // 组数据
     const updateGroupListRef = useRef<any>()
+
+    // 导入分组Modal
+    const [groupVisible, setGroupVisible] = useState<boolean>(false)
 
     useUpdateEffect(() => {
         const groups =
@@ -366,6 +374,9 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
                                 name='添加到组...'
                             />
                         </YakitPopover>
+                        <YakitButton type='primary' size='large' onClick={() => setGroupVisible(true)}>
+                            导入分组
+                        </YakitButton>
                         <div className='divider-style'></div>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
                     </div>
@@ -443,6 +454,136 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
                     </div>
                 )}
             </PluginListWrap>
+            {groupVisible && (
+                <YakitModal
+                    title='导入分组'
+                    // hiddenHeader={true}
+                    closable={true}
+                    visible={groupVisible}
+                    maskClosable={false}
+                    onCancel={() => setGroupVisible(false)}
+                    footer={null}
+                >
+                    <UploadGroupModal onClose={() => setGroupVisible(false)}/>
+                </YakitModal>
+            )}
         </div>
     )
 })
+
+interface UploadGroupModalProps {
+    onClose: () => void
+}
+
+const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
+    const {onClose} = props
+    const [file, setFile] = useState<RcFile>()
+    const [loading, setLoading] = useState<boolean>(false)
+    const isCancelRef = useRef<boolean>(false)
+
+    const suffixFun = (file_name: string) => {
+        let file_index = file_name.lastIndexOf(".")
+        return file_name.slice(file_index, file_name.length)
+    }
+
+    const UploadDataPackage = useMemoizedFn(async () => {
+        isCancelRef.current = false
+        if (file) {
+            setLoading(true)
+            ipcRenderer
+                // @ts-ignore
+                .invoke("upload-group-data", {path: file.path})
+                .then((res) => {
+                    if (res.code === 200 && !isCancelRef.current) {
+                        emiter.emit("onRefpluginGroupList")
+                        yakitNotify("success", "导入分组上传成功")
+                        onClose()
+                    }
+                })
+                .catch((err) => {
+                    !isCancelRef.current && yakitNotify("error", "导入分组上传失败")
+                })
+                .finally(() => {
+                    isCancelRef.current && setTimeout(() => setLoading(false), 200)
+                })
+        }
+    })
+
+    return (
+        <div className={styles["upload-yakit-ee"]}>
+            <Spin spinning={loading}>
+                <div className={styles["upload-dragger-box"]}>
+                    <Dragger
+                        className={styles["upload-dragger"]}
+                        multiple={false}
+                        maxCount={1}
+                        showUploadList={false}
+                        accept={".xlsx,.xls,.csv"}
+                        beforeUpload={(f) => {
+                            const file_name = f.name
+                            const suffix = suffixFun(file_name)
+                            const typeArr: string[] = [
+                                ".csv",
+                                ".xls",
+                                ".xlsx",
+                                "application/vnd.ms-excel",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            ]
+                            if (!typeArr.includes(suffix)) {
+                                setFile(undefined)
+                                yakitNotify("warning", "上传文件格式错误，请重新上传")
+                                return false
+                            }
+                            setFile(f)
+                            return false
+                        }}
+                    >
+                        <div className={styles["upload-info"]}>
+                            <div className={styles["add-file-icon"]}>
+                                <PropertyIcon />
+                            </div>
+                            {file ? (
+                                file.name
+                            ) : (
+                                <div className={styles["content"]}>
+                                    <div className={styles["title"]}>
+                                        可将文件拖入框内，或
+                                        <span className={styles["hight-light"]}>点击此处导入</span>
+                                    </div>
+                                    <div className={styles["sub-title"]}>仅支持excel文件类型</div>
+                                </div>
+                            )}
+                        </div>
+                    </Dragger>
+                </div>
+            </Spin>
+            <div style={{textAlign: "center", marginTop: 16}}>
+                {loading ? (
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='large'
+                        onClick={() => {
+                            isCancelRef.current = true
+                            setFile(undefined)
+                            setLoading(false)
+                        }}
+                    >
+                        取消
+                    </YakitButton>
+                ) : (
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        type='primary'
+                        size='large'
+                        disabled={!file}
+                        onClick={() => {
+                            UploadDataPackage()
+                        }}
+                    >
+                        确定
+                    </YakitButton>
+                )}
+            </div>
+        </div>
+    )
+}
