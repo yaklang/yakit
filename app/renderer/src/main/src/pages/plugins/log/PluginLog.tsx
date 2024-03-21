@@ -29,6 +29,7 @@ import {useStore} from "@/store"
 import {YakitTimeLineList} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineList"
 import {PluginDetailHeader} from "../baseTemplate"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitTimeLineListRefProps} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineListType"
 
 import styles from "./PluginLog.module.scss"
 
@@ -99,6 +100,11 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
     const [plugin, setPlugin] = useState<API.PluginsDetail>()
     const latestPlugin = useLatest(plugin)
 
+    const timeListRef = useRef<YakitTimeLineListRefProps>(null)
+    const handleClearTimeList = useMemoizedFn(() => {
+        timeListRef.current?.onClear()
+    })
+
     const pageRef = useRef<number>(1)
     const [resLoading, setResLoading] = useState<boolean>(false)
     const [response, setResponse] = useState<API.PluginsLogsResponse>({
@@ -133,15 +139,22 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
     const fetchLogs = useMemoizedFn((page: number) => {
         if (resLoading) return
 
+        if (page === 1) {
+            /**
+             * 因为不定高虚拟列表自身无法计算传入数据的数量由多变少时的逻辑
+             * 所以需要使用者手动清空虚拟列表的位置状态信息
+             */
+            handleClearTimeList()
+        }
         setResLoading(true)
         apiFetchPluginLogs({uuid: uuid, Page: page, Limit: 5})
             .then((res) => {
                 console.log("插件日志列表\n", res)
                 let data: API.PluginsLogsDetail[] = []
                 if (res.pagemeta.page === 1) {
-                    data = data.concat(res.data)
+                    data = data.concat(res.data || [])
                 } else {
-                    data = data.concat(response.data)
+                    data = data.concat(response.data || [])
                     data = data.concat(res.data)
                 }
                 if (data.length >= res.pagemeta.total) hasMore.current = false
@@ -223,7 +236,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
         if (lists.length === 0) return
 
         lists[mergeShow.index].checkStatus = isPass ? 1 : 2
-        lists[mergeShow.index].description = isPass ? "" : reason || ""
+        if (!isPass) lists[mergeShow.index].description = reason || ""
         setResponse({...response, data: [...lists]})
         onCancelMerge()
     })
@@ -271,6 +284,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                                     {response.data.length > 0 ? (
                                         <OnlineJudgment>
                                             <YakitTimeLineList
+                                                ref={timeListRef}
                                                 loading={resLoading}
                                                 data={response.data}
                                                 icon={(info) => {

@@ -1,4 +1,5 @@
 export interface YakitTimeLineListProps<T> {
+    ref?: React.ForwardedRef<YakitTimeLineListRefProps>
     loading?: boolean
     data: T[]
     icon?: (info: T) => ReactNode
@@ -8,6 +9,12 @@ export interface YakitTimeLineListProps<T> {
     hasMore?: boolean
     /** 加载更多 */
     loadMore?: () => any
+}
+export interface YakitTimeLineListRefProps {
+    /** 全局数据重置清空 */
+    onClear: () => any
+    /** 跳转到索引的位置(已实现，未验证功能是否正常) */
+    onScrollToIndex: (index: number) => any
 }
 
 /** 不定高虚拟列表的信息 */

@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {useDebounceEffect, useMemoizedFn, useSize} from "ahooks"
+import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePuzzleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -82,13 +82,9 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
     const [newCode, setNewCode] = useState<string>("")
     // 触发对比器刷新
     const triggerDiff = useRef<boolean>(false)
-    useDebounceEffect(
-        () => {
-            triggerDiff.current = !triggerDiff.current
-        },
-        [newCode],
-        {wait: 300}
-    )
+    useUpdateEffect(() => {
+        triggerDiff.current = !triggerDiff.current
+    }, [activeTab])
 
     // 插件调试数据
     const [plugin, setPlugin] = useState<PluginDataProps>()
