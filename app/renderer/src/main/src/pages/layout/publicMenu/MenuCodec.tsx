@@ -173,6 +173,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     size='small'
                     type={avtiveKey === "fuzztag" ? "primary" : "outline2"}
                     onClick={() => onCodec("fuzztag")}
+                    style={{height: 24}}
                 >
                     fuzztag
                 </YakitButton>
