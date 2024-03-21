@@ -1,3 +1,4 @@
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {GroupCount} from "@/pages/invoker/schema"
 
@@ -50,4 +51,19 @@ export interface PluginGroupByKeyWordItemProps {
     item: GroupCount
     selected: boolean
     onSelect: (g: GroupCount) => void
+}
+
+export interface PluginExecuteLogProps {
+    isExecuting: boolean
+    hidden: boolean
+    pluginExecuteLog: StreamResult.PluginExecuteLog[]
+}
+
+export interface TimeConsumingProps {
+    type: string
+    value: string
+}
+export interface PluginLogProps extends StreamResult.PluginExecuteLog {
+    /**耗时，前端计算 */
+    timeConsuming: TimeConsumingProps
 }

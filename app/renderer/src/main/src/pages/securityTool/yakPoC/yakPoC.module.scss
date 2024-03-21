@@ -99,6 +99,43 @@
         .plugin-list-by-group-wrapper-hidden {
             display: none;
         }
+        .plugin-execute-log-wrapper {
+            display: flex;
+            flex: 1;
+            justify-content: center;
+            overflow: hidden;
+            .plugin-log-list {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                flex: 1;
+                .plugin-log-item {
+                    @extend %display-column-center;
+                    gap: 4px;
+                    margin-bottom: 8px;
+                    background-color: var(--yakit-card-background-color);
+                    border-radius: 4px;
+                    padding: 8px 12px;
+                    height: 100px;
+                    .name {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                    }
+                    .time {
+                        color: var(--yakit-primary-5);
+                    }
+                    .time-danger {
+                        color: var(--yakit-danger-5);
+                    }
+                }
+            }
+        }
+        .plugin-execute-log-wrapper-hidden {
+            display: none;
+        }
     }
 }
 

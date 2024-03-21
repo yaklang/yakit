@@ -1,10 +1,13 @@
 import React, {useEffect, useReducer, useRef, useState} from "react"
 import {
+    PluginExecuteLogProps,
     PluginGroupByKeyWordItemProps,
     PluginGroupByKeyWordProps,
     PluginGroupGridItemProps,
     PluginGroupGridProps,
     PluginListByGroupProps,
+    PluginLogProps,
+    TimeConsumingProps,
     YakPoCExecuteContentProps,
     YakPoCProps
 } from "./yakPoCType"
@@ -19,7 +22,13 @@ import {
     PluginBatchExecuteContentRefProps,
     batchPluginType
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    useControllableValue,
+    useCreation,
+    useDebounceFn,
+    useInViewport,
+    useInterval,
+    useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {
     ExpandAndRetract,
@@ -46,7 +55,8 @@ import {
     apiFetchDeleteYakScriptGroupLocal,
     apiFetchQueryYakScriptGroupLocal,
     apiFetchSaveYakScriptGroupLocal,
-    apiQueryYakScript} from "@/pages/plugins/utils"
+    apiQueryYakScript
+} from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {apiFetchQueryYakScriptGroupLocalByPoc} from "./utils"
@@ -55,6 +65,7 @@ import {initialLocalState, pluginLocalReducer} from "@/pages/plugins/pluginReduc
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
+import moment from "moment"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
@@ -85,7 +96,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const [type, setType] = useState<"keyword" | "group">("keyword")
 
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
-    
+
     const pluginGroupRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginGroupRef)
 
@@ -206,7 +217,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
         })
     })
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         fetchList(true)
     }, [selectGroupList])
 
@@ -737,6 +748,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     const [stopLoading, setStopLoading] = useState<boolean>(false)
     const [total, setTotal] = useState<number>(0)
     const [showType, setShowType] = useState<"plugin" | "log">("plugin")
+    const [pluginExecuteLog, setPluginExecuteLog] = useState<StreamResult.PluginExecuteLog[]>([])
 
     useEffect(() => {
         if (defaultFormValue) {
@@ -774,7 +786,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     }, [executeStatus])
     return (
         <>
-            {executeStatus === "default" && (
+            {(executeStatus !== "default" || selectGroupList.length > 0) && (
                 <div className={styles["midden-wrapper"]}>
                     <div className={styles["midden-heard"]}>
                         <YakitRadioButtons
@@ -811,6 +823,11 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         selectGroupList={selectGroupList}
                         total={total}
                         setTotal={setTotal}
+                    />
+                    <PluginExecuteLog
+                        hidden={showType !== "log"}
+                        pluginExecuteLog={pluginExecuteLog}
+                        isExecuting={isExecuting}
                     />
                 </div>
             )}
@@ -874,9 +891,114 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         pluginInfo={pluginInfo}
                         executeStatus={executeStatus}
                         setExecuteStatus={setExecuteStatus}
+                        setPluginExecuteLog={setPluginExecuteLog}
                     />
                 </div>
             </div>
         </>
+    )
+})
+/**
+ * 计算两个时间戳的间隔
+ * @param {number} startTime
+ * @param {number} endTime
+ * @returns {TimeConsumingProps}
+ */
+const intervalTime = (startTime: number, endTime: number) => {
+    const startMoment = moment(startTime)
+    const endMoment = moment(endTime)
+
+    // 计算时间差
+    const duration = endMoment.diff(startMoment)
+
+    // 使用duration的as方法获取分钟和秒数
+    const durationObj = moment.duration(duration)
+    const minutes = durationObj.minutes()
+    const seconds = durationObj.seconds()
+    if (minutes > 60) {
+        return {
+            type: "danger",
+            value: "超时"
+        }
+    }
+    if (minutes > 0) {
+        return {
+            type: "info",
+            value: `${minutes} min`
+        }
+    }
+    return {
+        type: "info",
+        value: `${seconds} s`
+    }
+}
+const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
+    const {hidden, pluginExecuteLog, isExecuting} = props
+    const [interval, setInterval] = useState<number | undefined>(1000)
+
+    const [recalculation, setRecalculation] = useState<boolean>(false)
+    const [data, setData] = useState<PluginLogProps[]>([])
+
+    const clear = useInterval(() => {
+        onHandleData()
+    }, interval)
+    useEffect(() => {
+        if (hidden || !isExecuting) {
+            setInterval(undefined)
+        } else {
+            setInterval(1000)
+        }
+        return () => {
+            clear()
+        }
+    }, [hidden, isExecuting])
+
+    const onHandleData = useMemoizedFn(() => {
+        const logs: PluginLogProps[] = pluginExecuteLog.map((item) => {
+            const newTime = Date.now()
+            const timeConsuming: TimeConsumingProps = intervalTime(item.startTime, newTime)
+            return {...item, timeConsuming}
+        })
+        setData(logs)
+        setRecalculation(!recalculation)
+    })
+
+    return (
+        <div
+            className={classNames(styles["plugin-execute-log-wrapper"], {
+                [styles["plugin-execute-log-wrapper-hidden"]]: hidden
+            })}
+        >
+            <RollingLoadList<PluginLogProps>
+                data={data}
+                loadMoreData={() => {}}
+                renderRow={(i: PluginLogProps, index: number) => {
+                    const {value, type} = i.timeConsuming
+                    return (
+                        <>
+                            <span className={styles["name"]}>
+                                {i.Index}: [{i.PluginName}]
+                            </span>
+                            <span className='content-ellipsis'>执行目标: {i.Url}</span>
+                            <span
+                                className={classNames(styles["time"], {
+                                    [styles["time-danger"]]: type === "danger"
+                                })}
+                            >
+                                {type === "danger" ? value : `耗时: ${value}`}
+                            </span>
+                        </>
+                    )
+                }}
+                page={1}
+                hasMore={false}
+                defItemHeight={108}
+                rowKey='Index'
+                recalculation={recalculation}
+                loading={false}
+                classNameList={styles["plugin-log-list"]}
+                classNameRow={styles["plugin-log-item"]}
+            />
+        </div>
     )
 })

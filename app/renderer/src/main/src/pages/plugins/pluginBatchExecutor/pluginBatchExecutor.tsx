@@ -295,6 +295,9 @@ interface PluginBatchExecuteContentProps {
     /**执行状态 */
     executeStatus: ExpandAndRetractExcessiveState
     setExecuteStatus: (value: ExpandAndRetractExcessiveState) => void
+
+    /**插件执行日志 */
+    setPluginExecuteLog?: (s: StreamResult.PluginExecuteLog[]) => void
 }
 export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
@@ -304,7 +307,8 @@ export interface PluginBatchExecuteContentRefProps {
 }
 export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {selectNum, pluginInfo, defaultActiveKey, onInitInputValueAfter, setProgressList} = props
+        const {selectNum, pluginInfo, defaultActiveKey, onInitInputValueAfter, setProgressList, setPluginExecuteLog} =
+            props
         const [form] = Form.useForm()
         const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
         useImperativeHandle(
@@ -373,6 +377,9 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         useEffect(() => {
             setProgressList(progressList)
         }, [progressList])
+        useEffect(() => {
+            if (setPluginExecuteLog) setPluginExecuteLog(streamInfo.pluginExecuteLog)
+        }, [streamInfo.pluginExecuteLog])
 
         /** 通过runtimeId查询该条记录详情 */
         const onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null> = useMemoizedFn((runtimeId) => {

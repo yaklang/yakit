@@ -1,14 +1,15 @@
 import {useState, useRef, useEffect} from "react"
 import {failed, info} from "../../utils/notification"
 import {useMemoizedFn} from "ahooks"
-import {HoldGRPCStreamParams, convertCardInfo} from "../useHoldGRPCStream/useHoldGRPCStream"
+import {convertCardInfo} from "../useHoldGRPCStream/useHoldGRPCStream"
 import {DefaultTabs} from "../useHoldGRPCStream/constant"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "../useHoldGRPCStream/useHoldGRPCStreamType"
 import {
+    BatchHoldGRPCStreamInfo,
     HoldBatchGRPCStreamParams,
     PluginBatchExecutorResult
 } from "./useHoldBatchGRPCStreamType"
-import isEqual from "lodash/isEqual"
+import {HybridScanActiveTask} from "@/models/HybridScan"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,13 +27,14 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         onGetInputValue
     } = params
 
-    const [streamInfo, setStreamInfo] = useState<HoldGRPCStreamInfo>({
+    const [streamInfo, setStreamInfo] = useState<BatchHoldGRPCStreamInfo>({
         progressState: [],
         cardState: [],
         tabsState: [],
         tabsInfoState: {},
         riskState: [],
-        logState: []
+        logState: [],
+        pluginExecuteLog: []
     })
 
     // 启动数据流处理定时器
@@ -42,8 +44,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     const runTimeId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
     /** 输入模块值 */
     const inputValueRef = useRef<{cache: string; sent: string}>({
-        cache: '',
-        sent: ''
+        cache: "",
+        sent: ""
     })
     // progress
     let progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
@@ -61,6 +63,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     let riskMessages = useRef<StreamResult.Risk[]>([])
     // logs
     let messages = useRef<StreamResult.Message[]>([])
+    /**plugin log */
+    let pluginLog = useRef<StreamResult.PluginExecuteLog[]>([])
 
     /** 放入日志队列 */
     const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
@@ -97,6 +101,9 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
                 Math.max(progressKVPair.current.get(processDataId) || 0, progress)
             )
 
+            if (!!res.UpdateActiveTask) {
+                onHandleActiveTask(res.UpdateActiveTask)
+            }
             if (!data) return
             // run-time-id
             if (!!data?.RuntimeID) {
@@ -172,6 +179,20 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
     }, [token])
+    /**处理插件执行日志 */
+    const onHandleActiveTask = useMemoizedFn((updateActiveTask: HybridScanActiveTask) => {
+        if (updateActiveTask.Operator === "create") {
+            const time = Date.now()
+            const item: StreamResult.PluginExecuteLog = {
+                ...updateActiveTask,
+                startTime: time
+            }
+            pluginLog.current.unshift(item)
+        }
+        if (updateActiveTask.Operator === "remove") {
+            pluginLog.current = pluginLog.current.filter((item) => item.Index !== updateActiveTask.Index)
+        }
+    })
 
     /** @name 数据流处理逻辑 */
     const handleResults = useMemoizedFn(() => {
@@ -229,7 +250,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             tabsState: tabs,
             tabsInfoState: tabsInfo,
             riskState: risks,
-            logState: logs
+            logState: logs,
+            pluginExecuteLog: pluginLog.current
         }
         setStreamInfo(info)
     })
@@ -269,7 +291,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             tabsState: [],
             tabsInfoState: {},
             riskState: [],
-            logState: []
+            logState: [],
+            pluginExecuteLog: []
         })
 
         runTimeId.current = {cache: "", sent: ""}

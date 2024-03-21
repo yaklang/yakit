@@ -1,3 +1,4 @@
+import { HybridScanActiveTask } from "@/models/HybridScan"
 import {Risk as RiskProps} from "@/pages/risks/schema"
 
 /** @name hooks逻辑数据 */
@@ -135,4 +136,10 @@ export declare namespace StreamResult {
 
     /** @name 数据流结果(风险数据) */
     export interface Risk extends Omit<RiskProps, "Id"> {}
+
+    /** @name 数据流结果(批量执行中得插件执行日志) */
+    export interface PluginExecuteLog extends HybridScanActiveTask {
+        /**第一次接受到该id得时间,前端记录 */
+        startTime: number
+    }
 }
