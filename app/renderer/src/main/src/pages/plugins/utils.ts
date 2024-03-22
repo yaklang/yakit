@@ -25,7 +25,6 @@ import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {HybridScanControlAfterRequest, HybridScanControlRequest, HybridScanPluginConfig} from "@/models/HybridScan"
 import {
-    PluginBatchExecutorTaskProps,
     defPluginBatchExecuteExtraFormValue
 } from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
@@ -1266,6 +1265,11 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         yakitNotify("error", "解析任务输入参数数据和插件勾选数据失败:" + error)
     }
     return data
+}
+export interface PluginBatchExecutorTaskProps {
+    Proxy: string
+    Concurrent: number
+    TotalTimeoutSecond: number
 }
 export interface HybridScanRequest extends PluginBatchExecutorTaskProps {
     Input: string

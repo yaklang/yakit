@@ -97,6 +97,7 @@ import {
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {
     HybridScanRequest,
+    PluginBatchExecutorTaskProps,
     apiCancelHybridScan,
     apiHybridScan,
     apiStopHybridScan,
@@ -106,7 +107,6 @@ import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {
     PluginBatchExecuteExtraFormValue,
-    PluginBatchExecutorTaskProps,
     defPluginExecuteTaskValue
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {cloneDeep} from "bizcharts/lib/utils"

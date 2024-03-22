@@ -6,6 +6,7 @@ import {PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
     PluginBatchExecutorInputValueProps,
+    PluginBatchExecutorTaskProps,
     apiGetPluginByGroup,
     apiHybridScan,
     apiQueryHybridScan,
@@ -46,11 +47,7 @@ const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBat
 interface PluginBatchExecutorProps {
     id: string
 }
-export interface PluginBatchExecutorTaskProps {
-    Proxy: string
-    Concurrent: number
-    TotalTimeoutSecond: number
-}
+
 export interface PluginBatchExecuteExtraFormValue extends PluginExecuteExtraFormValue, PluginBatchExecutorTaskProps {}
 export const defPluginExecuteTaskValue: PluginBatchExecutorTaskProps = {
     Proxy: "",
