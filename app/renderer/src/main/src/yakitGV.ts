@@ -1,3 +1,4 @@
+import { MITMConsts } from '@/pages/mitm/MITMConsts';
 /** 本地文件缓存数据-键值变量 */
 export enum LocalGV {
     /** @name 用户协议(需用户同意才能使用软件) */
@@ -109,5 +110,7 @@ export enum CacheDropDownGV {
     /** @name 私有域地址 */
     ConfigBaseUrl = "config_base_url",
     /** @name 配置插件源 -》设置代理 */
-    ConfigProxy = "config_proxy"
+    ConfigProxy = "config_proxy",
+    /** @name MITM 保存用户数据地址 */
+    MITMSaveUserDataDir = "mitm_save_user_data_dir",
 }
