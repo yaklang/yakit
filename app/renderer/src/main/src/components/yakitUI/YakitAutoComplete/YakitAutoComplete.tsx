@@ -1,13 +1,14 @@
 import {AutoComplete} from "antd"
-import React, {useEffect, useImperativeHandle, useState} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {YakitAutoCompleteCacheDataHistoryProps, YakitAutoCompleteProps} from "./YakitAutoCompleteType"
 import styles from "./YakitAutoComplete.module.scss"
 import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
-import {onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
+import {YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
+import {OutlineXIcon} from "@/assets/icon/outline"
 
 export const defYakitAutoCompleteRef = {
-    onGetRemoteValues: () => {},
+    onGetRemoteValues: () => ({options: [], defaultValue: ""}),
     onSetRemoteValues: (s: string) => {}
 }
 
@@ -26,8 +27,11 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         cacheHistoryListLength = 10,
         isCacheDefaultValue = true,
         ref: forwardRef,
+        isDelExternalOptionData = false,
+        delExternalOptionItem,
         ...restProps
     } = props
+    const [mouseEnterItem, setMouseEnterItem] = useState<string>("")
     const [show, setShow] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [cacheHistoryData, setCacheHistoryData] = useState<YakitAutoCompleteCacheDataHistoryProps>({
@@ -81,6 +85,59 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                 }, 200)
             })
     })
+
+    const delCatchOptionItem = (e: React.MouseEvent<Element, MouseEvent>, item: YakitOptionTypeProps) => {
+        e.stopPropagation()
+        if (cacheHistoryDataKey) {
+            onSetRemoteValuesBase({
+                cacheHistoryDataKey,
+                newValue: "",
+                isCacheDefaultValue,
+                delCacheValue: item.value
+            }).then((value) => {
+                setCacheHistoryData({
+                    defaultValue: value.defaultValue,
+                    options: value.options
+                })
+            })
+        } else if (isDelExternalOptionData) {
+            delExternalOptionItem && delExternalOptionItem(item)
+        }
+    }
+
+    const renderItem = (item: YakitOptionTypeProps) => {
+        const copyItem = {...item}
+        copyItem.label = (
+            <div
+                className={styles["yakit-option-item"]}
+                onMouseEnter={(e) => {
+                    setMouseEnterItem(item.value)
+                }}
+                onMouseLeave={() => {
+                    setMouseEnterItem("")
+                }}
+            >
+                {copyItem.label}
+                <OutlineXIcon
+                    style={{display: mouseEnterItem === item.value ? "block" : "none"}}
+                    className={styles["option-item-close"]}
+                    onClick={(e) => delCatchOptionItem(e, item)}
+                />
+            </div>
+        )
+        return copyItem
+    }
+
+    const options = useMemo(() => {
+        if (cacheHistoryData.options.length) {
+            return cacheHistoryData.options.map((item) => renderItem(item))
+        } else if (isDelExternalOptionData) {
+            return restProps?.options?.map((item) => renderItem(item as YakitOptionTypeProps))
+        } else {
+            return restProps.options
+        }
+    }, [cacheHistoryData, restProps, isDelExternalOptionData])
+
     return (
         <div
             className={classNames(styles["yakit-auto-complete-wrapper"], {
@@ -93,9 +150,9 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                 <></>
             ) : (
                 <AutoComplete
-                    options={cacheHistoryData.options}
                     defaultValue={cacheHistoryData.defaultValue}
                     {...restProps}
+                    options={options}
                     size='middle'
                     dropdownClassName={classNames(
                         styles["yakit-auto-complete-popup"],
