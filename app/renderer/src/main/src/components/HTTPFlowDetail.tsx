@@ -1145,10 +1145,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [flow])
 
-    useEffect(() => {
-        console.log(789, flow?.IsTooLargeResponse);
-    }, [flow?.IsTooLargeResponse])
-
     return (
         <YakitResizeBox
             firstNode={() => {
