@@ -1154,10 +1154,15 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     showDefaultExtra?: boolean
     /**@name 数据对比(默认无对比) */
     dataCompare?: DataCompareProps
+    /**默认选中美化或渲染 */
+    typeOptionVal?: RenderTypeOptionVal
+    onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
 }
 
+export type RenderTypeOptionVal = "beautify" | "render"
+
 interface TypeOptionsProps {
-    value: "beautify" | "render"
+    value: RenderTypeOptionVal
     label: string
 }
 
@@ -1172,7 +1177,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         isShowBeautifyRender = true,
         showDefaultExtra = true,
         dataCompare,
-        editorOperationRecord
+        editorOperationRecord,
+        typeOptionVal,
+        onTypeOptionVal
     } = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
@@ -1400,8 +1407,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }, [props.defaultSearchKeyword, monacoEditor])
 
     useEffect(() => {
-        setType(undefined)
         setRenderHTML(undefined)
+        setTypeOptions([])
         setShowValue(originValue)
         if (originValue.length > 0) {
             // 默认展示 originValue
@@ -1455,18 +1462,41 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     }, [originValue])
 
-    const beautifyCode = async () => {
-        setTypeLoading(true)
-        setRenderHTML(undefined)
-        if (originValue.length > 0) {
-            let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
-            setShowValue(beautifyValue as Uint8Array)
-            setTypeLoading(false)
-        } else {
-            setShowValue(new Uint8Array())
-            setTypeLoading(false)
+    const isShowBeautifyRenderRef = useRef<boolean>()
+    useEffect(() => {
+        isShowBeautifyRenderRef.current = isShowBeautifyRender
+    }, [isShowBeautifyRender])
+
+    useUpdateEffect(() => {
+        setType(typeOptionVal)
+        if (typeOptionVal === "beautify") {
+            if (originValue) {
+                beautifyCode()
+            }
         }
-    }
+    }, [typeOptionVal, originValue])
+
+    const beautifyCode = useDebounceFn(
+        useMemoizedFn(async () => {
+            const encoder = new TextEncoder()
+            const bytes = encoder.encode(Uint8ArrayToString(originValue))
+            const mb = bytes.length / 1024 / 1024
+            if (!isShowBeautifyRenderRef.current || mb > 0.5) return
+            setTypeLoading(true)
+            setRenderHTML(undefined)
+            if (originValue.length > 0) {
+                let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
+                setShowValue(beautifyValue as Uint8Array)
+                setTypeLoading(false)
+            } else {
+                setShowValue(new Uint8Array())
+                setTypeLoading(false)
+            }
+        }),
+        {
+            wait: 300
+        }
+    ).run
 
     const renderCode = async () => {
         setTypeLoading(true)
@@ -1476,13 +1506,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }
 
     useUpdateEffect(() => {
+        onTypeOptionVal && onTypeOptionVal(type)
         if (originValue && type === undefined) {
             setRenderHTML(undefined)
             setShowValue(originValue)
         } else if (originValue && type === "beautify") {
-            setTimeout(() => {
-                beautifyCode()
-            }, 200)
+            beautifyCode()
         } else if (originValue && type === "render") {
             setTimeout(() => {
                 renderCode()

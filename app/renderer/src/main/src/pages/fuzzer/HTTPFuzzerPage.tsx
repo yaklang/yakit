@@ -117,6 +117,7 @@ import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdP
 import blastingIdmp4 from "@/assets/blasting-id.mp4"
 import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
+import { prettifyPacketCode } from "@/utils/prettifyPacket"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1543,6 +1544,18 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         }
                     }}
                 />
+                <YakitButton
+                    size='small'
+                    type='primary'
+                    onClick={async () => {
+                        if (!requestRef.current) return
+                        const beautifyValue = await prettifyPacketCode(requestRef.current)
+                        onSetRequest(Uint8ArrayToString(beautifyValue as Uint8Array, "utf8"))
+                        refreshRequest()
+                    }}
+                >
+                    美化
+                </YakitButton>
                 <YakitButton
                     size='small'
                     type='primary'

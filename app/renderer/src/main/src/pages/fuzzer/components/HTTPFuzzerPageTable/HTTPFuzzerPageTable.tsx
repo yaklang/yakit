@@ -9,7 +9,7 @@ import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorTy
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
+import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
@@ -31,6 +31,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import { RemoteGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -744,6 +745,19 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         })
 
+        const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
+        useEffect(() => {
+            if (currentSelectItem) {
+                getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then(res => {
+                    if (!!res) {
+                        setTypeOptionVal(res)
+                    } else {
+                        setTypeOptionVal(undefined)
+                    }
+                })
+            }
+        }, [currentSelectItem, currentSelectShowType])
+
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
@@ -890,6 +904,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     提取数据
                                 </YakitButton>
                             ]}
+                            typeOptionVal={typeOptionVal}
+                            onTypeOptionVal={(typeOptionVal) => {
+                                if (typeOptionVal === "beautify") {
+                                    setTypeOptionVal(typeOptionVal)
+                                    setRemoteValue(RemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
+                                } else {
+                                    setTypeOptionVal(undefined)
+                                    setRemoteValue(RemoteGV.WebFuzzerEditorBeautify, "")
+                                }
+                            }}
                         />
                     }
                     {...ResizeBoxProps}
