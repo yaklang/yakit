@@ -468,6 +468,7 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                         onSearch={onSearch}
                         onPressEnter={onPressEnter}
                         size='large'
+                        wrapperStyle={{flex: 1}}
                     />
                 </div>
                 <div className={styles["filter-body"]}>
