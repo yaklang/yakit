@@ -1,0 +1,25 @@
+.plugin-list-right-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+}
+
+.details-filter-extra-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    path {
+        stroke-width: 1.5;
+    }
+    .loading-icon {
+        width: 26px;
+        text-align: center;
+        color: var(--yakit-primary-5);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}

@@ -25,7 +25,6 @@ import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {HybridScanControlAfterRequest, HybridScanControlRequest, HybridScanPluginConfig} from "@/models/HybridScan"
 import {
-    PluginBatchExecutorTaskProps,
     defPluginBatchExecuteExtraFormValue
 } from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
@@ -657,11 +656,20 @@ export const apiReductionRecyclePlugin: (query?: PluginsRecycleRequest) => Promi
 /**
  * @name QueryYakScript接口参数转换(前端数据转接口参数)
  */
-export const convertLocalPluginsRequestParams = (
-    filter: PluginFilterParams,
-    search: PluginSearchParams,
+export const convertLocalPluginsRequestParams = (query: {
+    filter: PluginFilterParams
+    search: PluginSearchParams
     pageParams?: PluginListPageMeta
-): QueryYakScriptRequest => {
+    defaultFilters?: PluginFilterParams
+}): QueryYakScriptRequest => {
+    const {filter, search, pageParams, defaultFilters} = query
+
+    const type =
+        filter.plugin_type && filter.plugin_type?.length > 0 ? filter.plugin_type : defaultFilters?.plugin_type || []
+    const tag = filter.tags && filter.tags.length > 0 ? filter.tags : defaultFilters?.tags || []
+    const group =
+        filter.plugin_group && filter.plugin_group.length > 0 ? filter.plugin_group : defaultFilters?.plugin_group || []
+
     const data: QueryYakScriptRequest = {
         Pagination: {
             Limit: pageParams?.limit || 10,
@@ -674,9 +682,12 @@ export const convertLocalPluginsRequestParams = (
         UserName: search.type === "userName" ? search.userName : "",
 
         // filter
-        Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
-        Tag: filter.tags?.map((ele) => ele.value) || [],
-        Group: {UnSetGroup: false, Group: filter.plugin_group?.map((ele) => ele.value) || []}
+        Type: (type.map((ele) => ele.value) || []).join(","),
+        Tag: tag.map((ele) => ele.value) || [],
+        Group: {
+            UnSetGroup: false,
+            Group: group?.map((ele) => ele.value) || []
+        }
     }
     return toolDelInvalidKV(data)
 }
@@ -1167,8 +1178,8 @@ export const convertHybridScanParams = (
                     : {
                           //   /* Pagination is ignore for hybrid scan */
                           //   Pagination: genDefaultPagination()
-                          ...convertLocalPluginsRequestParams(
-                              {
+                          ...convertLocalPluginsRequestParams({
+                              filter: {
                                   plugin_type: [
                                       {
                                           label: pluginType,
@@ -1178,7 +1189,7 @@ export const convertHybridScanParams = (
                                   ]
                               },
                               search
-                          )
+                          })
                       }
         },
         Targets: {
@@ -1254,6 +1265,11 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         yakitNotify("error", "解析任务输入参数数据和插件勾选数据失败:" + error)
     }
     return data
+}
+export interface PluginBatchExecutorTaskProps {
+    Proxy: string
+    Concurrent: number
+    TotalTimeoutSecond: number
 }
 export interface HybridScanRequest extends PluginBatchExecutorTaskProps {
     Input: string

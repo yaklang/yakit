@@ -89,6 +89,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [response, setResponse] = useState<GroupCount[]>([])
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+    const [recalculation, setRecalculation] = useState<boolean>(false)
 
     const pluginGroupGridRef = useRef<HTMLDivElement>(null)
     const initialResponseRef = useRef<GroupCount[]>([]) // 用来做搜索
@@ -104,6 +105,10 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
             .then((res) => {
                 setResponse(res)
                 initialResponseRef.current = res
+                setRecalculation(!recalculation)
+
+                const newSelectGroupList = selectGroupList.filter((item) => res.some((ele) => ele.Value === item))
+                setSelectGroupList(newSelectGroupList)
             })
             .finally(() =>
                 setTimeout(() => {
@@ -163,7 +168,6 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         >
             <div className={styles["filter-wrapper"]}>
                 <div className={styles["header-search"]}>
-                    <span className={styles["header-search-text"]}>选择插件组</span>
                     <YakitInput.Search
                         placeholder='请输入组名搜索'
                         value={keywords}
@@ -171,7 +175,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                         onSearch={onSearch}
                         onPressEnter={onPressEnter}
                         size='large'
-                        wrapperStyle={{width: 280}}
+                        wrapperStyle={{flex: 1}}
                     />
                 </div>
                 <div className={styles["filter-body"]}>
@@ -230,6 +234,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     defCol={3}
                     classNameList={styles["group-list-wrapper"]}
                     rowKey='Value'
+                    recalculation={recalculation}
                 />
             )}
             <YakitGetOnlinePlugin

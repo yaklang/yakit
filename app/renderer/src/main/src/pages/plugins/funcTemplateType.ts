@@ -5,6 +5,7 @@ import {DropDownProps} from "antd"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 import {YakitPluginOnlineDetail} from "./online/PluginsOnlineType"
 import {OnlinePluginAppAction} from "./pluginReducer"
+import {API} from "@/services/swagger/resposeType"
 
 export interface TypeSelectOpt {
     /** 唯一标识符 */
@@ -318,6 +319,8 @@ export interface FilterPopoverBtnProps {
     refresh?: boolean
     /** 筛选组件的类型-商店|审核|我的 */
     type?: "check" | "online" | "user" | "local"
+    /**固定的过滤条件，有的话就不去请求接口获取,传了该参数后type无效 */
+    fixFilterList?: API.PluginsSearch[]
 }
 
 /** 插件源码评分模块 */

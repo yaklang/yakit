@@ -1,16 +1,11 @@
-%display-flex-center {
-    display: flex;
-    align-items: center;
+@use "../securityTool.scss" as securityTool;
+
+.yak-poc-execute-wrapper {
+    @include securityTool.execute-title("yak-poc");
 }
-%display-column-center {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+
 .divider-style {
-    width: 1px;
-    height: 12px;
-    background-color: #eaecf3;
+    @extend %divider-style;
 }
 .yak-poc-wrapper {
     @extend %display-flex-center;
@@ -33,12 +28,6 @@
         .header-search {
             @extend %display-flex-center;
             justify-content: space-between;
-            .header-search-text {
-                color: var(--yakit-header-color);
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 16px; /* 133.333% */
-            }
         }
         .filter-body {
             @extend %display-flex-center;
@@ -117,38 +106,6 @@
 }
 .plugin-group-wrapper-hidden {
     display: none;
-}
-
-.yak-poc-execute-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    flex: 1;
-    overflow: hidden;
-    .yak-poc-executor-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-
-        .yak-poc-executor-title-text {
-            font-size: 16px;
-            font-weight: 600;
-            color: #31343f;
-            line-height: 16px;
-        }
-    }
-    .yak-poc-executor-btn {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .yak-poc-executor-body {
-        display: flex;
-        flex-direction: column;
-        padding: 0 12px 16px;
-        overflow: auto;
-        height: 100%;
-    }
 }
 
 .yak-poc-empty {

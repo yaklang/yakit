@@ -21,21 +21,20 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed, yakitNotify} from "@/utils/notification"
+import {failed} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import {OutlineChevrondownIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
-import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, defaultLinkPluginConfig} from "../../utils"
+import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {GetPluginLanguage} from "../../builtInData"
 import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam} from "../../editDetails/utils"
 import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
-import cloneDeep from "lodash/cloneDeep"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -184,7 +183,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         const input = value["Input"]
 
         let executeParams: DebugPluginRequest = {
-            Code: "", 
+            Code: "",
             PluginType: plugin.Type,
             Input: input,
             HTTPRequestTemplate: {
@@ -196,8 +195,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     : Buffer.from("", "utf8")
             },
             ExecParams: yakExecutorParams,
-            LinkPluginConfig: linkPluginConfig || cloneDeep(defaultLinkPluginConfig),
-            PluginName: plugin.ScriptName, 
+            LinkPluginConfig: linkPluginConfig,
+            PluginName: plugin.ScriptName
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")
@@ -377,10 +376,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             {progressList.length > 1 && (
                 <div className={styles["plugin-head-executing-progress"]}>
                     {progressList.map((ele, index) => (
-                        <>
+                        <React.Fragment key={ele.id}>
                             {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
                             <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                        </>
+                        </React.Fragment>
                     ))}
                 </div>
             )}

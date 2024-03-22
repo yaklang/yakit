@@ -4,7 +4,6 @@ import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
 import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
-import {PluginOperator} from "../pages/yakitStore/PluginOperator"
 import {failed} from "../utils/notification"
 import {BrutePage} from "../pages/brute/BrutePage"
 import {DataCompare} from "../pages/compare/DataCompare"
@@ -17,7 +16,6 @@ import {fuzzerInfoProp} from "../pages/MainOperator"
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
-import {BatchExecutorPageEx} from "../pages/invoker/batch/BatchExecutorPageEx"
 import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 import {
     ReadOnlyBatchExecutorByMenuItem,
@@ -137,6 +135,7 @@ import { PluginBatchExecutorPageInfoProps, PocPageInfoProps } from "@/store/page
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import { SinglePluginExecution } from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 import {YakPoC} from "@/pages/securityTool/yakPoC/yakPoC"
+import {NewPortScan} from "@/pages/securityTool/newPortScan/newPortScan"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -387,7 +386,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Codec,
     YakitRoute.Space_Engine,
     YakitRoute.Plugin_OP,
-    YakitRoute.PoC
+    YakitRoute.PoC,
+    YakitRoute.Mod_ScanPort
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -528,13 +528,12 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DataCompare:
             return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
-            return <PortScanPage sendTarget={params?.scanportParams} />
+            // return <PortScanPage sendTarget={params?.scanportParams} />
+            return <NewPortScan />
         case YakitRoute.PoC:
-            // return <YakBatchExecutors keyword={"poc"} verbose={"Poc"} />
             return <YakPoC pageId={params?.id || ""}/>
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
-            // return <PluginOperator yakScriptId={yakScriptId || 0} yakScriptName='' size={"big"} fromMenu={true} />
             return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
         case YakitRoute.Mod_Brute:
             return <BrutePage sendTarget={params?.bruteParams} />
@@ -1433,12 +1432,14 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
     }
 ]
 // 要全部删除，但是里面的内容还没确定好
+/**@deprecated */
 export enum Route {
     WebsocketHistory = "websocket-history",
     // 获取标准输出流
     AttachEngineCombinedOutput = "attach-engine-combined-output"
 }
 // 要全部删除，但是里面的内容还没确定好
+/**@deprecated */
 export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
     const routeStr = `${r}`
     // 处理社区插件（以插件 ID 添加的情况）
@@ -1451,7 +1452,7 @@ export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?:
         } catch (e) {
             failed(`Loading PluginKey: ${r} failed`)
         }
-        return <PluginOperator yakScriptId={yakScriptId || id} yakScriptName='' size={"big"} fromMenu={true} />
+        return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
     }
 
     if (routeStr.startsWith("batch:")) {

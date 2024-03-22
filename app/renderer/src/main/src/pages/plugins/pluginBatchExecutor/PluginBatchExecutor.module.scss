@@ -3,16 +3,6 @@
     display: flex;
     align-items: flex-start;
 }
-.plugin-batch-executor {
-    @extend %display-align-start;
-    flex: 1;
-    overflow: hidden;
-    :global {
-        .plugin-details-item-wrapper {
-            cursor: pointer;
-        }
-    }
-}
 
 .plugin-batch-executor-title {
     display: flex;
@@ -77,6 +67,11 @@
     flex-direction: column;
     padding: 0 12px 16px;
     overflow: auto !important;
+    :global {
+        .plugin-details-item-wrapper {
+            cursor: pointer;
+        }
+    }
 }
 
 .to-end {

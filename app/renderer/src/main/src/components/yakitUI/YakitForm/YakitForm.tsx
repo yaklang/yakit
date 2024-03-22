@@ -12,6 +12,7 @@ import classNames from "classnames"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useMemoizedFn} from "ahooks"
 import {failed, yakitNotify} from "@/utils/notification"
+import {OutlineUploadIcon} from "@/assets/icon/outline"
 
 const {Dragger} = Upload
 
@@ -621,8 +622,9 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                                 })}
                                 onClick={onUploadFile}
                             >
-                                点击此处上传
+                                <OutlineUploadIcon className={styles["upload-icon"]} /> 点击此处
                             </span>
+                            上传
                         </label>
                     </div>
                 )}

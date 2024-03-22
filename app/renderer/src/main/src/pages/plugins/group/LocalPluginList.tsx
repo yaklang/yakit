@@ -147,7 +147,7 @@ export const LocalPluginList: React.FC<PluginLocalGroupsListProps> = React.memo(
             const queryFilters = filters
             const querySearch = search
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams(queryFilters, querySearch, params),
+                ...convertLocalPluginsRequestParams({filter:queryFilters, search:querySearch, pageParams:params}),
                 ExcludeTypes: ["yak", "codec"] // 过滤条件 插件组需要过滤Yak、codec
             }
 

@@ -1,0 +1,62 @@
+@use "../securityTool.scss" as securityTool;
+
+.port-scan-body {
+    padding-right: 0 !important;
+}
+
+.port-scan-execute-wrapper {
+    @include securityTool.execute-title("port-scan");
+}
+
+.divider-style {
+    @extend %divider-style;
+}
+.port-scan-form-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: all 0.3s ease;
+    padding-top: 16px;
+    :global {
+        .ant-form {
+            overflow: hidden;
+        }
+    }
+    .plugin-execute-form-item {
+        width: 100%;
+    }
+    .plugin-execute-form-operate {
+        @extend %display-flex-center;
+        .plugin-execute-form-operate-start {
+            margin-right: 8px;
+        }
+    }
+}
+.port-scan-form-wrapper-hidden {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+}
+
+.preset-port-group-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-gap: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    background: var(--yakit-card-background-color);
+}
+
+.ports-form-extra {
+    @extend %display-flex-center;
+}
+.form-extra {
+    @extend %display-flex-center;
+    gap: 8px 0;
+    flex-wrap: wrap;
+}
+
+.executing-progress {
+    @extend %display-flex-center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 12px 0 0;
+}

@@ -1,4 +1,4 @@
-import {SolidViewgridIcon, SolidPaperairplaneIcon} from "@/assets/icon/solid"
+import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -8,10 +8,7 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {PaginationSchema, QueryGeneralResponse, genDefaultPagination} from "@/pages/invoker/schema"
-import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
-import {YakitRoute} from "@/routes/newRoute"
-import emiter from "@/utils/eventBus/eventBus"
+import {QueryGeneralResponse, genDefaultPagination} from "@/pages/invoker/schema"
 import {formatTimestamp} from "@/utils/timeUtil"
 import React, {useState, useMemo, useEffect, useRef, useImperativeHandle} from "react"
 import {QueryPortsRequest, portAssetFormatJson, PortTableAndDetail} from "../PortAssetPage"
@@ -20,15 +17,10 @@ import {defQueryPortsRequest, apiQueryPortsBase, apiQueryPortsIncrementOrderAsc}
 import {
     useDebounceFn,
     useMemoizedFn,
-    useSelections,
     useInterval,
     useCreation,
     useControllableValue,
-    useLatest,
-    useUpdateEffect,
-    useWhyDidYouUpdate,
-    useInViewport
-} from "ahooks"
+    useUpdateEffect} from "ahooks"
 import styles from "./PortTable.module.scss"
 import {PortTableProps} from "./PortTableType"
 import ReactResizeDetector from "react-resize-detector"

@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {Button, Checkbox, Col, Divider, Form, Input, InputNumber, Row, Space, Spin, Tabs, Tag, Tooltip} from "antd"
 import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
-import {ExecResult, YakScript} from "../invoker/schema"
+import {ExecResult} from "../invoker/schema"
 import {failed, info, success, yakitInfo} from "../../utils/notification"
 import {writeExecResultXTerm, xtermClear} from "../../utils/xtermUtils"
 import {OpenPortTableViewer} from "./PortTable"
@@ -11,9 +11,7 @@ import {PortAssetTable} from "../assetViewer/PortAssetPage"
 import {PortAsset} from "../assetViewer/models"
 import {PresetPorts} from "./schema"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {queryYakScriptList} from "../yakitStore/network"
-import {PluginList} from "../../components/PluginList"
-import {showDrawer, showModal} from "../../utils/showModal"
+import {showDrawer} from "../../utils/showModal"
 import {PluginResultUI} from "../yakitStore/viewers/base"
 import useHoldingIPCRStream from "../../hook/useHoldingIPCRStream"
 import {CVXterm} from "../../components/CVXterm"
@@ -26,14 +24,15 @@ import {isEnpriTrace} from "@/utils/envfile"
 import {CreateReport} from "./CreateReport"
 import {v4 as uuidv4} from "uuid"
 import {StartBruteParams} from "../brute/BrutePage"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
-import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
-import {PcapMetadata} from "@/models/Traffic";
-import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage";
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {PcapMetadata} from "@/models/Traffic"
+import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {HybridScanPluginConfig} from "@/models/HybridScan"
 
 const {ipcRenderer} = window.require("electron")
-const ScanPortTemplate = "scan-port-template"
+export const ScanPortTemplate = "scan-port-template"
 
 export interface PortScanPageProp {
     sendTarget?: string
@@ -68,14 +67,18 @@ export interface PortScanParams {
 
     SynScanNetInterface?: string
     HostAliveConcurrent?: number
+    /**插件条件的配置 */
+    LinkPluginConfig?: HybridScanPluginConfig
+    /**爬虫是否启用 JS 解析 */
+    BasicCrawlerEnableJSParser?: boolean
 }
 
-const ScanKind: { [key: string]: string } = {
+export const ScanKind: {[key: string]: string} = {
     syn: "SYN",
     fingerprint: "指纹",
     all: "SYN+指纹"
 }
-const ScanKindKeys: string[] = Object.keys(ScanKind)
+export const ScanKindKeys: string[] = Object.keys(ScanKind)
 
 export const defaultPorts =
     "21,22,443,445,80,8000-8004,3306,3389,5432,6379,8080-8084,7000-7005,9000-9002,8443,7443,9443,7080,8070"
@@ -102,7 +105,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         EnableBasicCrawler: true,
         BasicCrawlerRequestMax: 5,
         SynConcurrent: 1000,
-        HostAliveConcurrent:20
+        HostAliveConcurrent: 20
     })
     const [token, setToken] = useState(randomString(40))
     const xtermRef = useRef(null)
@@ -119,10 +122,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         "scan-port",
         "PortScan",
         token,
-        () => {
-        },
-        () => {
-        },
+        () => {},
+        () => {},
         (obj, content) => content.data.indexOf("isOpen") > -1 && content.data.indexOf("port") > -1
     )
 
@@ -138,8 +139,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                     // }, 300)
                 }
             })
-            .catch(() => {
-            })
+            .catch(() => {})
             .finally(() => {
                 setTimeout(() => setLoading(false), 100)
             })
@@ -198,7 +198,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const uuid: string = uuidv4()
     const [_, setNowUUID, getNowUUID] = useGetState<string>(uuid)
     // 监听网卡选择是否被修改
-    const [isSetInterface,setInterface] = useState<boolean>(false)
+    const [isSetInterface, setInterface] = useState<boolean>(false)
     return (
         <div style={{width: "100%", height: "100%"}}>
             <Tabs className='scan-port-tabs no-theme-tabs' tabBarStyle={{marginBottom: 5}}>
@@ -250,12 +250,11 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 {
                                                     LastRecord: {},
                                                     StartBruteParams: {},
-                                                    PortScanRequest,
+                                                    PortScanRequest
                                                 },
                                                 token
                                             )
                                         } else {
-                                            console.log("params",params)
                                             ipcRenderer.invoke("PortScan", params, token)
                                         }
                                     }}
@@ -390,7 +389,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                         setParams({...params, Ports: defaultPorts})
                                                     }}
                                                 >
-                                                    <ReloadOutlined/>
+                                                    <ReloadOutlined />
                                                 </a>
                                             </Tooltip>
                                         </Space>
@@ -437,7 +436,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                     </Form.Item>
                                 </Form>
                             </div>
-                            <Divider style={{margin: "5px 0"}}/>
+                            <Divider style={{margin: "5px 0"}} />
                             <div style={{flex: 1, overflow: "hidden"}}>
                                 <Tabs
                                     className='scan-port-tabs'
@@ -460,7 +459,7 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                         <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                                             <Row style={{marginTop: 6}} gutter={6}>
                                                 <Col span={24}>
-                                                    <OpenPortTableViewer data={openPorts}/>
+                                                    <OpenPortTableViewer data={openPorts} />
                                                 </Col>
                                                 {/*<Col span={8}>*/}
                                                 {/*    <ClosedPortTableViewer data={closedPorts}/>*/}
@@ -534,7 +533,7 @@ interface ScanPortFormProp {
     setParams: (p: PortScanParams) => any
     // 网卡选择是否被修改
     isSetInterface?: boolean
-    setInterface?:(v:boolean)=>void
+    setInterface?: (v: boolean) => void
     // 简易企业版显示
     isSimpleDetectShow?: boolean
     // 简易版扫描速度
@@ -547,7 +546,7 @@ interface ScanPortFormProp {
 }
 
 export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
-    const {deepLevel, isSetPort, bruteParams, setBruteParams,setInterface,isSetInterface} = props
+    const {deepLevel, isSetPort, bruteParams, setBruteParams, setInterface, isSetInterface} = props
     const isSimpleDetectShow = props.isSimpleDetectShow || false
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
     const [simpleParams, setSimpleParams] = useState<StartBruteParams | undefined>(bruteParams)
@@ -564,7 +563,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
         let bruteParams = {
             ...simpleParams,
             Usernames: usernamesValue ? usernamesValue.split(/\n|,/) : [],
-            Passwords: passwordsValue ? passwordsValue.split(/\n|,/) : [],
+            Passwords: passwordsValue ? passwordsValue.split(/\n|,/) : []
         }
 
         setBruteParams && setBruteParams({...bruteParams})
@@ -601,33 +600,38 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
             console.log("GetGlobalNetworkConfig", rsp)
             globalNetworkConfig.current = rsp
-            const { SynScanNetInterface} = rsp
+            const {SynScanNetInterface} = rsp
             console.log("SynScanNetInterface", SynScanNetInterface)
             ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
                 if (!data || data.AvailablePcapDevices.length === 0) {
                     return
                 }
-                const interfaceList = data.AvailablePcapDevices.map(
-                    (item) => (
-                        {label: `${item.NetInterfaceName}-(${item.IP})`, value: item.Name})
-                )
-                if (SynScanNetInterface.length === 0&&!isSetInterface) {
+                const interfaceList = data.AvailablePcapDevices.map((item) => ({
+                    label: `${item.NetInterfaceName}-(${item.IP})`,
+                    value: item.Name
+                }))
+                if (SynScanNetInterface.length === 0 && !isSetInterface) {
                     setParams({...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName})
                 }
                 setNetInterfaceList(interfaceList)
-                if(SynScanNetInterface.length !== 0&&!isSetInterface){
+                if (SynScanNetInterface.length !== 0 && !isSetInterface) {
                     setParams({...params, SynScanNetInterface})
                 }
             })
         })
     }, [])
-    
-    const updateGlobalNetworkConfig = useMemoizedFn(()=>{
-        ipcRenderer.invoke("SetGlobalNetworkConfig", {...globalNetworkConfig.current,SynScanNetInterface:params.SynScanNetInterface}).then(() => {
-            yakitInfo("更新配置成功")
-        })
+
+    const updateGlobalNetworkConfig = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("SetGlobalNetworkConfig", {
+                ...globalNetworkConfig.current,
+                SynScanNetInterface: params.SynScanNetInterface
+            })
+            .then(() => {
+                yakitInfo("更新配置成功")
+            })
     })
-    
+
     return (
         <Form
             onSubmitCapture={(e) => {
@@ -669,12 +673,14 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                             size='small'
                             value={params.SynScanNetInterface}
                             onChange={(netInterface) => {
-                                setInterface&&setInterface(true)
+                                setInterface && setInterface(true)
                                 setParams({...params, SynScanNetInterface: netInterface})
                             }}
                             maxTagCount={100}
                         />
-                        <YakitButton onClick={updateGlobalNetworkConfig} size="small">同步到全局网络配置</YakitButton>
+                        <YakitButton onClick={updateGlobalNetworkConfig} size='small'>
+                            同步到全局网络配置
+                        </YakitButton>
                     </Form.Item>
                 </>
             )}
@@ -706,7 +712,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                             })
                                             .join(",")
                                         if (value.includes("all")) {
-                                            res = PresetPorts['all'] || ""
+                                            res = PresetPorts["all"] || ""
                                         }
                                         if (!!res) {
                                             setParams({...params, Ports: res})
@@ -742,7 +748,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                                 setParams({...params, Ports: PresetPorts["top100"]})
                                             }}
                                         >
-                                            <ReloadOutlined/>
+                                            <ReloadOutlined />
                                         </a>
                                     </Tooltip>
                                 </Space>
@@ -860,7 +866,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         </Checkbox>
                                         {simpleParams.UsernameFile && (
                                             <div>
-                                                <PaperClipOutlined/>
+                                                <PaperClipOutlined />
                                                 <span style={{marginLeft: 6, color: "#198fff"}}>
                                                     {simpleParams.UsernameFile}
                                                 </span>
@@ -925,7 +931,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                         </Checkbox>
                                         {simpleParams.PasswordFile && (
                                             <div>
-                                                <PaperClipOutlined/>
+                                                <PaperClipOutlined />
                                                 <span style={{marginLeft: 6, color: "#198fff"}}>
                                                     {simpleParams.PasswordFile}
                                                 </span>

@@ -1436,7 +1436,7 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
 
 /** @name 标题栏的搜索选项组件 */
 export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) => {
-    const {defaultFilter, onFilter, refresh, type = "online"} = props
+    const {defaultFilter, onFilter, refresh, type = "online", fixFilterList = []} = props
 
     const excludeFilterName = useMemo(() => {
         return ["tags", "plugin_group"]
@@ -1448,6 +1448,10 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
 
     // 查询筛选条件统计数据列表
     useEffect(() => {
+        if (fixFilterList.length > 0) {
+            setFilterList(fixFilterList)
+            return
+        }
         if (type === "online") {
             apiFetchGroupStatisticsOnline().then((res) => {
                 const list = (res?.data || []).filter((item) => !excludeFilterName.includes(item.groupKey))
@@ -1513,7 +1517,22 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
             let isActive = false
             valueArr.forEach((key) => {
                 if (value[key] && value[key].length > 0) {
-                    isActive = true
+                    if (fixFilterList.length > 0) {
+                        const groupData = fixFilterList.find((ele) => ele.groupKey === "key") || {data: []}
+                        const list = (value[key] || [])
+                            .map((ele) => ele.value)
+                            .sort()
+                            .join(",")
+                        const defList = (groupData.data || [])
+                            .map((ele) => ele.value)
+                            .sort()
+                            .join(",")
+                        if (list && list !== defList) {
+                            isActive = true
+                        }
+                    } else {
+                        isActive = true
+                    }
                 }
             })
             setIsActive(isActive)
