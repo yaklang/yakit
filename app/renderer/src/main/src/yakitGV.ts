@@ -106,4 +106,6 @@ export enum CacheDropDownGV {
     MITMDefaultHostHistoryList = "mitm_default_host_history",
     /** @name CVETable 设置代理 */
     CVEProxyList = "cev_proxy_list",
+    /** @name 私有域地址 */
+    ConfigBaseUrl = "config_base_url",
 }
