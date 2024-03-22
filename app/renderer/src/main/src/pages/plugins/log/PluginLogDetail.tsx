@@ -81,9 +81,9 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
     // 对比器-修改源码
     const [newCode, setNewCode] = useState<string>("")
     // 触发对比器刷新
-    const triggerDiff = useRef<boolean>(false)
+    const [triggerDiff, setTriggerDiff] = useState<boolean>(true)
     useUpdateEffect(() => {
-        triggerDiff.current = !triggerDiff.current
+        setTriggerDiff((prev) => !prev)
     }, [activeTab])
 
     // 插件调试数据
@@ -142,7 +142,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                         Params: paramsList?.CliParameter || [],
                         Content: res.content
                     })
-                    triggerDiff.current = !triggerDiff.current
+                    setTriggerDiff((prev) => !prev)
                 } else {
                     yakitNotify("error", `获取修改内容为空，请重试!`)
                     onCancel()
@@ -364,7 +364,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                                             leftReadOnly={true}
                                             rightDefaultCode={newCode}
                                             setRightCode={setNewCode}
-                                            triggerUpdate={triggerDiff.current}
+                                            triggerUpdate={triggerDiff}
                                             language={pluginLanguage}
                                         />
                                     )}

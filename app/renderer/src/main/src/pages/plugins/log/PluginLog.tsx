@@ -13,7 +13,7 @@ import {
     PluginLogPassIcon,
     PluginLogRestoreIcon
 } from "./icon"
-import {useInViewport, useLatest, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useInViewport, useLatest, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {apiFetchOnlinePluginInfo, apiFetchPluginDetailCheck, apiFetchPluginLogs} from "../utils"
 import {yakitNotify} from "@/utils/notification"
@@ -149,13 +149,14 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
         setResLoading(true)
         apiFetchPluginLogs({uuid: uuid, Page: page, Limit: 5})
             .then((res) => {
+                console.log("插件日志列表参数\n", JSON.stringify({uuid: uuid, Page: page, Limit: 5}))
                 console.log("插件日志列表\n", res)
                 let data: API.PluginsLogsDetail[] = []
                 if (res.pagemeta.page === 1) {
                     data = data.concat(res.data || [])
                 } else {
-                    data = data.concat(response.data || [])
-                    data = data.concat(res.data)
+                    data = data.concat(response.data)
+                    data = data.concat(res.data || [])
                 }
                 if (data.length >= res.pagemeta.total) hasMore.current = false
                 setResponse({...res, data: [...data]})
@@ -192,25 +193,53 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
         })
     })
 
+    const getInView = useMemoizedFn(() => {
+        return inViewport
+    })
+
+    // 控制日志列表展示时的loading状态和重置列表数据
     useEffect(() => {
         if (inViewport) {
             if (uuid) {
+                if (!latestPlugin.current) {
+                    setPluginLoading(true)
+                } else {
+                    // 减少切换页面场景下的重复请求
+                    if (latestPlugin.current.uuid !== uuid) setPluginLoading(true)
+                    else resetFetchLogs()
+                }
+            }
+        }
+
+        return () => {
+            setPluginLoading(false)
+        }
+    }, [inViewport, uuid])
+    // uuid变化时的信息重新请求获取
+    useDebounceEffect(
+        () => {
+            if (uuid) {
+                if (!getInView()) return
+
                 if (!latestPlugin.current) {
                     fetchPluginDetail(uuid)
                 } else {
                     // 减少切换页面场景下的重复请求
                     if (latestPlugin.current.uuid !== uuid) fetchPluginDetail(uuid)
-                    else resetFetchLogs()
                 }
             } else {
                 setPlugin(undefined)
                 resetResponse()
             }
-        }
-    }, [inViewport, uuid])
+        },
+        [uuid],
+        {wait: 300}
+    )
 
     const handleLoadMore = useMemoizedFn(() => {
         if (resLoading) return
+        if (plugin && plugin.uuid !== uuid) return
+
         fetchLogs(pageRef.current)
     })
 

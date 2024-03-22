@@ -265,7 +265,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
             if (plugin.Type === "yak") setParams(plugin.Params || [])
             // 非yak类型插件固定参数
             else setParams([])
-            setNewCode(plugin.Content || "")
+            setNewCode(newCode || plugin.Content || "")
         } else {
             failed("未获取插件信息，请关闭调试窗后再次尝试")
         }
