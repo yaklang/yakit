@@ -103,5 +103,7 @@ export enum CodeGV {
 /**YakitAutoComplate + YakitSelect缓存下拉和默认值变量 */
 export enum CacheDropDownGV {
     /** @name mitm 劫持代理监听主机 */
-    MITMDefaultHostHistoryList = "mitm_default_host_history"
+    MITMDefaultHostHistoryList = "mitm_default_host_history",
+    /** @name CVETable 设置代理 */
+    CVEProxyList = "cev_proxy_list",
 }
