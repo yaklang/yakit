@@ -22,13 +22,7 @@ import {
     PluginBatchExecuteContentRefProps,
     batchPluginType
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import {
-    useControllableValue,
-    useCreation,
-    useDebounceFn,
-    useInViewport,
-    useInterval,
-    useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useInViewport, useInterval, useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {
     ExpandAndRetract,
@@ -329,6 +323,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
                     rowKey='ScriptName'
                     isRef={loading && isLoadingRef.current}
                     classNameRow='plugin-details-opt-wrapper'
+                    classNameList={styles["plugin-by-group-list-wrapper"]}
                 />
             )}
         </div>
