@@ -255,7 +255,6 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                 token
                                             )
                                         } else {
-                                            console.log("params", params)
                                             ipcRenderer.invoke("PortScan", params, token)
                                         }
                                     }}
