@@ -57,6 +57,7 @@ export interface PluginExecuteLogProps {
     isExecuting: boolean
     hidden: boolean
     pluginExecuteLog: StreamResult.PluginExecuteLog[]
+    classNameWrapper?:string
 }
 
 export interface TimeConsumingProps {

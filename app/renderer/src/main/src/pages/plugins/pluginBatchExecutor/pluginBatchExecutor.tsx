@@ -44,6 +44,7 @@ import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
 import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/newPortScan"
+import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/yakPoC"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -99,12 +100,11 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
 
     const [refreshList, setRefreshList] = useState<boolean>(false)
     const [selectNum, setSelectNum] = useState<number>(0)
+    const [pluginExecuteLog, setPluginExecuteLog] = useState<StreamResult.PluginExecuteLog[]>([])
 
     const userInfo = useStore((s) => s.userInfo)
 
     /** 是否为初次加载 */
-    const isLoadingRef = useRef<boolean>(true)
-    const privateDomainRef = useRef<string>("") // 私有域地址
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
 
     const batchExecuteDomRef = useRef<HTMLDivElement>(null)
@@ -201,8 +201,20 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             }}
             pluginDetailsProps={{
                 title: "选择插件",
-                bodyClassName: styles["plugin-batch-executor-body"],
-                rightHeardNode: (
+                bodyClassName: styles["plugin-batch-executor-body"]
+            }}
+            fetchListInPageFirstAfter={fetchListInPageFirstAfter}
+            selectNum={selectNum}
+            setSelectNum={setSelectNum}
+        >
+            <div className={styles["right-wrapper"]}>
+                <PluginExecuteLog
+                    classNameWrapper={styles["log-list-wrapper"]}
+                    hidden={false}
+                    pluginExecuteLog={pluginExecuteLog}
+                    isExecuting={isExecuting}
+                />
+                <div className={styles["content-wrapper"]}>
                     <>
                         <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                             <div className={styles["plugin-batch-executor-title"]} ref={batchExecuteDomRef}>
@@ -248,26 +260,24 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             </div>
                         </ExpandAndRetract>
                     </>
-                )
-            }}
-            fetchListInPageFirstAfter={fetchListInPageFirstAfter}
-            selectNum={selectNum}
-            setSelectNum={setSelectNum}
-        >
-            <PluginBatchExecuteContent
-                ref={pluginBatchExecuteContentRef}
-                selectNum={selectNum}
-                isExpand={isExpand}
-                setIsExpand={setIsExpand}
-                defaultActiveKey={pageInfo.defaultActiveKey}
-                onInitInputValueAfter={onInitInputValueAfter}
-                setProgressList={setProgressList}
-                stopLoading={stopLoading}
-                setStopLoading={setStopLoading}
-                pluginInfo={pluginInfo}
-                executeStatus={executeStatus}
-                setExecuteStatus={setExecuteStatus}
-            />
+                    <PluginBatchExecuteContent
+                        ref={pluginBatchExecuteContentRef}
+                        selectNum={selectNum}
+                        isExpand={isExpand}
+                        setIsExpand={setIsExpand}
+                        defaultActiveKey={pageInfo.defaultActiveKey}
+                        onInitInputValueAfter={onInitInputValueAfter}
+                        setProgressList={setProgressList}
+                        stopLoading={stopLoading}
+                        setStopLoading={setStopLoading}
+                        pluginInfo={pluginInfo}
+                        executeStatus={executeStatus}
+                        setExecuteStatus={setExecuteStatus}
+                        setPluginExecuteLog={setPluginExecuteLog}
+                        pluginExecuteResultWrapper={styles["plugin-executor-result-wrapper"]}
+                    />
+                </div>
+            </div>
         </PluginLocalListDetails>
     )
 })
@@ -298,6 +308,8 @@ interface PluginBatchExecuteContentProps {
 
     /**插件执行日志 */
     setPluginExecuteLog?: (s: StreamResult.PluginExecuteLog[]) => void
+
+    pluginExecuteResultWrapper?: string
 }
 export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
@@ -307,8 +319,15 @@ export interface PluginBatchExecuteContentRefProps {
 }
 export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {selectNum, pluginInfo, defaultActiveKey, onInitInputValueAfter, setProgressList, setPluginExecuteLog} =
-            props
+        const {
+            selectNum,
+            pluginInfo,
+            defaultActiveKey,
+            onInitInputValueAfter,
+            setProgressList,
+            setPluginExecuteLog,
+            pluginExecuteResultWrapper = ""
+        } = props
         const [form] = Form.useForm()
         const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
         useImperativeHandle(
@@ -519,6 +538,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         loading={isExecuting}
                         pluginType={""}
                         defaultActiveKey={defaultActiveKey}
+                        pluginExecuteResultWrapper={pluginExecuteResultWrapper}
                     />
                 )}
                 <React.Suspense fallback={<div>loading...</div>}>

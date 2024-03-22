@@ -928,8 +928,8 @@ const intervalTime = (startTime: number, endTime: number) => {
         value: `${seconds} s`
     }
 }
-const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
-    const {hidden, pluginExecuteLog, isExecuting} = props
+export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
+    const {hidden, pluginExecuteLog, isExecuting, classNameWrapper = ""} = props
     const [interval, setInterval] = useState<number | undefined>(1000)
 
     const [recalculation, setRecalculation] = useState<boolean>(false)
@@ -961,9 +961,13 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
 
     return (
         <div
-            className={classNames(styles["plugin-execute-log-wrapper"], {
-                [styles["plugin-execute-log-wrapper-hidden"]]: hidden
-            })}
+            className={classNames(
+                styles["plugin-execute-log-wrapper"],
+                {
+                    [styles["plugin-execute-log-wrapper-hidden"]]: hidden
+                },
+                classNameWrapper
+            )}
         >
             <RollingLoadList<PluginLogProps>
                 data={data}
