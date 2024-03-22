@@ -1471,9 +1471,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         setType(typeOptionVal)
         if (typeOptionVal === "beautify") {
             if (originValue) {
-                setTimeout(() => {
-                    beautifyCode()
-                }, 200)
+                beautifyCode()
             }
         }
     }, [typeOptionVal, originValue])
@@ -1513,9 +1511,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             setRenderHTML(undefined)
             setShowValue(originValue)
         } else if (originValue && type === "beautify") {
-            setTimeout(() => {
-                beautifyCode()
-            }, 200)
+            beautifyCode()
         } else if (originValue && type === "render") {
             setTimeout(() => {
                 renderCode()
