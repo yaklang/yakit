@@ -9,10 +9,10 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import style from "./MITMPage.module.scss"
 import {ChromeFrameSvgIcon, ChromeSvgIcon, RemoveIcon} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {RemoteGV} from "@/yakitGV"
+import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import { MITMConsts } from "./MITMConsts"
+import {MITMConsts} from "./MITMConsts"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -54,18 +54,33 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                 setParams({...params, host: hosts[0]})
             })
             .catch(() => {})
+
         ipcRenderer.invoke("getDefaultUserDataDir").then((e: string) => {
-            getRemoteValue("USER_DATA_DIR_ARR").then((data) => {
-                if (!data) {
-                    setUserDataDir(e)
-                    setUserDataDirArr([e])
-                    return
-                } else {
-                    const obj = JSON.parse(data)
-                    setSaveUserData(obj.isSaveUserData)
-                    setUserDataDir(obj.userDataDirArr[0])
-                    setUserDataDirArr(obj.userDataDirArr)
-                }
+            // 缓存数据结构迁移(后续删除)
+            Promise.allSettled([getRemoteValue("USER_DATA_DIR_ARR")]).then((cacheRes) => {
+                const defaultValue =
+                    cacheRes[0].status === "fulfilled"
+                        ? !!cacheRes[0].value
+                            ? JSON.parse(cacheRes[0].value).userDataDirArr[0]
+                            : e
+                        : e
+                const options =
+                    cacheRes[0].status === "fulfilled"
+                        ? !!cacheRes[0].value
+                            ? JSON.parse(cacheRes[0].value).userDataDirArr
+                            : [e]
+                        : [e]
+                console.log("迁移缓存数据结构:", {defaultValue, options})
+                setSaveUserData(
+                    cacheRes[0].status === "fulfilled"
+                        ? !!cacheRes[0].value
+                            ? JSON.parse(cacheRes[0].value).isSaveUserData
+                            : false
+                        : false
+                )
+                setUserDataDir(defaultValue)
+                setUserDataDirArr(options)
+                setRemoteValue(CacheDropDownGV.MITMSaveUserDataDir, JSON.stringify({defaultValue, options}))
             })
         })
     }, [])
@@ -75,14 +90,21 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         <Form
             labelCol={{span: 4}}
             wrapperCol={{span: 18}}
-            onSubmitCapture={async(e) => {
+            onSubmitCapture={async (e) => {
                 e.preventDefault()
                 // 代理认证用户名
-                let username = await getRemoteValue(MITMConsts.MITMDefaultProxyUsername)||""
+                let username = (await getRemoteValue(MITMConsts.MITMDefaultProxyUsername)) || ""
                 // 代理认证用户密码
-                let password = await getRemoteValue(MITMConsts.MITMDefaultProxyPassword)||""
-                let newParams: {host: string; port: number; chromePath?: string; userDataDir?: string; username?: string, password?: string} = {...params,username,password}
-                
+                let password = (await getRemoteValue(MITMConsts.MITMDefaultProxyPassword)) || ""
+                let newParams: {
+                    host: string
+                    port: number
+                    chromePath?: string
+                    userDataDir?: string
+                    username?: string
+                    password?: string
+                } = {...params, username, password}
+
                 if (isSaveUserData) {
                     let newUserDataDirArr = filterItem([userDataDir, ...userDataDirArr]).slice(0, 5)
                     setRemoteValue(
@@ -326,7 +348,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                             if (!isStartMITM) {
                                 // 记录时间戳
                                 const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
-                                setRemoteValue(MITMConsts.MITMStartTimeStamp,nowTime)
+                                setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
                                 if (onFished) onFished(host, port)
                             }
                         }}
