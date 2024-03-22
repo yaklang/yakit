@@ -1,22 +1,22 @@
-const {ipcMain} = require("electron");
+const {ipcMain} = require("electron")
 const FS = require("fs")
 const path = require("path")
 const xlsx = require("node-xlsx")
-const handlerHelper = require("./handleStreamWithContext");
+const {YakitProjectPath} = require("../filePath")
 module.exports = (win, getClient) => {
-    const handlerHelper = require("./handleStreamWithContext");
+    const handlerHelper = require("./handleStreamWithContext")
 
-    const streamPortScanMap = new Map();
-    ipcMain.handle("cancel-PortScan", handlerHelper.cancelHandler(streamPortScanMap));
+    const streamPortScanMap = new Map()
+    ipcMain.handle("cancel-PortScan", handlerHelper.cancelHandler(streamPortScanMap))
     ipcMain.handle("PortScan", (e, params, token) => {
-        let stream = getClient().PortScan(params);
+        let stream = getClient().PortScan(params)
         handlerHelper.registerHandler(win, stream, streamPortScanMap, token)
     })
 
     const asyncFetchFileContent = (params) => {
         return new Promise((resolve, reject) => {
             const type = params.split(".").pop()
-            const typeArr = ['csv', 'xls', 'xlsx']
+            const typeArr = ["csv", "xls", "xlsx"]
             // 读取Excel
             if (typeArr.includes(type)) {
                 // 读取xlsx
@@ -29,15 +29,14 @@ module.exports = (win, getClient) => {
             }
             // 读取txt
             else {
-                FS.readFile(params, 'utf-8', function (err, data) {
+                FS.readFile(params, "utf-8", function (err, data) {
                     if (err) {
                         reject(err)
                     } else {
                         resolve(data)
                     }
-                });
+                })
             }
-
         })
     }
 
@@ -47,25 +46,24 @@ module.exports = (win, getClient) => {
             // 读取 .pfx 文件
             FS.readFile(params, (err, data) => {
                 if (err) {
-                    reject(err);
+                    reject(err)
                 } else {
                     resolve(data)
                 }
-  
-            // 处理 .pfx 文件的内容，例如解析证书
-            // 这里可能需要使用 `crypto` 模块进行进一步的处理
-            // 例如：crypto.createCredentials
-            });
+
+                // 处理 .pfx 文件的内容，例如解析证书
+                // 这里可能需要使用 `crypto` 模块进行进一步的处理
+                // 例如：crypto.createCredentials
+            })
         })
     }
 
+    const streamSimpleDetectMap = new Map()
 
-    const streamSimpleDetectMap = new Map();
-
-    ipcMain.handle("cancel-SimpleDetect", handlerHelper.cancelHandler(streamSimpleDetectMap));
+    ipcMain.handle("cancel-SimpleDetect", handlerHelper.cancelHandler(streamSimpleDetectMap))
 
     ipcMain.handle("SimpleDetect", (e, params, token) => {
-        let stream = getClient().SimpleDetect(params);
+        let stream = getClient().SimpleDetect(params)
         handlerHelper.registerHandler(win, stream, streamSimpleDetectMap, token)
     })
 
@@ -139,20 +137,29 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamRecoverSimpleDetectUnfinishedTaskMap, token)
     })
 
+    /** simple-detect-log文件夹路径 */
+    simpleDetectLogDir = path.join(YakitProjectPath, "simple-detect-log")
     const asyncSaveSimpleDetectLogToTxt = (params) => {
         return new Promise(async (resolve, reject) => {
-            const {outputDir, data, fileName} = params
-            const filePath = path.join(outputDir, fileName);
-            FS.writeFile(filePath, data, (err) => {
+            const {data, fileName} = params
+            FS.mkdir(simpleDetectLogDir, {recursive: true}, (err) => {
                 if (err) {
                     reject(err)
-                } else {
-                    resolve({
-                        ok: true,
-                        outputDir: filePath
-                    })
+                    return
                 }
-              });
+                // 写入文件
+                const filePath = path.join(simpleDetectLogDir, fileName)
+                FS.writeFile(filePath, data, (err) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve({
+                            ok: true,
+                            outputDir: filePath
+                        })
+                    }
+                })
+            })
         })
     }
 

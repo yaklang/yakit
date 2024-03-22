@@ -148,8 +148,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
-    const [logContent, setLogContent, getLogContent] = useGetState("")
-    const [logEditorModelVisible, setLogEditorModelVisible] = useGetState(false)
     const [logChannelToken, setLogChannelToken] = useState(randomString(40))
     const [portParams, setPortParams, getPortParams] = useGetState<PortScanParams>({
         Ports: "",
@@ -214,6 +212,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const isInputValue = useRef<boolean>(false)
     // 是否已经修改速度
     const isSetSpeed = useRef<number>()
+    // 安全检测日志
+    const simpleDetectLogRef = useRef<string>("")
 
     useEffect(() => {
         let obj: any = {}
@@ -294,7 +294,32 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
     }, [TaskName])
 
+    const downloadLog = useMemoizedFn(()=>{
+        const fileName = `${getPortParams().Targets||getPortParams().TargetsFile}-${new Date().getTime()}.txt`
+        if(simpleDetectLogRef.current.length === 0) return
+                ipcRenderer
+                    .invoke("SaveSimpleDetectLogToTxt", {
+                        data: simpleDetectLogRef.current,
+                        fileName
+                    })
+                    .then((r) => {
+                        if (r?.ok) {
+                            success("Log导出成功")
+                            // r?.outputDir && openABSFileLocated(r.outputDir)
+                        }
+                    })
+                    .catch((e) => {
+                        failed(`failed ${e}`)
+                    })
+                    .finally(() => {
+                        simpleDetectLogRef.current = ""
+                    })
+            
+       
+    })
+
     const stopListenLog = () => {
+        downloadLog()
         const token = logChannelToken
         ipcRenderer.invoke("cancel-AttachCombinedOutput", token)
         ipcRenderer.removeAllListeners(`${token}-data`)
@@ -304,7 +329,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const listenLog = () => {
         const token = logChannelToken
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
-            setLogContent(getLogContent() + Uint8ArrayToString(data.Raw) + "\r\n")
+            simpleDetectLogRef.current = simpleDetectLogRef.current + Uint8ArrayToString(data.Raw) + "\r\n"
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
             failed(`[AttachCombinedOutput] error:  ${error}`)
@@ -385,7 +410,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }, [])
     useEffect(() => {
         if (executing) {
-            setLogContent("")
+            simpleDetectLogRef.current = ""
             info("start log listener")
             listenLog()
         } else {
@@ -557,79 +582,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         getPluginGroup()
     }, [inViewport, refreshPluginGroup])
 
-    const downloadLog = useMemoizedFn(()=>{
-        if(getLogContent().length===0){
-            warn("无导出内容")
-            return
-        }
-        ipcRenderer
-        .invoke("openDialog", {
-            title: "请选择文件夹",
-            properties: ["openDirectory"]
-        })
-        .then((data: {filePaths: string[]}) => {
-            const filesLength = data.filePaths.length
-            if (filesLength) {
-                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
-                ipcRenderer
-                    .invoke("SaveSimpleDetectLogToTxt", {
-                        data: getLogContent(),
-                        outputDir: absolutePath,
-                        fileName: `SimpleDetectLog-${new Date().getTime()}.txt`
-                    })
-                    .then((r) => {
-                        console.log(r)
-                        if (r?.ok) {
-                            success("Log导出成功")
-                            r?.outputDir && openABSFileLocated(r.outputDir)
-                        }
-                    })
-                    .catch((e) => {
-                        failed(`failed ${e}`)
-                    })
-                    .finally(() => setTimeout(() => {}, 300))
-            }
-        })
-    })
-
     return (
         <>
-            <YakitModal
-                title='任务日志'
-                subTitle={
-                    <div className={styles["plugin-editor-modal-subtitle"]}>
-                        <span>按 Esc 即可退出全屏</span>
-                    </div>
-                }
-                type='white'
-                width='80%'
-                centered={true}
-                maskClosable={false}
-                closable={true}
-                closeIcon={<OutlineArrowscollapseIcon className={styles["plugin-editor-modal-close-icon"]} />}
-                footer={null}
-                visible={logEditorModelVisible}
-                onCancel={() => {
-                    setLogEditorModelVisible(false)
-                }}
-                bodyStyle={{padding: 0}}
-            >
-                <div style={{height: 700}}>
-                    <YakEditor type={"log"} value={getLogContent()} readOnly noMiniMap />
-                </div>
-            </YakitModal>
-            <div style={{float: "right", fontSize: 12, width: 300, height: 350}}>
-                <div style={{float: "right"}}>
-                    <YakitButton type="text" onClick={downloadLog}>下载log</YakitButton>
-                    全屏查看
-                    <YakitButton
-                        type='text2'
-                        icon={<OutlineArrowsexpandIcon />}
-                        onClick={() => setLogEditorModelVisible(true)}
-                    />
-                </div>
-                <YakEditor type={"log"} value={getLogContent()} readOnly noMiniMap noLineNumber />
-            </div>
             <div className={styles["simple-detect-form"]} style={{marginTop: 20}}>
                 <Form {...layout} form={form} onFinish={onFinish}>
                     <Spin spinning={uploadLoading}>
