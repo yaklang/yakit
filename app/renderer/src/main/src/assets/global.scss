@@ -9,55 +9,55 @@ $colors: (
     ),
     green: (
         backgroundColor: var(--yakit-tag-color-green),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-green),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-green) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     blue: (
         backgroundColor: var(--yakit-tag-color-blue),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-blue),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-blue) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     yellow: (
         backgroundColor: var(--yakit-tag-color-yellow),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-yellow),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-yellow) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     orange: (
         backgroundColor: var(--yakit-tag-color-orange),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-orange),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-orange) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     purple: (
         backgroundColor: var(--yakit-tag-color-purple),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-purple),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-purple) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     lakeBlue:(
         backgroundColor: #29BCD0,
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-lakeBlue),
+        opacityBackgroundColor: color-mix(in srgb, #29BCD0 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     cyan: (
         backgroundColor: var(--yakit-tag-color-cyan),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-cyan),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-cyan) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     bluePurple: (
-        backgroundColor: rgba(218, 95, 221, 1),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-bluePurple),
+        backgroundColor: #da5fdd,
+        opacityBackgroundColor: color-mix(in srgb, #da5fdd 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
     grey: (
         backgroundColor: var(--yakit-helper-text-color),
-        opacityBackgroundColor: var(--yakit-table-select-row-bg-color-grey),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-grey) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     )

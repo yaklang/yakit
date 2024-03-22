@@ -1,3 +1,5 @@
+@use "../../assets/global.scss" as global;
+@use "../../theme/themeify.scss" as tools;
 .virtual-table {
     height: 100%;
 
@@ -390,6 +392,22 @@
                 .virtual-table-hover-row {
                     background-color: var(--yakit-card-background-color);
                     color: var(--yakit-table-text-color);
+                }
+
+                @each $color, $properties in global.$colors {
+                    $bgHoverColor: color-mix(in srgb, var(--yakit-tag-color-#{$color}) 30%, transparent);
+                        $bgActiveColor: color-mix(in srgb, var(--yakit-tag-color-#{$color}) 40%, transparent);
+
+                        .virtual-table-hover-row-#{$color} {
+                            background-color: $bgHoverColor;
+                            &:hover {
+                                background-color: $bgHoverColor;
+                            }
+                        }
+
+                        .virtual-table-active-row-#{$color} {
+                            background-color: $bgActiveColor !important;
+                        }
                 }
 
                 .virtual-table-hover-row-red {

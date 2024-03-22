@@ -5,7 +5,7 @@ import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {info, yakitNotify} from "../../utils/notification"
+import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -3814,7 +3814,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
-                const item = data[index]
+                const item = {...data[index]}
                 if (item.Hash === flow.Hash) {
                     item.cellClassName = i.className
                     item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
@@ -3822,6 +3822,8 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
                 newData.push(item)
             }
             setData(newData)
+        }).catch((e) => {
+            yakitFailed(e + "")
         })
 }
 

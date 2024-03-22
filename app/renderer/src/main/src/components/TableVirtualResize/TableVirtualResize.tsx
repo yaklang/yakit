@@ -268,7 +268,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        { enabled: inViewport },
+        {enabled: inViewport},
         [data, currentRow, containerRef.current]
     )
     const upKey = useDebounceFn(
@@ -289,7 +289,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const inViewport =
                 currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
 
-        if (!inViewport) scrollTo(index)
+            if (!inViewport) scrollTo(index)
         },
         {wait: 100, leading: true}
     ).run
@@ -333,7 +333,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        { enabled: inViewport },
+        {enabled: inViewport},
         [data, currentRow, containerRef.current]
     )
     const downKey = useDebounceFn(
@@ -636,10 +636,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     }
                     //向下滑动
                     if (
-                        preScrollBottom.current > scrollBottom 
-                        && scrollBottom <= (scrollToBottom || 300) 
-                        && !hasMore
-                        && prePage.current != pagination.page
+                        preScrollBottom.current > scrollBottom &&
+                        scrollBottom <= (scrollToBottom || 300) &&
+                        !hasMore &&
+                        prePage.current != pagination.page
                     ) {
                         prePage.current = Number(pagination.page)
                         pagination.onChange(Number(pagination.page) + 1, pagination.limit)
@@ -678,13 +678,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 props.onRowClick(record)
             }
             // 反选
-            if(currentRow&&currentRow[renderKey]===record[renderKey]){
+            if (currentRow && currentRow[renderKey] === record[renderKey]) {
                 setCurrentRow(undefined)
-                onSetCurrentRow&&onSetCurrentRow(undefined)
-            }
-            else{
+                onSetCurrentRow && onSetCurrentRow(undefined)
+            } else {
                 setCurrentRow(record)
-                onSetCurrentRow&&onSetCurrentRow(record)
+                onSetCurrentRow && onSetCurrentRow(record)
             }
         }
     })
@@ -924,7 +923,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
 
     return (
-        <div className={classNames(styles["virtual-table"])} ref={tableRef} tabIndex={-1} onMouseMove={(e) => onMouseMoveLine(e)}>
+        <div
+            className={classNames(styles["virtual-table"])}
+            ref={tableRef}
+            tabIndex={-1}
+            onMouseMove={(e) => onMouseMoveLine(e)}
+        >
             <ReactResizeDetector
                 onResize={(w, h) => {
                     if (!w || !h) {
@@ -939,47 +943,50 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            {isShowTitle&&<>
-            {renderTitle ? (
-                renderTitle
-            ) : (
-                <div className={classNames(styles["virtual-table-heard"])}>
-                    <div className={classNames(styles["virtual-table-heard-left"])}>
-                        {title && typeof title === "string" && (
-                            <div className={classNames(styles["virtual-table-heard-title"])}>{title}</div>
-                        )}
-                        {title && React.isValidElement(title) && title}
-                        {props.isShowTotal && pagination?.total && (
-                            <div className={styles["virtual-table-heard-right"]}>
-                                <div className={styles["virtual-table-heard-right-item"]}>
-                                    <span className={styles["virtual-table-heard-right-text"]}>Total</span>
-                                    <span className={styles["virtual-table-heard-right-number"]}>
-                                        {pagination?.total || 0}
-                                    </span>
-                                </div>
-                                <Divider type='vertical' />
-                                <div className={styles["virtual-table-heard-right-item"]}>
-                                    <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
-                                    <span className={styles["virtual-table-heard-right-number"]}>
-                                        {rowSelection?.selectedRowKeys?.length || 0}
-                                    </span>
-                                </div>
+            {isShowTitle && (
+                <>
+                    {renderTitle ? (
+                        renderTitle
+                    ) : (
+                        <div className={classNames(styles["virtual-table-heard"])}>
+                            <div className={classNames(styles["virtual-table-heard-left"])}>
+                                {title && typeof title === "string" && (
+                                    <div className={classNames(styles["virtual-table-heard-title"])}>{title}</div>
+                                )}
+                                {title && React.isValidElement(title) && title}
+                                {props.isShowTotal && pagination?.total && (
+                                    <div className={styles["virtual-table-heard-right"]}>
+                                        <div className={styles["virtual-table-heard-right-item"]}>
+                                            <span className={styles["virtual-table-heard-right-text"]}>Total</span>
+                                            <span className={styles["virtual-table-heard-right-number"]}>
+                                                {pagination?.total || 0}
+                                            </span>
+                                        </div>
+                                        <Divider type='vertical' />
+                                        <div className={styles["virtual-table-heard-right-item"]}>
+                                            <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
+                                            <span className={styles["virtual-table-heard-right-number"]}>
+                                                {rowSelection?.selectedRowKeys?.length || 0}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                    {extra && React.isValidElement(extra) && (
-                        <div className={classNames(styles["virtual-table-heard-right"])}>{extra}</div>
+                            {extra && React.isValidElement(extra) && (
+                                <div className={classNames(styles["virtual-table-heard-right"])}>{extra}</div>
+                            )}
+                        </div>
                     )}
-                </div>
+                </>
             )}
-            </>}
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
                 <Spin spinning={loading !== undefined ? loading && pagination?.page == 1 : false}>
                     <div
                         className={classNames(styles["virtual-table-body"])}
                         style={{
                             maxHeight:
-                                ((renderTitle || title || extra) && isShowTitle &&
+                                ((renderTitle || title || extra) &&
+                                    isShowTitle &&
                                     `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
                                 "100%"
                         }}
@@ -1036,36 +1043,36 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 ))}
                             </div>
                             {/* <DndProvider backend={HTML5Backend}> */}
-                                <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
-                                    {columns.map((columnsItem, index) => (
-                                        <ColRender
-                                            colIndex={index}
-                                            currentRow={currentRow}
-                                            selectedRows={selectedRows}
-                                            key={`${columnsItem.dataKey}-${index}` || index}
-                                            columnsItem={columnsItem}
-                                            list={list}
-                                            colWidth={colWidth}
-                                            renderKey={renderKey}
-                                            isLastItem={index === columns.length - 1}
-                                            onRowClick={onRowClick}
-                                            onRowContextMenu={(data, e, rowIndex) => {
-                                                onRowContextMenu(data, e, rowIndex)
-                                            }}
-                                            rowSelection={rowSelection as any}
-                                            onChangeCheckboxSingle={onChangeCheckboxSingle}
-                                            scroll={scroll}
-                                            setMouseEnter={onMouseEnterCell}
-                                            setMouseLeave={oMouseLeaveCell}
-                                            mouseCellId={mouseCellId}
-                                            moveRow={moveRow}
-                                            width={width}
-                                            enableDragSort={enableDragSort}
-                                            moveRowEnd={moveRowEnd}
-                                            size={size}
-                                        />
-                                    ))}
-                                </div>
+                            <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
+                                {columns.map((columnsItem, index) => (
+                                    <ColRender
+                                        colIndex={index}
+                                        currentRow={currentRow}
+                                        selectedRows={selectedRows}
+                                        key={`${columnsItem.dataKey}-${index}` || index}
+                                        columnsItem={columnsItem}
+                                        list={list}
+                                        colWidth={colWidth}
+                                        renderKey={renderKey}
+                                        isLastItem={index === columns.length - 1}
+                                        onRowClick={onRowClick}
+                                        onRowContextMenu={(data, e, rowIndex) => {
+                                            onRowContextMenu(data, e, rowIndex)
+                                        }}
+                                        rowSelection={rowSelection as any}
+                                        onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                        scroll={scroll}
+                                        setMouseEnter={onMouseEnterCell}
+                                        setMouseLeave={oMouseLeaveCell}
+                                        mouseCellId={mouseCellId}
+                                        moveRow={moveRow}
+                                        width={width}
+                                        enableDragSort={enableDragSort}
+                                        moveRowEnd={moveRowEnd}
+                                        size={size}
+                                    />
+                                ))}
+                            </div>
                             {/* </DndProvider> */}
                         </div>
                         <div
@@ -1237,11 +1244,11 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                     <div className={styles["popover-content"]}>
                                         {columnsItem?.filterProps?.filterRender
                                             ? columnsItem?.filterProps?.filterRender(() => {
-                                                setOpensPopover({
-                                                    ...opensPopover,
-                                                    [filterKey]: false
-                                                })
-                                            })
+                                                  setOpensPopover({
+                                                      ...opensPopover,
+                                                      [filterKey]: false
+                                                  })
+                                              })
                                             : renderFilterPopover(
                                                   columnsItem,
                                                   filterKey,
@@ -1368,59 +1375,60 @@ const ColRender = React.memo((props: ColRenderProps) => {
                 })
             }}
         >
-            {list.length !== 0 && list.map((item, number) => {
-                return (
-                    <React.Fragment key={`${item.data[renderKey]}-${colIndex}` || number}>
-                        {(colIndex === 0 && (
-                            <CellRenderDrop
-                                colIndex={colIndex}
-                                key={`${item.data[renderKey]}-${colIndex}` || number}
-                                item={item}
-                                columnsItem={columnsItem}
-                                number={item.index}
-                                isLastItem={isLastItem}
-                                onRowClick={() => onRowClick(item.data, item.index)}
-                                onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
-                                currentRow={currentRow}
-                                selectedRows={selectedRows}
-                                // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
-                                renderKey={renderKey}
-                                rowSelection={rowSelection}
-                                onChangeCheckboxSingle={onChangeCheckboxSingle}
-                                setMouseEnter={setMouseEnter}
-                                setMouseLeave={setMouseLeave}
-                                mouseCellId={mouseCellId}
-                                moveRow={moveRow}
-                                width={width}
-                                enableDragSort={enableDragSort}
-                                moveRowEnd={moveRowEnd}
-                                size={size}
-                            />
-                        )) || (
-                            <CellRender
-                                colIndex={colIndex}
-                                key={`${item.data[renderKey]}-${colIndex}` || number}
-                                item={item}
-                                columnsItem={columnsItem}
-                                number={item.index}
-                                isLastItem={isLastItem}
-                                onRowClick={() => onRowClick(item.data, item.index)}
-                                onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
-                                currentRow={currentRow}
-                                selectedRows={selectedRows}
-                                // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
-                                renderKey={renderKey}
-                                rowSelection={rowSelection}
-                                onChangeCheckboxSingle={onChangeCheckboxSingle}
-                                setMouseEnter={setMouseEnter}
-                                setMouseLeave={setMouseLeave}
-                                mouseCellId={mouseCellId}
-                                size={size}
-                            />
-                        )}
-                    </React.Fragment>
-                )
-            })}
+            {list.length !== 0 &&
+                list.map((item, number) => {
+                    return (
+                        <React.Fragment key={`${item.data[renderKey]}-${colIndex}` || number}>
+                            {(colIndex === 0 && (
+                                <CellRenderDrop
+                                    colIndex={colIndex}
+                                    key={`${item.data[renderKey]}-${colIndex}` || number}
+                                    item={item}
+                                    columnsItem={columnsItem}
+                                    number={item.index}
+                                    isLastItem={isLastItem}
+                                    onRowClick={() => onRowClick(item.data, item.index)}
+                                    onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
+                                    currentRow={currentRow}
+                                    selectedRows={selectedRows}
+                                    // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
+                                    renderKey={renderKey}
+                                    rowSelection={rowSelection}
+                                    onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                    setMouseEnter={setMouseEnter}
+                                    setMouseLeave={setMouseLeave}
+                                    mouseCellId={mouseCellId}
+                                    moveRow={moveRow}
+                                    width={width}
+                                    enableDragSort={enableDragSort}
+                                    moveRowEnd={moveRowEnd}
+                                    size={size}
+                                />
+                            )) || (
+                                <CellRender
+                                    colIndex={colIndex}
+                                    key={`${item.data[renderKey]}-${colIndex}` || number}
+                                    item={item}
+                                    columnsItem={columnsItem}
+                                    number={item.index}
+                                    isLastItem={isLastItem}
+                                    onRowClick={() => onRowClick(item.data, item.index)}
+                                    onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
+                                    currentRow={currentRow}
+                                    selectedRows={selectedRows}
+                                    // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
+                                    renderKey={renderKey}
+                                    rowSelection={rowSelection}
+                                    onChangeCheckboxSingle={onChangeCheckboxSingle}
+                                    setMouseEnter={setMouseEnter}
+                                    setMouseLeave={setMouseLeave}
+                                    mouseCellId={mouseCellId}
+                                    size={size}
+                                />
+                            )}
+                        </React.Fragment>
+                    )
+                })}
         </div>
     )
 })
@@ -1478,19 +1486,51 @@ const CellRender = React.memo(
             }
             return false
         }, [selectedRows])
+
+        const rowBgColorFlagFun = (color: string) => {
+            return item.data["cellClassName"] && item.data["cellClassName"].indexOf(`color-opacity-bg-${color}`) !== -1
+        }
         return (
             <div
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-active-row"]]: isSelect,
-                    [styles["virtual-table-active-row-red"]]: isSelect && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
+                    [styles["virtual-table-active-row-red"]]: isSelect && rowBgColorFlagFun("red"),
+                    [styles["virtual-table-active-row-green"]]: isSelect && rowBgColorFlagFun("green"),
+                    [styles["virtual-table-active-row-blue"]]: isSelect && rowBgColorFlagFun("blue"),
+                    [styles["virtual-table-active-row-yellow"]]: isSelect && rowBgColorFlagFun("yellow"),
+                    [styles["virtual-table-active-row-orange"]]: isSelect && rowBgColorFlagFun("orange"),
+                    [styles["virtual-table-active-row-purple"]]: isSelect && rowBgColorFlagFun("purple"),
+                    [styles["virtual-table-active-row-lakeBlue"]]: isSelect && rowBgColorFlagFun("lakeBlue"),
+                    [styles["virtual-table-active-row-cyan"]]: isSelect && rowBgColorFlagFun("cyan"),
+                    [styles["virtual-table-active-row-bluePurple"]]: isSelect && rowBgColorFlagFun("bluePurple"),
+                    [styles["virtual-table-active-row-grey"]]: isSelect && rowBgColorFlagFun("grey"),
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
-                    [styles["virtual-table-hover-row-red"]]: mouseCellId === item.data[renderKey] && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
+                    [styles["virtual-table-hover-row-red"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("red"),
+                    [styles["virtual-table-hover-row-green"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("green"),
+                    [styles["virtual-table-hover-row-blue"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("blue"),
+                    [styles["virtual-table-hover-row-yellow"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("yellow"),
+                    [styles["virtual-table-hover-row-orange"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("orange"),
+                    [styles["virtual-table-hover-row-purple"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("purple"),
+                    [styles["virtual-table-hover-row-lakeBlue"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("lakeBlue"),
+                    [styles["virtual-table-hover-row-cyan"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("cyan"),
+                    [styles["virtual-table-hover-row-bluePurple"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("bluePurple"),
+                    [styles["virtual-table-hover-row-grey"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("grey"),
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
-                    [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"],
+                    [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"]
                 })}
                 onClick={(e) => {
                     // @ts-ignore
@@ -1561,7 +1601,6 @@ const CellRender = React.memo(
         if (preProps.item.data !== nextProps.item.data) {
             return false
         }
-
         return true
     }
 )
@@ -1672,16 +1711,48 @@ const CellRenderDrop = React.memo(
             }
             return false
         }, [selectedRows])
+
+        const rowBgColorFlagFun = (color: string) => {
+            return item.data["cellClassName"] && item.data["cellClassName"].indexOf(`color-opacity-bg-${color}`) !== -1
+        }
         return (
             <div
                 data-handler-id={handlerId}
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-active-row"]]: isSelect,
-                    [styles["virtual-table-active-row-red"]]: isSelect && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
+                    [styles["virtual-table-active-row-red"]]: isSelect && rowBgColorFlagFun("red"),
+                    [styles["virtual-table-active-row-green"]]: isSelect && rowBgColorFlagFun("green"),
+                    [styles["virtual-table-active-row-blue"]]: isSelect && rowBgColorFlagFun("blue"),
+                    [styles["virtual-table-active-row-yellow"]]: isSelect && rowBgColorFlagFun("yellow"),
+                    [styles["virtual-table-active-row-orange"]]: isSelect && rowBgColorFlagFun("orange"),
+                    [styles["virtual-table-active-row-purple"]]: isSelect && rowBgColorFlagFun("purple"),
+                    [styles["virtual-table-active-row-lakeBlue"]]: isSelect && rowBgColorFlagFun("lakeBlue"),
+                    [styles["virtual-table-active-row-cyan"]]: isSelect && rowBgColorFlagFun("cyan"),
+                    [styles["virtual-table-active-row-bluePurple"]]: isSelect && rowBgColorFlagFun("bluePurple"),
+                    [styles["virtual-table-active-row-grey"]]: isSelect && rowBgColorFlagFun("grey"),
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
-                    [styles["virtual-table-hover-row-red"]]: mouseCellId === item.data[renderKey] && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
+                    [styles["virtual-table-hover-row-red"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("red"),
+                    [styles["virtual-table-hover-row-green"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("green"),
+                    [styles["virtual-table-hover-row-blue"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("blue"),
+                    [styles["virtual-table-hover-row-yellow"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("yellow"),
+                    [styles["virtual-table-hover-row-orange"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("orange"),
+                    [styles["virtual-table-hover-row-purple"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("purple"),
+                    [styles["virtual-table-hover-row-lakeBlue"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("lakeBlue"),
+                    [styles["virtual-table-hover-row-cyan"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("cyan"),
+                    [styles["virtual-table-hover-row-bluePurple"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("bluePurple"),
+                    [styles["virtual-table-hover-row-grey"]]:
+                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("grey"),
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
