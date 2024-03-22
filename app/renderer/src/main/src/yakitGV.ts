@@ -108,4 +108,6 @@ export enum CacheDropDownGV {
     CVEProxyList = "cev_proxy_list",
     /** @name 私有域地址 */
     ConfigBaseUrl = "config_base_url",
+    /** @name 配置插件源 -》设置代理 */
+    ConfigProxy = "config_proxy"
 }
