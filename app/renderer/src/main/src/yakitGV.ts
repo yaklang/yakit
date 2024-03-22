@@ -99,3 +99,9 @@ export enum CodeGV {
     /** @name 插件参数-帮助文档地址 */
     PluginParamsHelp = "https://yaklang.com/products/Plugin-repository/plugins/plugin_create"
 }
+
+/**YakitAutoComplate + YakitSelect缓存下拉和默认值变量 */
+export enum CacheDropDownGV {
+    /** @name mitm 劫持代理监听主机 */
+    MITMDefaultHostHistoryList = "mitm_default_host_history"
+}
