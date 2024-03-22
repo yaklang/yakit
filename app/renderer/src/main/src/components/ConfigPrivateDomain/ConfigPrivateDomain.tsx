@@ -201,7 +201,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const getHistoryList = useMemoizedFn(() => {
         // 缓存数据结构迁移(后续删除)
         Promise.allSettled([getRemoteValue("httpHistoryList")]).then((cacheRes) => {
-            const defaultValue = defaultHttpUrl.current
+            const defaultValue = defaultHttpUrl.current || ""
             const options =
                 cacheRes[0].status === "fulfilled"
                     ? !!cacheRes[0].value
@@ -215,15 +215,14 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     })
     /**@description 获取代理list历史 */
     const getProxyList = useMemoizedFn(() => {
-        getRemoteValue("httpProxyList").then((listString) => {
-            try {
-                if (listString) {
-                    const list: string[] = JSON.parse(listString) || []
-                    setHttpProxyList(list)
-                }
-            } catch (error) {
-                yakitFailed("代理获取失败:" + error)
-            }
+        // 缓存数据结构迁移(后续删除)
+        Promise.allSettled([getRemoteValue("httpProxyList")]).then((cacheRes) => {
+            const defaultValue = form.getFieldValue("Proxy") || ""
+            const options =
+                cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? JSON.parse(cacheRes[0].value) : []) : []
+            console.log("迁移缓存数据结构:", {defaultValue, options})
+            setHttpProxyList(options)
+            setRemoteValue(CacheDropDownGV.ConfigProxy, JSON.stringify({defaultValue, options}))
         })
     })
     /**@description 增加代理list历史 */
