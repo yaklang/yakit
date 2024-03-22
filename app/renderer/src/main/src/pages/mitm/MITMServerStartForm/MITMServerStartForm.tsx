@@ -24,6 +24,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {CacheDropDownGV} from "@/yakitGV"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -84,13 +85,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((a) => {
             form.setFieldsValue({enableInitialPlugin: !!a})
         })
-        getRemoteValue(MITMConsts.MITMDefaultServer).then((e) => {
-            if (!!e) {
-                form.setFieldsValue({host: e})
-            } else {
-                form.setFieldsValue({host: defHost})
-            }
-        })
         getRemoteValue(MITMConsts.MITMDefaultPort).then((e) => {
             if (!!e) {
                 form.setFieldsValue({port: e})
@@ -104,16 +98,24 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then((e) => {
             form.setFieldsValue({enableGMTLS: !!e})
         })
-        getRemoteValue(MITMConsts.MITMDefaultHostHistoryList).then((e) => {
-            if (!!e) {
-                setHostHistoryList(JSON.parse(e))
-            } else {
-                getRemoteValue(MITMConsts.MITMDefaultServer).then((h) => {
-                    if (!!h) {
-                        setHostHistoryList([h])
-                    }
-                })
-            }
+
+        // 缓存数据结构迁移(后续删除)
+        Promise.allSettled([
+            getRemoteValue(MITMConsts.MITMDefaultServer),
+            getRemoteValue(MITMConsts.MITMDefaultHostHistoryList)
+        ]).then((cacheRes) => {
+            const defaultValue =
+                cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? cacheRes[0].value : defHost) : defHost
+            const options =
+                cacheRes[1].status === "fulfilled"
+                    ? !!cacheRes[1].value
+                        ? JSON.parse(cacheRes[1].value)
+                        : [defHost]
+                    : [defHost]
+            console.log("迁移缓存数据结构:", {defaultValue, options})
+            form.setFieldsValue({host: defaultValue})
+            setHostHistoryList(options)
+            setRemoteValue(CacheDropDownGV.MITMDefaultHostHistoryList, JSON.stringify({defaultValue, options}))
         })
     }, [props.status])
     useUpdateEffect(() => {
@@ -445,7 +447,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                 } else {
                     params.Port = "1080"
                 }
-            } 
+            }
 
             const res: GenerateURLResponse = await ipcRenderer.invoke("mitm-agent-hijacking-config", params)
             generateURL(res.URL)
@@ -520,7 +522,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                     </Form.Item>
                     <Form.Item
                         label='密码'
-                        name="Password"
+                        name='Password'
                         style={{marginBottom: 4}}
                         rules={[{required: false, message: "请输入密码"}]}
                     >
