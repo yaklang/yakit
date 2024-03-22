@@ -1045,7 +1045,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             )}
                         ></VariableList>
                     </YakitPanel>
-                    {/* <YakitPanel
+                    <YakitPanel
                         header='GET 参数'
                         key='GET 参数'
                         extra={
@@ -1196,7 +1196,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             field='headers'
                             onDel={(i) => handleVariableDel(i, "headers")}
                         ></VariableList>
-                    </YakitPanel> */}
+                    </YakitPanel>
                 </YakitCollapse>
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>
