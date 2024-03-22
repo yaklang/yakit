@@ -302,6 +302,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         tabsText.current = new Map<string, string>()
         riskMessages.current = []
         messages.current = []
+        pluginLog.current = []
     })
 
     return [streamInfo, {start, stop, cancel, reset}] as const

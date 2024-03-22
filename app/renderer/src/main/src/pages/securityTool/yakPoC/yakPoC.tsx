@@ -217,7 +217,25 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
 
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (selectGroupList.length === 0) return
+            if (selectGroupList.length === 0) {
+                setTotal(0)
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: {
+                            Pagination: {
+                                Limit: 20,
+                                Page: 1,
+                                OrderBy: "",
+                                Order: ""
+                            },
+                            Total: 0,
+                            Data: []
+                        }
+                    }
+                })
+                return
+            }
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -746,6 +764,11 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     const [showType, setShowType] = useState<"plugin" | "log">("plugin")
     const [pluginExecuteLog, setPluginExecuteLog] = useState<StreamResult.PluginExecuteLog[]>([])
 
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
+
     useEffect(() => {
         if (defaultFormValue) {
             const value = JSON.stringify(defaultFormValue)
@@ -776,13 +799,26 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
         }
     }, [selectGroupList])
 
-    const isExecuting = useCreation(() => {
-        if (executeStatus === "process") return true
-        return false
-    }, [executeStatus])
+    const isShowPluginAndLog = useCreation(() => {
+        return selectGroupList.length > 0 || isExecuting
+    }, [selectGroupList, isExecuting])
+
+    const pluginLogDisabled = useCreation(() => {
+        return pluginExecuteLog.length === 0 && !isExecuting
+    }, [pluginExecuteLog, isExecuting])
+
+    const onSetExecuteStatus = useMemoizedFn((val) => {
+        setExecuteStatus(val)
+        if (val === "process") {
+            setShowType("log")
+        }
+        if (val === "finished") {
+            setShowType("plugin")
+        }
+    })
     return (
         <>
-            {(executeStatus !== "default" || selectGroupList.length > 0) && (
+            {isShowPluginAndLog && (
                 <div className={styles["midden-wrapper"]}>
                     <div className={styles["midden-heard"]}>
                         <YakitRadioButtons
@@ -799,7 +835,8 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                                 },
                                 {
                                     value: "log",
-                                    label: "插件日志"
+                                    label: "插件日志",
+                                    disabled: pluginLogDisabled
                                 }
                             ]}
                         />
@@ -886,7 +923,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         setStopLoading={setStopLoading}
                         pluginInfo={pluginInfo}
                         executeStatus={executeStatus}
-                        setExecuteStatus={setExecuteStatus}
+                        setExecuteStatus={onSetExecuteStatus}
                         setPluginExecuteLog={setPluginExecuteLog}
                     />
                 </div>
