@@ -17,6 +17,9 @@ export interface YakitAutoCompleteProps extends AutoCompleteProps {
     /**是否缓存默认值 */
     isCacheDefaultValue?: boolean
     ref?: React.ForwardedRef<YakitAutoCompleteRefProps>
+    /**是否支持外部传入的option项删除 */
+    isDelExternalOptionData?: boolean
+    delExternalOptionItem?: YakitOptionTypeProps
 }
 
 export interface YakitAutoCompleteRefProps {
