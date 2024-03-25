@@ -488,7 +488,7 @@ export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (prop
             item={{}}
             select={{
                 ref: selectRef,
-                className: "div-width-100",
+                wrapperClassName: "div-width-100",
                 allowClear: true,
                 autoClearSearchValue: false,
                 maxTagCount: "responsive",

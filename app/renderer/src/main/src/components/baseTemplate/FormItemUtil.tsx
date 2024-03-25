@@ -1,5 +1,5 @@
 import React, {ReactNode} from "react"
-import {Col, Form, FormItemProps, Input, InputProps, Row, Upload, Select, SelectProps} from "antd"
+import {Col, Form, FormItemProps, Input, InputProps, Row, Upload, Select} from "antd"
 import "@ant-design/compatible/assets/index.css"
 import {DraggerProps} from "antd/lib/upload"
 import {TextAreaProps} from "antd/lib/input"
@@ -7,6 +7,7 @@ import {TextAreaProps} from "antd/lib/input"
 import "./FormItemUtil.css"
 import {ManyMultiSelectForString} from "../../utils/inputUtil"
 import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
+import { YakitSelectProps } from "../yakitUI/YakitSelect/YakitSelectType"
 
 const {Item} = Form
 const {Dragger} = Upload
@@ -25,7 +26,7 @@ interface ItemTextAreaProps extends TextAreaProps {
     isBubbing?: boolean // 是否阻止事件冒泡
     setValue?: (s: string) => any
 }
-interface ItemSelectProps<T> extends SelectProps<T> {
+interface ItemSelectProps<T> extends YakitSelectProps<T> {
     ref?: any
     setValue?: (value: any) => any
     data?: T[]
