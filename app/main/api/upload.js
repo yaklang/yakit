@@ -1,4 +1,4 @@
-const {httpApi} = require("../httpServer")
+const {service, httpApi} = require("../httpServer")
 const {ipcMain} = require("electron")
 const fs = require("fs")
 const customPath = require("path")
@@ -74,7 +74,7 @@ module.exports = (win, getClient) => {
 
     // 上传次数缓存
     let postPackageHistory = {}
-    const postPackage = ({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token}) => {
+    const postProject = ({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token}) => {
         return new Promise((resolve, reject) => {
             postPackageHistory[hash] ? (postPackageHistory[hash] += 1) : (postPackageHistory[hash] = 1)
             const percent = (chunkIndex + 1) / totalChunks
@@ -91,7 +91,7 @@ module.exports = (win, getClient) => {
                 formData,
                 {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
                 false,
-                percent === 1 ? 60 * 1000 * 10 : 60 * 1000
+                (percent === 1 && totalChunks > 3) ? 60 * 1000 * 10 : 60 * 1000
             )
                 .then(async (res) => {
                     // console.log("res---", res)
@@ -103,7 +103,7 @@ module.exports = (win, getClient) => {
                     if (res.code !== 200 && postPackageHistory[hash] <= 3) {
                         // console.log("重传", postPackageHistory[hash])
                         // 传输失败 重传3次
-                        await postPackage({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token})
+                        await postProject({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token})
                     } else if (postPackageHistory[hash] > 3) {
                         reject("重传三次失败")
                     }
@@ -116,11 +116,26 @@ module.exports = (win, getClient) => {
         })
     }
 
+    const postProjectFail = ({fileName, hash, fileIndex}) => {
+        service({
+            url: "import/project/fail",
+            method: "post",
+            data: {
+                fileName,
+                hash,
+                fileIndex
+            }
+        }).then((res) => {
+            // console.log("rrrr---", res)
+        })
+    }
+
     // 上传状态
     let TaskStatus = true
     // 分片上传
     ipcMain.handle("split-upload", (event, params) => {
         return new Promise(async (resolve, reject) => {
+            // console.log("params---",params);
             // path为文件路径 token为切片进度回调 url为接口
             const {url, path, token} = params
             // 获取文件名
@@ -139,6 +154,7 @@ module.exports = (win, getClient) => {
             const totalChunks = Math.ceil(size / chunkSize)
             // 计算整个文件Hash
             const fileHash = await hashChunk({path})
+            const fileHashTime = `${fileHash}-${Date.now()}`
             TaskStatus = true
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                 if (TaskStatus) {
@@ -149,8 +165,22 @@ module.exports = (win, getClient) => {
                         const end = Math.min((chunkIndex + 1) * chunkSize, size)
                         // 创建当前分片的读取流
                         const chunkStream = fs.createReadStream(path, {start, end})
-                        await postPackage({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash:`${fileHash}-${Date.now()}`, token})
+                        await postProject({
+                            url,
+                            chunkStream,
+                            chunkIndex,
+                            totalChunks,
+                            fileName,
+                            hash,
+                            fileHash: fileHashTime,
+                            token
+                        })
                     } catch (error) {
+                        postProjectFail({
+                            fileName,
+                            hash: fileHashTime,
+                            fileIndex: chunkIndex
+                        })
                         reject(error)
                         TaskStatus = false
                     }
