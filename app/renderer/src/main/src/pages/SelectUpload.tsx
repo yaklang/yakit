@@ -76,7 +76,6 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     useEffect(() => {
         ipcRenderer.on(`callback-split-upload-${uploadToken}`, async (e, res: any) => {
             const {progress} = res
-            console.log("暂不使用此处", progress)
             let intProgress = Math.floor(progress / 100)
             if (allowPassword === "2") {
                 setPercent(intProgress)
@@ -129,7 +128,6 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     }, [token])
 
     const onFinish = useMemoizedFn((values) => {
-        console.log("onFinish--x", cascaderValue, values)
         if (!cascaderValue) return
         setLoading(true)
         isCancle.current = false
