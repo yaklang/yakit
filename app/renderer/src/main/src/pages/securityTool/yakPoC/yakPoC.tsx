@@ -32,7 +32,6 @@ import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecute
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
-    OutlineCloseIcon,
     OutlineCogIcon,
     OutlineOpenIcon
 } from "@/assets/icon/outline"
@@ -116,9 +115,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const onSetSelectGroupListByKeyWord = useMemoizedFn((groups) => {
         setPageInfo({...pageInfo, selectGroupListByKeyWord: groups})
     })
-    const onClose = useMemoizedFn(() => {
-        setHidden(true)
-    })
     const selectGroupListAll = useCreation(() => {
         return [...(pageInfo.selectGroup || []), ...(pageInfo.selectGroupListByKeyWord || [])]
     }, [pageInfo.selectGroup, pageInfo.selectGroupListByKeyWord])
@@ -153,13 +149,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                             ]}
                         />
                     </div>
-                    <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
-                        <YakitButton
-                            type='text2'
-                            onClick={onClose}
-                            icon={<OutlineCloseIcon className={styles["header-icon"]} />}
-                        ></YakitButton>
-                    </Tooltip>
                 </div>
                 <PluginGroupByKeyWord
                     pageId={pageId}

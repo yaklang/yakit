@@ -221,68 +221,65 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         />
                     </div>
                 )}
-                <div className={styles["content-wrapper"]}>
-                    <>
-                        <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
-                            <div className={styles["plugin-batch-executor-title"]} ref={batchExecuteDomRef}>
-                                <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
-                                {selectNum > 0 && (
-                                    <YakitTag closable onClose={onRemove} color='info'>
-                                        {selectNum}
-                                    </YakitTag>
-                                )}
-                            </div>
-                            <div className={styles["plugin-batch-executor-btn"]}>
-                                {progressList.length === 1 && (
-                                    <PluginExecuteProgress
-                                        percent={progressList[0].progress}
-                                        name={progressList[0].id}
-                                    />
-                                )}
-                                {isExecuting
-                                    ? !isExpand && (
-                                          <>
-                                              <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
-                                                  停止
-                                              </YakitButton>
-                                              <div className={styles["divider-style"]}></div>
-                                          </>
-                                      )
-                                    : !isExpand && (
-                                          <>
-                                              <YakitButton onClick={onExecuteInTop} disabled={selectNum === 0}>
-                                                  执行
-                                              </YakitButton>
-                                              <div className={styles["divider-style"]}></div>
-                                          </>
-                                      )}
-                                <YakitButton
-                                    type='text2'
-                                    icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setHidden(!hidden)
-                                    }}
-                                />
-                            </div>
-                        </ExpandAndRetract>
-                    </>
-                    <PluginBatchExecuteContent
-                        ref={pluginBatchExecuteContentRef}
-                        selectNum={selectNum}
-                        isExpand={isExpand}
-                        setIsExpand={setIsExpand}
-                        defaultActiveKey={pageInfo.defaultActiveKey}
-                        onInitInputValueAfter={onInitInputValueAfter}
-                        setProgressList={setProgressList}
-                        stopLoading={stopLoading}
-                        setStopLoading={setStopLoading}
-                        pluginInfo={pluginInfo}
-                        executeStatus={executeStatus}
-                        setExecuteStatus={setExecuteStatus}
-                        setPluginExecuteLog={setPluginExecuteLog}
-                        pluginExecuteResultWrapper={styles["plugin-executor-result-wrapper"]}
-                    />
+                <div className={styles["plugin-batch-executor-wrapper"]}>
+                    <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
+                        <div className={styles["plugin-batch-executor-title"]} ref={batchExecuteDomRef}>
+                            <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
+                            {selectNum > 0 && (
+                                <YakitTag closable onClose={onRemove} color='info'>
+                                    {selectNum}
+                                </YakitTag>
+                            )}
+                        </div>
+                        <div className={styles["plugin-batch-executor-btn"]}>
+                            {progressList.length === 1 && (
+                                <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+                            )}
+                            {isExecuting
+                                ? !isExpand && (
+                                      <>
+                                          <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
+                                              停止
+                                          </YakitButton>
+                                          <div className={styles["divider-style"]}></div>
+                                      </>
+                                  )
+                                : !isExpand && (
+                                      <>
+                                          <YakitButton onClick={onExecuteInTop} disabled={selectNum === 0}>
+                                              执行
+                                          </YakitButton>
+                                          <div className={styles["divider-style"]}></div>
+                                      </>
+                                  )}
+                            <YakitButton
+                                type='text2'
+                                icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setHidden(!hidden)
+                                }}
+                            />
+                        </div>
+                    </ExpandAndRetract>
+                    <div className={styles["plugin-batch-executor-body"]}>
+                        <PluginBatchExecuteContent
+                            ref={pluginBatchExecuteContentRef}
+                            selectNum={selectNum}
+                            isExpand={isExpand}
+                            setIsExpand={setIsExpand}
+                            defaultActiveKey={pageInfo.defaultActiveKey}
+                            onInitInputValueAfter={onInitInputValueAfter}
+                            setProgressList={setProgressList}
+                            stopLoading={stopLoading}
+                            setStopLoading={setStopLoading}
+                            pluginInfo={pluginInfo}
+                            executeStatus={executeStatus}
+                            setExecuteStatus={setExecuteStatus}
+                            setPluginExecuteLog={setPluginExecuteLog}
+                            pluginExecuteResultWrapper={styles["plugin-executor-result-wrapper"]}
+                        />
+                    </div>
                 </div>
             </div>
         </PluginLocalListDetails>
