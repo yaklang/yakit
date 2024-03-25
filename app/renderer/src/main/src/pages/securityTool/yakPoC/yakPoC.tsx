@@ -506,9 +506,6 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                         </span>
                     </div>
                     <div className={styles["filter-body-right"]}>
-                        <YakitButton type='text' onClick={onToManageGroup}>
-                            管理分组
-                        </YakitButton>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <YakitButton type='text' danger onClick={onClearSelect}>
                             清空
@@ -1009,7 +1006,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
                 classNameWrapper
             )}
         >
-            <YakitSpin spinning={isExecuting} size='small' style={{alignItems: "center",height:20}} />
+            <YakitSpin spinning={isExecuting} size='small' style={{alignItems: "center", height: 20}} />
             <RollingLoadList<PluginLogProps>
                 data={data}
                 loadMoreData={() => {}}
