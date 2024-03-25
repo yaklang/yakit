@@ -267,7 +267,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                         <Col span={10}>
                             {props.valueIsStringArray ? <div style={{width: "100%"}}>
                                 <OneLine>
-                                    <Select
+                                    <YakitSelect
                                         style={{width: "100%"}}
                                         allowClear={true}
                                         autoClearSearchValue={true}
@@ -499,10 +499,10 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
             placeholder={p.placeholder}
         >
             {p.data.map(i => {
-                return <Select.Option
+                return <YakitSelect.Option
                     key={`${i.value}`}
                     value={i.value.toString()}
-                >{i?.label?.toString()}</Select.Option>
+                >{i?.label?.toString()}</YakitSelect.Option>
             })}
         </YakitSelect>
     </Item>
@@ -728,15 +728,15 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
 
 export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
     return <Item label={p.label} help={p.help} style={{...p.formItemStyle}}>
-        <Select
+        <YakitSelect
             value={p.value} onChange={e => p.setValue && p.setValue(e)}
             disabled={p.disabled} size={p.size}
             placeholder={p.placeholder}
         >
-            {p.data.map(e => <Select.Option key={e.value} value={e.value}>
+            {p.data.map(e => <YakitSelect.Option key={e.value} value={e.value}>
                 {e.text}
-            </Select.Option>)}
-        </Select>
+            </YakitSelect.Option>)}
+        </YakitSelect>
     </Item>
 }
 

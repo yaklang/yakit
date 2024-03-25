@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
-import { Form, FormItemProps, Select } from "antd"
+import { Form, FormItemProps } from "antd"
 import { failed } from "../../utils/notification"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -20,7 +21,6 @@ export interface SelectItemProps {
 }
 
 const { Item } = Form
-const { Option } = Select
 
 export const SelectItem: React.FC<SelectItemProps> = (props) => {
     const [lists, setLists] = useState<string[]>([])
@@ -51,7 +51,7 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
                 style={props.style}
                 help={props.help}
             >
-                <Select
+                <YakitSelect
                     value={props.value}
                     allowClear={true}
                     loading={loading}
@@ -78,11 +78,11 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
                     }}
                 >
                     {lists.map((item) => (
-                        <Option key={item} value={item}>
+                        <YakitSelect.Option key={item} value={item}>
                             {item}
-                        </Option>
+                        </YakitSelect.Option>
                     ))}
-                </Select>
+                </YakitSelect>
             </Item>
         </div>
     )

@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Form, Input, InputNumber, Select} from "antd";
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect";
 
 export interface TimeIntervalProps {
     defaultValue?: number
@@ -63,11 +64,11 @@ const TimeInterval: React.FC<TimeIntervalProps> = (props: TimeIntervalProps) => 
                 setValue(valueRaw || 0);
             }}
             />
-            <Select
+            <YakitSelect
                 style={{width: 120}}
                 defaultValue={unit} onChange={(e: TimeUnit) => setUnit(e)}>
-                {units.map(e => <Select.Option value={e}>{TimeUnitToString(e)}</Select.Option>)}
-            </Select>
+                {units.map(e => <YakitSelect.Option value={e}>{TimeUnitToString(e)}</YakitSelect.Option>)}
+            </YakitSelect>
         </InputGroup>
     </div>
 };
