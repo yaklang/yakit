@@ -231,7 +231,7 @@ export const YakitTimeLineList: <T>(props: YakitTimeLineListProps<T>) => any = m
                     right = midIndex
                 }
             }
-            return templateIndex
+            return templateIndex === -1 ? 0 : templateIndex
         }
 
         // 初始化 基础信息

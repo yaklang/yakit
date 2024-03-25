@@ -13,7 +13,7 @@ import {
     PluginLogPassIcon,
     PluginLogRestoreIcon
 } from "./icon"
-import {useDebounceEffect, useInViewport, useLatest, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceFn, useInViewport, useLatest, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {apiFetchOnlinePluginInfo, apiFetchPluginDetailCheck, apiFetchPluginLogs} from "../utils"
 import {yakitNotify} from "@/utils/notification"
@@ -30,6 +30,7 @@ import {YakitTimeLineList} from "@/components/yakitUI/YakitTimeLineList/YakitTim
 import {PluginDetailHeader} from "../baseTemplate"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitTimeLineListRefProps} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineListType"
+import emiter from "@/utils/eventBus/eventBus"
 
 import styles from "./PluginLog.module.scss"
 
@@ -119,22 +120,26 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
     const hasMore = useRef<boolean>(true)
 
     // 获取插件详情
-    const fetchPluginDetail = useMemoizedFn((onlineId) => {
-        setPluginLoading(true)
-        apiFetchOnlinePluginInfo(onlineId)
-            .then((info) => {
-                if (uuid === onlineId) {
-                    setPlugin(info)
-                    resetFetchLogs()
-                }
-            })
-            .catch(() => {
-                resetResponse()
-                setTimeout(() => {
-                    setPluginLoading(false)
-                }, 200)
-            })
-    })
+    const fetchPluginDetail = useDebounceFn(
+        useMemoizedFn((onlineId) => {
+            setPluginLoading(true)
+            apiFetchOnlinePluginInfo(onlineId)
+                .then((info) => {
+                    if (uuid === onlineId) {
+                        setPlugin(info)
+                        resetFetchLogs()
+                    }
+                })
+                .catch(() => {
+                    setPlugin(undefined)
+                    resetResponse()
+                    setTimeout(() => {
+                        setPluginLoading(false)
+                    }, 200)
+                })
+        }),
+        {wait: 300}
+    ).run
     // 获取插件日志
     const fetchLogs = useMemoizedFn((page: number) => {
         if (resLoading) return
@@ -214,25 +219,21 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
         }
     }, [inViewport, uuid])
     // uuid变化时的信息重新请求获取
-    useDebounceEffect(
-        () => {
-            if (uuid) {
-                if (!getInView()) return
+    useEffect(() => {
+        if (uuid) {
+            if (!getInView()) return
 
-                if (!latestPlugin.current) {
-                    fetchPluginDetail(uuid)
-                } else {
-                    // 减少切换页面场景下的重复请求
-                    if (latestPlugin.current.uuid !== uuid) fetchPluginDetail(uuid)
-                }
+            if (!latestPlugin.current) {
+                fetchPluginDetail(uuid)
             } else {
-                setPlugin(undefined)
-                resetResponse()
+                // 减少切换页面场景下的重复请求
+                if (latestPlugin.current.uuid !== uuid) fetchPluginDetail(uuid)
             }
-        },
-        [uuid],
-        {wait: 300}
-    )
+        } else {
+            setPlugin(undefined)
+            resetResponse()
+        }
+    }, [uuid])
 
     const handleLoadMore = useMemoizedFn(() => {
         if (resLoading) return
@@ -241,12 +242,27 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
         fetchLogs(pageRef.current)
     })
 
+    /** ---------- 认证状态改变时的触发事件 Start ---------- */
+    // 切换私有域后的信息请求
+    const onSwitchHost = useMemoizedFn(() => {
+        if (mergeShow.visible) onCancelMerge()
+        setPlugin(undefined)
+        fetchPluginDetail(uuid)
+    })
+
+    useEffect(() => {
+        emiter.on("onSwitchPrivateDomain", onSwitchHost)
+        return () => {
+            emiter.off("onSwitchPrivateDomain", onSwitchHost)
+        }
+    }, [])
+
     const {userInfo} = useStore()
     useUpdateEffect(() => {
         resetFetchLogs()
         if (mergeShow.visible) onCancelMerge()
     }, [userInfo])
-
+    /** ---------- 认证状态改变时的触发事件 End ---------- */
     /** ---------- 合并功能 Start ---------- */
     const [mergeShow, setMergeShow] = useState<{visible: boolean; info?: API.PluginsLogsDetail; index: number}>({
         visible: false,
