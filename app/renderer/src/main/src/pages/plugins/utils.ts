@@ -24,9 +24,7 @@ import {YakitRoute} from "@/routes/newRoute"
 import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {HybridScanControlAfterRequest, HybridScanControlRequest, HybridScanPluginConfig} from "@/models/HybridScan"
-import {
-    defPluginBatchExecuteExtraFormValue
-} from "./pluginBatchExecutor/pluginBatchExecutor"
+import {defPluginBatchExecuteExtraFormValue} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch} from "./baseTemplate"
 import {PluginGroupList} from "./local/PluginsLocalType"
@@ -922,7 +920,6 @@ export const apiFetchPluginDetailCheck: (
 export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            console.log("插件日志是否合并 method:post|api:plugins/audit", JSON.stringify(query))
             NetWorkApi<API.PluginsAuditRequest, API.ActionSucceeded>({
                 method: "post",
                 url: "plugins/audit",

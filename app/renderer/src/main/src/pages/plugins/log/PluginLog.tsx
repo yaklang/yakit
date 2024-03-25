@@ -149,8 +149,6 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
         setResLoading(true)
         apiFetchPluginLogs({uuid: uuid, Page: page, Limit: 5})
             .then((res) => {
-                console.log("插件日志列表参数\n", JSON.stringify({uuid: uuid, Page: page, Limit: 5}))
-                console.log("插件日志列表\n", res)
                 let data: API.PluginsLogsDetail[] = []
                 if (res.pagemeta.page === 1) {
                     data = data.concat(res.data || [])

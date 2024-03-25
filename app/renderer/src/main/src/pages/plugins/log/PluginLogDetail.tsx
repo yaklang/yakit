@@ -97,11 +97,11 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
         apiFetchPluginDetailCheck({uuid: uuid, list_type: "log", up_log_id: info.id})
             .then(async (res) => {
                 if (res) {
-                    console.log(
-                        `method:post|api:plugins/audit/detail`,
-                        `\nrequest:${JSON.stringify({uuid: uuid, list_type: "log", up_log_id: info.id})}`,
-                        `\nresponse"${JSON.stringify(res)}`
-                    )
+                    // console.log(
+                    //     `method:post|api:plugins/audit/detail`,
+                    //     `\nrequest:${JSON.stringify({uuid: uuid, list_type: "log", up_log_id: info.id})}`,
+                    //     `\nresponse"${JSON.stringify(res)}`
+                    // )
                     setPRInfo(res)
                     // 获取对比器-修改源码
                     setNewCode(res.content)
