@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {Alert, Form, Space, Tooltip, Typography, Modal} from "antd"
 import {failed, info} from "../../utils/notification"
 import {CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
@@ -11,8 +11,9 @@ import {ChromeFrameSvgIcon, ChromeSvgIcon, RemoveIcon} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {MITMConsts} from "./MITMConsts"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
