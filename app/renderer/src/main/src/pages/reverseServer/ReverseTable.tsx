@@ -102,11 +102,11 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                         </div>
 
                         <div className='extra-opt'>
-                            <div className='opt-title'>类型</div>
+                            <div className='opt-title' style={{width: 35}}>类型</div>
                             <YakitSelect
                                 size='small'
                                 mode='multiple'
-                                style={{width: 180}}
+                                style={{width: 170}}
                                 value={!types ? [] : types.split(",")}
                                 allowClear={true}
                                 options={DefaultType}

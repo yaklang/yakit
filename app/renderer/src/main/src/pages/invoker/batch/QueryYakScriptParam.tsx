@@ -196,7 +196,7 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
             item={{}}
             select={{
                 ref: selectRef,
-                className: "div-width-100",
+                wrapperClassName: "div-width-100",
                 allowClear: true,
                 autoClearSearchValue: false,
                 maxTagCount: "responsive",
