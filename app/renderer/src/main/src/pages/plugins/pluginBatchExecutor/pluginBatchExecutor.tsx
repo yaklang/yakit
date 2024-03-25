@@ -189,6 +189,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         if (executeStatus === "process") return true
         return false
     }, [executeStatus])
+    const isShowPluginLog = useCreation(() => {
+        return pluginExecuteLog.length > 0 || isExecuting
+    }, [pluginExecuteLog, isExecuting])
     return (
         <PluginLocalListDetails
             hidden={hidden}
@@ -208,12 +211,16 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             setSelectNum={setSelectNum}
         >
             <div className={styles["right-wrapper"]}>
-                <PluginExecuteLog
-                    classNameWrapper={styles["log-list-wrapper"]}
-                    hidden={false}
-                    pluginExecuteLog={pluginExecuteLog}
-                    isExecuting={isExecuting}
-                />
+                {isShowPluginLog && (
+                    <div className={styles["log-wrapper"]}>
+                        <div className={styles["log-heard"]}>插件日志</div>
+                        <PluginExecuteLog
+                            hidden={false}
+                            pluginExecuteLog={pluginExecuteLog}
+                            isExecuting={isExecuting}
+                        />
+                    </div>
+                )}
                 <div className={styles["content-wrapper"]}>
                     <>
                         <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>

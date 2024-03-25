@@ -86,11 +86,7 @@
     display: flex;
     flex: 1;
     overflow: hidden;
-    .log-list-wrapper {
-        max-width: 300px;
-        border-right: 1px solid var(--yakit-border-color);
-        padding: 12px;
-    }
+
     .content-wrapper {
         display: flex;
         flex-direction: column;
@@ -98,6 +94,22 @@
         overflow: hidden;
         .plugin-executor-result-wrapper {
             padding: 12px;
+        }
+    }
+    .log-wrapper {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+        max-width: 300px;
+        border-right: 1px solid var(--yakit-border-color);
+        padding: 12px;
+        .log-heard {
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            margin-bottom: 12px;
         }
     }
 }
