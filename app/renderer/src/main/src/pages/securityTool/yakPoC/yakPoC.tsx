@@ -60,6 +60,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 import moment from "moment"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
@@ -133,7 +134,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             >
                 <div className={styles["left-header-search"]}>
                     <div className={styles["header-type-wrapper"]}>
-                        <span className={styles["header-text"]}>选择插件组</span>
+                        <span className={styles["header-text"]}>选择插件</span>
                         <YakitRadioButtons
                             value={type}
                             onChange={(e) => {
@@ -1008,6 +1009,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
                 classNameWrapper
             )}
         >
+            <YakitSpin spinning={isExecuting} size='small' style={{alignItems: "center",height:20}} />
             <RollingLoadList<PluginLogProps>
                 data={data}
                 loadMoreData={() => {}}
