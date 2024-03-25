@@ -524,7 +524,6 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 {!hiddenLogIssue && (
                     <TabPane tab='日志' key='log'>
                         <PluginLog
-                            wrapperClassName={styles["plugin-log-tab-wrapper"]}
                             uuid={plugin.UUID || ""}
                             getContainer={pageWrapId}
                         />
