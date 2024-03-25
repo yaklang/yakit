@@ -399,6 +399,8 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
             setSelectGroupList(newList)
             setAllCheck(newList.length === response.length)
         }
+        setKeywords("")
+        onSearch("")
     })
     const total = useCreation(() => {
         return response.length
