@@ -6,6 +6,7 @@ import {TextAreaProps} from "antd/lib/input"
 
 import "./FormItemUtil.css"
 import {ManyMultiSelectForString} from "../../utils/inputUtil"
+import { YakitSelect } from "../yakitUI/YakitSelect/YakitSelect"
 
 const {Item} = Form
 const {Dragger} = Upload
@@ -255,7 +256,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
     } = props
     if (!isItem) {
         return (
-            <Select
+            <YakitSelect
                 {...restSelect}
                 onChange={(value, option) => {
                     if (setValue) setValue(value)
@@ -268,7 +269,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                     const title = flag ? item[optText] : item
                     const key = optKey?item[optText] : null
                     return (
-                        <Option
+                        <YakitSelect.Option
                             key={key || value || index}
                             value={value}
                             title={title}
@@ -276,10 +277,10 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                             record={item}
                         >
                             {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
-                        </Option>
+                        </YakitSelect.Option>
                     )
                 })}
-            </Select>
+            </YakitSelect>
         )
     }
 
@@ -289,7 +290,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                 <Col span={prefixNode ? 4 : 0}>{prefixNode}</Col>
 
                 <Col span={24 - (prefixNode ? 1 : 0) * 6 - (suffixNode ? 1 : 0) * 6}>
-                    <Select
+                    <YakitSelect
                         {...restSelect}
                         onChange={(value, option) => {
                             if (setValue) setValue(value)
@@ -302,7 +303,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                             const title = flag ? item[optText] : item
 
                             return (
-                                <Option
+                                <YakitSelect.Option
                                     key={value || index}
                                     value={value}
                                     title={title}
@@ -310,10 +311,10 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                                     record={item}
                                 >
                                     {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
-                                </Option>
+                                </YakitSelect.Option>
                             )
                         })}
-                    </Select>
+                    </YakitSelect>
                 </Col>
 
                 <Col span={suffixNode ? 4 : 0}>{suffixNode}</Col>

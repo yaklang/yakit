@@ -25,6 +25,7 @@ import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 const { Option } = Select;
 export interface ShowUserInfoProps {
     text: string
@@ -174,12 +175,14 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Form.Item name='id' label='企业名称' rules={[{required: true, message: "该项为必选"}]}>
-                    <Select
+                    <YakitSelect
                         showSearch
                         optionFilterProp='children'
                         placeholder='请选择企业名称'
-                        filterOption={(input, option) =>
-                            (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                        filterOption={(input, option) =>{
+                                const val = (option?.label ?? "") + ""
+                                return val.toLowerCase().includes(input.toLowerCase())
+                            }
                         }
                         options={selectData}
                         onSearch={(value) => {
@@ -196,10 +199,10 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                     />
                 </Form.Item>
                 <Form.Item name='company_version' label='版本' rules={[{required: true, message: "该项为必选"}]}>
-                    <Select placeholder='请选择版本' allowClear>
-                        <Option value='EnpriTrace'>企业版</Option>
-                        <Option value='EnpriTraceAgent'>便携版</Option>
-                    </Select>
+                    <YakitSelect placeholder='请选择版本' allowClear>
+                        <YakitSelect.Option value='EnpriTrace'>企业版</YakitSelect.Option>
+                        <YakitSelect.Option value='EnpriTraceAgent'>便携版</YakitSelect.Option>
+                    </YakitSelect>
                 </Form.Item>
                 <Form.Item name='license' label='申请码' rules={[{required: true, message: "该项为必选"}]}>
                     <Input.TextArea placeholder='请输入申请码' allowClear rows={13} />
