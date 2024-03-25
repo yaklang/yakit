@@ -856,18 +856,6 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             <div className={styles["yak-poc-execute-wrapper"]}>
                 <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                     <div className={styles["yak-poc-executor-title"]}>
-                        {hidden && (
-                            <Tooltip title='展开' placement='top' overlayClassName='plugins-tooltip'>
-                                <YakitButton
-                                    type='text2'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setHidden(false)
-                                    }}
-                                    icon={<OutlineOpenIcon className={styles["header-icon"]} />}
-                                ></YakitButton>
-                            </Tooltip>
-                        )}
                         <span className={styles["yak-poc-executor-title-text"]}>插件执行</span>
                     </div>
                     <div className={styles["yak-poc-executor-btn"]}>
@@ -914,6 +902,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         executeStatus={executeStatus}
                         setExecuteStatus={onSetExecuteStatus}
                         setPluginExecuteLog={setPluginExecuteLog}
+                        setHidden={setHidden}
                     />
                 </div>
             </div>
