@@ -54,6 +54,7 @@
             display: inline-flex;
             align-items: center;
             border-color: var(--yakit-border-color);
+            word-break: keep-all;
         }
 
         .ant-radio-button-wrapper:hover {
