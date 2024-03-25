@@ -18,7 +18,6 @@ import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitSettingCallbackType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
-import {showConfigEngineProxyForm} from "@/utils/ConfigEngineProxy"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import Login from "@/pages/Login"
 import {useStore, yakitDynamicStatus} from "@/store"
@@ -986,7 +985,6 @@ const GetUIOpSettingMenu = () => {
             children: [
                 {key: "reverse", label: "全局反连"},
                 {key: "agent", label: "系统代理"},
-                // { key: "engineAgent",label: "引擎扫描代理" },
                 // { key: "engineVar",label: "引擎环境变量" },
                 {key: "config-network", label: "全局配置"}
             ]
@@ -1064,9 +1062,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "agent":
                 showConfigSystemProxyForm()
-                return
-            case "engineAgent":
-                showConfigEngineProxyForm()
                 return
             case "engineVar":
                 showConfigYaklangEnvironment()
