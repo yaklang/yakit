@@ -27,6 +27,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         cacheHistoryListLength = 10,
         isCacheDefaultValue = true,
         ref: forwardRef,
+        initValue = "",
         isDelExternalOptionData = false,
         delExternalOptionItem,
         ...restProps
@@ -70,14 +71,22 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         if (init) setLoading(true)
         onGetRemoteValuesBase(cacheHistoryDataKey)
             .then((cacheData) => {
-                const value = cacheData.defaultValue ? cacheData.defaultValue : ""
+                let value = cacheData.defaultValue ? cacheData.defaultValue : ""
                 let newOption = cacheData.options || props.options || []
+                // 当缓存不存在的时候，若有初始默认值
+                if (value === "" && !newOption.length && initValue) {
+                    value = initValue
+                    newOption = [{value: initValue, label: initValue}]
+                    // 主要是删缓存需要
+                    onSetRemoteValues(initValue)
+                } else {
+                    setCacheHistoryData({defaultValue: value, options: newOption})
+                }
                 //非form表单时,设置value
                 // 在表单使用时，如果该值为true，这设置值的优先级高于组件外部直接使用form.setfeildvalue设置(场景：初始化)
                 if (isCacheDefaultValue) {
                     if (props.onChange) props.onChange(value, newOption)
                 }
-                setCacheHistoryData({defaultValue: value, options: newOption})
             })
             .finally(() => {
                 setTimeout(() => {
