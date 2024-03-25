@@ -1,6 +1,5 @@
 import React, {CSSProperties, useEffect, useRef, useState} from "react";
 import {
-    AutoComplete,
     Button,
     Checkbox,
     Col,
@@ -33,6 +32,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber";
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect";
+import { YakitAutoComplete } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete";
 
 type TooltipPlacement =
     'top'
@@ -114,7 +114,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
         help={props.help}
     >
         {props.prefixNode}
-        {props.autoComplete ? <AutoComplete
+        {props.autoComplete ? <YakitAutoComplete
             style={{width: props.width || "100%"}}
             dropdownMatchSelectWidth={400}
             disabled={!!props.disable}
@@ -122,7 +122,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             allowClear={true}
             value={props.value} onChange={e => props.setValue && props.setValue(e)}
             options={(props.autoComplete || []).map(i => {
-                return {value: i}
+                return {value: i, label: i}
             })}
             onFocus={(e) => {
                 if (props.isBubbing) e.stopPropagation()
