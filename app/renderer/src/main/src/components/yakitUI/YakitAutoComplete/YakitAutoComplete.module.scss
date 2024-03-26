@@ -115,9 +115,10 @@
             width: 16px;
             height: 16px;
             margin-top: 4px;
-        }
-        &:hover {
-            color: var(--yakit-danger-5);
+            color: var(--yakit-primary-5);
+            &:hover {
+                color: var(--yakit-danger-5);
+            }
         }
     }
 }

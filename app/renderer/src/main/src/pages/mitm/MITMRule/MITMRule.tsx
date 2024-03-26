@@ -907,34 +907,6 @@ export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps>
     )
 })
 
-const YakitSelectMemo = React.memo<YakitSelectMemoProps>(
-    (props) => {
-        return (
-            <YakitSelect
-                value={props.value}
-                bordered={false}
-                disabled={props.disabled}
-                size='small'
-                wrapperStyle={{width: "100%"}}
-                onSelect={(val) => props.onSelect(val)}
-            >
-                {colorSelectNode}
-            </YakitSelect>
-        )
-    },
-    (preProps, nextProps) => {
-        // return true; 	不渲染
-        // return false;	渲染
-        if (preProps.value !== nextProps.value) {
-            return false
-        }
-        if (preProps.disabled !== nextProps.disabled) {
-            return false
-        }
-        return true
-    }
-)
-
 const YakitSwitchMemo = React.memo<YakitSwitchMemoProps>(
     (props) => {
         let node: ReactNode = (

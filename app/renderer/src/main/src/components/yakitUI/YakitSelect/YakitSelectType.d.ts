@@ -44,3 +44,7 @@ export interface YakitBaseSelectRef {
     onSetRemoteValues: (s: string[]) => void
     onGetRemoteValues: () => void
 }
+
+export interface YakitDefaultOptionType extends DefaultOptionType {
+    tabLable?: React.ReactNode
+}

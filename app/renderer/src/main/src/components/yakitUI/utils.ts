@@ -110,7 +110,7 @@ export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promis
                 const newHistoryList = oldCacheHistoryData.options.filter(item => item.value !== delCacheValue)
                 cacheData = {
                     options: newHistoryList,
-                    defaultValue: oldCacheHistoryData.defaultValue
+                    defaultValue: isCacheDefaultValue ? oldCacheHistoryData.defaultValue : ""
                 }
                 cacheHistory = {
                     options: newHistoryList,
