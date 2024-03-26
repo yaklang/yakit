@@ -13,12 +13,12 @@ import cloneDeep from "lodash/cloneDeep"
 import {thousandthConversion} from "../pluginReducer"
 import {useStore} from "@/store"
 import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
-import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {onlineUseToLocalDetail} from "../utils"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {PluginLog} from "../log/PluginLog"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -28,6 +28,8 @@ import {API} from "@/services/swagger/resposeType"
 const {ipcRenderer} = window.require("electron")
 
 const {TabPane} = PluginTabs
+
+const wrapperId = "plugin-online-detail"
 
 export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) => {
     const {
@@ -190,6 +192,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     return (
         <PluginDetails<YakitPluginOnlineDetail>
             title='插件商店'
+            pageWrapId={wrapperId}
             filterNode={
                 <>
                     <PluginGroup
@@ -326,9 +329,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                         </div>
                     </TabPane>
                     <TabPane tab='日志' key='log'>
-                        <div className={styles["plugin-log-wrapper"]}>
-                            <YakitPluginOnlineJournal pluginId={plugin.id} />
-                        </div>
+                        <PluginLog uuid={plugin.uuid || ""} getContainer={wrapperId} />
                     </TabPane>
                 </PluginTabs>
             </div>

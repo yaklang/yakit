@@ -605,7 +605,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "exec-packet-scan")
                 addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             if (type === "add-yakit-script") addYakScript(data)
-            if (type === "yakit-plugin-journal-details") addYakPluginJournalDetails(data)
             if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
@@ -837,19 +836,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     )
 
-    /** ---------- 插件修改历史详情 ---------- */
-    const addYakPluginJournalDetails = useMemoizedFn((res: any) => {
-        const time = new Date().getTime().toString()
-        openMenuPage(
-            {route: YakitRoute.YakitPluginJournalDetails},
-            {
-                pageParams: {
-                    YakScriptJournalDetailsId: res.YakScriptJournalDetailsId
-                },
-                hideAdd: true
-            }
-        )
-    })
     /** ---------- 插件回收站 ---------- */
     const addOnlinePluginRecycleBin = useMemoizedFn((res: any) => {
         openMenuPage({route: YakitRoute.OnlinePluginRecycleBin})

@@ -838,9 +838,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 </div>
                             </YakitSpin>
                         </TabPane>
-                        <TabPane tab='日 志(监修中)' key='log' disabled={true}>
-                            <div></div>
-                        </TabPane>
                     </PluginTabs>
                 </div>
 

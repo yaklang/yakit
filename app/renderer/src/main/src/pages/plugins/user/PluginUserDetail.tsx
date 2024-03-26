@@ -13,18 +13,20 @@ import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginUserDetailProps, UserBackInfoProps} from "./PluginUserType"
 import {useStore} from "@/store"
-import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {onlineUseToLocalDetail} from "../utils"
 import {LoadingOutlined} from "@ant-design/icons"
 import {SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {PluginLog} from "../log/PluginLog"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
 
 const {TabPane} = PluginTabs
+
+const wrapperId = "plugin-user-detail"
 
 export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
     forwardRef((props, ref) => {
@@ -227,6 +229,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
             <>
                 <PluginDetails<YakitPluginOnlineDetail>
                     title='我的云端插件'
+                    pageWrapId={wrapperId}
                     filterExtra={
                         <div className={"details-filter-extra-wrapper"}>
                             <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='user' />
@@ -338,9 +341,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                                 </div>
                             </TabPane>
                             <TabPane tab='日志' key='log'>
-                                <div className={styles["plugin-log-wrapper"]}>
-                                    <YakitPluginOnlineJournal pluginId={plugin.id} />
-                                </div>
+                                <PluginLog uuid={plugin.uuid || ""} getContainer={wrapperId} />
                             </TabPane>
                         </PluginTabs>
                     </div>

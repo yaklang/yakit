@@ -549,7 +549,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             data: userMenu
                                         }}
                                         dropdown={{
-                                            placement: "bottomCenter",
+                                            placement: "bottom",
                                             trigger: ["click"],
                                             overlayClassName: "user-dropdown-menu-box",
                                             onVisibleChange: (value: boolean) => {

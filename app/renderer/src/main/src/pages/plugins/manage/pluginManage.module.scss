@@ -57,13 +57,18 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    padding-top: 12px;
+    // padding-top: 12px;
+    :global {
+        .ant-tabs-right > .ant-tabs-nav .ant-tabs-tab {
+            margin-top: 4px;
+        }
+    }
     .plugin-info-wrapper {
         width: 100%;
         height: 100%;
-        padding: 0 12px 12px;
+        padding: 12px;
         overflow: hidden overlay;
-        .plugin-info-header{
+        .plugin-info-header {
             background-color: #fff;
         }
         .plugin-info-extra-header {

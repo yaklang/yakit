@@ -13,3 +13,9 @@ export interface PluginDebugProps {
 
 /** @name 插件参数-额外参数-自定义请求键值对(get|post|header|cookie) */
 export type PluginExtraKVParams = keyof HTTPRequestBuilderParams
+
+export interface PluginDebugBodyProps {
+    plugin?: PluginDataProps
+    newCode: string
+    setNewCode: (value: string) => any
+}

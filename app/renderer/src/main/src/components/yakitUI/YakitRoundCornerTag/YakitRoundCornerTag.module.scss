@@ -1,0 +1,49 @@
+@use "../../../theme/themeify.scss" as tools;
+
+.yakit-round-corner-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 6px;
+    border-radius: 8px;
+
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+$color-type: (
+    blue: (
+        color: var(--yakit-color-blue),
+        alph: 10%
+    ),
+    green: (
+        color: var(--yakit-color-green),
+        alph: 10%
+    )
+);
+
+@mixin generateColors() {
+    @each $type, $value in $color-type {
+        $color: map-get($value, "color");
+        $bgColor: tools.fetch-color-transparen($color, map-get($value, "alph"));
+
+        .yakit-round-corner-tag-#{$type} {
+            color: $color;
+            background-color: $bgColor;
+            svg {
+                color: $color;
+            }
+        }
+    }
+}
+@include generateColors();
+
+.yakit-round-corner-tag-primary {
+    color: var(--ui-neutral-70);
+    background-color: var(--ui-neutral-30);
+    svg {
+        color: var(--ui-neutral-70);
+    }
+}

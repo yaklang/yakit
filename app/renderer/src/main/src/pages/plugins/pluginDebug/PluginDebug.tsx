@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {PluginDebugProps} from "./PluginDebugType"
+import {PluginDebugBodyProps, PluginDebugProps} from "./PluginDebugType"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -53,76 +53,22 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
     const pluginType = useMemo(() => {
         return plugin?.Type || "yak"
     }, [plugin])
-    // 插件类型的tag颜色
-    const pluginTypeColor = useMemo(() => {
-        try {
-            return pluginTypeToName[pluginType].color || undefined
-        } catch (error) {
-            return undefined
-        }
-    }, [pluginType])
 
-    // 插件参数
-    const [params, setParams] = useState<YakParamProps[]>([])
-    /** 必填参数 */
-    const requiredParams = useMemo(() => {
-        return params.filter((item) => !!item.Required) || []
-    }, [params])
-    /** 选填参数 */
-    const groupParams = useMemo(() => {
-        const arr = params.filter((item) => !item.Required) || []
-        return ParamsToGroupByGroupName(arr)
-    }, [params])
-
-    // 插件源码
+    // 插件源码(修改后的)
     const [content, setContent] = useState<string>("")
+
+    useEffect(() => {
+        if (visible) {
+            return () => {
+                setContent("")
+            }
+        }
+    }, [visible])
 
     // 关闭
     const onCancel = useMemoizedFn(() => {
         if (onClose) onClose()
     })
-
-    const [fetchParamsLoading, setFetchParamsLoading] = useState<boolean>(false)
-    // 获取参数
-    const onFetchParams = useMemoizedFn(async () => {
-        if (fetchParamsLoading) return
-        if (!plugin) {
-            failed("未获取插件信息，请关闭调试窗后再次尝试")
-            return
-        }
-
-        setFetchParamsLoading(true)
-        const codeInfo = await onCodeToInfo(plugin.Type, content || "")
-        if (codeInfo) {
-            setParams(codeInfo.CliParameter)
-        }
-        setTimeout(() => {
-            setFetchParamsLoading(false)
-        }, 200)
-    })
-
-    // init
-    useEffect(() => {
-        if (visible) {
-            if (plugin) {
-                if (plugin.Type === "yak") setParams(plugin.Params || [])
-                // 非yak类型插件固定参数
-                else setParams([])
-                setContent(plugin.Content || "")
-            } else {
-                failed("未获取插件信息，请关闭调试窗后再次尝试")
-            }
-
-            return () => {
-                setParams([])
-                setContent("")
-            }
-        }
-    }, [plugin, visible])
-    // 更新表单内容
-    useUpdateEffect(() => {
-        initFormValue()
-    }, [params])
 
     /** --------------- 自动评分 Start --------------- */
     const [scoreShow, setScoreShow] = useState<boolean>(false)
@@ -180,6 +126,158 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         if (diffShow) setDiffShow(false)
     })
     /** --------------- 合并代码 End --------------- */
+
+    return (
+        <>
+            <YakitDrawer
+                getContainer={getContainer}
+                placement='bottom'
+                mask={false}
+                closable={false}
+                keyboard={false}
+                height={showHeight}
+                visible={visible}
+                className={classNames(styles["plugin-debug-drawer"])}
+                title={<div className={styles["header-title"]}>插件调试</div>}
+                extra={
+                    <div className={styles["header-extra-wrapper"]}>
+                        <YakitButton type='outline2' icon={<OutlineSparklesIcon />} onClick={onOpenScore}>
+                            自动评分
+                        </YakitButton>
+                        <YakitButton icon={<OutlinePuzzleIcon />} onClick={onOpenDiff}>
+                            合并代码
+                        </YakitButton>
+
+                        <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onCancel} />
+                    </div>
+                }
+                onClose={onCancel}
+            >
+                {visible && <PluginDebugBody plugin={plugin} newCode={content} setNewCode={setContent} />}
+            </YakitDrawer>
+
+            <YakitModal
+                title='代码对比'
+                type='white'
+                width='80%'
+                centered={true}
+                maskClosable={false}
+                closable={true}
+                visible={diffShow}
+                okText='合并'
+                onCancel={onCancelDiff}
+                onOk={onOkDiff}
+            >
+                <div className={styles["diff-code-modal"]}>
+                    <YakitDiffEditor
+                        leftDefaultCode={plugin?.Content || ""}
+                        leftReadOnly={true}
+                        rightDefaultCode={content}
+                        setRightCode={setContent}
+                        triggerUpdate={triggerDiffUpdate.current}
+                        language={diffLanguage}
+                    />
+                </div>
+            </YakitModal>
+
+            <YakitModal
+                title='插件评分'
+                type='white'
+                width={506}
+                centered={true}
+                maskClosable={false}
+                closable={true}
+                destroyOnClose={true}
+                visible={scoreShow}
+                okText='合并代码'
+                okButtonProps={{
+                    icon: <OutlinePuzzleIcon />,
+                    style: isPass === 2 ? undefined : {display: "none"}
+                }}
+                cancelButtonProps={{style: isPass !== 0 ? undefined : {display: "none"}}}
+                onOk={onOkScore}
+                onCancel={onCancelScore}
+            >
+                <CodeScoreModule
+                    type={pluginType}
+                    code={content}
+                    isStart={scoreShow}
+                    successWait={10}
+                    successHint='表现良好，检测通过'
+                    failedHint='检测不通过，请根据提示修改'
+                    callback={onCallbackScore}
+                />
+            </YakitModal>
+        </>
+    )
+})
+
+export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
+    const {plugin, newCode, setNewCode} = props
+
+    /** 插件类型 */
+    const pluginType = useMemo(() => {
+        return plugin?.Type || "yak"
+    }, [plugin])
+    // 插件类型的tag颜色
+    const pluginTypeColor = useMemo(() => {
+        try {
+            return pluginTypeToName[pluginType].color || undefined
+        } catch (error) {
+            return undefined
+        }
+    }, [pluginType])
+
+    // 插件参数
+    const [params, setParams] = useState<YakParamProps[]>([])
+    /** 必填参数 */
+    const requiredParams = useMemo(() => {
+        return params.filter((item) => !!item.Required) || []
+    }, [params])
+    /** 选填参数 */
+    const groupParams = useMemo(() => {
+        const arr = params.filter((item) => !item.Required) || []
+        return ParamsToGroupByGroupName(arr)
+    }, [params])
+
+    const [fetchParamsLoading, setFetchParamsLoading] = useState<boolean>(false)
+    // 获取参数
+    const onFetchParams = useMemoizedFn(async () => {
+        if (fetchParamsLoading) return
+        if (!plugin) {
+            failed("未获取插件信息，请关闭调试窗后再次尝试")
+            return
+        }
+
+        setFetchParamsLoading(true)
+        const codeInfo = await onCodeToInfo(plugin.Type, newCode || "")
+        if (codeInfo) {
+            setParams(codeInfo.CliParameter)
+        }
+        setTimeout(() => {
+            setFetchParamsLoading(false)
+        }, 200)
+    })
+
+    // init
+    useEffect(() => {
+        if (plugin) {
+            if (plugin.Type === "yak") setParams(plugin.Params || [])
+            // 非yak类型插件固定参数
+            else setParams([])
+            setNewCode(newCode || plugin.Content || "")
+        } else {
+            failed("未获取插件信息，请关闭调试窗后再次尝试")
+        }
+
+        return () => {
+            setParams([])
+        }
+    }, [plugin])
+    // 更新表单内容
+    useUpdateEffect(() => {
+        initFormValue()
+    }, [params])
 
     /** --------------- 参数部分逻辑 Start --------------- */
     const [form] = Form.useForm()
@@ -332,7 +430,7 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         }
     })
 
-    const onStartExecute = useMemoizedFn((value) => {
+    const onStartExecute = useMemoizedFn(() => {
         if (form) {
             form.validateFields()
                 .then((value: HTTPRequestBuilderParams) => {
@@ -343,12 +441,12 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
                     }
 
                     const requestParams: DebugPluginRequest = {
-                        Code: content,
+                        Code: newCode,
                         PluginType: pluginType,
                         Input: value["Input"] || "",
                         HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
                         ExecParams: [],
-                        PluginName: "",
+                        PluginName: ""
                     }
 
                     switch (pluginType) {
@@ -392,212 +490,124 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
 
     // 停靠模式-浮窗
     return (
-        <>
-            <YakitDrawer
-                getContainer={getContainer}
-                placement='bottom'
-                mask={false}
-                closable={false}
-                keyboard={false}
-                height={showHeight}
-                visible={visible}
-                className={classNames(styles["plugin-debug-drawer"])}
-                title={<div className={styles["heard-title"]}>插件调试</div>}
-                extra={
-                    <div className={styles["header-extra-wrapper"]}>
-                        <YakitButton type='outline2' icon={<OutlineSparklesIcon />} onClick={onOpenScore}>
-                            自动评分
-                        </YakitButton>
-                        <YakitButton icon={<OutlinePuzzleIcon />} onClick={onOpenDiff}>
-                            合并代码
-                        </YakitButton>
-
-                        <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onCancel} />
-                    </div>
-                }
-                onClose={onCancel}
-            >
-                <div className={styles["plugin-debug-wrapper"]}>
-                    <div className={styles["left-wrapper"]}>
-                        <YakitCard
-                            title='参数列表'
-                            style={{borderTop: 0}}
-                            headClassName={styles["left-header-wrapper"]}
-                            extra={
-                                <div className={styles["header-extra"]}>
-                                    {plugin?.Type === "yak" && (
-                                        <>
-                                            <YakitButton
-                                                type='text'
-                                                loading={fetchParamsLoading}
-                                                onClick={onFetchParams}
-                                            >
-                                                获取参数
-                                                <OutlineRefreshIcon />
-                                            </YakitButton>
-                                            <div className={styles["divider-wrapper"]}></div>
-                                        </>
-                                    )}
-                                    {isExecuting ? (
-                                        <YakitButton danger onClick={onStopExecute}>
-                                            停止
-                                        </YakitButton>
-                                    ) : (
-                                        <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
-                                            执行
-                                        </YakitButton>
-                                    )}
-                                </div>
-                            }
-                            bodyClassName={styles["left-body-wrapper"]}
+        <div className={styles["plugin-debug-wrapper"]}>
+            <div className={styles["left-wrapper"]}>
+                <YakitCard
+                    title='参数列表'
+                    style={{borderTop: 0}}
+                    headClassName={styles["left-header-wrapper"]}
+                    extra={
+                        <div className={styles["header-extra"]}>
+                            {plugin?.Type === "yak" && (
+                                <>
+                                    <YakitButton type='text' loading={fetchParamsLoading} onClick={onFetchParams}>
+                                        获取参数
+                                        <OutlineRefreshIcon />
+                                    </YakitButton>
+                                    <div className={styles["divider-wrapper"]}></div>
+                                </>
+                            )}
+                            {isExecuting ? (
+                                <YakitButton danger onClick={onStopExecute}>
+                                    停止
+                                </YakitButton>
+                            ) : (
+                                <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
+                                    执行
+                                </YakitButton>
+                            )}
+                        </div>
+                    }
+                    bodyClassName={styles["left-body-wrapper"]}
+                >
+                    <div className={styles["form-wrapper"]}>
+                        <Form
+                            form={form}
+                            onFinish={() => {}}
+                            size='small'
+                            labelCol={{span: 8}}
+                            wrapperCol={{span: 16}}
+                            labelWrap={true}
+                            validateMessages={{
+                                /* eslint-disable no-template-curly-in-string */
+                                required: "${label} 是必填字段"
+                            }}
                         >
-                            <div className={styles["form-wrapper"]}>
-                                <Form
-                                    form={form}
-                                    onFinish={() => {}}
-                                    size='small'
-                                    labelCol={{span: 8}}
-                                    wrapperCol={{span: 16}}
-                                    labelWrap={true}
-                                    validateMessages={{
-                                        /* eslint-disable no-template-curly-in-string */
-                                        required: "${label} 是必填字段"
-                                    }}
-                                >
-                                    <div className={styles["custom-params-wrapper"]}>
-                                        {pluginRequiredItem(pluginType)}
-                                    </div>
-                                    {isRawHTTPRequest ? null : pluginOptionalItem(pluginType)}
-                                </Form>
-                            </div>
-                        </YakitCard>
+                            <div className={styles["custom-params-wrapper"]}>{pluginRequiredItem(pluginType)}</div>
+                            {isRawHTTPRequest ? null : pluginOptionalItem(pluginType)}
+                        </Form>
                     </div>
-                    <div className={styles["right-wrapper"]}>
-                        <div className={styles["right-header-wrapper"]}>
-                            <YakitRadioButtons
-                                buttonStyle='solid'
-                                value={activeTab}
-                                options={[
-                                    {value: "code", label: "源码"},
-                                    {value: "execResult", label: "执行结果"}
-                                ]}
-                                onChange={(e) => setActiveTab(e.target.value)}
-                            />
-                            <div className={styles["header-info"]}>
-                                <YakitTag color={pluginTypeColor as YakitTagColor}>
-                                    {pluginTypeToName[pluginType].name || pluginType}
-                                </YakitTag>
-                                {
-                                    <div
-                                        className={classNames(styles["info-name"], "yakit-content-single-ellipsis")}
-                                        title={plugin?.ScriptName || ""}
-                                    >
-                                        {plugin?.ScriptName || ""}
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div className={styles["right-body-wrapper"]}>
-                            <div
-                                tabIndex={activeTab !== "code" ? -1 : 1}
-                                className={classNames(styles["tab-show"], {
-                                    [styles["tab-hidden"]]: activeTab !== "code"
-                                })}
-                            >
-                                <YakitEditor type={pluginType} value={content} setValue={setContent} />
-                            </div>
-
-                            <div
-                                tabIndex={activeTab !== "execResult" ? -1 : 1}
-                                className={classNames(styles["tab-show"], {
-                                    [styles["tab-hidden"]]: activeTab !== "execResult"
-                                })}
-                            >
-                                {runtimeId ? (
-                                    <>
-                                        {streamInfo.progressState.length > 1 && (
-                                            <div className={styles["plugin-executing-progress"]}>
-                                                {streamInfo.progressState.map((ele, index) => (
-                                                    <React.Fragment key={ele.id}>
-                                                        {index !== 0 && (
-                                                            <Divider type='vertical' style={{margin: 0, top: 2}} />
-                                                        )}
-                                                        <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                                                    </React.Fragment>
-                                                ))}
-                                            </div>
-                                        )}
-                                        <div className={styles["result-body"]}>
-                                            <PluginExecuteResult
-                                                streamInfo={streamInfo}
-                                                runtimeId={runtimeId}
-                                                loading={isExecuting}
-                                                pluginType={pluginType}
-                                            />
-                                        </div>
-                                    </>
-                                ) : (
-                                    <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </YakitDrawer>
-
-            <YakitModal
-                title='代码对比'
-                type='white'
-                width='80%'
-                centered={true}
-                maskClosable={false}
-                closable={true}
-                visible={diffShow}
-                okText='合并'
-                onCancel={onCancelDiff}
-                onOk={onOkDiff}
-            >
-                <div className={styles["diff-code-modal"]}>
-                    <YakitDiffEditor
-                        leftDefaultCode={plugin?.Content || ""}
-                        leftReadOnly={true}
-                        rightDefaultCode={content}
-                        setRightCode={setContent}
-                        triggerUpdate={triggerDiffUpdate.current}
-                        language={diffLanguage}
+                </YakitCard>
+            </div>
+            <div className={styles["right-wrapper"]}>
+                <div className={styles["right-header-wrapper"]}>
+                    <YakitRadioButtons
+                        buttonStyle='solid'
+                        value={activeTab}
+                        options={[
+                            {value: "code", label: "源码"},
+                            {value: "execResult", label: "执行结果"}
+                        ]}
+                        onChange={(e) => setActiveTab(e.target.value)}
                     />
+                    <div className={styles["header-info"]}>
+                        <YakitTag color={pluginTypeColor as YakitTagColor}>
+                            {pluginTypeToName[pluginType].name || pluginType}
+                        </YakitTag>
+                        {
+                            <div
+                                className={classNames(styles["info-name"], "yakit-content-single-ellipsis")}
+                                title={plugin?.ScriptName || ""}
+                            >
+                                {plugin?.ScriptName || ""}
+                            </div>
+                        }
+                    </div>
                 </div>
-            </YakitModal>
 
-            <YakitModal
-                title='插件评分'
-                type='white'
-                width={506}
-                centered={true}
-                maskClosable={false}
-                closable={true}
-                destroyOnClose={true}
-                visible={scoreShow}
-                okText='合并代码'
-                okButtonProps={{
-                    icon: <OutlinePuzzleIcon />,
-                    style: isPass === 2 ? undefined : {display: "none"}
-                }}
-                cancelButtonProps={{style: isPass !== 0 ? undefined : {display: "none"}}}
-                onOk={onOkScore}
-                onCancel={onCancelScore}
-            >
-                <CodeScoreModule
-                    type={pluginType}
-                    code={content}
-                    isStart={scoreShow}
-                    successWait={10}
-                    successHint='表现良好，检测通过'
-                    failedHint='检测不通过，请根据提示修改'
-                    callback={onCallbackScore}
-                />
-            </YakitModal>
-        </>
+                <div className={styles["right-body-wrapper"]}>
+                    <div
+                        tabIndex={activeTab !== "code" ? -1 : 1}
+                        className={classNames(styles["tab-show"], {
+                            [styles["tab-hidden"]]: activeTab !== "code"
+                        })}
+                    >
+                        <YakitEditor type={pluginType} value={newCode} setValue={setNewCode} />
+                    </div>
+
+                    <div
+                        tabIndex={activeTab !== "execResult" ? -1 : 1}
+                        className={classNames(styles["tab-show"], {
+                            [styles["tab-hidden"]]: activeTab !== "execResult"
+                        })}
+                    >
+                        {runtimeId ? (
+                            <>
+                                {streamInfo.progressState.length > 1 && (
+                                    <div className={styles["plugin-executing-progress"]}>
+                                        {streamInfo.progressState.map((ele, index) => (
+                                            <React.Fragment key={ele.id}>
+                                                {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
+                                                <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className={styles["result-body"]}>
+                                    <PluginExecuteResult
+                                        streamInfo={streamInfo}
+                                        runtimeId={runtimeId}
+                                        loading={isExecuting}
+                                        pluginType={pluginType}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
     )
 })
