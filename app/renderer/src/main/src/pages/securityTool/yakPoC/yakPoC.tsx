@@ -32,6 +32,7 @@ import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecute
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
+    OutlineCloseIcon,
     OutlineCogIcon,
     OutlineOpenIcon
 } from "@/assets/icon/outline"
@@ -122,6 +123,10 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     }, [pageInfo.selectGroup, pageInfo.selectGroupListByKeyWord])
     const onClearAll = useMemoizedFn(() => {
         setPageInfo({...pageInfo, selectGroup: [], selectGroupListByKeyWord: []})
+        setHidden(false)
+    })
+    const onClose = useMemoizedFn(() => {
+        setHidden(true)
     })
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
@@ -151,6 +156,13 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                             ]}
                         />
                     </div>
+                    <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
+                        <YakitButton
+                            type='text2'
+                            onClick={onClose}
+                            icon={<OutlineCloseIcon className={styles["header-icon"]} />}
+                        ></YakitButton>
+                    </Tooltip>
                 </div>
                 <PluginGroupByKeyWord
                     pageId={pageId}
@@ -830,6 +842,15 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             {isShowPluginAndLog && (
                 <div className={styles["midden-wrapper"]}>
                     <div className={styles["midden-heard"]}>
+                        {hidden && (
+                            <Tooltip title='展开' placement='top' overlayClassName='plugins-tooltip'>
+                                <YakitButton
+                                    type='text2'
+                                    onClick={() => setHidden(false)}
+                                    icon={<OutlineOpenIcon className={styles["header-icon"]} />}
+                                ></YakitButton>
+                            </Tooltip>
+                        )}
                         <YakitRadioButtons
                             size='small'
                             value={showType}
@@ -852,7 +873,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         {showType === "plugin" && (
                             <div className={styles["heard-right"]}>
                                 <span className={styles["heard-tip"]}>
-                                    已选插件<span className={styles["heard-number"]}>{total}</span>
+                                    Total<span className={styles["heard-number"]}>{total}</span>
                                 </span>
                                 <YakitButton type='text' danger onClick={onClearAll}>
                                     清空

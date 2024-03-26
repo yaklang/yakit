@@ -11,7 +11,21 @@
 .divider-style {
     @extend %divider-style;
 }
-
+.header-icon {
+    color: var(--yakit-body-text-color);
+    width: 16px;
+    height: 16px;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+    &:hover {
+        color: var(--yakit-primary-4);
+    }
+    path {
+        stroke-width: 1.5;
+    }
+}
 .yak-poc-wrapper {
     @extend %display-flex-center;
     flex: 1;
@@ -61,7 +75,6 @@
         .midden-heard {
             @extend %display-flex-center;
             gap: 4px;
-            padding: 0 4px;
             height: 24px;
             .heard-right {
                 @extend %display-flex-center;
