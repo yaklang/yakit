@@ -24,7 +24,7 @@ import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {AddToMenuActionForm} from "@/pages/yakitStore/PluginOperator"
 import {isCommunityEdition} from "@/utils/envfile"
-import {CodeGV} from "@/yakitGV"
+import {CodeGV, RemoteGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {LoadingOutlined} from "@ant-design/icons"
@@ -483,6 +483,37 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
         hiddenLogIssue,
         linkPluginConfig
     } = props
+
+    // 私有域地址
+    const [privateDomain, setPrivateDomain] = useState<string>("")
+
+    /** 获取最新的私有域 */
+    const getPrivateDomainAndRefList = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+            if (setting) {
+                try {
+                    const values = JSON.parse(setting || "{}")
+                    setPrivateDomain(values?.BaseUrl || "")
+                } catch (error) {}
+            }
+        })
+    })
+
+    useEffect(() => {
+        getPrivateDomainAndRefList()
+        emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+        return () => {
+            emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+        }
+    }, [])
+
+    const isShowLog = useMemo(() => {
+        if (plugin.IsCorePlugin) return false
+        if (!plugin.OnlineBaseUrl || !privateDomain) return false
+        if (plugin.OnlineBaseUrl !== privateDomain) return false
+        return true
+    }, [plugin, privateDomain])
+
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
             <PluginTabs defaultActiveKey='execute' tabPosition='right'>
@@ -522,11 +553,8 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                     </div>
                 </TabPane>
                 {!hiddenLogIssue && (
-                    <TabPane tab='日志' key='log'>
-                        <PluginLog
-                            uuid={plugin.UUID || ""}
-                            getContainer={pageWrapId}
-                        />
+                    <TabPane tab='日志' key='log' disabled={!isShowLog}>
+                        <PluginLog uuid={plugin.UUID || ""} getContainer={pageWrapId} />
                     </TabPane>
                 )}
                 {!hiddenLogIssue && (

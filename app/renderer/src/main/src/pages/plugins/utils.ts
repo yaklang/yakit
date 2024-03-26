@@ -944,29 +944,19 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
  */
 export const apiFetchOnlinePluginInfo: (uuid: string) => Promise<API.PluginsDetail> = (uuid) => {
     return new Promise(async (resolve, reject) => {
-        const params: {uuid: string; token?: string} = {
-            uuid: uuid
-        }
-        // try {
-        //     const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
-        //     if (userInfo.isLogin) {
-        //         params.token = userInfo.token || undefined
-        //     }
-        // } catch (error) {}
-
         try {
-            NetWorkApi<{uuid: string}, API.PluginsDetail>({
+            PluginNetWorkApi<{uuid: string; token?: string}, API.PluginsDetail>({
                 method: "post",
                 url: "plugins/detail",
-                data: {...params}
+                data: {uuid: uuid}
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "获取插件详情失败:" + err)
+                    yakitNotify("error", "获取线上插件详情失败:" + err)
                     reject(err)
                 })
         } catch (error) {
-            yakitNotify("error", "获取插件详情失败:" + error)
+            yakitNotify("error", "获取线上插件详情失败:" + error)
             reject(error)
         }
     })

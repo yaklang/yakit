@@ -131,11 +131,13 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                     }
                 })
                 .catch(() => {
-                    setPlugin(undefined)
-                    resetResponse()
-                    setTimeout(() => {
-                        setPluginLoading(false)
-                    }, 200)
+                    if (uuid === onlineId) {
+                        setPlugin(undefined)
+                        resetResponse()
+                        setTimeout(() => {
+                            setPluginLoading(false)
+                        }, 200)
+                    }
                 })
         }),
         {wait: 300}
@@ -206,34 +208,37 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
             if (uuid) {
                 if (!latestPlugin.current) {
                     setPluginLoading(true)
+                    fetchPluginDetail(uuid)
                 } else {
                     // 减少切换页面场景下的重复请求
-                    if (latestPlugin.current.uuid !== uuid) setPluginLoading(true)
-                    else resetFetchLogs()
+                    if (latestPlugin.current.uuid !== uuid) {
+                        setPluginLoading(true)
+                        fetchPluginDetail(uuid)
+                    } else resetFetchLogs()
                 }
+            } else {
+                setPlugin(undefined)
+                resetResponse()
             }
-        }
-
-        return () => {
-            setPluginLoading(false)
         }
     }, [inViewport, uuid])
     // uuid变化时的信息重新请求获取
-    useEffect(() => {
-        if (uuid) {
-            if (!getInView()) return
+    // useEffect(() => {
+    //     console.log(`uuid`, uuid, new Date().getTime())
+    //     if (uuid) {
+    //         if (!getInView()) return
 
-            if (!latestPlugin.current) {
-                fetchPluginDetail(uuid)
-            } else {
-                // 减少切换页面场景下的重复请求
-                if (latestPlugin.current.uuid !== uuid) fetchPluginDetail(uuid)
-            }
-        } else {
-            setPlugin(undefined)
-            resetResponse()
-        }
-    }, [uuid])
+    //         if (!latestPlugin.current) {
+    //             fetchPluginDetail(uuid)
+    //         } else {
+    //             // 减少切换页面场景下的重复请求
+    //             if (latestPlugin.current.uuid !== uuid) fetchPluginDetail(uuid)
+    //         }
+    //     } else {
+    //         setPlugin(undefined)
+    //         resetResponse()
+    //     }
+    // }, [uuid])
 
     const handleLoadMore = useMemoizedFn(() => {
         if (resLoading) return
