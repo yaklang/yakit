@@ -1,20 +1,13 @@
+@use "../../securityTool/securityTool.scss" as securityTool;
 @use "../plugins.scss";
+
 %display-align-start {
     display: flex;
     align-items: flex-start;
 }
 
-.plugin-batch-executor-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .plugin-batch-executor-title-text {
-        font-size: 16px;
-        font-weight: 600;
-        color: #31343f;
-        line-height: 16px;
-    }
+.plugin-batch-executor-wrapper {
+    @include securityTool.execute-title("plugin-batch");
 }
 .plugin-batch-executor-btn {
     display: flex;
@@ -65,7 +58,7 @@
 .plugin-batch-executor-body {
     display: flex;
     flex-direction: column;
-    padding: 0 12px 16px;
+    padding-right: 0 !important;
     overflow: auto !important;
     :global {
         .plugin-details-item-wrapper {
@@ -80,4 +73,29 @@
     font-size: 11px;
     padding-top: 12px;
     padding-bottom: 24px;
+}
+
+.right-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+
+    .plugin-executor-result-wrapper {
+        padding: 12px;
+    }
+    .log-wrapper {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+        max-width: 300px;
+        border-right: 1px solid var(--yakit-border-color);
+        padding: 12px;
+        .log-heard {
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
+    }
 }

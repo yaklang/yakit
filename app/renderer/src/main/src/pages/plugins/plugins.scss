@@ -180,13 +180,7 @@
         align-items: center;
         border-radius: 4px;
         border: 1px solid transparent;
-        cursor: pointer;
-        &:hover {
-            background-color: #f0f1f3;
-            .plugin-details-item {
-                border-color: transparent;
-            }
-        }
+
         .plugin-details-item {
             flex: 1 0 0;
             overflow: hidden;
@@ -212,7 +206,7 @@
                 }
             }
             .plugin-details-item-show {
-                width: 131px;
+                width: 80px;
                 display: flex;
                 justify-content: right;
                 align-items: center;
@@ -234,13 +228,23 @@
         border-color: #fbc6a1;
         background: rgba(242, 139, 68, 0.06);
     }
+    .plugin-details-item-wrapper-enableClick {
+        cursor: pointer;
+        &:hover {
+            background-color: #f0f1f3;
+            .plugin-details-item {
+                border-color: transparent;
+            }
+        }
+    }
 }
-.plugin-details-opt-wrapper:hover + .plugin-details-opt-wrapper {
+.plugin-details-opt-wrapper-enableClick:hover + .plugin-details-opt-wrapper-enableClick {
     .plugin-details-item {
         border-color: transparent;
     }
 }
-.plugin-details-opt-wrapper:has(.plugin-details-item-wrapper-active) + .plugin-details-opt-wrapper {
+.plugin-details-opt-wrapper-enableClick:has(.plugin-details-item-wrapper-active)
+    + .plugin-details-opt-wrapper-enableClick {
     .plugin-details-item {
         border-color: transparent;
     }

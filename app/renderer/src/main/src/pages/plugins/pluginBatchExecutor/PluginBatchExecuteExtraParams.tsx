@@ -11,10 +11,9 @@ import {defPluginExecuteFormValue} from "../operator/localPluginExecuteDetailHea
 import {PluginBatchExecuteExtraFormValue, defPluginExecuteTaskValue} from "./pluginBatchExecutor"
 import {FixExtraParamsNode} from "../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import cloneDeep from "lodash/cloneDeep"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {PluginGV} from "../builtInData"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 
 const {YakitPanel} = YakitCollapse
@@ -36,8 +35,7 @@ const PluginBatchExecuteExtraParamsDrawer: React.FC<PluginBatchExecuteExtraParam
         onSetRemoteValues: (s: string[]) => {}
     })
     const proxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
-        onGetRemoteValues: () => {},
-        onSetRemoteValues: (s: string) => {}
+        ...defYakitAutoCompleteRef
     })
     useEffect(() => {
         if (visible) {

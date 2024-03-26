@@ -26,7 +26,7 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {HybridScanControlAfterRequest, HybridScanControlRequest, HybridScanPluginConfig} from "@/models/HybridScan"
 import {defPluginBatchExecuteExtraFormValue} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
-import {defaultSearch} from "./baseTemplate"
+import {defaultFilter, defaultSearch} from "./baseTemplate"
 import {PluginGroupList} from "./local/PluginsLocalType"
 import {HTTPRequestParameters} from "@/types/http-api"
 
@@ -1214,16 +1214,25 @@ export const apiGetPluginByGroup: (OnlineGroup: string[]) => Promise<QueryYakScr
         }
     })
 }
+
+export interface PluginInfoProps {
+    selectPluginName: string[]
+    search?: PluginSearchParams
+    filters?: PluginFilterParams
+}
 /**
  * @name HybridScan接口参数转换(前端数据转接口参数)
  * @description HybridScan
  */
 export const convertHybridScanParams = (
     params: HybridScanRequest,
-    pluginInfo: {selectPluginName: string[]; search?: PluginSearchParams; selectPluginGroup?: string[]},
-    pluginType: string
+    pluginInfo: PluginInfoProps
 ): HybridScanControlAfterRequest => {
-    const {selectPluginName, search = {...cloneDeep(defaultSearch)}} = pluginInfo
+    const {
+        selectPluginName,
+        search = {...cloneDeep(defaultSearch)},
+        filters = {...cloneDeep(defaultFilter)}
+    } = pluginInfo
     const hTTPRequestTemplate = {
         ...cloneDeep(params.HTTPRequestTemplate)
     }
@@ -1244,18 +1253,7 @@ export const convertHybridScanParams = (
                     : {
                           //   /* Pagination is ignore for hybrid scan */
                           //   Pagination: genDefaultPagination()
-                          ...convertLocalPluginsRequestParams({
-                              filter: {
-                                  plugin_type: [
-                                      {
-                                          label: pluginType,
-                                          value: pluginType,
-                                          count: 0
-                                      }
-                                  ]
-                              },
-                              search
-                          })
+                          ...convertLocalPluginsRequestParams({filter: filters, search})
                       }
         },
         Targets: {

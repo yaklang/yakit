@@ -300,7 +300,7 @@ service Yak {
   rpc YaklangLanguageSuggestion(YaklangLanguageSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
   // 从代码中提取yaklang数据
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
-  // 进行数据迁移使用 
+  // 进行数据迁移使用
   rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
@@ -632,8 +632,8 @@ service Yak {
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
-}
 
+}
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
   string Key = 2;
@@ -737,7 +737,7 @@ message HybridScanUpdateActiveTaskTable {
 // 输入目标，可以通过 input/file + template 构建可能带认证或其他内容的模版
 message HybridScanInputTarget {
   string Input = 1;
-  repeated string InputFile = 2;
+  repeated string InputFile = 2; // 似乎已启用
   HTTPRequestBuilderParams HTTPRequestTemplate = 3;
 }
 
@@ -1190,8 +1190,9 @@ message DebugPluginRequest {
   HTTPRequestBuilderParams HTTPRequestTemplate = 4;
   repeated KVPair ExecParams = 5;
   HybridScanPluginConfig LinkPluginConfig = 6;
+
   // plugin name, if not empty, will use code
-  string PluginName  = 7;
+  string PluginName = 7;
 }
 
 message HTTPRequestBuilderResult {
@@ -1225,6 +1226,9 @@ message HTTPRequestBuilderParams {
   repeated KVPair PostParams = 11;
   repeated KVPair MultipartParams = 12;
   repeated KVPair MultipartFileParams = 13;
+
+  bool IsHttpFlowId = 14;
+  repeated int64 HTTPFlowId = 15;
 }
 
 message ScreenRecorder {
@@ -1384,6 +1388,10 @@ message ImportChaosMakerRulesRequest {
   string Content = 1;
   // suricata / http-request / icmp
   string RuleType = 2;
+  bool AIDecoration = 3;
+  string Domain = 4;
+  string Proxy = 5;
+  string Key = 6;
 }
 
 message ChaosMakerRuleGroup {
@@ -3699,6 +3707,9 @@ message ImportYakScriptResult {
 
 message QueryYakScriptGroupRequest {
   bool All = 1;
+  string PageId = 2;
+  // 默认是false， 目前中有专项漏洞这里的关键词组传 true 才会返回数据，插件管理里面不传就不会返回 poc 这边的内置组
+  bool IsPocBuiltIn = 3;
 }
 
 message QueryYakScriptGroupResponse {
@@ -3709,12 +3720,16 @@ message GroupCount {
   string Value = 1;
   int32 Total = 2;
   bool Default = 3;
+  // 临时组ID
+  string TemporaryId = 5;
+  bool IsPocBuiltIn = 6;
 }
 
 message SaveYakScriptGroupRequest {
   QueryYakScriptRequest Filter = 1;
   repeated string SaveGroup = 2;
   repeated string RemoveGroup = 3;
+  string PageId = 4;
 }
 
 message RenameYakScriptGroupRequest {
@@ -3726,6 +3741,9 @@ message DeleteYakScriptGroupRequest {
   string Group = 1;
 }
 
+/*message GetYakScriptGroupRequest {
+  QueryYakScriptRequest Filter = 1;
+}*/
 
 message GetYakScriptGroupResponse {
   repeated string SetGroup = 1;
@@ -3774,7 +3792,7 @@ message CodecRequestFlow{
 
 message CodecResponse {
   string Result = 1;
-  bytes RawResult = 2;
+  bytes  RawResult = 2;
 }
 
 message CodecMethods {
@@ -4659,9 +4677,9 @@ message MITMResponse {
 
   // Websocket 相关配置
   bool isWebsocket = 37;
-  repeated string websocketEncode = 38;
   // Websocket 传输的数据
   bytes Payload = 39;
+  repeated string websocketEncode = 38;
 }
 
 message YakScriptHooks {

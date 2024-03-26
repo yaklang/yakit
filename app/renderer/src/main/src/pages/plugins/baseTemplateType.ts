@@ -206,6 +206,10 @@ export interface PluginDetailsListItemProps<T> {
     optCheck: (data: T, value: boolean) => any
     extra?: (data: T) => ReactNode
     onPluginClick: (plugin: T, index: number) => void
+    /**是否可以勾选 */
+    enableCheck?: boolean
+    /**是否可以点击 */
+    enableClick?: boolean
 }
 
 export interface PluginContributesListItemProps {
