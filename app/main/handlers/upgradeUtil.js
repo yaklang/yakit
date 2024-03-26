@@ -279,7 +279,14 @@ module.exports = {
                 console.info("YAK-VERSION: mount version")
                 yakVersionEmitter.once('version', (err, version) => {
                     if (err) {
-                        reject(err);
+
+                        diagnosingYakVersion().catch(err => {
+                            console.info("YAK-VERSION(DIAG): fetch error: " + `${err}`)
+                            reject(err)
+                        }).then(() => {
+                            console.info("YAK-VERSION: fetch error: " + `${err}`)
+                            reject(err)
+                        })
                     } else {
                         console.info("YAK-VERSION: hit version: " + `${version}`)
                         resolve(version);
@@ -316,6 +323,45 @@ module.exports = {
         }
         ipcMain.handle("get-current-yak", async (e, params) => {
             return await asyncGetCurrentLatestYakVersion(params)
+        })
+
+        const diagnosingYakVersion = () => new Promise((resolve, reject) => {
+            const commandPath = getLatestYakLocalEngine()
+            fs.access(commandPath, fs.constants.X_OK, err => {
+                if (err) {
+                    if (err.code === 'ENOENT') {
+                        reject(new Error(`命令未找到: ${commandPath}`));
+                    } else if (err.code === 'EACCES') {
+                        reject(new Error(`命令无法执行(无权限): ${commandPath}`));
+                    } else {
+                        reject(new Error(`命令无法执行: ${commandPath}`));
+                    }
+                    return;
+                }
+
+                childProcess.execFile(commandPath, ['-v'], {timeout: 20000}, (error, stdout, stderr) => {
+                    if (error) {
+                        let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`;
+                        if (error.code === 'ENOENT') {
+                            errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nStderr: ${stderr}`;
+                        } else if (error.killed) {
+                            errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nStderr: ${stderr}`;
+                        } else if (error.signal) {
+                            errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`;
+                        } else if (error.code === 'ETIMEDOUT') {
+                            errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`;
+                        }
+
+                        reject(new Error(errorMessage));
+                        return;
+                    }
+
+                    resolve(stdout);
+                })
+            })
+        })
+        ipcMain.handle('diagnosing-yak-version', async (e, params) => {
+            return diagnosingYakVersion()
         })
 
         /** 获取Yakit Yaklang本地版本号 操作系统 架构 */
