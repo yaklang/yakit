@@ -83,7 +83,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             info("数据包为空")
                             return
                         }
-                        generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), (code) => {
+                        generateCSRFPocByRequest(StringToUint8Array(text, "utf8"),defaultHttps, (code) => {
                             callCopyToClipboard(code)
                         })
                     } catch (e) {

@@ -55,7 +55,6 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
             .then((TaskStatus) => {
                 if (TaskStatus) {
                     setPercent(1)
-                    onCancel()
                     success("上传数据成功")
                 } else {
                     failed(`项目上传失败`)
@@ -68,6 +67,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 setTimeout(() => {
                     setLoading(false)
                     setPercent(0)
+                    onCancel()
                 }, 200)
             })
     })

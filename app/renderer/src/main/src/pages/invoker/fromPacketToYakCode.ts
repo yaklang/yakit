@@ -19,9 +19,12 @@ export const generateYakCodeByRequest = (isHttps: boolean, req: Uint8Array, onRe
     })
 }
 
-export const generateCSRFPocByRequest = (req: Uint8Array, onResult: (code: string) => any) => {
+export const generateCSRFPocByRequest = (req: Uint8Array,IsHttps: boolean, onResult: (code: string) => any) => {
+    console.log("wawawa",IsHttps);
+    
     ipcRenderer.invoke("GenerateCSRFPocByPacket", {
         Request: req,
+        IsHttps
     }).then((r: { Code: Uint8Array }) => {
         onResult(Uint8ArrayToString(r.Code, "utf8"))
     }).catch(e => {
