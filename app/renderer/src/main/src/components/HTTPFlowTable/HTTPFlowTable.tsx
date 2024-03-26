@@ -1702,7 +1702,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "URL",
                 dataKey: "Url",
-                width: 400
+                width: 400,
+                filterProps: {
+                    filterKey: "SearchURL",
+                    filtersType: "input",
+                }
             },
             {
                 title: "Title",
