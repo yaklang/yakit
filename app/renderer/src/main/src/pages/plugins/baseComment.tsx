@@ -4,7 +4,7 @@ import React, {useState, useEffect, memo, Suspense, useRef} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "@/utils/notification"
-import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin, Image} from "antd"
+import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin, Image, Avatar} from "antd"
 import {
     StarOutlined,
     StarFilled,
@@ -31,6 +31,10 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import { CollapseParagraph } from "../yakitStore/YakitPluginInfoOnline/CollapseParagraph"
 import classNames from "classnames"
+import { UserPlatformType } from "../globalVariable"
+import yakitImg from "@/assets/yakit.jpg"
+import { randomAvatarColor } from "@/components/layout/FuncDomain"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 const {ipcRenderer} = window.require("electron")
 
 const limit = 20
@@ -286,7 +290,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                     <span className={styles['header-title']}>评论</span>
                     <span className={styles['header-subtitle']}>{plugin.comment_num || 0}</span>
                 </div>
-                <div></div>
+                <PluginCommentUpload isLogin={isLogin} files={files} setFiles={setFiles}/>
                 <PluginCommentInput
                     value={commentText}
                     setValue={onSetValue}
@@ -360,7 +364,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                     onSubmit={pluginReplyComment}
                     loading={commentLoading}
                     isLogin={isLogin}
-                ></PluginCommentInput>
+                />
             </Modal>
             <SecondConfirm visible={commentSecondShow} onCancel={pluginCancelComment}></SecondConfirm>
         </div>
@@ -465,6 +469,109 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
         </div>
     )
 })
+
+interface PluginCommentUploadProps {
+    isLogin:boolean
+    files: string[]
+    setFiles: (files: string[]) => any
+}
+
+const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
+    const {isLogin, files,setFiles} = props
+    const {userInfo} = useStore()
+    const {platform,companyHeadImg, companyName} = userInfo
+    const avatarColor = useRef<string>(randomAvatarColor())
+    const [filesLoading, setFilesLoading] = useState<boolean>(false)
+    const uploadFiles = (file) => {
+        setFilesLoading(true)
+        ipcRenderer
+            .invoke("upload-img", {path: file.path, type: file.type})
+            .then((res) => {
+                setFiles(files.concat(res.data))
+            })
+            .catch((err) => {
+                fail("图片上传失败")
+            })
+            .finally(() => {
+                setTimeout(() => setFilesLoading(false), 1)
+            })
+    }
+    return(
+    <div className={styles['plugin-comment-upload']}>
+        <div className={styles['upload-author-img']}>
+        {platform === "company" ? (
+                                            <div>
+                                            {companyHeadImg && !!companyHeadImg.length ? (
+                                                <Avatar size={20} style={{cursor: "pointer"}} src={companyHeadImg} />
+                                            ) : (
+                                                <Avatar
+                                                    size={20}
+                                                    style={{backgroundColor: avatarColor.current}}
+                                                    className={classNames(styles["judge-avatar-avatar"])}
+                                                >
+                                                    {companyName && companyName.slice(0, 1)}
+                                                </Avatar>
+                                            )}
+                                        </div>
+                                        ) : (
+                                            <img
+                                                src={
+                                                    userInfo[UserPlatformType[platform || ""].img] || yakitImg
+                                                }
+                                                style={{width: 24, height: 24, borderRadius: "50%"}}
+                                            />
+                                        )}
+        </div>
+        <div className={styles['input-upload-box']}>
+            <div className={styles['input-box']}></div>
+            <YakitInput.TextArea
+                // value={}
+                autoSize={{minRows: 1, maxRows: 6}}
+                placeholder='说点什么...'
+                // onChange={(e) => setValue(e.target.value)}
+            />
+            <div className={styles['upload-box']}>
+                <div className={styles['upload-box-left']}>
+                    {isLogin &&<Upload
+                        accept='image/jpeg,image/png,image/jpg,image/gif'
+                        multiple={false}
+                        disabled={files.length >= 3}
+                        showUploadList={false}
+                        beforeUpload={(file: any) => {
+                            if (file.size / 1024 / 1024 > 10) {
+                                failed("图片大小不超过10M")
+                                return false
+                            }
+                            if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
+                                failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
+                                return false
+                            }
+                            if (file) {
+                                uploadFiles(file)
+                            }
+                            return true
+                        }}
+                    >
+                        <YakitButton
+                            loading={filesLoading}
+                            disabled={files.length >= 3}
+                            type="text2"
+                            icon={<PictureOutlined className={classNames({
+                            [styles["btn-pic-disabled"]]: files.length >= 3,
+                            [styles["btn-pic"]]: files.length < 3,
+                            }) }/>}
+                        />
+                    </Upload>}
+                </div>
+                            <div className={styles['upload-box-right']}>
+                                <div className={styles['limit-count']}>0/150</div>
+                                <YakitButton>提交反馈</YakitButton>
+                            </div>
+            </div>
+        </div>
+    </div>
+    )
+}
 
 interface PluginCommentInputProps {
     value: string

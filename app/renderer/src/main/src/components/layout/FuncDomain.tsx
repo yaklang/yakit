@@ -113,7 +113,7 @@ export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dyn
 }
 
 /** 随机头像颜色 */
-const randomAvatarColor = () => {
+export const randomAvatarColor = () => {
     const colorArr: string[] = ["#8863F7", "#DA5FDD", "#4A94F8", "#35D8EE", "#56C991", "#F4736B", "#FFB660", "#B4BBCA"]
     let color: string = colorArr[Math.round(Math.random() * 7)]
     return color
