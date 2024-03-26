@@ -2500,7 +2500,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             onClickSingle: (v) => {
                 const flow = v as HTTPFlow
                 if (!flow) return
-                generateCSRFPocByRequest(flow.Request, (e) => {
+                generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
                     callCopyToClipboard(e)
                 })
             }

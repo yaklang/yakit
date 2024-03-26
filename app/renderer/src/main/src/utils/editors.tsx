@@ -1042,7 +1042,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     info("数据包为空")
                                                     return
                                                 }
-                                                generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), (code) => {
+                                                generateCSRFPocByRequest(StringToUint8Array(text, "utf8"),props.defaultHttps||false, (code) => {
                                                     callCopyToClipboard(code)
                                                 })
                                             } catch (e) {
