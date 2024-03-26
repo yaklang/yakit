@@ -290,3 +290,27 @@
         height: 16px;
     }
 }
+
+.yakit-option-item {
+    display: flex;
+    justify-content: space-between;
+    .option-item-close {
+        svg {
+            width: 16px;
+            height: 16px;
+            margin-top: 4px;
+            color: var(--yakit-primary-5);
+            &:hover {
+                color: var(--yakit-danger-5);
+            }
+        }
+    }
+    .option-item-checked {
+        svg {
+            width: 16px;
+            height: 16px;
+            margin-top: 4px;
+            color: var(--yakit-primary-5);
+        }
+    }
+}

@@ -1,9 +1,14 @@
 import {Select} from "antd"
-import React, {useEffect, useImperativeHandle, useState} from "react"
-import {YakitBaseSelectRef, YakitSelectCacheDataHistoryProps, YakitSelectProps} from "./YakitSelectType"
+import React, {useEffect, useImperativeHandle, useMemo, useState} from "react"
+import {
+    YakitBaseSelectRef,
+    YakitDefaultOptionType,
+    YakitSelectCacheDataHistoryProps,
+    YakitSelectProps
+} from "./YakitSelectType"
 import styles from "./YakitSelect.module.scss"
 import classNames from "classnames"
-import {BaseOptionType, DefaultOptionType} from "antd/lib/select"
+import {BaseOptionType} from "antd/lib/select"
 import {OptGroup} from "rc-select"
 import {YakitTag} from "../YakitTag/YakitTag"
 import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
@@ -11,6 +16,7 @@ import {useMemoizedFn} from "ahooks"
 import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
+import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
 
 const {Option} = Select
 
@@ -35,6 +41,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     }: YakitSelectProps<OptionType>,
     ref: React.Ref<YakitBaseSelectRef>
 ) => {
+    // 鼠标移入项 用于判断是否显示 ×
+    const [mouseEnterItem, setMouseEnterItem] = useState<string>("")
     const [show, setShow] = useState<boolean>(false)
     const [cacheHistoryData, setCacheHistoryData] = useState<YakitSelectCacheDataHistoryProps>({
         options: [],
@@ -106,7 +114,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         if (!cacheHistoryDataKey) return
         onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
             const value = cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
-            let newOption: DefaultOptionType[] = getNewOption(cacheData.options)
+            let newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options)
             //非form表单时,设置value
             if (isCacheDefaultValue) {
                 if (props.onChange) props.onChange(value, newOption)
@@ -115,21 +123,128 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         })
     })
     const getNewOption = useMemoizedFn((options) => {
-        let newOption: DefaultOptionType[] = []
+        let newOption: YakitDefaultOptionType[] = []
         if (options.length > 0) {
-            newOption = options as DefaultOptionType[]
+            newOption = options as YakitDefaultOptionType[]
         } else if (defaultOptions?.length > 0) {
-            newOption = (defaultOptions || []) as DefaultOptionType[]
+            newOption = (defaultOptions || []) as YakitDefaultOptionType[]
         } else if ((props?.options?.length || 0) > 0) {
-            newOption = props.options as DefaultOptionType[]
+            newOption = props.options as YakitDefaultOptionType[]
         }
         return newOption || []
     })
-    let extraProps = {}
+    /**@description 删除缓存项 */
+    const delCatchOptionItem = (e: React.MouseEvent<Element, MouseEvent>, item: YakitDefaultOptionType) => {
+        e.stopPropagation()
+        if (cacheHistoryDataKey) {
+            if (props.mode === "tags") {
+                const newHistoryList = cacheHistoryData.options.filter((i) => i.value !== item.value)
+                const cacheData = {
+                    options: newHistoryList,
+                    defaultValue: isCacheDefaultValue ? cacheHistoryData.defaultValue : ""
+                }
+                const cacheHistory = {
+                    options: newHistoryList,
+                    defaultValue: cacheHistoryData.defaultValue
+                }
+                setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheData))
+                    .then(() => {
+                        setCacheHistoryData({
+                            options: cacheHistory.options,
+                            defaultValue: cacheHistory.defaultValue
+                        })
+                    })
+                    .catch((e) => {
+                        yakitNotify("error", `${cacheHistoryDataKey}缓存字段保存数据出错:` + e)
+                    })
+            } else if (props.mode === "multiple") {
+                // 暂不支持删除缓存项
+            } else {
+                // 暂不支持删除缓存项
+            }
+        }
+    }
+
+    const renderItem = (item: YakitDefaultOptionType) => {
+        const copyItem = {...item}
+        // 主要是tag部分直接渲染props.label的话会将下面强制塞进去的icon一起渲染
+        copyItem.tabLable = item.label
+
+        let showClose = false
+        const newValue = props.value ?? ""
+        // input框里面选中了这个值，应该是由于antd本身的限制，就算过滤掉了该项的options选项，但是下拉列表还是存在该项
+        if (mouseEnterItem === item.value && !newValue.includes(item.value)) {
+            showClose = true
+        }
+
+        let showSelectedIcon = false
+        if (["tags", "multiple"].includes(props.mode || "") && !showClose && newValue.includes(item.value)) {
+            showSelectedIcon = true
+        }
+
+        copyItem.label = (
+            <div
+                className={styles["yakit-option-item"]}
+                onMouseEnter={(e) => {
+                    setMouseEnterItem(item.value + "")
+                }}
+                onMouseLeave={() => {
+                    setMouseEnterItem("")
+                }}
+            >
+                {copyItem.label}
+                <OutlineXIcon
+                    style={{
+                        display: showClose ? "block" : "none"
+                    }}
+                    className={styles["option-item-close"]}
+                    onClick={(e) => delCatchOptionItem(e, item)}
+                />
+                <OutlineCheckIcon
+                    style={{
+                        display: showSelectedIcon ? "block" : "none"
+                    }}
+                    className={styles["option-item-checked"]}
+                />
+            </div>
+        )
+        return copyItem
+    }
+
+    // 是否支持删除缓存 目前只有tags支持
+    const supportDelCache = useMemo(() => {
+        if (cacheHistoryDataKey) {
+            if (props.mode === "tags") {
+                return true
+            } else if (props.mode === "multiple") {
+                // 多选 暂不支持删除缓存项
+                return false
+            } else {
+                // 单选 暂不支持删除缓存项
+                return false
+            }
+        } else {
+            return false
+        }
+    }, [cacheHistoryDataKey, props.mode])
+
+    let extraProps: {defaultValue?: string[]; options?: YakitDefaultOptionType[]} = {}
     if (!props.children) {
+        const renderNewOptions = [...cacheHistoryData.options]
+        // 此处是由于属性menuItemSelectedIcon被设置为<></>, 勾是在label中处理的，当手动输入选项值后，点击选项，处理没有勾显示的问题
+        if (supportDelCache && Array.isArray(props.value)) {
+            props.value.forEach((value) => {
+                const exists = renderNewOptions.some((item) => item.value === value)
+                if (!exists) {
+                    renderNewOptions.push({label: value, value: value})
+                }
+            })
+        }
         extraProps = {
             ...extraProps,
-            options: getNewOption(cacheHistoryData.options),
+            options: supportDelCache
+                ? renderNewOptions.map((item) => renderItem(item))
+                : getNewOption(cacheHistoryData.options),
             defaultValue: cacheHistoryData.defaultValue
         }
     }
@@ -158,16 +273,19 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     )
                 }
                 tagRender={(props) => {
+                    const tabEle =
+                        extraProps.options?.find((item) => item.value === props.value)?.tabLable || props.label
                     return (
                         <YakitTag size={size} {...props}>
                             <span className='content-ellipsis' style={{width: "100%"}}>
-                                {props.label}
+                                {tabEle}
                             </span>
                         </YakitTag>
                     )
                 }}
                 {...props}
                 {...extraProps}
+                menuItemSelectedIcon={supportDelCache ? <></> : props.menuItemSelectedIcon}
                 size='middle'
                 dropdownClassName={classNames(
                     styles["yakit-select-popup"],
@@ -190,7 +308,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
 
 export const YakitSelect = React.forwardRef(YakitSelectCustom) as unknown as (<
     ValueType = any,
-    OptionType extends BaseOptionType | DefaultOptionType = DefaultOptionType
+    OptionType extends BaseOptionType | YakitDefaultOptionType = YakitDefaultOptionType
 >(
     props: React.PropsWithChildren<YakitSelectProps<ValueType, OptionType>> & {
         ref?: React.Ref<YakitBaseSelectRef>

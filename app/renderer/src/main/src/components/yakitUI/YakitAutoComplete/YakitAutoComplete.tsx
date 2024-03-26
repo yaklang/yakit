@@ -28,8 +28,6 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         isCacheDefaultValue = true,
         ref: forwardRef,
         initValue = "",
-        isDelExternalOptionData = false,
-        delExternalOptionItem,
         ...restProps
     } = props
     const [mouseEnterItem, setMouseEnterItem] = useState<string>("")
@@ -109,8 +107,6 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                     options: value.options
                 })
             })
-        } else if (isDelExternalOptionData) {
-            delExternalOptionItem && delExternalOptionItem(item)
         }
     }
 
@@ -140,12 +136,10 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     const options = useMemo(() => {
         if (cacheHistoryData.options.length) {
             return cacheHistoryData.options.map((item) => renderItem(item))
-        } else if (isDelExternalOptionData) {
-            return restProps?.options?.map((item) => renderItem(item as YakitOptionTypeProps))
         } else {
             return restProps.options
         }
-    }, [cacheHistoryData, restProps, isDelExternalOptionData])
+    }, [cacheHistoryData, restProps])
 
     return (
         <div
