@@ -79,7 +79,9 @@ export enum RemoteGV {
     /** @name history编辑器请求美化 */
     HistoryRequestEditorBeautify = "history_request_editor_beautify",
     /** @name WebFuzzer编辑器美化 */
-    WebFuzzerEditorBeautify = "webFuzzer_editor_beautify"
+    WebFuzzerEditorBeautify = "webFuzzer_editor_beautify",
+    /**@name 专项漏洞关键词搜索缓存 */
+    PocPluginKeywords = "poc-plugin-keywords"
 }
 
 /** 项目逻辑全局变量 */

@@ -60,6 +60,8 @@ import {RemoteGV} from "@/yakitGV"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 import moment from "moment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
@@ -353,6 +355,9 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
     const [isRef, setIsRef] = useState<boolean>(false)
 
     const initialResponseRef = useRef<GroupCount[]>([])
+    const pocPluginKeywordsRef = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
 
     useEffect(() => {
         if (inViewport) init()
@@ -418,6 +423,10 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
             setIsRef(!isRef)
             return
         }
+        if (pocPluginKeywordsRef.current) {
+            pocPluginKeywordsRef.current?.onSetRemoteValues(val)
+        }
+
         const isHaveData = initialResponseRef.current.filter((ele) => {
             return ele.Value.toUpperCase() === val.toUpperCase()
         })
@@ -463,6 +472,10 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
     const onPressEnter = useMemoizedFn((e) => {
         onSearch(e.target.value)
     })
+    const onSelectKeywords = useMemoizedFn((value) => {
+        onSearch(value)
+        setKeywords(value)
+    })
     return (
         <div
             className={classNames(styles["plugin-group-wrapper"], {
@@ -471,15 +484,23 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
         >
             <div className={styles["filter-wrapper"]}>
                 <div className={styles["header-search"]}>
-                    <YakitInput.Search
-                        placeholder='请输入关键词搜索'
+                    <YakitAutoComplete
+                        ref={pocPluginKeywordsRef}
+                        isCacheDefaultValue={false}
+                        cacheHistoryDataKey={RemoteGV.PocPluginKeywords}
+                        onSelect={onSelectKeywords}
                         value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        onSearch={onSearch}
-                        onPressEnter={onPressEnter}
-                        size='large'
-                        wrapperStyle={{flex: 1}}
-                    />
+                        style={{flex: 1}}
+                    >
+                        <YakitInput.Search
+                            value={keywords}
+                            onChange={(e) => setKeywords(e.target.value)}
+                            placeholder='请输入关键词搜索'
+                            onSearch={onSearch}
+                            onPressEnter={onPressEnter}
+                            size='large'
+                        />
+                    </YakitAutoComplete>
                 </div>
                 <div className={styles["filter-body"]}>
                     <div className={styles["filter-body-left"]}>
@@ -495,7 +516,6 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                         </span>
                     </div>
                     <div className={styles["filter-body-right"]}>
-                        <Divider type='vertical' style={{margin: "0 4px"}} />
                         <YakitButton type='text' danger onClick={onClearSelect}>
                             清空
                         </YakitButton>
