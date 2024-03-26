@@ -7,6 +7,7 @@ const fs = require("fs");
 const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
+const EventEmitter = require('events');
 
 const zip = require('node-stream-zip');
 const {
@@ -87,8 +88,7 @@ function saveSecret(name, host, port, tls, password, caPem) {
     }
 
     authMeta.push({
-        host, port, tls, password, caPem,
-        name: name || `${host}:${port}`,
+        host, port, tls, password, caPem, name: name || `${host}:${port}`,
     })
     saveAllSecret([...authMeta])
 };
@@ -103,11 +103,9 @@ const saveAllSecret = (authInfos) => {
     }
 
 
-    const authFileStr = JSON.stringify(
-        [...authInfos.filter((v, i, arr) => {
-            return arr.findIndex(origin => origin.name === v.name) === i
-        })]
-    );
+    const authFileStr = JSON.stringify([...authInfos.filter((v, i, arr) => {
+        return arr.findIndex(origin => origin.name === v.name) === i
+    })]);
     fs.writeFileSync(remoteLinkFile, new Buffer(authFileStr, "utf8"))
 };
 
@@ -180,11 +178,9 @@ const getYakitPlatform = () => {
 }
 
 module.exports = {
-    getLatestYakLocalEngine,
-    initial: async () => {
+    getLatestYakLocalEngine, initial: async () => {
         return await initMkbaseDir();
-    },
-    register: (win, getClient) => {
+    }, register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
             let {name, host, port, tls, caPem, password} = params;
             name = name || `${host}:${port}`
@@ -262,30 +258,60 @@ module.exports = {
             return await asyncQueryLatestYakitEngineVersion(params)
         })
 
+
+        class YakVersionEmitter extends EventEmitter {
+        }
+
+        const yakVersionEmitter = new YakVersionEmitter();
+        let isFetchingVersion = false;
+        let latestVersionCache = null;
+
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
-                try {
-                    childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
-                        if (err) {
-                            reject(err)
-                            return
-                        }
-                        // const version = stdout.replaceAll("yak version ()", "").trim();
-                        const version = /.*?yak(\.exe)?\s+version\s+([^\s]+)/.exec(stdout)[2];
-                        if (!version) {
-                            if (err) {
-                                reject(err)
-                            } else {
-                                reject("[unknown reason] cannot fetch yak version (yak -v)")
-                            }
-                        } else {
-                            resolve(version)
-                        }
-                    })
-                } catch (e) {
-                    reject(e)
+                console.info("start to fetch YAK-VERSION")
+                if (latestVersionCache) {
+                    console.info("YAK-VERSION: fetch cache: " + `${latestVersionCache}`)
+                    resolve(latestVersionCache)
+                    return;
                 }
+
+                console.info("YAK-VERSION: mount version")
+                yakVersionEmitter.once('version', (err, version) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        console.info("YAK-VERSION: hit version: " + `${version}`)
+                        resolve(version);
+                    }
+                })
+                if (isFetchingVersion) {
+                    console.info("YAK-VERSION is executing...")
+                    return;
+                }
+
+                console.info("YAK-VERSION process is executing...")
+                isFetchingVersion = true;
+                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
+                    console.info(stdout)
+                    if (err) {
+                        yakVersionEmitter.emit('version', err, null);
+                        isFetchingVersion = false
+                        return;
+                    }
+                    // const version = stdout.replaceAll("yak version ()", "").trim();
+                    const match = /.*?yak(\.exe)?\s+version\s+(\S+)/.exec(stdout);
+                    const version = match && match[2];
+                    if (!version) {
+                        const error = new Error("[unknown reason] cannot fetch yak version (yak -v)");
+                        yakVersionEmitter.emit('version', error, null);
+                        isFetchingVersion = false;
+                    } else {
+                        latestVersionCache = version;
+                        yakVersionEmitter.emit('version', null, version);
+                        isFetchingVersion = false
+                    }
+                })
             })
         }
         ipcMain.handle("get-current-yak", async (e, params) => {
@@ -297,10 +323,7 @@ module.exports = {
             const localYakit = app.getVersion()
             const localYaklang = await asyncGetCurrentLatestYakVersion()
             return {
-                system:process.platform,
-                arch:process.arch,
-                localYakit,
-                localYaklang
+                system: process.platform, arch: process.arch, localYakit, localYaklang
             }
         })
 
@@ -342,17 +365,17 @@ module.exports = {
             const pattern = /[\u4e00-\u9fa5]/g; // 匹配中文字符的正则表达式
             const matches = str.match(pattern); // 找到所有中文字符的匹配项
             if (matches) {
-              for (const match of matches) {
-                const encodedMatch = encodeURIComponent(match);
-                str = str.replace(match, encodedMatch);
-              }
+                for (const match of matches) {
+                    const encodedMatch = encodeURIComponent(match);
+                    str = str.replace(match, encodedMatch);
+                }
             }
             return str;
         }
 
-        const downloadYakitByDownloadUrl = (resolve,reject,downloadUrl) => {
+        const downloadYakitByDownloadUrl = (resolve, reject, downloadUrl) => {
             // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
-            if(!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
+            if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
             const dest = path.join(yakitInstallDir, path.basename(downloadUrl));
             try {
                 fs.unlinkSync(dest)
@@ -361,13 +384,12 @@ module.exports = {
             }
             // https://github.com/IndigoUnited/node-request-progress
             // The options argument is optional so you can omit it
-            requestProgress(
-                request(encodeChineseCharacters(downloadUrl)), {
-                    // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
-                    // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
-                    // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
-                })
-                .on("response",function (resp){
+            requestProgress(request(encodeChineseCharacters(downloadUrl)), {
+                // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+                // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+                // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+            })
+                .on("response", function (resp) {
                     if (resp.statusCode === 404) {
                         reject("暂无最新安装包")
                     }
@@ -391,7 +413,7 @@ module.exports = {
                     version = version.substr(1)
                 }
                 const downloadUrl = getYakitDownloadUrl(version, isEnterprise);
-                downloadYakitByDownloadUrl(resolve,reject,downloadUrl)
+                downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
             })
         }
 
@@ -401,12 +423,12 @@ module.exports = {
 
         ipcMain.handle("download-enpriTrace-latest-yakit", async (e, url) => {
             return await new Promise((resolve, reject) => {
-                downloadYakitByDownloadUrl(resolve,reject,url)
-            }) 
+                downloadYakitByDownloadUrl(resolve, reject, url)
+            })
         })
 
         ipcMain.handle("update-enpritrace-info", async () => {
-            return await {version:getYakitPlatform()}
+            return await {version: getYakitPlatform()}
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
@@ -446,18 +468,13 @@ module.exports = {
                 }
 
 
-                childProcess.exec(
-                    isWindows ?
-                        `copy "${origin}" "${dest}"`
-                        : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
-                    err => {
-                        if (err) {
-                            reject(err)
-                            return
-                        }
-                        resolve()
+                childProcess.exec(isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`, err => {
+                    if (err) {
+                        reject(err)
+                        return
                     }
-                )
+                    resolve()
+                })
             })
         }
 
@@ -490,8 +507,7 @@ module.exports = {
 
                 console.info("Start to Extract yak.zip")
                 const zipHandler = new zip({
-                    file: loadExtraFilePath(path.join("bins", "yak.zip")),
-                    storeEntries: true,
+                    file: loadExtraFilePath(path.join("bins", "yak.zip")), storeEntries: true,
                 })
                 console.info("Start to Extract yak.zip: Set `ready`")
                 zipHandler.on("ready", () => {
@@ -572,8 +588,7 @@ module.exports = {
 
         // 获取内置引擎版本
         ipcMain.handle("GetBuildInEngineVersion"
-            /*"IsBinsExisted"*/,
-            async (e) => {
+            /*"IsBinsExisted"*/, async (e) => {
                 const yakZipName = path.join("bins", "yak.zip")
                 if (!fs.existsSync(loadExtraFilePath(yakZipName))) {
                     throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(yakZipName)}`)
