@@ -30,13 +30,9 @@ import {
     FolderOpenOutlined,
     FullscreenExitOutlined,
     FullscreenOutlined,
-    PoweroffOutlined,
-    EditOutlined,
-    SaveOutlined
+    PoweroffOutlined
 } from "@ant-design/icons"
-import {YakScriptManagerPage} from "./YakScriptManager"
 import {getRandomInt} from "../../utils/randomUtil"
-import {showDrawer} from "../../utils/showModal"
 import {failed, info, success} from "../../utils/notification"
 import {ExecResult} from "./schema"
 import {SelectOne} from "../../utils/inputUtil"
@@ -762,47 +758,6 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                     {isInteractive ? "常规编辑" : "交互式编辑"}
                                                 </Button>
 
-                                                {/* <Button
-                                                    style={{height: 25}}
-                                                    type={"link"}
-                                                    size={"small"}
-                                                    disabled={
-                                                        tabList[+activeTab] && tabList[+activeTab].suffix !== "yak"
-                                                    }
-                                                    onClick={(e) => {
-                                                        let m = showDrawer({
-                                                            width: "60%",
-                                                            placement: "left",
-                                                            title: "选择你的 Yak 模块执行特定功能",
-                                                            content: (
-                                                                <>
-                                                                    <YakScriptManagerPage
-                                                                        type={"yak"}
-                                                                        onLoadYakScript={(s) => {
-                                                                            const tab: tabCodeProps = {
-                                                                                tab: `Untitle-${unTitleCount}.yak`,
-                                                                                code: s.Content,
-                                                                                suffix: "yak",
-                                                                                isFile: false
-                                                                            }
-                                                                            info(`加载 Yak 模块：${s.ScriptName}`)
-                                                                            isInteractive
-                                                                                ? xtermClear(xtermRef)
-                                                                                : xtermClear(interactiveXtermRef)
-
-                                                                            setActiveTab(`${tabList.length}`)
-                                                                            setTabList(tabList.concat([tab]))
-                                                                            setUnTitleCount(unTitleCount + 1)
-                                                                            m.destroy()
-                                                                        }}
-                                                                    />
-                                                                </>
-                                                            )
-                                                        })
-                                                    }}
-                                                >
-                                                    Yak脚本模板
-                                                </Button> */}
                                                 <Button
                                                     icon={
                                                         fullScreen ? (

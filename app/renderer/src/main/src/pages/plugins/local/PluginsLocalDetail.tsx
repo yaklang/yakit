@@ -20,7 +20,6 @@ import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {PluginDetailsTabProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
-import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {AddToMenuActionForm} from "@/pages/yakitStore/PluginOperator"
 import {isCommunityEdition} from "@/utils/envfile"
@@ -194,9 +193,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             case "share":
                 onExport()
                 break
-            case "local-debugging":
-                onLocalDebugging()
-                break
             case "add-to-menu":
                 onAddToMenu()
                 break
@@ -209,11 +205,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             default:
                 break
         }
-    })
-    /**调试 */
-    const onLocalDebugging = useMemoizedFn(() => {
-        if (!plugin) return
-        executeYakScriptByParams(plugin, true)
     })
     /**添加到菜单栏 */
     const onAddToMenu = useMemoizedFn(() => {

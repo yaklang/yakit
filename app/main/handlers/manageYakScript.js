@@ -140,6 +140,7 @@ module.exports = (win, getClient) => {
         stream && stream.cancel()
         streamMap.delete(token)
     })
+    // 老版插件批量
     ipcMain.handle("exec-batch-yak-script", async (e, params, token) => {
         let stream = getClient().ExecBatchYakScript(params)
         streamMap.set(token, stream)

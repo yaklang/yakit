@@ -1,10 +1,8 @@
 import React, {ReactNode, Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
-import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
-import {failed} from "../utils/notification"
 import {BrutePage} from "../pages/brute/BrutePage"
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory"
@@ -12,18 +10,13 @@ import {PortAssetTable} from "../pages/assetViewer/PortAssetPage"
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage"
 import {RiskPage} from "../pages/risks/RiskPage"
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage"
-import {fuzzerInfoProp} from "../pages/MainOperator"
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
 import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
-import {
-    ReadOnlyBatchExecutorByMenuItem,
-    ReadOnlyBatchExecutorByRecoverUid
-} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
+import {ReadOnlyBatchExecutorByRecoverUid} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
 import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
-import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
 import {OnlinePluginRecycleBin} from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
@@ -33,7 +26,6 @@ import {HoleCollectPage} from "@/pages/loginOperationMenu/HoleCollectPage"
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
-import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
@@ -126,13 +118,13 @@ import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {PluginGroupType, PluginGroups} from "@/pages/plugins/group/PluginGroups"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
-import { NewPayload } from "@/pages/payloadManager/newPayload"
-import { NewCodec } from "@/pages/codec/NewCodec";
-import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
-import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import { PluginBatchExecutorPageInfoProps, PocPageInfoProps } from "@/store/pageInfo"
+import {NewPayload} from "@/pages/payloadManager/newPayload"
+import {NewCodec} from "@/pages/codec/NewCodec"
+import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
+import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
+import {PluginBatchExecutorPageInfoProps, PocPageInfoProps} from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
-import { SinglePluginExecution } from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
+import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 import {YakPoC} from "@/pages/securityTool/yakPoC/yakPoC"
 import {NewPortScan} from "@/pages/securityTool/newPortScan/newPortScan"
 
@@ -226,7 +218,7 @@ export enum YakitRoute {
     Beta_WebShellOpt = "beta-webshell-opt",
     // 数据统计
     Data_Statistics = "data_statistics",
-     /**空间引擎 */
+    /**空间引擎 */
     Space_Engine = "space-engine"
 }
 /**
@@ -310,7 +302,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "**beta-debug-traffic-analize": {label: "流量分析"},
     "beta-webshell-manager": {label: "网站管理"},
     "beta-webshell-opt": {label: "WebShell 实例"},
-    "data_statistics":{label: "数据统计"},
+    data_statistics: {label: "数据统计"},
     "space-engine": {label: "空间引擎"}
 }
 /** 页面路由(无法多开的页面) */
@@ -466,7 +458,7 @@ export interface ComponentParams {
     webshellInfo?: WebShellDetail
     /**批量执行页面参数 */
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
-    pocPageInfo?:PocPageInfoProps
+    pocPageInfo?: PocPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -518,16 +510,16 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 </Suspense>
             )
         case YakitRoute.WebsocketFuzzer:
-            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} toServer={params?.wsToServer}/>
+            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} toServer={params?.wsToServer} />
         case YakitRoute.Codec:
-            return <NewCodec id={params?.id || ""}/>
+            return <NewCodec id={params?.id || ""} />
         case YakitRoute.DataCompare:
             return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
             // return <PortScanPage sendTarget={params?.scanportParams} />
             return <NewPortScan />
         case YakitRoute.PoC:
-            return <YakPoC pageId={params?.id || ""}/>
+            return <YakPoC pageId={params?.id || ""} />
         case YakitRoute.Plugin_OP:
             if (!yakScriptId || !+yakScriptId) return <div />
             return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
@@ -1425,48 +1417,3 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
         ]
     }
 ]
-// 要全部删除，但是里面的内容还没确定好
-/**@deprecated */
-export enum Route {
-    WebsocketHistory = "websocket-history",
-    // 获取标准输出流
-    AttachEngineCombinedOutput = "attach-engine-combined-output"
-}
-// 要全部删除，但是里面的内容还没确定好
-/**@deprecated */
-export const ContentByRoute = (r: Route | string, yakScriptId?: number, params?: ComponentParams): JSX.Element => {
-    const routeStr = `${r}`
-    // 处理社区插件（以插件 ID 添加的情况）
-    if (routeStr.startsWith("plugin:")) {
-        let id = -1
-        try {
-            let splitList = routeStr.split(":")
-            let idRaw = splitList.reverse().shift()
-            id = parseInt(idRaw || "")
-        } catch (e) {
-            failed(`Loading PluginKey: ${r} failed`)
-        }
-        return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
-    }
-
-    if (routeStr.startsWith("batch:")) {
-        let batchMenuItemId = 0
-        try {
-            let splitList = routeStr.split(":")
-            let verbose = splitList.reverse().shift()
-            batchMenuItemId = parseInt(verbose || "0")
-        } catch (e) {
-            failed(`Loading PluginKey: ${r} failed`)
-        }
-        return <ReadOnlyBatchExecutorByMenuItem MenuItemId={batchMenuItemId} />
-    }
-    switch (r) {
-        case Route.WebsocketHistory:
-            return <WebsocketFlowHistory />
-
-        case Route.AttachEngineCombinedOutput:
-            return <EngineConsole />
-        default:
-            return <div />
-    }
-}

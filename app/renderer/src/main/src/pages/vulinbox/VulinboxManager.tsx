@@ -10,7 +10,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
 import {InputInteger, InputItem, SwitchItem} from "@/utils/inputUtil";
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
-import {DefaultPluginResultUI} from "@/pages/invoker/ExecYakScript";
 import {ExecResult} from "@/pages/invoker/schema";
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
 import {useGetState} from "ahooks";

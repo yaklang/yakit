@@ -14,10 +14,6 @@ module.exports = (win, getClient) => {
     ipcMain.handle("send-to-tab", async (e, params) => {
         win.webContents.send("fetch-send-to-tab", params)
     })
-    // 发送专项漏洞页面目标和类型参数
-    ipcMain.handle("send-to-bug-test", async (e, params) => {
-        win.webContents.send("fetch-send-to-bug-test", params)
-    })
     // 请求包通过通信打开一个数据包插件执行弹窗
     ipcMain.handle("send-to-packet-hack", async (e, params) => {
         win.webContents.send("fetch-send-to-packet-hack", params)

@@ -50,7 +50,6 @@ import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal
 import {defaultUserInfo} from "@/pages/MainOperator"
 import {useStore} from "@/store"
 import {getLocalValue, getRemoteProjectValue, getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {BugInfoProps, BugList, CustomBugList} from "@/pages/invoker/batch/YakBatchExecutors"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
 import {GroupCount, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {showModal} from "@/utils/showModal"
