@@ -51,7 +51,9 @@ export const getDefaultHTTPRequestBuilderParams = (): HTTPRequestBuilderParams =
         MultipartParams: [],
         Path: ["/"],
         PostParams: [],
-        RawHTTPRequest: new Uint8Array()
+        RawHTTPRequest: new Uint8Array(),
+        IsHttpFlowId:false,
+        HTTPFlowId:[]
     }
 }
 

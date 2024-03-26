@@ -9,7 +9,8 @@ import {
     PluginExecuteProgressProps,
     YakExtraParamProps,
     FormContentItemByTypeProps,
-    PluginFixFormParamsProps
+    PluginFixFormParamsProps,
+    RequestType
 } from "./LocalPluginExecuteDetailHeardType"
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
@@ -50,7 +51,10 @@ export const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
     Body: Buffer.from("", "utf-8"),
     PostParams: [],
     MultipartParams: [],
-    MultipartFileParams: []
+    MultipartFileParams: [],
+    IsHttpFlowId: false,
+    HTTPFlowId: [],
+    requestType: "original"
 }
 
 /**插件执行头部 */
@@ -189,7 +193,9 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             HTTPRequestTemplate: {
                 ...extraParamsValue,
                 IsHttps: !!value.IsHttps,
-                IsRawHTTPRequest: value.IsRawHTTPRequest,
+                IsRawHTTPRequest: value.requestType === "original",
+                IsHttpFlowId: false,
+                HTTPFlowId: [],
                 RawHTTPRequest: value.RawHTTPRequest
                     ? Buffer.from(value.RawHTTPRequest, "utf8")
                     : Buffer.from("", "utf8")
@@ -647,9 +653,9 @@ export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React
 })
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
-    const {form, disabled} = props
+    const {form, disabled, type = "single"} = props
 
-    const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+    const requestType: RequestType = Form.useWatch("requestType", form)
     const rawItem = useMemo(() => {
         const codeItem: YakParamProps = {
             Field: "RawHTTPRequest",
@@ -661,30 +667,44 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
         }
         return codeItem
     }, [])
+    const requestTypeOptions = useCreation(() => {
+        if (type === "single") {
+            return [
+                {
+                    value: "original",
+                    label: "原始请求"
+                },
+                {
+                    value: "input",
+                    label: "请求配置"
+                }
+            ]
+        }
+        return [
+            {
+                value: "original",
+                label: "原始请求"
+            },
+            {
+                value: "input",
+                label: "请求配置"
+            },
+            {
+                value: "hTTPFlowId",
+                label: "请求Id"
+            }
+        ]
+    }, [type])
     return (
         <>
             <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' initialValue={false}>
                 <YakitSwitch size='large' disabled={disabled} />
             </Form.Item>
-            <Form.Item label='请求类型' name='IsRawHTTPRequest' initialValue={false}>
-                <YakitRadioButtons
-                    buttonStyle='solid'
-                    options={[
-                        {
-                            value: true,
-                            label: "原始请求"
-                        },
-                        {
-                            value: false,
-                            label: "请求配置"
-                        }
-                    ]}
-                    disabled={disabled}
-                />
+            <Form.Item label='请求类型' name='requestType' initialValue='original'>
+                <YakitRadioButtons buttonStyle='solid' options={requestTypeOptions} disabled={disabled} />
             </Form.Item>
-            {isRawHTTPRequest ? (
-                <OutputFormComponentsByType item={rawItem} />
-            ) : (
+            {requestType === "original" && <OutputFormComponentsByType item={rawItem} />}
+            {requestType === "input" && (
                 <YakitFormDraggerContent
                     className={styles["plugin-execute-form-item"]}
                     formItemProps={{
@@ -701,6 +721,11 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                     disabled={disabled}
                     valueSeparator={"\r\n"}
                 />
+            )}
+            {requestType === "hTTPFlowId" && (
+                <Form.Item label='请求Id' name='hTTPFlowId' required={true}>
+                    <YakitInput.TextArea placeholder='请输入请求Id,多个请求Id用“英文逗号”分隔' disabled={disabled} />
+                </Form.Item>
             )}
         </>
     )

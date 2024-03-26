@@ -1,4 +1,4 @@
-import {KVPair} from "@/models/kv";
+import {KVPair} from "@/models/kv"
 
 export interface HTTPRequestBuilderParams {
     IsHttps: boolean
@@ -18,4 +18,7 @@ export interface HTTPRequestBuilderParams {
     PostParams: KVPair[]
     MultipartParams: KVPair[]
     MultipartFileParams: KVPair[]
+
+    IsHttpFlowId: boolean
+    HTTPFlowId: number[]
 }

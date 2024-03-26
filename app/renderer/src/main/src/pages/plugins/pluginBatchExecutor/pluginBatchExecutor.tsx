@@ -32,7 +32,10 @@ import {
     PluginFixFormParams,
     defPluginExecuteFormValue
 } from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import {PluginExecuteExtraFormValue} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {
+    PluginExecuteExtraFormValue,
+    RequestType
+} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
@@ -425,18 +428,32 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const onInitInputValue = useMemoizedFn((value) => {
             const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
             const {params} = inputValue
+            const isRawHTTPRequest = !!params.HTTPRequestTemplate.IsRawHTTPRequest
+            const isHttpFlowId = !!params.HTTPRequestTemplate.IsHttpFlowId
+            const hTTPFlowId = !!params.HTTPRequestTemplate.HTTPFlowId
+                ? params.HTTPRequestTemplate.HTTPFlowId.join(",")
+                : ""
+            // 请求类型新增了请求id，兼容之前的版本
+            const requestType = {
+                IsRawHTTPRequest: isRawHTTPRequest,
+                IsHttpFlowId: isHttpFlowId,
+                hTTPFlowId: hTTPFlowId,
+                requestType: (isHttpFlowId ? "hTTPFlowId" : isRawHTTPRequest ? "original" : "input") as RequestType
+            }
             // form表单数据
             const extraForm = {
                 ...params.HTTPRequestTemplate,
+                ...requestType,
                 Proxy: params.Proxy,
                 Concurrent: params.Concurrent,
                 TotalTimeoutSecond: params.TotalTimeoutSecond
             }
+
             form.setFieldsValue({
                 Input: params.Input,
                 IsHttps: params.HTTPRequestTemplate.IsHttps,
-                IsRawHTTPRequest: !!params.HTTPRequestTemplate.IsRawHTTPRequest,
-                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest
+                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest,
+                ...requestType
             })
             setExtraParamsValue(extraForm)
             if (onInitInputValueAfter) onInitInputValueAfter(value)
@@ -456,7 +473,10 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 HTTPRequestTemplate: {
                     ...extraParamsValue,
                     IsHttps: !!value.IsHttps,
-                    IsRawHTTPRequest: value.IsRawHTTPRequest,
+                    IsRawHTTPRequest: value.requestType === "original",
+                    IsHttpFlowId: value.requestType === "hTTPFlowId",
+                    HTTPFlowId:
+                        value.requestType === "hTTPFlowId" && value.hTTPFlowId ? value.hTTPFlowId.split(",") : [],
                     RawHTTPRequest: value.RawHTTPRequest
                         ? Buffer.from(value.RawHTTPRequest, "utf8")
                         : Buffer.from("", "utf8")
@@ -510,7 +530,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         }}
                         labelWrap={true}
                     >
-                        <PluginFixFormParams form={form} disabled={isExecuting} />
+                        <PluginFixFormParams form={form} disabled={isExecuting} type='batch' />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (

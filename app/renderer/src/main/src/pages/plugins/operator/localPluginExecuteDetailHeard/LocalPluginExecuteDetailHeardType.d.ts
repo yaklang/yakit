@@ -5,7 +5,7 @@ import {KVPair} from "@/models/kv"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {FormInstance} from "antd"
-import { ExpandAndRetractExcessiveState } from "../expandAndRetract/ExpandAndRetract"
+import {ExpandAndRetractExcessiveState} from "../expandAndRetract/ExpandAndRetract"
 
 export interface PluginExecuteDetailHeardProps {
     token: string
@@ -23,9 +23,9 @@ export interface PluginExecuteDetailHeardProps {
     runtimeId: string
     setRuntimeId: (b: string) => void
     executeStatus: ExpandAndRetractExcessiveState
-    setExecuteStatus:(b:ExpandAndRetractExcessiveState)=>void
+    setExecuteStatus: (b: ExpandAndRetractExcessiveState) => void
     /**插件UI联动相关参数*/
-    linkPluginConfig?:HybridScanPluginConfig
+    linkPluginConfig?: HybridScanPluginConfig
 }
 
 export interface YakExtraParamProps {
@@ -61,10 +61,13 @@ export interface PluginExecuteProgressProps {
     name: string
 }
 
-export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {}
+export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
+    /**前端使用，请求类型的选择 */
+    requestType: RequestType
+}
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
-    [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[]
+    [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[] | number[]
 }
 
 export interface FormContentItemByTypeProps {
@@ -74,6 +77,9 @@ export interface FormContentItemByTypeProps {
 }
 
 export interface PluginFixFormParamsProps {
+    type?: "single" | "batch"
     form: FormInstance<any>
     disabled: boolean
 }
+
+export type RequestType = "original" | "input" | "hTTPFlowId"
