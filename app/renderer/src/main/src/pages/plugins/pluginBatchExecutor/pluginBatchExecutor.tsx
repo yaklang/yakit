@@ -278,7 +278,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             setExecuteStatus={setExecuteStatus}
                             setPluginExecuteLog={setPluginExecuteLog}
                             pluginExecuteResultWrapper={styles["plugin-executor-result-wrapper"]}
-                            setHidden={setHidden}
                         />
                     </div>
                 </div>
@@ -316,7 +315,7 @@ interface PluginBatchExecuteContentProps {
 
     pluginExecuteResultWrapper?: string
     /**设置某部分的显示与隐藏 eg:poc设置最左侧的显示与隐藏 */
-    setHidden: (value: boolean) => void
+    setHidden?: (value: boolean) => void
 }
 export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
@@ -468,7 +467,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
                 setExecuteStatus("process")
                 setIsExpand(false)
-                setHidden(true)
+                if (setHidden) setHidden(true)
                 hybridScanStreamEvent.start()
             })
         })

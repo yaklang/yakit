@@ -3,6 +3,9 @@
 
 .yak-poc-execute-wrapper {
     @include securityTool.execute-title("yak-poc");
+    .yak-poc-executor-body {
+        padding: 0 12px 16px;
+    }
 }
 
 .divider-style {
