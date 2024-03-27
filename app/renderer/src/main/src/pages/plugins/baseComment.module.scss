@@ -23,11 +23,156 @@ $active-color: #036ffe;
     }
 }
 
-.plugin-comment-upload{
+.plugin-comment-upload {
     display: flex;
-    flex-direction: column;
-    .upload-author-img{
-        
+    flex-direction: row;
+    gap: 8px;
+    .upload-author-img {
+    }
+    .input-upload-box {
+        flex: 1;
+        padding: 12px;
+        border-radius: 4px;
+        transition: all 0.3s;
+        border: 1px solid var(--yakit-border-color);
+        .input-box {
+            position: relative;
+            .input-box-textArea {
+                padding: 0px;
+                max-height: 120px;
+            }
+            .textArea-resizer-icon {
+                position: absolute;
+                bottom: 0px;
+                right: 0px;
+                color: var(--yakit-body-text-color);
+                z-index: 1;
+                pointer-events: none;
+                background-color: #fff;
+            }
+        }
+        .images-box {
+            margin-top: 12px;
+            display: flex;
+            gap: 16px;
+            .upload-img-opt {
+                width: 56px;
+                height: 56px;
+                cursor: pointer;
+                position: relative;
+                :global {
+                    .ant-image {
+                        border-radius: 4px;
+                        overflow: hidden;
+                    }
+                }
+                .opt-pic {
+                    width: 56px;
+                    height: 56px;
+                }
+                .mask-box {
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    position: absolute;
+                    left: 0px;
+                    right: 0px;
+                    top: 0px;
+                    bottom: 0px;
+                    background-color: rgba(0, 0, 0, 0.2);
+                    color: #fff;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+                .close {
+                    display: none;
+                    cursor: pointer;
+                    padding: 4px;
+                    border-radius: 20px;
+                    border: 2px solid #fff;
+                    background: #f0f1f3;
+                    position: absolute;
+                    top: -12px;
+                    right: -12px;
+                    box-sizing: content-box;
+                    height: 12px;
+                    width: 12px;
+                    overflow: hidden;
+                    transition: all 0.2s ease-in-out;
+                    svg {
+                        position: relative;
+                        top: -6px;
+                        left: 0px;
+                        height: 12px;
+                        width: 12px;
+                        color: #85899e;
+                    }
+                    &:hover {
+                        background-color: var(--yakit-primary-5);
+                        svg {
+                            color: #ffffff;
+                        }
+                    }
+                }
+                &:hover {
+                    .mask-box {
+                        display: flex;
+                    }
+                    .close {
+                        display: block;
+                    }
+                }
+            }
+        }
+        .upload-box {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-top: 12px;
+            .upload-box-left {
+                .photograph-icon {
+                    cursor: pointer;
+                    color: #85899e;
+                    svg {
+                        height: 24px;
+                        width: 24px;
+                    }
+                }
+                .photograph-icon-loading {
+                    padding: 2px;
+                    svg {
+                        height: 20px;
+                        width: 20px;
+                    }
+                }
+                .photograph-icon-disabled {
+                    cursor: no-drop;
+                    color: #d6d6d6;
+                }
+            }
+            .upload-box-right {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                .limit-count {
+                    padding: 2px 6px;
+                    border-radius: 8px;
+                    background: #f0f1f3;
+                    color: #85899e;
+                    text-align: center;
+                    font-size: 10px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 12px;
+                }
+            }
+        }
+    }
+    .input-upload-box-active {
+        border-color: var(--yakit-primary-4);
+        box-shadow: 0 0 0 2px var(--yakit-primary-2);
     }
 }
 
