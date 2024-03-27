@@ -795,7 +795,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     }, [executeStatus])
 
     useEffect(() => {
-        if (defaultFormValue) {
+        if (defaultFormValue && Object.keys(defaultFormValue).length > 0) {
             const value = JSON.stringify(defaultFormValue)
             pluginBatchExecuteContentRef.current?.onInitInputValue(value)
         }

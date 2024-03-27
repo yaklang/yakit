@@ -53,6 +53,7 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
 import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/newPortScan"
 import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/yakPoC"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -60,6 +61,9 @@ interface PluginBatchExecutorProps {
     id: string
 }
 
+const isEmpty = (uint8Array: Uint8Array) => {
+    return !(uint8Array && Object.keys(uint8Array).length > 0)
+}
 export interface PluginBatchExecuteExtraFormValue extends PluginExecuteExtraFormValue, PluginBatchExecutorTaskProps {}
 export const defPluginExecuteTaskValue: PluginBatchExecutorTaskProps = {
     Proxy: "",
@@ -382,6 +386,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const [extraParamsValue, setExtraParamsValue] = useState<PluginBatchExecuteExtraFormValue>({
             ...cloneDeep(defPluginBatchExecuteExtraFormValue)
         })
+        /**初始的原始请求数据包，不受额外参数中的 RawHTTPRequest 影响 */
+        const [initRawHTTPRequest, setInitRawHTTPRequest] = useState<string>("")
 
         const [stopLoading, setStopLoading] = useControllableValue<boolean>(props, {
             defaultValue: false,
@@ -441,15 +447,22 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             const formValue = {
                 IsHttps: https,
                 httpFlowId: httpFlowIds.length > 0 ? httpFlowIds.join(",") : "",
-                IsHttpFlowId: true,
-                requestType: "httpFlowId" as RequestType,
-
-                IsRawHTTPRequest: request.length > 0,
-                RawHTTPRequest: request.length > 0 ? request : new Uint8Array()
+                IsHttpFlowId: httpFlowIds.length > 0,
+                requestType: (httpFlowIds.length > 0
+                    ? "httpFlowId"
+                    : isEmpty(request)
+                    ? "input"
+                    : "original") as RequestType,
+                IsRawHTTPRequest: isEmpty(request),
+                RawHTTPRequest: isEmpty(request) ? new Uint8Array() : request
             }
+            const initRawHTTPRequestString = Uint8ArrayToString(formValue.RawHTTPRequest)
             setExtraParamsValue((v) => ({...v, ...formValue}))
+            /**目前只有webfuzzer带数据包的参数进入poc */
+            setInitRawHTTPRequest(initRawHTTPRequestString)
             form.setFieldsValue({
-                ...formValue
+                ...formValue,
+                RawHTTPRequest: initRawHTTPRequestString
             })
         })
 
@@ -491,7 +504,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 Concurrent: params.Concurrent,
                 TotalTimeoutSecond: params.TotalTimeoutSecond
             }
-
             form.setFieldsValue({
                 Input: params.Input,
                 IsHttps: params.HTTPRequestTemplate.IsHttps,
@@ -539,7 +551,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         })
         /**保存额外参数 */
         const onSaveExtraParams = useMemoizedFn((v: PluginBatchExecuteExtraFormValue) => {
-            setExtraParamsValue({...v} as PluginBatchExecuteExtraFormValue)
+            setExtraParamsValue((val) => ({...val, ...v}) as PluginBatchExecuteExtraFormValue)
             setExtraParamsVisible(false)
         })
         /**取消执行 */
@@ -573,7 +585,12 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         }}
                         labelWrap={true}
                     >
-                        <PluginFixFormParams form={form} disabled={isExecuting} type='batch' />
+                        <PluginFixFormParams
+                            form={form}
+                            disabled={isExecuting}
+                            type='batch'
+                            rawHTTPRequest={initRawHTTPRequest}
+                        />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (

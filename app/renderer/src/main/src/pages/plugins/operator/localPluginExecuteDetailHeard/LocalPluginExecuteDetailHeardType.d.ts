@@ -80,6 +80,8 @@ export interface PluginFixFormParamsProps {
     type?: "single" | "batch"
     form: FormInstance<any>
     disabled: boolean
+    /**原始请求中的数据包数据 */
+    rawHTTPRequest?:string
 }
 
 export type RequestType = "original" | "input" | "httpFlowId"

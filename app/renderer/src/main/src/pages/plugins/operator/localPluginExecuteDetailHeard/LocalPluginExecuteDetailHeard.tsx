@@ -653,7 +653,7 @@ export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React
 })
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
-    const {form, disabled, type = "single"} = props
+    const {form, disabled, type = "single", rawHTTPRequest = ""} = props
 
     const requestType: RequestType = Form.useWatch("requestType", form)
     const rawItem = useMemo(() => {
@@ -662,11 +662,11 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
             FieldVerbose: "数据包",
             Required: true,
             TypeVerbose: "http-packet",
-            DefaultValue: "",
+            DefaultValue: rawHTTPRequest,
             Help: ""
         }
         return codeItem
-    }, [])
+    }, [rawHTTPRequest])
     const requestTypeOptions = useCreation(() => {
         if (type === "single") {
             return [
