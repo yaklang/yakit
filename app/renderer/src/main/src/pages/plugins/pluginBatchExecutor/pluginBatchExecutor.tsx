@@ -41,7 +41,12 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/ExpandAndRetract"
-import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {
+    PageNodeItemProps,
+    PluginBatchExecutorPageInfoProps,
+    defaultPluginBatchExecutorPageInfo,
+    usePageInfo
+} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -81,8 +86,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             return currentItem.pageParamsInfo.pluginBatchExecutorPageInfo
         } else {
             return {
-                runtimeId: "",
-                defaultActiveKey: ""
+                ...defaultPluginBatchExecutorPageInfo
             }
         }
     })
@@ -195,6 +199,14 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const isShowPluginLog = useCreation(() => {
         return pluginExecuteLog.length > 0 || isExecuting
     }, [pluginExecuteLog, isExecuting])
+    const dataScanParams = useCreation(() => {
+        return {
+            https: pageInfo.https,
+            httpFlowIds: pageInfo.httpFlowIds,
+            verbose: "",
+            request: pageInfo.request
+        }
+    }, [pageInfo])
     return (
         <PluginLocalListDetails
             hidden={hidden}
@@ -281,6 +293,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             setExecuteStatus={setExecuteStatus}
                             setPluginExecuteLog={setPluginExecuteLog}
                             pluginExecuteResultWrapper={styles["plugin-executor-result-wrapper"]}
+                            dataScanParams={dataScanParams}
                         />
                     </div>
                 </div>
@@ -288,7 +301,16 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         </PluginLocalListDetails>
     )
 })
-
+interface DataScanParamsProps {
+    /**是否为https */
+    https: boolean
+    /**选中的数据History id */
+    httpFlowIds: []
+    /**关键词 */
+    verbose: string
+    /**请求包 */
+    request: Uint8Array
+}
 interface PluginBatchExecuteContentProps {
     ref?: React.ForwardedRef<PluginBatchExecuteContentRefProps>
     pluginInfo: PluginInfoProps
@@ -319,6 +341,7 @@ interface PluginBatchExecuteContentProps {
     pluginExecuteResultWrapper?: string
     /**设置某部分的显示与隐藏 eg:poc设置最左侧的显示与隐藏 */
     setHidden?: (value: boolean) => void
+    dataScanParams?: DataScanParamsProps
 }
 export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
@@ -336,7 +359,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             setProgressList,
             setPluginExecuteLog,
             pluginExecuteResultWrapper = "",
-            setHidden
+            setHidden,
+            dataScanParams
         } = props
         const [form] = Form.useForm()
         const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
@@ -410,6 +434,28 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             if (setPluginExecuteLog) setPluginExecuteLog(streamInfo.pluginExecuteLog)
         }, [streamInfo.pluginExecuteLog])
 
+        useEffect(() => {
+            onSetScanData()
+        }, [dataScanParams])
+
+        const onSetScanData = useMemoizedFn(() => {
+            if (!dataScanParams) return
+            const {https, httpFlowIds, request} = dataScanParams
+            const formValue = {
+                IsHttps: https,
+                httpFlowId: httpFlowIds.length > 0 ? httpFlowIds.join(",") : "",
+                IsHttpFlowId: true,
+                requestType: "httpFlowId" as RequestType,
+
+                IsRawHTTPRequest: request.length > 0,
+                RawHTTPRequest: request
+            }
+            setExtraParamsValue((v) => ({...v, formValue}))
+            form.setFieldsValue({
+                ...formValue
+            })
+        })
+
         /** 通过runtimeId查询该条记录详情 */
         const onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null> = useMemoizedFn((runtimeId) => {
             return new Promise((resolve, reject) => {
@@ -430,15 +476,15 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             const {params} = inputValue
             const isRawHTTPRequest = !!params.HTTPRequestTemplate.IsRawHTTPRequest
             const isHttpFlowId = !!params.HTTPRequestTemplate.IsHttpFlowId
-            const hTTPFlowId = !!params.HTTPRequestTemplate.HTTPFlowId
+            const httpFlowId = !!params.HTTPRequestTemplate.HTTPFlowId
                 ? params.HTTPRequestTemplate.HTTPFlowId.join(",")
                 : ""
             // 请求类型新增了请求id，兼容之前的版本
             const requestType = {
                 IsRawHTTPRequest: isRawHTTPRequest,
                 IsHttpFlowId: isHttpFlowId,
-                hTTPFlowId: hTTPFlowId,
-                requestType: (isHttpFlowId ? "hTTPFlowId" : isRawHTTPRequest ? "original" : "input") as RequestType
+                httpFlowId,
+                requestType: (isHttpFlowId ? "httpFlowId" : isRawHTTPRequest ? "original" : "input") as RequestType
             }
             // form表单数据
             const extraForm = {
@@ -474,9 +520,9 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                     ...extraParamsValue,
                     IsHttps: !!value.IsHttps,
                     IsRawHTTPRequest: value.requestType === "original",
-                    IsHttpFlowId: value.requestType === "hTTPFlowId",
+                    IsHttpFlowId: value.requestType === "httpFlowId",
                     HTTPFlowId:
-                        value.requestType === "hTTPFlowId" && value.hTTPFlowId ? value.hTTPFlowId.split(",") : [],
+                        value.requestType === "httpFlowId" && value.httpFlowId ? value.httpFlowId.split(",") : [],
                     RawHTTPRequest: value.RawHTTPRequest
                         ? Buffer.from(value.RawHTTPRequest, "utf8")
                         : Buffer.from("", "utf8")

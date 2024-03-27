@@ -41,7 +41,7 @@ import {FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/a
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, PocPageInfoProps, defaultPocPageInfo, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {GroupCount, QueryYakScriptRequest, SaveYakScriptGroupRequest, YakScript} from "@/pages/invoker/schema"
@@ -81,11 +81,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         if (currentItem && currentItem.pageParamsInfo.pocPageInfo) {
             return currentItem.pageParamsInfo.pocPageInfo
         }
-        return {
-            selectGroup: [],
-            selectGroupListByKeyWord: [],
-            formValue: {}
-        }
+        return {...defaultPocPageInfo}
     })
     const [pageInfo, setPageInfo] = useState<PocPageInfoProps>(initPageInfo())
     // 隐藏插件列表

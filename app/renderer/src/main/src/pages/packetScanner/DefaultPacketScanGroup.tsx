@@ -18,6 +18,12 @@ export const packetScanDefaultValue: {Verbose: string; Keyword?: string}[] = [
     {Verbose: "Weblogic", Keyword: "weblogic,Weblogic"},
     {Verbose: "远程代码执行（扫描）", Keyword: "RCE,rce"},
     {Verbose: "XSS", Keyword: "xss,XSS"},
+    {Verbose: "Java", Keyword: "Java"},
+    {Verbose: "Tomcat", Keyword: "Tomcat"},
+    {Verbose: "IIS", Keyword: "IIS"},
+    {Verbose: "Nginx", Keyword: "Nginx"},
+    {Verbose: "Shiro", Keyword: "Shiro"},
+    {Verbose: "SQL注入", Keyword: "SQL注入"}
 ]
 
 export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {
@@ -28,7 +34,7 @@ export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps
             return {
                 id:i.Keyword,
                 title: i.Verbose, onClick: () => {
-                    execPacketScan([id], i.Keyword)
+                    execPacketScan([id], i)
                 }
             }
         })
@@ -60,7 +66,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
                                     setTimeout(() => {
                                         setVisible(undefined)
                                     }, 300)
-                                    execPacketScanFromRaw(https, httpRequest, i.Keyword)
+                                    execPacketScanFromRaw(https, httpRequest, i)
                                 }}
                                 key={`${i.Verbose}+${n}`}
                             >

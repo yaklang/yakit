@@ -45,16 +45,29 @@ interface PageParamsInfoProps {
     pluginLocalPageInfo?: {uuid: string}
     /**YakitRoute.Plugin_Store 插件商店页面 */
     pluginOnlinePageInfo?: {keyword: string; plugin_type: string}
+    /**批量执行页面 */
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
     /**专项漏洞页面 */
     pocPageInfo?: PocPageInfoProps
 }
-
+export const defaultPluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps = {
+    runtimeId: "",
+    defaultActiveKey: "",
+    https: false,
+    httpFlowIds: [],
+    request: new Uint8Array()
+}
 export interface PluginBatchExecutorPageInfoProps {
     /**执行批量执行的runtimeId */
     runtimeId: string
     /**批量执行结果的默认选中的tab默认值 */
     defaultActiveKey: string
+    /**是否为https */
+    https: boolean
+    /**选中的数据History id */
+    httpFlowIds: []
+    /**请求包 */
+    request: Uint8Array
 }
 export interface WebFuzzerPageInfoProps {
     pageId: string
@@ -62,12 +75,29 @@ export interface WebFuzzerPageInfoProps {
     request: string
 }
 
+export const defaultPocPageInfo: PocPageInfoProps = {
+    selectGroup: [],
+    selectGroupListByKeyWord:[],
+    formValue: {},
+    https: false,
+    httpFlowIds: [],
+    verbose: "",
+    request: new Uint8Array()
+}
 export interface PocPageInfoProps {
     /**按组搜的选中 */
     selectGroup?: string[]
     /**按关键字搜的选中/poc内置组*/
     selectGroupListByKeyWord?:string[]
     formValue?: HybridScanControlAfterRequest
+    /**是否为https */
+    https: boolean
+    /**选中的数据History id */
+    httpFlowIds: []
+    /**关键词 */
+    verbose: string
+    /**请求包 */
+    request: Uint8Array
 }
 
 interface PageInfoStoreProps {

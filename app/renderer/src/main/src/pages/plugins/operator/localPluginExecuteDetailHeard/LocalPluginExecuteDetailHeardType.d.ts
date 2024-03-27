@@ -82,4 +82,4 @@ export interface PluginFixFormParamsProps {
     disabled: boolean
 }
 
-export type RequestType = "original" | "input" | "hTTPFlowId"
+export type RequestType = "original" | "input" | "httpFlowId"

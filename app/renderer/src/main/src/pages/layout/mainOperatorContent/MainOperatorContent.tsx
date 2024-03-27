@@ -83,7 +83,14 @@ import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
-import {PageNodeItemProps, PageProps, defPage, usePageInfo} from "@/store/pageInfo"
+import {
+    PageNodeItemProps,
+    PageProps,
+    defPage,
+    defaultPluginBatchExecutorPageInfo,
+    defaultPocPageInfo,
+    usePageInfo
+} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/yakPoC"
@@ -434,9 +441,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Plugin_Groups:
                 pluginGroup(params)
                 break
+            case YakitRoute.BatchExecutorPage:
+                addBatchExecutorPage(params)
+                break
+            case YakitRoute.PoC:
+                addPoC(params)
+                break
             default:
                 break
         }
+    })
+    /**批量执行 */
+    const addBatchExecutorPage = useMemoizedFn((data) => {
+        openMenuPage({route: YakitRoute.BatchExecutorPage}, {pageParams: {pluginBatchExecutorPageInfo: data}})
+    })
+    /**专项漏洞 */
+    const addPoC = useMemoizedFn((data) => {
+        openMenuPage({route: YakitRoute.PoC}, {pageParams: {pocPageInfo: data}})
     })
     /**
      * @name 新建插件
@@ -601,8 +622,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
             if (type === "simple-batch-exec-recover") addSimpleBatchExecRecover(data as UnfinishedSimpleDetectBatchTask)
-            if (type === "exec-packet-scan")
-                addPacketScan(data["httpFlows"], data["https"], data["httpRequest"], data["keyword"])
             if (type === "add-yakit-script") addYakScript(data)
             if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
             if (type === "facade-server") addFacadeServer(data)
@@ -761,6 +780,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 {
                     pageParams: {
                         pocPageInfo: {
+                            ...defaultPocPageInfo,
                             selectGroup: bugTestValue ? [bugTestValue] : [],
                             formValue: {
                                 Targets: {
@@ -1037,11 +1057,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.PoC:
                             onSetPocData(node, order)
                             break
+                        case YakitRoute.BatchExecutorPage:
+                            onBatchExecutorPage(node, order)
+                            break
                         default:
                             break
-                    }
-                    if (route === YakitRoute.BatchExecutorPage) {
-                        onBatchExecutorPage(node, order)
                     }
                     setPageCache([...pages])
                     openFlag && setCurrentTabKey(key)
@@ -1058,11 +1078,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.PoC:
                             onSetPocData(node, 1)
                             break
+                        case YakitRoute.BatchExecutorPage:
+                            onBatchExecutorPage(node, 1)
+                            break
                         default:
                             break
-                    }
-                    if (route === YakitRoute.BatchExecutorPage) {
-                        onBatchExecutorPage(node, 1)
                     }
                     setPageCache([
                         ...pageCache,
@@ -1092,9 +1112,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {
-                pluginBatchExecutorPageInfo:node.pageParams?.pluginBatchExecutorPageInfo?{
+                pluginBatchExecutorPageInfo:node.pageParams?.pluginBatchExecutorPageInfo
+                    ? {
+                          ...defaultPluginBatchExecutorPageInfo,
                     ...node.pageParams.pluginBatchExecutorPageInfo
-                }:undefined
+                      }
+                    : undefined
             },
             sortFieId: order
         }
@@ -1619,6 +1642,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageName: node.verbose,
             pageParamsInfo: {
                 pocPageInfo: {
+                    ...defaultPocPageInfo,
                     ...node.pageParams?.pocPageInfo
                 }
             },

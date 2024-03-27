@@ -690,7 +690,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                 label: "请求配置"
             },
             {
-                value: "hTTPFlowId",
+                value: "httpFlowId",
                 label: "请求Id"
             }
         ]
@@ -722,8 +722,8 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                     valueSeparator={"\r\n"}
                 />
             )}
-            {requestType === "hTTPFlowId" && (
-                <Form.Item label='请求Id' name='hTTPFlowId' required={true}>
+            {requestType === "httpFlowId" && (
+                <Form.Item label='请求Id' name='httpFlowId' required={true}>
                     <YakitInput.TextArea placeholder='请输入请求Id,多个请求Id用“英文逗号”分隔' disabled={disabled} />
                 </Form.Item>
             )}
