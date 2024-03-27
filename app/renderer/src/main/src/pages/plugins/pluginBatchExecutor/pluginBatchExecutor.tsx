@@ -445,9 +445,9 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 requestType: "httpFlowId" as RequestType,
 
                 IsRawHTTPRequest: request.length > 0,
-                RawHTTPRequest: request
+                RawHTTPRequest: request.length > 0 ? request : new Uint8Array()
             }
-            setExtraParamsValue((v) => ({...v, formValue}))
+            setExtraParamsValue((v) => ({...v, ...formValue}))
             form.setFieldsValue({
                 ...formValue
             })
@@ -510,6 +510,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 TotalTimeoutSecond: extraParamsValue.TotalTimeoutSecond,
                 Proxy: extraParamsValue.Proxy
             }
+            const hTTPFlowId = value.requestType === "httpFlowId" && value.httpFlowId ? value.httpFlowId.split(",") : []
             const params: HybridScanRequest = {
                 Input: value.Input,
                 ...taskParams,
@@ -518,8 +519,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                     IsHttps: !!value.IsHttps,
                     IsRawHTTPRequest: value.requestType === "original",
                     IsHttpFlowId: value.requestType === "httpFlowId",
-                    HTTPFlowId:
-                        value.requestType === "httpFlowId" && value.httpFlowId ? value.httpFlowId.split(",") : [],
+                    HTTPFlowId: hTTPFlowId.map((ele) => Number(ele)).filter((ele) => !!ele),
                     RawHTTPRequest: value.RawHTTPRequest
                         ? Buffer.from(value.RawHTTPRequest, "utf8")
                         : Buffer.from("", "utf8")

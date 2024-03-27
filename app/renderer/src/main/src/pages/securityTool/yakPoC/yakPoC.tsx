@@ -109,16 +109,16 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     }, [])
 
     const onSetSelectGroupList = useMemoizedFn((groups) => {
-        setPageInfo({...pageInfo, selectGroup: groups})
+        setPageInfo((v) => ({...v, selectGroup: groups}))
     })
     const onSetSelectGroupListByKeyWord = useMemoizedFn((groups) => {
-        setPageInfo({...pageInfo, selectGroupListByKeyWord: groups})
+        setPageInfo((v) => ({...v, selectGroupListByKeyWord: groups}))
     })
     const selectGroupListAll = useCreation(() => {
         return [...(pageInfo.selectGroup || []), ...(pageInfo.selectGroupListByKeyWord || [])]
     }, [pageInfo.selectGroup, pageInfo.selectGroupListByKeyWord])
     const onClearAll = useMemoizedFn(() => {
-        setPageInfo({...pageInfo, selectGroup: [], selectGroupListByKeyWord: []})
+        setPageInfo((v) => ({...v, selectGroup: [], selectGroupListByKeyWord: []}))
         setHidden(false)
     })
     const onClose = useMemoizedFn(() => {
@@ -130,7 +130,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             httpFlowIds: pageInfo.httpFlowIds,
             request: pageInfo.request
         }
-    }, [pageInfo])
+    }, [pageInfo.https, pageInfo.httpFlowIds, pageInfo.request])
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div
