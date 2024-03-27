@@ -245,6 +245,8 @@
 .plugin-group-list {
     padding: 4px 6px;
     border-radius: 4px;
+    max-height: 380px;
+    overflow-y: auto;
     .plugin-group-item {
         display: flex;
         justify-content: space-between;
