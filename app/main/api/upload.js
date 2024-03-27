@@ -98,7 +98,7 @@ module.exports = (win, getClient) => {
                     const progress = Math.floor(percent * 100)
                     win.webContents.send(`callback-split-upload-${token}`, {
                         res,
-                        progress: progress === 100 ? 99 : progress
+                        progress
                     })
                     if (res.code !== 200 && postPackageHistory[hash] <= 3) {
                         // console.log("重传", postPackageHistory[hash])
