@@ -50,12 +50,17 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
 
     const uploadFile = useMemoizedFn(async () => {
         if (isCancle.current) return
+        setPercent(allowPassword === "2" ? 0.01 : 0.51)
         await ipcRenderer
             .invoke("split-upload", {url: "import/project", path: filePath.current, token: uploadToken})
             .then((TaskStatus) => {
+                if (isCancle.current) return
                 if (TaskStatus) {
                     setPercent(1)
                     success("上传数据成功")
+                    setTimeout(() => {
+                        onCancel()
+                    }, 200)
                 } else {
                     failed(`项目上传失败`)
                 }
@@ -64,18 +69,26 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 failed(`项目上传失败:${err}`)
             })
             .finally(() => {
+                if (isCancle.current) return
                 setTimeout(() => {
                     setLoading(false)
                     setPercent(0)
-                    onCancel()
                 }, 200)
             })
     })
 
     useEffect(() => {
         ipcRenderer.on(`callback-split-upload-${uploadToken}`, async (e, res: any) => {
+            if (isCancle.current) return
             const {progress} = res
-            let intProgress = Math.floor(progress / 100)
+            let newProgress = progress
+            if (newProgress === 100) {
+                newProgress = 99
+            }
+            if (newProgress === 0) {
+                newProgress = 1
+            }
+            let intProgress = newProgress / 100
             if (allowPassword === "2") {
                 setPercent(intProgress)
             } else {
@@ -85,9 +98,10 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
         return () => {
             ipcRenderer.removeAllListeners(`callback-split-upload-${uploadToken}`)
         }
-    }, [])
+    }, [allowPassword])
 
     const cancleUpload = () => {
+        ipcRenderer.invoke("cancel-ExportProject", token)
         ipcRenderer.invoke("cancle-split-upload").then(() => {
             warn("取消上传成功")
             setLoading(false)
@@ -105,6 +119,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 filePath.current = data.TargetPath.replace(/\\/g, "\\")
             }
             if (data.Percent > 0) {
+                if (isCancle.current) return
                 setPercent(data.Percent * 0.5)
             }
         })
