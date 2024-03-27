@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, ReactNode} from "react"
-import {Button, Checkbox, Divider, Form, Input, List, Popconfirm, Space, Spin, Tag} from "antd"
+import {Button, Checkbox, Divider, Form, Input, List, Popconfirm, Space, Tag} from "antd"
 import {SearchOutlined} from "@ant-design/icons"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../schema"
 import {FieldName} from "../../risks/RiskTable"
@@ -16,6 +16,7 @@ import {info} from "../../../utils/notification"
 import {ImportMenuConfig} from "./consts_importConfigYakCode"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export interface QueryYakScriptParamProp {
     params: SimpleQueryYakScriptSchema
@@ -151,12 +152,12 @@ export const QueryYakScriptParamSelector: React.FC<QueryYakScriptParamProp> = Re
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>
+                <YakitSpin spinning={selectLoading}>
                     {/* <div className='select-render-all' onClick={() => selectedAll(true)}>
                         全选
                     </div> */}
                     {originNode}
-                </Spin>
+                </YakitSpin>
             </div>
         )
     })

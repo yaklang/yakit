@@ -31,6 +31,7 @@ import {DefaultOptionType} from "antd/lib/cascader"
 import {useStore} from "@/store"
 import { unReadable } from "../dynamicControl/DynamicControl"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
 export interface ShowUserInfoProps extends API.NewUrmResponse {
     onClose: () => void
@@ -291,7 +292,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
             </div>
         )
     })

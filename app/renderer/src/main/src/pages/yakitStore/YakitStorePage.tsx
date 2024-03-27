@@ -87,6 +87,7 @@ import { YakitRoute } from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import { apiFetchQueryYakScriptGroupLocal } from "../plugins/utils"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {Search} = Input
 const {Option} = Select
@@ -479,7 +480,7 @@ export const YakFilterModuleSelect: React.FC<YakFilterModuleSelectProps> = (prop
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
             </div>
         )
     })

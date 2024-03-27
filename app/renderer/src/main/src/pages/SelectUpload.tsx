@@ -1,13 +1,13 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Input, Form, Select, Spin, Progress} from "antd"
+import {Button, Input, Form, Select, Progress} from "antd"
 import {useMemoizedFn, useThrottleFn, useGetState} from "ahooks"
 import {failed, success} from "@/utils/notification"
 import {PaginationSchema} from "./invoker/schema"
 import {randomString} from "@/utils/randomUtil"
 import { ProjectDescription, ProjectIOProgress, ProjectsResponse } from "./softwareSettings/ProjectManage"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 
-const {Option} = Select
 const {ipcRenderer} = window.require("electron")
 
 export interface SelectUploadProps {
@@ -141,7 +141,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
             </div>
         )
     })

@@ -24,7 +24,6 @@ import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import debounce from "lodash/debounce"
 import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 export interface ShowUserInfoProps {
     text: string
