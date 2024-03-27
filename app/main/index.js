@@ -204,7 +204,8 @@ app.whenReady().then(() => {
 
     try {
         registerIPC(win)
-    } catch (e) {}
+    } catch (e) {
+    }
 
     //
     // // autoUpdater.autoDownload = false

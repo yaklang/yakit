@@ -1,4 +1,4 @@
-const {ipcMain, nativeImage, Notification, app} = require("electron")
+const {ipcMain, nativeImage, Notification, app, protocol} = require("electron")
 const path = require("path")
 const fs = require("fs")
 const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
@@ -86,21 +86,23 @@ function testRemoteClient(params, callback) {
     const yak = !caPem
         ? new Yak(`${host}:${port}`, grpc.credentials.createInsecure(), options)
         : new Yak(
-              `${host}:${port}`,
-              // grpc.credentials.createInsecure(),
-              grpc.credentials.combineChannelCredentials(
-                  grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
-                      checkServerIdentity: (hostname, cert) => {
-                          return undefined
-                      }
-                  }),
-                  creds
-              ),
-              options
-          )
+            `${host}:${port}`,
+            // grpc.credentials.createInsecure(),
+            grpc.credentials.combineChannelCredentials(
+                grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
+                    checkServerIdentity: (hostname, cert) => {
+                        return undefined
+                    }
+                }),
+                creds
+            ),
+            options
+        )
 
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
+
+const YAKIT_PROTOCOL = "yakitctrl"
 
 module.exports = {
     testRemoteClient,
@@ -108,6 +110,20 @@ module.exports = {
         require("./handlers/yakLocal").clearing()
     },
     registerIPC: (win) => {
+        // registerYakitControllerProtocol
+        protocol.unregisterProtocol(YAKIT_PROTOCOL)
+        protocol.registerHttpProtocol(YAKIT_PROTOCOL, (request, callback) => {
+            const client = getClient()
+            if (!client) {
+                console.info("NO CLIENT FOUND.")
+                callback({error: -1, message: "NO CLIENT FOUND."})
+            } else {
+                console.info("CLIENT IS CONNECTED.")
+                callback({url: "http://www.example.com"})
+            }
+        })
+        app.setAsDefaultProtocolClient(YAKIT_PROTOCOL)
+
         ipcMain.handle("relaunch", () => {
             app.relaunch({})
             app.exit(0)
