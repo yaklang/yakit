@@ -2695,7 +2695,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (keyPath.includes("数据包扫描")) {
                         const scanItem = packetScanDefaultValue.find((e) => e.Verbose === key)
                         if (!scanItem) return
-                        execPacketScan([rowData.Id], scanItem)
+                        execPacketScan({
+                            httpFlowIds: [rowData.Id],
+                            value: scanItem,
+                            https: rowData.IsHTTPS
+                        })
                         return
                     }
                     if (keyPath.includes("标注颜色")) {

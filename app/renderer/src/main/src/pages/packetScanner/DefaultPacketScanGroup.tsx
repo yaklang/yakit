@@ -28,13 +28,18 @@ export const packetScanDefaultValue: {Verbose: string; Keyword?: string}[] = [
 
 export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {
     return {
-        title: "数据包扫描", onClick: () => {
-        },
-        subMenuItems: packetScanDefaultValue.map(i => {
+        title: "数据包扫描",
+        onClick: () => {},
+        subMenuItems: packetScanDefaultValue.map((i) => {
             return {
-                id:i.Keyword,
-                title: i.Verbose, onClick: () => {
-                    execPacketScan([id], i)
+                id: i.Keyword,
+                title: i.Verbose,
+                onClick: () => {
+                    execPacketScan({
+                        httpFlowIds: [id],
+                        value: i,
+                        https: false
+                    })
                 }
             }
         })
@@ -42,7 +47,7 @@ export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps
 }
 
 export interface PacketScanButtonProp {
-    packetGetter: () => { https: boolean, httpRequest: Uint8Array }
+    packetGetter: () => {https: boolean; httpRequest: Uint8Array}
 }
 
 export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {

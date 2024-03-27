@@ -139,11 +139,17 @@ const PacketScannerViewer: React.FC<PacketScannerFormProp> = React.memo((props) 
     )
 })
 
-export const execPacketScan = (ids: number[], value: {Keyword?: string; Verbose: string}) => {
+export const execPacketScan = (params: {
+    httpFlowIds: number[]
+    https: boolean
+    request?: Uint8Array
+    value: {Keyword?: string; Verbose: string}
+}) => {
+    const {httpFlowIds, value, https} = params
     const {Keyword, Verbose} = value
     execPacketScanWithNewTab({
-        httpFlowIds: ids,
-        https: false,
+        httpFlowIds,
+        https,
         request: new Uint8Array(),
         keyword: Keyword || "",
         verbose: Verbose
