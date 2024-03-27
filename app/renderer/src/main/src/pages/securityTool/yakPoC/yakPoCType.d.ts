@@ -1,6 +1,7 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {GroupCount} from "@/pages/invoker/schema"
+import {DataScanParamsProps} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 
 export interface YakPoCProps {
     pageId: string
@@ -39,6 +40,8 @@ export interface YakPoCExecuteContentProps {
     setExecuteStatus: (s: ExpandAndRetractExcessiveState) => void
     /**清空所有组 */
     onClearAll: () => void
+    /**数据包扫描跳转到该页面需要使用到的参数 */
+    dataScanParams: DataScanParamsProps
 }
 
 export interface PluginGroupGridItemProps {

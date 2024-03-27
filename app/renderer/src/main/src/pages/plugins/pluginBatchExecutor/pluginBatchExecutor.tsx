@@ -203,7 +203,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         return {
             https: pageInfo.https,
             httpFlowIds: pageInfo.httpFlowIds,
-            verbose: "",
             request: pageInfo.request
         }
     }, [pageInfo])
@@ -301,13 +300,11 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         </PluginLocalListDetails>
     )
 })
-interface DataScanParamsProps {
+export interface DataScanParamsProps {
     /**是否为https */
     https: boolean
     /**选中的数据History id */
     httpFlowIds: []
-    /**关键词 */
-    verbose: string
     /**请求包 */
     request: Uint8Array
 }

@@ -81,7 +81,6 @@ export const defaultPocPageInfo: PocPageInfoProps = {
     formValue: {},
     https: false,
     httpFlowIds: [],
-    verbose: "",
     request: new Uint8Array()
 }
 export interface PocPageInfoProps {
@@ -94,8 +93,6 @@ export interface PocPageInfoProps {
     https: boolean
     /**选中的数据History id */
     httpFlowIds: []
-    /**关键词 */
-    verbose: string
     /**请求包 */
     request: Uint8Array
 }

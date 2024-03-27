@@ -124,6 +124,13 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const onClose = useMemoizedFn(() => {
         setHidden(true)
     })
+    const dataScanParams = useCreation(() => {
+        return {
+            https: pageInfo.https,
+            httpFlowIds: pageInfo.httpFlowIds,
+            request: pageInfo.request
+        }
+    }, [pageInfo])
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div
@@ -182,6 +189,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 executeStatus={executeStatus}
                 setExecuteStatus={setExecuteStatus}
                 onClearAll={onClearAll}
+                dataScanParams={dataScanParams}
             />
         </div>
     )
@@ -758,7 +766,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-    const {selectGroupList, defaultFormValue, onClearAll} = props
+    const {selectGroupList, defaultFormValue, onClearAll, dataScanParams} = props
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -940,6 +948,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         setExecuteStatus={onSetExecuteStatus}
                         setPluginExecuteLog={setPluginExecuteLog}
                         setHidden={setHidden}
+                        dataScanParams={dataScanParams}
                     />
                 </div>
             </div>

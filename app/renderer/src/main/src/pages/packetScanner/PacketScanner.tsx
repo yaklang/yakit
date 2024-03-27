@@ -177,7 +177,7 @@ export const execPacketScanWithNewTab = (params: {
                     request,
                     https,
                     httpFlowIds,
-                    verbose
+                    selectGroupListByKeyWord: !!verbose ? [verbose] : []
                 }
             })
         )
