@@ -46,7 +46,7 @@ import {saveABSFileToOpen} from "@/utils/openWebsite"
 import ReactResizeDetector from "react-resize-detector"
 
 import "./javaPayloadPage.scss"
-import {NetInterface} from "@/models/Traffic";
+import {NetInterface} from "@/models/Traffic"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -557,7 +557,9 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                             HTTP反连地址&nbsp;&nbsp;
                                             <CopyableField
                                                 width={340}
-                                                text={`http://${reverseAddr}/${paramsRef.current?.className || ""}.class`}
+                                                text={`http://${reverseAddr}/${
+                                                    paramsRef.current?.className || ""
+                                                }.class`}
                                                 style={{color: "blue"}}
                                             />
                                         </div>
@@ -806,7 +808,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             paramsOptions[el.Key] = el.Value
                             break
                         case FormParamsType.StringPort:
-                            paramsOptions[el.Key] = !el.Value ? 1 : +el.Value || 1
+                            paramsOptions[el.Key] = !el.Value ? 0 : +el.Value
                             break
                         case FormParamsType.StringBool:
                             paramsOptions[el.Key] = !el.Value ? false : el.Value === "false" ? false : true
@@ -1062,8 +1064,6 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                 )}
                                 {item.Type === FormParamsType.StringPort && (
                                     <InputNumber
-                                        min={0}
-                                        max={65535}
                                         precision={0}
                                         value={+params[item.Key]}
                                         onChange={(value) => setParamsValue([{key: item.Key, value: value as number}])}
