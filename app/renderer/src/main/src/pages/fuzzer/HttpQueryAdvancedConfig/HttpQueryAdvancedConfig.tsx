@@ -54,6 +54,7 @@ import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
+import {CacheDropDownGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -189,11 +190,27 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }, [advancedConfigValue])
     const proxyListRef = useRef<SelectOptionProps[]>([])
     useEffect(() => {
-        // 代理数据 最近10条
-        getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
-            try {
-                const newList = remoteData
-                    ? JSON.parse(remoteData)
+        // 缓存数据结构迁移(后续删除)
+        Promise.allSettled([getRemoteValue(WEB_FUZZ_PROXY_LIST)]).then((cacheRes) => {
+            const defaultValue = form.getFieldValue("proxy") || ""
+            const options =
+                cacheRes[0].status === "fulfilled"
+                    ? !!cacheRes[0].value
+                        ? JSON.parse(cacheRes[0].value)
+                        : [
+                              {
+                                  label: "http://127.0.0.1:7890",
+                                  value: "http://127.0.0.1:7890"
+                              },
+                              {
+                                  label: "http://127.0.0.1:8080",
+                                  value: "http://127.0.0.1:8080"
+                              },
+                              {
+                                  label: "http://127.0.0.1:8082",
+                                  value: "http://127.0.0.1:8082"
+                              }
+                          ]
                     : [
                           {
                               label: "http://127.0.0.1:7890",
@@ -208,12 +225,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                               value: "http://127.0.0.1:8082"
                           }
                       ]
-                if (JSON.stringify(newList) !== JSON.stringify(proxyListRef.current)) {
-                    proxyListRef.current = newList
-                }
-            } catch (error) {
-                yakitFailed("代理列表获取失败:" + error)
-            }
+            console.log("迁移缓存数据结构:", {defaultValue, options})
+            proxyListRef.current = options
+            setRemoteValue(CacheDropDownGV.WebFuzzerProxyList, JSON.stringify({defaultValue, options}))
         })
     }, [inViewport, refreshProxy])
 

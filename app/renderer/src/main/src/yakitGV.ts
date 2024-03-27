@@ -1,4 +1,4 @@
-import { MITMConsts } from '@/pages/mitm/MITMConsts';
+import {MITMConsts} from "@/pages/mitm/MITMConsts"
 /** 本地文件缓存数据-键值变量 */
 export enum LocalGV {
     /** @name 用户协议(需用户同意才能使用软件) */
@@ -113,4 +113,6 @@ export enum CacheDropDownGV {
     ConfigProxy = "config_proxy",
     /** @name MITM 保存用户数据地址 */
     MITMSaveUserDataDir = "mitm_save_user_data_dir",
+    /** @name MITM webFuzzer 代理 */
+    WebFuzzerProxyList = "web_fuzzer_proxy_list",
 }
