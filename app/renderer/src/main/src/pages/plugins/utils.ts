@@ -1240,6 +1240,8 @@ export const convertHybridScanParams = (
     delete hTTPRequestTemplate.Concurrent
     delete hTTPRequestTemplate.TotalTimeoutSecond
     delete hTTPRequestTemplate.Proxy
+    delete hTTPRequestTemplate.httpFlowId
+    delete hTTPRequestTemplate.requestType
 
     const data: HybridScanControlAfterRequest = {
         Concurrent: params.Concurrent,
