@@ -32,7 +32,6 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         size = "middle",
         wrapperClassName = "",
         wrapperStyle,
-        dropdownRender,
         cacheHistoryDataKey = "",
         isCacheDefaultValue = true,
         cacheHistoryListLength = 10,

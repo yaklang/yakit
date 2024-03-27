@@ -25,8 +25,8 @@ import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
-const { Option } = Select;
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import debounce from "lodash/debounce"
 export interface ShowUserInfoProps {
     text: string
     onClose: () => void
@@ -91,7 +91,6 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
             page: page || 1,
             limit: limit || getPagination().Limit
         }
-
         NetWorkApi<QueryProps, API.CompanyLicenseConfigResponse>({
             method: "get",
             url: "company/license/config",
@@ -107,16 +106,22 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                     value: item.id,
                     label: item.company
                 }))
-                if(data.length>0){
-                    setPagination((v)=>({...v,Page:paginationProps.page}))
+                let selectedDataArr: {value: number; label: string}[] = []
+                if (data.length > 0) {
+                    setPagination((v) => ({...v, Page: paginationProps.page}))
                 }
                 if (reload) {
                     setData([...data])
-                    setSelectData([...newData])
+                    selectedDataArr = [...newData]
                 } else {
                     setData([...getData(), ...data])
-                    setSelectData([...getSelectData(), ...newData])
+                    selectedDataArr = [...getSelectData(), ...newData]
                 }
+                setSelectData(
+                    selectedDataArr.filter(
+                        (item, index, self) => index === self.findIndex((t) => t.value === item.value)
+                    )
+                )
             })
             .catch((err) => {
                 failed("查看license失败：" + err)
@@ -130,7 +135,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
 
     const onFinish = useMemoizedFn((values) => {
         setLoading(true)
-        const {id, license,company_version} = values
+        const {id, license, company_version} = values
         const selectDate = data.filter((item) => item.id === id)[0]
         const {company, maxUser} = selectDate
         let params = {
@@ -179,11 +184,10 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                         showSearch
                         optionFilterProp='children'
                         placeholder='请选择企业名称'
-                        filterOption={(input, option) =>{
-                                const val = (option?.label ?? "") + ""
-                                return val.toLowerCase().includes(input.toLowerCase())
-                            }
-                        }
+                        filterOption={(input, option) => {
+                            const val = (option?.label ?? "") + ""
+                            return val.toLowerCase().includes(input.toLowerCase())
+                        }}
                         options={selectData}
                         onSearch={(value) => {
                             update(1, undefined, value, true)
