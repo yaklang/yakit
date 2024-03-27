@@ -53,7 +53,7 @@ import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStart
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
-import { OutlineBadgecheckIcon } from "@/assets/icon/outline"
+import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -394,7 +394,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }
     // 重置
     const handleVariableReset = useMemoizedFn(
-        (e: React.MouseEvent<HTMLElement, MouseEvent>, field: fields, val: object, ref: React.MutableRefObject<any>) => {
+        (
+            e: React.MouseEvent<HTMLElement, MouseEvent>,
+            field: fields,
+            val: object,
+            ref: React.MutableRefObject<any>
+        ) => {
             e.stopPropagation()
             onReset({
                 [field]: [{...val}]
@@ -595,15 +600,23 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 type='text'
                                 onClick={() => setBatchTargetModalVisible(true)}
                                 icon={
-                                    Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                                        <OutlineBadgecheckIcon style={{color: "#56C991"}}/>
+                                    advancedConfigValue.batchTarget instanceof Uint8Array ? (
+                                        Uint8ArrayToString(advancedConfigValue.batchTarget) ? (
+                                            <OutlineBadgecheckIcon style={{color: "#56C991"}} />
+                                        ) : (
+                                            <PlusSmIcon />
+                                        )
                                     ) : (
                                         <PlusSmIcon />
                                     )
                                 }
                             >
-                                {Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                                    <div style={{color: "#56C991"}}>已配置</div>
+                                {advancedConfigValue.batchTarget instanceof Uint8Array ? (
+                                    Uint8ArrayToString(advancedConfigValue.batchTarget) ? (
+                                        <div style={{color: "#56C991"}}>已配置</div>
+                                    ) : (
+                                        "配置批量目标"
+                                    )
                                 ) : (
                                     "配置批量目标"
                                 )}
@@ -1065,7 +1078,13 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     onClick={(e) =>
-                                        handleVariableAdd(e, "methodGet", "GET 参数", {Key: "", Value: ""}, methodGetRef)
+                                        handleVariableAdd(
+                                            e,
+                                            "methodGet",
+                                            "GET 参数",
+                                            {Key: "", Value: ""},
+                                            methodGetRef
+                                        )
                                     }
                                     className={styles["btn-padding-right-0"]}
                                     size='small'
@@ -1168,9 +1187,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     colors='danger'
-                                    onClick={(e) =>
-                                        handleVariableReset(e, "headers", {Key: "", Value: ""}, headersRef)
-                                    }
+                                    onClick={(e) => handleVariableReset(e, "headers", {Key: "", Value: ""}, headersRef)}
                                     size='small'
                                 >
                                     重置
