@@ -4,7 +4,23 @@ import React, {useState, useEffect, memo, Suspense, useRef} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "@/utils/notification"
-import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin, Image, Avatar} from "antd"
+import {
+    PageHeader,
+    Space,
+    Tooltip,
+    Button,
+    Empty,
+    Tag,
+    Tabs,
+    Upload,
+    Input,
+    List,
+    Modal,
+    Spin,
+    Image,
+    Avatar,
+    InputRef
+} from "antd"
 import {
     StarOutlined,
     StarFilled,
@@ -29,12 +45,15 @@ import Login from "@/pages/Login"
 import {fail} from "assert"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import { CollapseParagraph } from "../yakitStore/YakitPluginInfoOnline/CollapseParagraph"
+import {CollapseParagraph} from "../yakitStore/YakitPluginInfoOnline/CollapseParagraph"
 import classNames from "classnames"
-import { UserPlatformType } from "../globalVariable"
+import {UserPlatformType} from "../globalVariable"
 import yakitImg from "@/assets/yakit.jpg"
-import { randomAvatarColor } from "@/components/layout/FuncDomain"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import {randomAvatarColor} from "@/components/layout/FuncDomain"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {PaperAirplaneIcon, ResizerIcon} from "@/assets/newIcon"
+import {OutlinePhotographIcon} from "@/assets/icon/outline"
+import {CloseIcon} from "@/components/configNetwork/icon"
 const {ipcRenderer} = window.require("electron")
 
 const limit = 20
@@ -281,17 +300,26 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
         }
         setCommentText(value)
     })
-  
+
     return (
-        <div className={styles['comment-box']} id='online-plugin-info-scroll'>
+        <div className={styles["comment-box"]} id='online-plugin-info-scroll'>
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-            <div className={styles['info-comment-box']}>
-                <div className={styles['box-header']}>
-                    <span className={styles['header-title']}>评论</span>
-                    <span className={styles['header-subtitle']}>{plugin.comment_num || 0}</span>
+            <div className={styles["info-comment-box"]}>
+                <div className={styles["box-header"]}>
+                    <span className={styles["header-title"]}>评论</span>
+                    <span className={styles["header-subtitle"]}>{plugin.comment_num || 0}</span>
                 </div>
-                <PluginCommentUpload isLogin={isLogin} files={files} setFiles={setFiles}/>
-                <PluginCommentInput
+                {isLogin && (
+                    <PluginCommentUpload
+                        loading={commentLoading}
+                        value={commentText}
+                        setValue={onSetValue}
+                        files={files}
+                        setFiles={setFiles}
+                        onSubmit={pluginComment}
+                    />
+                )}
+                {/* <PluginCommentInput
                     value={commentText}
                     setValue={onSetValue}
                     files={files}
@@ -299,7 +327,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                     onSubmit={pluginComment}
                     loading={commentLoading}
                     isLogin={isLogin}
-                />
+                /> */}
             </div>
             {/* @ts-ignore */}
             <InfiniteScroll
@@ -308,13 +336,13 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 next={loadMoreData}
                 hasMore={hasMore}
                 loader={
-                    <div className={styles['vertical-center']}>
+                    <div className={styles["vertical-center"]}>
                         <LoadingOutlined />
                     </div>
                 }
                 endMessage={
                     (commentResponses?.pagemeta?.total || 0) > 0 && (
-                        <div className={classNames(styles['row-cneter'],styles["no-more-text"])}>暂无更多数据</div>
+                        <div className={classNames(styles["row-cneter"], styles["no-more-text"])}>暂无更多数据</div>
                     )
                 }
                 scrollableTarget='online-plugin-info-scroll'
@@ -348,8 +376,8 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 isLogin={isLogin}
             />
             <Modal
-                wrapClassName={styles['comment-reply-dialog']}
-                title={<div className={styles['header-title']}>回复@{currentComment?.user_name}</div>}
+                wrapClassName={styles["comment-reply-dialog"]}
+                title={<div className={styles["header-title"]}>回复@{currentComment?.user_name}</div>}
                 visible={commentShow}
                 centered={true}
                 footer={null}
@@ -396,49 +424,57 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
 
     const message_img: string[] = (info.message_img && JSON.parse(info.message_img)) || []
     return (
-        <div className={styles['plugin-comment-opt']} key={key}>
-            <div className={styles['opt-author-img']}>
-                <img src={info.head_img} className={styles['author-img-style']}/>
+        <div className={styles["plugin-comment-opt"]} key={key}>
+            <div className={styles["opt-author-img"]}>
+                <img src={info.head_img} className={styles["author-img-style"]} />
             </div>
 
-            <div className={styles['opt-comment-body']}>
-                <div className={styles['comment-body-name']}>{info.user_name || "anonymous"}</div>
+            <div className={styles["opt-comment-body"]}>
+                <div className={styles["comment-body-name"]}>{info.user_name || "anonymous"}</div>
 
-                <div className={styles['comment-body-content']}>
+                <div className={styles["comment-body-content"]}>
                     <CollapseParagraph value={`${info.message}`} rows={2} valueConfig={{className: "content-style"}}>
                         {info.by_user_name && (
                             <span>
-                                回复<span className={styles['content-by-name']}>{info.by_user_name}</span>:
+                                回复<span className={styles["content-by-name"]}>{info.by_user_name}</span>:
                             </span>
                         )}
                     </CollapseParagraph>
                 </div>
 
-                <div className={styles['comment-body-time-func']}>
+                <div className={styles["comment-body-time-func"]}>
                     <div>
                         <span>{moment.unix(info.created_at).format("YYYY-MM-DD HH:mm")}</span>
                     </div>
                     {isOperation && (
-                        <div className={styles['func-comment-and-star']}>
-                            <div className={styles['comment-and-star']} onClick={() => onReply(info)}>
-                                {/* @ts-ignore */}
-                                <OnlineCommentIcon className={classNames(styles['icon-style-comment'],styles['hover-active'])} />
+                        <div className={styles["func-comment-and-star"]}>
+                            <div className={styles["comment-and-star"]} onClick={() => onReply(info)}>
+                                <OnlineCommentIcon
+                                    // @ts-ignore
+                                    className={classNames(styles["icon-style-comment"], styles["hover-active"])}
+                                />
                             </div>
                             <div
                                 style={{marginLeft: 18}}
-                                className={classNames(styles['hover-active'],styles['comment-and-star'])}
+                                className={classNames(styles["hover-active"], styles["comment-and-star"])}
                                 onClick={() => onStar(info)}
                             >
-                                {/* @ts-ignore */}
-                                {(isStarChange && <OnlineSurfaceIcon className={classNames(styles['hover-active'],styles['icon-style-start'])}
-                                />) || (
-                                    // @ts-ignore
-                                    <OnlineThumbsUpIcon className={classNames(styles['hover-active'],styles['icon-style'])}/>
+                                {(isStarChange && (
+                                    <OnlineSurfaceIcon
+                                        // @ts-ignore
+                                        className={classNames(styles["hover-active"], styles["icon-style-start"])}
+                                    />
+                                )) || (
+                                    <OnlineThumbsUpIcon
+                                        // @ts-ignore
+                                        className={classNames(styles["hover-active"], styles["icon-style"])}
+                                    />
                                 )}
                                 <span
-                                className={classNames(styles["hover-active"],styles['num-style'],{
-                                [styles["num-style-active"]]: isStarChange,
-                                }) }>
+                                    className={classNames(styles["hover-active"], styles["num-style"], {
+                                        [styles["num-style-active"]]: isStarChange
+                                    })}
+                                >
                                     {numeral(info.like_num).format("0,0")}
                                 </span>
                             </div>
@@ -447,12 +483,12 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                 </div>
                 <Space>
                     {message_img.map((url) => (
-                        <Image key={url + info.id} src={url as any} className={styles['comment-pic']} />
+                        <Image key={url + info.id} src={url as any} className={styles["comment-pic"]} />
                     ))}
                 </Space>
                 {isOperation && info.reply_num > 0 && (
                     <a
-                        className={styles['comment-reply']}
+                        className={styles["comment-reply"]}
                         onClick={() => {
                             if (openCommentChildModel && setParentComment) {
                                 setParentComment(info)
@@ -471,17 +507,33 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
 })
 
 interface PluginCommentUploadProps {
-    isLogin:boolean
+    value: string
+    setValue: (value: string) => any
+    loading: boolean
     files: string[]
     setFiles: (files: string[]) => any
+    onSubmit: () => void
+}
+
+interface ImageShowProps {
+    src: string
+    visible: boolean
 }
 
 const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
-    const {isLogin, files,setFiles} = props
+    const {value, setValue, loading, files, setFiles, onSubmit} = props
     const {userInfo} = useStore()
-    const {platform,companyHeadImg, companyName} = userInfo
+    const {platform, companyHeadImg, companyName} = userInfo
     const avatarColor = useRef<string>(randomAvatarColor())
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
+    const textAreRef = useRef<InputRef>(null)
+    const [isFocused, setIsFocused] = useState<boolean>(false)
+    const [imageShow, setImageShow] = useState<ImageShowProps>({
+        src: "",
+        visible: false
+    })
+    // textArea纯文本域 operator带操作的文本域 operatorImg带操作加图片展示的文本域
+    const [textAreaType, setTextAreaType] = useState<"textArea" | "operator" | "operatorImg">("operator")
     const uploadFiles = (file) => {
         setFilesLoading(true)
         ipcRenderer
@@ -496,80 +548,170 @@ const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
                 setTimeout(() => setFilesLoading(false), 1)
             })
     }
-    return(
-    <div className={styles['plugin-comment-upload']}>
-        <div className={styles['upload-author-img']}>
-        {platform === "company" ? (
-                                            <div>
-                                            {companyHeadImg && !!companyHeadImg.length ? (
-                                                <Avatar size={20} style={{cursor: "pointer"}} src={companyHeadImg} />
-                                            ) : (
-                                                <Avatar
-                                                    size={20}
-                                                    style={{backgroundColor: avatarColor.current}}
-                                                    className={classNames(styles["judge-avatar-avatar"])}
-                                                >
-                                                    {companyName && companyName.slice(0, 1)}
-                                                </Avatar>
-                                            )}
-                                        </div>
-                                        ) : (
-                                            <img
-                                                src={
-                                                    userInfo[UserPlatformType[platform || ""].img] || yakitImg
-                                                }
-                                                style={{width: 24, height: 24, borderRadius: "50%"}}
-                                            />
-                                        )}
-        </div>
-        <div className={styles['input-upload-box']}>
-            <div className={styles['input-box']}></div>
-            <YakitInput.TextArea
-                // value={}
-                autoSize={{minRows: 1, maxRows: 6}}
-                placeholder='说点什么...'
-                // onChange={(e) => setValue(e.target.value)}
-            />
-            <div className={styles['upload-box']}>
-                <div className={styles['upload-box-left']}>
-                    {isLogin &&<Upload
-                        accept='image/jpeg,image/png,image/jpg,image/gif'
-                        multiple={false}
-                        disabled={files.length >= 3}
-                        showUploadList={false}
-                        beforeUpload={(file: any) => {
-                            if (file.size / 1024 / 1024 > 10) {
-                                failed("图片大小不超过10M")
-                                return false
-                            }
-                            if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
-                                failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
-                                return false
-                            }
-                            if (file) {
-                                uploadFiles(file)
-                            }
-                            return true
+    return (
+        <div className={styles["plugin-comment-upload"]}>
+            <div className={styles["upload-author-img"]}>
+                {platform === "company" ? (
+                    <div>
+                        {companyHeadImg && !!companyHeadImg.length ? (
+                            <Avatar size={32} style={{cursor: "pointer"}} src={companyHeadImg} />
+                        ) : (
+                            <Avatar
+                                size={32}
+                                style={{backgroundColor: avatarColor.current}}
+                                className={classNames(styles["judge-avatar-avatar"])}
+                            >
+                                {companyName && companyName.slice(0, 1)}
+                            </Avatar>
+                        )}
+                    </div>
+                ) : (
+                    <img
+                        src={userInfo[UserPlatformType[platform || ""].img] || yakitImg}
+                        style={{width: 32, height: 32, borderRadius: "50%"}}
+                    />
+                )}
+            </div>
+            <div
+                className={classNames(styles["input-upload-box"], {
+                    [styles["input-upload-box-active"]]: isFocused
+                })}
+                onClick={() => {
+                    textAreRef.current!.focus({
+                        cursor: "end"
+                    })
+                }}
+            >
+                <div
+                    className={styles["input-box"]}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                    }}
+                >
+                    {/* <YakitInput */}
+                    <Input.TextArea
+                        className={styles["input-box-textArea"]}
+                        onFocus={() => {
+                            setIsFocused(true)
                         }}
-                    >
-                        <YakitButton
-                            loading={filesLoading}
-                            disabled={files.length >= 3}
-                            type="text2"
-                            icon={<PictureOutlined className={classNames({
-                            [styles["btn-pic-disabled"]]: files.length >= 3,
-                            [styles["btn-pic"]]: files.length < 3,
-                            }) }/>}
-                        />
-                    </Upload>}
+                        onBlur={() => {
+                            setIsFocused(false)
+                        }}
+                        value={value}
+                        ref={textAreRef}
+                        bordered={false}
+                        rows={4}
+                        placeholder='说点什么...'
+                        onChange={(e) => setValue(e.target.value)}
+                    />
+                    <ResizerIcon className={styles["textArea-resizer-icon"]} />
                 </div>
-                            <div className={styles['upload-box-right']}>
-                                <div className={styles['limit-count']}>0/150</div>
-                                <YakitButton>提交反馈</YakitButton>
+                {files.length !== 0 && (
+                    <div className={styles["images-box"]}>
+                        {files.map((item, index) => {
+                            return (
+                                <div
+                                    key={item}
+                                    className={styles["upload-img-opt"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    <img src={item as any} className={styles["opt-pic"]} />
+                                    <div
+                                        className={styles["mask-box"]}
+                                        onClick={() => {
+                                            setImageShow({
+                                                visible: true,
+                                                src: item
+                                            })
+                                        }}
+                                    >
+                                        预览
+                                    </div>
+                                    <div
+                                        className={styles["close"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const arr = cloneDeep(files)
+                                            arr.splice(index, 1)
+                                            setFiles(arr)
+                                        }}
+                                    >
+                                        <CloseIcon />
+                                    </div>
+                                </div>
+                            )
+                        })}
+                        <Image
+                            src={imageShow.src}
+                            style={{display: "none"}}
+                            preview={{
+                                visible: imageShow.visible,
+                                src: imageShow.src,
+                                onVisibleChange: (value) => {
+                                    if (!value) {
+                                        setImageShow({
+                                            visible: false,
+                                            src: ""
+                                        })
+                                    }
+                                }
+                            }}
+                        />
+                    </div>
+                )}
+                <div className={styles["upload-box"]}>
+                    <div className={styles["upload-box-left"]} onClick={(e) => e.stopPropagation()}>
+                        <Upload
+                            accept='image/jpeg,image/png,image/jpg,image/gif'
+                            multiple={false}
+                            disabled={files.length >= 3}
+                            showUploadList={false}
+                            beforeUpload={(file: any) => {
+                                if (filesLoading) {
+                                    return false
+                                }
+                                if (file.size / 1024 / 1024 > 10) {
+                                    failed("图片大小不超过10M")
+                                    return false
+                                }
+                                if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
+                                    failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
+                                    return false
+                                }
+                                if (file) {
+                                    uploadFiles(file)
+                                }
+                                return true
+                            }}
+                        >
+                            <div
+                                className={classNames(styles["photograph-icon"], {
+                                    [styles["photograph-icon-disabled"]]: files.length >= 3,
+                                    [styles["photograph-icon-loading"]]: filesLoading
+                                })}
+                            >
+                                {filesLoading ? <LoadingOutlined /> : <OutlinePhotographIcon />}
                             </div>
+                        </Upload>
+                    </div>
+                    <div className={styles["upload-box-right"]}>
+                        <div className={styles["limit-count"]}>0/150</div>
+                        <YakitButton
+                            icon={<PaperAirplaneIcon />}
+                            loading={loading}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onSubmit()
+                            }}
+                        >
+                            提交反馈
+                        </YakitButton>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
     )
 }
 
@@ -602,17 +744,17 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
             })
     }
     return (
-        <div className={styles['plugin-info-comment-input']}>
-            <div className={styles['box-input']}>
+        <div className={styles["plugin-info-comment-input"]}>
+            <div className={styles["box-input"]}>
                 <Input.TextArea
-                    className={styles['input-stlye']}
+                    className={styles["input-stlye"]}
                     value={value}
                     autoSize={{minRows: 1, maxRows: 6}}
                     placeholder='说点什么...'
                     onChange={(e) => setValue(e.target.value)}
                 ></Input.TextArea>
             </div>
-            <div className={styles['box-btn']}>
+            <div className={styles["box-btn"]}>
                 {isLogin && (
                     <Upload
                         accept='image/jpeg,image/png,image/jpg,image/gif'
@@ -638,10 +780,14 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                             loading={filesLoading}
                             type='link'
                             disabled={files.length >= 3}
-                            icon={<PictureOutlined className={classNames({
-                            [styles["btn-pic-disabled"]]: files.length >= 3,
-                            [styles["btn-pic"]]: files.length < 3,
-                            }) }/>}
+                            icon={
+                                <PictureOutlined
+                                    className={classNames({
+                                        [styles["btn-pic-disabled"]]: files.length >= 3,
+                                        [styles["btn-pic"]]: files.length < 3
+                                    })}
+                                />
+                            }
                         />
                     </Upload>
                 )}
@@ -649,8 +795,8 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                     // disabled={value || files.length !== 0 }
                     type='primary'
                     className={classNames({
-                    [styles["btn-submit"]]: !((value || files.length !== 0) && isLogin),
-                    }) }
+                        [styles["btn-submit"]]: !((value || files.length !== 0) && isLogin)
+                    })}
                     onClick={onSubmit}
                     loading={loading}
                 >
@@ -658,13 +804,13 @@ const PluginCommentInput = (props: PluginCommentInputProps) => {
                 </Button>
             </div>
             {files.length !== 0 && (
-                <div className={styles['box-upload']}>
+                <div className={styles["box-upload"]}>
                     {files.map((item, index) => {
                         return (
-                            <div key={item} className={styles['upload-img-opt']}>
-                                <Image key={item} src={item as any} className={styles['opt-pic']}/>
+                            <div key={item} className={styles["upload-img-opt"]}>
+                                <Image key={item} src={item as any} className={styles["opt-pic"]} />
                                 <div
-                                    className={styles['opt-del']}
+                                    className={styles["opt-del"]}
                                     onClick={() => {
                                         const arr = cloneDeep(files)
                                         arr.splice(index, 1)
@@ -828,7 +974,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     if (!parentInfo) return <></>
     return (
         <Modal visible={visible} onCancel={onCommentChildCancel} footer={null} width='70%' centered>
-            <div id='scroll-able-div' className={styles['comment-child-body']}>
+            <div id='scroll-able-div' className={styles["comment-child-body"]}>
                 <PluginCommentInfo
                     key={parentInfo.id}
                     info={parentInfo}
@@ -836,7 +982,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     onStar={() => {}}
                     onReply={() => {}}
                 />
-                <div className={styles['child-comment-list']}>
+                <div className={styles["child-comment-list"]}>
                     {/* @ts-ignore */}
                     <InfiniteScroll
                         dataLength={commentChildResponses?.pagemeta?.total || 0}
@@ -844,13 +990,15 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                         next={loadMoreData}
                         hasMore={hasMore}
                         loader={
-                            <div className={styles['vertical-center']}>
+                            <div className={styles["vertical-center"]}>
                                 <LoadingOutlined />
                             </div>
                         }
                         endMessage={
                             (commentChildResponses?.pagemeta?.total || 0) > 0 && (
-                                <div className={classNames(styles['row-cneter'],styles['no-more-text'])}>暂无更多数据</div>
+                                <div className={classNames(styles["row-cneter"], styles["no-more-text"])}>
+                                    暂无更多数据
+                                </div>
                             )
                         }
                         scrollableTarget='scroll-able-div'
