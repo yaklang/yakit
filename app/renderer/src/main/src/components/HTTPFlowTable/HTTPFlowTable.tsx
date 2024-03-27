@@ -1706,6 +1706,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filterProps: {
                     filterKey: "SearchURL",
                     filtersType: "input",
+                    filterIcon: (
+                        <OutlineSearchIcon
+                            className={style["filter-icon"]}
+                        />
+                    ),
                 }
             },
             {
