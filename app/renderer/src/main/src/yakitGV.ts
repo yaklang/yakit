@@ -82,7 +82,9 @@ export enum RemoteGV {
     /** @name WebFuzzer编辑器美化 */
     WebFuzzerEditorBeautify = "webFuzzer_editor_beautify",
     /**@name 专项漏洞关键词搜索缓存 */
-    PocPluginKeywords = "poc-plugin-keywords"
+    PocPluginKeywords = "poc-plugin-keywords",
+    /**@name MITM 用户数据是否保存 */
+    MITMUserDataSave = "mitm_user_data_save",
 }
 
 /** 项目逻辑全局变量 */

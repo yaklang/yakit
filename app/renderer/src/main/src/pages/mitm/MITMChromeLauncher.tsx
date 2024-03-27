@@ -117,6 +117,14 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     setRemoteValue("USER_DATA_DIR_ARR", JSON.stringify({isSaveUserData: false, userDataDirArr}))
                 }
 
+                // 缓存数据结构迁移(后续删除)
+                console.log("迁移缓存数据结构:", {defaultValue: userDataDir, options: userDataDirArr})
+                setRemoteValue(
+                    CacheDropDownGV.MITMSaveUserDataDir,
+                    JSON.stringify({defaultValue: userDataDir, options: userDataDirArr})
+                )
+                setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + "")
+                
                 getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
                     if (setting) newParams.chromePath = JSON.parse(setting)
                     ipcRenderer

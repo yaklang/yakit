@@ -171,6 +171,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         if (index !== -1) return
         httpHistoryList.push(url)
         setRemoteValue("httpHistoryList", JSON.stringify(httpHistoryList))
+
+        // 缓存数据结构迁移(后续删除)
+        console.log("迁移缓存数据结构:", {defaultValue: url, options: httpHistoryList})
+        setRemoteValue(CacheDropDownGV.ConfigBaseUrl, JSON.stringify({defaultValue: url, options: httpHistoryList}))
     })
     const getHttpSetting = useMemoizedFn(() => {
         getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
@@ -231,6 +235,12 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         if (index !== -1) return
         httpProxyList.push(url)
         setRemoteValue("httpProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+        // 缓存数据结构迁移(后续删除)
+        console.log("迁移缓存数据结构:", {defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
+        setRemoteValue(
+            CacheDropDownGV.ConfigProxy,
+            JSON.stringify({defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
+        )
     })
     // 判断输入内容是否通过
     const judgePass = () => [
