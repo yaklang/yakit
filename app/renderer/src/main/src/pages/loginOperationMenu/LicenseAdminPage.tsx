@@ -8,10 +8,8 @@ import {
     Form,
     Popconfirm,
     Tag,
-    Select,
     InputNumber,
     DatePicker,
-    Spin,
     Tooltip
 } from "antd"
 import type {ColumnsType} from "antd/es/table"
@@ -27,6 +25,7 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import debounce from "lodash/debounce"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 export interface ShowUserInfoProps {
     text: string
     onClose: () => void
@@ -171,7 +170,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
             </div>
         )
     })
