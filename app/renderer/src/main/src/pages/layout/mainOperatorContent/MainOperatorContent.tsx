@@ -2512,7 +2512,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             const combineItem = subPage[combineIndex]
             subPage.splice(sourceIndex, 1)
             onUpdatePageCache(subPage)
-            setSelectGroupId(currentTabKey, combineItem.id)      
+            const isSetGroup=combineItem.groupChildren?.findIndex(ele=>ele.id===selectSubMenu.id)!==-1
+            if(isSetGroup){
+                setSelectGroupId(currentTabKey, combineItem.id)
+            }   
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
                 addFuzzerSequenceList({groupId: combineItem.id})
             }
@@ -2591,7 +2594,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     groupId: combineItem.id
                 })
             }
-            setSelectGroupId(currentTabKey, combineItem.id)
+            const isSetGroup=combineItem.groupChildren?.findIndex(ele=>ele.id===selectSubMenu.id)!==-1
+            if(isSetGroup){
+                setSelectGroupId(currentTabKey, combineItem.id)
+            }
         })
         /** @description 组外之间移动 */
         const movingBetweenOutsideGroups = useMemoizedFn((result: DropResult) => {
