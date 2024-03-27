@@ -1,21 +1,9 @@
-import React, {useEffect, useState} from "react"
-import {
-    Table,
-    Space,
-    Button,
-    Input,
-    Modal,
-    Form,
-    Popconfirm,
-    Tag,
-    InputNumber,
-    DatePicker,
-    Tooltip
-} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, InputNumber, DatePicker, Tooltip} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn, useDebounceFn} from "ahooks"
+import {useGetState, useMemoizedFn, useDebounceFn, usePrevious} from "ahooks"
 import moment from "moment"
 import "./LicenseAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
@@ -24,7 +12,7 @@ import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 export interface ShowUserInfoProps {
     text: string
     onClose: () => void
@@ -71,6 +59,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     const [selectLoading, setSelectLoading] = useState<boolean>(true)
     const [data, setData, getData] = useGetState<API.CompanyLicenseConfigList[]>([])
     const [selectData, setSelectData, getSelectData] = useGetState<SelectDataProps[]>([])
+    const keywordsRef = useRef<string>("")
     // 企业名称分页
     const [_, setPagination, getPagination] = useGetState<PaginationSchema>({
         Limit: 20,
@@ -80,10 +69,10 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     })
 
     useEffect(() => {
-        update()
+        update(1, undefined, true)
     }, [])
 
-    const update = (page?: number, limit?: number, keywords: string = "", reload: boolean = false) => {
+    const update = (page?: number, limit?: number, reload: boolean = false) => {
         setSelectLoading(true)
         const paginationProps = {
             page: page || 1,
@@ -93,7 +82,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
             method: "get",
             url: "company/license/config",
             params: {
-                keywords,
+                keywords: keywordsRef.current,
                 status: 0,
                 ...paginationProps
             }
@@ -104,22 +93,16 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                     value: item.id,
                     label: item.company
                 }))
-                let selectedDataArr: {value: number; label: string}[] = []
                 if (data.length > 0) {
                     setPagination((v) => ({...v, Page: paginationProps.page}))
                 }
                 if (reload) {
                     setData([...data])
-                    selectedDataArr = [...newData]
+                    setSelectData([...newData])
                 } else {
                     setData([...getData(), ...data])
-                    selectedDataArr = [...getSelectData(), ...newData]
+                    setSelectData([...getSelectData(), ...newData])
                 }
-                setSelectData(
-                    selectedDataArr.filter(
-                        (item, index, self) => index === self.findIndex((t) => t.value === item.value)
-                    )
-                )
             })
             .catch((err) => {
                 failed("查看license失败：" + err)
@@ -188,12 +171,13 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                         }}
                         options={selectData}
                         onSearch={(value) => {
-                            update(1, undefined, value, true)
+                            keywordsRef.current = value
+                            update(1, undefined, true)
                         }}
                         onPopupScroll={(e) => {
                             const {target} = e
                             const ref: HTMLDivElement = target as unknown as HTMLDivElement
-                            if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
+                            if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight && !selectLoading) {
                                 update(getPagination().Page + 1)
                             }
                         }}
