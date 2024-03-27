@@ -597,6 +597,13 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         if (index !== -1) return
         httpProxyList.push(url)
         setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+
+        // 缓存数据结构迁移(后续删除)
+        console.log("迁移缓存数据结构:", {defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
+        setRemoteValue(
+            CacheDropDownGV.CVEProxyList,
+            JSON.stringify({defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
+        )
     })
     const tipNode = useMemo(
         () =>
