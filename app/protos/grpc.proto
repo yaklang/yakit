@@ -2843,8 +2843,16 @@ message StartFacadesWithYsoParams {
 
   YsoOptionsRequerst GenerateClassParams = 7;
 }
+
+message Tree {
+  string Name = 1;
+  string Data = 2;
+  repeated Tree Children = 3;
+}
+
 message GetAvailableBruteTypesResponse {
-  repeated string Types = 1;
+  repeated string Types = 1; // 弃用
+  repeated Tree TypesWithChild = 2;
 }
 
 message StartBruteParams {
