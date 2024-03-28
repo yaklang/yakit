@@ -5,15 +5,17 @@ import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "@
 import {useMemoizedFn} from "ahooks"
 import {CopyableField} from "@/utils/inputUtil"
 import styles from "./hTTPFlowDetail.module.scss"
+import { HighLightText } from "./HTTPFlowDetail"
 const {Text} = Typography
 export interface HTTPFlowExtractedDataTableProp {
     title: React.ReactNode
     httpFlowHash: string
+    onSetHighLightText: (highLightText: HighLightText[]) => void
 }
 
 const {ipcRenderer} = window.require("electron")
 
-interface HTTPFlowExtractedData {
+export interface HTTPFlowExtractedData {
     Id: number
     CreatedAt: number
     SourceType: "httpflow" | string
@@ -21,6 +23,9 @@ interface HTTPFlowExtractedData {
     Regexp: string
     RuleName: string
     Data: string
+    Index: number
+    Length: number
+    IsMatchRequest: boolean
 }
 
 export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = (props) => {
@@ -47,6 +52,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             })
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 setData(r.Data)
+                console.log(r.Data);
+                props.onSetHighLightText(r.Data.map((i) => ({startOffset: i.Index, highlightLength: i.Length, hoverVal: i.RuleName, IsMatchRequest: i.IsMatchRequest })))
                 setPagination(r.Pagination)
                 setTotal(r.Total)
             })
