@@ -440,13 +440,6 @@
     &:global(.ant-btn-icon-only) {
         width: unset;
     }
-    &:global([ant-click-animating-without-extra-node="true"]::after) {
-        box-shadow: none;
-        opacity: 1;
-        animation:
-            fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1),
-            waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
-    }
     &:global(.ant-btn .anticon) {
         display: flex;
     }
@@ -498,15 +491,4 @@
 }
 .yakit-button-text2 {
     @include generateText2("primary");
-}
-
-@keyframes fadeEffect {
-    100% {
-        opacity: 0;
-    }
-}
-@keyframes waveEffect {
-    100% {
-        box-shadow: 0 0 0 4px var(--button-wave-shadow-color);
-    }
 }
