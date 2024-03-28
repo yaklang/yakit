@@ -32,19 +32,28 @@ import {
     PluginFixFormParams,
     defPluginExecuteFormValue
 } from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import {PluginExecuteExtraFormValue} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {
+    PluginExecuteExtraFormValue,
+    RequestType
+} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/ExpandAndRetract"
-import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {
+    PageNodeItemProps,
+    PluginBatchExecutorPageInfoProps,
+    defaultPluginBatchExecutorPageInfo,
+    usePageInfo
+} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
-import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/newPortScan"
-import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/yakPoC"
+import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/NewPortScan"
+import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/YakPoC"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -52,6 +61,9 @@ interface PluginBatchExecutorProps {
     id: string
 }
 
+const isEmpty = (uint8Array: Uint8Array) => {
+    return !(uint8Array && Object.keys(uint8Array).length > 0)
+}
 export interface PluginBatchExecuteExtraFormValue extends PluginExecuteExtraFormValue, PluginBatchExecutorTaskProps {}
 export const defPluginExecuteTaskValue: PluginBatchExecutorTaskProps = {
     Proxy: "",
@@ -78,8 +90,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             return currentItem.pageParamsInfo.pluginBatchExecutorPageInfo
         } else {
             return {
-                runtimeId: "",
-                defaultActiveKey: ""
+                ...defaultPluginBatchExecutorPageInfo
             }
         }
     })
@@ -192,6 +203,13 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const isShowPluginLog = useCreation(() => {
         return pluginExecuteLog.length > 0 || isExecuting
     }, [pluginExecuteLog, isExecuting])
+    const dataScanParams = useCreation(() => {
+        return {
+            https: pageInfo.https,
+            httpFlowIds: pageInfo.httpFlowIds,
+            request: pageInfo.request
+        }
+    }, [pageInfo])
     return (
         <PluginLocalListDetails
             hidden={hidden}
@@ -278,6 +296,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             setExecuteStatus={setExecuteStatus}
                             setPluginExecuteLog={setPluginExecuteLog}
                             pluginExecuteResultWrapper={styles["plugin-executor-result-wrapper"]}
+                            dataScanParams={dataScanParams}
                         />
                     </div>
                 </div>
@@ -285,7 +304,14 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         </PluginLocalListDetails>
     )
 })
-
+export interface DataScanParamsProps {
+    /**是否为https */
+    https: boolean
+    /**选中的数据History id */
+    httpFlowIds: []
+    /**请求包 */
+    request: Uint8Array
+}
 interface PluginBatchExecuteContentProps {
     ref?: React.ForwardedRef<PluginBatchExecuteContentRefProps>
     pluginInfo: PluginInfoProps
@@ -316,6 +342,7 @@ interface PluginBatchExecuteContentProps {
     pluginExecuteResultWrapper?: string
     /**设置某部分的显示与隐藏 eg:poc设置最左侧的显示与隐藏 */
     setHidden?: (value: boolean) => void
+    dataScanParams?: DataScanParamsProps
 }
 export interface PluginBatchExecuteContentRefProps {
     onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null>
@@ -333,10 +360,11 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             setProgressList,
             setPluginExecuteLog,
             pluginExecuteResultWrapper = "",
-            setHidden
+            setHidden,
+            dataScanParams
         } = props
         const [form] = Form.useForm()
-        const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+        const requestType = Form.useWatch("requestType", form)
         useImperativeHandle(
             ref,
             () => ({
@@ -358,6 +386,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const [extraParamsValue, setExtraParamsValue] = useState<PluginBatchExecuteExtraFormValue>({
             ...cloneDeep(defPluginBatchExecuteExtraFormValue)
         })
+        /**初始的原始请求数据包，不受额外参数中的 RawHTTPRequest 影响 */
+        const [initRawHTTPRequest, setInitRawHTTPRequest] = useState<string>("")
 
         const [stopLoading, setStopLoading] = useControllableValue<boolean>(props, {
             defaultValue: false,
@@ -407,6 +437,35 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             if (setPluginExecuteLog) setPluginExecuteLog(streamInfo.pluginExecuteLog)
         }, [streamInfo.pluginExecuteLog])
 
+        useEffect(() => {
+            onSetScanData()
+        }, [dataScanParams])
+
+        const onSetScanData = useMemoizedFn(() => {
+            if (!dataScanParams) return
+            const {https, httpFlowIds, request} = dataScanParams
+            const formValue = {
+                IsHttps: https,
+                httpFlowId: httpFlowIds.length > 0 ? httpFlowIds.join(",") : "",
+                IsHttpFlowId: httpFlowIds.length > 0,
+                requestType: (httpFlowIds.length > 0
+                    ? "httpFlowId"
+                    : isEmpty(request)
+                    ? "input"
+                    : "original") as RequestType,
+                IsRawHTTPRequest: isEmpty(request),
+                RawHTTPRequest: isEmpty(request) ? new Uint8Array() : request
+            }
+            const initRawHTTPRequestString = Uint8ArrayToString(formValue.RawHTTPRequest)
+            setExtraParamsValue((v) => ({...v, ...formValue}))
+            /**目前只有webfuzzer带数据包的参数进入poc */
+            setInitRawHTTPRequest(initRawHTTPRequestString)
+            form.setFieldsValue({
+                ...formValue,
+                RawHTTPRequest: initRawHTTPRequestString
+            })
+        })
+
         /** 通过runtimeId查询该条记录详情 */
         const onQueryHybridScanByRuntimeId: (runtimeId: string) => Promise<null> = useMemoizedFn((runtimeId) => {
             return new Promise((resolve, reject) => {
@@ -425,9 +484,22 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const onInitInputValue = useMemoizedFn((value) => {
             const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
             const {params} = inputValue
+            const isRawHTTPRequest = !!params.HTTPRequestTemplate.IsRawHTTPRequest
+            const isHttpFlowId = !!params.HTTPRequestTemplate.IsHttpFlowId
+            const httpFlowId = !!params.HTTPRequestTemplate.HTTPFlowId
+                ? params.HTTPRequestTemplate.HTTPFlowId.join(",")
+                : ""
+            // 请求类型新增了请求id，兼容之前的版本
+            const requestType = {
+                IsRawHTTPRequest: isRawHTTPRequest,
+                IsHttpFlowId: isHttpFlowId,
+                httpFlowId,
+                requestType: (isHttpFlowId ? "httpFlowId" : isRawHTTPRequest ? "original" : "input") as RequestType
+            }
             // form表单数据
             const extraForm = {
                 ...params.HTTPRequestTemplate,
+                ...requestType,
                 Proxy: params.Proxy,
                 Concurrent: params.Concurrent,
                 TotalTimeoutSecond: params.TotalTimeoutSecond
@@ -435,8 +507,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             form.setFieldsValue({
                 Input: params.Input,
                 IsHttps: params.HTTPRequestTemplate.IsHttps,
-                IsRawHTTPRequest: !!params.HTTPRequestTemplate.IsRawHTTPRequest,
-                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest
+                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest,
+                ...requestType
             })
             setExtraParamsValue(extraForm)
             if (onInitInputValueAfter) onInitInputValueAfter(value)
@@ -450,13 +522,16 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 TotalTimeoutSecond: extraParamsValue.TotalTimeoutSecond,
                 Proxy: extraParamsValue.Proxy
             }
+            const hTTPFlowId = value.requestType === "httpFlowId" && value.httpFlowId ? value.httpFlowId.split(",") : []
             const params: HybridScanRequest = {
                 Input: value.Input,
                 ...taskParams,
                 HTTPRequestTemplate: {
                     ...extraParamsValue,
                     IsHttps: !!value.IsHttps,
-                    IsRawHTTPRequest: value.IsRawHTTPRequest,
+                    IsRawHTTPRequest: value.requestType === "original",
+                    IsHttpFlowId: value.requestType === "httpFlowId",
+                    HTTPFlowId: hTTPFlowId.map((ele) => Number(ele)).filter((ele) => !!ele),
                     RawHTTPRequest: value.RawHTTPRequest
                         ? Buffer.from(value.RawHTTPRequest, "utf8")
                         : Buffer.from("", "utf8")
@@ -476,7 +551,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         })
         /**保存额外参数 */
         const onSaveExtraParams = useMemoizedFn((v: PluginBatchExecuteExtraFormValue) => {
-            setExtraParamsValue({...v} as PluginBatchExecuteExtraFormValue)
+            setExtraParamsValue((val) => ({...val, ...v}) as PluginBatchExecuteExtraFormValue)
             setExtraParamsVisible(false)
         })
         /**取消执行 */
@@ -491,7 +566,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const isShowResult = useCreation(() => {
             return isExecuting || runtimeId
         }, [isExecuting, runtimeId])
-
         return (
             <>
                 <div
@@ -510,7 +584,12 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         }}
                         labelWrap={true}
                     >
-                        <PluginFixFormParams form={form} disabled={isExecuting} />
+                        <PluginFixFormParams
+                            form={form}
+                            disabled={isExecuting}
+                            type='batch'
+                            rawHTTPRequest={initRawHTTPRequest}
+                        />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (
@@ -551,7 +630,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 )}
                 <React.Suspense fallback={<div>loading...</div>}>
                     <PluginBatchExecuteExtraParamsDrawer
-                        isRawHTTPRequest={isRawHTTPRequest}
+                        isRawHTTPRequest={requestType !== "input"}
                         extraParamsValue={extraParamsValue}
                         visible={extraParamsVisible}
                         setVisible={setExtraParamsVisible}

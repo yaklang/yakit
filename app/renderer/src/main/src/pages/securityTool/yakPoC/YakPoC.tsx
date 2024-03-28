@@ -10,9 +10,9 @@ import {
     TimeConsumingProps,
     YakPoCExecuteContentProps,
     YakPoCProps
-} from "./yakPoCType"
+} from "./YakPoCType"
 import classNames from "classnames"
-import styles from "./yakPoC.module.scss"
+import styles from "./YakPoC.module.scss"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Divider, Tooltip} from "antd"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -41,7 +41,7 @@ import {FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/a
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, PocPageInfoProps, defaultPocPageInfo, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {GroupCount, QueryYakScriptRequest, SaveYakScriptGroupRequest, YakScript} from "@/pages/invoker/schema"
@@ -81,11 +81,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         if (currentItem && currentItem.pageParamsInfo.pocPageInfo) {
             return currentItem.pageParamsInfo.pocPageInfo
         }
-        return {
-            selectGroup: [],
-            selectGroupListByKeyWord: [],
-            formValue: {}
-        }
+        return {...defaultPocPageInfo}
     })
     const [pageInfo, setPageInfo] = useState<PocPageInfoProps>(initPageInfo())
     // 隐藏插件列表
@@ -113,21 +109,28 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     }, [])
 
     const onSetSelectGroupList = useMemoizedFn((groups) => {
-        setPageInfo({...pageInfo, selectGroup: groups})
+        setPageInfo((v) => ({...v, selectGroup: groups}))
     })
     const onSetSelectGroupListByKeyWord = useMemoizedFn((groups) => {
-        setPageInfo({...pageInfo, selectGroupListByKeyWord: groups})
+        setPageInfo((v) => ({...v, selectGroupListByKeyWord: groups}))
     })
     const selectGroupListAll = useCreation(() => {
         return [...(pageInfo.selectGroup || []), ...(pageInfo.selectGroupListByKeyWord || [])]
     }, [pageInfo.selectGroup, pageInfo.selectGroupListByKeyWord])
     const onClearAll = useMemoizedFn(() => {
-        setPageInfo({...pageInfo, selectGroup: [], selectGroupListByKeyWord: []})
+        setPageInfo((v) => ({...v, selectGroup: [], selectGroupListByKeyWord: []}))
         setHidden(false)
     })
     const onClose = useMemoizedFn(() => {
         setHidden(true)
     })
+    const dataScanParams = useCreation(() => {
+        return {
+            https: pageInfo.https,
+            httpFlowIds: pageInfo.httpFlowIds,
+            request: pageInfo.request
+        }
+    }, [pageInfo.https, pageInfo.httpFlowIds, pageInfo.request])
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div
@@ -186,6 +189,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 executeStatus={executeStatus}
                 setExecuteStatus={setExecuteStatus}
                 onClearAll={onClearAll}
+                dataScanParams={dataScanParams}
             />
         </div>
     )
@@ -762,7 +766,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-    const {selectGroupList, defaultFormValue, onClearAll} = props
+    const {selectGroupList, defaultFormValue, onClearAll, dataScanParams} = props
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -791,7 +795,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     }, [executeStatus])
 
     useEffect(() => {
-        if (defaultFormValue) {
+        if (defaultFormValue && Object.keys(defaultFormValue).length > 0) {
             const value = JSON.stringify(defaultFormValue)
             pluginBatchExecuteContentRef.current?.onInitInputValue(value)
         }
@@ -944,6 +948,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         setExecuteStatus={onSetExecuteStatus}
                         setPluginExecuteLog={setPluginExecuteLog}
                         setHidden={setHidden}
+                        dataScanParams={dataScanParams}
                     />
                 </div>
             </div>

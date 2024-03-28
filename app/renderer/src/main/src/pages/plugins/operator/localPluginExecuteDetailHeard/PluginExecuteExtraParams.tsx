@@ -24,14 +24,15 @@ const {ipcRenderer} = window.require("electron")
 
 const {YakitPanel} = YakitCollapse
 
+type ExtraParamsValue = PluginExecuteExtraFormValue | CustomPluginExecuteFormValue
 interface PluginExecuteExtraParamsProps {
     ref?: any
     pluginType: string
-    extraParamsValue: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue
+    extraParamsValue: ExtraParamsValue
     extraParamsGroup: YakExtraParamProps[]
     visible: boolean
     setVisible: (b: boolean) => void
-    onSave: (v: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue) => void
+    onSave: (v: ExtraParamsValue) => void
 }
 
 export interface PluginExecuteExtraParamsRefProps {
@@ -75,7 +76,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                         if (formValue.Path) {
                             pathRef.current.onSetRemoteValues(formValue.Path)
                         }
-                        onSave(formValue)
+                        onSave(formValue as ExtraParamsValue)
                     })
                     break
                 default:

@@ -26,7 +26,7 @@ import {
     generateYakCodeByRequest,
     RequestToYakCodeTemplate
 } from "../../pages/invoker/fromPacketToYakCode"
-import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
+import {execPacketScan, execPacketScanWithNewTab} from "@/pages/packetScanner/PacketScanner"
 import {GetPacketScanByCursorMenuItem, packetScanDefaultValue} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {FooterBottom, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
@@ -1496,7 +1496,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         let id
         if (inViewport) {
             scrollUpdate()
-            if(isLoop){
+            if (isLoop) {
                 id = setInterval(scrollUpdate, 1000)
             }
         }
@@ -2695,7 +2695,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (keyPath.includes("数据包扫描")) {
                         const scanItem = packetScanDefaultValue.find((e) => e.Verbose === key)
                         if (!scanItem) return
-                        execPacketScan([rowData.Id], scanItem.Keyword)
+                        execPacketScan({
+                            httpFlowIds: [rowData.Id],
+                            value: scanItem,
+                            https: rowData.IsHTTPS
+                        })
                         return
                     }
                     if (keyPath.includes("标注颜色")) {
@@ -3133,17 +3137,33 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                         })}
                                                                     onClick={({key, keyPath}) => {
                                                                         if (keyPath.includes("数据包扫描")) {
+                                                                            if (isAllSelect) {
+                                                                                yakitNotify(
+                                                                                    "warning",
+                                                                                    "该批量操作不支持全选"
+                                                                                )
+                                                                                return
+                                                                            }
                                                                             const currentItemScan = menuData.find(
                                                                                 (f) =>
                                                                                     f.onClickBatch &&
                                                                                     f.key === "数据包扫描"
                                                                             )
-                                                                            if (!currentItemScan) return
-                                                                            onBatch(
-                                                                                (v) => execPacketScan([v.Id], key),
-                                                                                currentItemScan.number || 0,
-                                                                                selectedRowKeys.length === total
+                                                                            const currentItemPacketScan =
+                                                                                packetScanDefaultValue.find(
+                                                                                    (f) => f.Verbose === key
                                                                             )
+                                                                            if (
+                                                                                !currentItemScan ||
+                                                                                !currentItemPacketScan
+                                                                            )
+                                                                            return
+                                                                            
+                                                                            onBatchExecPacketScan({
+                                                                                httpFlowIds: selectedRowKeys,
+                                                                                maxLength: currentItemScan.number || 0,
+                                                                                currentPacketScan: currentItemPacketScan
+                                                                            })
                                                                             return
                                                                         }
                                                                         if (keyPath.includes("标注颜色")) {
@@ -3851,4 +3871,22 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
             }
             setData(newData)
         })
+}
+
+const onBatchExecPacketScan = (params: {
+    httpFlowIds: string[]
+    maxLength: number
+    currentPacketScan: {Keyword?: string; Verbose: string}
+}) => {
+    const {httpFlowIds, maxLength, currentPacketScan} = params
+    if (httpFlowIds.length > maxLength) {
+        yakitNotify("warning", `最多同时只能发送${maxLength}条数据`)
+        return
+    }
+    execPacketScanWithNewTab({
+        httpFlowIds,
+        https: false,
+        keyword: currentPacketScan.Keyword || "",
+        verbose: currentPacketScan.Verbose
+    })
 }

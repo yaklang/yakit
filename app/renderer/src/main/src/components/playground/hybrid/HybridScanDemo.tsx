@@ -33,7 +33,8 @@ export const HybridScanDemo: React.FC<HybridScanDemoProp> = (props) => {
         HTTPRequestTemplate: {
             IsHttps: false, IsRawHTTPRequest: false, RawHTTPRequest: new Uint8Array(),
             Method: "GET", Path: ["/"], GetParams: [], Headers: [], Cookie: [],
-            Body: new Uint8Array(), PostParams: [], MultipartParams: [], MultipartFileParams: [],
+            Body: new Uint8Array(), PostParams: [], MultipartParams: [], MultipartFileParams: [],IsHttpFlowId:false,
+            HTTPFlowId:[]
         },
     })
     const [plugin, setPlugin] = React.useState<HybridScanPluginConfig>({

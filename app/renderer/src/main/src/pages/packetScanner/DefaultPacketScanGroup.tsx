@@ -10,7 +10,7 @@ import styles from "./packetScanner.module.scss"
  * @description 数据包扫描的默认菜单数据
  */
 export const packetScanDefaultValue: {Verbose: string; Keyword?: string}[] = [
-    {Verbose: "自定义", Keyword: undefined},
+    {Verbose: "批量执行", Keyword: undefined},
     {Verbose: "网络设备与OA系统", Keyword: "锐捷,若依,金和,金山,金蝶,致远,Seeyou,seeyou,通达,tonged,Tongda,银澎,浪潮,泛微,方维,帆软,向日葵,ecshop,dahua,huawei,zimbra,coremail,Coremail,邮件服务器"},
     {Verbose: "安全产品", Keyword: "防火墙,行为管理,绿盟,天擎,tianqing,防篡改,网御星云,安防,审计系统,天融信,安全系统"},
     {Verbose: "FastJSON", Keyword: "fastjson,FastJson,FastJSON"},
@@ -18,17 +18,28 @@ export const packetScanDefaultValue: {Verbose: string; Keyword?: string}[] = [
     {Verbose: "Weblogic", Keyword: "weblogic,Weblogic"},
     {Verbose: "远程代码执行（扫描）", Keyword: "RCE,rce"},
     {Verbose: "XSS", Keyword: "xss,XSS"},
+    {Verbose: "Java", Keyword: "Java"},
+    {Verbose: "Tomcat", Keyword: "Tomcat"},
+    {Verbose: "IIS", Keyword: "IIS"},
+    {Verbose: "Nginx", Keyword: "Nginx"},
+    {Verbose: "Shiro", Keyword: "Shiro"},
+    {Verbose: "SQL注入", Keyword: "SQL注入"}
 ]
 
 export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {
     return {
-        title: "数据包扫描", onClick: () => {
-        },
-        subMenuItems: packetScanDefaultValue.map(i => {
+        title: "数据包扫描",
+        onClick: () => {},
+        subMenuItems: packetScanDefaultValue.map((i) => {
             return {
-                id:i.Keyword,
-                title: i.Verbose, onClick: () => {
-                    execPacketScan([id], i.Keyword)
+                id: i.Keyword,
+                title: i.Verbose,
+                onClick: () => {
+                    execPacketScan({
+                        httpFlowIds: [id],
+                        value: i,
+                        https: false
+                    })
                 }
             }
         })
@@ -36,7 +47,7 @@ export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps
 }
 
 export interface PacketScanButtonProp {
-    packetGetter: () => { https: boolean, httpRequest: Uint8Array }
+    packetGetter: () => {https: boolean; httpRequest: Uint8Array}
 }
 
 export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
@@ -60,7 +71,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
                                     setTimeout(() => {
                                         setVisible(undefined)
                                     }, 300)
-                                    execPacketScanFromRaw(https, httpRequest, i.Keyword)
+                                    execPacketScanFromRaw(https, httpRequest, i)
                                 }}
                                 key={`${i.Verbose}+${n}`}
                             >
