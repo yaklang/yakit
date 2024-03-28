@@ -91,6 +91,17 @@ const fuzzTagModeOptions = [
     }
 ]
 
+const fuzzTagSyncOptions = [
+    {
+        value: false,
+        label: "交叉乘积"
+    },
+    {
+        value: true,
+        label: "草叉/同步"
+    }
+]
+
 type fields = keyof AdvancedConfigValueProps
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
@@ -140,6 +151,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         () => advancedConfigValue.batchTarget || new Uint8Array(),
         [advancedConfigValue.batchTarget]
     )
+
+    console.log(123, batchTarget)
 
     useEffect(() => {
         setHttpResponse(defaultHttpResponse)
@@ -582,8 +595,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <YakitRadioButtons buttonStyle='solid' options={fuzzTagModeOptions} size={"small"} />
                         </Form.Item>
 
-                        <Form.Item label='强制同步渲染' name='fuzzTagSyncIndex' valuePropName='checked'>
-                            <YakitSwitch />
+                        <Form.Item label='渲染模式' name='fuzzTagSyncIndex'>
+                            <YakitRadioButtons buttonStyle='solid' options={fuzzTagSyncOptions} size={"small"} />
                         </Form.Item>
 
                         <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
@@ -600,8 +613,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 type='text'
                                 onClick={() => setBatchTargetModalVisible(true)}
                                 icon={
-                                    advancedConfigValue.batchTarget instanceof Uint8Array ? (
-                                        Uint8ArrayToString(advancedConfigValue.batchTarget) ? (
+                                    JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
+                                        Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
                                             <OutlineBadgecheckIcon style={{color: "#56C991"}} />
                                         ) : (
                                             <PlusSmIcon />
@@ -611,8 +624,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     )
                                 }
                             >
-                                {advancedConfigValue.batchTarget instanceof Uint8Array ? (
-                                    Uint8ArrayToString(advancedConfigValue.batchTarget) ? (
+                                {JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
+                                    Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
                                         <div style={{color: "#56C991"}}>已配置</div>
                                     ) : (
                                         "配置批量目标"
@@ -1307,7 +1320,9 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
                     labelCol={{span: 6}}
                     wrapperCol={{span: 18}}
                     style={{height: "100%"}}
-                    initialValues={{BatchTarget: Uint8ArrayToString(batchTarget)}}
+                    initialValues={{
+                        BatchTarget: JSON.stringify(batchTarget) === "{}" ? "" : Uint8ArrayToString(batchTarget)
+                    }}
                 >
                     <YakitFormDraggerContent
                         style={{width: "100%"}}
