@@ -30,7 +30,7 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
-import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
+import {HTTPFlowExtractedData, HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
@@ -46,7 +46,8 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
-import { RemoteGV } from "@/yakitGV"
+import {RemoteGV} from "@/yakitGV"
+import {QueryGeneralResponse} from "@/pages/invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -167,7 +168,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [props.id])
 
     const onCloseDetails = useMemoizedFn((e, res) => {
-        const { type, data } = res
+        const {type, data} = res
         if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
         if (props.onClose) props.onClose()
     })
@@ -541,6 +542,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
+export interface HighLightText {
+    startOffset: number
+    highlightLength: number
+    hoverVal: string
+}
+
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const {id, selectedFlow, refresh, defaultFold = false, pageType} = props
     const [flow, setFlow] = useState<HTTPFlow>()
@@ -554,6 +561,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(defaultFold)
     const lastIdRef = useRef<number>()
+    const [highLightText, setHighLightText] = useState<HighLightText[]>([])
 
     useEffect(() => {
         update()
@@ -650,6 +658,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .then((rsp: {Total: number}) => {
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
+                } else {
+                    setHighLightText([])
                 }
             })
             .catch((e) => {
@@ -700,10 +710,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     {flow && (
                         <HTTPFlowDetailRequestAndResponse
                             flow={flow}
-                            flowRequest={flowRequest}
-                            flowResponse={flowResponse}
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
+                            highLightText={highLightText}
                             {...props}
                         />
                     )}
@@ -816,6 +825,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             </div>
                                         </div>
                                     }
+                                    onSetHighLightText={setHighLightText}
                                 />
                             </Col>
                         )}
@@ -868,6 +878,7 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flowRequestLoad?: boolean
     flowResponseLoad?: boolean
     pageType?: HTTPHistorySourcePageType
+    highLightText?: HighLightText[]
 }
 
 interface HTTPFlowBareProps {
@@ -884,8 +895,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         search,
         id,
         Tags,
-        flowRequest,
-        flowResponse,
+        highLightText,
         flowRequestLoad,
         flowResponseLoad,
         historyId,
@@ -1128,14 +1138,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
     useEffect(() => {
         if (flow) {
-            getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then(res => {
+            getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
                 if (!!res) {
                     setReqTypeOptionVal(res)
                 } else {
                     setReqTypeOptionVal(undefined)
                 }
             })
-            getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then(res => {
+            getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
                 if (!!res) {
                     setResTypeOptionVal(res)
                 } else {
@@ -1245,6 +1255,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
                             }
                         }}
+                        highLightText={highLightText}
                     />
                 )
             }}
@@ -1258,6 +1269,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
+                        highLightText={highLightText}
                         language={flow?.DisableRenderStyles ? "text" : undefined}
                         typeOptionVal={resTypeOptionVal}
                         onTypeOptionVal={(typeOptionVal) => {
