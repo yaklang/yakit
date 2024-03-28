@@ -12,8 +12,6 @@ const osHome = os.homedir()
 /** 软件关联数据文件夹名 */
 const projectName = "yakit-projects"
 
-console.log(`software: ${appPath}\n osHome: ${osHome}\n projectName: ${projectName}`)
-
 /** 软件关联数据路径设置逻辑 Start */
 // 数据文件夹路径
 let project_path = ""
@@ -51,7 +49,12 @@ try {
  * 如果获取项目关联文件夹路径错误时，将自动设置为系统用户下面(容灾处理)
  */
 const YakitProjectPath = project_path || osHomeProjectPath
+
+console.log(`---------- Global-Path Start ----------`)
+console.log(`software-path: ${appPath}`)
+console.log(`os-home-path: ${osHome}`)
 console.log(`yakit-projects-path: ${YakitProjectPath}`)
+console.log(`---------- Global-Path End ----------`)
 
 /** 引擎文件夹路径 */
 const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
