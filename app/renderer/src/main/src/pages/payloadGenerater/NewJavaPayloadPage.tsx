@@ -808,7 +808,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             paramsOptions[el.Key] = el.Value
                             break
                         case FormParamsType.StringPort:
-                            paramsOptions[el.Key] = !el.Value ? 0 : +el.Value
+                            paramsOptions[el.Key] = !el.Value ? 0 : +el.Value || 0 
                             break
                         case FormParamsType.StringBool:
                             paramsOptions[el.Key] = !el.Value ? false : el.Value === "false" ? false : true
