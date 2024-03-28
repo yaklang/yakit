@@ -1,6 +1,5 @@
 import React, {CSSProperties, useEffect, useRef, useState} from "react";
 import {
-    AutoComplete,
     Button,
     Checkbox,
     Col,
@@ -33,6 +32,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber";
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect";
+import { YakitAutoComplete } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete";
 
 type TooltipPlacement =
     'top'
@@ -114,7 +114,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
         help={props.help}
     >
         {props.prefixNode}
-        {props.autoComplete ? <AutoComplete
+        {props.autoComplete ? <YakitAutoComplete
             style={{width: props.width || "100%"}}
             dropdownMatchSelectWidth={400}
             disabled={!!props.disable}
@@ -122,7 +122,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             allowClear={true}
             value={props.value} onChange={e => props.setValue && props.setValue(e)}
             options={(props.autoComplete || []).map(i => {
-                return {value: i}
+                return {value: i, label: i}
             })}
             onFocus={(e) => {
                 if (props.isBubbing) e.stopPropagation()
@@ -267,7 +267,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                         <Col span={10}>
                             {props.valueIsStringArray ? <div style={{width: "100%"}}>
                                 <OneLine>
-                                    <Select
+                                    <YakitSelect
                                         style={{width: "100%"}}
                                         allowClear={true}
                                         autoClearSearchValue={true}
@@ -499,10 +499,10 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
             placeholder={p.placeholder}
         >
             {p.data.map(i => {
-                return <Select.Option
+                return <YakitSelect.Option
                     key={`${i.value}`}
                     value={i.value.toString()}
-                >{i?.label?.toString()}</Select.Option>
+                >{i?.label?.toString()}</YakitSelect.Option>
             })}
         </YakitSelect>
     </Item>
@@ -728,15 +728,15 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
 
 export const ManySelectOne: React.FC<SelectOneProps> = (p) => {
     return <Item label={p.label} help={p.help} style={{...p.formItemStyle}}>
-        <Select
+        <YakitSelect
             value={p.value} onChange={e => p.setValue && p.setValue(e)}
             disabled={p.disabled} size={p.size}
             placeholder={p.placeholder}
         >
-            {p.data.map(e => <Select.Option key={e.value} value={e.value}>
+            {p.data.map(e => <YakitSelect.Option key={e.value} value={e.value}>
                 {e.text}
-            </Select.Option>)}
-        </Select>
+            </YakitSelect.Option>)}
+        </YakitSelect>
     </Item>
 }
 

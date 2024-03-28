@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Col, DatePicker, Row} from "antd";
 import moment from "moment";
-import {TimeUnit} from "./timeInterval";
 
 interface TimeRangeProps {
     start?: number
@@ -82,7 +81,3 @@ const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
 };
 
 export default TimeRange;
-
-export const secondsToNumberAndUnit = (seconds: number): { value: number, unit: TimeUnit } => {
-    return {value: seconds, unit: TimeUnit.Second}
-}

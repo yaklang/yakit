@@ -8,6 +8,7 @@ import {AutoCard} from "../../components/AutoCard"
 import {YakEditor} from "../../utils/editors"
 
 import "./reverseTable.scss"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const DefaultType: {label: string; value: string}[] = [
     {value: "rmi", label: "RMI连接"},
@@ -101,11 +102,11 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                         </div>
 
                         <div className='extra-opt'>
-                            <div className='opt-title'>类型</div>
-                            <Select
+                            <div className='opt-title' style={{width: 35}}>类型</div>
+                            <YakitSelect
                                 size='small'
                                 mode='multiple'
-                                style={{width: 180}}
+                                style={{width: 170}}
                                 value={!types ? [] : types.split(",")}
                                 allowClear={true}
                                 options={DefaultType}
@@ -170,7 +171,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                             filterIcon: () => <SearchOutlined style={{color: !!getTypes() ? "#1890ff" : undefined}} />,
                             filterDropdown: () => (
                                 <div style={{padding: 8}}>
-                                    <Select
+                                    <YakitSelect
                                         mode='multiple'
                                         style={{width: 200}}
                                         value={!types ? [] : types.split(",")}

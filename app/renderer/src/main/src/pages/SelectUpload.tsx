@@ -1,12 +1,13 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Input, Form, Select, Spin, Progress} from "antd"
+import {Button, Input, Form, Select, Progress} from "antd"
 import {useMemoizedFn, useThrottleFn, useGetState} from "ahooks"
 import {failed, success} from "@/utils/notification"
 import {PaginationSchema} from "./invoker/schema"
 import {randomString} from "@/utils/randomUtil"
 import { ProjectDescription, ProjectIOProgress, ProjectsResponse } from "./softwareSettings/ProjectManage"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 
-const {Option} = Select
 const {ipcRenderer} = window.require("electron")
 
 export interface SelectUploadProps {
@@ -140,17 +141,17 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
             </div>
         )
     })
     return (
         <Form {...layout} form={form} onFinish={onFinish}>
             <Form.Item name='allow_password' label='加密方式' rules={[{required: true, message: "该项为必填"}]}>
-                <Select placeholder='请选择加密方式' onChange={setAllowPassword}>
-                    <Option value='1'>加密上传</Option>
-                    <Option value='0'>明文上传</Option>
-                </Select>
+                <YakitSelect placeholder='请选择加密方式' onChange={setAllowPassword}>
+                    <YakitSelect.Option value='1'>加密上传</YakitSelect.Option>
+                    <YakitSelect.Option value='0'>明文上传</YakitSelect.Option>
+                </YakitSelect>
             </Form.Item>
             {allowPassword === "1" && (
                 <Form.Item name='password' label='密码' rules={[{required: true, message: "该项为必填"}]}>
@@ -158,7 +159,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 </Form.Item>
             )}
             <Form.Item name='name' label='项目' rules={[{required: true, message: "该项为必填"}]}>
-                <Select
+                <YakitSelect
                     showSearch
                     placeholder='请选择项目'
                     optionFilterProp='children'
@@ -175,11 +176,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                     dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                 >
                     {projectList.map((item) => (
-                        <Option key={item.Id} value={item.Id}>
+                        <YakitSelect.Option key={item.Id} value={item.Id}>
                             {item.ProjectName}
-                        </Option>
+                        </YakitSelect.Option>
                     ))}
-                </Select>
+                </YakitSelect>
             </Form.Item>
             {percent > 0 && (
                 <div style={{width: 276, margin: "0 auto", paddingBottom: 14}}>

@@ -70,6 +70,7 @@ import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
+import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -154,7 +155,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const getCacheEngineMode = useMemoizedFn(() => {
         setEngineMode(undefined)
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
-            if(val) info(`加载上次引擎模式：${val}`)
+            if (val) info(`加载上次引擎模式：${val}`)
             switch (val) {
                 case "remote":
                     setEngineMode("remote")
@@ -908,7 +909,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ></YakitMenu>
     )
     const menuSelect = useMemoizedFn((type: string) => {
-        if(show) setShow(false)
+        if (show) setShow(false)
         const info = getLocalInfo()
         switch (type) {
             case "report_bug":
@@ -1549,8 +1550,8 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                         <div className={styles["title-style"]}>远程模式</div>
                         <div className={styles["remote-history"]}>
                             <div className={styles["select-title"]}>连接历史</div>
-                            <Select
-                                className={styles["select-style"]}
+                            <YakitSelect
+                                wrapperClassName={styles["select-style"]}
                                 placeholder='请选择...'
                                 onSelect={(value) => {
                                     const info = auths.filter((item) => item.name === value)[0]
@@ -1570,12 +1571,12 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                             >
                                 {auths.map((item) => {
                                     return (
-                                        <Select.Option key={item.name} value={item.name}>
+                                        <YakitSelect.Option key={item.name} value={item.name}>
                                             {item.name}
-                                        </Select.Option>
+                                        </YakitSelect.Option>
                                     )
                                 })}
-                            </Select>
+                            </YakitSelect>
                         </div>
                     </div>
 

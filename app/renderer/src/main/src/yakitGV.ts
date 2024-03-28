@@ -1,3 +1,4 @@
+import {MITMConsts} from "@/pages/mitm/MITMConsts"
 /** 本地文件缓存数据-键值变量 */
 export enum LocalGV {
     /** @name 用户协议(需用户同意才能使用软件) */
@@ -81,7 +82,9 @@ export enum RemoteGV {
     /** @name WebFuzzer编辑器美化 */
     WebFuzzerEditorBeautify = "webFuzzer_editor_beautify",
     /**@name 专项漏洞关键词搜索缓存 */
-    PocPluginKeywords = "poc-plugin-keywords"
+    PocPluginKeywords = "poc-plugin-keywords",
+    /**@name MITM 用户数据是否保存 */
+    MITMUserDataSave = "mitm_user_data_save",
 }
 
 /** 项目逻辑全局变量 */
@@ -98,4 +101,20 @@ export enum CodeGV {
     MenuExpand = "menu-expand",
     /** @name 插件参数-帮助文档地址 */
     PluginParamsHelp = "https://yaklang.com/products/Plugin-repository/plugins/plugin_create"
+}
+
+/**YakitAutoComplate + YakitSelect缓存下拉和默认值变量 */
+export enum CacheDropDownGV {
+    /** @name mitm 劫持代理监听主机 */
+    MITMDefaultHostHistoryList = "mitm_default_host_history",
+    /** @name CVETable 设置代理 */
+    CVEProxyList = "cev_proxy_list",
+    /** @name 私有域地址 */
+    ConfigBaseUrl = "config_base_url",
+    /** @name 配置插件源 -》设置代理 */
+    ConfigProxy = "config_proxy",
+    /** @name MITM 保存用户数据地址 */
+    MITMSaveUserDataDir = "mitm_save_user_data_dir",
+    /** @name MITM webFuzzer 代理 */
+    WebFuzzerProxyList = "web_fuzzer_proxy_list",
 }
