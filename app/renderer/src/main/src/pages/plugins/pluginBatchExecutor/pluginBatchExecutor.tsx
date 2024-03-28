@@ -364,7 +364,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             dataScanParams
         } = props
         const [form] = Form.useForm()
-        const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+        const requestType = Form.useWatch("requestType", form)
         useImperativeHandle(
             ref,
             () => ({
@@ -566,7 +566,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const isShowResult = useCreation(() => {
             return isExecuting || runtimeId
         }, [isExecuting, runtimeId])
-
         return (
             <>
                 <div
@@ -631,7 +630,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 )}
                 <React.Suspense fallback={<div>loading...</div>}>
                     <PluginBatchExecuteExtraParamsDrawer
-                        isRawHTTPRequest={isRawHTTPRequest}
+                        isRawHTTPRequest={requestType !== "input"}
                         extraParamsValue={extraParamsValue}
                         visible={extraParamsVisible}
                         setVisible={setExtraParamsVisible}

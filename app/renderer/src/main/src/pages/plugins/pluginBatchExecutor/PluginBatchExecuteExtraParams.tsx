@@ -19,6 +19,7 @@ import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/
 const {YakitPanel} = YakitCollapse
 
 interface PluginBatchExecuteExtraParamsDrawerProps {
+    /**是否显示请求配置 默认显示 */
     isRawHTTPRequest: boolean
     extraParamsValue: PluginBatchExecuteExtraFormValue
     visible: boolean
