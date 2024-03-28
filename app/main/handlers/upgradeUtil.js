@@ -278,8 +278,8 @@ module.exports = {
 
                 console.info("YAK-VERSION: mount version")
                 yakVersionEmitter.once('version', (err, version) => {
+                    console.log(`version-once`, !!err, !!version)
                     if (err) {
-
                         diagnosingYakVersion().catch(err => {
                             console.info("YAK-VERSION(DIAG): fetch error: " + `${err}`)
                             reject(err)
@@ -322,6 +322,7 @@ module.exports = {
             })
         }
         ipcMain.handle("get-current-yak", async (e, params) => {
+            console.log('get-current-yak')
             return await asyncGetCurrentLatestYakVersion(params)
         })
 

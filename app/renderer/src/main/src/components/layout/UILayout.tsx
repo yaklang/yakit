@@ -67,8 +67,9 @@ import yakitCattle from "@/assets/yakitCattle.png"
 import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
-
+import {saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
 import classNames from "classnames"
+
 import styles from "./uiLayout.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -124,7 +125,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** 数据库权限由usestate改为useref(数据不影响渲染) */
     const databaseError = useRef<boolean>(false)
 
-    /* 内置二进制文件的话，需要通过自检 */
+    /** 本地引擎自检输出日志 */
+    const [checkLog, setCheckLog] = useState<string[]>([])
+
+    /**
+     * 检查是否有内置引擎
+     * 检查漏洞信息库
+     */
     useEffect(() => {
         ipcRenderer
             .invoke("GetBuildInEngineVersion")
@@ -139,7 +146,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 outputToWelcomeConsole(`引擎内置自检：无内置引擎: ${e}`)
             })
             .finally(() => {
-                info("开始检查漏洞信息库")
                 ipcRenderer
                     .invoke("InitCVEDatabase")
                     .then(() => {
@@ -154,7 +160,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const getCacheEngineMode = useMemoizedFn(() => {
         setEngineMode(undefined)
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
-            if(val) info(`加载上次引擎模式：${val}`)
+            if (val) info(`加载上次引擎模式：${val}`)
             switch (val) {
                 case "remote":
                     setEngineMode("remote")
@@ -908,7 +914,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         ></YakitMenu>
     )
     const menuSelect = useMemoizedFn((type: string) => {
-        if(show) setShow(false)
+        if (show) setShow(false)
         const info = getLocalInfo()
         switch (type) {
             case "report_bug":
@@ -968,15 +974,39 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         )
     }, [screenRecorderInfo])
 
+    // fuzzer-tab页数据订阅事件
+    const unFuzzerCacheData = useRef<any>(null)
+
     /** chat-cs 功能逻辑 */
     const [showChatCS, setShowChatCS] = useState<boolean>(true)
     useEffect(() => {
-        getRemoteValue(RemoteGV.KnowChatCS)
-            .then((value: any) => {
-                if (!value) return
-                else setShowChatCS(false)
-            })
-            .catch(() => {})
+        if (engineLink) {
+            getRemoteValue(RemoteGV.KnowChatCS)
+                .then((value: any) => {
+                    if (!value) return
+                    else setShowChatCS(false)
+                })
+                .catch(() => {})
+
+            // 开启fuzzer-tab页内数据的订阅事件
+            if (unFuzzerCacheData.current) {
+                unFuzzerCacheData.current()
+            }
+            unFuzzerCacheData.current = usePageInfo.subscribe(
+                (state) => state.pages.get("httpFuzzer") || [],
+                (selectedState, previousSelectedState) => {
+                    saveFuzzerCache(selectedState)
+                }
+            )
+
+            return () => {
+                // 注销fuzzer-tab页内数据的订阅事件
+                if (unFuzzerCacheData.current) {
+                    unFuzzerCacheData.current()
+                    unFuzzerCacheData.current = null
+                }
+            }
+        }
     }, [engineLink])
     const onChatCS = useMemoizedFn(() => {
         setShowChatCS(false)
