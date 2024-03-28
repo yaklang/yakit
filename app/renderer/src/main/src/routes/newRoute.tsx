@@ -127,6 +127,7 @@ import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 import {YakPoC} from "@/pages/securityTool/yakPoC/YakPoC"
 import {NewPortScan} from "@/pages/securityTool/newPortScan/NewPortScan"
+import {NewBrute} from "@/pages/securityTool/newBrute/NewBrute"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -375,7 +376,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Space_Engine,
     YakitRoute.Plugin_OP,
     YakitRoute.PoC,
-    YakitRoute.Mod_ScanPort
+    YakitRoute.Mod_ScanPort,
+    YakitRoute.Mod_Brute
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -524,7 +526,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             if (!yakScriptId || !+yakScriptId) return <div />
             return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
         case YakitRoute.Mod_Brute:
-            return <BrutePage sendTarget={params?.bruteParams} />
+            return <NewBrute id={params?.id || ""} />
         case YakitRoute.Plugin_Store:
             // 社区版的插件商店不用判断登录,企业版/简易版的插件商店登录后才可查看
             return (

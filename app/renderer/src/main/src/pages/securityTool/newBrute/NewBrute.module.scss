@@ -1,0 +1,44 @@
+@use "../securityTool.scss" as securityTool;
+
+.brute-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 12px;
+}
+
+.tree-list-wrapper {
+    @extend %display-column-center;
+    justify-content: flex-start;
+    gap: 12px;
+    flex: 1;
+    overflow: hidden;
+    max-width: 300px;
+    border-right: 1px solid var(--yakit-border-color);
+    padding: 12px;
+    :global {
+        .ant-tree-switcher {
+            height: 24px;
+        }
+    }
+    .tree-heard {
+        @extend %display-flex-center;
+        justify-content: space-between;
+
+        &-title {
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
+    }
+    .tree-list {
+        display: flex;
+        flex: 1;
+        overflow: auto;
+        .tree-root {
+            flex: 1;
+            padding-right: 12px;
+        }
+    }
+}
