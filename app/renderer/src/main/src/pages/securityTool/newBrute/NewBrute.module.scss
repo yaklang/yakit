@@ -4,7 +4,10 @@
     display: flex;
     flex: 1;
     overflow: hidden;
-    gap: 12px;
+}
+
+.divider-style {
+    @extend %divider-style;
 }
 
 .tree-list-wrapper {
@@ -41,4 +44,37 @@
             padding-right: 12px;
         }
     }
+}
+
+.tree-list-wrapper-hidden {
+    display: none;
+}
+
+.brute-execute-wrapper {
+    @include securityTool.execute-title("brute");
+}
+
+.brute-form-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: all 0.3s ease;
+    padding-top: 16px;
+    :global {
+        .ant-form {
+            overflow: hidden;
+        }
+    }
+    .plugin-execute-form-item {
+        width: 100%;
+    }
+    .plugin-execute-form-operate {
+        @extend %display-flex-center;
+        .plugin-execute-form-operate-start {
+            margin-right: 8px;
+        }
+    }
+}
+.brute-form-wrapper-hidden {
+    grid-template-rows: 0fr;
+    padding-top: 0;
 }

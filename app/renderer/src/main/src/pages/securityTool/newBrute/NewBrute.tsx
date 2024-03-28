@@ -1,29 +1,49 @@
-import React, {useState, useEffect, useMemo, Key} from "react"
-import {BruteExecuteProps, BruteTypeTreeListProps, NewBruteProps} from "./NewBruteType"
+import React, {useState, useEffect, Key, useRef, forwardRef, useImperativeHandle} from "react"
+import {
+    BruteExecuteContentProps,
+    BruteExecuteContentRefProps,
+    BruteExecuteExtraFormValue,
+    BruteExecuteProps,
+    BruteTypeTreeListProps,
+    NewBruteProps
+} from "./NewBruteType"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
-import {Tree, apiGetAvailableBruteTypes} from "./utils"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {apiGetAvailableBruteTypes, defaultBruteExecuteExtraFormValue} from "./utils"
 import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import {DataNode} from "antd/lib/tree"
-import classNames from "classnames"
 import styles from "./NewBrute.module.scss"
+import {
+    ExpandAndRetract,
+    ExpandAndRetractExcessiveState
+} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon} from "@/assets/icon/outline"
+import classNames from "classnames"
+import {Divider, Form} from "antd"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import {randomString} from "@/utils/randomUtil"
+import cloneDeep from "lodash/cloneDeep"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+
+const BruteExecuteParamsDrawer = React.lazy(() => import("./BruteExecuteParamsDrawer"))
 
 export const NewBrute: React.FC<NewBruteProps> = React.memo((props) => {
     const [bruteType, setBruteType] = useState<React.Key[]>([])
-    const type = useCreation(() => {
-        return bruteType?.join(",") || ""
-    }, [bruteType])
+    const [hidden, setHidden] = useState<boolean>(false)
+
     return (
         <div className={styles["brute-wrapper"]}>
-            <BruteTypeTreeList bruteType={bruteType} setBruteType={setBruteType} />
-            <BruteExecute type={type} />
+            <BruteTypeTreeList hidden={hidden} bruteType={bruteType} setBruteType={setBruteType} />
+            <BruteExecute hidden={hidden} setHidden={setHidden} bruteType={bruteType} setBruteType={setBruteType} />
         </div>
     )
 })
 
 const BruteTypeTreeList: React.FC<BruteTypeTreeListProps> = React.memo((props) => {
+    const {hidden} = props
     const [tree, setTree] = useState<DataNode[]>([])
 
     const [checkedKeys, setCheckedKeys] = useControllableValue<React.Key[]>(props, {
@@ -71,7 +91,11 @@ const BruteTypeTreeList: React.FC<BruteTypeTreeListProps> = React.memo((props) =
         }
     })
     return (
-        <div className={styles["tree-list-wrapper"]}>
+        <div
+            className={classNames(styles["tree-list-wrapper"], {
+                [styles["tree-list-wrapper-hidden"]]: hidden
+            })}
+        >
             <div className={styles["tree-heard"]}>
                 <span className={styles["tree-heard-title"]}>可用爆破类型</span>
             </div>
@@ -91,6 +115,252 @@ const BruteTypeTreeList: React.FC<BruteTypeTreeListProps> = React.memo((props) =
 })
 
 const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
-    const {type} = props
-    return <div>fsdfd</div>
+    const {bruteType, setBruteType} = props
+    const [hidden, setHidden] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "hidden",
+        trigger: "setHidden"
+    })
+    /**是否展开/收起 */
+    const [isExpand, setIsExpand] = useState<boolean>(true)
+    const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+
+    const bruteExecuteContentRef = useRef<BruteExecuteContentRefProps>(null)
+
+    const onExpand = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setIsExpand(!isExpand)
+    })
+    const onRemove = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setBruteType([])
+    })
+    const selectNum = useCreation(() => {
+        return bruteType.length
+    }, [bruteType])
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
+    const onStopExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
+        bruteExecuteContentRef.current?.onStopExecute()
+    })
+    const onStartExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
+        bruteExecuteContentRef.current?.onStartExecute()
+    })
+    return (
+        <div className={styles["brute-execute-wrapper"]}>
+            <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
+                <div className={styles["brute-executor-title"]}>
+                    <span className={styles["brute-executor-title-text"]}>弱口令检测</span>
+                    {selectNum > 0 && (
+                        <YakitTag closable onClose={onRemove} color='info'>
+                            {selectNum} 个类型
+                        </YakitTag>
+                    )}
+                </div>
+                <div className={styles["brute-executor-btn"]}>
+                    {progressList.length === 1 && (
+                        <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+                    )}
+                    {isExecuting
+                        ? !isExpand && (
+                              <>
+                                  <YakitButton danger onClick={onStopExecute}>
+                                      停止
+                                  </YakitButton>
+                                  <div className={styles["divider-style"]}></div>
+                              </>
+                          )
+                        : !isExpand && (
+                              <>
+                                  <YakitButton onClick={onStartExecute}>执行</YakitButton>
+                                  <div className={styles["divider-style"]}></div>
+                              </>
+                          )}
+                    <YakitButton
+                        type='text2'
+                        icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            setHidden(!hidden)
+                        }}
+                    />
+                </div>
+            </ExpandAndRetract>
+            <div className={styles["brute-executor-body"]}>
+                <BruteExecuteContent
+                    ref={bruteExecuteContentRef}
+                    isExpand={isExpand}
+                    setIsExpand={setIsExpand}
+                    executeStatus={executeStatus}
+                    setExecuteStatus={setExecuteStatus}
+                    selectNum={selectNum}
+                    setProgressList={setProgressList}
+                />
+            </div>
+        </div>
+    )
 })
+
+const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {isExpand, executeStatus, setExecuteStatus, setIsExpand, selectNum, setProgressList} = props
+        const [form] = Form.useForm()
+        const [runtimeId, setRuntimeId] = useState<string>("")
+
+        /**额外参数弹出框 */
+        const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+        const [extraParamsValue, setExtraParamsValue] = useState<BruteExecuteExtraFormValue>(
+            cloneDeep(defaultBruteExecuteExtraFormValue)
+        )
+
+        const tokenRef = useRef<string>(randomString(40))
+
+        const defaultTabs = useCreation(() => {
+            return [
+                {tabName: "日志", type: "log"},
+                {tabName: "Console", type: "console"}
+            ]
+        }, [])
+        const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
+            tabs: defaultTabs,
+            taskName: "StartBrute",
+            apiKey: "StartBrute",
+            token: tokenRef.current,
+            onEnd: () => {
+                portScanStreamEvent.stop()
+                setTimeout(() => {
+                    setExecuteStatus("finished")
+                }, 200)
+            },
+            setRuntimeId: (rId) => {
+                setRuntimeId(rId)
+            }
+        })
+
+        useImperativeHandle(
+            ref,
+            () => ({
+                onStopExecute,
+                onStartExecute: () => {
+                    form.validateFields()
+                        .then(onStartExecute)
+                        .catch((e) => {
+                            setIsExpand(true)
+                        })
+                }
+            }),
+            [form]
+        )
+
+        useEffect(() => {
+            setProgressList(streamInfo.progressState)
+        }, [streamInfo.progressState])
+
+        /**取消执行 */
+        const onStopExecute = useMemoizedFn(() => {})
+
+        const onStartExecute = useMemoizedFn(() => {})
+
+        const isExecuting = useCreation(() => {
+            if (executeStatus === "process") return true
+            return false
+        }, [executeStatus])
+
+        const openExtraPropsDrawer = useMemoizedFn(() => {
+            setExtraParamsValue({
+                ...extraParamsValue
+            })
+            setExtraParamsVisible(true)
+        })
+        /**保存额外参数 */
+        const onSaveExtraParams = useMemoizedFn((v: BruteExecuteExtraFormValue) => {
+            setExtraParamsValue({...v} as BruteExecuteExtraFormValue)
+            setExtraParamsVisible(false)
+        })
+        const isShowResult = useCreation(() => {
+            return isExecuting || runtimeId
+        }, [isExecuting, runtimeId])
+        const progressList = useCreation(() => {
+            return streamInfo.progressState
+        }, [streamInfo.progressState])
+
+        return (
+            <>
+                <div
+                    className={classNames(styles["brute-form-wrapper"], {
+                        [styles["brute-form-wrapper-hidden"]]: !isExpand
+                    })}
+                >
+                    <Form
+                        form={form}
+                        onFinish={onStartExecute}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                        labelWrap={true}
+                    >
+                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                            <div className={styles["plugin-execute-form-operate"]}>
+                                {isExecuting ? (
+                                    <YakitButton danger onClick={onStopExecute} size='large'>
+                                        停止
+                                    </YakitButton>
+                                ) : (
+                                    <YakitButton
+                                        className={styles["plugin-execute-form-operate-start"]}
+                                        htmlType='submit'
+                                        size='large'
+                                    >
+                                        开始执行
+                                    </YakitButton>
+                                )}
+                                <YakitButton
+                                    type='text'
+                                    onClick={openExtraPropsDrawer}
+                                    disabled={isExecuting}
+                                    size='large'
+                                >
+                                    额外参数
+                                </YakitButton>
+                            </div>
+                        </Form.Item>
+                    </Form>
+                </div>
+                {progressList.length > 1 && (
+                    <div className={styles["executing-progress"]}>
+                        {progressList.map((ele, index) => (
+                            <React.Fragment key={ele.id}>
+                                {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
+                                <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+                            </React.Fragment>
+                        ))}
+                    </div>
+                )}
+                {isShowResult && (
+                    <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        pluginType={""} // 算yak类型的插件，可以传空字符串
+                        defaultActiveKey={""}
+                    />
+                )}
+                <React.Suspense fallback={<div>loading...</div>}>
+                    <BruteExecuteParamsDrawer
+                        extraParamsValue={extraParamsValue}
+                        visible={extraParamsVisible}
+                        onSave={onSaveExtraParams}
+                    />
+                </React.Suspense>
+            </>
+        )
+    })
+)

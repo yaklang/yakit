@@ -1,8 +1,8 @@
 import {yakitNotify} from "@/utils/notification"
 import {DataNode} from "antd/lib/tree"
+import {BruteExecuteExtraFormValue} from "./NewBruteType"
 
 const {ipcRenderer} = window.require("electron")
-
 export interface Tree {
     Name: string
     Data: string
@@ -36,4 +36,25 @@ export const apiGetAvailableBruteTypes: () => Promise<DataNode[]> = () => {
                 reject(e)
             })
     })
+}
+
+export const defaultBruteExecuteExtraFormValue: BruteExecuteExtraFormValue = {
+    Concurrent: 50,
+    DelayMax: 5,
+    DelayMin: 1,
+    OkToStop: true,
+    PasswordFile: "",
+    Passwords: [],
+    PasswordsDict: [],
+    ReplaceDefaultPasswordDict: false,
+    PluginScriptName: "",
+    Prefix: "",
+    TargetFile: "",
+    TargetTaskConcurrent: 1,
+    Targets: "",
+    Type: "",
+    UsernameFile: "",
+    Usernames: [],
+    UsernamesDict: [],
+    ReplaceDefaultUsernameDict: false,
 }
