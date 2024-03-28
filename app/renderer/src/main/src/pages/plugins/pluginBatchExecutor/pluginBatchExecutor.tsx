@@ -51,8 +51,8 @@ import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
-import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/newPortScan"
-import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/yakPoC"
+import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/NewPortScan"
+import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/YakPoC"
 import {Uint8ArrayToString} from "@/utils/str"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))

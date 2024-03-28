@@ -6,8 +6,8 @@ import {
     NewPortScanProps,
     PortScanExecuteExtraFormValue,
     NewPortScanExecuteContentRefProps
-} from "./newPortScanType"
-import styles from "./newPortScan.module.scss"
+} from "./NewPortScanType"
+import styles from "./NewPortScan.module.scss"
 import {
     ExpandAndRetract,
     ExpandAndRetractExcessiveState
@@ -50,7 +50,7 @@ import {v4 as uuidv4} from "uuid"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 
-const NewPortScanExtraParamsDrawer = React.lazy(() => import("./newPortScanExtraParamsDrawer"))
+const NewPortScanExtraParamsDrawer = React.lazy(() => import("./NewPortScanExtraParamsDrawer"))
 
 const {ipcRenderer} = window.require("electron")
 

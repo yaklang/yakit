@@ -93,7 +93,7 @@ import {
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
-import {onToManageGroup} from "@/pages/securityTool/yakPoC/yakPoC"
+import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import { apiFetchQueryYakScriptGroupLocal } from "@/pages/plugins/utils"
 import { PluginGroupType } from "@/pages/plugins/group/PluginGroups"

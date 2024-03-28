@@ -1,5 +1,5 @@
 import {yakitNotify} from "@/utils/notification"
-import {PortScanExecuteExtraFormValue} from "./newPortScanType"
+import {PortScanExecuteExtraFormValue} from "./NewPortScanType"
 import {LastRecordProps} from "@/pages/simpleDetect/SimpleDetect"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
 

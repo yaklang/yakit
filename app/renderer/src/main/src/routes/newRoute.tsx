@@ -125,8 +125,8 @@ import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBat
 import {PluginBatchExecutorPageInfoProps, PocPageInfoProps} from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
-import {YakPoC} from "@/pages/securityTool/yakPoC/yakPoC"
-import {NewPortScan} from "@/pages/securityTool/newPortScan/newPortScan"
+import {YakPoC} from "@/pages/securityTool/yakPoC/YakPoC"
+import {NewPortScan} from "@/pages/securityTool/newPortScan/NewPortScan"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))

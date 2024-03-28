@@ -10,9 +10,9 @@ import {
     TimeConsumingProps,
     YakPoCExecuteContentProps,
     YakPoCProps
-} from "./yakPoCType"
+} from "./YakPoCType"
 import classNames from "classnames"
-import styles from "./yakPoC.module.scss"
+import styles from "./YakPoC.module.scss"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Divider, Tooltip} from "antd"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
