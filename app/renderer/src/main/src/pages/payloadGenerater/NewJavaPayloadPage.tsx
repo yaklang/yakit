@@ -47,7 +47,6 @@ import ReactResizeDetector from "react-resize-detector"
 
 import "./javaPayloadPage.scss"
 import {NetInterface} from "@/models/Traffic"
-import {NetInterface} from "@/models/Traffic";
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
