@@ -1061,7 +1061,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
 
                 // 缓存数据结构迁移(后续删除)
-                console.log("迁移缓存数据结构:", {defaultValue: proxyList, options: newProxyList})
                 setRemoteValue(
                     CacheDropDownGV.WebFuzzerProxyList,
                     JSON.stringify({defaultValue: proxyList, options: newProxyList})

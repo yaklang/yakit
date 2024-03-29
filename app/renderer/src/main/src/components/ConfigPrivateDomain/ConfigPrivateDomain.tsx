@@ -173,7 +173,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         setRemoteValue("httpHistoryList", JSON.stringify(httpHistoryList))
 
         // 缓存数据结构迁移(后续删除)
-        console.log("迁移缓存数据结构:", {defaultValue: url, options: httpHistoryList})
         setRemoteValue(CacheDropDownGV.ConfigBaseUrl, JSON.stringify({defaultValue: url, options: httpHistoryList}))
     })
     const getHttpSetting = useMemoizedFn(() => {
@@ -212,7 +211,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         ? JSON.parse(cacheRes[0].value)
                         : [defaultHttpUrl.current]
                     : [defaultHttpUrl.current]
-            console.log("迁移缓存数据结构:", {defaultValue, options})
             setHttpHistoryList(options)
             setRemoteValue(CacheDropDownGV.ConfigBaseUrl, JSON.stringify({defaultValue, options}))
         })
@@ -224,7 +222,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             const defaultValue = form.getFieldValue("Proxy") || ""
             const options =
                 cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? JSON.parse(cacheRes[0].value) : []) : []
-            console.log("迁移缓存数据结构:", {defaultValue, options})
             setHttpProxyList(options)
             setRemoteValue(CacheDropDownGV.ConfigProxy, JSON.stringify({defaultValue, options}))
         })
@@ -236,7 +233,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         httpProxyList.push(url)
         setRemoteValue("httpProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
         // 缓存数据结构迁移(后续删除)
-        console.log("迁移缓存数据结构:", {defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
         setRemoteValue(
             CacheDropDownGV.ConfigProxy,
             JSON.stringify({defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})

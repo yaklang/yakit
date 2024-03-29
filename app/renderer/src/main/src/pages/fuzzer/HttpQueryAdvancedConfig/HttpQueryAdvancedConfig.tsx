@@ -225,7 +225,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                               value: "http://127.0.0.1:8082"
                           }
                       ]
-            console.log("迁移缓存数据结构:", {defaultValue, options})
             proxyListRef.current = options
             setRemoteValue(CacheDropDownGV.WebFuzzerProxyList, JSON.stringify({defaultValue, options}))
         })

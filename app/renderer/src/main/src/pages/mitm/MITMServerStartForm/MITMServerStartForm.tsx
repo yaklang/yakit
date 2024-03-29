@@ -112,7 +112,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         ? JSON.parse(cacheRes[1].value)
                         : [defHost]
                     : [defHost]
-            console.log("迁移缓存数据结构:", {defaultValue, options})
             form.setFieldsValue({host: defaultValue})
             setHostHistoryList(options)
             setRemoteValue(CacheDropDownGV.MITMDefaultHostHistoryList, JSON.stringify({defaultValue, options}))
@@ -204,7 +203,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
             setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
             // 缓存数据结构迁移(后续删除)
-            console.log("迁移缓存数据结构:", {defaultValue: params.host, options: newHostHistoryList})
             setRemoteValue(
                 CacheDropDownGV.MITMDefaultHostHistoryList,
                 JSON.stringify({defaultValue: params.host, options: newHostHistoryList})

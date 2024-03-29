@@ -71,7 +71,6 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             ? JSON.parse(cacheRes[0].value).userDataDirArr
                             : [e]
                         : [e]
-                console.log("迁移缓存数据结构:", {defaultValue, options})
                 setSaveUserData(
                     cacheRes[0].status === "fulfilled"
                         ? !!cacheRes[0].value
@@ -118,7 +117,6 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                 }
 
                 // 缓存数据结构迁移(后续删除)
-                console.log("迁移缓存数据结构:", {defaultValue: userDataDir, options: userDataDirArr})
                 setRemoteValue(
                     CacheDropDownGV.MITMSaveUserDataDir,
                     JSON.stringify({defaultValue: userDataDir, options: userDataDirArr})

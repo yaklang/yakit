@@ -585,7 +585,6 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                 cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? cacheRes[0].value : "") : ""
             const options =
                 cacheRes[1].status === "fulfilled" ? (!!cacheRes[1].value ? JSON.parse(cacheRes[1].value) : []) : []
-            console.log("迁移缓存数据结构:", {defaultValue, options})
             setProxy(defaultValue)
             setHttpProxyList(options)
             setRemoteValue(CacheDropDownGV.CVEProxyList, JSON.stringify({defaultValue, options}))
@@ -599,7 +598,6 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
 
         // 缓存数据结构迁移(后续删除)
-        console.log("迁移缓存数据结构:", {defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
         setRemoteValue(
             CacheDropDownGV.CVEProxyList,
             JSON.stringify({defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
