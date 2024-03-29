@@ -731,7 +731,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         (e) => true,
         (e) => {
             e.stopPropagation()
-            e.preventDefault()
+            // e.preventDefault()
             const filterKey = [16, 17, 18, 93]
             if (filterKey.includes(e.keyCode)) return
 
