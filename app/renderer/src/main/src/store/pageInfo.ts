@@ -20,7 +20,7 @@ export interface PageProps {
     pageList: PageNodeItemProps[]
     routeKey: string
     singleNode: boolean
-    currentSelectPageId:string
+    currentSelectPageId: string
 }
 
 export interface PageNodeItemProps {
@@ -134,7 +134,7 @@ interface PageInfoStoreProps {
     /**只保留routeKey的数据，删除除此routeKey之外的数据 */
     clearOtherDataByRoute: (routeKey: string) => void
     /** 设置当前激活的页面id */
-    setCurrentSelectPageId: (routeKey: string,pageId:string) => void
+    setCurrentSelectPageId: (routeKey: string, pageId: string) => void
     /** 获取当前激活的页面id */
     getCurrentSelectPageId: (routeKey: string) => string
 }
@@ -142,7 +142,7 @@ export const defPage: PageProps = {
     pageList: [],
     routeKey: "",
     singleNode: false,
-    currentSelectPageId:''
+    currentSelectPageId: ""
 }
 export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(
@@ -293,19 +293,19 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                         selectGroupId: new Map().set(key, newSelectGroupId)
                     })
                 },
-                setCurrentSelectPageId: (key,pageId) => {
+                setCurrentSelectPageId: (key, pageId) => {
                     const newPages = get().pages
                     const currentPage = newPages.get(key) || cloneDeep(defPage)
-                    newPages.set(key,{
+                    newPages.set(key, {
                         ...currentPage,
-                        currentSelectPageId:pageId
+                        currentSelectPageId: pageId
                     })
                     set({
                         ...get(),
-                       pages: newPages
+                        pages: newPages
                     })
                 },
-                getCurrentSelectPageId:(key)=>{
+                getCurrentSelectPageId: (key) => {
                     const {pages} = get()
                     const current = pages.get(key) || cloneDeep(defPage)
                     return current.currentSelectPageId
@@ -350,55 +350,96 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     ),
     Object.is
 )
-try {
-    /**
-     *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
-     */
-    const unFuzzerCacheData = usePageInfo.subscribe(
-        // (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
-        (state) => state.pages.get("httpFuzzer") || [], // 因为循环引用导致开发环境热加载YakitRoute.HTTPFuzzer为undefined
-        (selectedState, previousSelectedState) => {
-            saveFuzzerCache(selectedState)
-        }
-    )
 
-    const saveFuzzerCache = debounce(
-        (selectedState: PageProps) => {
-            try {
-                const {pageList = []} = selectedState || {
-                    pageList: []
-                }
-                const cache = pageList.map((ele) => {
-                    const advancedConfigValue =
-                        ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
-                    return {
-                        groupChildren: [],
-                        groupId: ele.pageGroupId,
-                        id: ele.pageId,
-                        pageParams: {
-                            actualHost: advancedConfigValue.actualHost || "",
-                            id: ele.pageId,
-                            isHttps: advancedConfigValue.isHttps,
-                            request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
-                            params: advancedConfigValue.params,
-                            extractors: advancedConfigValue.extractors
-                        },
-                        sortFieId: ele.sortFieId,
-                        verbose: ele.pageName,
-                        expand: ele.expand,
-                        color: ele.color
-                    }
-                })
-                // console.log("saveFuzzerCache", cache)
-                // console.table(pageList)
-                setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
-            } catch (error) {
-                yakitNotify("error", "webFuzzer缓存数据失败:" + error)
+export const saveFuzzerCache = debounce(
+    (selectedState: PageProps) => {
+        try {
+            const {pageList = []} = selectedState || {
+                pageList: []
             }
-        },
-        500,
-        {leading: true}
-    )
-} catch (error) {
-    yakitNotify("error", "page-info缓存数据错误:" + error)
-}
+            const cache = pageList.map((ele) => {
+                const advancedConfigValue =
+                    ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
+                return {
+                    groupChildren: [],
+                    groupId: ele.pageGroupId,
+                    id: ele.pageId,
+                    pageParams: {
+                        actualHost: advancedConfigValue.actualHost || "",
+                        id: ele.pageId,
+                        isHttps: advancedConfigValue.isHttps,
+                        request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
+                        params: advancedConfigValue.params,
+                        extractors: advancedConfigValue.extractors
+                    },
+                    sortFieId: ele.sortFieId,
+                    verbose: ele.pageName,
+                    expand: ele.expand,
+                    color: ele.color
+                }
+            })
+            setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
+        } catch (error) {
+            yakitNotify("error", "webFuzzer缓存数据失败:" + error)
+        }
+    },
+    500,
+    {leading: true}
+)
+
+/**
+ * 下面注释的代码含义
+ * fuzzer-tab页内数据的订阅事件，订阅数据包括request、请求参数、序列组配置信息等
+ * 注释原因：
+ * 软件打开后，这个订阅就会启动，导致还没连接引擎时就请求引擎相关接口，导致控制台报错
+ */
+// try {
+//     const unFuzzerCacheData = usePageInfo.subscribe(
+//         // (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+//         (state) => state.pages.get("httpFuzzer") || [], // 因为循环引用导致开发环境热加载YakitRoute.HTTPFuzzer为undefined
+//         (selectedState, previousSelectedState) => {
+//             saveFuzzerCache(selectedState)
+//         }
+//     )
+
+//     const saveFuzzerCache = debounce(
+//         (selectedState: PageProps) => {
+//             try {
+//                 const {pageList = []} = selectedState || {
+//                     pageList: []
+//                 }
+//                 const cache = pageList.map((ele) => {
+//                     const advancedConfigValue =
+//                         ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
+//                     return {
+//                         groupChildren: [],
+//                         groupId: ele.pageGroupId,
+//                         id: ele.pageId,
+//                         pageParams: {
+//                             actualHost: advancedConfigValue.actualHost || "",
+//                             id: ele.pageId,
+//                             isHttps: advancedConfigValue.isHttps,
+//                             request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
+//                             params: advancedConfigValue.params,
+//                             extractors: advancedConfigValue.extractors
+//                         },
+//                         sortFieId: ele.sortFieId,
+//                         verbose: ele.pageName,
+//                         expand: ele.expand,
+//                         color: ele.color
+//                     }
+//                 })
+//                 // console.log("saveFuzzerCache", cache)
+//                 // console.table(pageList)
+//                 console.log("cache", cache)
+//                 setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
+//             } catch (error) {
+//                 yakitNotify("error", "webFuzzer缓存数据失败:" + error)
+//             }
+//         },
+//         500,
+//         {leading: true}
+//     )
+// } catch (error) {
+//     yakitNotify("error", "page-info缓存数据错误:" + error)
+// }

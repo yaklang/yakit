@@ -228,6 +228,7 @@ export const TagsFilter: React.FC<TagsFilterProps> = (props) => {
     }, [open])
     // 键盘移动
     const goAnchor = (e) => {
+        e.preventDefault()
         const nowCheckList = getCheckList()
         const nowCheckItem = getCheckItem()
         const {code} = e
