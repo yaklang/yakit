@@ -168,10 +168,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     }, [])
     const addHttpHistoryList = useMemoizedFn((url) => {
         const index = httpHistoryList.findIndex((u) => u === url)
-        if (index !== -1) return
-        httpHistoryList.push(url)
-        setRemoteValue("httpHistoryList", JSON.stringify(httpHistoryList))
-
+        if (index === -1) {
+            httpHistoryList.push(url)
+            setRemoteValue("httpHistoryList", JSON.stringify(httpHistoryList))
+        }
         // 缓存数据结构迁移(后续删除)
         setRemoteValue(CacheDropDownGV.ConfigBaseUrl, JSON.stringify({defaultValue: url, options: httpHistoryList}))
     })
@@ -229,9 +229,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     /**@description 增加代理list历史 */
     const addProxyList = useMemoizedFn((url) => {
         const index = httpProxyList.findIndex((u) => u === url)
-        if (index !== -1) return
-        httpProxyList.push(url)
-        setRemoteValue("httpProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+        if (index === -1) {
+            httpProxyList.push(url)
+            setRemoteValue("httpProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+        }
         // 缓存数据结构迁移(后续删除)
         setRemoteValue(
             CacheDropDownGV.ConfigProxy,

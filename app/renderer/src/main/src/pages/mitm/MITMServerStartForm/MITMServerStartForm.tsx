@@ -199,15 +199,16 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             }
         )
         const index = hostHistoryList.findIndex((ele) => ele === params.host)
+        let newHostHistoryList = [...hostHistoryList]
         if (index === -1) {
-            const newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
+            newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
             setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
-            // 缓存数据结构迁移(后续删除)
-            setRemoteValue(
-                CacheDropDownGV.MITMDefaultHostHistoryList,
-                JSON.stringify({defaultValue: params.host, options: newHostHistoryList})
-            )
         }
+        // 缓存数据结构迁移(后续删除)
+        setRemoteValue(
+            CacheDropDownGV.MITMDefaultHostHistoryList,
+            JSON.stringify({defaultValue: params.host, options: newHostHistoryList})
+        )
         if (downstreamProxyRef.current) {
             downstreamProxyRef.current.onSetRemoteValues(params.downstreamProxy || "")
         }

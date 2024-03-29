@@ -593,10 +593,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     const addProxyList = useMemoizedFn((url) => {
         if (!url) return
         const index = httpProxyList.findIndex((u) => u === url)
-        if (index !== -1) return
-        httpProxyList.push(url)
-        setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
-
+        if (index === -1) {
+            httpProxyList.push(url)
+            setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+        }
         // 缓存数据结构迁移(后续删除)
         setRemoteValue(
             CacheDropDownGV.CVEProxyList,
