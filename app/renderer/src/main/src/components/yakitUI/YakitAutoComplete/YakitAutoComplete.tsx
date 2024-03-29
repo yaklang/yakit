@@ -71,7 +71,6 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
             .then((cacheData) => {
                 let value = cacheData.defaultValue ? cacheData.defaultValue : ""
                 let newOption = cacheData.options || props.options || []
-                console.log(123, value, newOption)
                 // 当缓存不存在的时候，若有初始默认值
                 if (value === "" && !newOption.length && initValue) {
                     value = initValue
