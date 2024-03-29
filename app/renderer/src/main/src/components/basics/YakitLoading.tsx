@@ -15,9 +15,9 @@ import {InstallEngine, QuestionModal} from "../layout/update/InstallEngine"
 import classNames from "classnames"
 import styles from "./yakitLoading.module.scss"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
-import { DynamicStatusProps } from "@/store"
-import yakitSE from "@/assets/yakitSE.png";
-import yakitEE from "@/assets/yakitEE.png";
+import {DynamicStatusProps} from "@/store"
+import yakitSE from "@/assets/yakitSE.png"
+import yakitEE from "@/assets/yakitEE.png"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,8 +45,8 @@ const LoadingTitle: string[] = [
     "你的鼠标，掌控世界！——Chelth"
 ]
 
-export const EngineModeVerbose = (m: YaklangEngineMode,n?:DynamicStatusProps) => {
-    if(n&&n.isDynamicStatus){
+export const EngineModeVerbose = (m: YaklangEngineMode, n?: DynamicStatusProps) => {
+    if (n && n.isDynamicStatus) {
         return "控制模式"
     }
     switch (m) {
@@ -69,6 +69,9 @@ export interface YakitLoadingProp {
     /** 是否完成初始化 */
     loading: boolean
 
+    /** 软件检查日志 */
+    checkLog: string[]
+
     currentYakit: string
     latestYakit: string
     setLatestYakit: (val: string) => any
@@ -82,7 +85,7 @@ export interface YakitLoadingProp {
     setShowEngineLog: (flag: boolean) => any
 
     connectControl: () => any
-    setRunRemote:(v:boolean) => void
+    setRunRemote: (v: boolean) => void
 }
 
 export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
@@ -101,7 +104,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         setShowEngineLog,
         onEngineModeChange,
         connectControl,
-        setRunRemote
+        setRunRemote,
+        checkLog
     } = props
 
     const [restartLoading, setRestartLoading] = useState<boolean>(false)
@@ -200,7 +204,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             getEngineReady() > 0 &&
             !!readyTime.current
         ) {
-            if(!isCommunityEdition()) return false
+            if (!isCommunityEdition()) return false
             setTimeout(() => {
                 clearInterval(readyTime.current)
             }, 300)
@@ -214,7 +218,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             getEngineReady() > 0 &&
             !!readyTime.current
         ) {
-            if(!isCommunityEdition()) return false
+            if (!isCommunityEdition()) return false
             setTimeout(() => {
                 clearInterval(readyTime.current)
             }, 300)
@@ -233,7 +237,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             ipcRenderer
                 .invoke("start-local-yaklang-engine", {
                     port: props.localPort,
-                    isEnpriTraceAgent:isEnpriTraceAgent()
+                    isEnpriTraceAgent: isEnpriTraceAgent()
                 })
                 .then(() => {
                     outputToWelcomeConsole("手动引擎启动成功！")
@@ -284,13 +288,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         }, 1000)
     })
 
-    const [isRefresh,setRefresh] = useState<boolean>(false)
-    useEffect(()=>{
+    const [isRefresh, setRefresh] = useState<boolean>(false)
+    useEffect(() => {
         // 自动远程连接
-        if(yakitStatus === "control-remote"){
-           connectControl() 
+        if (yakitStatus === "control-remote") {
+            connectControl()
         }
-    },[isRefresh])
+    }, [isRefresh])
 
     const refresh = () => {
         setRefresh(!isRefresh)
@@ -298,26 +302,26 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
 
     const goBack = () => {
         ipcRenderer
-        .invoke("start-local-yaklang-engine", {
-            port: props.localPort,
-            isEnpriTraceAgent:isEnpriTraceAgent()
-        })
-        .then(() => {
-            outputToWelcomeConsole("手动引擎启动成功！")
-            if (onEngineModeChange) {
-                onEngineModeChange("local", true)
-                setRunRemote(false)
-            }
-        })
-        .catch((e) => {
-            outputToWelcomeConsole("手动引擎启动失败！")
-            outputToWelcomeConsole(`失败原因:${e}`)
-        })
+            .invoke("start-local-yaklang-engine", {
+                port: props.localPort,
+                isEnpriTraceAgent: isEnpriTraceAgent()
+            })
+            .then(() => {
+                outputToWelcomeConsole("手动引擎启动成功！")
+                if (onEngineModeChange) {
+                    onEngineModeChange("local", true)
+                    setRunRemote(false)
+                }
+            })
+            .catch((e) => {
+                outputToWelcomeConsole("手动引擎启动失败！")
+                outputToWelcomeConsole(`失败原因:${e}`)
+            })
     }
 
     const hintTitle = useMemo(() => {
         if (loading) {
-            return <div className={styles["time-wait-title"]}>软件加载中 ...</div>
+            return <div className={styles["time-wait-title"]}>软件启动中 ...</div>
         }
         if (yakitStatus === "ready") {
             if (__engineReady > 0) {
@@ -357,30 +361,47 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     }, [yakitStatus, loading, __engineReady, readyTime.current, __showLog, logTime.current])
 
     const btns = useMemo(() => {
-        if(yakitStatus === "control-remote"){
-            return <>
-                <YakitButton className={styles["btn-style"]} size='max' onClick={refresh}>
-                    刷新
-                </YakitButton>
-                <YakitButton className={styles["btn-style"]} type='outline2' size='max' onClick={goBack}>
-                    返回
-                </YakitButton>
-            </>
+        if (yakitStatus === "control-remote") {
+            return (
+                <>
+                    <YakitButton className={styles["btn-style"]} size='max' onClick={refresh}>
+                        刷新
+                    </YakitButton>
+                    <YakitButton className={styles["btn-style"]} type='outline2' size='max' onClick={goBack}>
+                        返回
+                    </YakitButton>
+                </>
+            )
         }
         if (yakitStatus === "ready") {
             if (__engineReady > 0) {
                 return (
                     <>
-                        <YakitButton className={styles["btn-style"]} size='max' disabled={loading} onClick={skipTime}>
-                            跳过倒计时
-                        </YakitButton>
+                        {checkLog.length === 0 && (
+                            <>
+                                <YakitButton
+                                    className={styles["btn-style"]}
+                                    size='max'
+                                    disabled={loading}
+                                    onClick={skipTime}
+                                >
+                                    跳过倒计时
+                                </YakitButton>
 
-                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
-                            selectEngineMode(engineMode === "local" ? "remote": "local")
-                            changeMode()
-                        }}>
-                            切换为{engineMode === "local" ? "远程": "本地"}模式
-                        </YakitButton>
+                                <YakitButton
+                                    className={styles["btn-style"]}
+                                    size='max'
+                                    type='outline2'
+                                    disabled={loading}
+                                    onClick={() => {
+                                        selectEngineMode(engineMode === "local" ? "remote" : "local")
+                                        changeMode()
+                                    }}
+                                >
+                                    切换为{engineMode === "local" ? "远程" : "本地"}模式
+                                </YakitButton>
+                            </>
+                        )}
                     </>
                 )
             }
@@ -397,11 +418,17 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             手动连接引擎
                         </YakitButton>
 
-                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
-                            selectEngineMode(engineMode === "local" ? "remote": "local")
-                            changeMode()
-                        }}>
-                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            type='outline2'
+                            disabled={loading}
+                            onClick={() => {
+                                selectEngineMode(engineMode === "local" ? "remote" : "local")
+                                changeMode()
+                            }}
+                        >
+                            切换为{engineMode === "local" ? "远程" : "本地"}模式
                         </YakitButton>
 
                         <YakitButton
@@ -432,11 +459,17 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             手动连接引擎
                         </YakitButton>
 
-                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
-                            selectEngineMode(engineMode === "local" ? "remote": "local")
-                            changeMode()
-                        }}>
-                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            type='outline2'
+                            disabled={loading}
+                            onClick={() => {
+                                selectEngineMode(engineMode === "local" ? "remote" : "local")
+                                changeMode()
+                            }}
+                        >
+                            切换为{engineMode === "local" ? "远程" : "本地"}模式
                         </YakitButton>
 
                         <YakitButton
@@ -468,11 +501,17 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             手动连接引擎
                         </YakitButton>
 
-                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
-                            selectEngineMode(engineMode === "local" ? "remote": "local")
-                            changeMode()
-                        }}>
-                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            type='outline2'
+                            disabled={loading}
+                            onClick={() => {
+                                selectEngineMode(engineMode === "local" ? "remote" : "local")
+                                changeMode()
+                            }}
+                        >
+                            切换为{engineMode === "local" ? "远程" : "本地"}模式
                         </YakitButton>
                     </>
                 )
@@ -490,11 +529,17 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             手动连接引擎
                         </YakitButton>
 
-                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
-                            selectEngineMode(engineMode === "local" ? "remote": "local")
-                            changeMode()
-                        }}>
-                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        <YakitButton
+                            className={styles["btn-style"]}
+                            size='max'
+                            type='outline2'
+                            disabled={loading}
+                            onClick={() => {
+                                selectEngineMode(engineMode === "local" ? "remote" : "local")
+                                changeMode()
+                            }}
+                        >
+                            切换为{engineMode === "local" ? "远程" : "本地"}模式
                         </YakitButton>
 
                         <YakitButton
@@ -525,14 +570,18 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         manuallyStartEngine,
         showEngineLog,
         restartLoading,
-        engineMode
+        engineMode,
+        checkLog
     ])
 
     /** 加载页随机宣传语 */
     const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
     /** Title */
-    const Title = useMemo(() => yakitStatus==="control-remote"?"远程控制中 ...":`欢迎使用 ${getReleaseEditionName()}`, [])
-    
+    const Title = useMemo(
+        () => (yakitStatus === "control-remote" ? "远程控制中 ..." : `欢迎使用 ${getReleaseEditionName()}`),
+        []
+    )
+
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
@@ -543,35 +592,46 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     </div>
 
                     {/* 社区版 - 启动Logo */}
-                    {isCommunityEdition() && <div className={styles["yakit-loading-icon-wrapper"]}>
-                        <div className={styles["theme-icon-wrapper"]}>
-                            <div className={styles["theme-icon"]}>
-                                <YakitThemeLoadingSvgIcon />
+                    {isCommunityEdition() && (
+                        <div className={styles["yakit-loading-icon-wrapper"]}>
+                            <div className={styles["theme-icon-wrapper"]}>
+                                <div className={styles["theme-icon"]}>
+                                    <YakitThemeLoadingSvgIcon />
+                                </div>
+                            </div>
+                            <div className={styles["white-icon"]}>
+                                <YakitLoadingSvgIcon />
                             </div>
                         </div>
-                        <div className={styles["white-icon"]}>
-                            <YakitLoadingSvgIcon />
-                        </div>
-                    </div>}
+                    )}
                     {/* 企业版 - 启动Logo */}
-                    {
-                        isEnpriTrace()&& <div className={styles["yakit-loading-icon-wrapper"]}>
-                        <div className={styles["white-icon"]}>
-                            <img src={yakitEE} alt="暂无图片" />
+                    {isEnpriTrace() && (
+                        <div className={styles["yakit-loading-icon-wrapper"]}>
+                            <div className={styles["white-icon"]}>
+                                <img src={yakitEE} alt='暂无图片' />
+                            </div>
                         </div>
-                    </div>
-                    }
+                    )}
                     {/* 便携版 - 启动Logo */}
-                    {
-                        isEnpriTraceAgent()&& <div className={styles["yakit-loading-icon-wrapper"]}>
-                        <div className={styles["white-icon"]}>
-                            <img src={yakitSE} alt="暂无图片" />
+                    {isEnpriTraceAgent() && (
+                        <div className={styles["yakit-loading-icon-wrapper"]}>
+                            <div className={styles["white-icon"]}>
+                                <img src={yakitSE} alt='暂无图片' />
+                            </div>
                         </div>
-                    </div>
-                    }
+                    )}
 
                     <div className={styles["yakit-loading-content"]}>
                         {hintTitle}
+                        {
+                            <div style={{width: "100%", display: "flex", justifyContent: "center"}}>
+                                <div style={{width: 500, maxHeight: 180, overflow: "hidden auto"}}>
+                                    {checkLog.map((item, index) => {
+                                        return <div key={item}>{item}</div>
+                                    })}
+                                </div>
+                            </div>
+                        }
                         <div className={styles["engine-log-btn"]}>{btns}</div>
                     </div>
                 </div>
@@ -607,19 +667,19 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     )
 }
 
-interface YakitControlLoadingProp{
+interface YakitControlLoadingProp {
     localPort: number
     onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
     onSubmit: () => any
 }
 
 export const YakitControlLoading: React.FC<YakitControlLoadingProp> = (props) => {
-    const {localPort,onEngineModeChange,onSubmit} = props
-    const [isRefresh,setRefresh] = useState<boolean>(false)
-    useEffect(()=>{
+    const {localPort, onEngineModeChange, onSubmit} = props
+    const [isRefresh, setRefresh] = useState<boolean>(false)
+    useEffect(() => {
         // 自动远程连接
         onSubmit()
-    },[isRefresh])
+    }, [isRefresh])
 
     const refresh = () => {
         setRefresh(!isRefresh)
@@ -627,53 +687,55 @@ export const YakitControlLoading: React.FC<YakitControlLoadingProp> = (props) =>
 
     const goBack = () => {
         ipcRenderer
-        .invoke("start-local-yaklang-engine", {
-            port: localPort,
-            isEnpriTraceAgent:isEnpriTraceAgent()
-        })
-        .then(() => {
-            outputToWelcomeConsole("手动引擎启动成功！")
-            if (onEngineModeChange) {
-                onEngineModeChange("local", true)
-            }
-        })
-        .catch((e) => {
-            outputToWelcomeConsole("手动引擎启动失败！")
-            outputToWelcomeConsole(`失败原因:${e}`)
-        })
+            .invoke("start-local-yaklang-engine", {
+                port: localPort,
+                isEnpriTraceAgent: isEnpriTraceAgent()
+            })
+            .then(() => {
+                outputToWelcomeConsole("手动引擎启动成功！")
+                if (onEngineModeChange) {
+                    onEngineModeChange("local", true)
+                }
+            })
+            .catch((e) => {
+                outputToWelcomeConsole("手动引擎启动失败！")
+                outputToWelcomeConsole(`失败原因:${e}`)
+            })
     }
-    return <div className={styles["yakit-loading-wrapper"]}>
-    <div className={styles["yakit-loading-body"]}>
-        <div className={styles["body-content"]}>
-            <div className={styles["yakit-loading-title"]}>
-                <div className={styles["title-style"]}>远程控制中 ...</div>
-            </div>
-
-            <div className={styles["yakit-loading-icon-wrapper"]}>
-                <div className={styles["theme-icon-wrapper"]}>
-                    <div className={styles["theme-icon"]}>
-                        <YakitThemeLoadingSvgIcon />
+    return (
+        <div className={styles["yakit-loading-wrapper"]}>
+            <div className={styles["yakit-loading-body"]}>
+                <div className={styles["body-content"]}>
+                    <div className={styles["yakit-loading-title"]}>
+                        <div className={styles["title-style"]}>远程控制中 ...</div>
                     </div>
-                </div>
-                <div className={styles["white-icon"]}>
-                    <YakitLoadingSvgIcon />
-                </div>
-            </div>
 
-            <div className={styles["yakit-loading-content"]}>
-                {/* <div className={styles["time-wait-title"]}>远程控制中 ...</div> */}
-                <div className={styles["engine-log-btn"]}>
-                        <YakitButton className={styles["btn-style"]} size='max' onClick={refresh}>
-                            刷新
-                        </YakitButton>
-                        <YakitButton className={styles["btn-style"]} type='outline2' size='max' onClick={goBack}>
-                            返回
-                        </YakitButton>
+                    <div className={styles["yakit-loading-icon-wrapper"]}>
+                        <div className={styles["theme-icon-wrapper"]}>
+                            <div className={styles["theme-icon"]}>
+                                <YakitThemeLoadingSvgIcon />
+                            </div>
+                        </div>
+                        <div className={styles["white-icon"]}>
+                            <YakitLoadingSvgIcon />
+                        </div>
+                    </div>
+
+                    <div className={styles["yakit-loading-content"]}>
+                        {/* <div className={styles["time-wait-title"]}>远程控制中 ...</div> */}
+                        <div className={styles["engine-log-btn"]}>
+                            <YakitButton className={styles["btn-style"]} size='max' onClick={refresh}>
+                                刷新
+                            </YakitButton>
+                            <YakitButton className={styles["btn-style"]} type='outline2' size='max' onClick={goBack}>
+                                返回
+                            </YakitButton>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    )
 }
 interface DownloadYaklangProps {
     system: YakitSystem
@@ -712,7 +774,7 @@ const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
 
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
-            .then((data: string) => latestVersion.current = data)
+            .then((data: string) => (latestVersion.current = data))
             .catch((e: any) => {
                 if (isBreakRef.current) return
                 failed(`获取引擎最新版本失败 ${e}`)

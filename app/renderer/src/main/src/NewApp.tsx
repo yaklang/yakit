@@ -1,10 +1,6 @@
-import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
+import {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
 import {failed, warn, yakitFailed} from "./utils/notification"
-import {useHotkeys} from "react-hotkeys-hook"
-import {getCompletions} from "./utils/monacoSpec/yakCompletionSchema"
-import {showModal} from "./utils/showModal"
-import {YakCodeEditor} from "./utils/editors"
 import {getRemoteValue, setRemoteValue} from "./utils/kv"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
@@ -19,7 +15,6 @@ import styles from "./app.module.scss"
 import {coordinate} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
-import {ProjectDescription} from "./pages/softwareSettings/ProjectManage"
 import {useRunNodeStore} from "./store/runNode"
 
 /** 快捷键目录 */
@@ -71,8 +66,8 @@ function NewApp() {
     /** 私有域是否设置成功 */
     const [onlineProfileStatus, setOnlineProfileStatus] = useState<boolean>(false)
 
+    // 错误信息收集监听逻辑
     useEffect(() => {
-        // 错误信息收集监听逻辑
         const unhandledrejectionError = (e) => {
             const content = e?.reason?.stack || ""
             if (content) ipcRenderer.invoke("render-error-log", content)
@@ -95,21 +90,25 @@ function NewApp() {
 
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
     const coordinateTimer = useRef<any>(null)
+    const handleMouseMove = useMemoizedFn((e: MouseEvent) => {
+        const {screenX, screenY, clientX, clientY, pageX, pageY} = e
+        if (coordinateTimer.current) {
+            clearTimeout(coordinateTimer.current)
+            coordinateTimer.current = null
+        }
+        coordinateTimer.current = setTimeout(() => {
+            coordinate.screenX = screenX
+            coordinate.screenY = screenY
+            coordinate.clientX = clientX
+            coordinate.clientY = clientY
+            coordinate.pageX = pageX
+            coordinate.pageY = pageY
+        }, 50)
+    })
     useEffect(() => {
-        document.onmousemove = (e) => {
-            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
-            if (coordinateTimer.current) {
-                clearTimeout(coordinateTimer.current)
-                coordinateTimer.current = null
-            }
-            coordinateTimer.current = setTimeout(() => {
-                coordinate.screenX = screenX
-                coordinate.screenY = screenY
-                coordinate.clientX = clientX
-                coordinate.clientY = clientY
-                coordinate.pageX = pageX
-                coordinate.pageY = pageY
-            }, 50)
+        document.addEventListener("mousemove", handleMouseMove)
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove)
         }
     }, [])
 
@@ -150,20 +149,6 @@ function NewApp() {
             })
             .catch(() => {})
     }, [])
-
-    /** 全局拦截快捷键(补全内容) */
-    useHotkeys("alt+a", (e) => {
-        const a = getCompletions()
-        showModal({
-            title: "补全内容",
-            width: "100%",
-            content: (
-                <div style={{height: 600}}>
-                    <YakCodeEditor readOnly={true} originValue={Buffer.from(JSON.stringify(a), "utf8")} />
-                </div>
-            )
-        })
-    })
 
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
@@ -258,22 +243,20 @@ function NewApp() {
      * 拦截软件全局快捷键[(win:ctrl|mac:command) + 26字母]
      * 通过 InterceptKeyword 变量进行拦截控制
      */
-    useEffect(() => {
-        let originEvent = window.onkeydown
-        window.onkeydown = (ev) => {
-            let code = ev.code
-
-            // 屏蔽当前事件
-            if ((ev.metaKey || ev.ctrlKey) && InterceptKeyword.includes(code)) {
-                return false
-            }
-
-            // @ts-ignore
-            originEvent && originEvent(ev)
-            return
+    const handlekey = useMemoizedFn((ev: KeyboardEvent) => {
+        let code = ev.code
+        // 屏蔽当前事件
+        if ((ev.metaKey || ev.ctrlKey) && InterceptKeyword.includes(code)) {
+            ev.stopPropagation()
+            ev.preventDefault()
+            return false
         }
+        return
+    })
+    useEffect(() => {
+        document.addEventListener("keydown", handlekey)
         return () => {
-            window.onkeydown = originEvent
+            document.removeEventListener("keydown", handlekey)
         }
     }, [])
 

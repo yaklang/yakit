@@ -67,8 +67,9 @@ import yakitCattle from "@/assets/yakitCattle.png"
 import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
-
+import {saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
 import classNames from "classnames"
+
 import styles from "./uiLayout.module.scss"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 
@@ -113,7 +114,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [runRemote, setRunRemote] = useState<boolean>(false)
 
     /** 认证信息 */
-    const [credential, setCredential, getCredential] = useGetState<YaklangEngineWatchDogCredential>({
+    const [credential, setCredential] = useState<YaklangEngineWatchDogCredential>({
         Host: "127.0.0.1",
         IsTLS: false,
         Password: "",
@@ -125,35 +126,269 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** 数据库权限由usestate改为useref(数据不影响渲染) */
     const databaseError = useRef<boolean>(false)
 
-    /* 内置二进制文件的话，需要通过自检 */
-    useEffect(() => {
+    /** 本地引擎自检输出日志 */
+    const [checkLog, setCheckLog] = useState<string[]>([])
+    const updateCheckLog = useMemoizedFn((conten: string) => {
+        setCheckLog((arr) => arr.concat([conten]))
+    })
+
+    /**
+     * 插件漏洞信息库自检
+     */
+    const handleBuiltInCheck = useMemoizedFn(() => {
         ipcRenderer
-            .invoke("GetBuildInEngineVersion")
-            .then((e) => {
-                if (e !== "") {
-                    outputToWelcomeConsole(`引擎内置自检成功！内置引擎：${e}`)
-                } else {
-                    outputToWelcomeConsole(`引擎内置自检：无内置引擎标识 ${e}`)
-                }
+            .invoke("InitCVEDatabase")
+            .then(() => {
+                info("漏洞信息库自检完成")
             })
             .catch((e) => {
-                outputToWelcomeConsole(`引擎内置自检：无内置引擎: ${e}`)
+                info(`漏洞信息库检查错误：${e}`)
+            })
+    })
+    /**
+     * 获取上次本地连接引擎的端口缓存
+     * 获取上次连接引擎的模式缓存
+     */
+    const handleLinkEngineInfo = useMemoizedFn(() => {
+        getLocalValue(LocalGV.YaklangEnginePort)
+            .then((portRaw) => {
+                const port = parseInt(portRaw)
+                if (!port) {
+                    getRandomLocalEnginePort((p) => setLocalPort(p))
+                } else {
+                    setLocalPort(port)
+                }
+            })
+            .catch(() => {
+                getRandomLocalEnginePort((p) => setLocalPort(p))
+            })
+
+        updateCheckLog("获取上次连接引擎的模式")
+        getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
+            switch (val) {
+                case "remote":
+                    updateCheckLog("获取连接模式成功——远程模式")
+                    setCheckLog([])
+                    setEngineMode("remote")
+                    cacheEngineMode.current = "remote"
+                    setLoading(false)
+                    return
+                case "local":
+                    updateCheckLog("获取连接模式成功——本地模式")
+                    handleCheckEngineAndDataBase()
+                    return
+                default:
+                    updateCheckLog("获取连接模式失败，自动选择默认(本地)模式")
+                    handleCheckEngineAndDataBase()
+                    return
+            }
+        })
+    })
+    /**
+     * 检查引擎是否存在
+     * 检查数据库权限是否正常
+     */
+    const handleCheckEngineAndDataBase = useMemoizedFn(() => {
+        updateCheckLog("开始识别引擎是否已安装...")
+        ipcRenderer
+            .invoke("is-yaklang-engine-installed")
+            .then((flag: boolean) => {
+                if (flag) {
+                    updateCheckLog("引擎已安装")
+                } else {
+                    updateCheckLog("引擎未安装")
+                }
+                isEngineInstalled.current = flag
             })
             .finally(() => {
-                info("开始检查漏洞信息库")
-                ipcRenderer
-                    .invoke("InitCVEDatabase")
-                    .then(() => {
-                        info("漏洞信息库自检完成")
-                    })
-                    .catch((e) => {
-                        info(`漏洞信息库检查错误：${e}`)
-                    })
+                if (!isEngineInstalled.current) {
+                    setEngineMode(undefined)
+                    updateCheckLog("由于引擎未安装，准备弹出安装提示框")
+                    getCacheEngineMode()
+                    setTimeout(() => {
+                        setYakitStatus("install")
+                        cacheYakitStatus.current = "install"
+                        setLoading(false)
+                    }, 2000)
+                    return
+                } else {
+                    updateCheckLog("已安装引擎，开始检查数据库权限是否正常")
+                    /** 引擎已安装的情况下，优先检查数据库权限 */
+                    ipcRenderer
+                        .invoke("check-local-database")
+                        .then((e) => {
+                            databaseError.current = e === "not allow to write"
+                        })
+                        .finally(() => {
+                            // 这里只有两种状态，数据库(有|无)权限情况
+                            if (databaseError.current && getSystem() !== "Windows_NT") {
+                                updateCheckLog("数据库权限错误，开始进行调整操作(非WIN系统检查)")
+                                setYakitStatus("database")
+                                cacheYakitStatus.current = "database"
+                            } else {
+                                updateCheckLog("数据库权限无问题")
+                                handleFetchYakitAndYaklangVersion()
+                            }
+                        })
+                }
             })
+    })
+    /**
+     * 获取yaklang本地版本和最新版本
+     * 获取yakit本地版本和最新版本
+     */
+    const handleFetchYakitAndYaklangVersion = useMemoizedFn(() => {
+        getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
+            updateCheckLog("开始检查引擎文件相关状态")
+            ipcRenderer.invoke("fetch-yakit-version").then((data: string) => {
+                if (!val) setCurrentYakit(data)
+            })
+            ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
+                if (!val) {
+                    isEnpriTraceAgent() ? setLatestYakit("") : setLatestYakit(data)
+                }
+            })
+
+            ipcRenderer
+                .invoke("get-current-yak")
+                .then((data: string) => {
+                    if (!val) setCurrentYaklang(data)
+                    updateCheckLog(`获取引擎版本号：${data}`)
+                    setTimeout(() => {
+                        getCacheEngineMode()
+                        setLoading(false)
+                    }, 1000)
+                })
+                .catch((e) => {
+                    updateCheckLog(`获取引擎失败：${e}`)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        getCacheEngineMode()
+                        setLoading(false)
+                    }, 1000)
+                })
+            ipcRenderer
+                .invoke("fetch-latest-yaklang-version")
+                .then((data: string) => {
+                    if (!val) setLatestYaklang(data)
+                })
+                .catch((err) => {})
+        })
+    })
+
+    useEffect(() => {
+        setLoading(true)
+        ipcRenderer.invoke("is-dev").then((flag: boolean) => (isDev.current = !!flag))
+        ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => setSystem(type))
+
+        handleBuiltInCheck()
+        handleLinkEngineInfo()
     }, [])
 
-    const getCacheEngineMode = useMemoizedFn(() => {
-        setEngineMode(undefined)
+    useEffect(() => {
+        if (engineLink) setCheckLog([])
+    }, [engineLink])
+
+    /**
+     * 检查是否有内置引擎
+     * 检查漏洞信息库
+     */
+    // useEffect(() => {
+    //     ipcRenderer
+    //         .invoke("GetBuildInEngineVersion")
+    //         .then((e) => {
+    //             if (e !== "") {
+    //                 outputToWelcomeConsole(`引擎内置自检成功！内置引擎：${e}`)
+    //             } else {
+    //                 outputToWelcomeConsole(`引擎内置自检：无内置引擎标识 ${e}`)
+    //             }
+    //         })
+    //         .catch((e) => {
+    //             outputToWelcomeConsole(`引擎内置自检：无内置引擎: ${e}`)
+    //         })
+    //         .finally(() => {
+    //             ipcRenderer
+    //                 .invoke("InitCVEDatabase")
+    //                 .then(() => {
+    //                     info("漏洞信息库自检完成")
+    //                 })
+    //                 .catch((e) => {
+    //                     info(`漏洞信息库检查错误：${e}`)
+    //                 })
+    //         })
+    // }, [])
+
+    /**
+     * 获取yaklang引擎是否安装的状态
+     * - 判断上次使用引擎的状态，如果有使用，这判断是否可以启动引擎进入软件界面(未安装状态只限远程可以进入软件界面)
+     *    1) 如果有使用，引擎未安装，则只限远程状态可以连接进入界面
+     *    2) 如果有使用，引擎已安装，则正常连接上次使用状态的引擎
+     */
+    // useEffect(() => {
+    //     outputToWelcomeConsole("识别引擎是否已安装...")
+    //     updateCheckLog("识别引擎是否已安装...")
+    //     ipcRenderer
+    //         .invoke("is-yaklang-engine-installed")
+    //         .then((flag: boolean) => {
+    //             if (flag) {
+    //                 outputToWelcomeConsole("引擎已安装")
+    //                 updateCheckLog("引擎已安装")
+    //             } else {
+    //                 outputToWelcomeConsole("引擎未安装")
+    //                 updateCheckLog("引擎未安装")
+    //             }
+    //             isEngineInstalled.current = flag
+    //         })
+    //         .finally(() => {
+    //             if (!isEngineInstalled.current) {
+    //                 setEngineMode(undefined)
+    //                 outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
+    //                 updateCheckLog("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
+    //                 getCacheEngineMode()
+    //                 setTimeout(() => {
+    //                     setYakitStatus("install")
+    //                     cacheYakitStatus.current = "install"
+    //                     setLoading(false)
+    //                 }, 300)
+    //                 return
+    //             } else {
+    //                 outputToWelcomeConsole("已安装引擎，开始检查数据库权限是否正常")
+    //                 updateCheckLog("已安装引擎，开始检查数据库权限是否正常")
+    //                 /** 引擎已安装的情况下，优先检查数据库权限 */
+    //                 ipcRenderer
+    //                     .invoke("check-local-database")
+    //                     .then((e) => {
+    //                         if (e === "not allow to write") outputToWelcomeConsole("数据库权限错误，开始进行调整操作")
+    //                         databaseError.current = e === "not allow to write"
+    //                     })
+    //                     .finally(() => {
+    //                         // 这里只有两种状态，数据库(有|无)权限情况
+    //                         if (databaseError.current && getSystem() !== "Windows_NT") {
+    //                             setYakitStatus("database")
+    //                             cacheYakitStatus.current = "database"
+    //                         } else getCacheEngineMode()
+    //                         setLoading(false)
+    //                     })
+    //             }
+    //         })
+
+    //     getLocalValue(LocalGV.YaklangEnginePort)
+    //         .then((portRaw) => {
+    //             const port = parseInt(portRaw)
+    //             if (!port) {
+    //                 getRandomLocalEnginePort((p) => setLocalPort(p))
+    //             } else {
+    //                 setLocalPort(port)
+    //             }
+    //         })
+    //         .catch(() => {
+    //             getRandomLocalEnginePort((p) => setLocalPort(p))
+    //         })
+    // }, [])
+
+    const getCacheEngineMode = useMemoizedFn((isSet?: boolean) => {
+        if (!isSet) setEngineMode(undefined)
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
             if (val) info(`加载上次引擎模式：${val}`)
             switch (val) {
@@ -184,35 +419,35 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 3、获取yakit本地版本和最新版本
      * 4、获取yaklang本地版本和最新版本
      */
-    useEffect(() => {
-        setLoading(true)
-        ipcRenderer.invoke("is-dev").then((flag: boolean) => (isDev.current = !!flag))
-        ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => setSystem(type))
+    // useEffect(() => {
+    //     setLoading(true)
+    //     ipcRenderer.invoke("is-dev").then((flag: boolean) => (isDev.current = !!flag))
+    //     ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => setSystem(type))
 
-        getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
-            if (!val) {
-                ipcRenderer.invoke("fetch-yakit-version").then((data: string) => {
-                    setCurrentYakit(data)
-                })
-                ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
-                    isEnpriTraceAgent() ? setLatestYakit("") : setLatestYakit(data)
-                })
+    //     getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
+    //         if (!val) {
+    //             ipcRenderer.invoke("fetch-yakit-version").then((data: string) => {
+    //                 setCurrentYakit(data)
+    //             })
+    //             ipcRenderer.invoke("fetch-latest-yakit-version").then((data: string) => {
+    //                 isEnpriTraceAgent() ? setLatestYakit("") : setLatestYakit(data)
+    //             })
 
-                ipcRenderer
-                    .invoke("get-current-yak")
-                    .then((data: string) => {
-                        setCurrentYaklang(data)
-                    })
-                    .catch(() => {})
-                ipcRenderer
-                    .invoke("fetch-latest-yaklang-version")
-                    .then((data: string) => {
-                        setLatestYaklang(data)
-                    })
-                    .catch((err) => {})
-            }
-        })
-    }, [])
+    //             ipcRenderer
+    //                 .invoke("get-current-yak")
+    //                 .then((data: string) => {
+    //                     setCurrentYaklang(data)
+    //                 })
+    //                 .catch(() => {})
+    //             ipcRenderer
+    //                 .invoke("fetch-latest-yaklang-version")
+    //                 .then((data: string) => {
+    //                     setLatestYaklang(data)
+    //                 })
+    //                 .catch((err) => {})
+    //         }
+    //     })
+    // }, [])
 
     useEffect(() => {
         const id = setInterval(() => {
@@ -246,7 +481,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             if (databaseError.current && getSystem() !== "Windows_NT") {
                                 setYakitStatus("database")
                                 cacheYakitStatus.current = "database"
-                            } else getCacheEngineMode()
+                            } else {
+                                if (cacheEngineMode.current === "remote") return
+                                getCacheEngineMode(true)
+                            }
                         })
                 }
             })
@@ -265,69 +503,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setShowEngineLog(false)
         }
     }, [engineLink])
-
-    /**
-     * 获取yaklang引擎是否安装的状态
-     * - 判断上次使用引擎的状态，如果有使用，这判断是否可以启动引擎进入软件界面(未安装状态只限远程可以进入软件界面)
-     *    1) 如果有使用，引擎未安装，则只限远程状态可以连接进入界面
-     *    2) 如果有使用，引擎已安装，则正常连接上次使用状态的引擎
-     */
-    useEffect(() => {
-        outputToWelcomeConsole("识别引擎是否已安装...")
-        ipcRenderer
-            .invoke("is-yaklang-engine-installed")
-            .then((flag: boolean) => {
-                if (flag) {
-                    outputToWelcomeConsole("引擎已安装")
-                } else {
-                    outputToWelcomeConsole("引擎未安装")
-                }
-                isEngineInstalled.current = flag
-            })
-            .finally(() => {
-                if (!isEngineInstalled.current) {
-                    setEngineMode(undefined)
-                    outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
-                    getCacheEngineMode()
-                    setTimeout(() => {
-                        setYakitStatus("install")
-                        cacheYakitStatus.current = "install"
-                        setLoading(false)
-                    }, 300)
-                    return
-                } else {
-                    outputToWelcomeConsole("已安装引擎，开始检查数据库权限是否正常")
-                    /** 引擎已安装的情况下，优先检查数据库权限 */
-                    ipcRenderer
-                        .invoke("check-local-database")
-                        .then((e) => {
-                            if (e === "not allow to write") outputToWelcomeConsole("数据库权限错误，开始进行调整操作")
-                            databaseError.current = e === "not allow to write"
-                        })
-                        .finally(() => {
-                            // 这里只有两种状态，数据库(有|无)权限情况
-                            if (databaseError.current && getSystem() !== "Windows_NT") {
-                                setYakitStatus("database")
-                                cacheYakitStatus.current = "database"
-                            } else getCacheEngineMode()
-                            setLoading(false)
-                        })
-                }
-            })
-
-        getLocalValue(LocalGV.YaklangEnginePort)
-            .then((portRaw) => {
-                const port = parseInt(portRaw)
-                if (!port) {
-                    getRandomLocalEnginePort((p) => setLocalPort(p))
-                } else {
-                    setLocalPort(port)
-                }
-            })
-            .catch(() => {
-                getRandomLocalEnginePort((p) => setLocalPort(p))
-            })
-    }, [])
 
     /**
      * 根据引擎状态处理不同的方式
@@ -428,7 +603,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const runControlRemote = useMemoizedFn((v: string, baseUrl: string) => {
         try {
             const resultObj: ResultObjProps = JSON.parse(v)
-            console.log("runControlRemote", resultObj, baseUrl)
 
             // 缓存远程控制参数
             setDynamicStatus({...dynamicStatus, baseUrl, ...resultObj})
@@ -510,6 +684,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (type) {
             case "install":
             case "update":
+                if (checkLog.length > 0 && type === "install") setCheckLog([])
                 setYakitStatus("")
                 cacheYakitStatus.current = ""
                 getCacheEngineMode()
@@ -869,14 +1044,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
     const [_, setLocalInfo, getLocalInfo] = useGetState<LocalInfoProps>()
     useEffect(() => {
-        // 获取操作系统、架构、Yakit 版本、Yak 版本
-        ipcRenderer
-            .invoke("fetch-local-basic-info")
-            .then((data: LocalInfoProps) => {
-                setLocalInfo(data)
-            })
-            .catch(() => {})
-    }, [])
+        if (engineLink) {
+            // 获取操作系统、架构、Yakit 版本、Yak 版本
+            ipcRenderer
+                .invoke("fetch-local-basic-info")
+                .then((data: LocalInfoProps) => {
+                    setLocalInfo(data)
+                })
+                .catch(() => {})
+        }
+    }, [engineLink])
     useEffect(() => {
         // 用户退出 - 验证license=>展示企业登录
         ipcRenderer.on("again-judge-license-login", () => {
@@ -969,15 +1146,39 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         )
     }, [screenRecorderInfo])
 
+    // fuzzer-tab页数据订阅事件
+    const unFuzzerCacheData = useRef<any>(null)
+
     /** chat-cs 功能逻辑 */
     const [showChatCS, setShowChatCS] = useState<boolean>(true)
     useEffect(() => {
-        getRemoteValue(RemoteGV.KnowChatCS)
-            .then((value: any) => {
-                if (!value) return
-                else setShowChatCS(false)
-            })
-            .catch(() => {})
+        if (engineLink) {
+            getRemoteValue(RemoteGV.KnowChatCS)
+                .then((value: any) => {
+                    if (!value) return
+                    else setShowChatCS(false)
+                })
+                .catch(() => {})
+
+            // 开启fuzzer-tab页内数据的订阅事件
+            if (unFuzzerCacheData.current) {
+                unFuzzerCacheData.current()
+            }
+            unFuzzerCacheData.current = usePageInfo.subscribe(
+                (state) => state.pages.get("httpFuzzer") || [],
+                (selectedState, previousSelectedState) => {
+                    saveFuzzerCache(selectedState)
+                }
+            )
+
+            return () => {
+                // 注销fuzzer-tab页内数据的订阅事件
+                if (unFuzzerCacheData.current) {
+                    unFuzzerCacheData.current()
+                    unFuzzerCacheData.current = null
+                }
+            }
+        }
     }, [engineLink])
     const onChatCS = useMemoizedFn(() => {
         setShowChatCS(false)
@@ -1271,6 +1472,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         )}
                         {!engineLink && !isRemoteEngine && (
                             <YakitLoading
+                                checkLog={checkLog}
                                 yakitStatus={yakitStatus}
                                 yakitStatusCallback={yakitStatusCallback}
                                 engineMode={engineMode || "local"}
@@ -1304,10 +1506,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 onEngineModeChange={changeEngineMode}
                                 engineNotInstalled={!isEngineInstalled.current}
                                 oncancel={() => {
+                                    setLocalValue(LocalGV.YaklangEngineMode, "local")
                                     setEngineMode(undefined)
                                     cacheEngineMode.current = undefined
-                                    setYakitStatus("install")
-                                    cacheYakitStatus.current = "install"
+                                    if (isEngineInstalled.current) {
+                                        setEngineMode("local")
+                                        cacheEngineMode.current = "local"
+                                    } else {
+                                        handleLinkEngineInfo()
+                                    }
                                 }}
                             />
                         )}
