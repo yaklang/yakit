@@ -152,8 +152,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         [advancedConfigValue.batchTarget]
     )
 
-    console.log(123, batchTarget)
-
     useEffect(() => {
         setHttpResponse(defaultHttpResponse)
     }, [defaultHttpResponse])
