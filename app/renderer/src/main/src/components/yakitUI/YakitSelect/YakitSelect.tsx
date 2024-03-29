@@ -9,7 +9,6 @@ import {
 import styles from "./YakitSelect.module.scss"
 import classNames from "classnames"
 import {BaseOptionType} from "antd/lib/select"
-import {OptGroup} from "rc-select"
 import {YakitTag} from "../YakitTag/YakitTag"
 import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
 import {useMemoizedFn} from "ahooks"
@@ -18,7 +17,7 @@ import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
 
-const {Option} = Select
+const {Option, OptGroup} = Select
 
 /**
  * @description: 下拉选择
@@ -319,3 +318,4 @@ export const YakitSelect = React.forwardRef(YakitSelectCustom) as unknown as (<
 }
 
 YakitSelect.Option = Option
+YakitSelect.OptGroup = OptGroup
