@@ -1576,7 +1576,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 title: "URL",
                 dataKey: "Url",
-                width: 400
+                width: 400,
+                filterProps: {
+                    filterKey: "SearchURL",
+                    filtersType: "input",
+                    filterIcon: (
+                        <OutlineSearchIcon
+                            className={style["filter-icon"]}
+                        />
+                    ),
+                }
             },
             {
                 title: "Title",
@@ -2374,7 +2383,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             onClickSingle: (v) => {
                 const flow = v as HTTPFlow
                 if (!flow) return
-                generateCSRFPocByRequest(flow.Request, (e) => {
+                generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
                     callCopyToClipboard(e)
                 })
             }

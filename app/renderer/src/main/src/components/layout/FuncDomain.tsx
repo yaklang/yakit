@@ -119,118 +119,6 @@ const randomAvatarColor = () => {
     return color
 }
 
-export interface UploadYakitEEProps {
-    onClose: () => void
-}
-
-export const UploadYakitEE: React.FC<UploadYakitEEProps> = (props) => {
-    const {onClose} = props
-    const [filePath, setFilePath] = useState<RcFile>()
-    const [loading, setLoading] = useState<boolean>(false)
-    const [percent, setPercent] = useState(0)
-
-    const suffixFun = (file_name: string) => {
-        let file_index = file_name.lastIndexOf(".")
-        return file_name.slice(file_index, file_name.length)
-    }
-
-    useEffect(() => {
-        ipcRenderer.on("call-back-upload-yakit-ee", async (e, res: any) => {
-            const {progress} = res
-            setPercent(progress)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("call-back-upload-yakit-ee")
-        }
-    }, [])
-
-    const uploadYakitEEPackage = useMemoizedFn(async () => {
-        setLoading(true)
-        // @ts-ignore
-        const {path, size} = filePath
-        await ipcRenderer
-            .invoke("yak-install-package", {path, size})
-            .then((TaskStatus) => {
-                if (TaskStatus) {
-                    success("上传成功")
-                    setPercent(100)
-                    setTimeout(() => {
-                        onClose()
-                    }, 1000)
-                }
-            })
-            .catch((err) => {
-                console.log("文件上传失败", err)
-                setFilePath(undefined)
-                failed(`文件上传失败：${err}`)
-                setTimeout(() => {
-                    setLoading(false)
-                    setPercent(0)
-                }, 1000)
-            })
-    })
-
-    const cancleUpload = () => {
-        ipcRenderer.invoke("yak-cancle-upload-package").then(() => {
-            warn("取消上传成功")
-            setLoading(false)
-            setPercent(0)
-        })
-    }
-    return (
-        <div className={styles["upload-yakit-ee"]}>
-            <div style={{marginBottom: 8}}>选择zip压缩文件进行上传</div>
-            <Spin spinning={loading}>
-                <Dragger
-                    multiple={false}
-                    maxCount={1}
-                    showUploadList={false}
-                    accept={".zip"}
-                    beforeUpload={(f) => {
-                        const file_name = f.name
-                        const suffix = suffixFun(file_name)
-                        if (![".zip"].includes(suffix)) {
-                            warn("上传文件格式错误，请重新上传")
-                            return false
-                        }
-                        setFilePath(f)
-                        return false
-                    }}
-                >
-                    <p className='ant-upload-drag-icon'>
-                        <InboxOutlined />
-                    </p>
-                    <p className='ant-upload-text'>{filePath ? filePath.name : "拖拽文件到框内或点击上传"}</p>
-                </Dragger>
-            </Spin>
-            {loading && <Progress percent={percent} status='active' />}
-            <div style={{textAlign: "center", marginTop: 16}}>
-                {loading ? (
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        onClick={() => {
-                            cancleUpload()
-                        }}
-                    >
-                        取消
-                    </YakitButton>
-                ) : (
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        type='primary'
-                        disabled={!filePath}
-                        onClick={() => {
-                            uploadYakitEEPackage()
-                        }}
-                    >
-                        确定
-                    </YakitButton>
-                )}
-            </div>
-        </div>
-    )
-}
-
 export interface FuncDomainProp {
     isEngineLink: boolean
     isReverse?: Boolean
@@ -350,7 +238,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     {key: "role-admin", title: "角色管理"},
                     {key: "account-admin", title: "用户管理"},
                     {key: "set-password", title: "修改密码"},
-                    {key: "upload-yakit-ee", title: "上传安装包"},
                     {key: "plugin-aduit", title: "插件管理"},
                     {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
                 ]
@@ -602,21 +489,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 setPasswordShow(true)
                                             }
                                             if (key === "upload-data") setUploadModalShow(true)
-                                            if (key === "upload-yakit-ee") {
-                                                const m = showYakitModal({
-                                                    title: "上传安装包",
-                                                    width: 450,
-                                                    footer: null,
-                                                    centered: true,
-                                                    content: (
-                                                        <UploadYakitEE
-                                                            onClose={() => {
-                                                                m.destroy()
-                                                            }}
-                                                        />
-                                                    )
-                                                })
-                                            }
                                             if (key === "role-admin") {
                                                 onOpenPage({route: YakitRoute.RoleAdminPage})
                                             }

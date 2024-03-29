@@ -25,4 +25,6 @@ export type PluginsEventProps = {
     onRefPluginGroupMagOnlinePluginList: string
     /** 刷新插件组中PluginGroup选中插件组 */
     onRefpluginGroupSelectGroup: string
+    /** 刷新线上插件组管理列表 */
+    onRefpluginGroupList?: string
 }
