@@ -1,4 +1,4 @@
-$active-color: #036ffe;
+$active-color: #f28b44;
 
 .comment-box {
     width: 100%;
@@ -62,81 +62,6 @@ $active-color: #036ffe;
                 background-color: #fff;
             }
         }
-        .images-box {
-            margin-top: 12px;
-            display: flex;
-            gap: 16px;
-            .upload-img-opt {
-                width: 56px;
-                height: 56px;
-                cursor: pointer;
-                position: relative;
-                :global {
-                    .ant-image {
-                        border-radius: 4px;
-                        overflow: hidden;
-                    }
-                }
-                .opt-pic {
-                    width: 56px;
-                    height: 56px;
-                }
-                .mask-box {
-                    display: none;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 4px;
-                    position: absolute;
-                    left: 0px;
-                    right: 0px;
-                    top: 0px;
-                    bottom: 0px;
-                    background-color: rgba(0, 0, 0, 0.2);
-                    color: #fff;
-                    font-size: 12px;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-                .close {
-                    display: none;
-                    cursor: pointer;
-                    padding: 4px;
-                    border-radius: 20px;
-                    border: 2px solid #fff;
-                    background: #f0f1f3;
-                    position: absolute;
-                    top: -12px;
-                    right: -12px;
-                    box-sizing: content-box;
-                    height: 12px;
-                    width: 12px;
-                    overflow: hidden;
-                    transition: all 0.2s ease-in-out;
-                    svg {
-                        position: relative;
-                        top: -6px;
-                        left: 0px;
-                        height: 12px;
-                        width: 12px;
-                        color: #85899e;
-                    }
-                    &:hover {
-                        background-color: var(--yakit-primary-5);
-                        svg {
-                            color: #ffffff;
-                        }
-                    }
-                }
-                &:hover {
-                    .mask-box {
-                        display: flex;
-                    }
-                    .close {
-                        display: block;
-                    }
-                }
-            }
-        }
         .upload-box {
             display: flex;
             flex-direction: row;
@@ -184,6 +109,79 @@ $active-color: #036ffe;
     .input-upload-box-active {
         border-color: var(--yakit-primary-4);
         box-shadow: 0 0 0 2px var(--yakit-primary-2);
+    }
+}
+
+.plugin-comment-images {
+    display: flex;
+    gap: 16px;
+    .upload-img-opt {
+        cursor: pointer;
+        position: relative;
+        :global {
+            .ant-image {
+                border-radius: 4px;
+                overflow: hidden;
+            }
+        }
+        .opt-pic {
+            width: 56px;
+            height: 56px;
+        }
+        .mask-box {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            position: absolute;
+            left: 0px;
+            right: 0px;
+            top: 0px;
+            bottom: 0px;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
+        .close {
+            display: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 20px;
+            border: 2px solid #fff;
+            background: #f0f1f3;
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            box-sizing: content-box;
+            height: 12px;
+            width: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease-in-out;
+            svg {
+                position: relative;
+                top: -6px;
+                left: 0px;
+                height: 12px;
+                width: 12px;
+                color: #85899e;
+            }
+            &:hover {
+                background-color: var(--yakit-primary-5);
+                svg {
+                    color: #ffffff;
+                }
+            }
+        }
+        &:hover {
+            .mask-box {
+                display: flex;
+            }
+            .close {
+                display: block;
+            }
+        }
     }
 }
 
@@ -378,11 +376,18 @@ $active-color: #036ffe;
         }
 
         .comment-reply {
-            margin-top: 8px;
-            font-size: 12px;
+            margin-top: 16px;
+            color: var(--yakit-color-grey);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+            &:hover{
+                color: $active-color;
+            }
         }
 
-        .comment-body-time-func {
+        .comment-body-option {
+            margin-top: 8px;
             height: 20px;
             line-height: 20px;
             display: flex;
@@ -401,20 +406,27 @@ $active-color: #036ffe;
                     display: flex;
                     align-items: center;
 
-                    .icon-style {
-                        font-size: 21px;
-                        cursor: pointer;
-                        color: #686c78;
+                    .reply-btn {
+                        color: #31343f;
+                        &:hover {
+                            color: var(--yakit-primary-4);
+                        }
                     }
 
-                    .icon-style-comment {
-                        font-size: 16px;
+                    .icon-style {
+                        svg {
+                            height: 16px;
+                            width: 16px;
+                        }
                         cursor: pointer;
                         color: #686c78;
                     }
 
                     .icon-style-start {
-                        font-size: 21px;
+                        svg {
+                            height: 16px;
+                            width: 16px;
+                        }
                         cursor: pointer;
                         color: $active-color;
                     }
@@ -423,18 +435,12 @@ $active-color: #036ffe;
                         margin-left: 4px;
                         cursor: pointer;
                     }
-
-                    .num-style-active {
-                        color: $active-color;
-                    }
                 }
 
                 .hover-active {
                     &:hover {
-                        color: $active-color !important;
-
                         svg {
-                            color: $active-color !important;
+                            color: $active-color;
                         }
                     }
                 }

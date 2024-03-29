@@ -1,6 +1,6 @@
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn} from "ahooks"
-import React, {useState, useEffect, memo, Suspense, useRef, useMemo} from "react"
+import React, {useState, useEffect, memo, Suspense, useRef, useMemo, CSSProperties} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "@/utils/notification"
@@ -52,12 +52,13 @@ import yakitImg from "@/assets/yakit.jpg"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PaperAirplaneIcon, ResizerIcon} from "@/assets/newIcon"
-import {OutlinePhotographIcon} from "@/assets/icon/outline"
+import {OutlinePhotographIcon, OutlineThumbupActiveIcon, OutlineThumbupIcon} from "@/assets/icon/outline"
 import {CloseIcon} from "@/components/configNetwork/icon"
 import {NewYakitTimeLineList} from "@/components/yakitUI/NewYakitTimeLineList/NewYakitTimeLineList"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {OnlineJudgment} from "./onlineJudgment/OnlineJudgment"
 import {YakitTimeLineListRefProps} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineListType"
+import { YakitCollapseText } from "@/components/yakitUI/YakitCollapseText/YakitCollapseText"
 const {ipcRenderer} = window.require("electron")
 
 const limit = 20
@@ -125,6 +126,8 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             params
         })
             .then((res) => {
+                console.log("comment", params, res)
+
                 if (!res.data) {
                     res.data = []
                 }
@@ -480,56 +483,50 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                 </div>
 
                 <div className={styles["comment-body-content"]}>
-                    <CollapseParagraph value={`${info.message}`} rows={2} valueConfig={{className: "content-style"}}>
+                    {/* <CollapseParagraph value={`${info.message}`} rows={2} valueConfig={{className: "content-style"}}>
                         {info.by_user_name && (
                             <span>
                                 回复<span className={styles["content-by-name"]}>{info.by_user_name}</span>:
                             </span>
                         )}
-                    </CollapseParagraph>
+                    </CollapseParagraph> */}
+                    <YakitCollapseText content={info.message} rows={2} lineHeight={20} fontSize={14}/>
                 </div>
-
-                <div className={styles["comment-body-time-func"]}>
+                <PluginCommentImages images={message_img} key={info.id} size={90} />
+                {/* <Space>
+                    {message_img.map((url) => (
+                        <Image key={url + info.id} src={url as any} className={styles["comment-pic"]} />
+                    ))}
+                </Space> */}
+                <div className={styles["comment-body-option"]}>
                     {isOperation && (
                         <div className={styles["func-comment-and-star"]}>
                             <div className={styles["comment-and-star"]} onClick={() => onReply(info)}>
-                                <OnlineCommentIcon
-                                    // @ts-ignore
-                                    className={classNames(styles["icon-style-comment"], styles["hover-active"])}
-                                />
+                                <YakitButton type='secondary2' className={styles["reply-btn"]}>
+                                    回复
+                                </YakitButton>
                             </div>
                             <div
-                                style={{marginLeft: 18}}
-                                className={classNames(styles["hover-active"], styles["comment-and-star"])}
+                                style={{marginLeft: 16}}
+                                className={classNames(styles["comment-and-star"])}
                                 onClick={() => onStar(info)}
                             >
                                 {(isStarChange && (
-                                    <OnlineSurfaceIcon
-                                        // @ts-ignore
+                                    <OutlineThumbupActiveIcon
                                         className={classNames(styles["hover-active"], styles["icon-style-start"])}
                                     />
                                 )) || (
-                                    <OnlineThumbsUpIcon
-                                        // @ts-ignore
+                                    <OutlineThumbupIcon
                                         className={classNames(styles["hover-active"], styles["icon-style"])}
                                     />
                                 )}
-                                <span
-                                    className={classNames(styles["hover-active"], styles["num-style"], {
-                                        [styles["num-style-active"]]: isStarChange
-                                    })}
-                                >
+                                <span className={classNames(styles["num-style"])}>
                                     {numeral(info.like_num).format("0,0")}
                                 </span>
                             </div>
                         </div>
                     )}
                 </div>
-                <Space>
-                    {message_img.map((url) => (
-                        <Image key={url + info.id} src={url as any} className={styles["comment-pic"]} />
-                    ))}
-                </Space>
                 {isOperation && info.reply_num > 0 && (
                     <a
                         className={styles["comment-reply"]}
@@ -542,13 +539,86 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                             }
                         }}
                     >
-                        查看更多回复
+                        共 12 条回复，点击查看
                     </a>
                 )}
             </div>
         </div>
     )
 })
+interface PluginCommentImagesProps {
+    images: string[]
+    onDelete?: (v: string[]) => void
+    // 辅助key值
+    key?: string | number
+    // 展示图片大小 默认56
+    size?: number
+}
+
+const PluginCommentImages: React.FC<PluginCommentImagesProps> = (props) => {
+    const {images, onDelete, key, size = 56} = props
+    const [imageShow, setImageShow] = useState<ImageShowProps>({
+        src: "",
+        visible: false
+    })
+    return (
+        <div className={styles["plugin-comment-images"]}>
+            {images.map((item, index) => {
+                return (
+                    <div
+                        key={`${item}-${key || ""}`}
+                        className={styles["upload-img-opt"]}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        <img src={item as any} className={styles["opt-pic"]} style={{width: size, height: size}} />
+                        <div
+                            className={styles["mask-box"]}
+                            onClick={() => {
+                                setImageShow({
+                                    visible: true,
+                                    src: item
+                                })
+                            }}
+                        >
+                            预览
+                        </div>
+                        {onDelete && (
+                            <div
+                                className={styles["close"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    const arr: string[] = cloneDeep(images)
+                                    arr.splice(index, 1)
+                                    onDelete && onDelete(arr)
+                                }}
+                            >
+                                <CloseIcon />
+                            </div>
+                        )}
+                    </div>
+                )
+            })}
+            <Image
+                src={imageShow.src}
+                style={{display: "none"}}
+                preview={{
+                    visible: imageShow.visible,
+                    src: imageShow.src,
+                    onVisibleChange: (value) => {
+                        if (!value) {
+                            setImageShow({
+                                visible: false,
+                                src: ""
+                            })
+                        }
+                    }
+                }}
+            />
+        </div>
+    )
+}
 
 interface PluginCommentUploadProps {
     value: string
@@ -575,10 +645,7 @@ const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
     const textAreRef = useRef<InputRef>(null)
     const [isFocused, setIsFocused] = useState<boolean>(false)
-    const [imageShow, setImageShow] = useState<ImageShowProps>({
-        src: "",
-        visible: false
-    })
+
     // textArea纯文本域 operator带操作的文本域 operatorImg带操作加图片展示的文本域
     const [textAreaType, setTextAreaType] = useState<"textArea" | "operator" | "operatorImg">("operator")
     const uploadFiles = (file) => {
@@ -597,7 +664,7 @@ const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
     }
 
     const disabled = useMemo(() => {
-        if (value.length > limit) {
+        if (value.length > limit || value.length === 0) {
             return true
         }
         return false
@@ -642,7 +709,6 @@ const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
                         e.stopPropagation()
                     }}
                 >
-                    {/* <YakitInput */}
                     <Input.TextArea
                         className={styles["input-box-textArea"]}
                         onFocus={() => {
@@ -661,62 +727,12 @@ const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
                     <ResizerIcon className={styles["textArea-resizer-icon"]} />
                 </div>
                 {files.length !== 0 && (
-                    <div className={styles["images-box"]}>
-                        {files.map((item, index) => {
-                            return (
-                                <div
-                                    key={item}
-                                    className={styles["upload-img-opt"]}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                    }}
-                                >
-                                    <img src={item as any} className={styles["opt-pic"]} />
-                                    <div
-                                        className={styles["mask-box"]}
-                                        onClick={() => {
-                                            setImageShow({
-                                                visible: true,
-                                                src: item
-                                            })
-                                        }}
-                                    >
-                                        预览
-                                    </div>
-                                    <div
-                                        className={styles["close"]}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            const arr = cloneDeep(files)
-                                            arr.splice(index, 1)
-                                            setFiles(arr)
-                                        }}
-                                    >
-                                        <CloseIcon />
-                                    </div>
-                                </div>
-                            )
-                        })}
-                        <Image
-                            src={imageShow.src}
-                            style={{display: "none"}}
-                            preview={{
-                                visible: imageShow.visible,
-                                src: imageShow.src,
-                                onVisibleChange: (value) => {
-                                    if (!value) {
-                                        setImageShow({
-                                            visible: false,
-                                            src: ""
-                                        })
-                                    }
-                                }
-                            }}
-                        />
+                    <div style={{marginTop: 12}}>
+                        <PluginCommentImages images={files} onDelete={setFiles} />
                     </div>
                 )}
-                <div className={styles["upload-box"]}>
-                    <div className={styles["upload-box-left"]} onClick={(e) => e.stopPropagation()}>
+                {isFocused&&<div className={styles["upload-box"]}>
+                    <div className={styles["upload-box-left"]} >
                         <Upload
                             accept='image/jpeg,image/png,image/jpg,image/gif'
                             multiple={false}
@@ -766,7 +782,7 @@ const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
                             {submitTxt}
                         </YakitButton>
                     </div>
-                </div>
+                </div>}
             </div>
         </div>
     )

@@ -5,5 +5,7 @@ export interface YakitCollapseTextProps {
     rows?: number
     /** 内容单行行高，默认 16px */
     lineHeight?: number
+    /** 文字大小，默认 12px */
+    fontSize?: number
     wrapperClassName?: string
 }
