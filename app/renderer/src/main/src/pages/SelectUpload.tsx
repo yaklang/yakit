@@ -1,8 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Input, Form, Select, Spin, Progress, Cascader} from "antd"
+import {Form, Select, Progress, Cascader} from "antd"
 import {useMemoizedFn, useThrottleFn, useGetState} from "ahooks"
 import {failed, success, warn} from "@/utils/notification"
-import {PaginationSchema} from "./invoker/schema"
 import {randomString} from "@/utils/randomUtil"
 import {
     FileProjectInfoProps,
@@ -13,6 +12,7 @@ import {
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -234,11 +234,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     return (
         <Form {...layout} form={form} onFinish={onFinish}>
             <Form.Item name='allow_password' label='上传方式' rules={[{required: true, message: "该项为必填"}]}>
-                <Select disabled={loading} placeholder='请选择加密方式' onChange={setAllowPassword}>
-                    <Option value='1'>加密上传</Option>
-                    <Option value='0'>压缩上传</Option>
-                    <Option value='2'>直接上传</Option>
-                </Select>
+                <YakitSelect disabled={loading} placeholder='请选择加密方式' onChange={setAllowPassword}>
+                    <YakitSelect.Option value='1'>加密上传</YakitSelect.Option>
+                    <YakitSelect.Option value='0'>压缩上传</YakitSelect.Option>
+                    <YakitSelect.Option value='2'>直接上传</YakitSelect.Option>
+                </YakitSelect>
             </Form.Item>
             {allowPassword === "1" && (
                 <Form.Item name='password' label='密码' rules={[{required: true, message: "该项为必填"}]}>
