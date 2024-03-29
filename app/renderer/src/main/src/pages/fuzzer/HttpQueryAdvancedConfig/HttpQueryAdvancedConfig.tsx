@@ -53,7 +53,7 @@ import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStart
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
-import { OutlineBadgecheckIcon } from "@/assets/icon/outline"
+import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -88,6 +88,17 @@ const fuzzTagModeOptions = [
     {
         value: "legacy",
         label: "兼容"
+    }
+]
+
+const fuzzTagSyncOptions = [
+    {
+        value: false,
+        label: "交叉乘积"
+    },
+    {
+        value: true,
+        label: "草叉/同步"
     }
 ]
 
@@ -394,7 +405,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }
     // 重置
     const handleVariableReset = useMemoizedFn(
-        (e: React.MouseEvent<HTMLElement, MouseEvent>, field: fields, val: object, ref: React.MutableRefObject<any>) => {
+        (
+            e: React.MouseEvent<HTMLElement, MouseEvent>,
+            field: fields,
+            val: object,
+            ref: React.MutableRefObject<any>
+        ) => {
             e.stopPropagation()
             onReset({
                 [field]: [{...val}]
@@ -577,8 +593,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <YakitRadioButtons buttonStyle='solid' options={fuzzTagModeOptions} size={"small"} />
                         </Form.Item>
 
-                        <Form.Item label='强制同步渲染' name='fuzzTagSyncIndex' valuePropName='checked'>
-                            <YakitSwitch />
+                        <Form.Item label='渲染模式' name='fuzzTagSyncIndex'>
+                            <YakitRadioButtons buttonStyle='solid' options={fuzzTagSyncOptions} size={"small"} />
                         </Form.Item>
 
                         <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
@@ -595,15 +611,23 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 type='text'
                                 onClick={() => setBatchTargetModalVisible(true)}
                                 icon={
-                                    Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                                        <OutlineBadgecheckIcon style={{color: "#56C991"}}/>
+                                    JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
+                                        Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
+                                            <OutlineBadgecheckIcon style={{color: "#56C991"}} />
+                                        ) : (
+                                            <PlusSmIcon />
+                                        )
                                     ) : (
                                         <PlusSmIcon />
                                     )
                                 }
                             >
-                                {Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                                    <div style={{color: "#56C991"}}>已配置</div>
+                                {JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
+                                    Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
+                                        <div style={{color: "#56C991"}}>已配置</div>
+                                    ) : (
+                                        "配置批量目标"
+                                    )
                                 ) : (
                                     "配置批量目标"
                                 )}
@@ -1065,7 +1089,13 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     onClick={(e) =>
-                                        handleVariableAdd(e, "methodGet", "GET 参数", {Key: "", Value: ""}, methodGetRef)
+                                        handleVariableAdd(
+                                            e,
+                                            "methodGet",
+                                            "GET 参数",
+                                            {Key: "", Value: ""},
+                                            methodGetRef
+                                        )
                                     }
                                     className={styles["btn-padding-right-0"]}
                                     size='small'
@@ -1168,9 +1198,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitButton
                                     type='text'
                                     colors='danger'
-                                    onClick={(e) =>
-                                        handleVariableReset(e, "headers", {Key: "", Value: ""}, headersRef)
-                                    }
+                                    onClick={(e) => handleVariableReset(e, "headers", {Key: "", Value: ""}, headersRef)}
                                     size='small'
                                 >
                                     重置
@@ -1290,7 +1318,9 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
                     labelCol={{span: 6}}
                     wrapperCol={{span: 18}}
                     style={{height: "100%"}}
-                    initialValues={{BatchTarget: Uint8ArrayToString(batchTarget)}}
+                    initialValues={{
+                        BatchTarget: JSON.stringify(batchTarget) === "{}" ? "" : Uint8ArrayToString(batchTarget)
+                    }}
                 >
                     <YakitFormDraggerContent
                         style={{width: "100%"}}

@@ -55,9 +55,9 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     })
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-        if (key === "config") {
-            ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
-        }
+        // if (key === "config") {
+        //     ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
+        // }
     })
 
     // 监听tab栏打开或关闭

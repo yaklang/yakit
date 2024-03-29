@@ -448,6 +448,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
     }
 
     fuzzerRequests.MutateMethods = mutateMethods
+
     return fuzzerRequests
 }
 
