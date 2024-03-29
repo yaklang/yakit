@@ -1058,7 +1058,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
                 setRemoteValue(WEB_FUZZ_PROXY_LIST, JSON.stringify(newProxyList)).then(() => {
                     setRefreshProxy(!refreshProxy)
-                    console.log('存', {defaultValue: proxyList, options: newProxyList});
                     // 缓存数据结构迁移(后续删除)
                     setRemoteValue(
                         CacheDropDownGV.WebFuzzerProxyList,

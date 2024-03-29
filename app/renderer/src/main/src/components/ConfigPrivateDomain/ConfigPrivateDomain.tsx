@@ -219,7 +219,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const getProxyList = useMemoizedFn(() => {
         // 缓存数据结构迁移(后续删除)
         Promise.allSettled([getRemoteValue("httpProxyList")]).then((cacheRes) => {
-            const defaultValue = form.getFieldValue("Proxy") || ""
+            const defaultValue = ""
             const options =
                 cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? JSON.parse(cacheRes[0].value) : []) : []
             setHttpProxyList(options)
@@ -236,7 +236,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         // 缓存数据结构迁移(后续删除)
         setRemoteValue(
             CacheDropDownGV.ConfigProxy,
-            JSON.stringify({defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
+            JSON.stringify({defaultValue: "", options: httpProxyList.filter((_, index) => index < 10)})
         )
     })
     // 判断输入内容是否通过
