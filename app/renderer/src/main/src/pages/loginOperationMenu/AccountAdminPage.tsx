@@ -9,7 +9,6 @@ import {
     Popconfirm,
     Tag,
     Avatar,
-    Select,
     Cascader,
     Popover,
     Spin,
@@ -31,8 +30,9 @@ import {PlusOutlined, EditOutlined, DeleteOutlined,RightOutlined} from "@ant-des
 import {DefaultOptionType} from "antd/lib/cascader"
 import {useStore} from "@/store"
 import { unReadable } from "../dynamicControl/DynamicControl"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
-const {Option} = Select
 export interface ShowUserInfoProps extends API.NewUrmResponse {
     onClose: () => void
 }
@@ -292,7 +292,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
             </div>
         )
     })
@@ -385,7 +385,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                     />
                 </Form.Item>
                 <Form.Item name='role_id' label='角色' rules={[{required: true, message: "该项为必填"}]}>
-                    <Select
+                    <YakitSelect
                         showSearch
                         placeholder='请选择角色'
                         optionFilterProp='children'
@@ -402,11 +402,11 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                     >
                         {roleData.map((item) => (
-                            <Option key={item.id} value={item.id}>
+                            <YakitSelect.Option key={item.id} value={item.id}>
                                 {item.name}
-                            </Option>
+                            </YakitSelect.Option>
                         ))}
-                    </Select>
+                    </YakitSelect>
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
                     <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>

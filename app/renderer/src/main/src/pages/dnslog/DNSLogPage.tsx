@@ -428,9 +428,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         size='small'
                                     >
                                         {platforms.map((item, index) => (
-                                            <Option key={index} value={item}>
+                                            <YakitSelect.Option key={index} value={item}>
                                                 {item}
-                                            </Option>
+                                            </YakitSelect.Option>
                                         ))}
                                     </YakitSelect>
                                 </Form.Item>

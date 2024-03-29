@@ -17,6 +17,8 @@ export interface YakitAutoCompleteProps extends AutoCompleteProps {
     /**是否缓存默认值 */
     isCacheDefaultValue?: boolean
     ref?: React.ForwardedRef<YakitAutoCompleteRefProps>
+    /** 初始默认值 主要用于缓存值不存在时*/
+    initValue?: string
 }
 
 export interface YakitAutoCompleteRefProps {

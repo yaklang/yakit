@@ -47,6 +47,7 @@ import ReactResizeDetector from "react-resize-detector"
 
 import "./javaPayloadPage.scss"
 import {NetInterface} from "@/models/Traffic"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -983,7 +984,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                 }}
                             />
                         ) : (
-                            <Select
+                            <YakitSelect
                                 allowClear={true}
                                 placeholder='请选择恶意类'
                                 optionLabelProp='NameVerbose'
@@ -1001,7 +1002,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             >
                                 {selectOptions.map((item) => {
                                     return (
-                                        <Select.Option key={item.Name} value={item.Name}>
+                                        <YakitSelect.Option key={item.Name} value={item.Name}>
                                             <div className='form-item-options-title'>
                                                 {item.NameVerbose}
                                                 {!!item.Help && (
@@ -1010,10 +1011,10 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                                     </Tooltip>
                                                 )}
                                             </div>
-                                        </Select.Option>
+                                        </YakitSelect.Option>
                                     )
                                 })}
-                            </Select>
+                            </YakitSelect>
                         )}
                     </Form.Item>
 

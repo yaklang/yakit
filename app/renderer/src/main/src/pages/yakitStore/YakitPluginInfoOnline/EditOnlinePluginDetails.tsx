@@ -7,6 +7,7 @@ import {UserQuery} from "@/pages/loginOperationMenu/TrustListPage"
 import {failed, success} from "@/utils/notification"
 import {OnlineUserItem} from "@/components/OnlineUserItem/OnlineUserItem"
 import {UserInfoProps} from "@/store"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {Option} = Select
 
@@ -121,7 +122,7 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
                 {["admin","superAdmin"].includes(userInfo.role||"")&& (
                     <>
                         <Form.Item name='user_id' label='作者'>
-                            <Select
+                            <YakitSelect
                                 optionLabelProp='label'
                                 filterOption={() => true}
                                 placeholder='请输入用户名称搜索'
@@ -129,11 +130,11 @@ const EditOnlinePluginDetails: React.FC<EditOnlinePluginDetailsProps> = (props) 
                                 onSearch={getUserList}
                             >
                                 {(userList.data || []).map((info) => (
-                                    <Option value={info.id} key={info.id} label={info.name}>
+                                    <YakitSelect.Option value={info.id} key={info.id} label={info.name}>
                                         <OnlineUserItem info={info} />
-                                    </Option>
+                                    </YakitSelect.Option>
                                 ))}
-                            </Select>
+                            </YakitSelect>
                         </Form.Item>
                         <Form.Item name='is_official' label='是否官方'>
                             <Radio.Group>

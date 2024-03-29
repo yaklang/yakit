@@ -1,23 +1,9 @@
-import React, {useEffect, useState} from "react"
-import {
-    Table,
-    Space,
-    Button,
-    Input,
-    Modal,
-    Form,
-    Popconfirm,
-    Tag,
-    Select,
-    InputNumber,
-    DatePicker,
-    Spin,
-    Tooltip
-} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, InputNumber, DatePicker, Tooltip} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn, useDebounceFn} from "ahooks"
+import {useGetState, useMemoizedFn, useDebounceFn, usePrevious} from "ahooks"
 import moment from "moment"
 import "./LicenseAdminPage.scss"
 import {failed, success, warn} from "@/utils/notification"
@@ -25,7 +11,8 @@ import {PaginationSchema} from "../invoker/schema"
 import {showModal} from "@/utils/showModal"
 import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
-const { Option } = Select;
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 export interface ShowUserInfoProps {
     text: string
     onClose: () => void
@@ -72,6 +59,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     const [selectLoading, setSelectLoading] = useState<boolean>(true)
     const [data, setData, getData] = useGetState<API.CompanyLicenseConfigList[]>([])
     const [selectData, setSelectData, getSelectData] = useGetState<SelectDataProps[]>([])
+    const keywordsRef = useRef<string>("")
     // 企业名称分页
     const [_, setPagination, getPagination] = useGetState<PaginationSchema>({
         Limit: 20,
@@ -81,21 +69,20 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     })
 
     useEffect(() => {
-        update()
+        update(1, undefined, true)
     }, [])
 
-    const update = (page?: number, limit?: number, keywords: string = "", reload: boolean = false) => {
+    const update = (page?: number, limit?: number, reload: boolean = false) => {
         setSelectLoading(true)
         const paginationProps = {
             page: page || 1,
             limit: limit || getPagination().Limit
         }
-
         NetWorkApi<QueryProps, API.CompanyLicenseConfigResponse>({
             method: "get",
             url: "company/license/config",
             params: {
-                keywords,
+                keywords: keywordsRef.current,
                 status: 0,
                 ...paginationProps
             }
@@ -106,8 +93,8 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                     value: item.id,
                     label: item.company
                 }))
-                if(data.length>0){
-                    setPagination((v)=>({...v,Page:paginationProps.page}))
+                if (data.length > 0) {
+                    setPagination((v) => ({...v, Page: paginationProps.page}))
                 }
                 if (reload) {
                     setData([...data])
@@ -129,7 +116,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
 
     const onFinish = useMemoizedFn((values) => {
         setLoading(true)
-        const {id, license,company_version} = values
+        const {id, license, company_version} = values
         const selectDate = data.filter((item) => item.id === id)[0]
         const {company, maxUser} = selectDate
         let params = {
@@ -165,7 +152,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <div>
-                <Spin spinning={selectLoading}>{originNode}</Spin>
+                <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
             </div>
         )
     })
@@ -174,21 +161,23 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
         <div style={{marginTop: 24}}>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Form.Item name='id' label='企业名称' rules={[{required: true, message: "该项为必选"}]}>
-                    <Select
+                    <YakitSelect
                         showSearch
                         optionFilterProp='children'
                         placeholder='请选择企业名称'
-                        filterOption={(input, option) =>
-                            (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-                        }
+                        filterOption={(input, option) => {
+                            const val = (option?.label ?? "") + ""
+                            return val.toLowerCase().includes(input.toLowerCase())
+                        }}
                         options={selectData}
                         onSearch={(value) => {
-                            update(1, undefined, value, true)
+                            keywordsRef.current = value
+                            update(1, undefined, true)
                         }}
                         onPopupScroll={(e) => {
                             const {target} = e
                             const ref: HTMLDivElement = target as unknown as HTMLDivElement
-                            if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight) {
+                            if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight && !selectLoading) {
                                 update(getPagination().Page + 1)
                             }
                         }}
@@ -196,10 +185,10 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                     />
                 </Form.Item>
                 <Form.Item name='company_version' label='版本' rules={[{required: true, message: "该项为必选"}]}>
-                    <Select placeholder='请选择版本' allowClear>
-                        <Option value='EnpriTrace'>企业版</Option>
-                        <Option value='EnpriTraceAgent'>便携版</Option>
-                    </Select>
+                    <YakitSelect placeholder='请选择版本' allowClear>
+                        <YakitSelect.Option value='EnpriTrace'>企业版</YakitSelect.Option>
+                        <YakitSelect.Option value='EnpriTraceAgent'>便携版</YakitSelect.Option>
+                    </YakitSelect>
                 </Form.Item>
                 <Form.Item name='license' label='申请码' rules={[{required: true, message: "该项为必选"}]}>
                     <Input.TextArea placeholder='请输入申请码' allowClear rows={13} />

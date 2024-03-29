@@ -14,7 +14,7 @@ import {
 import {ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ResizeBox} from "@/components/ResizeBox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {CVEDetail, CVEDetailEx,CWEDetail} from "@/pages/cve/models"
+import {CVEDetail, CVEDetailEx, CWEDetail} from "@/pages/cve/models"
 import {CVEInspect} from "@/pages/cve/CVEInspect"
 import styles from "./CVETable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
@@ -42,6 +42,7 @@ import {formatDate, formatTimestamp} from "@/utils/timeUtil"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {CacheDropDownGV} from "@/yakitGV"
 
 export interface CVETableProp {
     available: boolean
@@ -90,9 +91,7 @@ export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
                             setCVE={setCVE}
                         />
                     }
-                    secondNode={
-                        <CVEInspect selected={selected} CVE={cve} CWE={cwe} onSelectCve={setSelected} />
-                }
+                    secondNode={<CVEInspect selected={selected} CVE={cve} CWE={cwe} onSelectCve={setSelected} />}
                 />
             ) : (
                 <CVETableList
@@ -117,12 +116,12 @@ interface CVETableListProps {
     setSelected: (s: string) => void
     advancedQuery: boolean //是否开启高级查询
     setAdvancedQuery: (b: boolean) => void
-    CVE:CVEDetail
-    setCVE:(v:CVEDetail)=>void
+    CVE: CVEDetail
+    setCVE: (v: CVEDetail) => void
 }
 
 const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
-    const {available, selected, setSelected, advancedQuery, setAdvancedQuery,CVE,setCVE} = props
+    const {available, selected, setSelected, advancedQuery, setAdvancedQuery, CVE, setCVE} = props
     const [params, setParams] = useState<QueryCVERequest>({...props.filter})
     const [loading, setLoading] = useState(false)
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -139,7 +138,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
     const [dataBaseUpdateLatestMode, setDataBaseUpdateLatestMode] = useState<boolean>(false)
 
     const [updateTime, setUpdateTime] = useState<number>() // 数据库更新时间
-    
+
     const [currentSelectItem, setCurrentSelectItem] = useState<CVEDetail>()
     useEffect(() => {
         if (!selected) return
@@ -315,11 +314,10 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         ]
     }, [])
     const onRowClick = useMemoizedFn((record?: CVEDetail) => {
-        if(record){
+        if (record) {
             setCVE(record)
             setSelected(record.CVE) // 更新当前选中的行
-        }
-        else{
+        } else {
             setCVE(emptyCVE())
             setSelected("")
         }
@@ -581,32 +579,29 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     }, [visible])
     /**@description 获取代理list历史 和代理 */
     const getProxyListAndProxy = useMemoizedFn(() => {
-        getRemoteValue("cveProxyList").then((listString) => {
-            try {
-                if (listString) {
-                    const list: string[] = JSON.parse(listString) || []
-                    setHttpProxyList(list)
-                }
-            } catch (error) {
-                yakitFailed("CVE代理list获取失败:" + error)
-            }
-        })
-        getRemoteValue("cveProxy").then((v) => {
-            try {
-                if (v) {
-                    setProxy(v)
-                }
-            } catch (error) {
-                yakitFailed("CVE代理获取失败:" + error)
-            }
+        // 缓存数据结构迁移(后续删除)
+        Promise.allSettled([getRemoteValue("cveProxy"), getRemoteValue("cveProxyList")]).then((cacheRes) => {
+            const defaultValue =
+                cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? cacheRes[0].value : "") : ""
+            const options =
+                cacheRes[1].status === "fulfilled" ? (!!cacheRes[1].value ? JSON.parse(cacheRes[1].value) : []) : []
+            setProxy(defaultValue)
+            setHttpProxyList(options)
+            setRemoteValue(CacheDropDownGV.CVEProxyList, JSON.stringify({defaultValue, options}))
         })
     })
     const addProxyList = useMemoizedFn((url) => {
-        if(!url)return
+        if (!url) return
         const index = httpProxyList.findIndex((u) => u === url)
-        if (index !== -1) return
-        httpProxyList.push(url)
-        setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+        if (index === -1) {
+            httpProxyList.push(url)
+            setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
+        }
+        // 缓存数据结构迁移(后续删除)
+        setRemoteValue(
+            CacheDropDownGV.CVEProxyList,
+            JSON.stringify({defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
+        )
     })
     const tipNode = useMemo(
         () =>

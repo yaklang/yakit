@@ -11,6 +11,7 @@ import {ReverseNotification, ReverseNotificationTable} from "./ReverseNotificati
 import {ThunderboltOutlined, PoweroffOutlined} from "@ant-design/icons"
 import {FacadeOptions} from "./FacadesOptions"
 import {Color} from "bizcharts/lib/plots/core/dependents"
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 export const BRIDGE_ADDR = "yak-bridge-addr"
@@ -377,7 +378,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                 />
                             </Form.Item>
                             <Form.Item label='恶意类' name='select'>
-                                <Select options={options} onChange={loadClassGeneraterOptions}></Select>
+                                <YakitSelect options={options} onChange={loadClassGeneraterOptions}></YakitSelect>
                             </Form.Item>
                             <Form
                                 labelCol={{span: 6}}

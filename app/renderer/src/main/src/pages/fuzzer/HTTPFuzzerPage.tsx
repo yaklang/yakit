@@ -117,7 +117,8 @@ import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdP
 import blastingIdmp4 from "@/assets/blasting-id.mp4"
 import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
-import { prettifyPacketCode } from "@/utils/prettifyPacket"
+import {prettifyPacketCode} from "@/utils/prettifyPacket"
+import {CacheDropDownGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1057,6 +1058,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
                 setRemoteValue(WEB_FUZZ_PROXY_LIST, JSON.stringify(newProxyList)).then(() => {
                     setRefreshProxy(!refreshProxy)
+                    // 缓存数据结构迁移(后续删除)
+                    setRemoteValue(
+                        CacheDropDownGV.WebFuzzerProxyList,
+                        JSON.stringify({defaultValue: proxyList, options: newProxyList})
+                    )
                 })
             } catch (error) {
                 yakitFailed("代理列表获取失败:" + error)
