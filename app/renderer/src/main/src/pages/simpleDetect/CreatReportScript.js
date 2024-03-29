@@ -367,17 +367,21 @@ for target,risks = range targetToRisks {
 aliveHostList = []
 aliveHostKey = 0
 for aliveHost = range db.QueryAliveHost(runtimeID) {
-    aliveHostKey = aliveHostKey + 1
-    aliveHostList = append(aliveHostList,
-        [aliveHostKey, aliveHost.IP]
-    )
+    if aliveHost.IP != "127.0.0.1" {
+        aliveHostKey = aliveHostKey + 1
+        aliveHostList = append(aliveHostList,
+            [aliveHostKey, aliveHost.IP]
+        )
+    }
 }
 if len(aliveHostList) == 0 {
     for _, host := range aliveHostCountList{
-        aliveHostKey = aliveHostKey + 1
-        aliveHostList = append(aliveHostList,
-            [aliveHostKey, host]
-        )
+        if host != "127.0.0.1" {
+            aliveHostKey = aliveHostKey + 1
+            aliveHostList = append(aliveHostList,
+                [aliveHostKey, host]
+            )
+        }
     }
 }
 
