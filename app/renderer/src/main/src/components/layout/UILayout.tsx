@@ -684,6 +684,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (type) {
             case "install":
             case "update":
+                if (checkLog.length > 0 && type === "install") setCheckLog([])
                 setYakitStatus("")
                 cacheYakitStatus.current = ""
                 getCacheEngineMode()
