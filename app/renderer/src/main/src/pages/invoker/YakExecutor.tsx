@@ -272,12 +272,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         document.onmousedown = (e) => {
             try {
                 // @ts-ignore
-                if (!e || !e?.path || Array.isArray(e?.path || undefined)) {
-                    return
-                }
-
-                // @ts-ignore
-                if (e.path[0].id !== "rename-input" && renameFlag) {
+                if (e.target.id !== "rename-input" && renameFlag) {
                     renameCode(renameIndex)
                     setRenameFlag(false)
                 }
