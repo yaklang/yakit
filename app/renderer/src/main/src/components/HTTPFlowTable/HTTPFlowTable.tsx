@@ -999,12 +999,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         isGrpcRef.current = true
 
         if (runTimeId) query.RuntimeId = runTimeId
-
+        console.log('查询数据', type);
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
+                console.log('获取数据', type, resData.length);
                 const newData: HTTPFlow[] = getClassNameData(resData)
                 if (type === "top") {
                     if (newData.length <= 0) {
@@ -1216,6 +1217,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 return
             }
             setIsRefresh(!isRefresh)
+            setSelectedRowKeys([])
+            setSelectedRows([])
+            setScrollToIndex(0)
+            setCurrentIndex(undefined)
             getDataByGrpc(query, "update")
         } else{
             setIsLoop(true)

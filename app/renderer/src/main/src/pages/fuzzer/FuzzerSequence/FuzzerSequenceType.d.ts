@@ -87,6 +87,7 @@ export interface ResponseProps {
     onlyOneResponse: FuzzerResponse
     successFuzzer: FuzzerResponse[]
     failedFuzzer: FuzzerResponse[]
+    runtimeIdFuzzer: string[]
 }
 /**
  * @description HTTPFuzzerSequence接口返回类型
@@ -119,6 +120,7 @@ export interface SequenceResponseProps {
     hotPatchCodeWithParamGetter: string
     setHotPatchCode: (s: string) => void
     setHotPatchCodeWithParamGetter: (s: string) => void
+    onShowAll: () => void
 }
 
 export interface SequenceResponseRefProps{
@@ -155,4 +157,13 @@ export interface ResponseCardProps {
     showAllResponse: boolean
     responseMap: Map<string, ResponseProps>
     setShowAllResponse: () => void
+}
+
+/**
+ * @description 展示所有响应的card
+ */
+export interface ResponseAllDataCardProps {
+    showAllDataRes: boolean
+    setShowAllDataRes: () => void
+    runtimeId: string
 }

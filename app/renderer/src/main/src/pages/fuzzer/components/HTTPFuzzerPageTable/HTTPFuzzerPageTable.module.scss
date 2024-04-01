@@ -33,15 +33,18 @@
     color: var(--yakit-danger-5);
 }
 
-.http-fuzzer-page-table{
+.http-fuzzer-page-table {
     :global {
-       .ant-card-bordered{
+        .ant-card-bordered {
             border-left: transparent;
             border-right: transparent;
             border-top: transparent;
-        } 
+        }
     }
-    
+
+    .fuzzer-page-table-wrap {
+        height: 100%;
+    }
 }
 
 .unit-select {

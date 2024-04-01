@@ -453,6 +453,7 @@ interface CurrentHttpFlowProp {
      * @param queryParams 流量表筛选条件JSON
      */
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
+    refresh?: boolean // 是否刷新表格
 }
 
 export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
@@ -466,7 +467,8 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
         onIsOnlyTable,
         showDetail,
         pageType,
-        onQueryParams
+        onQueryParams,
+        refresh = true,
     } = props
     const [highlightSearch, setHighlightSearch] = useState("")
     const lasetIdRef = useRef<number>()
@@ -575,6 +577,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         containerClassName={containerClassName}
                         pageType={pageType}
                         onQueryParams={onQueryParams}
+                        refresh={refresh}
                     />
                 }
                 secondNode={

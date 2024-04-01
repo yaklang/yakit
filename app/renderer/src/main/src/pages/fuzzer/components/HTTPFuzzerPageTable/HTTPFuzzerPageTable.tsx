@@ -9,7 +9,12 @@ import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorTy
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
-import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "@/utils/editors"
+import {
+    HTTP_PACKET_EDITOR_Response_Info,
+    IMonacoEditor,
+    NewHTTPPacketEditor,
+    RenderTypeOptionVal
+} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
@@ -18,11 +23,11 @@ import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateE
 import classNames from "classnames"
 import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, FuzzerResponse, FuzzerTableMaxData, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {ArrowRightSvgIcon} from "@/components/layout/icons"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {Divider, Space, Tooltip} from "antd"
+import {Alert, Divider, Space, Tooltip} from "antd"
 import {ExtractionResultsContent} from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
@@ -31,7 +36,9 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
-import { RemoteGV } from "@/yakitGV"
+import {RemoteGV} from "@/yakitGV"
+import {OutlineXIcon} from "@/assets/icon/outline"
+import ReactResizeDetector from "react-resize-detector"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -53,6 +60,9 @@ interface HTTPFuzzerPageTableProps {
     /**点击调试回调 */
     onDebug?: (res: string) => void
     pageId?: string
+    /**超过限制数据，alert文案显示 */
+    moreLimtAlertMsg?: string
+    tableKeyUpDownEnabled?: boolean
 }
 
 /**
@@ -131,7 +141,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             setExportData,
             isShowDebug,
             onDebug,
-            pageId
+            pageId,
+            moreLimtAlertMsg = "",
+            tableKeyUpDownEnabled = true
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
         const listTableRef = useRef<FuzzerResponse[]>([])
@@ -152,6 +164,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const tableRef = useRef<any>(null)
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
+        const [alertClose, setAlertClose] = useState<boolean>(false)
+        const [alertHeight, setAlertHeight] = useState<number>(0)
 
         useEffect(() => {
             sorterTableRef.current = sorterTable
@@ -203,7 +217,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: "请求",
                           dataKey: "Count",
                           render: (v) => {
-                            return v + 1
+                              return v + 1
                           },
                           width: 80,
                           sorterProps: {
@@ -566,16 +580,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 wait: 200
             }
         ).run
+
         /**
          * @description 前端搜索
          */
         const queryData = useMemoizedFn(() => {
             try {
                 // ------------  搜索 开始  ------------
-                const copyData = structuredClone(data)
-                copyData.forEach((item, index) => {
-                    item.Count = index
-                })
                 // 有搜索条件才循环
                 if (
                     query?.keyWord ||
@@ -584,7 +595,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     query?.beforeBodyLength ||
                     isHaveData
                 ) {
-                    const newDataTable = sorterFunction(copyData, sorterTable) || []
+                    const newDataTable = sorterFunction(data, sorterTable) || []
                     const l = newDataTable.length
                     const searchList: FuzzerResponse[] = []
                     for (let index = 0; index < l; index++) {
@@ -651,7 +662,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         scrollUpdate(searchList.length)
                     }
                 } else {
-                    const newData = sorterFunction(copyData, sorterTable) || []
+                    const newData = sorterFunction(data, sorterTable) || []
                     setExportData && setExportData([...newData])
                     setListTable([...newData])
                     if (newData.length > 0) {
@@ -748,7 +759,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
         useEffect(() => {
             if (currentSelectItem) {
-                getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then(res => {
+                getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then((res) => {
                     if (!!res) {
                         setTypeOptionVal(res)
                     } else {
@@ -766,26 +777,69 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     lineStyle={{display: firstFull ? "none" : ""}}
                     secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
                     firstNode={
-                        <TableVirtualResize<FuzzerResponse>
-                            ref={tableRef}
-                            query={query}
-                            isRefresh={isRefresh || loading}
-                            titleHeight={0.01}
-                            renderTitle={<></>}
-                            renderKey='UUID'
-                            data={listTable}
-                            loading={loading}
-                            enableDrag={true}
-                            columns={columns}
-                            onChange={onTableChange}
-                            containerClassName={classNames(styles["table-container"], {
-                                [styles["table-container-border"]]: currentSelectItem?.ResponseRaw
-                            })}
-                            currentSelectItem={currentSelectItem}
-                            onSetCurrentRow={onSetCurrentRow}
-                            useUpAndDown={true}
-                            scrollToIndex={scrollToIndex}
-                        />
+                        <div className={styles["fuzzer-page-table-wrap"]}>
+                            {moreLimtAlertMsg && data.length >= FuzzerTableMaxData && (
+                                <div>
+                                    <ReactResizeDetector
+                                        onResize={(w, h) => {
+                                            if (!w || !h) {
+                                                return
+                                            }
+                                            setAlertHeight(h)
+                                        }}
+                                        handleHeight={true}
+                                        refreshMode={"debounce"}
+                                        refreshRate={50}
+                                    />
+                                    <Alert
+                                        message={moreLimtAlertMsg}
+                                        type='warning'
+                                        closable
+                                        closeIcon={
+                                            <YakitButton
+                                                style={{float: "right"}}
+                                                type='text2'
+                                                size={"middle"}
+                                                icon={<OutlineXIcon />}
+                                            />
+                                        }
+                                        style={{margin: "5px 0"}}
+                                        onClose={(e) => {
+                                            setAlertClose(true)
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            <div
+                                style={{
+                                    height:
+                                        moreLimtAlertMsg && data.length >= FuzzerTableMaxData && !alertClose
+                                            ? `calc(100% - ${alertHeight + 10}px)`
+                                            : "100%"
+                                }}
+                            >
+                                <TableVirtualResize<FuzzerResponse>
+                                    ref={tableRef}
+                                    query={query}
+                                    isRefresh={isRefresh || loading}
+                                    titleHeight={0.01}
+                                    renderTitle={<></>}
+                                    renderKey='UUID'
+                                    data={listTable}
+                                    loading={loading}
+                                    enableDrag={true}
+                                    columns={columns}
+                                    onChange={onTableChange}
+                                    containerClassName={classNames(styles["table-container"], {
+                                        [styles["table-container-border"]]: currentSelectItem?.ResponseRaw
+                                    })}
+                                    currentSelectItem={currentSelectItem}
+                                    onSetCurrentRow={onSetCurrentRow}
+                                    useUpAndDown={tableKeyUpDownEnabled}
+                                    scrollToIndex={scrollToIndex}
+                                />
+                            </div>
+                        </div>
                     }
                     secondNode={
                         <NewHTTPPacketEditor

@@ -4210,6 +4210,7 @@ message FuzzerResponse {
   string TooLargeResponseHeaderFile = 50;
   string TooLargeResponseBodyFile = 51;
   bool DisableRenderStyles = 52;
+  string RuntimeID = 53;
 }
 
 message RedirectHTTPFlow {
