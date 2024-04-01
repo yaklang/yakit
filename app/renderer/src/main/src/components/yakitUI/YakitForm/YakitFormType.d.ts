@@ -1,3 +1,4 @@
+import {YakitAutoCompleteProps} from './../YakitAutoComplete/YakitAutoCompleteType.d';
 import {FormItemProps, InputProps} from "antd"
 import {DraggerProps} from "antd/lib/upload"
 import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
@@ -34,9 +35,10 @@ export interface YakitDraggerProps extends FileDraggerProps {
     onChange?: (s: string) => void
     /**all:支出上传文件和文件夹,不支持accept; file:只支持文件; folder:只支持文件夹;a */
     selectType?: "file" | "folder" | "all"
-
-    /** 展示组件 input|textarea */
-    renderType?: "input" | "textarea"
+    /** 展示组件 input|textarea|autoComplete */
+    renderType?: "input" | "textarea" | "autoComplete"
+    /** autoComplete的props */
+    autoCompleteProps?: YakitAutoCompleteProps
     /** textarea的props */
     textareaProps?: InternalTextAreaProps
     /**是否显示路径数量 */
@@ -44,6 +46,8 @@ export interface YakitDraggerProps extends FileDraggerProps {
 
     /**接受的文件类型 */
     accept?: string
+    /**是否给请输入正确的路径错误提示 */
+    showFailedFlag?: boolean
 }
 
 export interface YakitDraggerContentProps

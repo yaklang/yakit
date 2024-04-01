@@ -13,6 +13,7 @@ import {YakitInput} from "../YakitInput/YakitInput"
 import {useMemoizedFn} from "ahooks"
 import {failed, yakitNotify} from "@/utils/notification"
 import {OutlineUploadIcon} from "@/assets/icon/outline"
+import {YakitAutoComplete} from "../YakitAutoComplete/YakitAutoComplete"
 
 const {Dragger} = Upload
 
@@ -82,9 +83,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         selectType = "file",
         renderType = "input",
         textareaProps = {},
+        autoCompleteProps = {},
         disabled,
         isShowPathNumber = true,
-        multiple
+        multiple,
+        showFailedFlag = true
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
@@ -143,7 +146,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1) {
-                                failed("请输入正确的路径")
+                                showFailedFlag && failed("请输入正确的路径")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -163,7 +166,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1) {
-                                failed("请输入正确的路径")
+                                showFailedFlag && failed("请输入正确的路径")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -172,7 +175,52 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         }}
                     />
                 )
-
+            case "autoComplete":
+                return (
+                    <YakitAutoComplete
+                        placeholder='路径支持手动输入'
+                        value={fileName || name}
+                        disabled={disabled}
+                        {...autoCompleteProps}
+                        onChange={(value, option) => {
+                            setName(value)
+                            if (setFileName) setFileName(value)
+                            if (autoCompleteProps.onChange) autoCompleteProps.onChange(value, option)
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.stopPropagation()
+                                const index = name.lastIndexOf(".")
+                                if (selectType === "file" && index === -1) {
+                                    showFailedFlag && failed("请输入正确的路径")
+                                    return
+                                }
+                                const type = name.substring(index, name.length)
+                                getContent(name, type)
+                            }
+                        }}
+                        onFocus={(e) => {
+                            e.stopPropagation()
+                            if (autoCompleteProps.onFocus) autoCompleteProps.onFocus(e)
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            if (autoCompleteProps.onClick) autoCompleteProps.onClick(e)
+                        }}
+                        onBlur={(e) => {
+                            e.stopPropagation()
+                            if (!name) return
+                            const index = name.lastIndexOf(".")
+                            if (selectType === "file" && index === -1) {
+                                showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            const type = name.substring(index, name.length)
+                            getContent(name, type)
+                            if (autoCompleteProps.onBlur) autoCompleteProps.onBlur(e)
+                        }}
+                    />
+                )
             default:
                 return (
                     <YakitInput
@@ -191,7 +239,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1) {
-                                failed("请输入正确的路径")
+                                showFailedFlag && failed("请输入正确的路径")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -211,7 +259,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1) {
-                                failed("请输入正确的路径")
+                                showFailedFlag && failed("请输入正确的路径")
                                 return
                             }
                             const type = name.substring(index, name.length)
