@@ -112,16 +112,20 @@ export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): Sta
     const {usernames = "", passwords = "", Targets = ""} = params
     const usernamesArr = !!usernames ? usernames.split(/,|\r?\n/) : []
     const passwordsArr = !!passwords ? passwords.split(/,|\r?\n/) : []
+    delete params.usernames
+    delete params.passwords
+    delete params.replaceDefaultUsernameDict
+    delete params.replaceDefaultPasswordDict
     const data: StartBruteParams = {
         ...params,
         ReplaceDefaultUsernameDict: !params.replaceDefaultUsernameDict,
         ReplaceDefaultPasswordDict: !params.replaceDefaultPasswordDict,
         Usernames: usernamesArr.concat(params.UsernamesDict || []),
         Passwords: passwordsArr.concat(params.PasswordsDict || []),
-        Targets: Targets.split(/,|\r?\n/).join("\n"),
-        UsernamesDict: undefined,
-        PasswordsDict: undefined
+        Targets: Targets.split(/,|\r?\n/).join("\n")
     }
+    delete data.UsernamesDict
+    delete data.PasswordsDict
     return data
 }
 

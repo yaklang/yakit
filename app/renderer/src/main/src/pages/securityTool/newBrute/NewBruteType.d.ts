@@ -38,11 +38,11 @@ export interface BruteExecuteContentProps {
 
 export interface BruteExecuteExtraFormValue extends StartBruteParams {
     /**前端展示使用 */
-    replaceDefaultPasswordDict: boolean
+    replaceDefaultPasswordDict?: boolean
     /**前端展示使用 */
-    replaceDefaultUsernameDict: boolean
+    replaceDefaultUsernameDict?: boolean
     /**前端展示使用 */
-    usernames: string
+    usernames?: string
     /**前端展示使用 */
-    passwords: string
+    passwords?: string
 }
