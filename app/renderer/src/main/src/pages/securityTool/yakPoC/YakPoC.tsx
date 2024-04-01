@@ -63,6 +63,7 @@ import moment from "moment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {compareAsc} from "@/pages/yakitStore/viewers/base"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
@@ -1013,11 +1014,13 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     }, [hidden, isExecuting])
 
     const onHandleData = useMemoizedFn(() => {
-        const logs: PluginLogProps[] = pluginExecuteLog.map((item) => {
-            const newTime = Date.now()
-            const timeConsuming: TimeConsumingProps = intervalTime(item.startTime, newTime)
-            return {...item, timeConsuming}
-        })
+        const logs: PluginLogProps[] = pluginExecuteLog
+            .map((item) => {
+                const newTime = Date.now()
+                const timeConsuming: TimeConsumingProps = intervalTime(item.startTime, newTime)
+                return {...item, timeConsuming}
+            })
+            .sort((a, b) => compareAsc(a, b, "Index"))
         setData(logs)
         setRecalculation(!recalculation)
     })
