@@ -7,10 +7,11 @@ import {
     OutlineLogoutIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
-    OutlineTrashIcon
+    OutlineTrashIcon,
+    OutlineXIcon
 } from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
-import {Tooltip} from "antd"
+import {Modal, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
@@ -19,14 +20,14 @@ import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {PluginDetailsTabProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
-import {yakitNotify} from "@/utils/notification"
+import {failed, success, yakitNotify} from "@/utils/notification"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {AddToMenuActionForm} from "@/pages/yakitStore/PluginOperator"
 import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {LoadingOutlined} from "@ant-design/icons"
+import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
@@ -38,6 +39,11 @@ import {onToEditPlugin} from "../utils"
 import classNames from "classnames"
 import {API} from "@/services/swagger/resposeType"
 import {PluginLog} from "../log/PluginLog"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {PluginCommentUpload} from "../baseComment"
+import {useStore} from "@/store"
+import Login from "@/pages/Login"
+import { NetWorkApi } from "@/services/fetch"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -477,7 +483,14 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
 
     // 私有域地址
     const [privateDomain, setPrivateDomain] = useState<string>("")
-
+    // 激活tab
+    const [activeKey, setActiveKey] = useState<string>("execute")
+    // 问题反馈modal
+    const [visibleModal, setVisibleModal] = useState<boolean>(false)
+    // 获取用户信息
+    const userInfo = useStore((s) => s.userInfo)
+    // 登录框状态
+    const [loginshow, setLoginShow] = useState<boolean>(false)
     /** 获取最新的私有域 */
     const getPrivateDomainAndRefList = useMemoizedFn(() => {
         getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
@@ -507,7 +520,17 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
 
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
-            <PluginTabs defaultActiveKey='execute' tabPosition='right'>
+            <PluginTabs
+                activeKey={activeKey}
+                tabPosition='right'
+                onTabClick={(key) => {
+                    if (key === "feedback") {
+                        setVisibleModal(true)
+                        return
+                    }
+                    setActiveKey(key)
+                }}
+            >
                 <TabPane tab='执行' key='execute'>
                     <div className={styles["plugin-execute-wrapper"]}>
                         {executorShow ? (
@@ -549,12 +572,126 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                     </TabPane>
                 )}
                 {!hiddenLogIssue && (
-                    <TabPane tab='问题反馈' key='feedback' disabled={true}>
+                    <TabPane tab='问题反馈' key='feedback' disabled={!userInfo.isLogin}>
                         <div>问题反馈</div>
                     </TabPane>
                 )}
             </PluginTabs>
+            {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
+            {visibleModal&&<YakitModal
+                hiddenHeader={true}
+                centered={true}
+                footer={null}
+                keyboard={false}
+                maskClosable={false}
+                width={560}
+                visible={visibleModal}
+                bodyStyle={{padding: 0}}
+            >
+                <PluginCommentUploadLocal isLogin={userInfo.isLogin} setLoginShow={setLoginShow} setVisibleModal={setVisibleModal} plugin={plugin}/>
+            </YakitModal>}
         </div>
+    )
+})
+
+interface PluginCommentUploadLocalProps {
+    plugin: YakScript
+    isLogin: boolean
+    setLoginShow: (v: boolean) => void
+    setVisibleModal: (v: boolean)=>void
+}
+
+const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.memo((props) => {
+    const {plugin,isLogin, setLoginShow,setVisibleModal} = props
+    const [commentText, setCommentText] = useState<string>("")
+    const [files, setFiles] = useState<string[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const addComment = useMemoizedFn((data: API.NewComment) => {
+        setLoading(true)
+        NetWorkApi<API.NewComment, API.ActionSucceeded>({
+            method: "post",
+            url: "comment",
+            data
+        })
+            .then((res) => {
+                success("问题反馈成功")
+                if (commentText) setCommentText("")
+                if (files.length > 0) setFiles([])
+                setVisibleModal(false)
+            })
+            .catch((err) => {
+                failed("问题反馈错误" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 200)
+            })
+    })
+
+    const onSubmit = useMemoizedFn(() => {
+        if (!plugin) return
+        if (!isLogin) {
+            isLoading()
+            return
+        }
+        if (!commentText && files.length === 0) {
+            failed("请输入评论内容或者上传图片")
+            return
+        }
+        const params = {
+            plugin_id: parseInt(plugin.OnlineId+""),
+            message_img: files,
+            parent_id: 0,
+            root_id: 0,
+            by_user_id: 0,
+            message: commentText
+        }
+        addComment(params)
+    })
+
+    const isLoading = useMemoizedFn(() => {
+        Modal.confirm({
+            title: "未登录",
+            icon: <ExclamationCircleOutlined />,
+            content: "登录后才可评论",
+            cancelText: "取消",
+            okText: "登录",
+            onOk() {
+                setLoginShow(true)
+            },
+            onCancel() {}
+        })
+    })
+
+    const onSetValue = useMemoizedFn((value) => {
+        if (!isLogin) {
+            isLoading()
+            return
+        }
+        setCommentText(value)
+    })
+
+    return (
+        <div className={styles['plugin-comment-upload-local']}>
+            <div className={styles['header']}>
+                <div className={styles['title']}>问题反馈</div>
+                <div className={styles['opt']} onClick={()=>{
+                    setVisibleModal(false)
+                }}><OutlineXIcon/></div>
+            </div>
+           <div className={styles['main-content']}>
+        <PluginCommentUpload
+            loading={loading}
+            value={commentText}
+            setValue={onSetValue}
+            files={files}
+            setFiles={setFiles}
+            onSubmit={onSubmit}
+            submitTxt="提交反馈"
+        />
+        </div> 
+        </div>
+        
     )
 })
 

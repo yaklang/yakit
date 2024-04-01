@@ -42,10 +42,28 @@ $active-color: #f28b44;
     }
     .input-upload-box {
         flex: 1;
-        padding: 12px;
+        // padding: 12px;
         border-radius: 4px;
         transition: all 0.3s;
         border: 1px solid var(--yakit-border-color);
+        .padding-top{
+            height: 12px;
+            width: 100%;
+        }
+        .padding-left-right{
+            display: flex;
+            flex-direction: row;
+            .input-upload{
+                flex: 1;
+            }
+            .padding-left,.padding-right{
+                width: 12px;
+            }
+        }
+        .padding-bottom{
+            height: 12px;
+            width: 100%;
+        }
         .input-box {
             position: relative;
             .input-box-textArea {
@@ -66,7 +84,7 @@ $active-color: #f28b44;
             display: flex;
             flex-direction: row;
             justify-content: space-between;
-            margin-top: 12px;
+            padding-top: 12px;
             .upload-box-left {
                 .photograph-icon {
                     cursor: pointer;
@@ -102,6 +120,23 @@ $active-color: #f28b44;
                     font-style: normal;
                     font-weight: 400;
                     line-height: 12px;
+                }
+                .disabled-btn{
+                    background: var(--yakit-disable-text-color);
+                    color: var(--ui-text-inverse-color);
+                    border-color: var(--yakit-disable-text-color);
+                    height: 24px;
+                    padding: 3px 8px;
+                    font-weight: 500;
+                    font-size: 12px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 4px;
+                    box-shadow: none;
+                    border-radius: 4px;
+                    border: 1px solid transparent;
+                    cursor: not-allowed;
                 }
             }
         }

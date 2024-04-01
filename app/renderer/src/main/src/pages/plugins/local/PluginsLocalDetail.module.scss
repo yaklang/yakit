@@ -81,3 +81,32 @@
     display: flex;
     flex-wrap: wrap;
 }
+.plugin-comment-upload-local {
+    .header {
+        padding: 16px 24px 0px;
+        display: flex;
+        justify-content: space-between;
+        .title {
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+        }
+        .opt{
+            color: #B4BBCA;
+            cursor: pointer;
+            svg{
+                width: 16px;
+                height: 16px;
+            }
+            &:hover {
+                svg {
+                    color: var(--yakit-primary-4);
+                }
+            }
+        }
+    }
+    .main-content {
+        padding: 16px 24px 24px;
+    }
+}
