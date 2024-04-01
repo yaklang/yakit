@@ -60,13 +60,13 @@ const BruteExecuteParamsDrawer: React.FC<BruteExecuteParamsDrawerProps> = React.
                     trigger='setContentValue'
                     validateTrigger='setContentValue'
                     normalize={(value) => {
-                        return value ? value.split("\n") : []
+                        return value ? value.split(/,|\r?\n/) : []
                     }}
                 >
                     <SelectPayload visible={visible} />
                 </Form.Item>
                 <Form.Item label='爆破用户' name='usernames'>
-                    <YakitInput.TextArea placeholder='多个目标用换行分隔' rows={3} />
+                    <YakitInput.TextArea placeholder='请输入爆破用户，多个爆破用户用“英文逗号”或换行分隔' rows={3} />
                 </Form.Item>
                 <Form.Item label={" "} colon={false} name='replaceDefaultUsernameDict' valuePropName='checked'>
                     <YakitCheckbox disabled={usernamesDict.length === 0 && !usernames}>
@@ -80,13 +80,13 @@ const BruteExecuteParamsDrawer: React.FC<BruteExecuteParamsDrawerProps> = React.
                     trigger='setContentValue'
                     validateTrigger='setContentValue'
                     normalize={(value) => {
-                        return value ? value.split("\n") : []
+                        return value ? value.split(/,|\r?\n/) : []
                     }}
                 >
                     <SelectPayload visible={visible} />
                 </Form.Item>
                 <Form.Item label='爆破密码' name='passwords'>
-                    <YakitInput.TextArea placeholder='多个目标用换行分隔' rows={3} />
+                    <YakitInput.TextArea placeholder='请输入爆破密码，多个爆破密码用“英文逗号”或换行分隔' rows={3} />
                 </Form.Item>
                 <Form.Item label={" "} colon={false} name='replaceDefaultPasswordDict' valuePropName='checked'>
                     <YakitCheckbox disabled={passwordsDict.length === 0 && !passwords}>

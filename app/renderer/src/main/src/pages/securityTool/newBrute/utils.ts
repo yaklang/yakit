@@ -110,15 +110,15 @@ export const apiPayloadByType: (value: string) => Promise<string> = (value) => {
  */
 export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): StartBruteParams => {
     const {usernames = "", passwords = "", Targets = ""} = params
-    const usernamesArr = !!usernames ? usernames.split("\n") : []
-    const passwordsArr = !!passwords ? passwords.split("\n") : []
+    const usernamesArr = !!usernames ? usernames.split(/,|\r?\n/) : []
+    const passwordsArr = !!passwords ? passwords.split(/,|\r?\n/) : []
     const data: StartBruteParams = {
         ...params,
         ReplaceDefaultUsernameDict: !params.replaceDefaultUsernameDict,
         ReplaceDefaultPasswordDict: !params.replaceDefaultPasswordDict,
         Usernames: usernamesArr.concat(params.UsernamesDict || []),
         Passwords: passwordsArr.concat(params.PasswordsDict || []),
-        Targets: Targets.split(",").join("\n"),
+        Targets: Targets.split(/,|\r?\n/).join("\n"),
         UsernamesDict: undefined,
         PasswordsDict: undefined
     }

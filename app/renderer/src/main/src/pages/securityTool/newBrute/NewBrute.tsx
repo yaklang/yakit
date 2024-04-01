@@ -284,7 +284,11 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
             const params: StartBruteParams = {
-                ...convertStartBruteParams({...extraParamsValue, Targets: value.Targets, Type: bruteType.join(",")})
+                ...convertStartBruteParams({
+                    ...extraParamsValue,
+                    Targets: value.Targets,
+                    Type: bruteType.join(",")
+                })
             }
             streamEvent.reset()
             apiStartBrute(params, tokenRef.current).then(() => {
