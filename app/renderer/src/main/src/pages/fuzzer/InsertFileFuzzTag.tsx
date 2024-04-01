@@ -5,6 +5,7 @@ import {failed, info} from "../../utils/notification"
 import {InputFileNameItem, InputFileNameItemProps, InputItem, SelectOne} from "../../utils/inputUtil"
 import {StringToUint8Array} from "@/utils/str"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {CacheDropDownGV} from "@/yakitGV"
 
 interface InsertFileFuzzTagProp {
     onFinished: (i: string) => any
@@ -19,14 +20,20 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
     const {defaultMode} = props
     const [filename, setFilename] = useState("")
     const [mode, setMode] = useState<ModeProps>(defaultMode || "file")
-    const [autoComplete,setAutoComplete] = useState<string[]>([])
-    useEffect(()=>{
+    const [autoComplete, setAutoComplete] = useState<string[]>([])
+    useEffect(() => {
+        // 缓存数据结构迁移(后续删除)
         getRemoteValue(INSERT_FILE_FUZZ_TAG).then((data) => {
             if (!data) return
             const {fileNameHistory} = JSON.parse(data)
             setAutoComplete(fileNameHistory)
-          })
-    },[])
+
+            setRemoteValue(
+                CacheDropDownGV.WebFuzzerInsertFileFuzzTag,
+                JSON.stringify({defaultValue: "", options: fileNameHistory})
+            )
+        })
+    }, [])
     // 数组去重
     const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
     return (
@@ -48,15 +55,23 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                                 fileNameHistory: [filename]
                             })
                         )
+                        setRemoteValue(
+                            CacheDropDownGV.WebFuzzerInsertFileFuzzTag,
+                            JSON.stringify({defaultValue: "", options: [filename]})
+                        )
                         return
                     }
                     const {fileNameHistory} = JSON.parse(data)
-                    const newFileNameHistory = filter([filename,...fileNameHistory ]).slice(0, 10)
+                    const newFileNameHistory = filter([filename, ...fileNameHistory]).slice(0, 10)
                     setRemoteValue(
                         INSERT_FILE_FUZZ_TAG,
                         JSON.stringify({
                             fileNameHistory: newFileNameHistory
                         })
+                    )
+                    setRemoteValue(
+                        CacheDropDownGV.WebFuzzerInsertFileFuzzTag,
+                        JSON.stringify({defaultValue: "", options: newFileNameHistory})
                     )
                 })
 
