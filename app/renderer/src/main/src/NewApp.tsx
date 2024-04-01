@@ -1,55 +1,29 @@
 import {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
 import {failed, warn, yakitFailed} from "./utils/notification"
-import {getRemoteValue, setRemoteValue} from "./utils/kv"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "./utils/kv"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore, yakitDynamicStatus} from "./store"
 import {refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
 import {isCommunityEdition} from "@/utils/envfile"
-import {LocalGV, RemoteGV} from "./yakitGV"
+import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
 import {coordinate} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
+import {LocalGVS} from "./enums/localGlobal"
 
-/** 快捷键目录 */
-const InterceptKeyword = [
-    // "KeyA",
-    // "KeyB",
-    // "KeyC",
-    "KeyD",
-    "KeyE",
-    // "KeyF",
-    "KeyG",
-    "KeyH",
-    "KeyI",
-    "KeyJ",
-    "KeyK",
-    "KeyL",
-    // "KeyM",
-    "KeyN",
-    // "KeyO",
-    // "KeyP",
-    // "KeyQ",
-    "KeyR",
-    // "KeyS",
-    "KeyT",
-    // "KeyU",
-    // "KeyV",
-    "KeyW"
-    // "KeyX",
-    // "KeyY",
-    // "KeyZ",
-]
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
-
 const {ipcRenderer} = window.require("electron")
+
+/** 快捷键目录 */
+const InterceptKeyword = ["KeyR", "KeyW"]
 
 interface OnlineProfileProps {
     BaseUrl: string
@@ -60,13 +34,10 @@ interface OnlineProfileProps {
 function NewApp() {
     /** 是否展示用户协议 */
     const [agreed, setAgreed] = useState(false)
-    /** 展示用户协议计时时间 */
-    const [readingSeconds, setReadingSeconds, getReadingSeconds] = useGetState<number>(3)
-    const agrTimeRef = useRef<any>(null)
-    /** 私有域是否设置成功 */
-    const [onlineProfileStatus, setOnlineProfileStatus] = useState<boolean>(false)
 
-    // 错误信息收集监听逻辑
+    /**
+     * 渲染端全局错误监听，并收集到错误信息文件里
+     */
     useEffect(() => {
         const unhandledrejectionError = (e) => {
             const content = e?.reason?.stack || ""
@@ -89,22 +60,19 @@ function NewApp() {
     }, [])
 
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
-    const coordinateTimer = useRef<any>(null)
-    const handleMouseMove = useMemoizedFn((e: MouseEvent) => {
-        const {screenX, screenY, clientX, clientY, pageX, pageY} = e
-        if (coordinateTimer.current) {
-            clearTimeout(coordinateTimer.current)
-            coordinateTimer.current = null
-        }
-        coordinateTimer.current = setTimeout(() => {
+    const handleMouseMove = useDebounceFn(
+        useMemoizedFn((e: MouseEvent) => {
+            const {screenX, screenY, clientX, clientY, pageX, pageY} = e
+
             coordinate.screenX = screenX
             coordinate.screenY = screenY
             coordinate.clientX = clientX
             coordinate.clientY = clientY
             coordinate.pageX = pageX
             coordinate.pageY = pageY
-        }, 50)
-    })
+        }),
+        {wait: 50}
+    ).run
     useEffect(() => {
         document.addEventListener("mousemove", handleMouseMove)
         return () => {
@@ -112,7 +80,7 @@ function NewApp() {
         }
     }, [])
 
-    // 全局监听change事件 input & textrea 都去掉浏览器校验
+    // 全局监听change事件 input & textrea 都去掉浏览器自带的拼写校验
     useEffect(() => {
         const handleInputEvent = (event) => {
             const {target} = event
@@ -132,26 +100,15 @@ function NewApp() {
 
     /** 是否展示用户协议 */
     useEffect(() => {
-        ipcRenderer
-            .invoke("fetch-local-cache", LocalGV.UserProtocolAgreed)
+        getLocalValue(LocalGVS.UserProtocolAgreed)
             .then((value: any) => {
                 setAgreed(!!value)
-                if (!value) {
-                    if (agrTimeRef.current) clearInterval(agrTimeRef.current)
-                    agrTimeRef.current = setInterval(() => {
-                        setReadingSeconds(getReadingSeconds() - 1)
-                        if (getReadingSeconds() === 0) {
-                            clearInterval(agrTimeRef.current)
-                            agrTimeRef.current = null
-                        }
-                    }, 1000)
-                }
             })
             .catch(() => {})
     }, [])
 
     // 全局监听登录状态
-    const {userInfo, setStoreUserInfo} = useStore()
+    const setStoreUserInfo = useStore((state) => state.setStoreUserInfo)
 
     /** yaklang引擎 连接成功后的配置事件 */
     const linkSuccess = () => {
@@ -171,9 +128,6 @@ function NewApp() {
                     .catch((e) => {
                         failed(`获取失败:${e}`)
                     })
-                    .finally(() => {
-                        setOnlineProfileStatus(true)
-                    })
             } else {
                 const values = JSON.parse(setting)
                 ipcRenderer
@@ -187,9 +141,6 @@ function NewApp() {
                         refreshLogin()
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
-                    .finally(() => {
-                        setOnlineProfileStatus(true)
-                    })
             }
         })
     }
@@ -198,7 +149,7 @@ function NewApp() {
         // 获取引擎中的token(区分企业版与社区版)
         const TokenSource = isCommunityEdition() ? RemoteGV.TokenOnline : RemoteGV.TokenOnlineEnterprise
         // 企业版暂时不需要自动登录功能
-        if(!isCommunityEdition()) return
+        if (!isCommunityEdition()) return
         getRemoteValue(TokenSource)
             .then((resToken) => {
                 if (!resToken) {
@@ -318,21 +269,11 @@ function NewApp() {
                     width='75%'
                     cancelText={"关闭 / Closed"}
                     onCancel={() => ipcRenderer.invoke("UIOperate", "close")}
-                    okButtonProps={
-                        {
-                            // disabled: readingSeconds > 0,
-                        }
-                    }
                     onOk={() => {
-                        ipcRenderer.invoke("set-local-cache", LocalGV.UserProtocolAgreed, true)
-                        setReadingSeconds(3)
+                        setLocalValue(LocalGVS.UserProtocolAgreed, true)
                         setAgreed(true)
                     }}
-                    okText={
-                        readingSeconds > 0
-                            ? `我已认真阅读本协议(${readingSeconds}s)`
-                            : "我已认真阅读本协议，认同协议内容"
-                    }
+                    okText='我已认真阅读本协议，认同协议内容'
                     bodyStyle={{padding: "16px 24px 24px 24px"}}
                 >
                     <div className={styles["yakit-agr-modal-body"]}>

@@ -1,8 +1,7 @@
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 /** 本地文件缓存数据-键值变量 */
 export enum LocalGV {
-    /** @name 用户协议(需用户同意才能使用软件) */
-    UserProtocolAgreed = "user-protocol-agreed",
+    
     /** @name 获取缓存数据里引擎的启动模式("local"|"remote") */
     YaklangEngineMode = "yaklang-engine-mode",
     /** @name 获取缓存数据里引擎启动配置 */
