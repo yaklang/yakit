@@ -73,8 +73,17 @@
             margin-right: 8px;
         }
     }
+    .form-extra {
+        @extend %display-flex-center;
+        gap: 8px 0;
+        flex-wrap: wrap;
+    }
 }
 .brute-form-wrapper-hidden {
     grid-template-rows: 0fr;
     padding-top: 0;
+}
+
+.brute-execute-result-wrapper{
+    padding: 12px;
 }

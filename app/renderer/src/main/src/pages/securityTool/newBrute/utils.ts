@@ -1,6 +1,8 @@
 import {yakitNotify} from "@/utils/notification"
 import {DataNode} from "antd/lib/tree"
 import {BruteExecuteExtraFormValue} from "./NewBruteType"
+import {PayloadGroupNodeProps} from "@/pages/payloadManager/newPayload"
+import {StartBruteParams} from "@/pages/brute/BrutePage"
 
 const {ipcRenderer} = window.require("electron")
 export interface Tree {
@@ -57,4 +59,106 @@ export const defaultBruteExecuteExtraFormValue: BruteExecuteExtraFormValue = {
     Usernames: [],
     UsernamesDict: [],
     ReplaceDefaultUsernameDict: false,
+    // 前端展示使用  ------start
+    usernames: "",
+    passwords: "",
+    replaceDefaultPasswordDict: true,
+    replaceDefaultUsernameDict: true
+    // 前端展示使用  ------end
+}
+
+/**
+ * @description GetAllPayloadGroup
+ */
+export const apiGetAllPayloadGroup: () => Promise<PayloadGroupNodeProps[]> = () => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetAllPayloadGroup", {})
+            .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
+                resolve(res.Nodes || [])
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "获取弱口令的类型出错:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface CodecResponse {
+    Result: string
+    RawResult: string
+}
+
+/**
+ * @description 处理字典内容
+ */
+export const apiPayloadByType: (value: string) => Promise<string> = (value) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("Codec", {Type: "fuzz", Text: `{{x(${value})}}`})
+            .then((res: CodecResponse) => {
+                resolve(res?.Result || "")
+            })
+            .catch((err) => {
+                yakitNotify("error", `获取字典内容失败：${err.details}`)
+            })
+    })
+}
+/**
+ * @name StartBrute 接口参数转换(前端数据转接口参数)
+ * @description StartBrute
+ */
+export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): StartBruteParams => {
+    const {usernames = "", passwords = "", Targets = ""} = params
+    const usernamesArr = !!usernames ? usernames.split("\n") : []
+    const passwordsArr = !!passwords ? passwords.split("\n") : []
+    const data: StartBruteParams = {
+        ...params,
+        ReplaceDefaultUsernameDict: !params.replaceDefaultUsernameDict,
+        ReplaceDefaultPasswordDict: !params.replaceDefaultPasswordDict,
+        Usernames: usernamesArr.concat(params.UsernamesDict || []),
+        Passwords: passwordsArr.concat(params.PasswordsDict || []),
+        Targets: Targets.split(",").join("\n"),
+        UsernamesDict: undefined,
+        PasswordsDict: undefined
+    }
+    return data
+}
+
+/**
+ * @description StartBrute 弱口令检测
+ */
+export const apiStartBrute: (params: StartBruteParams, token: string) => Promise<null> = (params, token) => {
+    return new Promise((resolve, reject) => {
+        let executeParams: StartBruteParams = {
+            ...params
+        }
+        ipcRenderer
+            .invoke("StartBrute", executeParams, token)
+            .then(() => {
+                yakitNotify("info", `启动成功,任务ID: ${token}`)
+                resolve(null)
+            })
+            .catch((error) => {
+                yakitNotify("error", "弱口令检测执行出错:" + error)
+                reject(error)
+            })
+    })
+}
+
+/**
+ * @description 取消 StartBrute
+ */
+export const apiCancelStartBrute: (token: string) => Promise<null> = (token) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke(`cancel-StartBrute`, token)
+            .then(() => {
+                resolve(null)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "取消弱口令检测执行出错:" + e)
+                reject(e)
+            })
+    })
 }

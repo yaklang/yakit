@@ -1,6 +1,7 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import { StartBruteParams } from "@/pages/brute/BrutePage"
+import {StartBruteParams} from "@/pages/brute/BrutePage"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import React from "react"
 
 export interface NewBruteProps {
     id: string
@@ -26,6 +27,7 @@ export interface BruteExecuteContentRefProps {
 
 export interface BruteExecuteContentProps {
     ref?: React.ForwardedRef<BruteExecuteContentRefProps>
+    bruteType: React.Key[]
     isExpand: boolean
     setIsExpand: (b: boolean) => void
     executeStatus: ExpandAndRetractExcessiveState
@@ -35,5 +37,12 @@ export interface BruteExecuteContentProps {
 }
 
 export interface BruteExecuteExtraFormValue extends StartBruteParams {
-
+    /**前端展示使用 */
+    replaceDefaultPasswordDict: boolean
+    /**前端展示使用 */
+    replaceDefaultUsernameDict: boolean
+    /**前端展示使用 */
+    usernames: string
+    /**前端展示使用 */
+    passwords: string
 }
