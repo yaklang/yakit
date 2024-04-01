@@ -36,6 +36,17 @@ const BruteExecuteParamsDrawer: React.FC<BruteExecuteParamsDrawerProps> = React.
             form.setFieldsValue({...extraParamsValue})
         }
     }, [visible, extraParamsValue])
+    useEffect(() => {
+        if (usernamesDict.length === 0 && !usernames) {
+            form.setFieldsValue({replaceDefaultUsernameDict: true})
+        }
+    }, [usernamesDict, usernames])
+    useEffect(() => {
+        if (passwordsDict.length === 0 && !passwords) {
+            form.setFieldsValue({replaceDefaultPasswordDict: true})
+        }
+    }, [passwordsDict, passwords])
+
     const onClose = useMemoizedFn(() => {
         onSaveSetting()
     })
