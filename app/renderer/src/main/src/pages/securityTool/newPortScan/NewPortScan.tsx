@@ -521,13 +521,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                     </div>
                 )}
                 {isShowResult && (
-                    <PluginExecuteResult
-                        streamInfo={streamInfo}
-                        runtimeId={runtimeId}
-                        loading={isExecuting}
-                        pluginType={""} // 算yak类型的插件，可以传空字符串
-                        defaultActiveKey={""}
-                    />
+                    <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
                 )}
                 <React.Suspense fallback={<div>loading...</div>}>
                     <NewPortScanExtraParamsDrawer

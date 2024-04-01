@@ -623,7 +623,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         streamInfo={streamInfo}
                         runtimeId={runtimeId}
                         loading={isExecuting}
-                        pluginType={""}
                         defaultActiveKey={defaultActiveKey}
                         pluginExecuteResultWrapper={pluginExecuteResultWrapper}
                     />

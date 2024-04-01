@@ -62,7 +62,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                     streamInfo={streamInfo}
                     runtimeId={runtimeId}
                     loading={isExecuting}
-                    pluginType={plugin.Type}
+                    defaultActiveKey={plugin.Type === "yak" ? "日志" : undefined}
                     pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
                 />
             )}

@@ -6,7 +6,6 @@ export interface PluginExecuteResultProps {
     runtimeId: string
     streamInfo: HoldGRPCStreamInfo
     loading: boolean
-    pluginType: string
     defaultActiveKey?: string
     pluginExecuteResultWrapper?: string
 }
