@@ -9,7 +9,7 @@ import {CacheDropDownGV} from "@/yakitGV"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 interface InsertFileFuzzTagProp {
     onFinished: (i: string) => any
@@ -47,17 +47,27 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
         <Form
             labelCol={{span: 5}}
             wrapperCol={{span: 14}}
-            style={{ marginTop: 15 }}
+            style={{marginTop: 15}}
             onSubmitCapture={(e) => {
                 e.preventDefault()
                 if (!filename) {
                     info("选中的文件名为空")
                     return
                 }
-                if (mode !== 'file:dir' && filename.lastIndexOf('.') === -1) {
-                    failed("请输入正确的路径")
-                    return
+                
+                const index = filename.lastIndexOf(".")
+                if (mode !== "file:dir") {
+                    if (index === -1) {
+                        failed("请输入正确的路径")
+                        return
+                    }
+                } else {
+                    if (index !== -1) {
+                        failed("请输入正确的路径")
+                        return
+                    }
                 }
+
                 getRemoteValue(INSERT_FILE_FUZZ_TAG).then((data) => {
                     if (!data) {
                         setRemoteValue(
@@ -129,7 +139,7 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     labelCol: {span: 5},
                     wrapperCol: {span: 14}
                 }}
-                selectType={mode !== 'file:dir' ? "file" : "folder"}
+                selectType={mode !== "file:dir" ? "file" : "folder"}
                 isShowPathNumber={false}
                 multiple={false}
                 showFailedFlag={false}
