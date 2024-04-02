@@ -138,12 +138,18 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                                                             })
                                                         )
                                                         break
-
+                                                    case "bug-test":
+                                                        emiter.emit(
+                                                            "openPage",
+                                                            JSON.stringify({
+                                                                route: YakitRoute.PoC,
+                                                                params: {
+                                                                    URL: JSON.stringify(checkedURL)
+                                                                }
+                                                            })
+                                                        )
+                                                        break
                                                     default:
-                                                        ipcRenderer.invoke("send-to-tab", {
-                                                            type: key,
-                                                            data: {URL: JSON.stringify(checkedURL)}
-                                                        })
                                                         break
                                                 }
                                             }}

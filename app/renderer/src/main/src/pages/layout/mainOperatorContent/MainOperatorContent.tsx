@@ -453,14 +453,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.BatchExecutorPage:
                 addBatchExecutorPage(params)
                 break
-            case YakitRoute.PoC:
-                addPoC(params)
-                break
             case YakitRoute.Mod_Brute:
                 addBrute(params)
                 break
             case YakitRoute.Mod_ScanPort:
                 addScanPort(params)
+                break
+            case YakitRoute.PoC:
+                /** type 1会打开漏洞检测类型选择  2直接带着数据打开poc页面*/
+                if (params.type !== 2) {
+                    addBugTest(1, params)
+                } else {
+                    addPoC(params)
+                }
+
                 break
             default:
                 break
@@ -471,7 +477,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {route: YakitRoute.Mod_ScanPort},
             {
                 pageParams: {
-                    scanPortPageInfo:{...data}
+                    scanPortPageInfo: {...data}
                 }
             }
         )
@@ -652,9 +658,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
-            // if (type === "scan-port") addScanPort(data)
-            // if (type === "brute") addBrute(data)
-            if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
             if (type === "simple-batch-exec-recover") addSimpleBatchExecRecover(data as UnfinishedSimpleDetectBatchTask)

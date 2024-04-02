@@ -14,13 +14,7 @@ import React, {useState, useMemo, useEffect, useRef, useImperativeHandle} from "
 import {QueryPortsRequest, portAssetFormatJson, PortTableAndDetail} from "../PortAssetPage"
 import {PortAsset} from "../models"
 import {defQueryPortsRequest, apiQueryPortsBase, apiQueryPortsIncrementOrderAsc} from "./utils"
-import {
-    useDebounceFn,
-    useMemoizedFn,
-    useInterval,
-    useCreation,
-    useControllableValue,
-    useUpdateEffect} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useInterval, useCreation, useControllableValue, useUpdateEffect} from "ahooks"
 import styles from "./PortTable.module.scss"
 import {PortTableProps} from "./PortTableType"
 import ReactResizeDetector from "react-resize-detector"
@@ -443,12 +437,18 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                         })
                     )
                     break
-
+                case "bug-test":
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.PoC,
+                            params: {
+                                URL: JSON.stringify(urls)
+                            }
+                        })
+                    )
+                    break
                 default:
-                    ipcRenderer.invoke("send-to-tab", {
-                        type: key,
-                        data: {URL: JSON.stringify(urls)}
-                    })
                     break
             }
             setSendPopoverVisible(false)

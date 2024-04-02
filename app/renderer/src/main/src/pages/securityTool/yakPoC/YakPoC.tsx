@@ -86,7 +86,9 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const [pageInfo, setPageInfo] = useState<PocPageInfoProps>(initPageInfo())
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
-    const [type, setType] = useState<"keyword" | "group">("keyword")
+    const [type, setType] = useState<"keyword" | "group">(
+        pageInfo.selectGroup && pageInfo.selectGroup?.length > 0 ? "group" : "keyword"
+    )
 
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
 

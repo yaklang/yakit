@@ -472,13 +472,18 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                                     })
                                                                 )
                                                                 break
+                                                            case "bug-test":
+                                                                emiter.emit(
+                                                                    "openPage",
+                                                                    JSON.stringify({
+                                                                        route: YakitRoute.PoC,
+                                                                        params: {
+                                                                            URL: JSON.stringify(urls)
+                                                                        }
+                                                                    })
+                                                                )
+                                                                break
                                                             default:
-                                                                ipcRenderer.invoke("send-to-tab", {
-                                                                    type: key,
-                                                                    data: {
-                                                                        URL: JSON.stringify(urls)
-                                                                    }
-                                                                })
                                                                 break
                                                         }
                                                     })

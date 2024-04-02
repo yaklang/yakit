@@ -88,6 +88,8 @@ export const defaultPocPageInfo: PocPageInfoProps = {
     request: new Uint8Array()
 }
 export interface PocPageInfoProps {
+    /** type 1会打开漏洞检测类型选择  2直接带着数据打开poc页面*/
+    type?: number
     /**按组搜的选中 */
     selectGroup?: string[]
     /**按关键字搜的选中/poc内置组*/
