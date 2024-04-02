@@ -21,6 +21,12 @@ import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePic
 const {RangePicker} = YakitDatePicker
 const {ipcRenderer} = window.require("electron")
 
+// 将分钟转换为小时，并保留两位小数
+const minutesToHours = (minutes: number) => {
+    return (minutes / 60).toFixed(2)
+}
+
+
 interface RiseLineEchartsProps {
     riseLineParams: RiseLineProps
     inViewport?: boolean
@@ -189,6 +195,7 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
 interface ActiveLineEchartsProps {
     activeLineParams: ActiveLineProp
     inViewport?: boolean
+    activeOrTime: "active" | "times"
 }
 interface ActiveLineProp {
     // 天月年展示
@@ -200,7 +207,7 @@ interface ActiveLineProp {
 }
 
 const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
-    const {inViewport, activeLineParams} = props
+    const {inViewport, activeLineParams, activeOrTime} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const optionRef = useRef<any>({
@@ -286,13 +293,13 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
     useEffect(() => {
         if (inViewport) {
             echartsRef.current && echartsRef.current.resize()
-            getActiveLine()
+            activeOrTime === "active" ? getActiveLine() : getUsedTimeLine()
         }
     }, [inViewport])
 
     useUpdateEffect(() => {
-        getActiveLine()
-    }, [activeLineParams])
+        activeOrTime === "active" ? getActiveLine() : getUsedTimeLine()
+    }, [activeLineParams,activeOrTime])
 
     useEffect(() => {
         if (!echartsRef.current) return
@@ -306,6 +313,8 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
         //     // console.log("点击了", e) // 如果不加off事件，就会叠加触发
         // })
     }, [])
+
+    // 活跃度统计
     const getActiveLine = useMemoizedFn(() => {
         setEcharts(optionRef.current)
         NetWorkApi<ActiveLineProp, API.TouristIncrResponse>({
@@ -333,6 +342,36 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
                 setIsShowEcharts(true)
             })
     })
+
+    // 使用时长统计
+    const getUsedTimeLine = useMemoizedFn(() => {
+        setEcharts(optionRef.current)
+        NetWorkApi<ActiveLineProp, API.TouristIncrResponse>({
+            method: "get",
+            url: "tourist/used/time",
+            params: {...activeLineParams}
+        })
+            .then((res: API.TouristIncrResponse) => {
+                if (res.data) {
+                    let XData: string[] = []
+                    let YData: string[] = []
+                    res.data.forEach((item) => {
+                        XData.push(item.searchTime)
+                        YData.push(minutesToHours(item.count))
+                    })
+                    optionRef.current.xAxis.data = XData
+                    optionRef.current.series[0].data = YData
+                    setEcharts(optionRef.current)
+                }
+            })
+            .catch((err) => {
+                failed("用户活跃度获取失败:" + err)
+            })
+            .finally(() => {
+                setIsShowEcharts(true)
+            })
+    })
+
     const setEcharts = (options) => {
         const chartDom = document.getElementById("data-statistics-active-line")!
         if (chartDom) {
@@ -559,7 +598,7 @@ export const UpsOrDowns: React.FC<UpsOrDownsProps> = (props) => {
             <div className={classNames(styles["content"])}>
                 {type === "up" && "+"}
                 {type === "down" && "-"}
-                {value?`${value}%`:""}
+                {value ? `${value}%` : ""}
             </div>
             {["up", "down"].includes(type) && (
                 <div className={styles["icon"]}>
@@ -599,6 +638,8 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
         endTime: moment(today).unix()
     })
     const [cityDate, setCityDate] = useState<number>()
+
+    const [activeOrTime, setActiveOrTime] = useState<"active" | "times">("active")
 
     // 显示的选项
     const [activeNoShowType, setActiveNoShowType] = useState<showTypeValue[]>([])
@@ -703,6 +744,8 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             method: "get"
         })
             .then((data) => {
+                console.log("统计", data)
+
                 setUserData(data)
             })
             .catch((err) => {})
@@ -860,9 +903,27 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 </div>
             </div>
             <div className={styles["right-box"]}>
-                <div className={styles["user-active"]}>
+                <div className={styles["user-active-time"]}>
                     <div className={styles["header"]}>
-                        <div className={styles["title"]}>用户活跃度统计</div>
+                        <div className={styles["title"]}>
+                            <YakitRadioButtons
+                                value={activeOrTime}
+                                onChange={(e) => {
+                                    setActiveOrTime(e.target.value)
+                                }}
+                                buttonStyle='solid'
+                                options={[
+                                    {
+                                        value: "active",
+                                        label: "活跃度统计"
+                                    },
+                                    {
+                                        value: "times",
+                                        label: "使用时长统计"
+                                    }
+                                ]}
+                            />
+                        </div>
                         <div className={styles["extra"]}>
                             <RangePicker
                                 locale={locale}
@@ -950,47 +1011,94 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                     <div>
                         <YakitSpin spinning={loading}>
                             <div className={styles["card-box"]}>
-                                <div className={styles["card-item"]}>
-                                    <div className={styles["show"]}>
-                                        <div className={styles["count"]}>
-                                            {userData ? numeral(userData.dayActive).format("0,0") : ""}
+                                {activeOrTime === "active" ? (
+                                    <>
+                                        <div className={styles["card-item"]}>
+                                            <div className={styles["show"]}>
+                                                <div className={styles["count"]}>
+                                                    {userData ? numeral(userData.dayActive).format("0,0") : ""}
+                                                </div>
+                                                <UpsOrDowns
+                                                    type={userData?.dayActiveGainUpOrDown}
+                                                    value={userData?.dayActiveGain}
+                                                />
+                                            </div>
+                                            <div className={styles["title"]}>日活</div>
                                         </div>
-                                        <UpsOrDowns
-                                            type={userData?.dayActiveGainUpOrDown}
-                                            value={userData?.dayActiveGain}
-                                        />
-                                    </div>
-                                    <div className={styles["title"]}>日活</div>
-                                </div>
-                                <div className={styles["card-item"]}>
-                                    <div className={styles["show"]}>
-                                        <div className={styles["count"]}>
-                                            {userData ? numeral(userData.weekActive).format("0,0") : ""}
+                                        <div className={styles["card-item"]}>
+                                            <div className={styles["show"]}>
+                                                <div className={styles["count"]}>
+                                                    {userData ? numeral(userData.weekActive).format("0,0") : ""}
+                                                </div>
+                                                <UpsOrDowns
+                                                    type={userData?.weekActiveGainUpOrDown}
+                                                    value={userData?.weekActiveGain}
+                                                />
+                                            </div>
+                                            <div className={styles["title"]}>周活</div>
                                         </div>
-                                        <UpsOrDowns
-                                            type={userData?.weekActiveGainUpOrDown}
-                                            value={userData?.weekActiveGain}
-                                        />
-                                    </div>
-                                    <div className={styles["title"]}>周活</div>
-                                </div>
-                                <div className={styles["card-item"]}>
-                                    <div className={styles["show"]}>
-                                        <div className={styles["count"]}>
-                                            {userData ? numeral(userData.monthActive).format("0,0") : ""}
+                                        <div className={styles["card-item"]}>
+                                            <div className={styles["show"]}>
+                                                <div className={styles["count"]}>
+                                                    {userData ? numeral(userData.monthActive).format("0,0") : ""}
+                                                </div>
+                                                <UpsOrDowns
+                                                    type={userData?.monthActiveGainUpOrDown}
+                                                    value={userData?.monthActiveGain}
+                                                />
+                                            </div>
+                                            <div className={styles["title"]}>月活</div>
                                         </div>
-                                        <UpsOrDowns
-                                            type={userData?.monthActiveGainUpOrDown}
-                                            value={userData?.monthActiveGain}
-                                        />
-                                    </div>
-                                    <div className={styles["title"]}>月活</div>
-                                </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className={styles["card-item"]}>
+                                            <div className={styles["show"]}>
+                                                <div className={styles["count"]}>
+                                                    {userData ? minutesToHours(userData.dayTimes) : ""}
+                                                </div>
+                                                <UpsOrDowns
+                                                    type={userData?.dayTimesGainUpOrDown}
+                                                    value={userData?.dayTimesGain}
+                                                />
+                                            </div>
+                                            <div className={styles["title"]}>今日总时长/h</div>
+                                        </div>
+                                        <div className={styles["card-item"]}>
+                                            <div className={styles["show"]}>
+                                                <div className={styles["count"]}>
+                                                    {userData ? minutesToHours(userData.weekTimes) : ""}
+                                                </div>
+                                                <UpsOrDowns
+                                                    type={userData?.weekTimesGainUpOrDown}
+                                                    value={userData?.weekTimesGain}
+                                                />
+                                            </div>
+                                            <div className={styles["title"]}>本周总时长/h</div>
+                                        </div>
+                                        <div className={styles["card-item"]}>
+                                            <div className={styles["show"]}>
+                                                <div className={styles["count"]}>
+                                                    {userData ? minutesToHours(userData.monthTimes) : ""}
+                                                </div>
+                                                <UpsOrDowns
+                                                    type={userData?.monthTimesGainUpOrDown}
+                                                    value={userData?.monthTimesGain}
+                                                />
+                                            </div>
+                                            <div className={styles["title"]}>本月总时长/h</div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </YakitSpin>
                     </div>
                     <div className={styles["active-line-charts"]}>
-                        <ActiveLineEcharts inViewport={inViewport} activeLineParams={activeLineParams} />
+                        <ActiveLineEcharts
+                            inViewport={inViewport}
+                            activeLineParams={activeLineParams}
+                            activeOrTime={activeOrTime}
+                        />
                     </div>
                 </div>
                 <div className={styles["user-rise"]}>
