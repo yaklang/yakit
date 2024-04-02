@@ -95,7 +95,6 @@ import {
 import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
-import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
 import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager"
 import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
@@ -167,7 +166,6 @@ export enum YakitRoute {
     DB_Risk = "db-risks",
     DB_Ports = "db-ports",
     DB_Domain = "db-domains",
-    WebsiteTree = "website-tree",
     DB_CVE = "cve",
     /** 独立功能页面 */
     // Yak-Runner页面
@@ -272,7 +270,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-risks": {label: "漏洞"},
     "db-ports": {label: "端口"},
     "db-domains": {label: "域名"},
-    "website-tree": {label: "网站树"},
     cve: {label: "CVE 管理"},
     yakScript: {label: "Yak Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"},
     "payload-manager": {
@@ -323,7 +320,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.DB_Risk,
     YakitRoute.DB_Ports,
     YakitRoute.DB_Domain,
-    YakitRoute.WebsiteTree,
     YakitRoute.DB_CVE,
     YakitRoute.YakScript,
     YakitRoute.PayloadManager,
@@ -362,7 +358,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.DB_CVE,
     YakitRoute.HTTPFuzzer,
-    YakitRoute.WebsiteTree,
     YakitRoute.DB_Ports,
     YakitRoute.Beta_DebugPlugin,
     YakitRoute.DB_HTTPHistory,
@@ -571,8 +566,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <PortAssetTable />
         case YakitRoute.DB_Domain:
             return <DomainAssetPage />
-        case YakitRoute.WebsiteTree:
-            return <WebsiteTreeViewer />
         case YakitRoute.DB_CVE:
             return <CVEViewer />
         case YakitRoute.YakScript:
@@ -917,7 +910,6 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
             {page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk]},
             {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
             {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
-            {page: YakitRoute.WebsiteTree, ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]},
             {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
         ]
     }
@@ -1143,12 +1135,6 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidDomainIcon />,
         ...YakitRouteToPageInfo[YakitRoute.DB_Domain]
     },
-    [YakitRoute.WebsiteTree]: {
-        page: YakitRoute.WebsiteTree,
-        icon: <PrivateOutlineWebsiteTreeIcon />,
-        hoverIcon: <PrivateSolidWebsiteTreeIcon />,
-        ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]
-    },
     [YakitRoute.DB_HTTPHistory]: {
         page: YakitRoute.DB_HTTPHistory,
         icon: <PrivateOutlineHTTPHistoryIcon />,
@@ -1187,7 +1173,7 @@ export const InvalidFirstMenuItem = ""
  * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
  * @description 每个菜单项由 '|' 字符进行分割
  */
-export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|api提取|空间引擎集成版本|"
+export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|api提取|空间引擎集成版本|网站树"
 /**
  * @name private版专家模式菜单配置数据
  * @description 修改只对专家模式有效，别的模式需取对应模式数据进行修改
@@ -1271,7 +1257,6 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_Ports,
             YakitRoute.DB_Risk,
             YakitRoute.DB_Domain,
-            YakitRoute.WebsiteTree,
             YakitRoute.DB_HTTPHistory,
             YakitRoute.DB_CVE
         ])
@@ -1343,7 +1328,6 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_Ports,
             YakitRoute.DB_Risk,
             YakitRoute.DB_Domain,
-            YakitRoute.WebsiteTree,
             YakitRoute.DB_HTTPHistory,
             YakitRoute.DB_CVE
         ])
