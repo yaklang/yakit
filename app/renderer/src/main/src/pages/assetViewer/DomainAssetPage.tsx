@@ -166,7 +166,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             width: 470,
             render: (_, i: Domain) => (
                 <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
-                    {i.IPAddr || '-'}
+                    {i.IPAddr || "-"}
                 </Text>
             ),
             filteredValue: (getParams()["Network"] && ["IPAddr"]) || null,
@@ -196,7 +196,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             width: 470,
             render: (_, i: Domain) => (
                 <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
-                    {i.HTTPTitle || '-'}
+                    {i.HTTPTitle || "-"}
                 </Text>
             ),
             filteredValue: (getParams()["Title"] && ["HTTPTitle"]) || null,
@@ -306,7 +306,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     })
     return (
         <Table<Domain>
-            className={styles['table-wrapper']}
+            className={styles["table-wrapper"]}
             loading={loading}
             pagination={{
                 size: "small",
@@ -340,7 +340,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                         <Row>
                             <Col span={12} style={{display: "flex", alignItems: "center"}}>
                                 <Checkbox
-                                    style={{marginLeft:8}}
+                                    style={{marginLeft: 8}}
                                     checked={checkedAll}
                                     onChange={(e) => {
                                         if (!e.target.checked) {
@@ -401,7 +401,17 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                                         })
                                                     )
                                                     break
-
+                                                case "scan-port":
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.Mod_ScanPort,
+                                                            params: {
+                                                                targets: checkedURL.join(",")
+                                                            }
+                                                        })
+                                                    )
+                                                    break
                                                 default:
                                                     ipcRenderer.invoke("send-to-tab", {
                                                         type: key,

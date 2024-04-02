@@ -461,7 +461,17 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                                     })
                                                                 )
                                                                 break
-
+                                                            case "scan-port":
+                                                                emiter.emit(
+                                                                    "openPage",
+                                                                    JSON.stringify({
+                                                                        route: YakitRoute.Mod_ScanPort,
+                                                                        params: {
+                                                                            targets: urls.join(",")
+                                                                        }
+                                                                    })
+                                                                )
+                                                                break
                                                             default:
                                                                 ipcRenderer.invoke("send-to-tab", {
                                                                     type: key,

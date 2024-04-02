@@ -51,6 +51,8 @@ interface PageParamsInfoProps {
     pocPageInfo?: PocPageInfoProps
     /**弱口令页面 */
     brutePageInfo?: BrutePageInfoProps
+    /**端口扫描页面 */
+    scanPortPageInfo?: ScanPortPageInfoProps
 }
 export const defaultPluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps = {
     runtimeId: "",
@@ -102,6 +104,13 @@ export const defaultBrutePageInfo: BrutePageInfoProps = {
     targets: ""
 }
 export interface BrutePageInfoProps {
+    /**输入目标 */
+    targets: string
+}
+export const defaultScanPortPageInfo: ScanPortPageInfoProps = {
+    targets: ""
+}
+export interface ScanPortPageInfoProps {
     /**输入目标 */
     targets: string
 }

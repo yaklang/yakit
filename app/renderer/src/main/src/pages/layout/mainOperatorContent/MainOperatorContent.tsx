@@ -90,6 +90,7 @@ import {
     defaultBrutePageInfo,
     defaultPluginBatchExecutorPageInfo,
     defaultPocPageInfo,
+    defaultScanPortPageInfo,
     usePageInfo
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
@@ -458,9 +459,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Mod_Brute:
                 addBrute(params)
                 break
+            case YakitRoute.Mod_ScanPort:
+                addScanPort(params)
+                break
             default:
                 break
         }
+    })
+    const addScanPort = useMemoizedFn((data) => {
+        openMenuPage(
+            {route: YakitRoute.Mod_ScanPort},
+            {
+                pageParams: {
+                    scanPortPageInfo:{...data}
+                }
+            }
+        )
     })
     /**弱口令 */
     const addBrute = useMemoizedFn((data) => {
@@ -468,10 +482,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {route: YakitRoute.Mod_Brute},
             {
                 pageParams: {
-                    brutePageInfo: {
-                        ...defaultBrutePageInfo,
-                        ...data
-                    }
+                    brutePageInfo: {...data}
                 }
             }
         )
@@ -641,7 +652,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
-            if (type === "scan-port") addScanPort(data)
+            // if (type === "scan-port") addScanPort(data)
             // if (type === "brute") addBrute(data)
             if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
@@ -767,19 +778,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-    const addScanPort = useMemoizedFn((res: any) => {
-        const {URL = ""} = res || {}
-        if (URL) {
-            openMenuPage(
-                {route: YakitRoute.Mod_ScanPort},
-                {
-                    pageParams: {
-                        scanportParams: URL
-                    }
-                }
-            )
-        }
-    })
+
     const addBugTest = useMemoizedFn((type: number, res?: any) => {
         const {URL = ""} = res || {}
         if (type === 1 && URL) {
@@ -1066,7 +1065,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.Mod_Brute:
                             onBrutePage(node, order)
                             break
-
+                        case YakitRoute.Mod_ScanPort:
+                            onScanPortPage(node, order)
+                            break
                         default:
                             break
                     }
@@ -1090,6 +1091,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.Mod_Brute:
                             onBrutePage(node, 1)
+                            break
+                        case YakitRoute.Mod_ScanPort:
+                            onScanPortPage(node, 1)
                             break
                         default:
                             break
@@ -1152,6 +1156,25 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.Mod_Brute, newPageNode)
+    })
+    const onScanPortPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.Mod_ScanPort,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                scanPortPageInfo: node.pageParams?.scanPortPageInfo
+                    ? {
+                          ...defaultScanPortPageInfo,
+                          ...node.pageParams.scanPortPageInfo
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.Mod_ScanPort, newPageNode)
     })
     /** @name 多开页面的额外处理逻辑(针对web-fuzzer页面) */
     const openMultipleMenuPage = useMemoizedFn((route: RouteToPageProps) => {

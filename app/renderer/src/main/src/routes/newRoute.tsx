@@ -121,7 +121,12 @@ import {NewPayload} from "@/pages/payloadManager/newPayload"
 import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
 import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import {BrutePageInfoProps, PluginBatchExecutorPageInfoProps, PocPageInfoProps} from "@/store/pageInfo"
+import {
+    BrutePageInfoProps,
+    PluginBatchExecutorPageInfoProps,
+    PocPageInfoProps,
+    ScanPortPageInfoProps
+} from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 import {YakPoC} from "@/pages/securityTool/yakPoC/YakPoC"
@@ -459,6 +464,8 @@ export interface ComponentParams {
     pocPageInfo?: PocPageInfoProps
     /**弱口令页面 */
     brutePageInfo?: BrutePageInfoProps
+    /**端口扫描页面 */
+    scanPortPageInfo?: ScanPortPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -516,8 +523,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DataCompare:
             return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
-            // return <PortScanPage sendTarget={params?.scanportParams} />
-            return <NewPortScan />
+            return <NewPortScan id={params?.id || ""} />
         case YakitRoute.PoC:
             return <YakPoC pageId={params?.id || ""} />
         case YakitRoute.Plugin_OP:

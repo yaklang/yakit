@@ -49,6 +49,9 @@ import {onCreateReportModal} from "@/pages/portscan/CreateReport"
 import {v4 as uuidv4} from "uuid"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {shallow} from "zustand/shallow"
+import {PageNodeItemProps, ScanPortPageInfoProps, defaultScanPortPageInfo, usePageInfo} from "@/store/pageInfo"
+import {YakitRoute} from "@/routes/newRoute"
 
 const NewPortScanExtraParamsDrawer = React.lazy(() => import("./NewPortScanExtraParamsDrawer"))
 
@@ -62,6 +65,7 @@ export const pluginTypeFilterList = ["mitm", "port-scan", "nuclei"].map((ele) =>
 }))
 
 export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
+    const {id} = props
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
@@ -110,13 +114,33 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
                 setHidden={setHidden}
                 pluginListSearchInfo={{search, filters}}
                 allCheck={allCheck}
+                pageId={id}
             />
         </PluginLocalListDetails>
     )
 })
 
 const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props) => {
-    const {selectList, setSelectList, pluginListSearchInfo, selectNum, allCheck} = props
+    const {selectList, setSelectList, pluginListSearchInfo, selectNum, allCheck, pageId} = props
+
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+    /**获取数据中心中的页面数据 */
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Mod_ScanPort, pageId)
+        if (currentItem && currentItem.pageParamsInfo.scanPortPageInfo) {
+            return currentItem.pageParamsInfo.scanPortPageInfo
+        } else {
+            return {
+                ...defaultScanPortPageInfo
+            }
+        }
+    })
+    const [pageInfo, setPageInfo] = useState<ScanPortPageInfoProps>(initPageInfo())
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
         defaultValue: false,
@@ -219,6 +243,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                     selectList={selectList}
                     setProgressList={setProgressList}
                     allCheck={allCheck}
+                    pageInfo={pageInfo}
                 />
             </div>
         </div>
@@ -268,7 +293,8 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             pluginListSearchInfo,
             selectList,
             setProgressList,
-            allCheck
+            allCheck,
+            pageInfo
         } = props
         const [form] = Form.useForm()
 
@@ -339,6 +365,12 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 })
             })
         }, [])
+        useEffect(() => {
+            //  pageInfo.targets 目前情况下只有初始的时候才会变，给Targets设置初始值
+            form.setFieldsValue({
+                Targets: pageInfo.targets
+            })
+        }, [pageInfo.targets])
 
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true
