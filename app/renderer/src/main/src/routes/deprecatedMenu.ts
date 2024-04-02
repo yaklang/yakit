@@ -18,7 +18,8 @@ export const CommunityDeprecatedSecondMenu: string[] = [
     "空间引擎集成版本",
     "网站信息获取",
     "主域名提取",
-    "杀软匹配tasklist /svc"
+    "杀软匹配tasklist /svc",
+    "网站树"
 ]
 
 /**
@@ -35,5 +36,6 @@ export const EnterpriseDeprecatedSecondMenu: string[] = [
     "项目管理(Beta*)",
     "插件执行结果",
     "api提取",
-    "空间引擎集成版本"
+    "空间引擎集成版本",
+    "网站树"
 ]

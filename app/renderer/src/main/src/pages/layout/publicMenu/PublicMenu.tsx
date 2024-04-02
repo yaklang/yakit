@@ -1,6 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     DatabaseFirstMenuProps,
+    DatabaseMenuItemProps,
+    InvalidFirstMenuItem,
+    InvalidPageMenuItem,
     PublicCommonPlugins,
     PublicRouteMenu,
     PublicRouteMenuProps,
@@ -143,13 +146,25 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     /** 获取数据库保存的常用插件列表数据 */
     const fetchCommonPlugins = useMemoizedFn(() => {
         setLoading(true)
-
         ipcRenderer
             .invoke("GetAllNavigationItem", {Mode: CodeGV.PublicMenuModeValue})
             .then((res: {Data: DatabaseFirstMenuProps[]}) => {
                 // 没有考虑过滤系统删除的内定页面，因为public版本的可自定义菜单均为插件
                 const database = databaseConvertData(res.Data || [])
+                const caches: DatabaseMenuItemProps[] = []
+                for (let item of database) {
+                    // 过滤代码中无效的一级菜单项
+                    if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
 
+                    const menus: DatabaseMenuItemProps = {...item}
+                    if (item.children && item.children.length > 0) {
+                        menus.children = item.children.filter(
+                            // 过滤代码中无效的二级菜单项
+                            (item) => InvalidPageMenuItem.indexOf(item.menuName) === -1
+                        )
+                    }
+                    caches.push(menus)
+                }
                 // 过滤掉用户删除的系统内定菜单
                 let filterLocal: PublicRouteMenuProps[] = []
                 getRemoteValue(RemoteGV.UserDeleteMenu)
@@ -184,7 +199,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     })
                     .finally(() => {
                         // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
-                        const {menus, isUpdate, pluginName} = publicUnionMenus(filterLocal, database)
+                        const {menus, isUpdate, pluginName} = publicUnionMenus(filterLocal, caches)
 
                         if (isInitRef.current) {
                             isInitRef.current = false
