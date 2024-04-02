@@ -52,7 +52,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
                 let deleteCache: any = {}
                 getRemoteValue(RemoteGV.UserDeleteMenu)
                     .then((val) => {
-                        if (!!val) {
+                        if (val !== "{}") {
                             try {
                                 deleteCache = JSON.parse(val) || {}
                                 delete deleteCache[CodeGV.PublicMenuModeValue]

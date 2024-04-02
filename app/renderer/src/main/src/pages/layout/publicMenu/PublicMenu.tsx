@@ -169,7 +169,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 let filterLocal: PublicRouteMenuProps[] = []
                 getRemoteValue(RemoteGV.UserDeleteMenu)
                     .then((val) => {
-                        if (!!val) {
+                        if (val !== "{}") {
                             let filters: string[] = []
                             try {
                                 filters = (JSON.parse(val) || {})["public"] || []

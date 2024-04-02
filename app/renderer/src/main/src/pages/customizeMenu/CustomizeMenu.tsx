@@ -26,10 +26,7 @@ import {
     PencilAltIcon,
     ShieldExclamationIcon
 } from "@/assets/newIcon"
-import {
-    SolidCloudpluginIcon,
-    SolidOfficialpluginIcon, SolidPrivatepluginIcon
-} from "@/assets/icon/colors"
+import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable, DragUpdate, ResponderProvided, DropResult} from "@hello-pangea/dnd"
 import {Avatar, Input, Modal, Tooltip} from "antd"
@@ -182,7 +179,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 let filterLocal: EnhancedCustomRouteMenuProps[] = []
                 getRemoteValue(RemoteGV.UserDeleteMenu)
                     .then((val) => {
-                        if (!!val) {
+                        if (val !== "{}") {
                             let filters: string[] = []
                             try {
                                 deleteCache.current = JSON.parse(val) || {}
@@ -288,7 +285,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         setMenuData([...menuData])
     })
     /** @description 中间和右侧菜单-拖拽结束后的计算 */
-    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
+    const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
         if (!result.destination) {
             return
         }
@@ -959,7 +956,12 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
                         {menuItem.describe || "No Description about it."}
                     </div>
                 </div>
-                <YakitButton size="small" type="text2" icon={<RemoveIcon className={style['close-icon']} />} onClick={() => onRemoveSecondMenu(menuItem)} />
+                <YakitButton
+                    size='small'
+                    type='text2'
+                    icon={<RemoveIcon className={style["close-icon"]} />}
+                    onClick={() => onRemoveSecondMenu(menuItem)}
+                />
             </div>
         </div>
     )
