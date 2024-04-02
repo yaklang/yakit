@@ -382,7 +382,7 @@ $active-color: #f28b44;
         }
 
         .comment-body-content {
-            margin: 4px 0 8px 0;
+            margin: 4px 0 6px 0;
 
             .content-style {
                 color: #686c78;
@@ -422,7 +422,7 @@ $active-color: #f28b44;
         }
 
         .comment-body-option {
-            margin-top: 8px;
+            margin-top: 6px;
             height: 20px;
             line-height: 20px;
             display: flex;
@@ -467,6 +467,7 @@ $active-color: #f28b44;
                     }
 
                     .num-style {
+                        color: #31343F;
                         margin-left: 4px;
                         cursor: pointer;
                     }

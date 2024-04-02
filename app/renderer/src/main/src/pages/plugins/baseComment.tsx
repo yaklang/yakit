@@ -1,5 +1,5 @@
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useSize} from "ahooks"
 import React, {useState, useEffect, memo, Suspense, useRef, useMemo, CSSProperties} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
@@ -101,6 +101,9 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const [parentComment, setParentComment] = useState<API.CommentListData>()
     const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
     const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
+
+    const ref = useRef(null);
+    const size = useSize(ref);
     useEffect(() => {
         getComment(1)
         setFiles([])
@@ -313,8 +316,23 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     })
     const handleLoadMore = useMemoizedFn(() => {})
 
+    const rowsNum = useMemo(()=>{
+        if(size?.height){
+            if(size.height<200){
+                return 1
+            }
+            else if(size?.height<300){
+                return 2
+            }
+            else if(size?.height<400){
+                return 3
+            }   
+        }
+
+    },[size?.height])
+    
     return (
-        <div className={styles["comment-box"]} id='online-plugin-info-scroll'>
+        <div className={styles["comment-box"]} id='online-plugin-info-scroll' ref={ref}>
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
             <div className={styles["info-comment-box"]}>
                 <div className={styles["box-header"]}>
@@ -329,6 +347,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                         files={files}
                         setFiles={setFiles}
                         onSubmit={pluginComment}
+                        rows={rowsNum}
                     />
                 )}
                 {/* <PluginCommentInput
@@ -632,6 +651,8 @@ interface PluginCommentUploadProps {
     setFiles: (files: string[]) => any
     onSubmit: () => void
     submitTxt?: string
+    // TextArea行数 默认4行
+    rows?: number
 }
 
 interface ImageShowProps {
@@ -640,13 +661,14 @@ interface ImageShowProps {
 }
 
 export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
-    const {value, setValue, limit = 150, loading, files, setFiles, onSubmit, submitTxt = "发布评论"} = props
+    const {value, setValue, limit = 150, loading, files, setFiles, onSubmit, submitTxt = "发布评论",rows=4} = props
     const {userInfo} = useStore()
     const {platform, companyHeadImg, companyName} = userInfo
     const avatarColor = useRef<string>(randomAvatarColor())
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
     const textAreRef = useRef<InputRef>(null)
     const [isFocused, setIsFocused] = useState<boolean>(false)
+    
     // 是否允许其失焦
     const isAllowBlur = useRef<boolean>(true)
     const uploadFiles = (file) => {
@@ -750,7 +772,7 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
                                 value={value}
                                 ref={textAreRef}
                                 bordered={false}
-                                rows={4}
+                                rows={rows}
                                 placeholder='说点什么...'
                                 onChange={(e) => setValue(e.target.value)}
                             />
