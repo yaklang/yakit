@@ -589,7 +589,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
                     placeholder="请输入绝对路径"
                     isBubbing={true}
                     help={p.hint ? p.hint : (<div>
-                        可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
+                        可将文件拖入框内或<span style={{color: 'var(--yakit-primary-5'}}>点击此处</span>上传
                     </div>)}
                 /> : <InputItem
                     autoComplete={p.autoComplete}
@@ -597,7 +597,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = p => {
                     value={p.filename} setValue={f => p.setFileName && p.setFileName(f)}
                     placeholder="请输入绝对路径"
                     isBubbing={true} allowClear={false} help={p.hint ? p.hint : (<div>
-                    可将文件拖入框内或<span style={{color: 'rgb(25,143,255)'}}>点击此处</span>上传
+                    可将文件拖入框内或<span style={{color: 'var(--yakit-primary-5'}}>点击此处</span>上传
                 </div>)}
                 />
                 }

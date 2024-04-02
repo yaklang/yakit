@@ -117,4 +117,6 @@ export enum CacheDropDownGV {
     MITMSaveUserDataDir = "mitm_save_user_data_dir",
     /** @name MITM webFuzzer 代理 */
     WebFuzzerProxyList = "web_fuzzer_proxy_list",
+    /** @name WebFuzzer 插入文件 */
+    WebFuzzerInsertFileFuzzTag = "web_fuzzer_insert_file_fuzz_tag",
 }
