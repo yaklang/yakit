@@ -458,16 +458,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
                 <div className={styles["mitm-hijacked-heard-right"]}>
                     {onRenderHeardExtra()}
-                    {isFullScreen ? (
-                        <ArrowsRetractIcon className={styles["expand-icon"]} onClick={() => setIsFullScreen(false)} />
-                    ) : (
-                        <ArrowsExpandIcon
-                            className={styles["expand-icon"]}
-                            onClick={() => {
-                                setIsFullScreen(true)
-                            }}
-                        />
-                    )}
                 </div>
             </div>
             <div
