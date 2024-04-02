@@ -808,7 +808,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                             paramsOptions[el.Key] = el.Value
                             break
                         case FormParamsType.StringPort:
-                            paramsOptions[el.Key] = !el.Value ? 0 : +el.Value || 0 
+                            paramsOptions[el.Key] = !el.Value ? 0 : +el.Value || 0
                             break
                         case FormParamsType.StringBool:
                             paramsOptions[el.Key] = !el.Value ? false : el.Value === "false" ? false : true
@@ -865,7 +865,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
             }
             extra={
                 <div>
-                    {!isReverse && !useGadget && (
+                    {!isReverse && (
                         <Button
                             loading={loading}
                             className='setting-payload-btn'
@@ -913,29 +913,26 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     initialValues={{...paramsRef.current}}
                     autoComplete='off'
                 >
-                    {!isReverse && (
-                        <Form.Item
-                            label={
-                                <div className='form-item-label-title'>
-                                    使用利用链
-                                    <Tooltip placement='bottom' title='关闭则不使用利用链,只生成恶意类'>
-                                        <ExclamationCircleOutlined className='question-icon' />
-                                    </Tooltip>
-                                </div>
-                            }
-                            name='useGadget'
-                        >
-                            <Switch
-                                disabled={isStart}
-                                checked={useGadget}
-                                onChange={(check) => {
-                                    setUseGadget(check)
-                                    setParamsData({...paramsRef.current, useGadget: check})
-                                    setTimeout(() => cleatParams(), 300)
-                                }}
-                            />
-                        </Form.Item>
-                    )}
+                    <Form.Item
+                        label={
+                            <div className='form-item-label-title'>
+                                使用利用链
+                                <Tooltip placement='bottom' title='关闭则不使用利用链,只生成恶意类'>
+                                    <ExclamationCircleOutlined className='question-icon' />
+                                </Tooltip>
+                            </div>
+                        }
+                        name='useGadget'
+                    >
+                        <Switch
+                            checked={useGadget}
+                            onChange={(check) => {
+                                setUseGadget(check)
+                                setParamsData({...paramsRef.current, useGadget: check})
+                                setTimeout(() => cleatParams(), 300)
+                            }}
+                        />
+                    </Form.Item>
 
                     <Form.Item
                         label={useGadget ? "利用链" : "恶意类"}
