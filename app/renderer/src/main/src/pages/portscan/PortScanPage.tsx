@@ -83,6 +83,8 @@ export const ScanKindKeys: string[] = Object.keys(ScanKind)
 export const defaultPorts =
     "21,22,443,445,80,8000-8004,3306,3389,5432,6379,8080-8084,7000-7005,9000-9002,8443,7443,9443,7080,8070"
 
+
+/**@deprecated */
 export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [params, setParams, getParams] = useGetState<PortScanParams>({
