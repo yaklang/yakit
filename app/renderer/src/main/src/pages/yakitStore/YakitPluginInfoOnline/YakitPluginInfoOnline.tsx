@@ -73,7 +73,7 @@ export const TagColor: {[key: string]: string} = {
     success: "color-bgColor-green|审核通过",
     not: "color-bgColor-blue|待审核"
 }
-
+/**@deprecated */
 export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (props) => {
     const {pluginId, pluginUUId, user, deletePlugin, updatePlugin, deletePluginLocal} = props
     // 全局登录状态

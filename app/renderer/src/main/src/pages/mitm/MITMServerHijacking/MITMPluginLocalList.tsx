@@ -315,7 +315,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         }
     }, [visible])
     const StopAllPlugin = () => {
-        ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
+        ipcRenderer.invoke("cancel-DownloadOnlinePlugins", taskToken).catch((e) => {
             failed(`停止下载:${e}`)
             onRefLocalPluginList()
         })

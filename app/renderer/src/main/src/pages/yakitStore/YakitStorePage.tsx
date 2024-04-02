@@ -1113,6 +1113,7 @@ export interface DownloadOnlinePluginByTokenRequest {
     Tags?: string
 }
 
+/**@deprecated */
 const AddAllPlugin: React.FC<AddAllPluginProps> = (props) => {
     const {selectedRowKeysRecord, setListLoading, user, userInfo, onFinish, oneImport, size, query, isSelectAll} = props
     const [taskToken, setTaskToken] = useState(randomString(40))
@@ -1325,7 +1326,7 @@ interface OnlineProfileProps {
     BaseUrl: string
     Password?: string
 }
-
+/**@deprecated */
 export const YakModuleOnlineList: React.FC<YakModuleOnlineListProps> = (props) => {
     const {
         queryOnline,
