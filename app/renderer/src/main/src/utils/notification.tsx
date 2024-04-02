@@ -5,22 +5,18 @@ import {CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon} from "@
 
 export const warn = (msg: React.ReactNode) => {
     yakitNotify("warning", msg)
-    // notification["warning"]({message: msg, placement: "bottomRight"})
 }
 
 export const info = (msg: React.ReactNode) => {
     yakitNotify("info", msg)
-    // notification["info"]({message: msg, placement: "bottomRight"})
 }
 
-export const yakitInfo = msg => {
+export const yakitInfo = (msg) => {
     yakitNotify("info", msg)
 }
 
 export const success = (msg: React.ReactNode) => {
-    // yakitNotify("info", msg)
     yakitNotify("success", msg)
-    // notification["success"]({message: msg, placement: "bottomRight"})
 }
 export const successControlled = (msg: React.ReactNode, time?: number) => {
     notification["success"]({message: msg, placement: "bottomRight", duration: time === undefined ? 4.5 : time})

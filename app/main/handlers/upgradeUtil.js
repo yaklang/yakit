@@ -80,7 +80,7 @@ const loadSecrets = () => {
                 name: i["name"] || `${i["host"]}:${i["port"]}`,
                 host: i["host"],
                 port: i["port"],
-                tls: i["tls"] | false,
+                tls: i["tls"] || false,
                 password: i["password"] || "",
                 caPem: i["caPem"] || "",
             })
