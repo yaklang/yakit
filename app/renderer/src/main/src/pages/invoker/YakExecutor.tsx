@@ -229,10 +229,14 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         }
     }, [])
     // 自动保存
-    useDebounceEffect(() => {
-        autoSaveCurrentFile()
-        saveFileList()
-    }, [tabList[+activeTab]?.code], {wait: 500})
+    useDebounceEffect(
+        () => {
+            autoSaveCurrentFile()
+            saveFileList()
+        },
+        [tabList[+activeTab]?.code],
+        {wait: 500}
+    )
     // 获取和保存近期打开文件信息，同时展示打开默认内容
     useEffect(() => {
         setLoading(true)
@@ -272,19 +276,13 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         document.onmousedown = (e) => {
             try {
                 // @ts-ignore
-                if (!e || !e?.path || Array.isArray(e?.path || undefined)) {
-                    return
-                }
-
-                // @ts-ignore
-                if (e.path[0].id !== "rename-input" && renameFlag) {
+                if (e.target.id !== "rename-input" && renameFlag) {
                     renameCode(renameIndex)
                     setRenameFlag(false)
                 }
             } catch (e) {
                 failed(`rename error: ${e}`)
             }
-
         }
     }, [renameFlag])
 
@@ -709,6 +707,8 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                             newFile={newFile}
                             openFile={openFileLayout}
                             fileFunction={fileFunction}
+                            renameCode={renameCode}
+                            setRenameFlag={setRenameFlag}
                         />
                     </AutoSpin>
                 </div>
@@ -787,23 +787,31 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                     onPressEnter={(e) => {
                                                                         tabList[+activeTab].extraParams = extraParams
                                                                         setTabList(tabList)
-                                                                        tabList[+activeTab].isFile && 
-                                                                            setFileList(fileList.map((item) => {
-                                                                                item.route === tabList[+activeTab].route && (item.extraParams = extraParams);
-                                                                                return item
-                                                                            }))
+                                                                        tabList[+activeTab].isFile &&
+                                                                            setFileList(
+                                                                                fileList.map((item) => {
+                                                                                    item.route ===
+                                                                                        tabList[+activeTab].route &&
+                                                                                        (item.extraParams = extraParams)
+                                                                                    return item
+                                                                                })
+                                                                            )
                                                                         success("保存成功")
                                                                     }}
                                                                 />
                                                             </Form.Item>
                                                             <Form.Item label='字体大小' name='fontSize'>
-                                                                <YakitInputNumber 
+                                                                <YakitInputNumber
                                                                     size='small'
                                                                     value={fontSize}
                                                                     defaultValue={fontSize}
                                                                     onChange={(value) => {
                                                                         setFontSize(value as number)
-                                                                        ipcRenderer.invoke("set-local-cache", FontSizeCacheKey, value as number)
+                                                                        ipcRenderer.invoke(
+                                                                            "set-local-cache",
+                                                                            FontSizeCacheKey,
+                                                                            value as number
+                                                                        )
                                                                     }}
                                                                 />
                                                             </Form.Item>
@@ -1104,6 +1112,8 @@ interface ExecutorFileListProps {
     newFile: () => void
     openFile: (file: any) => void
     fileFunction: (kind: string, index: string, isFileList: boolean) => void
+    renameCode: (index: number) => void
+    setRenameFlag: (flag: boolean) => void
 }
 
 // @ts-ignore
@@ -1118,7 +1128,9 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
         renameFlag,
         renameIndex,
         renameCache,
-        setRenameCache
+        setRenameCache,
+        renameCode,
+        setRenameFlag
     } = props
 
     return (
@@ -1168,6 +1180,12 @@ const ExecutorFileList = (props: ExecutorFileListProps) => {
                                                     size='small'
                                                     value={renameCache}
                                                     onChange={(e) => setRenameCache(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            renameCode(renameIndex)
+                                                            setRenameFlag(false)
+                                                        }
+                                                    }}
                                                 />
                                             </div>
                                         ) : (
