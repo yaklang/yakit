@@ -1,6 +1,7 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {BrutePageInfoProps} from "@/store/pageInfo"
 import React from "react"
 
 export interface NewBruteProps {
@@ -18,6 +19,7 @@ export interface BruteExecuteProps {
     setBruteType: (v: React.Key[]) => void
     hidden: boolean
     setHidden: (b: boolean) => void
+    pageId: string
 }
 
 export interface BruteExecuteContentRefProps {
@@ -34,6 +36,7 @@ export interface BruteExecuteContentProps {
     setExecuteStatus: (b: ExpandAndRetractExcessiveState) => void
     selectNum: number
     setProgressList: (s: StreamResults.Progress[]) => void
+    pageInfo: BrutePageInfoProps
 }
 
 export interface BruteExecuteExtraFormValue extends StartBruteParams {

@@ -29,6 +29,8 @@ import classNames from "classnames"
 import {onRemoveToolFC} from "@/utils/deleteTool"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import cloneDeep from "lodash/cloneDeep"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 const defLimit = 20
@@ -429,14 +431,27 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
         })
         /**发送到其他页面 */
         const openExternalPage = useMemoizedFn((key, urls) => {
-            ipcRenderer
-                .invoke("send-to-tab", {
-                    type: key,
-                    data: {URL: JSON.stringify(urls)}
-                })
-                .then(() => {
-                    setSendPopoverVisible(false)
-                })
+            switch (key) {
+                case "brute":
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.Mod_Brute,
+                            params: {
+                                targets: urls.join(",")
+                            }
+                        })
+                    )
+                    break
+
+                default:
+                    ipcRenderer.invoke("send-to-tab", {
+                        type: key,
+                        data: {URL: JSON.stringify(urls)}
+                    })
+                    break
+            }
+            setSendPopoverVisible(false)
         })
         const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
             if (sort.order === "none") {

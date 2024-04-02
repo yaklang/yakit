@@ -49,6 +49,8 @@ interface PageParamsInfoProps {
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
     /**专项漏洞页面 */
     pocPageInfo?: PocPageInfoProps
+    /**弱口令页面 */
+    brutePageInfo?: BrutePageInfoProps
 }
 export const defaultPluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps = {
     runtimeId: "",
@@ -77,7 +79,7 @@ export interface WebFuzzerPageInfoProps {
 
 export const defaultPocPageInfo: PocPageInfoProps = {
     selectGroup: [],
-    selectGroupListByKeyWord:[],
+    selectGroupListByKeyWord: [],
     formValue: {},
     https: false,
     httpFlowIds: [],
@@ -87,7 +89,7 @@ export interface PocPageInfoProps {
     /**按组搜的选中 */
     selectGroup?: string[]
     /**按关键字搜的选中/poc内置组*/
-    selectGroupListByKeyWord?:string[]
+    selectGroupListByKeyWord?: string[]
     formValue?: HybridScanControlAfterRequest
     /**是否为https */
     https: boolean
@@ -96,7 +98,13 @@ export interface PocPageInfoProps {
     /**请求包 */
     request: Uint8Array
 }
-
+export const defaultBrutePageInfo: BrutePageInfoProps = {
+    targets: ""
+}
+export interface BrutePageInfoProps {
+    /**输入目标 */
+    targets: string
+}
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
 

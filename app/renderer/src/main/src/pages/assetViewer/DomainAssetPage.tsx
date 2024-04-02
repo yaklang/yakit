@@ -11,6 +11,8 @@ import {ExportExcel} from "../../components/DataExport/DataExport"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 
 import styles from "./DomainAssetPage.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
 
 export interface Domain {
     ID?: number
@@ -387,11 +389,26 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                                 failed("请最少选择一个选项再进行操作")
                                                 return
                                             }
+                                            switch (key) {
+                                                case "brute":
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.Mod_Brute,
+                                                            params: {
+                                                                targets: checkedURL.join(",")
+                                                            }
+                                                        })
+                                                    )
+                                                    break
 
-                                            ipcRenderer.invoke("send-to-tab", {
-                                                type: key,
-                                                data: {URL: JSON.stringify(checkedURL)}
-                                            })
+                                                default:
+                                                    ipcRenderer.invoke("send-to-tab", {
+                                                        type: key,
+                                                        data: {URL: JSON.stringify(checkedURL)}
+                                                    })
+                                                    break
+                                            }
                                         }}
                                     >
                                         <Button type='link' icon={<LineMenunIcon />}></Button>

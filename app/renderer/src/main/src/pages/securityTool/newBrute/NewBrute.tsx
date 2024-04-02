@@ -35,17 +35,27 @@ import cloneDeep from "lodash/cloneDeep"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
+import {BrutePageInfoProps, PageNodeItemProps, defaultBrutePageInfo, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/routes/newRoute"
 
 const BruteExecuteParamsDrawer = React.lazy(() => import("./BruteExecuteParamsDrawer"))
 
 export const NewBrute: React.FC<NewBruteProps> = React.memo((props) => {
+    const {id} = props
     const [bruteType, setBruteType] = useState<React.Key[]>([])
     const [hidden, setHidden] = useState<boolean>(false)
 
     return (
         <div className={styles["brute-wrapper"]}>
             <BruteTypeTreeList hidden={hidden} bruteType={bruteType} setBruteType={setBruteType} />
-            <BruteExecute hidden={hidden} setHidden={setHidden} bruteType={bruteType} setBruteType={setBruteType} />
+            <BruteExecute
+                hidden={hidden}
+                setHidden={setHidden}
+                bruteType={bruteType}
+                setBruteType={setBruteType}
+                pageId={id}
+            />
         </div>
     )
 })
@@ -123,7 +133,26 @@ const BruteTypeTreeList: React.FC<BruteTypeTreeListProps> = React.memo((props) =
 })
 
 const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
-    const {bruteType, setBruteType} = props
+    const {bruteType, setBruteType, pageId} = props
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+    /**获取数据中心中的页面数据 */
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Mod_Brute, pageId)
+        if (currentItem && currentItem.pageParamsInfo.brutePageInfo) {
+            return currentItem.pageParamsInfo.brutePageInfo
+        } else {
+            return {
+                ...defaultBrutePageInfo
+            }
+        }
+    })
+    const [pageInfo, setPageInfo] = useState<BrutePageInfoProps>(initPageInfo())
+
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
         defaultValue: false,
         valuePropName: "hidden",
@@ -211,6 +240,7 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
                     setExecuteStatus={setExecuteStatus}
                     selectNum={selectNum}
                     setProgressList={setProgressList}
+                    pageInfo={pageInfo}
                 />
             </div>
         </div>
@@ -219,7 +249,16 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
 
 const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {bruteType, isExpand, executeStatus, setExecuteStatus, setIsExpand, selectNum, setProgressList} = props
+        const {
+            bruteType,
+            isExpand,
+            executeStatus,
+            setExecuteStatus,
+            setIsExpand,
+            selectNum,
+            setProgressList,
+            pageInfo
+        } = props
         const [form] = Form.useForm()
         const [runtimeId, setRuntimeId] = useState<string>("")
 
@@ -343,7 +382,8 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                             formItemProps={{
                                 name: "Targets",
                                 label: "输入目标",
-                                rules: [{required: true}]
+                                rules: [{required: true}],
+                                initialValue: pageInfo.targets
                             }}
                             accept='.txt,.xlsx,.xls,.csv'
                             textareaProps={{
