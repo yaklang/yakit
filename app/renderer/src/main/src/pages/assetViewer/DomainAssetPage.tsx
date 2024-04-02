@@ -379,7 +379,6 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                         menu={{
                                             data: [
                                                 {key: "bug-test", title: "发送到漏洞检测"},
-                                                {key: "scan-port", title: "发送到端口扫描"},
                                                 {key: "brute", title: "发送到爆破"}
                                             ]
                                         }}
@@ -395,17 +394,6 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                                         "openPage",
                                                         JSON.stringify({
                                                             route: YakitRoute.Mod_Brute,
-                                                            params: {
-                                                                targets: checkedURL.join(",")
-                                                            }
-                                                        })
-                                                    )
-                                                    break
-                                                case "scan-port":
-                                                    emiter.emit(
-                                                        "openPage",
-                                                        JSON.stringify({
-                                                            route: YakitRoute.Mod_ScanPort,
                                                             params: {
                                                                 targets: checkedURL.join(",")
                                                             }
