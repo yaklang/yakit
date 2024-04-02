@@ -8,6 +8,7 @@ const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
 const EventEmitter = require('events');
+const urlUtils = request('url');
 
 const zip = require('node-stream-zip');
 const {
@@ -23,6 +24,11 @@ const {
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
 const authMeta = [];
+const ossDomains = [
+    "aliyun-oss.yaklang.com",
+    "yaklang.oss-cn-beijing.aliyuncs.com",
+    "yaklang.oss-accelerate.aliyuncs.com",
+];
 
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
@@ -459,7 +465,31 @@ module.exports = {
                     version = version.substr(1)
                 }
                 const downloadUrl = getYakitDownloadUrl(version, isEnterprise);
-                downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
+                try {
+                    const parsedUrl = urlUtils.parse(downloadUrl);
+                    let selectedUrl = null;
+                    for (const domain of ossDomains) {
+                        parsedUrl.host = domain
+                        const fixedUrl = urlUtils.format(parsedUrl)
+                        https.request({method: "HEAD", host: parsedUrl.host, path: parsedUrl.path}, resp => {
+                            if (resp.statusCode === 200) {
+                                selectedUrl = fixedUrl
+                            }
+                        }).end()
+                        if (selectedUrl === null) {
+                            continue;
+                        }
+                        break
+                    }
+                    if (!selectedUrl) {
+                        downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
+                    } else {
+                        downloadYakitByDownloadUrl(resolve, reject, selectedUrl)
+                    }
+                } catch (e) {
+                    downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
+                    reject(`Fetch Yakit Download Url failed: ${e}`)
+                }
             })
         }
 
