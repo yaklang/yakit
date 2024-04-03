@@ -2,6 +2,7 @@ import React, {memo} from "react"
 import {Button, Modal} from "antd"
 
 import "./SecondConfirm.scss"
+import { YakitButton } from "../yakitUI/YakitButton/YakitButton"
 
 export interface SecondConfirmProps {
     visible: boolean
@@ -30,12 +31,12 @@ export const SecondConfirm: React.FC<SecondConfirmProps> = memo((props) => {
                 <div className='container-subtitle'>关闭之后将不可恢复</div>
 
                 <div className='container-btn'>
-                    <Button onClick={() => kindClick(1)}>
+                    <YakitButton type="outline1" onClick={() => kindClick(1)} size="large">
                         取消
-                    </Button>
-                    <Button type="primary" onClick={() => kindClick(2)}>
+                    </YakitButton>
+                    <YakitButton type="primary" onClick={() => kindClick(2)} size="large">
                         确认
-                    </Button>
+                    </YakitButton>
                 </div>
             </div>
         </Modal>

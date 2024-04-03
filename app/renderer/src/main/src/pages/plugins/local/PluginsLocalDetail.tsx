@@ -578,7 +578,7 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 )}
             </PluginTabs>
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-            {visibleModal&&<YakitModal
+            <YakitModal
                 hiddenHeader={true}
                 centered={true}
                 footer={null}
@@ -587,9 +587,10 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 width={560}
                 visible={visibleModal}
                 bodyStyle={{padding: 0}}
+                destroyOnClose={true}
             >
                 <PluginCommentUploadLocal isLogin={userInfo.isLogin} setLoginShow={setLoginShow} setVisibleModal={setVisibleModal} plugin={plugin}/>
-            </YakitModal>}
+            </YakitModal>
         </div>
     )
 })
@@ -681,6 +682,7 @@ const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.
             </div>
            <div className={styles['main-content']}>
         <PluginCommentUpload
+            isAlwaysShow={true}
             loading={loading}
             value={commentText}
             setValue={onSetValue}

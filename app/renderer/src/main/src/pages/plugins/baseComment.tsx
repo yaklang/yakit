@@ -1,32 +1,18 @@
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn, useSize} from "ahooks"
-import React, {useState, useEffect, memo, Suspense, useRef, useMemo, CSSProperties} from "react"
+import React, {useState, useEffect, memo,  useRef, useMemo} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
-import {failed, success, warn} from "@/utils/notification"
+import {failed, warn} from "@/utils/notification"
 import {
-    PageHeader,
-    Space,
-    Tooltip,
-    Button,
-    Empty,
-    Tag,
-    Tabs,
     Upload,
     Input,
-    List,
     Modal,
-    Spin,
     Image,
     Avatar,
     InputRef
 } from "antd"
 import {
-    StarOutlined,
-    StarFilled,
-    DownloadOutlined,
-    PictureOutlined,
-    QuestionOutlined,
     LoadingOutlined,
     ExclamationCircleOutlined
 } from "@ant-design/icons"
@@ -35,22 +21,14 @@ import styles from "./baseComment.module.scss"
 import moment from "moment"
 import cloneDeep from "lodash/cloneDeep"
 import {useCommenStore} from "@/store/comment"
-import InfiniteScroll from "react-infinite-scroll-component"
-import {OnlineCommentIcon, OnlineThumbsUpIcon, OnlineSurfaceIcon} from "@/assets/icons"
 import {SecondConfirm} from "@/components/functionTemplate/SecondConfirm"
-import {YakEditor} from "@/utils/editors"
-import {YakScript} from "@/pages/invoker/schema"
-import {GetReleaseEdition, isEnterpriseEdition} from "@/utils/envfile"
 import Login from "@/pages/Login"
 import {fail} from "assert"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {CollapseParagraph} from "../yakitStore/YakitPluginInfoOnline/CollapseParagraph"
 import classNames from "classnames"
 import {UserPlatformType} from "../globalVariable"
 import yakitImg from "@/assets/yakit.jpg"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PaperAirplaneIcon, ResizerIcon} from "@/assets/newIcon"
 import {OutlinePhotographIcon, OutlineThumbupActiveIcon, OutlineThumbupIcon} from "@/assets/icon/outline"
 import {CloseIcon} from "@/components/configNetwork/icon"
@@ -59,6 +37,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {OnlineJudgment} from "./onlineJudgment/OnlineJudgment"
 import {YakitTimeLineListRefProps} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineListType"
 import {YakitCollapseText} from "@/components/yakitUI/YakitCollapseText/YakitCollapseText"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 const {ipcRenderer} = window.require("electron")
 
 const limit = 20
@@ -93,7 +72,6 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             total_page: 0
         }
     })
-    const [hasMore, setHasMore] = useState<boolean>(false)
     const [commentInputText, setCommentInputText] = useState<string>("")
     const [commentFiles, setCommentFiles] = useState<string[]>([])
     const [currentComment, setCurrentComment] = useState<API.CommentListData | null>()
@@ -102,12 +80,13 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
     const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
 
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     useEffect(() => {
         getComment(1)
         setFiles([])
         setCommentText("")
+        handleClearTimeList()
     }, [plugin.id])
     useEffect(() => {
         if (!isLogin) {
@@ -129,6 +108,8 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             params
         })
             .then((res) => {
+                console.log("comment---", res.data)
+
                 if (!res.data) {
                     res.data = []
                 }
@@ -138,7 +119,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 }
                 const isMore =
                     res.data.length < limit || newCommentResponses.data.length === commentResponses.pagemeta.total
-                setHasMore(!isMore)
+                ishasMore.current = !isMore
                 setCommentResponses({
                     data: [...newCommentResponses.data],
                     pagemeta: res.pagemeta
@@ -289,9 +270,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const openCommentChildModel = (visible) => {
         setCommentChildVisible(visible)
     }
-    const loadMoreData = useMemoizedFn(() => {
-        getComment(commentResponses.pagemeta.page + 1)
-    })
+
     const pluginCancelComment = useMemoizedFn((flag: number) => {
         if (flag === 2) {
             setCurrentComment(null)
@@ -314,23 +293,22 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const handleClearTimeList = useMemoizedFn(() => {
         timeListRef.current?.onClear()
     })
-    const handleLoadMore = useMemoizedFn(() => {})
+    const loadMoreData = useMemoizedFn(() => {
+        getComment(commentResponses.pagemeta.page + 1)
+    })
 
-    const rowsNum = useMemo(()=>{
-        if(size?.height){
-            if(size.height<200){
+    const rowsNum = useMemo(() => {
+        if (size?.height) {
+            if (size.height < 200) {
                 return 1
-            }
-            else if(size?.height<300){
+            } else if (size?.height < 300) {
                 return 2
-            }
-            else if(size?.height<400){
+            } else if (size?.height < 400) {
                 return 3
-            }   
+            }
         }
+    }, [size?.height])
 
-    },[size?.height])
-    
     return (
         <div className={styles["comment-box"]} id='online-plugin-info-scroll' ref={ref}>
             {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
@@ -350,17 +328,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                         rows={rowsNum}
                     />
                 )}
-                {/* <PluginCommentInput
-                    value={commentText}
-                    setValue={onSetValue}
-                    files={files}
-                    setFiles={setFiles}
-                    onSubmit={pluginComment}
-                    loading={commentLoading}
-                    isLogin={isLogin}
-                /> */}
             </div>
-            {/* @ts-ignore */}
             <div className={styles["comment-list-box"]}>
                 {commentResponses.data.length > 0 ? (
                     <OnlineJudgment>
@@ -382,48 +350,12 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                                 )
                             }}
                             hasMore={ishasMore.current}
-                            loadMore={handleLoadMore}
+                            loadMore={loadMoreData}
                         />
                     </OnlineJudgment>
                 ) : (
                     <YakitEmpty style={{paddingTop: 48}} />
                 )}
-
-                {/* <InfiniteScroll
-                    dataLength={commentResponses?.pagemeta?.total || 0}
-                    key={commentResponses?.pagemeta?.page}
-                    next={loadMoreData}
-                    hasMore={hasMore}
-                    loader={
-                        <div className={styles["vertical-center"]}>
-                            <LoadingOutlined />
-                        </div>
-                    }
-                    endMessage={
-                        (commentResponses?.pagemeta?.total || 0) > 0 && (
-                            <div className={classNames(styles["row-cneter"], styles["no-more-text"])}>暂无更多数据</div>
-                        )
-                    }
-                    scrollableTarget='online-plugin-info-scroll'
-                >
-                    <List
-                        dataSource={commentResponses.data || []}
-                        loading={loading}
-                        renderItem={(item) => (
-                            <>
-                                <PluginCommentInfo
-                                    key={item.id}
-                                    info={item}
-                                    onReply={pluginReply}
-                                    onStar={pluginCommentStar}
-                                    isStarChange={item.is_stars}
-                                    setParentComment={setParentComment}
-                                    openCommentChildModel={openCommentChildModel}
-                                />
-                            </>
-                        )}
-                    />
-                </InfiniteScroll> */}
             </div>
 
             <PluginCommentChildModal
@@ -436,25 +368,35 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 }}
                 isLogin={isLogin}
             />
-            <Modal
-                wrapClassName={styles["comment-reply-dialog"]}
+
+            <YakitModal
                 title={<div className={styles["header-title"]}>回复@{currentComment?.user_name}</div>}
-                visible={commentShow}
                 centered={true}
                 footer={null}
+                keyboard={false}
+                maskClosable={false}
+                width={560}
+                visible={commentShow}
                 destroyOnClose={true}
+                bodyStyle={{padding: 0}}
                 onCancel={() => setCommentSencondShow(true)}
             >
-                <PluginCommentInput
-                    value={commentInputText}
-                    setValue={setCommentInputText}
-                    files={commentFiles}
-                    setFiles={setCommentFiles}
-                    onSubmit={pluginReplyComment}
-                    loading={commentLoading}
-                    isLogin={isLogin}
-                />
-            </Modal>
+                <div style={{padding: "16px 24px 24px"}}>
+                    {isLogin ? (
+                        <PluginCommentUpload
+                            loading={commentLoading}
+                            value={commentInputText}
+                            setValue={setCommentInputText}
+                            files={commentFiles}
+                            setFiles={setCommentFiles}
+                            onSubmit={pluginReplyComment}
+                            isAlwaysShow={true}
+                        />
+                    ) : (
+                        <>请先登录</>
+                    )}
+                </div>
+            </YakitModal>
             <SecondConfirm visible={commentSecondShow} onCancel={pluginCancelComment}></SecondConfirm>
         </div>
     )
@@ -653,6 +595,8 @@ interface PluginCommentUploadProps {
     submitTxt?: string
     // TextArea行数 默认4行
     rows?: number
+    // 是否常驻显示操作按钮（默认为聚焦显示）
+    isAlwaysShow?: boolean
 }
 
 interface ImageShowProps {
@@ -661,14 +605,25 @@ interface ImageShowProps {
 }
 
 export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) => {
-    const {value, setValue, limit = 150, loading, files, setFiles, onSubmit, submitTxt = "发布评论",rows=4} = props
+    const {
+        value,
+        setValue,
+        limit = 150,
+        loading,
+        files,
+        setFiles,
+        onSubmit,
+        submitTxt = "发布评论",
+        rows = 4,
+        isAlwaysShow = false
+    } = props
     const {userInfo} = useStore()
     const {platform, companyHeadImg, companyName} = userInfo
     const avatarColor = useRef<string>(randomAvatarColor())
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
     const textAreRef = useRef<InputRef>(null)
     const [isFocused, setIsFocused] = useState<boolean>(false)
-    
+
     // 是否允许其失焦
     const isAllowBlur = useRef<boolean>(true)
     const uploadFiles = (file) => {
@@ -694,18 +649,13 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
     }, [value, limit])
 
     // 是否展示底部元素
-    const isShowdDom = useMemo(()=>{
-        if(files.length>0 || value.length>0){
+    const isShowdDom = useMemo(() => {
+        if (files.length > 0 || value.length > 0 || isAlwaysShow || isFocused) {
             return true
-        }
-        else if(isFocused){
-            return true
-        }
-        else{
+        } else {
             return false
         }
-
-    },[isFocused,files,value])
+    }, [isFocused, files, value])
 
     return (
         <div className={styles["plugin-comment-upload"]}>
@@ -742,13 +692,19 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
                 }}
             >
                 {/* 将原本padding: 12px;拆分为4个div的原因是为了解决控件闪烁 */}
-                <div className={styles["padding-top"]} onMouseDown={(e) => {
+                <div
+                    className={styles["padding-top"]}
+                    onMouseDown={(e) => {
                         e.preventDefault()
-                     }}></div>
+                    }}
+                ></div>
                 <div className={styles["padding-left-right"]}>
-                    <div className={styles["padding-left"]} onMouseDown={(e) => {
-                        e.preventDefault()
-                     }}></div>
+                    <div
+                        className={styles["padding-left"]}
+                        onMouseDown={(e) => {
+                            e.preventDefault()
+                        }}
+                    ></div>
                     <div className={styles["input-upload"]}>
                         <div
                             className={styles["input-box"]}
@@ -872,128 +828,21 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
                             </div>
                         )}
                     </div>
-                    <div className={styles["padding-right"]} onMouseDown={(e) => {
-                        e.preventDefault()
-                     }}></div>
-                </div>
-
-                <div className={styles["padding-bottom"]} onMouseDown={(e) => {
-                        e.preventDefault()
-                     }}></div>
-            </div>
-        </div>
-    )
-}
-
-interface PluginCommentInputProps {
-    value: string
-    loading: boolean
-    isLogin?: boolean
-    setValue: (value: string) => any
-    files: string[]
-    setFiles: (files: string[]) => any
-    onSubmit: (callback?) => any
-}
-
-// 评论功能的部分组件-输入组件、展示图片组件、上传和提交按钮组件
-const PluginCommentInput = (props: PluginCommentInputProps) => {
-    const {value, loading, isLogin, setValue, files, setFiles, onSubmit} = props
-    const [filesLoading, setFilesLoading] = useState<boolean>(false)
-    const uploadFiles = (file) => {
-        setFilesLoading(true)
-        ipcRenderer
-            .invoke("upload-img", {path: file.path, type: file.type})
-            .then((res) => {
-                setFiles(files.concat(res.data))
-            })
-            .catch((err) => {
-                fail("图片上传失败")
-            })
-            .finally(() => {
-                setTimeout(() => setFilesLoading(false), 1)
-            })
-    }
-    return (
-        <div className={styles["plugin-info-comment-input"]}>
-            <div className={styles["box-input"]}>
-                <Input.TextArea
-                    className={styles["input-stlye"]}
-                    value={value}
-                    autoSize={{minRows: 1, maxRows: 6}}
-                    placeholder='说点什么...'
-                    onChange={(e) => setValue(e.target.value)}
-                ></Input.TextArea>
-            </div>
-            <div className={styles["box-btn"]}>
-                {isLogin && (
-                    <Upload
-                        accept='image/jpeg,image/png,image/jpg,image/gif'
-                        multiple={false}
-                        disabled={files.length >= 3}
-                        showUploadList={false}
-                        beforeUpload={(file: any) => {
-                            if (file.size / 1024 / 1024 > 10) {
-                                failed("图片大小不超过10M")
-                                return false
-                            }
-                            if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
-                                failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
-                                return false
-                            }
-                            if (file) {
-                                uploadFiles(file)
-                            }
-                            return true
+                    <div
+                        className={styles["padding-right"]}
+                        onMouseDown={(e) => {
+                            e.preventDefault()
                         }}
-                    >
-                        <Button
-                            loading={filesLoading}
-                            type='link'
-                            disabled={files.length >= 3}
-                            icon={
-                                <PictureOutlined
-                                    className={classNames({
-                                        [styles["btn-pic-disabled"]]: files.length >= 3,
-                                        [styles["btn-pic"]]: files.length < 3
-                                    })}
-                                />
-                            }
-                        />
-                    </Upload>
-                )}
-                <Button
-                    // disabled={value || files.length !== 0 }
-                    type='primary'
-                    className={classNames({
-                        [styles["btn-submit"]]: !((value || files.length !== 0) && isLogin)
-                    })}
-                    onClick={onSubmit}
-                    loading={loading}
-                >
-                    评论
-                </Button>
-            </div>
-            {files.length !== 0 && (
-                <div className={styles["box-upload"]}>
-                    {files.map((item, index) => {
-                        return (
-                            <div key={item} className={styles["upload-img-opt"]}>
-                                <Image key={item} src={item as any} className={styles["opt-pic"]} />
-                                <div
-                                    className={styles["opt-del"]}
-                                    onClick={() => {
-                                        const arr = cloneDeep(files)
-                                        arr.splice(index, 1)
-                                        setFiles(arr)
-                                    }}
-                                >
-                                    x
-                                </div>
-                            </div>
-                        )
-                    })}
+                    ></div>
                 </div>
-            )}
+
+                <div
+                    className={styles["padding-bottom"]}
+                    onMouseDown={(e) => {
+                        e.preventDefault()
+                    }}
+                ></div>
+            </div>
         </div>
     )
 }
@@ -1014,7 +863,6 @@ interface CommentQueryProps extends API.PageMeta {
 const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     const {parentInfo, visible, onReply, onCancel, isLogin} = props
 
-    const [hasMore, setHasMore] = useState<boolean>(false)
     const [loadingChild, setLoadingChild] = useState<boolean>(false)
     const [commentChildResponses, setCommentChildResponses] = useState<API.CommentListResponse>({
         data: [],
@@ -1072,7 +920,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                 const isMore =
                     item.data.length < limit ||
                     newCommentChildResponses.data.length === commentChildResponses.pagemeta.total
-                setHasMore(!isMore)
+                ishasMore.current = !isMore
                 setCommentChildResponses({
                     data: [...newCommentChildResponses.data],
                     pagemeta: item.pagemeta
@@ -1143,6 +991,12 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
         }
     }, [visible])
 
+    const timeListChildRef = useRef<YakitTimeLineListRefProps>(null)
+    const ishasMore = useRef<boolean>(true)
+    const handleClearTimeList = useMemoizedFn(() => {
+        timeListChildRef.current?.onClear()
+    })
+
     if (!parentInfo) return <></>
     return (
         <Modal visible={visible} onCancel={onCommentChildCancel} footer={null} width='70%' centered>
@@ -1154,44 +1008,46 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     onStar={() => {}}
                     onReply={() => {}}
                 />
-                <div className={styles["child-comment-list"]}>
-                    {/* @ts-ignore */}
-                    <InfiniteScroll
-                        dataLength={commentChildResponses?.pagemeta?.total || 0}
-                        key={commentChildResponses?.pagemeta?.page}
-                        next={loadMoreData}
-                        hasMore={hasMore}
-                        loader={
-                            <div className={styles["vertical-center"]}>
-                                <LoadingOutlined />
-                            </div>
-                        }
-                        endMessage={
-                            (commentChildResponses?.pagemeta?.total || 0) > 0 && (
-                                <div className={classNames(styles["row-cneter"], styles["no-more-text"])}>
-                                    暂无更多数据
-                                </div>
+                {/* 10条以上使用不定高虚拟列表 10条以下正常渲染 */}
+                {commentChildResponses.data.length > 10 ? (
+                    <div className={styles["child-comment-list"]}>
+                        <OnlineJudgment>
+                            <NewYakitTimeLineList
+                                ref={timeListChildRef}
+                                loading={loadingChild}
+                                data={commentChildResponses.data}
+                                DefaultItemHeight={76}
+                                renderItem={(childItem) => {
+                                    return (
+                                        <PluginCommentInfo
+                                            key={childItem.id}
+                                            info={childItem}
+                                            onReply={onReply}
+                                            onStar={onCommentChildStar}
+                                            isStarChange={childItem.is_stars}
+                                        />
+                                    )
+                                }}
+                                hasMore={ishasMore.current}
+                                loadMore={loadMoreData}
+                            />
+                        </OnlineJudgment>
+                    </div>
+                ) : (
+                    <div className={styles["little-child-comment-list"]}>
+                        {commentChildResponses.data.map((childItem) => {
+                            return (
+                                <PluginCommentInfo
+                                    key={childItem.id}
+                                    info={childItem}
+                                    onReply={onReply}
+                                    onStar={onCommentChildStar}
+                                    isStarChange={childItem.is_stars}
+                                />
                             )
-                        }
-                        scrollableTarget='scroll-able-div'
-                    >
-                        <List
-                            dataSource={commentChildResponses.data || []}
-                            loading={loadingChild}
-                            renderItem={(childItem) => (
-                                <>
-                                    <PluginCommentInfo
-                                        key={childItem.id}
-                                        info={childItem}
-                                        onReply={onReply}
-                                        onStar={onCommentChildStar}
-                                        isStarChange={childItem.is_stars}
-                                    />
-                                </>
-                            )}
-                        />
-                    </InfiniteScroll>
-                </div>
+                        })}
+                    </div>
+                )}
             </div>
         </Modal>
     )

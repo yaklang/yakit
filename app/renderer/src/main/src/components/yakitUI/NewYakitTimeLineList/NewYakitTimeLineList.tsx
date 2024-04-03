@@ -11,10 +11,10 @@ import {
 } from "react"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
-import {YakitTimeLineListProps, YakitVirtualListPositionProps, YakitVirtualListProps} from "./YakitTimeLineListType"
+import {YakitTimeLineListProps, YakitVirtualListPositionProps, YakitVirtualListProps} from "./NewYakitTimeLineListType"
 import {YakitTimeLineItemIcon} from "./icon"
 
-import styles from "./YakitTimeLineList.module.scss"
+import styles from "./NewYakitTimeLineList.module.scss"
 
 /** 列表状态信息初始值 */
 const DefaultState: YakitVirtualListProps = {
@@ -24,9 +24,6 @@ const DefaultState: YakitVirtualListProps = {
     maxCount: 0,
     preLen: 0
 }
-
-/** @name time-line的单项高度默认值为44px */
-const DefaultItemHeight = 44
 
 /**
  * @name 单项不定高的虚拟列表-时间轴
@@ -38,7 +35,7 @@ const DefaultItemHeight = 44
  */
 export const NewYakitTimeLineList: <T>(props: YakitTimeLineListProps<T>) => any = memo(
     forwardRef((props, ref) => {
-        const {loading = false, data = [], renderItem, hasMore = true, loadMore} = props
+        const {loading = false, data = [], renderItem, hasMore = true, loadMore, DefaultItemHeight = 44} = props
 
         useImperativeHandle(
             ref,

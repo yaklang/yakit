@@ -1,3 +1,5 @@
+import { ReactNode } from "react"
+
 export interface YakitTimeLineListProps<T> {
     ref?: React.ForwardedRef<YakitTimeLineListRefProps>
     loading?: boolean
@@ -8,6 +10,8 @@ export interface YakitTimeLineListProps<T> {
     hasMore?: boolean
     /** 加载更多 */
     loadMore?: () => any
+    /** time-line的单项高度默认值为44px */
+    DefaultItemHeight?: number
 }
 export interface YakitTimeLineListRefProps {
     /** 全局数据重置清空 */
