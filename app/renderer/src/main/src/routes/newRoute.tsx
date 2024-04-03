@@ -948,12 +948,10 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
     },
     {
         page: undefined,
-        label: "信息收集",
-        children: ["子域名收集&漏洞扫描", "IP批量查询", "主动指纹探测", "ICP备案查询", "瞅一下"].map(
-            (item) => {
-                return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
-            }
-        )
+        label: "子域名收集",
+        children: ["子域名收集&漏洞扫描", "IP批量查询", "主动指纹探测", "ICP备案查询", "瞅一下"].map((item) => {
+            return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
+        })
     }
 ]
 

@@ -2,7 +2,7 @@
  * @description 社区版
  * 废弃的一级菜单
  * */
-export const CommunityDeprecatedFirstMenu: string[] = ["子域名收集"]
+export const CommunityDeprecatedFirstMenu: string[] = []
 
 /**
  * @description 社区版
@@ -19,7 +19,11 @@ export const CommunityDeprecatedSecondMenu: string[] = [
     "网站信息获取",
     "主域名提取",
     "杀软匹配tasklist /svc",
-    "网站树"
+    "网站树",
+    "crt子域名收集",
+    "纯暴力子域名收集",
+    "SEO综合查询",
+    "被动子域名收集"
 ]
 
 /**
