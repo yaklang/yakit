@@ -8,7 +8,9 @@ const https = require("https");
 const requestProgress = require("request-progress");
 const request = require("request");
 const EventEmitter = require('events');
-const urlUtils = request('url');
+const urlUtils = require('url');
+const {Transform} = require('stream');
+const {throttle} = require('throttle-debounce');
 
 const zip = require('node-stream-zip');
 const {
@@ -21,14 +23,13 @@ const {
     loadExtraFilePath,
     yakitInstallDir
 } = require("../filePath")
+const {caBundle} = require("./missedCABundle");
+const axios = require("axios");
+const {requestWithProgress, getHttpsAgentByDomain} = require("./requestWithProgress");
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
 const authMeta = [];
-const ossDomains = [
-    "aliyun-oss.yaklang.com",
-    "yaklang.oss-cn-beijing.aliyuncs.com",
-    "yaklang.oss-accelerate.aliyuncs.com",
-];
+const ossDomains = ["aliyun-oss.yaklang.com", "yaklang.oss-cn-beijing.aliyuncs.com", "yaklang.oss-accelerate.aliyuncs.com",];
 
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
@@ -434,33 +435,71 @@ module.exports = {
             } catch (e) {
 
             }
+
+            requestWithProgress(downloadUrl, dest, {
+                httpsAgent: getHttpsAgentByDomain(urlUtils.parse(downloadUrl).host)
+            }, state => {
+                if (!!state) {
+                    win.webContents.send("download-yakit-engine-progress", state)
+                }
+            }, () => {
+                console.info("downloaded finished ", downloadUrl)
+                resolve()
+            }, err => {
+                reject(err)
+            })
+
             // https://github.com/IndigoUnited/node-request-progress
             // The options argument is optional so you can omit it
-            requestProgress(request(encodeChineseCharacters(downloadUrl)), {
-                // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
-                // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
-                // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
-            })
-                .on("response", function (resp) {
-                    if (resp.statusCode === 404) {
-                        reject("暂无最新安装包")
+            // requestProgress(request(encodeChineseCharacters(downloadUrl), {
+            //     httpsAgent: getHttpsAgentByDomain(urlUtils.parse(downloadUrl).host)
+            // }), {
+            //     // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+            //     // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+            //     // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+            // })
+            //     .on("response", function (resp) {
+            //         if (resp.statusCode === 404) {
+            //             reject("暂无最新安装包")
+            //         }
+            //     })
+            //     .on("progress", function (state) {
+            //         win.webContents.send("download-yakit-engine-progress", state)
+            //     })
+            //     .on("error", function (err) {
+            //         reject(err)
+            //     })
+            //     .on("end", function () {
+            //         resolve()
+            //     })
+            //     .pipe(fs.createWriteStream(dest))
+        }
+
+
+        const checkUrlDomain200 = (domain, parsedUrl) => {
+            return new Promise((resolve, reject) => {
+                parsedUrl.host = domain
+                const fixedUrl = urlUtils.format(parsedUrl)
+                console.info("start to fetch (" + domain + ") HEAD: " + fixedUrl)
+                axios.head(fixedUrl, {
+                    httpsAgent: getHttpsAgentByDomain(domain)
+                }).then(resp => {
+                    if (resp.status === 200) {
+                        console.info("Fetch Yakit Download Url (fixed [HEAD] 200): " + fixedUrl)
+                        resolve(fixedUrl)
+                    } else {
+                        reject("[HEAD] 200 not found for " + fixedUrl)
                     }
-                })
-                .on("progress", function (state) {
-                    win.webContents.send("download-yakit-engine-progress", state)
-                })
-                .on("error", function (err) {
+                }).catch(err => {
+                    console.info(err)
                     reject(err)
                 })
-                .on("end", function () {
-                    resolve()
-                })
-                .pipe(fs.createWriteStream(dest))
+            })
         }
 
         // asyncDownloadLatestYakit wrapper
-        const asyncDownloadLatestYakit = (version, isEnterprise) => {
-            return new Promise((resolve, reject) => {
+        async function asyncDownloadLatestYakit(version, isEnterprise) {
+            return new Promise(async (resolve, reject) => {
                 if (version.startsWith("v")) {
                     version = version.substr(1)
                 }
@@ -469,26 +508,22 @@ module.exports = {
                     const parsedUrl = urlUtils.parse(downloadUrl);
                     let selectedUrl = null;
                     for (const domain of ossDomains) {
-                        parsedUrl.host = domain
-                        const fixedUrl = urlUtils.format(parsedUrl)
-                        https.request({method: "HEAD", host: parsedUrl.host, path: parsedUrl.path}, resp => {
-                            if (resp.statusCode === 200) {
-                                selectedUrl = fixedUrl
-                            }
-                        }).end()
+                        selectedUrl = await checkUrlDomain200(domain, parsedUrl)
                         if (selectedUrl === null) {
                             continue;
                         }
                         break
                     }
                     if (!selectedUrl) {
+                        console.info("Fetch Yakit Download Url: " + downloadUrl)
                         downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
                     } else {
+                        console.info("Fetch Yakit Download Url (fixed): " + selectedUrl)
                         downloadYakitByDownloadUrl(resolve, reject, selectedUrl)
                     }
                 } catch (e) {
+                    console.info(`Fetch Yakit Download Url(Use Default): WARNING: ${e}`)
                     downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
-                    reject(`Fetch Yakit Download Url failed: ${e}`)
                 }
             })
         }
