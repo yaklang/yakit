@@ -87,8 +87,10 @@ import {
     PageNodeItemProps,
     PageProps,
     defPage,
+    defaultBrutePageInfo,
     defaultPluginBatchExecutorPageInfo,
     defaultPocPageInfo,
+    defaultScanPortPageInfo,
     usePageInfo
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
@@ -451,12 +453,45 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.BatchExecutorPage:
                 addBatchExecutorPage(params)
                 break
+            case YakitRoute.Mod_Brute:
+                addBrute(params)
+                break
+            case YakitRoute.Mod_ScanPort:
+                addScanPort(params)
+                break
             case YakitRoute.PoC:
-                addPoC(params)
+                /** type 1会打开漏洞检测类型选择  2直接带着数据打开poc页面*/
+                if (params.type !== 2) {
+                    addBugTest(1, params)
+                } else {
+                    addPoC(params)
+                }
+
                 break
             default:
                 break
         }
+    })
+    const addScanPort = useMemoizedFn((data) => {
+        openMenuPage(
+            {route: YakitRoute.Mod_ScanPort},
+            {
+                pageParams: {
+                    scanPortPageInfo: {...data}
+                }
+            }
+        )
+    })
+    /**弱口令 */
+    const addBrute = useMemoizedFn((data) => {
+        openMenuPage(
+            {route: YakitRoute.Mod_Brute},
+            {
+                pageParams: {
+                    brutePageInfo: {...data}
+                }
+            }
+        )
     })
     /**批量执行 */
     const addBatchExecutorPage = useMemoizedFn((data) => {
@@ -623,9 +658,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
-            if (type === "scan-port") addScanPort(data)
-            if (type === "brute") addBrute(data)
-            if (type === "bug-test") addBugTest(1, data)
             if (type === "plugin-store") addYakRunning(data)
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
             if (type === "simple-batch-exec-recover") addSimpleBatchExecRecover(data as UnfinishedSimpleDetectBatchTask)
@@ -749,32 +781,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-    const addScanPort = useMemoizedFn((res: any) => {
-        const {URL = ""} = res || {}
-        if (URL) {
-            openMenuPage(
-                {route: YakitRoute.Mod_ScanPort},
-                {
-                    pageParams: {
-                        scanportParams: URL
-                    }
-                }
-            )
-        }
-    })
-    const addBrute = useMemoizedFn((res: any) => {
-        const {URL = ""} = res || {}
-        if (URL) {
-            openMenuPage(
-                {route: YakitRoute.Mod_Brute},
-                {
-                    pageParams: {
-                        bruteParams: URL
-                    }
-                }
-            )
-        }
-    })
+
     const addBugTest = useMemoizedFn((type: number, res?: any) => {
         const {URL = ""} = res || {}
         if (type === 1 && URL) {
@@ -850,22 +857,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-    const addPacketScan = useMemoizedFn(
-        (httpFlows: number[], https: boolean, request?: Uint8Array, keyword?: string) => {
-            openMenuPage(
-                {route: YakitRoute.PacketScanPage},
-                {
-                    pageParams: {
-                        packetScan_FlowIds: httpFlows,
-                        packetScan_Https: https,
-                        packetScan_HttpRequest: request,
-                        packetScan_Keyword: keyword
-                    },
-                    hideAdd: true
-                }
-            )
-        }
-    )
 
     /** ---------- 插件回收站 ---------- */
     const addOnlinePluginRecycleBin = useMemoizedFn((res: any) => {
@@ -1074,6 +1065,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.BatchExecutorPage:
                             onBatchExecutorPage(node, order)
                             break
+                        case YakitRoute.Mod_Brute:
+                            onBrutePage(node, order)
+                            break
+                        case YakitRoute.Mod_ScanPort:
+                            onScanPortPage(node, order)
+                            break
                         default:
                             break
                     }
@@ -1094,6 +1091,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.BatchExecutorPage:
                             onBatchExecutorPage(node, 1)
+                            break
+                        case YakitRoute.Mod_Brute:
+                            onBrutePage(node, 1)
+                            break
+                        case YakitRoute.Mod_ScanPort:
+                            onScanPortPage(node, 1)
                             break
                         default:
                             break
@@ -1126,16 +1129,55 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {
-                pluginBatchExecutorPageInfo:node.pageParams?.pluginBatchExecutorPageInfo
+                pluginBatchExecutorPageInfo: node.pageParams?.pluginBatchExecutorPageInfo
                     ? {
                           ...defaultPluginBatchExecutorPageInfo,
-                    ...node.pageParams.pluginBatchExecutorPageInfo
+                          ...node.pageParams.pluginBatchExecutorPageInfo
                       }
                     : undefined
             },
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.BatchExecutorPage, newPageNode)
+    })
+
+    const onBrutePage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.Mod_Brute,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                brutePageInfo: node.pageParams?.brutePageInfo
+                    ? {
+                          ...defaultBrutePageInfo,
+                          ...node.pageParams.brutePageInfo
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.Mod_Brute, newPageNode)
+    })
+    const onScanPortPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.Mod_ScanPort,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                scanPortPageInfo: node.pageParams?.scanPortPageInfo
+                    ? {
+                          ...defaultScanPortPageInfo,
+                          ...node.pageParams.scanPortPageInfo
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.Mod_ScanPort, newPageNode)
     })
     /** @name 多开页面的额外处理逻辑(针对web-fuzzer页面) */
     const openMultipleMenuPage = useMemoizedFn((route: RouteToPageProps) => {
@@ -2550,10 +2592,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             const combineItem = subPage[combineIndex]
             subPage.splice(sourceIndex, 1)
             onUpdatePageCache(subPage)
-            const isSetGroup=combineItem.groupChildren?.findIndex(ele=>ele.id===selectSubMenu.id)!==-1
-            if(isSetGroup){
+            const isSetGroup = combineItem.groupChildren?.findIndex((ele) => ele.id === selectSubMenu.id) !== -1
+            if (isSetGroup) {
                 setSelectGroupId(currentTabKey, combineItem.id)
-            }   
+            }
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
                 addFuzzerSequenceList({groupId: combineItem.id})
             }
@@ -2632,8 +2674,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     groupId: combineItem.id
                 })
             }
-            const isSetGroup=combineItem.groupChildren?.findIndex(ele=>ele.id===selectSubMenu.id)!==-1
-            if(isSetGroup){
+            const isSetGroup = combineItem.groupChildren?.findIndex((ele) => ele.id === selectSubMenu.id) !== -1
+            if (isSetGroup) {
                 setSelectGroupId(currentTabKey, combineItem.id)
             }
         })

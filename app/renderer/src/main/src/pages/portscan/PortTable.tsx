@@ -9,7 +9,8 @@ import {LineMenunIcon} from "../../assets/icons"
 import {callCopyToClipboard} from "../../utils/basic"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {useMemoizedFn} from "ahooks"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
+import emiter from "@/utils/eventBus/eventBus"
 export interface PortTableProp {
     data: YakitPort[]
     isSimple?: boolean
@@ -83,9 +84,11 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                         <Row>
                             <Col span={12}>开放端口 / Open Ports</Col>
                             <Col span={12} style={{textAlign: "right"}}>
-                                {
-                                    isSimple&&<div style={{fontSize:14,color:"#1890ff",cursor:"pointer"}} onClick={openMenu}>查看完整数据</div>
-                                }
+                                {isSimple && (
+                                    <div style={{fontSize: 14, color: "#1890ff", cursor: "pointer"}} onClick={openMenu}>
+                                        查看完整数据
+                                    </div>
+                                )}
                             </Col>
                         </Row>
                         <Row>
@@ -123,10 +126,32 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                                                     failed("请最少选择一个选项再进行操作")
                                                     return
                                                 }
-                                                ipcRenderer.invoke("send-to-tab", {
-                                                    type: key,
-                                                    data: {URL: JSON.stringify(checkedURL)}
-                                                })
+                                                switch (key) {
+                                                    case "brute":
+                                                        emiter.emit(
+                                                            "openPage",
+                                                            JSON.stringify({
+                                                                route: YakitRoute.Mod_Brute,
+                                                                params: {
+                                                                    targets: checkedURL.join(",")
+                                                                }
+                                                            })
+                                                        )
+                                                        break
+                                                    case "bug-test":
+                                                        emiter.emit(
+                                                            "openPage",
+                                                            JSON.stringify({
+                                                                route: YakitRoute.PoC,
+                                                                params: {
+                                                                    URL: JSON.stringify(checkedURL)
+                                                                }
+                                                            })
+                                                        )
+                                                        break
+                                                    default:
+                                                        break
+                                                }
                                             }}
                                         >
                                             <Button type='link' style={{height: 16}} icon={<LineMenunIcon />}></Button>

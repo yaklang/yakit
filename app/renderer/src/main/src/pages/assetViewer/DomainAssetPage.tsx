@@ -11,6 +11,8 @@ import {ExportExcel} from "../../components/DataExport/DataExport"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 
 import styles from "./DomainAssetPage.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
 
 export interface Domain {
     ID?: number
@@ -164,7 +166,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             width: 470,
             render: (_, i: Domain) => (
                 <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
-                    {i.IPAddr || '-'}
+                    {i.IPAddr || "-"}
                 </Text>
             ),
             filteredValue: (getParams()["Network"] && ["IPAddr"]) || null,
@@ -194,7 +196,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
             width: 470,
             render: (_, i: Domain) => (
                 <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
-                    {i.HTTPTitle || '-'}
+                    {i.HTTPTitle || "-"}
                 </Text>
             ),
             filteredValue: (getParams()["Title"] && ["HTTPTitle"]) || null,
@@ -304,7 +306,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
     })
     return (
         <Table<Domain>
-            className={styles['table-wrapper']}
+            className={styles["table-wrapper"]}
             loading={loading}
             pagination={{
                 size: "small",
@@ -338,7 +340,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                         <Row>
                             <Col span={12} style={{display: "flex", alignItems: "center"}}>
                                 <Checkbox
-                                    style={{marginLeft:8}}
+                                    style={{marginLeft: 8}}
                                     checked={checkedAll}
                                     onChange={(e) => {
                                         if (!e.target.checked) {
@@ -377,7 +379,6 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                         menu={{
                                             data: [
                                                 {key: "bug-test", title: "发送到漏洞检测"},
-                                                {key: "scan-port", title: "发送到端口扫描"},
                                                 {key: "brute", title: "发送到爆破"}
                                             ]
                                         }}
@@ -387,11 +388,32 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                                                 failed("请最少选择一个选项再进行操作")
                                                 return
                                             }
-
-                                            ipcRenderer.invoke("send-to-tab", {
-                                                type: key,
-                                                data: {URL: JSON.stringify(checkedURL)}
-                                            })
+                                            switch (key) {
+                                                case "brute":
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.Mod_Brute,
+                                                            params: {
+                                                                targets: checkedURL.join(",")
+                                                            }
+                                                        })
+                                                    )
+                                                    break
+                                                case "bug-test":
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.PoC,
+                                                            params: {
+                                                                URL: JSON.stringify(checkedURL)
+                                                            }
+                                                        })
+                                                    )
+                                                    break
+                                                default:
+                                                    break
+                                            }
                                         }}
                                     >
                                         <Button type='link' icon={<LineMenunIcon />}></Button>

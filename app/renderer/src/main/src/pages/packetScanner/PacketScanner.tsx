@@ -180,6 +180,7 @@ export const execPacketScanWithNewTab = (params: {
             JSON.stringify({
                 route: YakitRoute.PoC,
                 params: {
+                    type: 2,
                     request,
                     https,
                     httpFlowIds,

@@ -14,13 +14,7 @@ import React, {useState, useMemo, useEffect, useRef, useImperativeHandle} from "
 import {QueryPortsRequest, portAssetFormatJson, PortTableAndDetail} from "../PortAssetPage"
 import {PortAsset} from "../models"
 import {defQueryPortsRequest, apiQueryPortsBase, apiQueryPortsIncrementOrderAsc} from "./utils"
-import {
-    useDebounceFn,
-    useMemoizedFn,
-    useInterval,
-    useCreation,
-    useControllableValue,
-    useUpdateEffect} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useInterval, useCreation, useControllableValue, useUpdateEffect} from "ahooks"
 import styles from "./PortTable.module.scss"
 import {PortTableProps} from "./PortTableType"
 import ReactResizeDetector from "react-resize-detector"
@@ -29,6 +23,8 @@ import classNames from "classnames"
 import {onRemoveToolFC} from "@/utils/deleteTool"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import cloneDeep from "lodash/cloneDeep"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 const defLimit = 20
@@ -429,14 +425,33 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
         })
         /**发送到其他页面 */
         const openExternalPage = useMemoizedFn((key, urls) => {
-            ipcRenderer
-                .invoke("send-to-tab", {
-                    type: key,
-                    data: {URL: JSON.stringify(urls)}
-                })
-                .then(() => {
-                    setSendPopoverVisible(false)
-                })
+            switch (key) {
+                case "brute":
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.Mod_Brute,
+                            params: {
+                                targets: urls.join(",")
+                            }
+                        })
+                    )
+                    break
+                case "bug-test":
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.PoC,
+                            params: {
+                                URL: JSON.stringify(urls)
+                            }
+                        })
+                    )
+                    break
+                default:
+                    break
+            }
+            setSendPopoverVisible(false)
         })
         const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
             if (sort.order === "none") {

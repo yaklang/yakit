@@ -4,18 +4,20 @@ import type {DataNode as TreeNode, TreeProps} from "antd/es/tree"
 import {OutlineMinusIcon, OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import styles from "./YakitTree.module.scss"
+import classNames from "classnames"
 
 export type TreeKey = string | number
 interface YakitTreeProps extends TreeProps {
     showIcon?: boolean // 是否展示treeNode节点前的icon 默认 -> 展示
     treeData: TreeNode[] // 需要满足 DataNode类型的数组
+    classNameWrapper?: string
 }
 
 const YakitTree: React.FC<YakitTreeProps> = React.memo((props) => {
-    const {showLine = true, showIcon = true} = props
+    const {showLine = true, showIcon = true, classNameWrapper} = props
 
     return (
-        <div className={styles.yakitTree}>
+        <div className={classNames(styles.yakitTree, classNameWrapper)}>
             {props.treeData.length ? (
                 <Tree
                     {...props}

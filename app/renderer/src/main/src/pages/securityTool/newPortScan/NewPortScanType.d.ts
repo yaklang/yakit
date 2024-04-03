@@ -3,9 +3,12 @@ import {YakScript} from "@/pages/invoker/schema"
 import {PluginFilterParams, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {PortScanParams} from "@/pages/portscan/PortScanPage"
+import {ScanPortPageInfoProps} from "@/store/pageInfo"
 import {type} from "os"
 
-export interface NewPortScanProps {}
+export interface NewPortScanProps {
+    id: string
+}
 
 interface PluginListSearchInfoProps {
     search: PluginSearchParams
@@ -18,7 +21,8 @@ export interface NewPortScanExecuteProps {
     selectList: string[]
     setSelectList: (s: string[]) => void
     pluginListSearchInfo: PluginListSearchInfoProps
-    allCheck:boolean
+    allCheck: boolean
+    pageId: string
 }
 export interface NewPortScanExecuteContentProps {
     ref?: React.ForwardedRef<NewPortScanExecuteContentRefProps>
@@ -30,7 +34,8 @@ export interface NewPortScanExecuteContentProps {
     pluginListSearchInfo: PluginListSearchInfoProps
     selectList: string[]
     setProgressList: (s: StreamResult.Progress[]) => void
-    allCheck:boolean
+    allCheck: boolean
+    pageInfo: ScanPortPageInfoProps
 }
 
 export interface NewPortScanExecuteContentRefProps {

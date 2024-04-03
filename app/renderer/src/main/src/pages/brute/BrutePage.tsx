@@ -19,10 +19,12 @@ export interface StartBruteParams {
     Targets: string
     TargetFile?: string
     Usernames?: string[]
+    /**前端使用 记录选择的字典种的数据*/
     UsernamesDict?: string[]
     UsernameFile?: string
     ReplaceDefaultUsernameDict?: boolean
     Passwords?: string[]
+    /**前端使用 记录选择的字典种的数据 */
     PasswordsDict?: string[]
     PasswordFile?: string
     ReplaceDefaultPasswordDict?: boolean
@@ -175,7 +177,6 @@ export const BrutePage: React.FC<BrutePageProp> = (props) => {
                                 xtermClear(xtermRef)
                                 reset()
                                 setLoading(true)
-
                                 setTimeout(() => {
                                     ipcRenderer.invoke("StartBrute", info, taskToken)
                                 }, 300)

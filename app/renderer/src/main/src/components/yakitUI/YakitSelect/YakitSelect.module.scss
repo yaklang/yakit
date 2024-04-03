@@ -102,13 +102,15 @@
             background-color: transparent;
         }
 
-        .ant-select-item {
+        .ant-select-item:not(.ant-select-item-group) {
             border-radius: 4px;
-            padding: 4px 8px;
 
             &:hover {
                 background-color: var(--yakit-background-color);
             }
+        }
+        .ant-select-item:not(.ant-select-item-option-grouped) {
+            padding: 4px 8px;
         }
 
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {

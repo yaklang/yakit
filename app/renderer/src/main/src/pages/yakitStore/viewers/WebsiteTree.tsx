@@ -13,6 +13,8 @@ import {useGetState, useMemoizedFn} from "ahooks"
 import {ExportExcel} from "../../../components/DataExport/DataExport"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import "./WebsiteTreeStyle.css"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
 
 export interface WebsiteTreeViewerProp {
     pageMode?: boolean
@@ -117,9 +119,9 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
             warn("请选择")
             return
         }
-        let obj:any = {URLPrefixBatch: delUrlArr}
-        if(checkedAll){
-            obj = {DeleteAll:true}
+        let obj: any = {URLPrefixBatch: delUrlArr}
+        if (checkedAll) {
+            obj = {DeleteAll: true}
         }
         ipcRenderer.invoke("DeleteHTTPFlows", obj).then((res) => {
             setDelUrlArr([])
@@ -210,7 +212,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             title={
                                 <>
                                     <Space direction='vertical' style={{width: "100%"}}>
-                                        <div style={{display:"flex",justifyContent:"space-between"}}>
+                                        <div style={{display: "flex", justifyContent: "space-between"}}>
                                             <Space>
                                                 业务结构
                                                 <Button
@@ -349,7 +351,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                     onCheck={(checkedKeys, info) => {
                                         // @ts-ignore
                                         setSelectedKeys(checkedKeys)
-                                        
+
                                         const {children, key, parent, title, urls} = info.node
                                         let node = {
                                             children,
@@ -358,9 +360,9 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             title,
                                             urls
                                         }
-                                        
+
                                         const delUrlStr = fetchDelUrl(node, "")
-                                        
+
                                         const pathStr: string = title
                                         if (info.checked) {
                                             if (Array.isArray(checkedKeys) && checkedKeys.length === treeData.length) {
@@ -426,7 +428,6 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                             data,
                                             onClick: ({key}) => {
                                                 if (key === "del-item") {
-                                                    
                                                     delReord(node)
                                                     return
                                                 }
@@ -447,12 +448,44 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                             failed("该节点下的URL数量超过100个，请缩小范围后再重新操作")
                                                             return
                                                         }
-                                                        ipcRenderer.invoke("send-to-tab", {
-                                                            type: key,
-                                                            data: {
-                                                                URL: JSON.stringify(data.Data.map((item) => item.Url))
-                                                            }
-                                                        })
+                                                        const urls = data.Data.map((item) => item.Url)
+                                                        switch (key) {
+                                                            case "brute":
+                                                                emiter.emit(
+                                                                    "openPage",
+                                                                    JSON.stringify({
+                                                                        route: YakitRoute.Mod_Brute,
+                                                                        params: {
+                                                                            targets: urls.join(",")
+                                                                        }
+                                                                    })
+                                                                )
+                                                                break
+                                                            case "scan-port":
+                                                                emiter.emit(
+                                                                    "openPage",
+                                                                    JSON.stringify({
+                                                                        route: YakitRoute.Mod_ScanPort,
+                                                                        params: {
+                                                                            targets: urls.join(",")
+                                                                        }
+                                                                    })
+                                                                )
+                                                                break
+                                                            case "bug-test":
+                                                                emiter.emit(
+                                                                    "openPage",
+                                                                    JSON.stringify({
+                                                                        route: YakitRoute.PoC,
+                                                                        params: {
+                                                                            URL: JSON.stringify(urls)
+                                                                        }
+                                                                    })
+                                                                )
+                                                                break
+                                                            default:
+                                                                break
+                                                        }
                                                     })
                                             }
                                         })

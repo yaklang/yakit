@@ -402,14 +402,6 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             </div>
                             <div className={styles["title-style"]}>域名</div>
                         </div>
-                        <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.WebsiteTree)}>
-                            <div className={styles["menu-icon-wrapper"]}>
-                                <div className={styles["icon-wrapper"]}>
-                                    <PublicWebsiteTreeIcon />
-                                </div>
-                            </div>
-                            <div className={styles["title-style"]}>网站树</div>
-                        </div>
                     </div>
                     <div className={styles["divider-style"]}></div>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_CVE)}>

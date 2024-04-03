@@ -1153,7 +1153,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
     const StopAllPlugin = () => {
         onClose && onClose()
         setAddLoading(false)
-        ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
+        ipcRenderer.invoke("cancel-DownloadOnlinePlugins", taskToken).catch((e) => {
             failed(`停止添加失败:${e}`)
         })
     }

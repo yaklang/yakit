@@ -99,14 +99,14 @@
         }
 
         // ========================== check ==========================
-        .ant-checkbox-checked:hover {
+        .ant-checkbox-checked:hover:not(.ant-checkbox-disabled) {
             .ant-checkbox-inner {
                 background-color: var(--checkbox-hover-color);
                 border-color: var(--checkbox-hover-color);
             }
         }
 
-        .ant-checkbox-checked:active {
+        .ant-checkbox-checked:active:not(.ant-checkbox-disabled) {
             .ant-checkbox-inner {
                 background-color: var(--checkbox-background-color);
                 border: 1px solid var(--checkbox-border-primary-color);
