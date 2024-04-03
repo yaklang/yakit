@@ -25,11 +25,19 @@ const {
 } = require("../filePath")
 const {caBundle} = require("./missedCABundle");
 const axios = require("axios");
-const {requestWithProgress, getHttpsAgentByDomain} = require("./requestWithProgress");
+const {requestWithProgress} = require("./utils/requestWithProgress");
+const {
+    fetchLatestYakitVersion,
+    downloadYakitEE,
+    downloadYakitCommunity,
+    getYakitEEDownloadUrl,
+    getYakitCommunityDownloadUrl,
+    downloadYakEngine
+} = require("./utils/network");
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
 const authMeta = [];
-const ossDomains = ["aliyun-oss.yaklang.com", "yaklang.oss-cn-beijing.aliyuncs.com", "yaklang.oss-accelerate.aliyuncs.com",];
+
 
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
@@ -165,7 +173,6 @@ const getYakitDownloadUrl = (version, isEnterprise = false) => {
                 return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
         }
     }
-
 }
 
 // 获取Yakit所处平台
@@ -252,13 +259,11 @@ module.exports = {
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncQueryLatestYakitEngineVersion = (params) => {
             return new Promise((resolve, reject) => {
-                let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yakit-version.txt")
-                rsp.on("response", rsp => {
-                    rsp.on("data", data => {
-                        resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
-                    }).on("error", err => reject(err))
+                fetchLatestYakitVersion().then(version => {
+                    resolve(version)
+                }).catch(e => {
+                    reject(e)
                 })
-                rsp.on("error", reject)
             })
         }
         ipcMain.handle("query-latest-yakit-version", async (e, params) => {
@@ -382,148 +387,57 @@ module.exports = {
 
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 const dest = path.join(yaklangEngineDir, `yak-${version}`);
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
 
                 }
-
-                const downloadUrl = getYakDownloadUrl();
-                // https://github.com/IndigoUnited/node-request-progress
-                // The options argument is optional so you can omit it
-                requestProgress(request(downloadUrl), {
-                    // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
-                    // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
-                    // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
-                })
-                    .on('progress', function (state) {
-                        win.webContents.send("download-yak-engine-progress", state)
-                    })
-                    .on('error', function (err) {
-                        reject(err)
-                    })
-                    .on('end', function () {
-                        resolve()
-                    }).pipe(fs.createWriteStream(dest));
+                await downloadYakEngine(version, dest, state => {
+                    win.webContents.send("download-yak-engine-progress", state)
+                }, resolve, reject)
             })
         }
         ipcMain.handle("download-latest-yak", async (e, version) => {
             return await asyncDownloadLatestYak(version)
         })
 
-        // 正则匹配url 将url中的中文项进行编码
-        function encodeChineseCharacters(str) {
-            const pattern = /[\u4e00-\u9fa5]/g; // 匹配中文字符的正则表达式
-            const matches = str.match(pattern); // 找到所有中文字符的匹配项
-            if (matches) {
-                for (const match of matches) {
-                    const encodedMatch = encodeURIComponent(match);
-                    str = str.replace(match, encodedMatch);
-                }
-            }
-            return str;
-        }
-
-        const downloadYakitByDownloadUrl = (resolve, reject, downloadUrl) => {
-            // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
-            if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
-            const dest = path.join(yakitInstallDir, path.basename(downloadUrl));
-            try {
-                fs.unlinkSync(dest)
-            } catch (e) {
-
-            }
-
-            requestWithProgress(downloadUrl, dest, {
-                httpsAgent: getHttpsAgentByDomain(urlUtils.parse(downloadUrl).host)
-            }, state => {
-                if (!!state) {
-                    win.webContents.send("download-yakit-engine-progress", state)
-                }
-            }, () => {
-                console.info("downloaded finished ", downloadUrl)
-                resolve()
-            }, err => {
-                reject(err)
-            })
-
-            // https://github.com/IndigoUnited/node-request-progress
-            // The options argument is optional so you can omit it
-            // requestProgress(request(encodeChineseCharacters(downloadUrl), {
-            //     httpsAgent: getHttpsAgentByDomain(urlUtils.parse(downloadUrl).host)
-            // }), {
-            //     // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
-            //     // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
-            //     // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
-            // })
-            //     .on("response", function (resp) {
-            //         if (resp.statusCode === 404) {
-            //             reject("暂无最新安装包")
-            //         }
-            //     })
-            //     .on("progress", function (state) {
-            //         win.webContents.send("download-yakit-engine-progress", state)
-            //     })
-            //     .on("error", function (err) {
-            //         reject(err)
-            //     })
-            //     .on("end", function () {
-            //         resolve()
-            //     })
-            //     .pipe(fs.createWriteStream(dest))
-        }
-
-
-        const checkUrlDomain200 = (domain, parsedUrl) => {
-            return new Promise((resolve, reject) => {
-                parsedUrl.host = domain
-                const fixedUrl = urlUtils.format(parsedUrl)
-                console.info("start to fetch (" + domain + ") HEAD: " + fixedUrl)
-                axios.head(fixedUrl, {
-                    httpsAgent: getHttpsAgentByDomain(domain)
-                }).then(resp => {
-                    if (resp.status === 200) {
-                        console.info("Fetch Yakit Download Url (fixed [HEAD] 200): " + fixedUrl)
-                        resolve(fixedUrl)
-                    } else {
-                        reject("[HEAD] 200 not found for " + fixedUrl)
-                    }
-                }).catch(err => {
-                    console.info(err)
-                    reject(err)
-                })
-            })
-        }
-
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, isEnterprise) {
             return new Promise(async (resolve, reject) => {
+                // format version
                 if (version.startsWith("v")) {
                     version = version.substr(1)
                 }
-                const downloadUrl = getYakitDownloadUrl(version, isEnterprise);
+
+                console.info("start to fetching download-url for yakit")
+
+                const downloadUrl = isEnterprise ? await getYakitEEDownloadUrl(version) : await getYakitCommunityDownloadUrl(version)
+                // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
+                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
+                const dest = path.join(yakitInstallDir, path.basename(downloadUrl));
                 try {
-                    const parsedUrl = urlUtils.parse(downloadUrl);
-                    let selectedUrl = null;
-                    for (const domain of ossDomains) {
-                        selectedUrl = await checkUrlDomain200(domain, parsedUrl)
-                        if (selectedUrl === null) {
-                            continue;
-                        }
-                        break
-                    }
-                    if (!selectedUrl) {
-                        console.info("Fetch Yakit Download Url: " + downloadUrl)
-                        downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
-                    } else {
-                        console.info("Fetch Yakit Download Url (fixed): " + selectedUrl)
-                        downloadYakitByDownloadUrl(resolve, reject, selectedUrl)
-                    }
+                    fs.unlinkSync(dest)
                 } catch (e) {
-                    console.info(`Fetch Yakit Download Url(Use Default): WARNING: ${e}`)
-                    downloadYakitByDownloadUrl(resolve, reject, downloadUrl)
+
+                }
+
+                console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
+
+
+                if (isEnterprise) {
+                    await downloadYakitEE(version, dest, state => {
+                        if (!!state) {
+                            win.webContents.send("download-yakit-engine-progress", state)
+                        }
+                    }, resolve, reject)
+                } else {
+                    await downloadYakitCommunity(version, dest, state => {
+                        if (!!state) {
+                            win.webContents.send("download-yakit-engine-progress", state)
+                        }
+                    }, resolve, reject)
                 }
             })
         }

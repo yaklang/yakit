@@ -3,7 +3,7 @@ const fs = require('fs');
 const {throttle} = require('throttle-debounce');
 const urlUtils = require('url');
 const https = require("https");
-const {caBundle} = require("./missedCABundle");
+const {caBundle} = require("../missedCABundle");
 
 // 函数用于编码URL中的中文字符
 function encodeChineseCharacters(url) {
@@ -11,22 +11,13 @@ function encodeChineseCharacters(url) {
     return encodeURI(url);
 }
 
-// 根据域名获取HTTPS代理配置
-const getHttpsAgentByDomain = (domain) => {
-    if (domain.endsWith('.yaklang.com')) {
-        return new https.Agent({ca: caBundle, rejectUnauthorized: true})
-    }
-    return undefined
-}
 
 function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undefined, onFinished = undefined, onError = undefined) {
     // 解析下载URL
     const parsedUrl = urlUtils.parse(downloadUrl);
-    const agent = getHttpsAgentByDomain(parsedUrl.host);
-
     // 设置axios请求配置
     const config = {
-        responseType: 'stream', httpsAgent: agent, // 其他axios配置...
+        ...options, responseType: 'stream'
     };
 
 
@@ -98,5 +89,5 @@ function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undef
 }
 
 module.exports = {
-    requestWithProgress, getHttpsAgentByDomain,
+    requestWithProgress,
 }
