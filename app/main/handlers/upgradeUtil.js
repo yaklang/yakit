@@ -5,14 +5,9 @@ const path = require("path");
 const os = require("os");
 const fs = require("fs");
 const https = require("https");
-const requestProgress = require("request-progress");
-const request = require("request");
 const EventEmitter = require('events');
-const urlUtils = require('url');
-const {Transform} = require('stream');
-const {throttle} = require('throttle-debounce');
-
 const zip = require('node-stream-zip');
+
 const {
     YakitProjectPath,
     remoteLinkDir,
@@ -23,9 +18,6 @@ const {
     loadExtraFilePath,
     yakitInstallDir
 } = require("../filePath")
-const {caBundle} = require("./missedCABundle");
-const axios = require("axios");
-const {requestWithProgress} = require("./utils/requestWithProgress");
 const {
     fetchLatestYakitVersion,
     downloadYakitEE,
@@ -124,17 +116,6 @@ const saveAllSecret = (authInfos) => {
     fs.writeFileSync(remoteLinkFile, new Buffer(authFileStr, "utf8"))
 };
 
-const getYakDownloadUrl = () => {
-    switch (process.platform) {
-        case "darwin":
-            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_darwin_amd64"
-        case "win32":
-            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_windows_amd64.exe"
-        case "linux":
-            return "https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yak_linux_amd64"
-    }
-}
-
 const getLatestYakLocalEngine = () => {
     switch (process.platform) {
         case "darwin":
@@ -142,36 +123,6 @@ const getLatestYakLocalEngine = () => {
             return path.join(yaklangEngineDir, "yak")
         case "win32":
             return path.join(yaklangEngineDir, "yak.exe")
-    }
-}
-
-const getYakitDownloadUrl = (version, isEnterprise = false) => {
-    if (isEnterprise) {
-        switch (process.platform) {
-            case "darwin":
-                if (process.arch === "arm64") {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-darwin-arm64.dmg`
-                } else {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-darwin-x64.dmg`
-                }
-            case "win32":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-windows-amd64.exe`
-            case "linux":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-EE-${version}-linux-amd64.AppImage`
-        }
-    } else {
-        switch (process.platform) {
-            case "darwin":
-                if (process.arch === "arm64") {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-arm64.dmg`
-                } else {
-                    return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-darwin-x64.dmg`
-                }
-            case "win32":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-windows-amd64.exe`
-            case "linux":
-                return `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
-        }
     }
 }
 

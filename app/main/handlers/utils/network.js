@@ -4,13 +4,14 @@ const axios = require("axios");
 const url = require("url");
 const process = require("process");
 const {requestWithProgress} = require("./requestWithProgress");
+const events = require("events");
 
 const ossDomains = ["aliyun-oss.yaklang.com", "yaklang.oss-cn-beijing.aliyuncs.com", "yaklang.oss-accelerate.aliyuncs.com"];
 
 const getHttpsAgentByDomain = (domain) => {
     if (domain.endsWith('.yaklang.com')) {
         console.info(`use ssl ca-bundle for ${domain}`);
-        return new https.Agent({ca: caBundle, rejectUnauthorized: false}) // unsafe...
+        return new https.Agent({ca: caBundle, rejectUnauthorized: true}) // unsafe...
     }
     console.info(`skip ssl ca-bundle for ${domain}`);
     return undefined
@@ -18,10 +19,13 @@ const getHttpsAgentByDomain = (domain) => {
 
 const config = {
     initializedOSSDomain: false, currentOSSDomain: "",
+    fetchingOSSDomain: false,
+    fetchOSSDomainEventEmitter: new events.EventEmitter()
 };
 
 
 async function getAvailableOSSDomain() {
+    console.info("start to fetch oss domain for download extra resources")
     try {
         if (config.initializedOSSDomain) {
             if (!config.currentOSSDomain) {
@@ -31,25 +35,48 @@ async function getAvailableOSSDomain() {
             }
         }
 
-        for (const domain of ossDomains) {
-            const url = `https://${domain}/yak/latest/version.txt`;
-            try {
-                const response = await axios.get(url, {httpsAgent: getHttpsAgentByDomain(domain)});
-                if (response.status !== 200) {
-                    console.error(`Failed to access (StatusCode) ${url}: ${response.status}`);
-                    continue
+        if (config.fetchingOSSDomain) {
+            return new Promise((resolve, reject) => {
+                config.fetchOSSDomainEventEmitter.once("done", () => {
+                    console.info("fetch oss domain done, resolve the promise.")
+                    if (!config.currentOSSDomain) {
+                        resolve("yaklang.oss-accelerate.aliyuncs.com")
+                    } else {
+                        resolve(config.currentOSSDomain)
+                    }
+                })
+            })
+        }
+
+        config.fetchingOSSDomain = true;
+
+        try {
+            for (const domain of ossDomains) {
+                const url = `https://${domain}/yak/latest/version.txt`;
+                try {
+                    console.info(`start to do axios.get to ${url}`)
+                    const response = await axios.get(url, {httpsAgent: getHttpsAgentByDomain(domain)});
+                    if (response.status !== 200) {
+                        console.error(`Failed to access (StatusCode) ${url}: ${response.status}`);
+                        continue
+                    }
+                    config.currentOSSDomain = domain;
+                    config.initializedOSSDomain = true
+                    break
+                } catch (e) {
+                    console.error(`Failed to access ${url}: ${e.message}`)
                 }
-                config.currentOSSDomain = domain;
-                config.initializedOSSDomain = true
-                break
-            } catch (e) {
-                console.error(`Failed to access ${url}: ${e.message}`)
             }
-        }
-        if (!config.currentOSSDomain) {
+            if (!config.currentOSSDomain) {
+                return "yaklang.oss-accelerate.aliyuncs.com"
+            }
+            return config.currentOSSDomain
+        } catch (e) {
             return "yaklang.oss-accelerate.aliyuncs.com"
+        } finally {
+            config.fetchingOSSDomain = false;
+            config.fetchOSSDomainEventEmitter.emit("done")
         }
-        return config.currentOSSDomain
     } catch (e) {
         return "yaklang.oss-accelerate.aliyuncs.com"
     }

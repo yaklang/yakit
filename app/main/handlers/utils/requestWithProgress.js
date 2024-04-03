@@ -13,8 +13,6 @@ function encodeChineseCharacters(url) {
 
 
 function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undefined, onFinished = undefined, onError = undefined) {
-    // 解析下载URL
-    const parsedUrl = urlUtils.parse(downloadUrl);
     // 设置axios请求配置
     const config = {
         ...options, responseType: 'stream'
