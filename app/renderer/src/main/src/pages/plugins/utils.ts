@@ -518,7 +518,7 @@ export const apiDownloadPluginOther: (query?: DownloadOnlinePluginsRequest) => P
         apiDownloadPluginBase(newQuery)
             .then(resolve)
             .catch((err) => {
-                yakitNotify("error", "下载插件失败:" + err)
+                yakitNotify("error", "插件导入失败:" + err)
                 reject(err)
             })
     })

@@ -990,14 +990,10 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         if (loadMode === "uploadId") {
             apiDownloadPluginOther({
                 UUID: [formValue.localId]
+            }).then(() => {
+                setVisible(false)
+                success("插件导入成功")
             })
-                .then(() => {
-                    setVisible(false)
-                    success("插件导入成功")
-                })
-                .catch((e: any) => {
-                    failed(`插件导入失败: ${e}`)
-                })
         }
     })
 
