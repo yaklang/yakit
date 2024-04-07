@@ -1,137 +1,23 @@
-import React, {useEffect, useRef, useState} from "react"
-import {QueryYakScriptRequest, YakScript} from "../pages/invoker/schema"
-import {PluginList} from "./PluginList"
+import React, {useRef, useState} from "react"
+import {YakScript} from "../pages/invoker/schema"
 import "./PluginList.css"
-import {useDebounce, useDebounceEffect, useGetState, useMemoizedFn, useVirtualList} from "ahooks"
-import {queryYakScriptList} from "../pages/yakitStore/network"
+import {useGetState, useVirtualList} from "ahooks"
 import {AutoCard} from "./AutoCard"
-import {Space, Tag, Tooltip} from "antd"
+import {Space, Tag} from "antd"
 import ReactResizeDetector from "react-resize-detector"
 import {OneLine} from "../utils/inputUtil"
 import {showModal} from "../utils/showModal"
 import {CodeOutlined, QuestionCircleOutlined, UserOutlined} from "@ant-design/icons"
 import {YakEditor} from "../utils/editors"
 
-export interface SimplePluginListProp {
-    readOnly?: boolean
-    initialQuery?: QueryYakScriptRequest
-    autoSelectAll?: boolean
-    pluginTypes?: string
-    initialSelected?: string[]
-    onSelected?: (names: string[]) => any
-    verbose?: string | any
-    bordered?: boolean
-    disabled?: boolean
-    sourceType?: string
-    singleSelectMode?: boolean
-    onPluginClick?: (script: YakScript) => any
-}
-
-export const SimplePluginList: React.FC<SimplePluginListProp> = React.memo((props: SimplePluginListProp) => {
-    const [scripts, setScripts, getScripts] = useGetState<YakScript[]>([])
-    const [total, setTotal] = useState(0)
-    const [listNames, setListNames] = useState<string[]>([...(props.initialSelected || [])])
-    // const [params, setParams] = useState<{ ScriptNames: string[] }>({ScriptNames: [...props.initialSelected || []]})
-    const [pluginLoading, setPluginLoading] = useState<boolean>(false)
-
-    const allSelectYakScript = useMemoizedFn((flag: boolean) => {
-        if (flag) {
-            const newSelected = [...scripts.map((i) => i.ScriptName), ...listNames]
-            setListNames([...newSelected.filter((e, index) => newSelected.indexOf(e) === index)])
-        } else {
-            setListNames([])
-        }
-    })
-    const manySelectYakScript = useMemoizedFn((value:string[])=>{
-        setListNames([...value])
-    })
-    const selectYakScript = useMemoizedFn((y: YakScript) => {
-        listNames.push(y.ScriptName)
-        setListNames([...listNames])
-    })
-    const unselectYakScript = useMemoizedFn((y: YakScript) => {
-        const names = listNames.splice(listNames.indexOf(y.ScriptName), 1)
-        setListNames([...listNames])
-    })
-
-    useEffect(() => {
-        if (props.onSelected) {
-            props.onSelected([...listNames])
-        }
-    }, [listNames])
-
-    const search = useMemoizedFn((searchParams?: {limit?: number; keyword?: string},tag?:string[]) => {
-        const {limit, keyword} = searchParams || {}
-        console.info("插件菜单栏搜索", keyword, limit)
-        setPluginLoading(true)
-        queryYakScriptList(
-            props.pluginTypes ? props.pluginTypes : "",
-            (data, total) => {
-                setTotal(total || 0)
-                setScripts(data)
-                if (props.autoSelectAll) {
-                    setListNames(data.map((i) => i.ScriptName))
-                } else {
-                    // setListNames([...(data || []).filter((i) => i.IsGeneralModule).map((i) => i.ScriptName)])
-                    setListNames([])
-                }
-            },
-            () => setTimeout(() => setPluginLoading(false), 300),
-            limit || 200,
-            undefined,
-            keyword,
-            props.initialQuery,
-            undefined,
-            tag
-        )
-    })
-
-    useDebounceEffect(
-        () => {
-            search(
-                {
-                    limit: props.initialQuery?.Pagination ? props.initialQuery.Pagination.Limit : 300,
-                    keyword: props.initialQuery?.Keyword
-                }
-            )
-        },
-        [props.initialQuery],
-        {wait: 500}
-    )
-
-    return (
-        <PluginList
-            singleSelectMode={props.singleSelectMode}
-            readOnly={props.readOnly}
-            bordered={props.bordered}
-            loading={pluginLoading}
-            lists={(scripts || []).sort((a: YakScript, b: YakScript) => {
-                return (b.IsGeneralModule ? 1 : 0) - (a.IsGeneralModule ? 1 : 0)
-            })}
-            disabled={props.disabled}
-            getLists={getScripts}
-            total={total}
-            selected={listNames}
-            allSelectScript={allSelectYakScript}
-            manySelectScript={manySelectYakScript}
-            selectScript={selectYakScript}
-            onClickScript={props.onPluginClick}
-            unSelectScript={unselectYakScript}
-            search={search}
-            title={props?.verbose || "插件"}
-            bodyStyle={{
-                padding: "0 4px",
-                overflow: "hidden"
-            }}
-            sourceType={props.sourceType}
-        />
-    )
-})
-
 export interface SimplePluginListFromYakScriptNamesProp {
     names: string[]
 }
 
+/**
+ * @deprecated 暂时不删，批量执行任务列表功能做参考
+ * @description ReadOnlyBatchExecutorByRecoverUid再用，等ReadOnlyBatchExecutorByRecoverUid删除后同步删除
+ */
 export const SimplePluginListFromYakScriptNames: React.FC<SimplePluginListFromYakScriptNamesProp> = React.memo(
     (props: SimplePluginListFromYakScriptNamesProp) => {
         const [_list, setLists, getLists] = useGetState(props.names)

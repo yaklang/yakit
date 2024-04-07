@@ -1,9 +1,7 @@
 import React, {ReactNode, Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
-import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
-import {BrutePage} from "../pages/brute/BrutePage"
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory"
 import {PortAssetTable} from "../pages/assetViewer/PortAssetPage"
@@ -15,7 +13,6 @@ import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
 import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 import {ReadOnlyBatchExecutorByRecoverUid} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
-import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
@@ -58,7 +55,6 @@ import {
     PrivateOutlineSubDomainCollectionIcon,
     PrivateOutlineTCPPortLogIcon,
     PrivateOutlineWebFuzzerIcon,
-    PrivateOutlineWebsiteTreeIcon,
     PrivateOutlineWebsocketFuzzerIcon,
     PrivateSolidBasicCrawlerIcon,
     PrivateSolidBatchPluginIcon,
@@ -88,7 +84,6 @@ import {
     PrivateSolidSubDomainCollectionIcon,
     PrivateSolidTCPPortLogIcon,
     PrivateSolidWebFuzzerIcon,
-    PrivateSolidWebsiteTreeIcon,
     PrivateSolidWebsocketFuzzerIcon
 } from "./privateIcon"
 import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
@@ -596,15 +591,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 <ReadOnlyBatchExecutorByRecoverUid
                     Uid={params?.recoverUid}
                     BaseProgress={params?.recoverBaseProgress}
-                />
-            )
-        case YakitRoute.PacketScanPage:
-            return (
-                <PacketScanner
-                    HttpFlowIds={params?.packetScan_FlowIds}
-                    Https={params?.packetScan_Https}
-                    HttpRequest={params?.packetScan_HttpRequest}
-                    Keyword={params?.packetScan_Keyword}
                 />
             )
         case YakitRoute.AddYakitScript:

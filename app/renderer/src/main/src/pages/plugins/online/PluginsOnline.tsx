@@ -26,16 +26,12 @@ import {
     useMemoizedFn,
     useDebounceFn,
     useControllableValue,
-    useLockFn,
     useUpdateEffect,
     useInViewport,
-    useLatest,
-    useDebounceEffect
-} from "ahooks"
+    useLatest} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
-import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
     DownloadArgumentProps,
     NavigationBars,
