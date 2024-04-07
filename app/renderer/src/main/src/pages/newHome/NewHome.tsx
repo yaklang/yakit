@@ -110,7 +110,7 @@ const RouteItem: React.FC<RouteItemProps> = (props) => {
 
     const addMenuLab = (name: string) => {
         ipcRenderer
-            .invoke("DownloadOnlinePluginByScriptNames", {
+            .invoke("DownloadOnlinePluginByPluginName", {
                 ScriptNames: [name],
                 Token: userInfo.token
             })
