@@ -17,7 +17,7 @@ import {
 import {getRemoteValue} from "@/utils/kv"
 
 import "./reverseServerPage.scss"
-import {NetInterface} from "@/models/Traffic";
+import {NetInterface} from "@/models/Traffic"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -458,7 +458,9 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                         HTTP反连地址&nbsp;&nbsp;
                                         <CopyableField
                                             width={"80%"}
-                                            text={`http://${reverseAddr}/${classRequest?.className ? classRequest?.className + '.class' : ""}`}
+                                            text={`http://${reverseAddr}/${
+                                                classRequest?.className ? classRequest?.className + ".class" : ""
+                                            }`}
                                             style={{color: "blue"}}
                                         />
                                     </div>
