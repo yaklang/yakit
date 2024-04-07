@@ -2,6 +2,7 @@ const {ipcMain, app} = require("electron")
 const fs = require("fs")
 const https = require("https")
 const {getLocalYaklangEngine} = require("../filePath")
+const {fetchLatestYakEngineVersion} = require("../handlers/utils/network");
 
 module.exports = (win, getClient) => {
     /** yaklang引擎是否安装 */
@@ -13,15 +14,11 @@ module.exports = (win, getClient) => {
     /** 获取Yaklang引擎最新版本号 */
     const asyncFetchLatestYaklangVersion = () => {
         return new Promise((resolve, reject) => {
-            let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/version.txt")
-            rsp.on("response", (rsp) => {
-                rsp.on("data", (data) => {
-                    resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
-                }).on("error", (err) => {
-                    reject(err)
-                })
+            fetchLatestYakEngineVersion().then(version => {
+                resolve(`${version}`.trim())
+            }).catch(err => {
+                reject(err)
             })
-            rsp.on("error", reject)
         })
     }
     /** 获取Yaklang引擎最新版本号 */
@@ -65,6 +62,6 @@ module.exports = (win, getClient) => {
     })
     /** 连接引擎的指令 */
     ipcMain.handle("engine-ready-link", (e, isDynamicControl) => {
-        win.webContents.send("engine-ready-link-callback",isDynamicControl)
+        win.webContents.send("engine-ready-link-callback", isDynamicControl)
     })
 }

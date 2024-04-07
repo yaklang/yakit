@@ -273,7 +273,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 .then((data: string) => {
                     if (!val) setLatestYaklang(data)
                 })
-                .catch((err) => {})
+                .catch((err) => {
+                })
         })
     })
 
@@ -325,88 +326,88 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      *    1) 如果有使用，引擎未安装，则只限远程状态可以连接进入界面
      *    2) 如果有使用，引擎已安装，则正常连接上次使用状态的引擎
      */
-    // useEffect(() => {
-    //     outputToWelcomeConsole("识别引擎是否已安装...")
-    //     updateCheckLog("识别引擎是否已安装...")
-    //     ipcRenderer
-    //         .invoke("is-yaklang-engine-installed")
-    //         .then((flag: boolean) => {
-    //             if (flag) {
-    //                 outputToWelcomeConsole("引擎已安装")
-    //                 updateCheckLog("引擎已安装")
-    //             } else {
-    //                 outputToWelcomeConsole("引擎未安装")
-    //                 updateCheckLog("引擎未安装")
-    //             }
-    //             isEngineInstalled.current = flag
-    //         })
-    //         .finally(() => {
-    //             if (!isEngineInstalled.current) {
-    //                 setEngineMode(undefined)
-    //                 outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
-    //                 updateCheckLog("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
-    //                 getCacheEngineMode()
-    //                 setTimeout(() => {
-    //                     setYakitStatus("install")
-    //                     cacheYakitStatus.current = "install"
-    //                     setLoading(false)
-    //                 }, 300)
-    //                 return
-    //             } else {
-    //                 outputToWelcomeConsole("已安装引擎，开始检查数据库权限是否正常")
-    //                 updateCheckLog("已安装引擎，开始检查数据库权限是否正常")
-    //                 /** 引擎已安装的情况下，优先检查数据库权限 */
-    //                 ipcRenderer
-    //                     .invoke("check-local-database")
-    //                     .then((e) => {
-    //                         if (e === "not allow to write") outputToWelcomeConsole("数据库权限错误，开始进行调整操作")
-    //                         databaseError.current = e === "not allow to write"
-    //                     })
-    //                     .finally(() => {
-    //                         // 这里只有两种状态，数据库(有|无)权限情况
-    //                         if (databaseError.current && getSystem() !== "Windows_NT") {
-    //                             setYakitStatus("database")
-    //                             cacheYakitStatus.current = "database"
-    //                         } else getCacheEngineMode()
-    //                         setLoading(false)
-    //                     })
-    //             }
-    //         })
+        // useEffect(() => {
+        //     outputToWelcomeConsole("识别引擎是否已安装...")
+        //     updateCheckLog("识别引擎是否已安装...")
+        //     ipcRenderer
+        //         .invoke("is-yaklang-engine-installed")
+        //         .then((flag: boolean) => {
+        //             if (flag) {
+        //                 outputToWelcomeConsole("引擎已安装")
+        //                 updateCheckLog("引擎已安装")
+        //             } else {
+        //                 outputToWelcomeConsole("引擎未安装")
+        //                 updateCheckLog("引擎未安装")
+        //             }
+        //             isEngineInstalled.current = flag
+        //         })
+        //         .finally(() => {
+        //             if (!isEngineInstalled.current) {
+        //                 setEngineMode(undefined)
+        //                 outputToWelcomeConsole("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
+        //                 updateCheckLog("由于引擎未安装，仅开启远程模式或用户需安装核心引擎")
+        //                 getCacheEngineMode()
+        //                 setTimeout(() => {
+        //                     setYakitStatus("install")
+        //                     cacheYakitStatus.current = "install"
+        //                     setLoading(false)
+        //                 }, 300)
+        //                 return
+        //             } else {
+        //                 outputToWelcomeConsole("已安装引擎，开始检查数据库权限是否正常")
+        //                 updateCheckLog("已安装引擎，开始检查数据库权限是否正常")
+        //                 /** 引擎已安装的情况下，优先检查数据库权限 */
+        //                 ipcRenderer
+        //                     .invoke("check-local-database")
+        //                     .then((e) => {
+        //                         if (e === "not allow to write") outputToWelcomeConsole("数据库权限错误，开始进行调整操作")
+        //                         databaseError.current = e === "not allow to write"
+        //                     })
+        //                     .finally(() => {
+        //                         // 这里只有两种状态，数据库(有|无)权限情况
+        //                         if (databaseError.current && getSystem() !== "Windows_NT") {
+        //                             setYakitStatus("database")
+        //                             cacheYakitStatus.current = "database"
+        //                         } else getCacheEngineMode()
+        //                         setLoading(false)
+        //                     })
+        //             }
+        //         })
 
-    //     getLocalValue(LocalGV.YaklangEnginePort)
-    //         .then((portRaw) => {
-    //             const port = parseInt(portRaw)
-    //             if (!port) {
-    //                 getRandomLocalEnginePort((p) => setLocalPort(p))
-    //             } else {
-    //                 setLocalPort(port)
-    //             }
-    //         })
-    //         .catch(() => {
-    //             getRandomLocalEnginePort((p) => setLocalPort(p))
-    //         })
-    // }, [])
+        //     getLocalValue(LocalGV.YaklangEnginePort)
+        //         .then((portRaw) => {
+        //             const port = parseInt(portRaw)
+        //             if (!port) {
+        //                 getRandomLocalEnginePort((p) => setLocalPort(p))
+        //             } else {
+        //                 setLocalPort(port)
+        //             }
+        //         })
+        //         .catch(() => {
+        //             getRandomLocalEnginePort((p) => setLocalPort(p))
+        //         })
+        // }, [])
 
     const getCacheEngineMode = useMemoizedFn((isSet?: boolean) => {
-        if (!isSet) setEngineMode(undefined)
-        getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
-            if (val) info(`加载上次引擎模式：${val}`)
-            switch (val) {
-                case "remote":
-                    setEngineMode("remote")
-                    cacheEngineMode.current = "remote"
-                    return
-                case "local":
-                    setEngineMode("local")
-                    cacheEngineMode.current = "local"
-                    return
-                default:
-                    setEngineMode("local")
-                    cacheEngineMode.current = "local"
-                    return
-            }
+            if (!isSet) setEngineMode(undefined)
+            getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
+                if (val) info(`加载上次引擎模式：${val}`)
+                switch (val) {
+                    case "remote":
+                        setEngineMode("remote")
+                        cacheEngineMode.current = "remote"
+                        return
+                    case "local":
+                        setEngineMode("local")
+                        cacheEngineMode.current = "local"
+                        return
+                    default:
+                        setEngineMode("local")
+                        cacheEngineMode.current = "local"
+                        return
+                }
+            })
         })
-    })
 
     const [currentYakit, setCurrentYakit] = useState<string>("")
     const [latestYakit, setLatestYakit] = useState<string>("")
@@ -953,7 +954,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** MACOS 上双击放大窗口(不是最大化) */
     const maxScreen = () => {
-        ipcRenderer.invoke("UIOperate", "max").then(() => {})
+        ipcRenderer.invoke("UIOperate", "max").then(() => {
+        })
     }
 
     const [linkDatabase, setLinkDatabase] = useState<boolean>(false)
@@ -964,29 +966,29 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : (async () => {
-                      try {
-                          const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
-                          if (flag) {
-                              setTemporaryProjectNoPromptFlag(flag === "true")
-                          }
-                          // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
-                          if (isDev.current) {
-                              const res = await ipcRenderer.invoke("GetDefaultProject")
-                              if (res) {
-                                  ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id})
-                                  setLinkDatabase(false)
-                                  setYakitMode("")
-                                  setProjectName(res.ProjectName)
-                              }
-                          } else {
-                              setLinkDatabase(true)
-                              setYakitMode("soft")
-                          }
-                      } catch (error) {
-                          yakitFailed(error + "")
-                      }
-                      setTimeout(() => setEngineLink(true), 100)
-                  })()
+                    try {
+                        const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
+                        if (flag) {
+                            setTemporaryProjectNoPromptFlag(flag === "true")
+                        }
+                        // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
+                        if (isDev.current) {
+                            const res = await ipcRenderer.invoke("GetDefaultProject")
+                            if (res) {
+                                ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id})
+                                setLinkDatabase(false)
+                                setYakitMode("")
+                                setProjectName(res.ProjectName)
+                            }
+                        } else {
+                            setLinkDatabase(true)
+                            setYakitMode("soft")
+                        }
+                    } catch (error) {
+                        yakitFailed(error + "")
+                    }
+                    setTimeout(() => setEngineLink(true), 100)
+                })()
         }
 
         if (latestYakit) setLatestYakit("")
@@ -1051,7 +1053,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 .then((data: LocalInfoProps) => {
                     setLocalInfo(data)
                 })
-                .catch(() => {})
+                .catch(() => {
+                })
         }
     }, [engineLink])
     useEffect(() => {
@@ -1137,7 +1140,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         size='large'
                     >
                         <div className={styles["stop-icon"]}>
-                            <StopIcon />
+                            <StopIcon/>
                         </div>
                         <span className={styles["stop-text"]}>录屏中</span>
                     </YakitButton>
@@ -1158,7 +1161,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     if (!value) return
                     else setShowChatCS(false)
                 })
-                .catch(() => {})
+                .catch(() => {
+                })
 
             // 开启fuzzer-tab页内数据的订阅事件
             if (unFuzzerCacheData.current) {
@@ -1268,7 +1272,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div> */}
 
                                             <div className={styles["divider-wrapper"]}></div>
-                                            <YakitGlobalHost isEngineLink={engineLink} />
+                                            <YakitGlobalHost isEngineLink={engineLink}/>
                                         </>
                                     )}
                                     <div className={styles["short-divider-wrapper"]}>
@@ -1276,7 +1280,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
 
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback}/>
                                     </div>
                                 </div>
                                 <div
@@ -1328,7 +1332,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             {!linkDatabase && (
                                                 <>
                                                     <div className={styles["divider-wrapper"]}></div>
-                                                    <GlobalState isEngineLink={engineLink} system={system} />
+                                                    <GlobalState isEngineLink={engineLink} system={system}/>
                                                 </>
                                             )}
                                         </>
@@ -1351,7 +1355,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 <div className={styles["header-left"]}>
                                     {engineLink && (
                                         <>
-                                            {!linkDatabase && <GlobalState isEngineLink={engineLink} system={system} />}
+                                            {!linkDatabase && <GlobalState isEngineLink={engineLink} system={system}/>}
 
                                             {!isEnpriTraceAgent() && (
                                                 <div
@@ -1431,14 +1435,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                 <div className={styles["header-right"]}>
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={typeCallback}/>
                                     </div>
                                     <div className={styles["short-divider-wrapper"]}>
                                         <div className={styles["divider-style"]}></div>
                                     </div>
                                     {engineLink && (
                                         <>
-                                            <YakitGlobalHost isEngineLink={engineLink} />
+                                            <YakitGlobalHost isEngineLink={engineLink}/>
                                             <div className={styles["divider-wrapper"]}></div>
                                         </>
                                     )}
@@ -1457,7 +1461,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 {isJudgeLicense ? (
                                     <EnterpriseJudgeLogin
                                         setJudgeLicense={setJudgeLicense}
-                                        setJudgeLogin={(v: boolean) => {}}
+                                        setJudgeLogin={(v: boolean) => {
+                                        }}
                                     />
                                 ) : linkDatabase ? (
                                     <SoftwareSettings
@@ -1532,7 +1537,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     }}
                                 />
 
-                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
+                                <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload}/>
                             </div>
                         )}
                         {engineLink && __killOldEngine && (
@@ -1555,10 +1560,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     [styles["uilayout-noshow-log"]]: engineLink
                 })}
             >
-                <EngineLog visible={engineLink} setVisible={setShowEngineLog} />
+                <EngineLog visible={engineLink} setVisible={setShowEngineLog}/>
             </div>
 
-            <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole} />
+            <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole}/>
 
             <NewProjectAndFolder
                 {...projectModalInfo}
@@ -1619,11 +1624,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             </div>
                         </div>
                         <div className={styles["hint-modal-arrow"]}>
-                            <PolygonIcon />
+                            <PolygonIcon/>
                         </div>
 
                         <div className={styles["show-chat-icon-wrapper"]}>
-                            <img src={yakitCattle} />
+                            <img src={yakitCattle}/>
                         </div>
                     </div>
                 </div>
@@ -1701,7 +1706,8 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                     })
                 )
             })
-            .catch(() => {})
+            .catch(() => {
+            })
 
         getLocalValue(LocalGV.YaklangRemoteEngineCredential).then((result: RemoteLinkInfo) => {
             try {
@@ -1709,7 +1715,8 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                     return
                 }
                 setRemote({...result})
-            } catch (e) {}
+            } catch (e) {
+            }
         })
     }, [])
 
@@ -1743,15 +1750,15 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
             <Spin spinning={loading}>
                 <div className={styles["remote-yaklang-engine-body"]}>
                     <div className={styles["remote-title"]}>
-                        {isCommunityEdition() && <YakitThemeSvgIcon style={{fontSize: 64}} />}
+                        {isCommunityEdition() && <YakitThemeSvgIcon style={{fontSize: 64}}/>}
                         {isEnpriTrace() && (
                             <div className={styles["logo-img"]}>
-                                <img src={yakitEE} alt='暂无图片' />
+                                <img src={yakitEE} alt='暂无图片'/>
                             </div>
                         )}
                         {isEnpriTraceAgent() && (
                             <div className={styles["logo-img"]}>
-                                <img src={yakitSE} alt='暂无图片' />
+                                <img src={yakitSE} alt='暂无图片'/>
                             </div>
                         )}
                         <div className={styles["title-style"]}>远程模式</div>
@@ -1959,11 +1966,11 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
             <div className={styles["title-style"]}>需要 PEM 格式的证书</div>
             在通过 <div className={styles["content-code"]}>yak grpc --tls</div> 启动核心服务器的时候，会把 RootCA
             打印到屏幕上，复制到该输入框即可：
-            <br />
+            <br/>
             例如如下内容：
-            <br />
+            <br/>
             <div className={styles["code-pem"]}>
-                <YakEditor readOnly={true} value={PemPlaceHolder} />
+                <YakEditor readOnly={true} value={PemPlaceHolder}/>
             </div>
         </div>
     )
@@ -1995,14 +2002,14 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
     const content = (
         <div style={{width: 430}} className={styles["pem-wrapper"]}>
             注意：{getReleaseEditionName()} 并不会把历史记录上传到互联网
-            <br />
+            <br/>
             你可以在你的本地目录（客户端目录）下找到远程登录信息
-            <br />
+            <br/>
             <div className={styles["path-wrapper"]}>
                 <div className={styles["link-wrapper"]}>
                     {CodeGV.RemoteLinkPath}
                     <div className={styles["copy-icon"]} onClick={copyCommand}>
-                        <YakitCopySvgIcon />
+                        <YakitCopySvgIcon/>
                     </div>
                 </div>
                 <div className={styles["link-open"]} onClick={openFile}>
@@ -2110,7 +2117,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                         url: "download/install/package",
                         params: {version}
                     })
-                        .then((res: {from: string; ok: boolean}) => {
+                        .then((res: { from: string; ok: boolean }) => {
                             const {from, ok} = res
                             if (ok) {
                                 getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
@@ -2155,7 +2162,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
 
             ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
                 if (!isBreakRef.current) return
-                setDownloadProgress(state)
+                setDownloadProgress(safeFormatDownloadProcessState(state));
             })
 
             return () => {
@@ -2213,7 +2220,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
 
                             <div className={styles["hint-left-wrapper"]}>
                                 <div className={styles["hint-icon"]}>
-                                    <YaklangInstallHintSvgIcon />
+                                    <YaklangInstallHintSvgIcon/>
                                 </div>
                                 <div
                                     className={styles["qs-icon"]}
@@ -2223,7 +2230,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                                         setIsTop(2)
                                     }}
                                 >
-                                    <HelpSvgIcon style={{fontSize: 20}} />
+                                    <HelpSvgIcon style={{fontSize: 20}}/>
                                 </div>
                             </div>
 
@@ -2337,7 +2344,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                                     onClick={() => setVisible(false)}
                                 >
                                     {show ? (
-                                        <MacUIOpCloseSvgIcon />
+                                        <MacUIOpCloseSvgIcon/>
                                     ) : (
                                         <div className={styles["close-btn"]}>
                                             <div className={styles["btn-icon"]}></div>
@@ -2357,7 +2364,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                             >
                                 <span className={styles["header-title"]}>Yakit 软件官网下载链接</span>
                                 <div className={styles["close-wrapper"]} onClick={() => setVisible(false)}>
-                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
+                                    <WinUIOpCloseSvgIcon className={styles["icon-style"]}/>
                                 </div>
                             </div>
                         )}
@@ -2369,7 +2376,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                                 <div className={styles["link-wrapper"]}>
                                     {CodeGV.HomeWebsite}
                                     <div className={styles["copy-icon"]} onClick={copyCommand}>
-                                        <YakitCopySvgIcon />
+                                        <YakitCopySvgIcon/>
                                     </div>
                                 </div>
                             </div>
@@ -2396,7 +2403,7 @@ const KillOldEngineProcess: React.FC<KillOldEngineProcessProps> = React.memo((pr
                 <div className={styles["yaklang-engine-hint-wrapper"]}>
                     <div className={styles["hint-left-wrapper"]}>
                         <div className={styles["hint-icon"]}>
-                            <YaklangInstallHintSvgIcon />
+                            <YaklangInstallHintSvgIcon/>
                         </div>
                     </div>
 
@@ -2428,3 +2435,27 @@ const KillOldEngineProcess: React.FC<KillOldEngineProcessProps> = React.memo((pr
         </div>
     )
 })
+
+export const safeFormatDownloadProcessState = (state: DownloadingState) => {
+    try {
+        // 使用可选链操作符来安全地访问深层次属性，如果不存在，则默认为0
+        const total = state.size?.total || 0;
+        const transferred = state.size?.transferred || 0;
+        const elapsed = state.time?.elapsed || 0;
+        const remaining = state.time?.remaining || 0;
+
+        return {
+            percent: state.percent || 0,
+            size: {total, transferred},
+            speed: state.speed || 0,
+            time: {elapsed, remaining}
+        }
+    } catch (e) {
+        return {
+            percent: 0,
+            size: {total: 0, transferred: 0},
+            speed: 0,
+            time: {elapsed: 0, remaining: 0}
+        }
+    }
+}
