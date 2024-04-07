@@ -5,11 +5,11 @@ import {Progress} from "antd"
 import {DownloadingState} from "@/yakitGVDefine"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
-import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-import {getReleaseEditionName, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
+import {getReleaseEditionName, isEnterpriseEdition} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
+import {LocalGVS} from "@/enums/localGlobal"
 
 import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
@@ -123,8 +123,10 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
 
     useEffect(() => {
         if (latestYakit) fetchYakitLastVersion()
+    }, [latestYakit])
+    useEffect(() => {
         if (latestYaklang) fetchYaklangLastVersion()
-    }, [latestYakit, latestYaklang])
+    }, [latestYaklang])
 
     useEffect(() => {
         ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
@@ -144,22 +146,21 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
-        if (isEnpriTraceAgent()) return false
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
         if (`v${currentYakit}` !== latestYakit) return true
-        else return false
+        return false
     }, [currentYakit, latestYakit, isShow])
     const isShowYaklang = useMemo(() => {
         if (!isShow) return false
         if (!currentYaklang || !latestYaklang) return false
         if (currentYaklang !== latestYaklang) return true
-        else return false
+        return false
     }, [currentYaklang, latestYaklang, isShow])
 
     /** 不再提示 */
     const noHint = () => {
-        setLocalValue(LocalGV.NoAutobootLatestVersionCheck, true)
+        setLocalValue(LocalGVS.NoAutobootLatestVersionCheck, true)
         setLatestYakit("")
         setLatestYaklang("")
         onCancel()
@@ -352,13 +353,10 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                 </div>
                             ) : (
                                 <>
-                                    <div
-                                        className={styles["hint-right-title"]}>检测到 {getReleaseEditionName()} 版本升级
+                                    <div className={styles["hint-right-title"]}>
+                                        检测到 {getReleaseEditionName()} 版本升级
                                     </div>
                                     <div className={styles["hint-right-content"]}>
-                                        {/* {`当前版本：v${currentYakit}`}
-                                        <br />
-                                        {`最新版本：${latestYakit}`} */}
                                         {`${getReleaseEditionName()} ${latestYakit} 更新说明 :`}
                                     </div>
                                     <div className={styles["hint-right-update-content"]}>

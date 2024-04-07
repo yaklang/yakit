@@ -1,3 +1,10 @@
+.relaunch-hint {
+    height: 80px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+}
+
 .install-engine-mask {
     position: absolute;
     top: 0;
@@ -21,7 +28,7 @@
 
 .install-update-modal {
     width: 448px;
-    z-index: 99;
+    z-index: 100;
 }
 .engine-hint-modal-wrapper {
     position: absolute;
@@ -148,11 +155,11 @@
                     font-size: 11px;
                     color: var(--yakit-primary-5);
                     .copy-icon {
-                        width: 12px;
-                        height: 12px;
-                        display: flex;
                         margin-left: 8px;
-                        cursor: pointer;
+                        svg {
+                            width: 12px;
+                            height: 12px;
+                        }
                     }
                 }
             }
@@ -276,7 +283,7 @@
     left: calc(50% - 348px);
 }
 .info-modal-wrapper {
-    z-index: 99;
+    z-index: 100;
     position: absolute;
     top: 30%;
 }
