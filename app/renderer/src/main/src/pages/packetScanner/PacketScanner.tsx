@@ -26,7 +26,7 @@ export interface PacketScannerProp {
 }
 
 const PACKET_SCANNER_PRESET_PLUGIN_LIST = "PACKET_SCANNER_PRESET_PLUGIN_LISTNAMES"
-
+/**@deprecated 原http-history页面右键菜单"数据包扫描"生成页面；现在跳转得专项漏洞页面 */
 export const PacketScanner: React.FC<PacketScannerProp> = (props) => {
     const [presetPacketScanPlugin, setPresetPacketScanPlugin] = useState<string[]>([])
     const [initQuery, setInitQuery] = useState<QueryYakScriptRequest>({

@@ -421,7 +421,7 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
     return toolDelInvalidKV(data)
 }
 
-/**下载插件 */
+/**下载插件 非进度条版本 */
 export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
