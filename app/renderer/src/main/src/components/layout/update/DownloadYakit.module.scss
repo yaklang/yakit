@@ -1,0 +1,233 @@
+/* ---------- public ----------*/
+.draggable-modal {
+    width: 448px;
+    position: absolute;
+    left: calc(50% - 224px);
+}
+.modal-top-wrapper {
+    z-index: 999;
+}
+.draggable-hidden-modal {
+    display: none;
+}
+
+/* ---------- YakitQuestionModal ----------*/
+.download-yakit-modal {
+    top: 35%;
+}
+.modal-yaklang-engine-hint {
+    box-sizing: border-box;
+    width: 100%;
+    background: var(--yakit-card-background-color);
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
+
+    .yaklang-engine-hint-wrapper {
+        width: 100%;
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        position: relative;
+
+        .hint-draggle-body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 24px;
+        }
+
+        .hint-left-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+            .hint-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .qs-icon {
+                width: 20px;
+                height: 20px;
+                color: var(--yakit-body-text-color);
+                cursor: pointer;
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
+            }
+
+            .qs-icon:hover {
+                color: var(--yakit-primary-5);
+            }
+        }
+
+        .hint-right-wrapper {
+            flex: 1;
+
+            .hint-right-title {
+                height: 24px;
+                font-weight: 600;
+                font-size: 16px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+
+            .hint-right-download {
+                .download-progress {
+                    :global {
+                        .ant-progress-text {
+                            display: block;
+                            margin-left: 0;
+                            margin-top: 2px;
+                        }
+                    }
+                }
+
+                .download-info-wrapper {
+                    margin-top: 16px;
+                    display: flex;
+                    height: 16px;
+                    font-size: 12px;
+                    line-height: 16px;
+                    color: var(--yakit-helper-text-color);
+
+                    .divider-wrapper {
+                        margin: 0 8px;
+                        width: 1px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+
+                        .divider-style {
+                            width: 100%;
+                            height: 12px;
+                            border: 1px solid var(--yakit-border-color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* ---------- YakitQuestionModal ----------*/
+.qs-modal {
+    z-index: 99;
+    top: 37%;
+}
+.yakit-agr-and-qs-modal {
+    width: 100%;
+    background: var(--yakit-neutral10-color);
+    border: 1px solid var(--yakit-border-color);
+    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+    border-radius: 4px;
+
+    .modal-header {
+        box-sizing: border-box;
+        height: 36px;
+        display: flex;
+        align-items: center;
+
+        background: var(--yakit-card-background-color);
+        border-bottom: 1px solid var(--yakit-border-color);
+        border-radius: 4px 4px 0px 0px;
+
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--yakit-header-color);
+    }
+
+    .mac-header {
+        gap: 12px;
+
+        .close-wrapper {
+            width: 36px;
+            height: 36px;
+            padding: 10px;
+            display: flex;
+            cursor: pointer;
+
+            .close-btn {
+                padding: 2px;
+
+                .btn-icon {
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background-color: var(--yakit-danger-5);
+                }
+            }
+        }
+    }
+
+    .win-header {
+        justify-content: space-between;
+
+        .header-title {
+            margin-left: 12px;
+        }
+
+        .close-wrapper {
+            width: 36px;
+            height: 36px;
+            padding: 8px;
+            cursor: pointer;
+
+            .icon-style {
+                color: var(--yakit-helper-text-color);
+            }
+        }
+
+        .close-wrapper:hover {
+            .icon-style {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+
+    .question-modal-wrapper {
+        .modal-body {
+            padding: 16px 24px 24px 24px;
+
+            .yakit-update-hint {
+                height: 24px;
+                font-size: 14px;
+                line-height: 24px;
+                text-align: justify;
+                color: var(--yakit-danger-5);
+            }
+
+            .yakit-update-link {
+                margin-top: 8px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                .link-wrapper {
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    padding: 2px 6px;
+                    gap: 8px;
+                    background: var(--yakit-card-background-color);
+                    border: 1px solid var(--yakit-border-color);
+                    border-radius: 4px;
+                    font-size: 11px;
+                    color: var(--yakit-body-text-color);
+
+                    .copy-icon {
+                        margin-left: 0;
+                        svg {
+                            width: 12px;
+                            height: 12px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
