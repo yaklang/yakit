@@ -1,19 +1,13 @@
 import React, {useEffect, useState, useRef, ReactNode} from "react"
-import {Tooltip, Spin, Modal} from "antd"
-import {GithubOutlined, UploadOutlined, LoadingOutlined, LockOutlined, InfoCircleOutlined} from "@ant-design/icons"
+import {Tooltip, Spin} from "antd"
+import {GithubOutlined} from "@ant-design/icons"
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 import {failed} from "../../utils/notification"
-import {CopyableField} from "../../utils/inputUtil"
-import {formatDate} from "../../utils/timeUtil"
-import {UserInfoProps, useStore} from "@/store"
+import {useStore} from "@/store"
 import "./YakitStorePage.scss"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {SelectIcon, OnlineCloudIcon} from "../../assets/icons"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {setTimeout} from "timers"
-import {SyncCloudButton} from "@/components/SyncCloudButton/SyncCloudButton"
-import {getRemoteValue} from "@/utils/kv"
-import {ShareIcon} from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -48,7 +42,7 @@ export interface YakModuleListProp {
     emptyNode?: ReactNode
     targetRef?: React.RefObject<any>
 }
-/**@description 目前MITM在使用 */
+/**@description 目前MITM、PluginDebuggerPage在使用 但是这两处item渲染都是自己渲染的，组件内置的渲染没有使用，已删除 */
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const defaultQuery = useCreation(() => {
         return {
@@ -96,20 +90,11 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const [listBodyLoading, setListBodyLoading] = useState(false)
     const [recalculation, setRecalculation] = useState(false)
     const numberLocal = useRef<number>(0) // 本地 选择的插件index
-    const [baseUrl, setBaseUrl] = useState<string>("") // 获取私有域
     useEffect(() => {
         if (isSelectAll) {
             if (onSelectList) onSelectList(response.Data)
         }
     }, [isSelectAll])
-
-    useEffect(() => {
-        getRemoteValue("httpSetting").then((setting) => {
-            const values = JSON.parse(setting)
-            const baseUrl: string = values.BaseUrl
-            setBaseUrl(baseUrl)
-        })
-    }, [])
     useEffect(() => {
         if (!updatePluginRecordLocal) return
         // 列表中第一次上传的时候,本地返回的数据有OnlineId ,但是列表中的上传的那个没有OnlineId
@@ -191,25 +176,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     const loadMoreData = useMemoizedFn(() => {
         update(parseInt(`${response.Pagination.Page}`) + 1, undefined)
     })
-    const onSelect = useMemoizedFn((item: YakScript) => {
-        if (!selectedRowKeysRecord) return
-        const index = selectedRowKeysRecord.findIndex((ele) => ele.Id === item.Id)
-        if (index === -1) {
-            selectedRowKeysRecord.push(item)
-            if (onSelectList) onSelectList([...selectedRowKeysRecord])
-        } else {
-            const newSelectedRowKeysRecord = selectedRowKeysRecord.filter((ele) => ele.Id !== item.Id)
-            if (onSelectList) onSelectList([...newSelectedRowKeysRecord])
-        }
-        if (setIsSelectAll) setIsSelectAll(false)
-    })
-    const onShare = useMemoizedFn((item: YakScript) => {
-        Modal.info({
-            title: "请将插件id复制以后分享给朋友，导入后即可使用。",
-            icon: <InfoCircleOutlined />,
-            content: <CopyableField text={item.UUID} />
-        })
-    })
     return (
         <Spin spinning={listBodyLoading}>
             {(response.Data.length === 0 && emptyNode) || (
@@ -229,22 +195,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
                     renderRow={(data: YakScript, index) => (
                         <PluginListLocalItem
                             plugin={data}
-                            userInfo={userInfo}
-                            onClicked={(info) => {
-                                numberLocal.current = index
-                                props.onClicked(info, index)
-                            }}
-                            onlineProfile={baseUrl}
-                            currentScript={props.currentScript}
                             onYakScriptRender={props.onYakScriptRender}
                             maxWidth={maxWidth}
-                            selectedRowKeysRecord={selectedRowKeysRecord || []}
-                            onSelect={onSelect}
-                            setUpdatePluginRecordLocal={(s) => {
-                                if (setUpdatePluginRecordLocal) setUpdatePluginRecordLocal(s)
-                            }}
-                            onShare={onShare}
-                            onSetUser={onSetUser}
                         />
                     )}
                 />
@@ -270,130 +222,17 @@ interface PluginUserInfoLocalProps {
 
 interface PluginListLocalProps {
     plugin: YakScript
-    userInfo: UserInfoProps
-    onClicked: (y: YakScript) => any
-    currentScript?: YakScript
     onYakScriptRender?: (i: YakScript, maxWidth?: number) => any
     maxWidth: number
-    onSelect: (info: YakScript) => any
-    onShare: (info: YakScript) => any
-    selectedRowKeysRecord: YakScript[]
-    setUpdatePluginRecordLocal: (y: YakScript) => any
-    onSetUser?: (u: PluginUserInfoLocalProps) => any
-    onlineProfile: string
 }
+/**组件内置的渲染没有使用，已删除 */
 export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
-    const {
-        plugin,
-        selectedRowKeysRecord,
-        onSelect,
-        setUpdatePluginRecordLocal,
-        currentScript,
-        onShare,
-        onSetUser,
-        onlineProfile
-    } = props
-    const {userInfo, maxWidth, onClicked} = props
-    const [uploadLoading, setUploadLoading] = useState(false)
-    const updateListItem = useMemoizedFn((updatePlugin: YakScript) => {
-        setUpdatePluginRecordLocal(updatePlugin)
-        if (!currentScript) return
-        // 本地插件OnlineId为0,本地Id不一样,所以用 ScriptName  是唯一的
-        if ((updatePlugin.OnlineId as number) > 0 && currentScript.ScriptName === updatePlugin.ScriptName) {
-            onClicked(updatePlugin)
-        }
-    })
+    const {plugin} = props
+    const {maxWidth} = props
     if (props.onYakScriptRender) {
         return props.onYakScriptRender(plugin, maxWidth)
     }
-    const isShowPrivateDom = plugin?.OnlineBaseUrl && plugin.OnlineBaseUrl !== onlineProfile ? false : true
-    // console.log("私有域比较",plugin.OnlineBaseUrl,onlineProfile)
-    return (
-        <div
-            className={`plugin-item ${currentScript?.Id === plugin.Id && "plugin-item-active"}`}
-            onClick={() => props.onClicked(plugin)}
-        >
-            <div className={`plugin-item-heard ${currentScript?.Id === plugin.Id && "plugin-item-heard-active"}`}>
-                <div className='plugin-item-left'>
-                    <div className='text-style content-ellipsis'>{plugin.ScriptName}</div>
-                    <div className='icon-body'>
-                        <div className='text-icon'>
-                            {plugin.OnlineId > 0 && !plugin.OnlineIsPrivate && isShowPrivateDom && <OnlineCloudIcon />}
-                            {plugin.OnlineId > 0 && plugin.OnlineIsPrivate && <LockOutlined />}
-                        </div>
-                        {gitUrlIcon(plugin.FromGit)}
-                    </div>
-                </div>
-                <div className='plugin-item-right'>
-                    {plugin.UUID && (
-                        <ShareIcon
-                            // @ts-ignore
-                            className='operation-icon'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onShare(plugin)
-                            }}
-                        />
-                    )}
-                    {(uploadLoading && <LoadingOutlined className='upload-outline' />) || (
-                        <>
-                            {(userInfo.user_id == plugin.UserId || plugin.UserId == 0) && (
-                                <SyncCloudButton
-                                    params={plugin}
-                                    setParams={updateListItem}
-                                    uploadLoading={setUploadLoading}
-                                >
-                                    <UploadOutlined className='upload-outline' />
-                                </SyncCloudButton>
-                            )}
-                        </>
-                    )}
-                </div>
-                <SelectIcon
-                    //  @ts-ignore
-                    className={`icon-select  ${
-                        selectedRowKeysRecord.findIndex((ele) => ele.Id === plugin.Id) !== -1 && "icon-select-active"
-                    }`}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        onSelect(plugin)
-                    }}
-                />
-            </div>
-            <div className='plugin-item-content'>
-                <div className='plugin-help content-ellipsis'>{plugin.Help || "No Description about it."}</div>
-                <div className='plugin-type-body'>
-                    {PluginTypeText(plugin.Type)}
-                    {plugin.Tags && plugin.Tags !== "null" && <div className='plugin-tag'>TAG:{plugin.Tags}</div>}
-                </div>
-                <div className='plugin-item-footer'>
-                    <div
-                        className='plugin-item-footer-left'
-                        onClick={(e) => {
-                            e.stopPropagation()
-                        }}
-                    >
-                        {plugin.HeadImg && (
-                            <img
-                                alt=''
-                                src={plugin.HeadImg}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (onSetUser)
-                                        onSetUser({
-                                            UserId: plugin.UserId,
-                                            HeadImg: plugin.HeadImg || ""
-                                        })
-                                }}
-                            />
-                        )}
-                        <div className='plugin-item-author content-ellipsis'>{plugin.Author || "anonymous"}</div>
-                    </div>
-                    <div className='plugin-item-time'>{formatDate(plugin.CreatedAt)}</div>
-                </div>
-            </div>
-        </div>
-    )
+    return <></>
 }
 export const PluginType = {
     yak: "YAK 插件",
@@ -402,24 +241,6 @@ export const PluginType = {
     "port-scan": "端口扫描插件",
     codec: "CODEC插件",
     nuclei: "YAML POC"
-}
-const PluginTypeText = (type) => {
-    switch (type) {
-        case "yak":
-            return <div className='plugin-type plugin-yak'>{PluginType[type]}</div>
-        case "mitm":
-            return <div className='plugin-type plugin-mitm'>{PluginType[type]}</div>
-        case "packet-hack":
-            return <div className='plugin-type plugin-packet-hack'>{PluginType[type]}</div>
-        case "port-scan":
-            return <div className='plugin-type plugin-port-scan'>{PluginType[type]}</div>
-        case "codec":
-            return <div className='plugin-type plugin-codec'>{PluginType[type]}</div>
-        case "nuclei":
-            return <div className='plugin-type plugin-nuclei'>{PluginType[type]}</div>
-        default:
-            break
-    }
 }
 
 export const loadNucleiPoCFromLocal = `yakit.AutoInitYakit();
@@ -529,7 +350,7 @@ export interface DownloadOnlinePluginAllResProps {
     Log: string
 }
 
-export const gitUrlIcon = (url: string | undefined, noTag?: boolean) => {
+export const gitUrlIcon = (url: string | undefined) => {
     if (!url) {
         return <></>
     }
