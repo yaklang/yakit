@@ -662,7 +662,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
             if (type === "simple-batch-exec-recover") addSimpleBatchExecRecover(data as UnfinishedSimpleDetectBatchTask)
             if (type === "add-yakit-script") addYakScript(data)
-            if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
             if (type === "add-data-compare") addDataCompare(data)
@@ -858,10 +857,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
 
-    /** ---------- 插件回收站 ---------- */
-    const addOnlinePluginRecycleBin = useMemoizedFn((res: any) => {
-        openMenuPage({route: YakitRoute.OnlinePluginRecycleBin})
-    })
     const addFacadeServer = useMemoizedFn((res: any) => {
         const {facadeParams, classParam, classType} = res || {}
         if (facadeParams && classParam && classType) {

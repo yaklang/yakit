@@ -17,7 +17,6 @@ import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 import {ReadOnlyBatchExecutorByRecoverUid} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
 import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
-import {OnlinePluginRecycleBin} from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
 import AccountAdminPage from "@/pages/loginOperationMenu/AccountAdminPage"
@@ -201,8 +200,6 @@ export enum YakitRoute {
     AddYakitScript = "add-yakit-script",
     // 编辑插件页面
     ModifyYakitScript = "modify-yakit-script",
-    // 我的插件回收站页面
-    OnlinePluginRecycleBin = "online-plugin-recycle-bin",
     /** 简易版专属 */
     SimpleDetect = "simple-detect",
     // 录屏管理器
@@ -298,7 +295,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "packet-scan-page": {label: "数据包扫描"},
     "add-yakit-script": {label: "新建插件"},
     "modify-yakit-script": {label: "编辑插件"},
-    "online-plugin-recycle-bin": {label: "线上插件回收站"},
     "simple-detect": {label: "安全检测"},
     "screen-recorder-page": {label: "录屏管理"},
     "db-chaosmaker": {label: "BAS实验室"},
@@ -341,7 +337,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.TrustListPage,
     YakitRoute.AddYakitScript,
     YakitRoute.ModifyYakitScript,
-    YakitRoute.OnlinePluginRecycleBin,
     YakitRoute.DB_ChaosMaker,
     YakitRoute.ScreenRecorderPage,
     YakitRoute.ControlAdminPage,
@@ -616,8 +611,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <PluginEditDetails />
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />
-        case YakitRoute.OnlinePluginRecycleBin:
-            return <OnlinePluginRecycleBin />
         case YakitRoute.SimpleDetect:
             return (
                 <SimpleDetect
