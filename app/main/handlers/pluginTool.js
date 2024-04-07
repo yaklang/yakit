@@ -50,22 +50,6 @@ module.exports = (win, getClient) => {
         params.Token = USER_INFO.token
         return await asyncDownloadOnlinePluginById(params)
     })
-    const asyncDownloadOnlinePluginByIds = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().DownloadOnlinePluginByIds(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    // 下载插件
-    ipcMain.handle("DownloadOnlinePluginByIds", async (e, params) => {
-        params.Token = USER_INFO.token
-        return await asyncDownloadOnlinePluginByIds(params)
-    })
 
     const asyncDownloadOnlinePluginBatch = (params) => {
         return new Promise((resolve, reject) => {
