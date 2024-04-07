@@ -1,21 +1,11 @@
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn, useSize} from "ahooks"
-import React, {useState, useEffect, memo,  useRef, useMemo} from "react"
+import {useGetState, useInViewport, useMemoizedFn, useSize} from "ahooks"
+import React, {useState, useEffect, memo, useRef, useMemo} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, warn} from "@/utils/notification"
-import {
-    Upload,
-    Input,
-    Modal,
-    Image,
-    Avatar,
-    InputRef
-} from "antd"
-import {
-    LoadingOutlined,
-    ExclamationCircleOutlined
-} from "@ant-design/icons"
+import {Upload, Input, Modal, Image, Avatar, InputRef} from "antd"
+import {LoadingOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import numeral from "numeral"
 import styles from "./baseComment.module.scss"
 import moment from "moment"
@@ -108,7 +98,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             params
         })
             .then((res) => {
-                console.log("comment---", res.data)
+                console.log("comment---", res.data, plugin)
 
                 if (!res.data) {
                     res.data = []
@@ -411,6 +401,10 @@ interface PluginCommentInfoProps {
     onStar: (name: API.CommentListData) => any
     openCommentChildModel?: (visible: boolean) => any
     setParentComment?: (name: API.CommentListData) => any
+    // 头像大小 默认32
+    headImgSize?: number
+    // 是否默认懒加载图片 默认直接加载
+    isLazyLoadImage?: boolean
 }
 // 评论内容单条组件
 const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
@@ -422,71 +416,100 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
         isStarChange,
         openCommentChildModel,
         setParentComment,
-        isOperation = true
+        isOperation = true,
+        headImgSize = 32,
+        isLazyLoadImage = false
     } = props
 
+    const ref = useRef(null)
+    const [inViewport] = useInViewport(ref)
+
     const message_img: string[] = (info.message_img && JSON.parse(info.message_img)) || []
+
+    const lazyLoadImage = useMemo(() => {
+        return inViewport || !isLazyLoadImage
+    }, [inViewport, isLazyLoadImage])
+
+    const testNewInfo = () => {
+        const newInfo: API.CommentListData = JSON.parse(JSON.stringify(info))
+        newInfo.reply_num = 0
+        return newInfo
+    }
+
     return (
-        <div className={styles["plugin-comment-opt"]} key={key}>
-            <div className={styles["opt-author-img"]}>
-                <img src={info.head_img} className={styles["author-img-style"]} />
+        <div className={styles["plugin-comment-opt"]} key={key} ref={ref}>
+            <div className={styles["opt-author-img"]} style={{width: headImgSize}}>
+                <img
+                    src={info.head_img}
+                    className={styles["author-img-style"]}
+                    style={{height: headImgSize, width: headImgSize}}
+                />
             </div>
 
             <div className={styles["opt-comment-body"]}>
-                <div className={styles["comment-body-header"]}>
-                    <div className={styles["comment-body-name"]}>{info.user_name || "anonymous"}</div>
-                    <div className={styles["comment-dot"]}>·</div>
-                    <div className={styles["comment-body-time"]}>
-                        {moment.unix(info.created_at).format("YYYY-MM-DD HH:mm")}
+                <div className={styles["comment-body-main"]}>
+                    <div className={styles["comment-body-header"]}>
+                        <div className={styles["comment-body-name"]}>{info.user_name || "anonymous"}</div>
+                        {info.by_user_name && (
+                            <>
+                                <div className={styles["comment-replay-text"]}>回复</div>
+                                <div className={styles["comment-replay"]}>@{info.by_user_name}</div>
+                            </>
+                        )}
+                        <div className={styles["comment-dot"]}>·</div>
+                        <div className={styles["comment-body-time"]}>
+                            {moment.unix(info.created_at).format("YYYY-MM-DD HH:mm")}
+                        </div>
+                    </div>
+
+                    <div className={styles["comment-body-content"]}>
+                        <YakitCollapseText content={info.message} rows={2} lineHeight={20} fontSize={14} />
+                    </div>
+                    {lazyLoadImage && <PluginCommentImages images={message_img} key={info.id} size={90} />}
+                    <div className={styles["comment-body-option"]}>
+                        {isOperation && (
+                            <div className={styles["func-comment-and-star"]}>
+                                <div className={styles["comment-and-star"]} onClick={() => onReply(info)}>
+                                    <YakitButton type='secondary2' className={styles["reply-btn"]}>
+                                        回复
+                                    </YakitButton>
+                                </div>
+                                <div
+                                    style={{marginLeft: 16}}
+                                    className={classNames(styles["comment-and-star"])}
+                                    onClick={() => onStar(info)}
+                                >
+                                    {(isStarChange && (
+                                        <OutlineThumbupActiveIcon
+                                            className={classNames(styles["hover-active"], styles["icon-style-start"])}
+                                        />
+                                    )) || (
+                                        <OutlineThumbupIcon
+                                            className={classNames(styles["hover-active"], styles["icon-style"])}
+                                        />
+                                    )}
+                                    <span className={classNames(styles["num-style"])}>
+                                        {numeral(info.like_num).format("0,0")}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                <div className={styles["comment-body-content"]}>
-                    {/* <CollapseParagraph value={`${info.message}`} rows={2} valueConfig={{className: "content-style"}}>
-                        {info.by_user_name && (
-                            <span>
-                                回复<span className={styles["content-by-name"]}>{info.by_user_name}</span>:
-                            </span>
-                        )}
-                    </CollapseParagraph> */}
-                    <YakitCollapseText content={info.message} rows={2} lineHeight={20} fontSize={14} />
-                </div>
-                <PluginCommentImages images={message_img} key={info.id} size={90} />
-                {/* <Space>
-                    {message_img.map((url) => (
-                        <Image key={url + info.id} src={url as any} className={styles["comment-pic"]} />
-                    ))}
-                </Space> */}
-                <div className={styles["comment-body-option"]}>
-                    {isOperation && (
-                        <div className={styles["func-comment-and-star"]}>
-                            <div className={styles["comment-and-star"]} onClick={() => onReply(info)}>
-                                <YakitButton type='secondary2' className={styles["reply-btn"]}>
-                                    回复
-                                </YakitButton>
-                            </div>
-                            <div
-                                style={{marginLeft: 16}}
-                                className={classNames(styles["comment-and-star"])}
-                                onClick={() => onStar(info)}
-                            >
-                                {(isStarChange && (
-                                    <OutlineThumbupActiveIcon
-                                        className={classNames(styles["hover-active"], styles["icon-style-start"])}
-                                    />
-                                )) || (
-                                    <OutlineThumbupIcon
-                                        className={classNames(styles["hover-active"], styles["icon-style"])}
-                                    />
-                                )}
-                                <span className={classNames(styles["num-style"])}>
-                                    {numeral(info.like_num).format("0,0")}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                {isOperation && info.reply_num > 0 && (
+                {info.reply_num > 0 && (
+                    <div className={styles["comment-twice-reply"]}>
+                        {/* 此处的testNewInfo等待后期接口替换 */}
+                        <PluginCommentInfo
+                            key={123}
+                            info={testNewInfo()}
+                            onReply={onReply}
+                            onStar={onStar}
+                            isStarChange={testNewInfo().is_stars}
+                            headImgSize={24}
+                        />
+                    </div>
+                )}
+                {isOperation && info.reply_num > 2 && (
                     <a
                         className={styles["comment-reply"]}
                         onClick={() => {
@@ -498,7 +521,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                             }
                         }}
                     >
-                        共 12 条回复，点击查看
+                        共 {info.reply_num} 条回复，点击查看
                     </a>
                 )}
             </div>
@@ -533,7 +556,7 @@ const PluginCommentImages: React.FC<PluginCommentImagesProps> = (props) => {
                             e.stopPropagation()
                         }}
                     >
-                        <img src={item as any} className={styles["opt-pic"]} style={{width: size, height: size}} />
+                        <Image src={item as any} className={styles["opt-pic"]} style={{width: size, height: size}} />
                         <div
                             className={styles["mask-box"]}
                             onClick={() => {
@@ -991,11 +1014,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
         }
     }, [visible])
 
-    const timeListChildRef = useRef<YakitTimeLineListRefProps>(null)
     const ishasMore = useRef<boolean>(true)
-    const handleClearTimeList = useMemoizedFn(() => {
-        timeListChildRef.current?.onClear()
-    })
 
     if (!parentInfo) return <></>
     return (
@@ -1008,46 +1027,32 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                     onStar={() => {}}
                     onReply={() => {}}
                 />
-                {/* 10条以上使用不定高虚拟列表 10条以下正常渲染 */}
-                {commentChildResponses.data.length > 10 ? (
-                    <div className={styles["child-comment-list"]}>
-                        <OnlineJudgment>
-                            <NewYakitTimeLineList
-                                ref={timeListChildRef}
-                                loading={loadingChild}
-                                data={commentChildResponses.data}
-                                DefaultItemHeight={76}
-                                renderItem={(childItem) => {
-                                    return (
-                                        <PluginCommentInfo
-                                            key={childItem.id}
-                                            info={childItem}
-                                            onReply={onReply}
-                                            onStar={onCommentChildStar}
-                                            isStarChange={childItem.is_stars}
-                                        />
-                                    )
-                                }}
-                                hasMore={ishasMore.current}
-                                loadMore={loadMoreData}
+                {/* 使用图片懒加载 */}
+                <div
+                    className={styles["little-child-comment-list"]}
+                    onScroll={(e) => {
+                        const {target} = e
+                        const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                        if (ref.scrollTop + ref.offsetHeight + 10 >= ref.scrollHeight) {
+                            if (ishasMore.current) {
+                                loadMoreData()
+                            }
+                        }
+                    }}
+                >
+                    {commentChildResponses.data.map((childItem) => {
+                        return (
+                            <PluginCommentInfo
+                                key={childItem.id}
+                                info={childItem}
+                                onReply={onReply}
+                                onStar={onCommentChildStar}
+                                isStarChange={childItem.is_stars}
+                                isLazyLoadImage={true}
                             />
-                        </OnlineJudgment>
-                    </div>
-                ) : (
-                    <div className={styles["little-child-comment-list"]}>
-                        {commentChildResponses.data.map((childItem) => {
-                            return (
-                                <PluginCommentInfo
-                                    key={childItem.id}
-                                    info={childItem}
-                                    onReply={onReply}
-                                    onStar={onCommentChildStar}
-                                    isStarChange={childItem.is_stars}
-                                />
-                            )
-                        })}
-                    </div>
-                )}
+                        )
+                    })}
+                </div>
             </div>
         </Modal>
     )

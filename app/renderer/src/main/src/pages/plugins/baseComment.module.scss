@@ -154,6 +154,7 @@ $active-color: #f28b44;
     .upload-img-opt {
         cursor: pointer;
         position: relative;
+        display: flex;
         :global {
             .ant-image {
                 border-radius: 4px;
@@ -246,17 +247,11 @@ $active-color: #f28b44;
         background-color: #f9fafb;
         padding: 24px;
         margin: 0 40px;
-        max-height: 360px;
+        max-height: 70vh;;
         overflow: auto;
         display: flex;
         flex-direction: column;
-        gap: 16px;  
-    }
-    .child-comment-list {
-        background-color: #f9fafb;
-        padding: 24px;
-        margin: 0 40px;
-        height: 360px;
+        gap: 16px;
     }
 }
 
@@ -345,14 +340,9 @@ $active-color: #f28b44;
 .plugin-comment-opt {
     display: flex;
     width: 100%;
-
     .opt-author-img {
         margin-right: 8px;
-        width: 32px;
-
         .author-img-style {
-            width: 32px;
-            height: 32px;
             border-radius: 50%;
         }
     }
@@ -361,62 +351,129 @@ $active-color: #f28b44;
         flex: 1;
         display: flex;
         flex-direction: column;
-        .comment-body-header {
+        gap: 16px;
+        .comment-body-main{
             display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 4px;
-            .comment-body-name {
-                color: #31343f;
-                font-size: 14px;
-                font-weight: 600;
+            flex-direction: column;
+            .comment-body-header {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+                .comment-body-name {
+                    color: #31343f;
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 20px;
+                }
+                .comment-replay-text {
+                    color: #31343f;
+                    font-size: 14px;
+                    font-weight: 400;
+                    line-height: 20px;
+                }
+                .comment-replay {
+                    color: #f28b44;
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 20px;
+                }
+                .comment-dot {
+                    color: #85899e;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+                .comment-body-time {
+                    color: #b4bbca;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+    
+            .comment-body-content {
+                margin: 4px 0 6px 0;
+    
+                .content-style {
+                    color: #686c78;
+                    line-height: 20px;
+                    margin-bottom: 0;
+                }
+    
+                .content-by-name {
+                    color: $active-color;
+                    margin-left: 3px;
+                }
+            }
+            .comment-body-option {
+                margin-top: 6px;
+                height: 20px;
                 line-height: 20px;
-            }
-            .comment-dot {
-                color: #85899e;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: #999ea8;
                 font-size: 12px;
-                font-weight: 400;
-                line-height: 16px;
-            }
-            .comment-body-time {
-                color: #b4bbca;
-                font-size: 12px;
-                font-weight: 400;
-                line-height: 16px;
+                // margin-bottom: 12px;
+    
+                .func-comment-and-star {
+                    display: flex;
+                    height: 16px;
+                    line-height: 16px;
+    
+                    .comment-and-star {
+                        display: flex;
+                        align-items: center;
+    
+                        .reply-btn {
+                            color: #31343f;
+                            &:hover {
+                                color: var(--yakit-primary-4);
+                            }
+                        }
+    
+                        .icon-style {
+                            svg {
+                                height: 16px;
+                                width: 16px;
+                            }
+                            cursor: pointer;
+                            color: #686c78;
+                        }
+    
+                        .icon-style-start {
+                            svg {
+                                height: 16px;
+                                width: 16px;
+                            }
+                            cursor: pointer;
+                            color: $active-color;
+                        }
+    
+                        .num-style {
+                            color: #31343f;
+                            margin-left: 4px;
+                            cursor: pointer;
+                        }
+                    }
+    
+                    .hover-active {
+                        &:hover {
+                            svg {
+                                color: $active-color;
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        .comment-body-content {
-            margin: 4px 0 6px 0;
+        .comment-twice-reply{
 
-            .content-style {
-                color: #686c78;
-                line-height: 20px;
-                margin-bottom: 0;
-            }
-
-            .content-by-name {
-                color: $active-color;
-                margin-left: 3px;
-            }
-        }
-
-        .comment-body-subcomment {
-            width: 100%;
-            background-color: #f9fafb;
-            margin-top: 16px;
-            padding: 16px 24px;
-        }
-
-        .comment-pic {
-            width: 90px;
-            height: 90px;
-            border-radius: 10px;
-            object-fit: cover;
         }
 
         .comment-reply {
-            margin-top: 16px;
             color: var(--yakit-color-grey);
             font-size: 14px;
             font-weight: 400;
@@ -426,67 +483,7 @@ $active-color: #f28b44;
             }
         }
 
-        .comment-body-option {
-            margin-top: 6px;
-            height: 20px;
-            line-height: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #999ea8;
-            font-size: 12px;
-            // margin-bottom: 12px;
 
-            .func-comment-and-star {
-                display: flex;
-                height: 16px;
-                line-height: 16px;
-
-                .comment-and-star {
-                    display: flex;
-                    align-items: center;
-
-                    .reply-btn {
-                        color: #31343f;
-                        &:hover {
-                            color: var(--yakit-primary-4);
-                        }
-                    }
-
-                    .icon-style {
-                        svg {
-                            height: 16px;
-                            width: 16px;
-                        }
-                        cursor: pointer;
-                        color: #686c78;
-                    }
-
-                    .icon-style-start {
-                        svg {
-                            height: 16px;
-                            width: 16px;
-                        }
-                        cursor: pointer;
-                        color: $active-color;
-                    }
-
-                    .num-style {
-                        color: #31343f;
-                        margin-left: 4px;
-                        cursor: pointer;
-                    }
-                }
-
-                .hover-active {
-                    &:hover {
-                        svg {
-                            color: $active-color;
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
