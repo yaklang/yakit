@@ -508,6 +508,22 @@ export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => P
     })
 }
 
+/** 其他情况，不区分私密公开 下载插件 */
+export const apiDownloadPluginOther: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        const newQuery = {
+            ...(query || {}),
+            ListType: "other"
+        }
+        apiDownloadPluginBase(newQuery)
+            .then(resolve)
+            .catch((err) => {
+                yakitNotify("error", "下载插件失败:" + err)
+                reject(err)
+            })
+    })
+}
+
 /**线上删除插件接口基础版  删除（放到回收站） */
 const apiDeletePlugin: (query?: API.PluginsWhereDeleteRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {

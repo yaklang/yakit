@@ -14,17 +14,12 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {MITMRule} from "./MITMRule/MITMRule"
 import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {RemoveIcon} from "@/assets/newIcon"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {loadNucleiPoCFromLocal, loadYakitPluginCode} from "../yakitStore/YakitStorePage"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {StartExecYakCodeModal, YakScriptParam} from "@/utils/basic"
-import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {queryYakScriptList} from "../yakitStore/network"
 import MITMHijackedContent, {MITMStatus} from "./MITMServerHijacking/MITMHijackedContent"
 import {MITMPluginHijackContent} from "./MITMServerHijacking/MITMPluginHijackContent"
 import {
@@ -37,7 +32,6 @@ import {
 import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {PluginGV} from "../plugins/builtInData"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
     LogListInfo,
@@ -48,7 +42,7 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {v4 as uuidv4} from "uuid"
-import { apiQueryYakScript } from "../plugins/utils"
+import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
@@ -532,7 +526,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             ExcludeTypes: ["yak", "codec"],
             Group: {UnSetGroup: false, Group: groupNames}
         }
-        apiQueryYakScript(query).then(res => {
+        apiQueryYakScript(query).then((res) => {
             const data = res.Data || []
             setListNames(data.map((i) => i.ScriptName))
         })
@@ -542,10 +536,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             case "idle":
                 return (
                     <>
-                        <PluginGroup
-                            selectGroup={selectGroup}
-                            setSelectGroup={setSelectGroup}
-                        />
+                        <PluginGroup selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
                         <div style={{paddingRight: 9}}>
                             <PluginSearch
                                 tag={tags}
@@ -997,10 +988,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
 
         if (loadMode === "uploadId") {
-            ipcRenderer
-                .invoke("DownloadOnlinePluginById", {
-                    UUID: formValue.localId
-                } as DownloadOnlinePluginProps)
+            apiDownloadPluginOther({
+                UUID: [formValue.localId]
+            })
                 .then(() => {
                     setVisible(false)
                     success("插件导入成功")
@@ -1068,19 +1058,18 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 }
                 bodyStyle={{padding: 0}}
                 footerStyle={{justifyContent: "flex-end"}}
-                footer={<>
-                    <YakitButton type={"outline2"} onClick={onCancel}>
-                        {loadMode === "local" && localStreamData?.Progress === 1 ? "完成" : "取消"}
-                    </YakitButton>
-                    <div style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}>
-                        <YakitButton
-                            disabled={okBtnDisabled}
-                            onClick={onOk}
-                        >
-                            导入
+                footer={
+                    <>
+                        <YakitButton type={"outline2"} onClick={onCancel}>
+                            {loadMode === "local" && localStreamData?.Progress === 1 ? "完成" : "取消"}
                         </YakitButton>
-                    </div>
-                </>}
+                        <div style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}>
+                            <YakitButton disabled={okBtnDisabled} onClick={onOk}>
+                                导入
+                            </YakitButton>
+                        </div>
+                    </>
+                }
             >
                 <Form form={form} className={style["import-local-plugin-form"]}>
                     {getRenderByLoadMode(loadMode)}
