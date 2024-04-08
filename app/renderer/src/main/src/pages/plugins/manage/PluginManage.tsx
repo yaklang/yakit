@@ -49,9 +49,6 @@ import {NetWorkApi} from "@/services/fetch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {DefaultStatusList, PluginGV} from "../builtInData"
-import {showModal} from "@/utils/showModal"
-import {SolidChevrondownIcon} from "@/assets/icon/solid"
-import {AddPluginGroup, RemovePluginGroup} from "@/pages/yakitStore/store/PluginStore"
 import {useStore} from "@/store"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
@@ -466,53 +463,11 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         showPluginIndex.current = index
     })
 
-    /** 分组按钮展示状态 */
-    const showAuditState = useMemo(() => {
-        if (!isEnpriTraceAgent()) return false
-        if (userInfo.role === "admin") return true
-        else return false
-    }, [userInfo.role])
-
     /** 管理分组展示状态 */
     const magGroupState = useMemo(() => {
         if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
         else return false
     }, [userInfo.role])
-    // 插件分组
-    const onGroupMenu = useMemoizedFn((key: string) => {
-        switch (key) {
-            case "add-group":
-                const m = showModal({
-                    width: "40%",
-                    content: (
-                        <AddPluginGroup
-                            onRefList={onClearSelecteds}
-                            onClose={() => m.destroy()}
-                            selectedRowKeysRecordOnline={selectList as any}
-                            isSelectAllOnline={false}
-                            queryOnline={{bind_me: false, recycle: false}}
-                        />
-                    )
-                })
-                return m
-            case "edit-group":
-                const n = showModal({
-                    width: "35%",
-                    content: (
-                        <RemovePluginGroup
-                            onRefList={onClearSelecteds}
-                            onClose={() => n.destroy()}
-                            selectedRowKeysRecordOnline={selectList as any}
-                            isSelectAllOnline={false}
-                            queryOnline={{bind_me: false, recycle: false}}
-                        />
-                    )
-                })
-                return n
-            default:
-                return
-        }
-    })
 
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail | undefined>()
 
@@ -649,29 +604,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         <FuncSearch maxWidth={1000} value={searchs} onSearch={onKeywordAndUser} onChange={setSearchs} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
-                            {showAuditState && (
-                                <FuncFilterPopover
-                                    maxWidth={1150}
-                                    icon={<SolidChevrondownIcon />}
-                                    name='插件分组'
-                                    disabled={selectNum === 0 && !allCheck}
-                                    button={{
-                                        type: "outline2",
-                                        size: "large"
-                                    }}
-                                    menu={{
-                                        type: "primary",
-                                        data: [
-                                            {key: "add-group", label: "加入分组"},
-                                            {key: "edit-group", label: "编辑分组"}
-                                        ],
-                                        onClick: ({key}) => {
-                                            onGroupMenu(key)
-                                        }
-                                    }}
-                                    placement='bottomRight'
-                                />
-                            )}
                             {showAuthState && (
                                 <FuncBtn
                                     maxWidth={1150}
@@ -721,7 +653,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         onClick={() =>
                                             emiter.emit(
                                                 "openPage",
-                                                JSON.stringify({route: YakitRoute.Plugin_Groups, params: {pluginGroupType: "online"}})
+                                                JSON.stringify({
+                                                    route: YakitRoute.Plugin_Groups,
+                                                    params: {pluginGroupType: "online"}
+                                                })
                                             )
                                         }
                                     >
