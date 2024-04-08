@@ -1016,12 +1016,3 @@ export const defaultSearch: PluginSearchParams = {
     type: "keyword"
 }
 export const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}
-export const defaultResponse: API.YakitPluginListResponse = {
-    data: [],
-    pagemeta: {
-        limit: 20,
-        page: 1,
-        total: 0,
-        total_page: 1
-    }
-}

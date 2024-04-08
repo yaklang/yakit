@@ -27,7 +27,7 @@ export interface DownloadOnlinePluginProps {
 }
 
 interface PluginCommentProps {
-    plugin: API.YakitPluginDetail
+    plugin: API.PluginsDetail
     isLogin: boolean
 }
 

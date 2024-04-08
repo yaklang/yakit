@@ -246,7 +246,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         }
     })
 
-    // const [response, setResponse] = useState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [initTotal, setInitTotal] = useState<number>(0)
 

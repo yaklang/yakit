@@ -324,51 +324,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                         </div>
                     </TabPane>
                     <TabPane tab='评论' key='comment'>
-                        <div className={styles["plugin-comment-wrapper"]}>
-                            <PluginDetailHeader
-                                pluginName={plugin.script_name}
-                                help={plugin.help}
-                                tags={plugin.tags}
-                                wrapperClassName={styles["plugin-comment-detail-header"]}
-                                extraNode={
-                                    <div className={styles["plugin-info-extra-header"]}>
-                                        <OnlineExtraOperate
-                                            data={plugin}
-                                            isLogin={userInfo.isLogin}
-                                            dispatch={dispatch}
-                                            likeProps={{
-                                                active: plugin.is_stars,
-                                                likeNumber: plugin.starsCountString || "",
-                                                onLikeClick: onLikeClick
-                                            }}
-                                            commentProps={{
-                                                commentNumber: plugin.commentCountString || ""
-                                                // onCommentClick: onCommentClick
-                                            }}
-                                            downloadProps={{
-                                                downloadNumber: plugin.downloadedTotalString || "",
-                                                onDownloadClick: onDownloadClick
-                                            }}
-                                        />
-                                        <FuncBtn
-                                            maxWidth={1100}
-                                            icon={<OutlineCursorclickIcon />}
-                                            name={"去使用"}
-                                            onClick={onUse}
-                                        />
-                                    </div>
-                                }
-                                img={plugin.head_img}
-                                user={plugin.authors}
-                                pluginId={plugin.uuid}
-                                updated_at={plugin.updated_at}
-                                prImgs={(plugin.collaborator || []).map((ele) => ({
-                                    headImg: ele.head_img,
-                                    userName: ele.user_name
-                                }))}
-                                type={plugin.type}
-                            />
-                            <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin, default_open: false}} />
+                        <div className={styles["plugin-comment-wrapper"]} id='online-plugin-info-scroll'>
+                            <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin}} />
                         </div>
                     </TabPane>
                     <TabPane tab='日志' key='log'>
