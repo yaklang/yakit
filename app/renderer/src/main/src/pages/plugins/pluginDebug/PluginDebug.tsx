@@ -598,7 +598,6 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                         streamInfo={streamInfo}
                                         runtimeId={runtimeId}
                                         loading={isExecuting}
-                                        pluginType={pluginType}
                                     />
                                 </div>
                             </>

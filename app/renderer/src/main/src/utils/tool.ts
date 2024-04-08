@@ -27,3 +27,8 @@ export const isObject = (value) => {
 export const isArray = (value) => {
     return Object.prototype.toString.call(value) === "[object Array]"
 }
+
+/**是否为空对象 */
+export const isEmptyObject = (obj: object) => {
+    return !(obj && Object.keys(obj).length > 0)
+}

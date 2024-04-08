@@ -91,7 +91,7 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
             })
         localToMenus[item.label] = {...item, menuName: item.label, children: child}
     }
-
+    
     // 数据库有数据时的逻辑处理
     for (let item of database) {
         const newMenu: EnhancedPublicRouteMenuProps = {
@@ -178,6 +178,9 @@ const databaseConvertLocal = (local: EnhancedPublicRouteMenuProps[], database: D
         const info: EnhancedPublicRouteMenuProps = {
             ...localItem,
             yakScriptId: 0
+        }
+        if (!info.yakScriptId) {
+            plugins.push(info.yakScripName || info.menuName)
         }
         menus.push(info)
     }

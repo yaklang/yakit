@@ -451,7 +451,6 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                         streamInfo={streamInfo}
                         runtimeId={runtimeId}
                         loading={isExecuting}
-                        pluginType={""} // 算yak类型的插件，可以传空字符串
                         defaultActiveKey={""}
                         pluginExecuteResultWrapper={styles["brute-execute-result-wrapper"]}
                     />

@@ -204,7 +204,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 let filterLocal: EnhancedPrivateRouteMenuProps[] = []
                 getRemoteValue(RemoteGV.UserDeleteMenu)
                     .then((val) => {
-                        if (!!val) {
+                        if (val !== "{}") {
                             let filters: string[] = []
                             try {
                                 filters = (JSON.parse(val) || {})[menuMode] || []

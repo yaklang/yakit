@@ -132,6 +132,12 @@ import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/Singl
 import {YakPoC} from "@/pages/securityTool/yakPoC/YakPoC"
 import {NewPortScan} from "@/pages/securityTool/newPortScan/NewPortScan"
 import {NewBrute} from "@/pages/securityTool/newBrute/NewBrute"
+import {
+    CommunityDeprecatedFirstMenu,
+    CommunityDeprecatedSecondMenu,
+    EnterpriseDeprecatedFirstMenu,
+    EnterpriseDeprecatedSecondMenu
+} from "./deprecatedMenu"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -927,25 +933,23 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
 export const PublicCommonPlugins: PublicRouteMenuProps[] = [
     {
         page: undefined,
-        label: "子域名收集",
-        children: ["crt子域名收集", "纯暴力子域名收集", "SEO综合查询", "被动子域名收集"].map((item) => {
+        label: "基础工具",
+        children: [
+            "web登录页面用户名密码爆破",
+            "基础爬虫",
+            "字典生成器",
+            "无头浏览器模拟点击爬虫",
+            "综合目录扫描与爆破",
+            "fuzztag表格生成",
+            "按行去重"
+        ].map((item) => {
             return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
         })
     },
     {
         page: undefined,
-        label: "基础工具",
-        children: [
-            "域名、IP提取",
-            "域名批量转IP并查CDN",
-            "IP反查域名",
-            "批量备案查询",
-            "空间引擎集成版本",
-            "网站信息获取",
-            "主域名提取",
-            "杀软匹配tasklist /svc",
-            "按行去重"
-        ].map((item) => {
+        label: "子域名收集",
+        children: ["子域名收集&漏洞扫描", "IP批量查询", "主动指纹探测", "ICP备案查询", "瞅一下"].map((item) => {
             return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
         })
     }
@@ -1173,13 +1177,17 @@ const routeToChildren: (route: (YakitRoute | ResidentPluginName)[]) => PrivateRo
  * @description 该菜单数据为开发者迭代版本所产生的已消失的一级菜单项
  * @description 每个菜单项由 '|' 字符进行分割
  */
-export const InvalidFirstMenuItem = ""
+export const InvalidFirstMenuItem = isCommunityEdition()
+    ? CommunityDeprecatedFirstMenu.join("|")
+    : EnterpriseDeprecatedFirstMenu.join("|")
 /**
  * @name 强制删除用户端的无效菜单项集合
  * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
  * @description 每个菜单项由 '|' 字符进行分割
  */
-export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|api提取|空间引擎集成版本|网站树"
+export const InvalidPageMenuItem = isCommunityEdition()
+    ? CommunityDeprecatedSecondMenu.join("|")
+    : EnterpriseDeprecatedSecondMenu.join("|")
 /**
  * @name private版专家模式菜单配置数据
  * @description 修改只对专家模式有效，别的模式需取对应模式数据进行修改

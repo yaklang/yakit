@@ -220,7 +220,6 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         streamInfo={streamInfo}
                         runtimeId={runtimeId}
                         loading={isExecuting}
-                        pluginType={""}
                     />
                 )}
             </div>
