@@ -98,7 +98,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             params
         })
             .then((res) => {
-                console.log("comment---", res.data, plugin)
+                // console.log("comment---", res.data, plugin)
 
                 if (!res.data) {
                     res.data = []
@@ -935,8 +935,6 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             params
         })
             .then((res) => {
-                console.log("cyjcyj---", res.data)
-
                 if (!res.data) {
                     res.data = []
                 }
@@ -1005,7 +1003,6 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     useEffect(() => {
         if (!commenData.isRefChildCommentList) return
         if (!parentInfo) return
-        console.log("woc")
 
         const refParams = {
             root_id: parentInfo?.id,
