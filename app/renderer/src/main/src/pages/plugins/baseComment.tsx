@@ -3,7 +3,7 @@ import {useGetState, useInViewport, useMemoizedFn, useSize} from "ahooks"
 import React, {useState, useEffect, memo, useRef, useMemo} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
-import {failed, warn} from "@/utils/notification"
+import {failed, warn, success} from "@/utils/notification"
 import {Upload, Input, Modal, Image, Avatar, InputRef} from "antd"
 import {LoadingOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import numeral from "numeral"
@@ -37,7 +37,7 @@ interface PluginCommentProps {
 }
 
 interface SearchCommentRequest {
-    plugin_id: number
+    uuid: string
     limit: number
     page: number
 }
@@ -87,14 +87,14 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
 
     const getComment = useMemoizedFn((page: number = 1) => {
         const params: SearchCommentRequest = {
-            plugin_id: plugin.id,
+            uuid: plugin.uuid,
             limit,
             page
         }
         setLoading(true)
         NetWorkApi<SearchCommentRequest, API.CommentListResponse>({
             method: "get",
-            url: "comment",
+            url: "comments",
             params
         })
             .then((res) => {
@@ -147,7 +147,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             return
         }
         const params = {
-            plugin_id: plugin.id,
+            uuid: plugin.uuid,
             message_img: files,
             parent_id: 0,
             root_id: 0,
@@ -161,13 +161,14 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const {setCommenData} = useCommenStore()
     // 登录框状态
     const [loginshow, setLoginShow] = useState<boolean>(false)
-    const addComment = useMemoizedFn((data: API.NewComment) => {
-        NetWorkApi<API.NewComment, API.ActionSucceeded>({
+    const addComment = useMemoizedFn((data: API.NewComments) => {
+        NetWorkApi<API.NewComments, API.ActionSucceeded>({
             method: "post",
-            url: "comment",
+            url: "comments",
             data
         })
             .then((res) => {
+                success("评论成功")
                 if (data.by_user_id && data.by_user_id > 0) {
                     // 刷新modal中子评论列表
                     setCommenData({
@@ -209,7 +210,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             return
         }
         const params = {
-            plugin_id: plugin.id,
+            uuid: plugin.uuid,
             message_img: commentFiles,
             parent_id: currentComment.root_id === 0 ? 0 : currentComment.id,
             root_id: currentComment.root_id || currentComment.id,
@@ -349,6 +350,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             </div>
 
             <PluginCommentChildModal
+                plugin={plugin}
                 visible={commentChildVisible}
                 parentInfo={parentComment}
                 onReply={pluginReply}
@@ -430,12 +432,6 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
         return inViewport || !isLazyLoadImage
     }, [inViewport, isLazyLoadImage])
 
-    const testNewInfo = () => {
-        const newInfo: API.CommentListData = JSON.parse(JSON.stringify(info))
-        newInfo.reply_num = 0
-        return newInfo
-    }
-
     return (
         <div className={styles["plugin-comment-opt"]} key={key} ref={ref}>
             <div className={styles["opt-author-img"]} style={{width: headImgSize}}>
@@ -496,19 +492,25 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                         )}
                     </div>
                 </div>
-                {info.reply_num > 0 && (
-                    <div className={styles["comment-twice-reply"]}>
-                        {/* 此处的testNewInfo等待后期接口替换 */}
-                        <PluginCommentInfo
-                            key={123}
-                            info={testNewInfo()}
-                            onReply={onReply}
-                            onStar={onStar}
-                            isStarChange={testNewInfo().is_stars}
-                            headImgSize={24}
-                        />
-                    </div>
-                )}
+                {/* 此处不定高虚拟列表 二级评论的出现会导致列表泛白 */}
+                {/* {(info.reply_content || []).length > 0 && isOperation && (
+                    <>
+                        {info.reply_content?.map((info) => {
+                            return (
+                                <div className={styles["comment-twice-reply"]}>
+                                    <PluginCommentInfo
+                                        key={123}
+                                        info={info}
+                                        onReply={onReply}
+                                        onStar={onStar}
+                                        isStarChange={info.is_stars}
+                                        headImgSize={24}
+                                    />
+                                </div>
+                            )
+                        })}
+                    </>
+                )} */}
                 {isOperation && info.reply_num > 2 && (
                     <a
                         className={styles["comment-reply"]}
@@ -871,6 +873,7 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
 }
 
 interface PluginCommentChildModalProps {
+    plugin: API.YakitPluginDetail
     visible: boolean
     isLogin: boolean
     parentInfo?: API.CommentListData
@@ -880,11 +883,11 @@ interface PluginCommentChildModalProps {
 
 interface CommentQueryProps extends API.PageMeta {
     root_id?: number
-    plugin_id?: number
+    uuid?: string
 }
 
 const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
-    const {parentInfo, visible, onReply, onCancel, isLogin} = props
+    const {plugin, parentInfo, visible, onReply, onCancel, isLogin} = props
 
     const [loadingChild, setLoadingChild] = useState<boolean>(false)
     const [commentChildResponses, setCommentChildResponses] = useState<API.CommentListResponse>({
@@ -920,7 +923,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     const getChildComment = useMemoizedFn((page: number = 1, payload: any = {}) => {
         const params = {
             root_id: parentInfo?.id,
-            plugin_id: parentInfo?.plugin_id,
+            uuid: plugin.uuid,
             limit,
             page,
             order_by: "created_at",
@@ -928,10 +931,12 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
         }
         NetWorkApi<CommentQueryProps, API.CommentListResponse>({
             method: "get",
-            url: "comment/reply",
+            url: "comments/reply",
             params
         })
             .then((res) => {
+                console.log("cyjcyj---", res.data)
+
                 if (!res.data) {
                     res.data = []
                 }
@@ -1000,9 +1005,11 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
     useEffect(() => {
         if (!commenData.isRefChildCommentList) return
         if (!parentInfo) return
+        console.log("woc")
+
         const refParams = {
             root_id: parentInfo?.id,
-            plugin_id: parentInfo?.plugin_id
+            uuid: plugin.uuid
         }
         getChildComment(1, refParams)
     }, [commenData.isRefChildCommentList])

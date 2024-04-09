@@ -44,7 +44,7 @@ export interface SearchPluginDetailRequest {
 }
 
 export interface StarsOperation {
-    id: number
+    uuid: string
     operation: string
 }
 
@@ -116,13 +116,13 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         }
         if (!plugin) return
         const prams: StarsOperation = {
-            id: plugin?.id,
+            uuid:plugin.uuid,
             operation: plugin.is_stars ? "remove" : "add"
         }
 
         NetWorkApi<StarsOperation, API.ActionSucceeded>({
             method: "post",
-            url: "yakit/plugin/stars",
+            url: "plugins/stars",
             params: prams
         })
             .then((res) => {

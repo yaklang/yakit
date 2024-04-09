@@ -1009,6 +1009,14 @@ export declare namespace API {
     operation_plugin_id: string;
     extra?: string;
   }
+  export interface NewComments {
+    uuid: string;
+    by_user_id?: number;
+    message_img?: string[];
+    parent_id?: number;
+    root_id?: number;
+    message?: string;
+  }
   export interface NewComment {
     plugin_id: number;
     by_user_id?: number;
@@ -1195,6 +1203,7 @@ export declare namespace API {
     by_head_img: string;
     reply_num: number;
     is_stars?: boolean;
+    reply_content?: CommentListData[];
   }
   export interface CollaboratorInfo {
     user_id: number;

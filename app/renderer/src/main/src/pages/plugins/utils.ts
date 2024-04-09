@@ -359,7 +359,7 @@ export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) =>
  * @description 接口/yakit/plugin/stars 请求参数
  */
 export interface PluginStarsRequest {
-    id: number
+    uuid: string
     operation: "remove" | "add"
 }
 /**线上插件点赞 */
@@ -368,7 +368,7 @@ export const apiPluginStars: (query: PluginStarsRequest) => Promise<API.ActionSu
         try {
             NetWorkApi<PluginStarsRequest, API.ActionSucceeded>({
                 method: "post",
-                url: "yakit/plugin/stars",
+                url: "plugins/stars",
                 params: {...query}
             })
                 .then((res: API.ActionSucceeded) => {
