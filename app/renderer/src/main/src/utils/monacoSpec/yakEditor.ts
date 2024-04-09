@@ -446,10 +446,11 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             const editor = modelToEditorMap.get(model);
             if (editor) { // 修复在补全后的函数签名提示问题
                 const selection = editor.getSelection();
+                // 补全后一般会选择某些内容
                 if (selection) {
-                    const selectionLastChar = model.getValueInRange({ startLineNumber: selection.startLineNumber, startColumn: selection.startColumn - 1, endLineNumber: selection.endLineNumber, endColumn: selection.endColumn });
-                    if (selectionLastChar === "(") {
-                        newPosition = new monaco.Position(selection.startLineNumber, selection.startColumn - 1);
+                    const match = model.findPreviousMatch("(", newPosition, false, false, null, false);
+                    if (match) {
+                        newPosition = match.range.getStartPosition();
                     }
                 }
             }
