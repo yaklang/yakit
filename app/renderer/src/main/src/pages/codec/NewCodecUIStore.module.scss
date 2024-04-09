@@ -62,15 +62,92 @@
         }
     }
 }
-.new-codec-left-border-input-ui {
+
+.new-codec-textarea-ui{
+    display: flex;
+    flex-direction: row;
+    background-color: #fff;
+    border-radius: 4px 4px 0px 0px;
+    position: relative;
+    .main-left-focus {
+        border-radius: 4px 0px 0px 4px;
+    }
+    .main {
+        box-sizing: border-box;
+        padding: 4px 12px 6px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+        // height: 90px;
+        .header {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 4px;
+            .title {
+                color: #b4bbca;
+                font-size: 11px;
+                font-weight: 400;
+                line-height: 16px;
+            }
+            .icon {
+                color: #f4736b;
+                font-family: SimSong;
+                font-size: 11px;
+                font-weight: 400;
+                line-height: 16px;
+                // text-align: right;
+                position: relative;
+                top: 2px;
+            }
+        }
+        .content {
+        }
+    }
+    .extra {
+    }
+    .line{
+        position: absolute;
+        bottom: 0px;
+        height: 1px;
+        width: 100%;
+        background-color: var(--yakit-primary-5);
+    }
+    :global {
+        .ant-input {
+            border: transparent;
+            font-size: 12px;
+            padding: 0px;
+            height: 16px;
+            border-radius: 0px;
+            border-color: var(--yakit-primary-6);
+        }
+        .ant-input[disabled] {
+            background-color: #ffffff;
+            border: unset;
+        }
+        .ant-input:focus {
+            box-shadow: unset;
+        }
+        .textArea-resizer-icon{
+            bottom: 0px;
+            right: 1px;
+        }
+    }
+}
+
+.new-codec-left-border-input-ui,.new-codec-left-border-textarea-ui {
     border-radius: 4px 0px 0px 4px;
 }
 
+
+
 .new-codec-check-ui {
+    display: inline-block;
     padding: 4px 0px;
     .text {
         color: #31343f;
-
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;

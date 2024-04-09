@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Checkbox, CheckboxProps, Divider} from "antd"
+import {Checkbox, CheckboxProps, Divider, Input} from "antd"
 import {DownOutlined} from "@ant-design/icons"
 import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -14,7 +14,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {IMonacoEditor, NewHTTPPacketEditor, YakEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
+import {InternalTextAreaProps, YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {DefaultOptionType} from "antd/lib/select"
@@ -86,6 +86,71 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
             {extra && <div className={styles["extra"]}>{extra}</div>}
         </div>
     )
+}
+
+export interface NewCodecTextAreaUIProps extends InternalTextAreaProps {
+    // 标题
+    title?: string
+    extra?: React.ReactNode
+    // 是否为必填
+    require?: boolean
+    // 左右布局时 border圆角方向
+    direction?: "left" | "right"
+}
+
+export const NewCodecTextAreaUI: React.FC<NewCodecTextAreaUIProps> = (props) => {
+    const {title, extra, require, direction, ...restProps} = props
+    const [isFocus, setFocus] = useState<boolean>(false)
+    const inputRef = useRef<any>(null)
+
+    useEffect(() => {
+        if (restProps.disabled) {
+            setFocus(false)
+        }
+    }, [restProps.disabled])
+
+    const onFocusBox = useMemoizedFn(() => {
+        if (inputRef.current) {
+            inputRef.current.focus()
+        }
+    })
+
+    const onFocus = useMemoizedFn((e) => {
+        setFocus(true)
+    })
+
+    const onBlur = useMemoizedFn((e) => {
+        setFocus(false)
+    })
+    return (
+        <div
+        className={classNames(styles["new-codec-textarea-ui"], {
+            [styles["new-codec-left-border-textarea-ui"]]: direction === "left"
+        })}
+        onClick={onFocusBox}
+    >
+        <div
+            className={classNames(styles["main"], {
+                [styles["main-left-focus"]]: direction === "left"
+            })}
+        >
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>{title}</div>
+                {require && <div className={styles["icon"]}>*</div>}
+            </div>
+            <div className={styles["content"]}>
+                <YakitInput.TextArea 
+                    style={{height:60,maxHeight:120}}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                    ref={inputRef}
+                    placeholder='请输入...'
+                    {...restProps}/>
+            </div>
+        </div>
+        {extra && <div className={styles["extra"]}>{extra}</div>}
+        {isFocus && <div className={styles['line']}/>}
+    </div>)
 }
 
 export interface NewCodecCheckUIProps {
