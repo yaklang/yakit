@@ -2097,7 +2097,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const {pageItem, index, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache} = props
     // webFuzzer 序列化
     const [type, setType] = useState<WebFuzzerType>("config")
-
+    
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
         id: "0",
@@ -2163,9 +2163,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (!inViewport) return
         setType(res.type)
-        if (type === res.type && res.type === "config") {
-            emiter.emit("onSetFuzzerAdvancedConfigShow")
-        }
     })
     /**页面聚焦 */
     const onFocusPage = useMemoizedFn(() => {

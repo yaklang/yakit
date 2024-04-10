@@ -1,16 +1,16 @@
-import { ReactNode } from "react"
+import {ReactNode} from "react"
 
-export type WebFuzzerType = "config" | "sequence"
+export type WebFuzzerType = "config" | "sequence" | "rule"
 
 export interface WebFuzzerPageProps {
-    type: WebFuzzerType
+    selectType?: WebFuzzerType
+    setSelectType?: (t: WebFuzzerType) => void
+    defaultType: WebFuzzerType
     children?: ReactNode
-    // isHttps?: boolean
-    // isGmTLS?: boolean
-    // request?: string
-    // system?: string
-    // shareContent?: string
     id?: string
     groupId?: string
 }
 
+export interface FuzzerSequenceWrapperProps {
+    children?: ReactNode
+}

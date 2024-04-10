@@ -1,34 +1,45 @@
-import React, {Suspense, useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {WebFuzzerPageProps, WebFuzzerType} from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
-import {OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineAdjustmentsIcon, OutlineClipboardlistIcon, OutlineCollectionIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import {useCreation, useInViewport, useMemoizedFn, useDebounceFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
-import {yakitNotify} from "@/utils/notification"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import emiter from "@/utils/eventBus/eventBus"
 import {getRemoteValue} from "@/utils/kv"
-import {WEB_FUZZ_Advanced_Config_Switch_Checked} from "../HTTPFuzzerPage"
+import {WEB_FUZZ_Advanced_Config_Switch_Checked, WEB_FUZZ_Rule_Switch_Checked} from "../HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")
 
-const webFuzzerTabs = [
+export const webFuzzerTabs = [
     {
         key: "config",
-        label: "Fuzzer 配置",
+        label: "配置",
         icon: <OutlineAdjustmentsIcon />
     },
     {
+        key: "rule",
+        label: "规则",
+        icon: <OutlineClipboardlistIcon />
+    },
+    {
         key: "sequence",
-        label: "Fuzzer 序列",
+        label: "序列",
         icon: <OutlineCollectionIcon />
     }
 ]
+/**包裹 配置和规则，不包裹序列 */
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const webFuzzerRef = useRef<any>(null)
     const [inViewport] = useInViewport(webFuzzerRef)
+
+    const [type, setType] = useState<WebFuzzerType>(props.defaultType || "config")
+    // 监听tab栏打开或关闭 【配置】
+    const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(false)
+    // 监听tab栏打开或关闭 【规则】
+    const [ruleAdvancedConfigShow, setRuleAdvancedConfigShow] = useState<boolean>(false)
 
     const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
@@ -38,30 +49,15 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         shallow
     )
 
-    const onSwitchType = useMemoizedFn((key) => {
-        const pageChildrenList: PageNodeItemProps[] = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId)
-        if (props.id && !pageChildrenList) {
-            // 新建组
-            onAddGroup(props.id)
-        } else if (props.id && pageChildrenList.length === 0) {
-            // 新建组
-            onAddGroup(props.id)
-        } else {
-            onSetType("sequence")
+    useEffect(() => {
+        emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
+        emiter.on("onSwitchTypeWebFuzzerPage", onSwitchType)
+        return () => {
+            emiter.off("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
+            emiter.off("onSwitchTypeWebFuzzerPage", onSwitchType)
         }
-    })
-    const onAddGroup = useMemoizedFn((id: string) => {
-        ipcRenderer.invoke("send-add-group", {pageId: id})
-    })
-    const onSetType = useMemoizedFn((key: WebFuzzerType) => {
-        ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-        // if (key === "config") {
-        //     ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
-        // }
-    })
+    }, [])
 
-    // 监听tab栏打开或关闭
-    const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(false)
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
             if (c === "") {
@@ -70,19 +66,86 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 setAdvancedConfigShow(c === "true")
             }
         })
+        getRemoteValue(WEB_FUZZ_Rule_Switch_Checked).then((c) => {
+            if (c === "") {
+                setRuleAdvancedConfigShow(true)
+            } else {
+                setRuleAdvancedConfigShow(c === "true")
+            }
+        })
     }, [])
 
-    const debounceGetFuzzerAdvancedConfigShow = useMemoizedFn((flag) => {
-        if (inViewport) setAdvancedConfigShow(flag)
+    const onSetSequence = useMemoizedFn((key) => {
+        const pageChildrenList: PageNodeItemProps[] = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId) || []
+        if (props.id && pageChildrenList.length === 0) {
+            // 新建组
+            onAddGroup(props.id)
+        } else {
+            // 设置MainOperatorContent层type变化用来控制是否展示【序列】
+            ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
+            // 设置 【序列】的选中
+            emiter.emit("onSwitchTypeFuzzerSequenceWrapper", JSON.stringify({type: key}))
+        }
+    })
+    const onAddGroup = useMemoizedFn((id: string) => {
+        ipcRenderer.invoke("send-add-group", {pageId: id})
+    })
+    const onSetType = useMemoizedFn((key: WebFuzzerType) => {
+        switch (key) {
+            case "sequence":
+                onSetSequence("sequence")
+                break
+            default:
+                // 设置MainOperatorContent层type变化用来控制是否展示【配置】/【规则】
+                ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
+                // 设置【配置】/【规则】的高级配置项的展示
+                emiter.emit("onFuzzerAdvancedConfigShowType", JSON.stringify({type: key}))
+                if (type === key) {
+                    switch (key) {
+                        case "config":
+                            // 设置【配置】的高级配置的隐藏或显示
+                            emiter.emit("onSetFuzzerAdvancedConfigShow")
+                            break
+                        default:
+                            break
+                    }
+                }
+                // 设置【配置】/【规则】选中
+                setType(key)
+                break
+        }
     })
 
-    useEffect(() => {
-        emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
-        return () => {
-            emiter.off("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
+    const debounceGetFuzzerAdvancedConfigShow = useMemoizedFn((data) => {
+        if (inViewport) {
+            try {
+                const value = JSON.parse(data)
+                const key = value.type as WebFuzzerType
+                switch (key) {
+                    case "config":
+                        setAdvancedConfigShow(value.checked)
+                        break
+                    case "rule":
+                        setRuleAdvancedConfigShow(value.checked)
+                        break
+                    default:
+                        break
+                }
+            } catch (error) {}
         }
-    }, [])
-
+    })
+    const onSwitchType = useMemoizedFn((data) => {
+        try {
+            const value = JSON.parse(data)
+            setType(value.type as WebFuzzerType)
+        } catch (error) {}
+    })
+    const isUnShow = useCreation(() => {
+        if (type === "sequence") {
+            return false
+        }
+        return !advancedConfigShow || !ruleAdvancedConfigShow
+    }, [type, advancedConfigShow, ruleAdvancedConfigShow])
     return (
         <div className={styles["web-fuzzer"]} ref={webFuzzerRef}>
             <div className={styles["web-fuzzer-tab"]}>
@@ -90,16 +153,12 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                     <div
                         key={item.key}
                         className={classNames(styles["web-fuzzer-tab-item"], {
-                            [styles["web-fuzzer-tab-item-active"]]: props.type === item.key,
-                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]:
-                                props.type === "config" && item.key === "config" && !advancedConfigShow
+                            [styles["web-fuzzer-tab-item-active"]]: type === item.key,
+                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]: item.key === type && isUnShow
                         })}
                         onClick={() => {
-                            if (item.key === "sequence") {
-                                onSwitchType(item.key)
-                            } else {
-                                onSetType(item.key as WebFuzzerType)
-                            }
+                            const keyType = item.key as WebFuzzerType
+                            onSetType(keyType)
                         }}
                     >
                         <span className={styles["web-fuzzer-tab-label"]}>{item.label}</span>

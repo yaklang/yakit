@@ -500,7 +500,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.HTTPFuzzer:
             return (
                 <Suspense fallback={<PageLoading />}>
-                    <WebFuzzerPage type='config' id={params?.id || ""}>
+                    <WebFuzzerPage defaultType='config' id={params?.id || ""}>
                         <HTTPFuzzerPage
                             isHttps={params?.isHttps}
                             isGmTLS={params?.isGmTLS}

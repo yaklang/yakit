@@ -117,7 +117,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         onShowResponseMatcherAndExtraction,
         inViewportCurrent,
         id,
-        matchSubmitFun
+        matchSubmitFun,
+        showFormContentType
     } = props
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
@@ -231,7 +232,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }, [inViewport, refreshProxy])
 
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
-        let newValue: AdvancedConfigValueProps = {...allFields}
+        let newValue: AdvancedConfigValueProps = {...advancedConfigValue, ...allFields}
         if (newValue.isGmTLS) {
             newValue.isHttps = true
         }
@@ -469,7 +470,821 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 yakitNotify("error", "预览失败:" + err)
             })
     })
+    const renderContent = useMemoizedFn(() => {
+        switch (showFormContentType) {
+            case "config":
+                return (
+                    <>
+                        <div className={styles["advanced-config-extra-formItem"]}>
+                            <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item
+                                label={
+                                    <span className={styles["advanced-config-form-label"]}>
+                                        真实Host
+                                        <Tooltip title='如需Host碰撞，请配置真实Host' overlayStyle={{width: 150}}>
+                                            <InformationCircleIcon className={styles["info-icon"]} />
+                                        </Tooltip>
+                                    </span>
+                                }
+                                name='actualHost'
+                            >
+                                <YakitInput placeholder='请输入...' size='small' />
+                            </Form.Item>
+                            <Form.Item
+                                label={
+                                    <span className={styles["advanced-config-form-label"]}>
+                                        设置代理
+                                        <Tooltip
+                                            title='设置多个代理时，会智能选择能用的代理进行发包'
+                                            overlayStyle={{width: 150}}
+                                        >
+                                            <InformationCircleIcon className={styles["info-icon"]} />
+                                        </Tooltip>
+                                    </span>
+                                }
+                                name='proxy'
+                                style={{marginBottom: 5}}
+                            >
+                                <YakitSelect
+                                    allowClear
+                                    options={proxyList}
+                                    placeholder='请输入...'
+                                    mode='tags'
+                                    size='small'
+                                    maxTagCount={1}
+                                    dropdownMatchSelectWidth={245}
+                                />
+                            </Form.Item>
+                            <YakitButton
+                                size='small'
+                                type='text'
+                                onClick={() => setAgentConfigModalVisible(true)}
+                                icon={<PlusSmIcon />}
+                                style={{marginLeft: 100, marginBottom: 12}}
+                            >
+                                配置代理认证
+                            </YakitButton>
+                            <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                        </div>
+                        <YakitCollapse
+                            activeKey={activeKey}
+                            onChange={(key) => onSwitchCollapse(key)}
+                            destroyInactivePanel={true}
+                        >
+                            <YakitPanel
+                                header='请求包配置'
+                                key='请求包配置'
+                                extra={
+                                    <YakitButton
+                                        type='text'
+                                        colors='danger'
+                                        className={styles["btn-padding-right-0"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const restValue = {
+                                                fuzzTagMode: "standard",
+                                                fuzzTagSyncIndex: false,
+                                                isHttps: false,
+                                                noFixContentLength: false,
+                                                actualHost: "",
+                                                timeout: 30
+                                            }
+                                            onReset(restValue)
+                                        }}
+                                        size='small'
+                                    >
+                                        重置
+                                    </YakitButton>
+                                }
+                            >
+                                <Form.Item label='Fuzztag 辅助'>
+                                    <YakitButton
+                                        size='small'
+                                        type='outline1'
+                                        onClick={() => onInsertYakFuzzer()}
+                                        icon={<PlusSmIcon />}
+                                    >
+                                        插入 yak.fuzz 语法
+                                    </YakitButton>
+                                </Form.Item>
+                                <Form.Item
+                                    label={
+                                        <span className={styles["advanced-config-form-label"]}>
+                                            渲染 Fuzz
+                                            <Tooltip
+                                                title='兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。'
+                                                overlayStyle={{width: 150}}
+                                            >
+                                                <InformationCircleIcon className={styles["info-icon"]} />
+                                            </Tooltip>
+                                        </span>
+                                    }
+                                    name='fuzzTagMode'
+                                >
+                                    <YakitRadioButtons
+                                        buttonStyle='solid'
+                                        options={fuzzTagModeOptions}
+                                        size={"small"}
+                                    />
+                                </Form.Item>
 
+                                <Form.Item label='渲染模式' name='fuzzTagSyncIndex'>
+                                    <YakitRadioButtons
+                                        buttonStyle='solid'
+                                        options={fuzzTagSyncOptions}
+                                        size={"small"}
+                                    />
+                                </Form.Item>
+
+                                <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
+                                    <YakitSwitch />
+                                </Form.Item>
+
+                                <Form.Item label='超时时长' name='timeout' style={{marginBottom: 12}}>
+                                    <YakitInputNumber type='horizontal' size='small' />
+                                </Form.Item>
+                                <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
+                                    <YakitButton
+                                        style={{marginTop: 3}}
+                                        size='small'
+                                        type='text'
+                                        onClick={() => setBatchTargetModalVisible(true)}
+                                        icon={
+                                            JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
+                                                Uint8ArrayToString(
+                                                    advancedConfigValue.batchTarget || new Uint8Array()
+                                                ) ? (
+                                                    <OutlineBadgecheckIcon style={{color: "#56C991"}} />
+                                                ) : (
+                                                    <PlusSmIcon />
+                                                )
+                                            ) : (
+                                                <PlusSmIcon />
+                                            )
+                                        }
+                                    >
+                                        {JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
+                                            Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
+                                                <div style={{color: "#56C991"}}>已配置</div>
+                                            ) : (
+                                                "配置批量目标"
+                                            )
+                                        ) : (
+                                            "配置批量目标"
+                                        )}
+                                    </YakitButton>
+                                </Form.Item>
+                            </YakitPanel>
+                            <YakitPanel
+                                header='并发配置'
+                                key='发包配置'
+                                extra={
+                                    <YakitButton
+                                        type='text'
+                                        colors='danger'
+                                        className={styles["btn-padding-right-0"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const restValue = {
+                                                concurrent: 20,
+                                                proxy: [],
+                                                noSystemProxy: false,
+                                                minDelaySeconds: undefined,
+                                                maxDelaySeconds: undefined,
+                                                repeatTimes: 0
+                                            }
+                                            onReset(restValue)
+                                        }}
+                                        size='small'
+                                    >
+                                        重置
+                                    </YakitButton>
+                                }
+                            >
+                                <Form.Item
+                                    label='重复发包'
+                                    name='repeatTimes'
+                                    help={`一般用来测试条件竞争或者大并发的情况`}
+                                >
+                                    <YakitInputNumber type='horizontal' size='small' />
+                                </Form.Item>
+                                <Form.Item label='并发线程' name='concurrent'>
+                                    <YakitInputNumber type='horizontal' size='small' />
+                                </Form.Item>
+
+                                <Form.Item label='随机延迟' style={{marginBottom: 0}}>
+                                    <div className={styles["advanced-config-delay"]}>
+                                        <Form.Item
+                                            name='minDelaySeconds'
+                                            noStyle
+                                            normalize={(value) => {
+                                                return value.replace(/\D/g, "")
+                                            }}
+                                        >
+                                            <YakitInput
+                                                prefix='Min'
+                                                suffix='s'
+                                                size='small'
+                                                className={styles["delay-input-left"]}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item
+                                            name='maxDelaySeconds'
+                                            noStyle
+                                            normalize={(value) => {
+                                                return value.replace(/\D/g, "")
+                                            }}
+                                        >
+                                            <YakitInput
+                                                prefix='Max'
+                                                suffix='s'
+                                                size='small'
+                                                className={styles["delay-input-right"]}
+                                            />
+                                        </Form.Item>
+                                    </div>
+                                </Form.Item>
+                            </YakitPanel>
+                            <YakitPanel
+                                header='重试配置'
+                                key='重试配置'
+                                extra={
+                                    <YakitButton
+                                        type='text'
+                                        colors='danger'
+                                        className={styles["btn-padding-right-0"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const restValue = {
+                                                maxRetryTimes: 3,
+                                                retrying: true,
+                                                noRetrying: false,
+                                                retryConfiguration: {
+                                                    statusCode: undefined,
+                                                    keyWord: undefined
+                                                },
+                                                noRetryConfiguration: {
+                                                    statusCode: undefined,
+                                                    keyWord: undefined
+                                                }
+                                            }
+                                            onReset(restValue)
+                                        }}
+                                        size='small'
+                                    >
+                                        重置
+                                    </YakitButton>
+                                }
+                            >
+                                <Form.Item label='重试次数' name='maxRetryTimes'>
+                                    <YakitInputNumber type='horizontal' size='small' min={0} />
+                                </Form.Item>
+                                <YakitCollapse activeKey={retryActive} destroyInactivePanel={true} bordered={false}>
+                                    <YakitPanel
+                                        header={
+                                            <Form.Item name='retry' noStyle valuePropName='checked'>
+                                                <YakitCheckbox>
+                                                    <span style={{marginLeft: 6, cursor: "pointer"}}>重试条件</span>
+                                                </YakitCheckbox>
+                                            </Form.Item>
+                                        }
+                                        key='重试条件'
+                                        className={styles["advanced-config-collapse-secondary-item"]}
+                                    >
+                                        <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
+                                            <YakitInput placeholder='200,300-399' size='small' disabled={!retry} />
+                                        </Form.Item>
+                                    </YakitPanel>
+                                    <YakitPanel
+                                        header={
+                                            <Form.Item name='noRetry' noStyle valuePropName='checked'>
+                                                <YakitCheckbox>
+                                                    <span style={{marginLeft: 6, cursor: "pointer"}}>不重试条件</span>
+                                                </YakitCheckbox>
+                                            </Form.Item>
+                                        }
+                                        key='不重试条件'
+                                        className={styles["advanced-config-collapse-secondary-item"]}
+                                    >
+                                        <Form.Item
+                                            label='状态码'
+                                            name={["noRetryConfiguration", "statusCode"]}
+                                            style={{marginBottom: 0}}
+                                        >
+                                            <YakitInput placeholder='200,300-399' size='small' disabled={!noRetry} />
+                                        </Form.Item>
+                                    </YakitPanel>
+                                </YakitCollapse>
+                            </YakitPanel>
+                            <YakitPanel
+                                header='重定向配置'
+                                key='重定向配置'
+                                extra={
+                                    <YakitButton
+                                        type='text'
+                                        colors='danger'
+                                        className={styles["btn-padding-right-0"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const restValue = {
+                                                redirectCount: 3,
+                                                noFollowRedirect: true,
+                                                followJSRedirect: false
+                                            }
+                                            onReset(restValue)
+                                        }}
+                                        size='small'
+                                    >
+                                        重置
+                                    </YakitButton>
+                                }
+                            >
+                                <Form.Item label='禁用重定向' name='noFollowRedirect' valuePropName={"checked"}>
+                                    <YakitSwitch />
+                                </Form.Item>
+                                <Form.Item label='重定向次数' name='redirectCount'>
+                                    <YakitInputNumber type='horizontal' size='small' />
+                                </Form.Item>
+                                <Form.Item
+                                    label='JS 重定向'
+                                    name='followJSRedirect'
+                                    valuePropName={"checked"}
+                                    style={{marginBottom: 0}}
+                                >
+                                    <YakitSwitch />
+                                </Form.Item>
+                            </YakitPanel>
+                            <YakitPanel
+                                header={"DNS配置"}
+                                key={"DNS配置"}
+                                extra={
+                                    <YakitButton
+                                        type='text'
+                                        colors='danger'
+                                        className={styles["btn-padding-right-0"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const restValue = {
+                                                dnsServers: [],
+                                                etcHosts: []
+                                            }
+                                            onReset(restValue)
+                                        }}
+                                        size='small'
+                                    >
+                                        重置
+                                    </YakitButton>
+                                }
+                            >
+                                <Form.Item label='DNS服务器' name='dnsServers'>
+                                    <YakitSelect
+                                        options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
+                                            return {value: i, label: i}
+                                        })}
+                                        mode='tags'
+                                        allowClear={true}
+                                        size={"small"}
+                                        placeholder={"指定DNS服务器"}
+                                    />
+                                </Form.Item>
+                                <Form.Item label={"Hosts配置"} name='etcHosts' style={{marginBottom: 0}}>
+                                    <Space direction={"vertical"}>
+                                        {(etcHosts || []).map((i, n) => (
+                                            <Tooltip
+                                                title={
+                                                    getTextWidth(`${i.Key} => ${i.Value}`) >= 123
+                                                        ? `${i.Key} => ${i.Value}`
+                                                        : ""
+                                                }
+                                                key={`${i.Key} => ${i.Value}`}
+                                            >
+                                                <YakitTag
+                                                    closable={true}
+                                                    onClose={() => {
+                                                        const newEtcHosts = etcHosts.filter((j) => j.Key !== i.Key)
+                                                        const v = form.getFieldsValue()
+                                                        onSetValue({
+                                                            ...v,
+                                                            etcHosts: newEtcHosts
+                                                        })
+                                                    }}
+                                                    key={`${i.Key}-${n}`}
+                                                >
+                                                    <div
+                                                        className={styles.etcHostsText}
+                                                    >{`${i.Key} => ${i.Value}`}</div>
+                                                </YakitTag>
+                                            </Tooltip>
+                                        ))}
+                                        <YakitButton
+                                            onClick={() => {
+                                                inputHTTPFuzzerHostConfigItem((obj) => {
+                                                    const newEtcHosts = [
+                                                        ...etcHosts.filter((i) => i.Key !== obj.Key),
+                                                        obj
+                                                    ]
+                                                    const v = form.getFieldsValue()
+                                                    onSetValue({
+                                                        ...v,
+                                                        etcHosts: newEtcHosts
+                                                    })
+                                                })
+                                            }}
+                                        >
+                                            添加 Hosts 映射
+                                        </YakitButton>
+                                    </Space>
+                                </Form.Item>
+                            </YakitPanel>
+                        </YakitCollapse>
+                    </>
+                )
+            case "rule":
+                return (
+                    <>
+                        <YakitCollapse
+                            activeKey={activeKey}
+                            onChange={(key) => onSwitchCollapse(key)}
+                            destroyInactivePanel={true}
+                        >
+                            <YakitPanel
+                                header={
+                                    <div className={styles["matchers-panel"]}>
+                                        匹配器
+                                        <div className={styles["matchers-number"]}>{matchersList?.length}</div>
+                                    </div>
+                                }
+                                key='匹配器'
+                                extra={
+                                    <>
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                const restValue = {
+                                                    matchers: [],
+                                                    filterMode: "drop",
+                                                    hitColor: "red",
+                                                    matchersCondition: "and"
+                                                }
+                                                onReset(restValue)
+                                            }}
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            size='small'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
+                                                    onSwitchCollapse([...activeKey, "匹配器"])
+                                                }
+                                                onAddMatchingAndExtractionCard("matchers")
+                                            }}
+                                            className={styles["btn-padding-right-0"]}
+                                        >
+                                            添加/调试
+                                            <HollowLightningBoltIcon />
+                                        </YakitButton>
+                                    </>
+                                }
+                            >
+                                <div className={styles["matchers-heard"]}>
+                                    <div className={styles["matchers-heard-left"]}>
+                                        <Form.Item name='filterMode' noStyle>
+                                            <YakitRadioButtons
+                                                buttonStyle='solid'
+                                                options={filterModeOptions}
+                                                size='small'
+                                            />
+                                        </Form.Item>
+                                        {filterMode === "onlyMatch" && (
+                                            <Form.Item name='hitColor' noStyle>
+                                                <ColorSelect size='small' />
+                                            </Form.Item>
+                                        )}
+                                    </div>
+                                    <Form.Item name='matchersCondition' noStyle>
+                                        <YakitRadioButtons
+                                            buttonStyle='solid'
+                                            options={matchersConditionOptions}
+                                            size='small'
+                                        />
+                                    </Form.Item>
+                                </div>
+                                <MatchersList
+                                    matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
+                                    onAdd={() => onAddMatchingAndExtractionCard("matchers")}
+                                    onRemove={onRemoveMatcher}
+                                    onEdit={onEditMatcher}
+                                />
+                            </YakitPanel>
+                            <YakitPanel
+                                header={
+                                    <div className={styles["matchers-panel"]}>
+                                        数据提取器
+                                        <div className={styles["matchers-number"]}>{extractorList?.length}</div>
+                                    </div>
+                                }
+                                key='数据提取器'
+                                extra={
+                                    <>
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                const restValue = {
+                                                    extractors: []
+                                                }
+                                                onReset(restValue)
+                                            }}
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            size='small'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                if (activeKey?.findIndex((ele) => ele === "数据提取器") === -1) {
+                                                    onSwitchCollapse([...activeKey, "数据提取器"])
+                                                }
+                                                onAddMatchingAndExtractionCard("extractors")
+                                            }}
+                                            className={styles["btn-padding-right-0"]}
+                                        >
+                                            添加/调试
+                                            <HollowLightningBoltIcon />
+                                        </YakitButton>
+                                    </>
+                                }
+                            >
+                                <ExtractorsList
+                                    extractorValue={{extractorList}}
+                                    onAdd={() => onAddMatchingAndExtractionCard("extractors")}
+                                    onRemove={onRemoveExtractors}
+                                    onEdit={onEditExtractors}
+                                />
+                            </YakitPanel>
+                            <YakitPanel
+                                header='设置变量'
+                                key='设置变量'
+                                extra={
+                                    <>
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) =>
+                                                handleVariableReset(
+                                                    e,
+                                                    "params",
+                                                    {Key: "", Value: "", Type: "raw"},
+                                                    variableRef
+                                                )
+                                            }
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton type='text' onClick={onRenderVariables} size='small'>
+                                            预览
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) =>
+                                                handleVariableAdd(
+                                                    e,
+                                                    "params",
+                                                    "设置变量",
+                                                    {Key: "", Value: "", Type: "raw"},
+                                                    variableRef
+                                                )
+                                            }
+                                            className={styles["btn-padding-right-0"]}
+                                            size='small'
+                                        >
+                                            添加
+                                            <PlusIcon />
+                                        </YakitButton>
+                                    </>
+                                }
+                            >
+                                <VariableList
+                                    ref={variableRef}
+                                    field='params'
+                                    onDel={(i) => handleVariableDel(i, "params")}
+                                    extra={(i, info) => (
+                                        <Form.Item name={[info.name, "Type"]} noStyle wrapperCol={{span: 24}}>
+                                            <YakitRadioButtons
+                                                style={{marginLeft: 4}}
+                                                buttonStyle='solid'
+                                                options={variableModeOptions}
+                                                size={"small"}
+                                            />
+                                        </Form.Item>
+                                    )}
+                                ></VariableList>
+                            </YakitPanel>
+                            <YakitPanel
+                                header='GET 参数'
+                                key='GET 参数'
+                                extra={
+                                    <>
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) =>
+                                                handleVariableReset(e, "methodGet", {Key: "", Value: ""}, methodGetRef)
+                                            }
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) =>
+                                                handleVariableAdd(
+                                                    e,
+                                                    "methodGet",
+                                                    "GET 参数",
+                                                    {Key: "", Value: ""},
+                                                    methodGetRef
+                                                )
+                                            }
+                                            className={styles["btn-padding-right-0"]}
+                                            size='small'
+                                        >
+                                            添加
+                                            <PlusIcon />
+                                        </YakitButton>
+                                    </>
+                                }
+                            >
+                                <VariableList
+                                    ref={methodGetRef}
+                                    field='methodGet'
+                                    onDel={(i) => handleVariableDel(i, "methodGet")}
+                                ></VariableList>
+                            </YakitPanel>
+                            <YakitPanel
+                                header='POST 参数'
+                                key='POST 参数'
+                                extra={
+                                    <>
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) =>
+                                                handleVariableReset(
+                                                    e,
+                                                    "methodPost",
+                                                    {Key: "", Value: ""},
+                                                    methodPostRef
+                                                )
+                                            }
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) =>
+                                                handleVariableAdd(
+                                                    e,
+                                                    "methodPost",
+                                                    "POST 参数",
+                                                    {Key: "", Value: ""},
+                                                    methodPostRef
+                                                )
+                                            }
+                                            className={styles["btn-padding-right-0"]}
+                                            size='small'
+                                        >
+                                            添加
+                                            <PlusIcon />
+                                        </YakitButton>
+                                    </>
+                                }
+                            >
+                                <VariableList
+                                    ref={methodPostRef}
+                                    field='methodPost'
+                                    onDel={(i) => handleVariableDel(i, "methodPost")}
+                                ></VariableList>
+                            </YakitPanel>
+                            <YakitPanel
+                                header='Cookie'
+                                key='Cookie'
+                                extra={
+                                    <>
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) =>
+                                                handleVariableReset(e, "cookie", {Key: "", Value: ""}, cookieRef)
+                                            }
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) =>
+                                                handleVariableAdd(
+                                                    e,
+                                                    "cookie",
+                                                    "Cookie",
+                                                    {Key: "", Value: ""},
+                                                    cookieRef
+                                                )
+                                            }
+                                            className={styles["btn-padding-right-0"]}
+                                            size='small'
+                                        >
+                                            添加
+                                            <PlusIcon />
+                                        </YakitButton>
+                                    </>
+                                }
+                            >
+                                <VariableList
+                                    ref={cookieRef}
+                                    field='cookie'
+                                    onDel={(i) => handleVariableDel(i, "cookie")}
+                                ></VariableList>
+                            </YakitPanel>
+                            <YakitPanel
+                                header='Header'
+                                key='Header'
+                                extra={
+                                    <>
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) =>
+                                                handleVariableReset(e, "headers", {Key: "", Value: ""}, headersRef)
+                                            }
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) =>
+                                                handleVariableAdd(
+                                                    e,
+                                                    "headers",
+                                                    "Header",
+                                                    {Key: "", Value: ""},
+                                                    headersRef
+                                                )
+                                            }
+                                            className={styles["btn-padding-right-0"]}
+                                            size='small'
+                                        >
+                                            添加
+                                            <PlusIcon />
+                                        </YakitButton>
+                                    </>
+                                }
+                            >
+                                <VariableList
+                                    ref={headersRef}
+                                    field='headers'
+                                    onDel={(i) => handleVariableDel(i, "headers")}
+                                ></VariableList>
+                            </YakitPanel>
+                        </YakitCollapse>
+                    </>
+                )
+            default:
+                return <></>
+        }
+    })
     return (
         <div
             className={classNames(styles["http-query-advanced-config"])}
@@ -490,756 +1305,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     ...advancedConfigValue
                 }}
             >
-                <div className={styles["advanced-config-extra-formItem"]}>
-                    <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
-                        <YakitSwitch />
-                    </Form.Item>
-                    <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
-                        <YakitSwitch />
-                    </Form.Item>
-                    <Form.Item
-                        label={
-                            <span className={styles["advanced-config-form-label"]}>
-                                真实Host
-                                <Tooltip title='如需Host碰撞，请配置真实Host' overlayStyle={{width: 150}}>
-                                    <InformationCircleIcon className={styles["info-icon"]} />
-                                </Tooltip>
-                            </span>
-                        }
-                        name='actualHost'
-                    >
-                        <YakitInput placeholder='请输入...' size='small' />
-                    </Form.Item>
-                    <Form.Item
-                        label={
-                            <span className={styles["advanced-config-form-label"]}>
-                                设置代理
-                                <Tooltip
-                                    title='设置多个代理时，会智能选择能用的代理进行发包'
-                                    overlayStyle={{width: 150}}
-                                >
-                                    <InformationCircleIcon className={styles["info-icon"]} />
-                                </Tooltip>
-                            </span>
-                        }
-                        name='proxy'
-                        style={{marginBottom: 5}}
-                    >
-                        <YakitSelect
-                            allowClear
-                            options={proxyList}
-                            placeholder='请输入...'
-                            mode='tags'
-                            size='small'
-                            maxTagCount={1}
-                            dropdownMatchSelectWidth={245}
-                        />
-                    </Form.Item>
-                    <YakitButton
-                        size='small'
-                        type='text'
-                        onClick={() => setAgentConfigModalVisible(true)}
-                        icon={<PlusSmIcon />}
-                        style={{marginLeft: 100, marginBottom: 12}}
-                    >
-                        配置代理认证
-                    </YakitButton>
-                    <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
-                        <YakitSwitch />
-                    </Form.Item>
-                </div>
-                <YakitCollapse
-                    activeKey={activeKey}
-                    onChange={(key) => onSwitchCollapse(key)}
-                    destroyInactivePanel={true}
-                >
-                    <YakitPanel
-                        header='请求包配置'
-                        key='请求包配置'
-                        extra={
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                className={styles["btn-padding-right-0"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    const restValue = {
-                                        fuzzTagMode: "standard",
-                                        fuzzTagSyncIndex: false,
-                                        isHttps: false,
-                                        noFixContentLength: false,
-                                        actualHost: "",
-                                        timeout: 30
-                                    }
-                                    onReset(restValue)
-                                }}
-                                size='small'
-                            >
-                                重置
-                            </YakitButton>
-                        }
-                    >
-                        <Form.Item label='Fuzztag 辅助'>
-                            <YakitButton
-                                size='small'
-                                type='outline1'
-                                onClick={() => onInsertYakFuzzer()}
-                                icon={<PlusSmIcon />}
-                            >
-                                插入 yak.fuzz 语法
-                            </YakitButton>
-                        </Form.Item>
-                        <Form.Item
-                            label={
-                                <span className={styles["advanced-config-form-label"]}>
-                                    渲染 Fuzz
-                                    <Tooltip
-                                        title='兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。'
-                                        overlayStyle={{width: 150}}
-                                    >
-                                        <InformationCircleIcon className={styles["info-icon"]} />
-                                    </Tooltip>
-                                </span>
-                            }
-                            name='fuzzTagMode'
-                        >
-                            <YakitRadioButtons buttonStyle='solid' options={fuzzTagModeOptions} size={"small"} />
-                        </Form.Item>
-
-                        <Form.Item label='渲染模式' name='fuzzTagSyncIndex'>
-                            <YakitRadioButtons buttonStyle='solid' options={fuzzTagSyncOptions} size={"small"} />
-                        </Form.Item>
-
-                        <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
-                            <YakitSwitch />
-                        </Form.Item>
-
-                        <Form.Item label='超时时长' name='timeout' style={{marginBottom: 12}}>
-                            <YakitInputNumber type='horizontal' size='small' />
-                        </Form.Item>
-                        <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
-                            <YakitButton
-                                style={{marginTop: 3}}
-                                size='small'
-                                type='text'
-                                onClick={() => setBatchTargetModalVisible(true)}
-                                icon={
-                                    JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
-                                        Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                                            <OutlineBadgecheckIcon style={{color: "#56C991"}} />
-                                        ) : (
-                                            <PlusSmIcon />
-                                        )
-                                    ) : (
-                                        <PlusSmIcon />
-                                    )
-                                }
-                            >
-                                {JSON.stringify(advancedConfigValue.batchTarget) !== "{}" ? (
-                                    Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                                        <div style={{color: "#56C991"}}>已配置</div>
-                                    ) : (
-                                        "配置批量目标"
-                                    )
-                                ) : (
-                                    "配置批量目标"
-                                )}
-                            </YakitButton>
-                        </Form.Item>
-                    </YakitPanel>
-                    <YakitPanel
-                        header='并发配置'
-                        key='发包配置'
-                        extra={
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                className={styles["btn-padding-right-0"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    const restValue = {
-                                        concurrent: 20,
-                                        proxy: [],
-                                        noSystemProxy: false,
-                                        minDelaySeconds: undefined,
-                                        maxDelaySeconds: undefined,
-                                        repeatTimes: 0
-                                    }
-                                    onReset(restValue)
-                                }}
-                                size='small'
-                            >
-                                重置
-                            </YakitButton>
-                        }
-                    >
-                        <Form.Item label='重复发包' name='repeatTimes' help={`一般用来测试条件竞争或者大并发的情况`}>
-                            <YakitInputNumber type='horizontal' size='small' />
-                        </Form.Item>
-                        <Form.Item label='并发线程' name='concurrent'>
-                            <YakitInputNumber type='horizontal' size='small' />
-                        </Form.Item>
-
-                        <Form.Item label='随机延迟' style={{marginBottom: 0}}>
-                            <div className={styles["advanced-config-delay"]}>
-                                <Form.Item
-                                    name='minDelaySeconds'
-                                    noStyle
-                                    normalize={(value) => {
-                                        return value.replace(/\D/g, "")
-                                    }}
-                                >
-                                    <YakitInput
-                                        prefix='Min'
-                                        suffix='s'
-                                        size='small'
-                                        className={styles["delay-input-left"]}
-                                    />
-                                </Form.Item>
-                                <Form.Item
-                                    name='maxDelaySeconds'
-                                    noStyle
-                                    normalize={(value) => {
-                                        return value.replace(/\D/g, "")
-                                    }}
-                                >
-                                    <YakitInput
-                                        prefix='Max'
-                                        suffix='s'
-                                        size='small'
-                                        className={styles["delay-input-right"]}
-                                    />
-                                </Form.Item>
-                            </div>
-                        </Form.Item>
-                    </YakitPanel>
-                    <YakitPanel
-                        header='重试配置'
-                        key='重试配置'
-                        extra={
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                className={styles["btn-padding-right-0"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    const restValue = {
-                                        maxRetryTimes: 3,
-                                        retrying: true,
-                                        noRetrying: false,
-                                        retryConfiguration: {
-                                            statusCode: undefined,
-                                            keyWord: undefined
-                                        },
-                                        noRetryConfiguration: {
-                                            statusCode: undefined,
-                                            keyWord: undefined
-                                        }
-                                    }
-                                    onReset(restValue)
-                                }}
-                                size='small'
-                            >
-                                重置
-                            </YakitButton>
-                        }
-                    >
-                        <Form.Item label='重试次数' name='maxRetryTimes'>
-                            <YakitInputNumber type='horizontal' size='small' min={0} />
-                        </Form.Item>
-                        <YakitCollapse activeKey={retryActive} destroyInactivePanel={true} bordered={false}>
-                            <YakitPanel
-                                header={
-                                    <Form.Item name='retry' noStyle valuePropName='checked'>
-                                        <YakitCheckbox>
-                                            <span style={{marginLeft: 6, cursor: "pointer"}}>重试条件</span>
-                                        </YakitCheckbox>
-                                    </Form.Item>
-                                }
-                                key='重试条件'
-                                className={styles["advanced-config-collapse-secondary-item"]}
-                            >
-                                <Form.Item label='状态码' name={["retryConfiguration", "statusCode"]}>
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!retry} />
-                                </Form.Item>
-                            </YakitPanel>
-                            <YakitPanel
-                                header={
-                                    <Form.Item name='noRetry' noStyle valuePropName='checked'>
-                                        <YakitCheckbox>
-                                            <span style={{marginLeft: 6, cursor: "pointer"}}>不重试条件</span>
-                                        </YakitCheckbox>
-                                    </Form.Item>
-                                }
-                                key='不重试条件'
-                                className={styles["advanced-config-collapse-secondary-item"]}
-                            >
-                                <Form.Item
-                                    label='状态码'
-                                    name={["noRetryConfiguration", "statusCode"]}
-                                    style={{marginBottom: 0}}
-                                >
-                                    <YakitInput placeholder='200,300-399' size='small' disabled={!noRetry} />
-                                </Form.Item>
-                            </YakitPanel>
-                        </YakitCollapse>
-                    </YakitPanel>
-                    <YakitPanel
-                        header='重定向配置'
-                        key='重定向配置'
-                        extra={
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                className={styles["btn-padding-right-0"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    const restValue = {
-                                        redirectCount: 3,
-                                        redirectConfiguration: {
-                                            statusCode: undefined,
-                                            keyWord: undefined
-                                        },
-                                        noRedirectConfiguration: {
-                                            statusCode: undefined,
-                                            keyWord: undefined
-                                        }
-                                    }
-                                    onReset(restValue)
-                                }}
-                                size='small'
-                            >
-                                重置
-                            </YakitButton>
-                        }
-                    >
-                        <Form.Item label='禁用重定向' name='noFollowRedirect' valuePropName={"checked"}>
-                            <YakitSwitch />
-                        </Form.Item>
-                        <Form.Item label='重定向次数' name='redirectCount'>
-                            <YakitInputNumber type='horizontal' size='small' />
-                        </Form.Item>
-                        <Form.Item
-                            label='JS 重定向'
-                            name='followJSRedirect'
-                            valuePropName={"checked"}
-                            style={{marginBottom: 0}}
-                        >
-                            <YakitSwitch />
-                        </Form.Item>
-                    </YakitPanel>
-                    <YakitPanel
-                        header={"DNS配置"}
-                        key={"DNS配置"}
-                        extra={
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                className={styles["btn-padding-right-0"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    const restValue = {
-                                        dnsServers: [],
-                                        etcHosts: []
-                                    }
-                                    onReset(restValue)
-                                }}
-                                size='small'
-                            >
-                                重置
-                            </YakitButton>
-                        }
-                    >
-                        <Form.Item label='DNS服务器' name='dnsServers'>
-                            <YakitSelect
-                                options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
-                                    return {value: i, label: i}
-                                })}
-                                mode='tags'
-                                allowClear={true}
-                                size={"small"}
-                                placeholder={"指定DNS服务器"}
-                            />
-                        </Form.Item>
-                        <Form.Item label={"Hosts配置"} name='etcHosts' style={{marginBottom: 0}}>
-                            <Space direction={"vertical"}>
-                                {(etcHosts || []).map((i, n) => (
-                                    <Tooltip
-                                        title={
-                                            getTextWidth(`${i.Key} => ${i.Value}`) >= 123
-                                                ? `${i.Key} => ${i.Value}`
-                                                : ""
-                                        }
-                                        key={`${i.Key} => ${i.Value}`}
-                                    >
-                                        <YakitTag
-                                            closable={true}
-                                            onClose={() => {
-                                                const newEtcHosts = etcHosts.filter((j) => j.Key !== i.Key)
-                                                const v = form.getFieldsValue()
-                                                onSetValue({
-                                                    ...v,
-                                                    etcHosts: newEtcHosts
-                                                })
-                                            }}
-                                            key={`${i.Key}-${n}`}
-                                        >
-                                            <div className={styles.etcHostsText}>{`${i.Key} => ${i.Value}`}</div>
-                                        </YakitTag>
-                                    </Tooltip>
-                                ))}
-                                <YakitButton
-                                    onClick={() => {
-                                        inputHTTPFuzzerHostConfigItem((obj) => {
-                                            const newEtcHosts = [...etcHosts.filter((i) => i.Key !== obj.Key), obj]
-                                            const v = form.getFieldsValue()
-                                            onSetValue({
-                                                ...v,
-                                                etcHosts: newEtcHosts
-                                            })
-                                        })
-                                    }}
-                                >
-                                    添加 Hosts 映射
-                                </YakitButton>
-                            </Space>
-                        </Form.Item>
-                    </YakitPanel>
-                    <YakitPanel
-                        header={
-                            <div className={styles["matchers-panel"]}>
-                                匹配器
-                                <div className={styles["matchers-number"]}>{matchersList?.length}</div>
-                            </div>
-                        }
-                        key='匹配器'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const restValue = {
-                                            matchers: [],
-                                            filterMode: "drop",
-                                            hitColor: "red",
-                                            matchersCondition: "and"
-                                        }
-                                        onReset(restValue)
-                                    }}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    size='small'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
-                                            onSwitchCollapse([...activeKey, "匹配器"])
-                                        }
-                                        onAddMatchingAndExtractionCard("matchers")
-                                    }}
-                                    className={styles["btn-padding-right-0"]}
-                                >
-                                    添加/调试
-                                    <HollowLightningBoltIcon />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <div className={styles["matchers-heard"]}>
-                            <div className={styles["matchers-heard-left"]}>
-                                <Form.Item name='filterMode' noStyle>
-                                    <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
-                                </Form.Item>
-                                {filterMode === "onlyMatch" && (
-                                    <Form.Item name='hitColor' noStyle>
-                                        <ColorSelect size='small' />
-                                    </Form.Item>
-                                )}
-                            </div>
-                            <Form.Item name='matchersCondition' noStyle>
-                                <YakitRadioButtons
-                                    buttonStyle='solid'
-                                    options={matchersConditionOptions}
-                                    size='small'
-                                />
-                            </Form.Item>
-                        </div>
-                        <MatchersList
-                            matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
-                            onAdd={() => onAddMatchingAndExtractionCard("matchers")}
-                            onRemove={onRemoveMatcher}
-                            onEdit={onEditMatcher}
-                        />
-                    </YakitPanel>
-                    <YakitPanel
-                        header={
-                            <div className={styles["matchers-panel"]}>
-                                数据提取器
-                                <div className={styles["matchers-number"]}>{extractorList?.length}</div>
-                            </div>
-                        }
-                        key='数据提取器'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const restValue = {
-                                            extractors: []
-                                        }
-                                        onReset(restValue)
-                                    }}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    size='small'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (activeKey?.findIndex((ele) => ele === "数据提取器") === -1) {
-                                            onSwitchCollapse([...activeKey, "数据提取器"])
-                                        }
-                                        onAddMatchingAndExtractionCard("extractors")
-                                    }}
-                                    className={styles["btn-padding-right-0"]}
-                                >
-                                    添加/调试
-                                    <HollowLightningBoltIcon />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <ExtractorsList
-                            extractorValue={{extractorList}}
-                            onAdd={() => onAddMatchingAndExtractionCard("extractors")}
-                            onRemove={onRemoveExtractors}
-                            onEdit={onEditExtractors}
-                        />
-                    </YakitPanel>
-                    <YakitPanel
-                        header='设置变量'
-                        key='设置变量'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) =>
-                                        handleVariableReset(e, "params", {Key: "", Value: "", Type: "raw"}, variableRef)
-                                    }
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton type='text' onClick={onRenderVariables} size='small'>
-                                    预览
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) =>
-                                        handleVariableAdd(
-                                            e,
-                                            "params",
-                                            "设置变量",
-                                            {Key: "", Value: "", Type: "raw"},
-                                            variableRef
-                                        )
-                                    }
-                                    className={styles["btn-padding-right-0"]}
-                                    size='small'
-                                >
-                                    添加
-                                    <PlusIcon />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <VariableList
-                            ref={variableRef}
-                            field='params'
-                            onDel={(i) => handleVariableDel(i, "params")}
-                            extra={(i, info) => (
-                                <Form.Item name={[info.name, "Type"]} noStyle wrapperCol={{span: 24}}>
-                                    <YakitRadioButtons
-                                        style={{marginLeft: 4}}
-                                        buttonStyle='solid'
-                                        options={variableModeOptions}
-                                        size={"small"}
-                                    />
-                                </Form.Item>
-                            )}
-                        ></VariableList>
-                    </YakitPanel>
-                    <YakitPanel
-                        header='GET 参数'
-                        key='GET 参数'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) =>
-                                        handleVariableReset(e, "methodGet", {Key: "", Value: ""}, methodGetRef)
-                                    }
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) =>
-                                        handleVariableAdd(
-                                            e,
-                                            "methodGet",
-                                            "GET 参数",
-                                            {Key: "", Value: ""},
-                                            methodGetRef
-                                        )
-                                    }
-                                    className={styles["btn-padding-right-0"]}
-                                    size='small'
-                                >
-                                    添加
-                                    <PlusIcon />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <VariableList
-                            ref={methodGetRef}
-                            field='methodGet'
-                            onDel={(i) => handleVariableDel(i, "methodGet")}
-                        ></VariableList>
-                    </YakitPanel>
-                    <YakitPanel
-                        header='POST 参数'
-                        key='POST 参数'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) =>
-                                        handleVariableReset(e, "methodPost", {Key: "", Value: ""}, methodPostRef)
-                                    }
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) =>
-                                        handleVariableAdd(
-                                            e,
-                                            "methodPost",
-                                            "POST 参数",
-                                            {Key: "", Value: ""},
-                                            methodPostRef
-                                        )
-                                    }
-                                    className={styles["btn-padding-right-0"]}
-                                    size='small'
-                                >
-                                    添加
-                                    <PlusIcon />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <VariableList
-                            ref={methodPostRef}
-                            field='methodPost'
-                            onDel={(i) => handleVariableDel(i, "methodPost")}
-                        ></VariableList>
-                    </YakitPanel>
-                    <YakitPanel
-                        header='Cookie'
-                        key='Cookie'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) => handleVariableReset(e, "cookie", {Key: "", Value: ""}, cookieRef)}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) =>
-                                        handleVariableAdd(e, "cookie", "Cookie", {Key: "", Value: ""}, cookieRef)
-                                    }
-                                    className={styles["btn-padding-right-0"]}
-                                    size='small'
-                                >
-                                    添加
-                                    <PlusIcon />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <VariableList
-                            ref={cookieRef}
-                            field='cookie'
-                            onDel={(i) => handleVariableDel(i, "cookie")}
-                        ></VariableList>
-                    </YakitPanel>
-                    <YakitPanel
-                        header='Header'
-                        key='Header'
-                        extra={
-                            <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) => handleVariableReset(e, "headers", {Key: "", Value: ""}, headersRef)}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) =>
-                                        handleVariableAdd(e, "headers", "Header", {Key: "", Value: ""}, headersRef)
-                                    }
-                                    className={styles["btn-padding-right-0"]}
-                                    size='small'
-                                >
-                                    添加
-                                    <PlusIcon />
-                                </YakitButton>
-                            </>
-                        }
-                    >
-                        <VariableList
-                            ref={headersRef}
-                            field='headers'
-                            onDel={(i) => handleVariableDel(i, "headers")}
-                        ></VariableList>
-                    </YakitPanel>
-                </YakitCollapse>
+                {renderContent()}
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>
             <MatcherAndExtractionDrawer

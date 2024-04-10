@@ -120,6 +120,8 @@ import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {CacheDropDownGV} from "@/yakitGV"
+import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
+
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 
 const {ipcRenderer} = window.require("electron")
@@ -230,8 +232,10 @@ Host: www.example.com
 export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 export const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 export const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
-
+/**【配置】高级配置显示缓存字段 */
 export const WEB_FUZZ_Advanced_Config_Switch_Checked = "WEB_FUZZ_Advanced_Config_Switch_Checked"
+/**【规则】高级配置显示缓存字段 */
+export const WEB_FUZZ_Rule_Switch_Checked = "WEB_FUZZ_Rule_Switch_Checked"
 export const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
 export const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
 
@@ -655,6 +659,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         initWebFuzzerPageInfo().advancedConfigValue
     ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
     const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
+    // 【规则】高级配置的隐藏/显示
+    const [advancedConfigRuleShow, setAdvancedConfigRuleShow] = useState<boolean>(false)
+    // 【配置】/【规则】高级内容显示
+    const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
     const [affixSearch, setAffixSearch] = useState("")
@@ -719,22 +727,42 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setAdvancedConfig(c === "true")
             }
         })
+        getRemoteValue(WEB_FUZZ_Rule_Switch_Checked).then((c) => {
+            if (c === "") {
+                setAdvancedConfigRuleShow(true)
+            } else {
+                setAdvancedConfigRuleShow(c === "true")
+            }
+        })
         emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+        emiter.on("onSetAdvancedConfigRuleShow", onSetAdvancedConfigRuleShow)
         return () => {
             emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+            emiter.off("onSetAdvancedConfigRuleShow", onSetAdvancedConfigRuleShow)
         }
     }, [])
     useEffect(() => {
         if (inViewport) {
             onRefWebFuzzerValue()
             emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
+            emiter.on("onFuzzerAdvancedConfigShowType", onFuzzerAdvancedConfigShowType)
         }
         return () => {
             emiter.off("onRefWebFuzzer", onRefWebFuzzerValue)
+            emiter.off("onFuzzerAdvancedConfigShowType", onFuzzerAdvancedConfigShowType)
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         if (inViewport) onSetAdvancedConfig(!advancedConfig)
+    })
+    /**切换规则对应得高级配置显示内容 */
+    const onSetAdvancedConfigRuleShow = useMemoizedFn(() => {
+        if (inViewport) {
+            const c = !advancedConfigRuleShow
+            setAdvancedConfigRuleShow(c)
+            setRemoteValue(WEB_FUZZ_Rule_Switch_Checked, `${c}`)
+            emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
+        }
     })
     const onRefWebFuzzerValue = useMemoizedFn(() => {
         if (!inViewport) return
@@ -751,6 +779,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
         onUpdateRequest()
         onUpdateAdvancedConfigValue()
+    })
+    /**
+     * @description 高级配置得内容展示切换
+     * 规则和配置之前得type切换，与序列无关
+     * */
+    const onFuzzerAdvancedConfigShowType = useMemoizedFn((data) => {
+        try {
+            const value = JSON.parse(data)
+            setAdvancedConfigShowType(value.type)
+        } catch (error) {}
     })
     /**更新请求包 */
     const onUpdateRequest = useMemoizedFn(() => {
@@ -1084,7 +1122,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const resumeAndPause = useMemoizedFn(async () => {
         try {
             if (!taskIDRef.current) return
-            await ipcRenderer.invoke("HTTPFuzzer", {PauseTaskID: taskIDRef.current, IsPause: isPause, SetPauseStatus:true}, tokenRef.current)
+            await ipcRenderer.invoke(
+                "HTTPFuzzer",
+                {PauseTaskID: taskIDRef.current, IsPause: isPause, SetPauseStatus: true},
+                tokenRef.current
+            )
             setLoading(!isPause)
             setIsPause(!isPause)
         } catch (error) {
@@ -1204,7 +1246,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
-    
+
     const [extractedMap, {setAll, reset}] = useMap<string, string>()
     useEffect(() => {
         ipcRenderer.on(
@@ -1479,7 +1521,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
         setAdvancedConfig(c)
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
-        emiter.emit("onGetFuzzerAdvancedConfigShow", c)
+        emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
     })
 
     const httpResponse: FuzzerResponse = useMemo(() => {
@@ -1797,14 +1839,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             yakitFailed(error + "")
         }
     }
-
+    const advancedConfigVisible = useCreation(() => {
+        switch (advancedConfigShowType) {
+            case "config":
+                return advancedConfig
+            case "rule":
+                return advancedConfigRuleShow
+            default:
+                return false
+        }
+    }, [advancedConfigShowType, advancedConfigRuleShow, advancedConfig])
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef} style={{display: showAllDataRes ? "none" : ""}}>
                 <React.Suspense fallback={<>加载中...</>}>
                     <HttpQueryAdvancedConfig
                         advancedConfigValue={advancedConfigValue}
-                        visible={advancedConfig}
+                        visible={advancedConfigVisible}
                         onInsertYakFuzzer={onInsertYakFuzzerFun}
                         onValuesChange={onGetFormValue}
                         refreshProxy={refreshProxy}
@@ -1816,6 +1867,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         inViewportCurrent={inViewport === true}
                         id={props.id}
                         matchSubmitFun={matchSubmitFun}
+                        showFormContentType={advancedConfigShowType}
                     />
                 </React.Suspense>
                 <div className={styles["http-fuzzer-page"]}>
