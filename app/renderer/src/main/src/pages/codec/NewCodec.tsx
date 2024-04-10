@@ -1798,7 +1798,7 @@ export interface CodecParam {
     Desc: string
     Regex: string
     Label: string
-    connector: CodecParam
+    Connector: CodecParam
 }
 export interface CodecMethod {
     Tag: string
@@ -2016,11 +2016,11 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                             },
                             select: {
                                 type: "select",
-                                selectArr: item.connector.Options.map((item) => ({label: item, value: item})),
-                                title: item.connector.Label,
-                                name: item.connector.Name,
-                                require: item.connector.Required,
-                                value: item.connector.DefaultValue || undefined
+                                selectArr: item.Connector.Options.map((item) => ({label: item, value: item})),
+                                title: item.Connector.Label,
+                                name: item.Connector.Name,
+                                require: item.Connector.Required,
+                                value: item.Connector.DefaultValue || undefined
                             }
                         } as RightItemsInputSelectProps
                     default:
