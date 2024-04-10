@@ -60,6 +60,7 @@ linux:
     - target: AppImage
       arch:
         - x64
+  icon: "app/assets/yakitlogo.icns"
 
 win:
   artifactName: ${productName}-${version}-windows-amd64.${ext}

@@ -65,6 +65,7 @@ linux:
     - target: AppImage
       arch:
         - x64
+  icon: "app/assets/yakitselogo.icns"
 
 win:
   artifactName: ${productName}-${version}-windows-amd64.${ext}
