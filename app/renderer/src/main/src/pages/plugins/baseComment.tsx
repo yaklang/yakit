@@ -188,7 +188,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 if (commentShow) setCommentShow(false)
             })
             .catch((err) => {
-                failed("评论错误" + err)
+                failed(err)
             })
             .finally(() => {
                 setTimeout(() => setCommentLoading(false), 200)
