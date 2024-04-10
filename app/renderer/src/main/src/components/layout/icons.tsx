@@ -611,21 +611,7 @@ const ReverseUnlinkSvg = () => (
 export const ReverseUnlinkSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={ReverseUnlinkSvg} {...props} />
 }
-const HelpSvg = () => (
-    <svg width='1em' height='1em' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <path
-            d='M6.85638 7.5C7.31398 6.52901 8.54869 5.83333 10 5.83333C11.841 5.83333 13.3334 6.95262 13.3334 8.33333C13.3334 9.49953 12.2687 10.4792 10.8286 10.7555C10.3766 10.8422 10 11.2064 10 11.6667M10 14.1667H10.0083M17.5 10C17.5 14.1421 14.1421 17.5 10 17.5C5.85786 17.5 2.5 14.1421 2.5 10C2.5 5.85786 5.85786 2.5 10 2.5C14.1421 2.5 17.5 5.85786 17.5 10Z'
-            stroke='currentColor'
-            strokeWidth='1.5'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-    </svg>
-)
-/** @name 文档帮助图标 */
-export const HelpSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-    return <Icon component={HelpSvg} {...props} />
-}
+
 const UpdateSvg = () => (
     <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -730,22 +716,4 @@ const CheckedSvg = () => (
 /** @name 勾选中图标 */
 export const CheckedSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={CheckedSvg} {...props} />
-}
-
-
-
-const Loading3QuartersSvg = () => (
-    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <path
-            d='M28 16C28 22.6274 22.6274 28 16 28C9.37258 28 4 22.6274 4 16C4 9.37258 9.37258 4 16 4'
-            stroke='#FBC6A1'
-            strokeWidth='3.2'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-    </svg>
-)
-/** @name 加载中图标 */
-export const Loading3QuartersSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-    return <Icon component={Loading3QuartersSvg} {...props} />
 }

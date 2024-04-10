@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from "react"
-import ReactDOM from "react-dom"
+import React, {useEffect, useState} from "react"
 import {ModalProps} from "antd/lib/modal"
 import {Drawer, DrawerProps, Modal} from "antd"
 import {ErrorBoundary} from "react-error-boundary"
 import {createRoot} from "react-dom/client"
+import emiter from "./eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
@@ -116,10 +116,10 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
 
     useEffect(() => {
         if (visible) {
-            ipcRenderer.invoke("update-yakit-header-title-drop", false)
+            emiter.emit("setYakitHeaderDraggable", false)
             if (props.afterVisible) props.afterVisible(setVisible)
         } else {
-            ipcRenderer.invoke("update-yakit-header-title-drop", true)
+            emiter.emit("setYakitHeaderDraggable", true)
         }
     }, [visible])
 

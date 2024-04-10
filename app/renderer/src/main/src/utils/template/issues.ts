@@ -1,5 +1,11 @@
-import {LocalInfoProps} from "@/components/layout/UILayout";
-import { getReleaseEditionName } from "../envfile";
+import {getReleaseEditionName} from "../envfile"
+
+export interface LocalInfoProps {
+    system: string
+    arch: string
+    localYakit: string
+    localYaklang: string
+}
 
 export const ReportBug = (system_info?: LocalInfoProps): string => {
     let tpl = `
@@ -37,7 +43,6 @@ export const ReportBug = (system_info?: LocalInfoProps): string => {
 `
     tpl = encodeURIComponent(tpl)
     return tpl
-
 }
 export const FeatureRequest = (): string => {
     let tpl = `

@@ -12,6 +12,7 @@ import {YaklangInstallHintSvgIcon, MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon} fro
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
+import {safeFormatDownloadProcessState} from "../utils"
 
 import classNames from "classnames"
 import styles from "./DownloadYakit.module.scss"
@@ -96,7 +97,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
 
             ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
                 if (!isBreakRef.current) return
-                setDownloadProgress(state)
+                setDownloadProgress(safeFormatDownloadProcessState(state))
             })
             return () => {
                 ipcRenderer.removeAllListeners("download-yakit-engine-progress")

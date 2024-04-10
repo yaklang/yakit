@@ -1,9 +1,8 @@
 import React, {useState, useEffect, useRef, useMemo} from "react"
 import {failed, info, success} from "@/utils/notification"
-import {showModal} from "@/utils/showModal"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
-import {useGetState, useInViewport, useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {Popconfirm} from "antd"
 import {Sparklines, SparklinesCurve} from "react-sparklines"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -14,7 +13,8 @@ import {YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngine
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
-import { isEnpriTraceAgent } from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 
 import classNames from "classnames"
 import styles from "./performanceDisplay.module.scss"
@@ -23,7 +23,7 @@ const {ipcRenderer} = window.require("electron")
 
 interface PerformanceDisplayProps {
     engineMode: YaklangEngineMode | undefined
-    typeCallback: (type: "console" | "break") => any
+    typeCallback: (type: "break") => any
 }
 
 export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo((props) => {
@@ -99,7 +99,7 @@ export interface yakProcess {
 
 interface UIEngineListProp {
     engineMode: YaklangEngineMode | undefined
-    typeCallback: (type: "console" | "break") => any
+    typeCallback: (type: "break") => any
 }
 
 /** @name 已启动引擎列表 */
@@ -115,8 +115,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
 
     const [psLoading, setPSLoading] = useState<boolean>(false)
     const [process, setProcess] = useState<yakProcess[]>([])
-    const {runNodeList, clearRunNodeList} = useRunNodeStore()
-    const [port, setPort, getPort] = useGetState<number>(0)
+    const {runNodeList} = useRunNodeStore()
+    const [port, setPort] = useState<number>(0)
 
     const fetchPSList = useMemoizedFn(() => {
         if (psLoading) return
@@ -153,13 +153,13 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             .then((data) => {
                 const hosts: string[] = (data.addr as string).split(":")
                 if (hosts.length !== 2) return
-                if (+hosts[1]) setPort(+hosts[1])
+                if (+hosts[1]) setPort(+hosts[1] || 0)
             })
             .catch(() => {})
     }
     useEffect(() => {
-        ipcRenderer.invoke("is-dev").then((flag: boolean) => (isDev.current = flag))
         if (inViewport) {
+            ipcRenderer.invoke("is-dev").then((flag: boolean) => (isDev.current = flag))
             fetchPSList()
             fetchCurrentPort()
 
@@ -248,9 +248,10 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 type='text'
                                                 onClick={() => {
                                                     setShow(false)
-                                                    showModal({
+                                                    showYakitModal({
                                                         title: "YakProcess 详情",
-                                                        content: <div style={{padding: 8}}>{JSON.stringify(i)}</div>
+                                                        content: <div style={{padding: 8}}>{JSON.stringify(i)}</div>,
+                                                        footer: null
                                                     })
                                                 }}
                                             >
@@ -273,11 +274,11 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                             .invoke("connect-yaklang-engine", switchEngine)
                                                             .then(() => {
                                                                 setTimeout(() => {
-                                                                    ipcRenderer.invoke("switch-conn-refresh", false)
                                                                     success(`切换核心引擎成功！`)
                                                                     if (!isEnpriTraceAgent() && +i.port !== port) {
                                                                         emiter.emit("onSwitchEngine")
                                                                     }
+                                                                    ipcRenderer.invoke("switch-conn-refresh", false)
                                                                 }, 500)
                                                             })
                                                             .catch((e) => {
@@ -288,7 +289,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                     <YakitButton
                                                         type='outline1'
                                                         colors='success'
-                                                        disabled={+i.port === 0 || isLocal && +i.port === port}
+                                                        disabled={+i.port === 0 || (isLocal && +i.port === port)}
                                                     >
                                                         切换引擎
                                                     </YakitButton>
@@ -308,7 +309,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                     if (+i.port === port) {
                                                         await delTemporaryProject()
                                                     }
-                                                    
+
                                                     ipcRenderer
                                                         .invoke("kill-yak-grpc", i.pid)
                                                         .then((val) => {

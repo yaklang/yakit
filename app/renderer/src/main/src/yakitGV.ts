@@ -1,16 +1,12 @@
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 /** 本地文件缓存数据-键值变量 */
 export enum LocalGV {
-    
     /** @name 获取缓存数据里引擎的启动模式("local"|"remote") */
     YaklangEngineMode = "yaklang-engine-mode",
     /** @name 获取缓存数据里引擎启动配置 */
     YaklangEnginePort = "yaklang-engine-port",
     /** @name 关闭窗口的二次确认 */
     WindowsCloseFlag = "windows-close-flag",
-
-    /** @name 远程引擎的认证信息本地缓存 */
-    YaklangRemoteEngineCredential = "yaklang-remote-engine-credential",
 
     /** @name 是否自启最新版本检测 */
     NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check",
@@ -60,8 +56,7 @@ export enum RemoteGV {
 
     /** @name chat-cs聊天记录 */
     ChatCSStorage = "chat-cs-storage",
-    /** @name 是否已了解chat-cs功能 */
-    KnowChatCS = "know-chat-cs",
+
     /** @name webFuzzer页面以及每个页面的数据缓存字段 */
     FuzzerCache = "fuzzer-list-cache",
     /** @name webFuzzer序列的缓存字段 */
@@ -83,7 +78,7 @@ export enum RemoteGV {
     /**@name 专项漏洞关键词搜索缓存 */
     PocPluginKeywords = "poc-plugin-keywords",
     /**@name MITM 用户数据是否保存 */
-    MITMUserDataSave = "mitm_user_data_save",
+    MITMUserDataSave = "mitm_user_data_save"
 }
 
 /** 项目逻辑全局变量 */
@@ -117,5 +112,5 @@ export enum CacheDropDownGV {
     /** @name MITM webFuzzer 代理 */
     WebFuzzerProxyList = "web_fuzzer_proxy_list",
     /** @name WebFuzzer 插入文件 */
-    WebFuzzerInsertFileFuzzTag = "web_fuzzer_insert_file_fuzz_tag",
+    WebFuzzerInsertFileFuzzTag = "web_fuzzer_insert_file_fuzz_tag"
 }

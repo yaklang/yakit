@@ -1,12 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
-import {
-    HelpSvgIcon,
-    MacUIOpCloseSvgIcon,
-    WinUIOpCloseSvgIcon,
-    YakitCopySvgIcon,
-    YaklangInstallHintSvgIcon
-} from "../icons"
+import {MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon, YakitCopySvgIcon, YaklangInstallHintSvgIcon} from "../icons"
 import {Checkbox, Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import Draggable from "react-draggable"
@@ -19,6 +13,8 @@ import {getReleaseEditionName} from "@/utils/envfile"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {safeFormatDownloadProcessState} from "../utils"
+import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
@@ -96,7 +92,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     useEffect(() => {
         ipcRenderer.on("download-yak-engine-progress", (e: any, state: DownloadingState) => {
             if (isBreakDownload.current) return
-            setDownloadProgress(state)
+            setDownloadProgress(safeFormatDownloadProcessState(state))
         })
         return () => {
             ipcRenderer.removeAllListeners("download-yak-engine-progress")
@@ -194,6 +190,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     })
 
     const downloadEngine = useMemoizedFn(() => {
+        console.log(`v${latestVersionRef.current}`)
         ipcRenderer
             .invoke("download-latest-yak", `v${latestVersionRef.current}`)
             .then(() => {
@@ -258,9 +255,9 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     })
 
     return (
-        <div className={visible ? styles["install-engine-mask"] : styles["hidden-install-engine-mask"]}>
+        <div className={visible ? styles["install-engine-mask"] : styles["hidden-wrapper"]}>
             <Draggable
-                defaultClassName={classNames(styles["install-update-modal"], styles["engine-hint-modal-wrapper"], {
+                defaultClassName={classNames(styles["install-update-modal"], styles["modal-wrapper"], {
                     [styles["modal-top-wrapper"]]: isTop === 0
                 })}
                 disabled={disabled}
@@ -291,7 +288,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                         setIsTop(2)
                                     }}
                                 >
-                                    <HelpSvgIcon style={{fontSize: 20}} />
+                                    <OutlineQuestionmarkcircleIcon />
                                 </div>
                             </div>
 
@@ -499,7 +496,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
             defaultClassName={classNames(
                 styles["yakit-agr-modal"],
                 {[styles["modal-top-wrapper"]]: isTop === 1},
-                visible ? styles["info-modal-wrapper"] : styles["modal-hidden-wrapper"]
+                visible ? styles["modal-wrapper"] : styles["hidden-wrapper"]
             )}
             disabled={disabled}
             bounds={bounds}
@@ -637,7 +634,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
             defaultClassName={classNames(
                 styles["yaklang-qs-modal"],
                 {[styles["modal-top-wrapper"]]: isTop === 2},
-                visible ? styles["info-modal-wrapper"] : styles["modal-hidden-wrapper"]
+                visible ? styles["modal-wrapper"] : styles["hidden-wrapper"]
             )}
             disabled={disabled}
             bounds={bounds}

@@ -10,10 +10,10 @@ import {getReleaseEditionName, isEnterpriseEdition} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 import {LocalGVS} from "@/enums/localGlobal"
+import {safeFormatDownloadProcessState} from "../utils"
 
 import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
-import {safeFormatDownloadProcessState} from "@/components/layout/UILayout";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -92,11 +92,9 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     const data: UpdateContentProp = JSON.parse(res)
                     if (data.version !== latestYakit) return
                     setYakitUpdateContent({...data})
-                } catch (error) {
-                }
+                } catch (error) {}
             })
-            .catch((err) => {
-            })
+            .catch((err) => {})
     })
     /** 获取 yaklang 更新内容 */
     const fetchYaklangLastVersion = useMemoizedFn(() => {
@@ -114,11 +112,9 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     const data: UpdateContentProp = JSON.parse(res)
                     if (data.version !== latestYaklang) return
                     setYaklangUpdateContent({...data})
-                } catch (error) {
-                }
+                } catch (error) {}
             })
-            .catch((err) => {
-            })
+            .catch((err) => {})
     })
 
     useEffect(() => {
@@ -136,7 +132,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
 
         ipcRenderer.on("download-yak-engine-progress", (e: any, state: DownloadingState) => {
             if (isYaklangBreak.current) return
-            setYaklangProgress(state)
+            setYaklangProgress(safeFormatDownloadProcessState(state))
         })
 
         return () => {
@@ -292,7 +288,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     <div className={styles["yaklang-engine-hint-wrapper"]}>
                         <div className={styles["hint-left-wrapper"]}>
                             <div className={styles["hint-icon"]}>
-                                <YaklangInstallHintSvgIcon/>
+                                <YaklangInstallHintSvgIcon />
                             </div>
                         </div>
 
@@ -363,8 +359,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                         {yakitContent.length === 0
                                             ? "管理员未编辑更新通知"
                                             : yakitContent.map((item, index) => {
-                                                return <div key={`${item}-${index}`}>{item}</div>
-                                            })}
+                                                  return <div key={`${item}-${index}`}>{item}</div>
+                                              })}
                                     </div>
 
                                     <div className={styles["hint-right-btn"]}>
@@ -399,7 +395,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     <div className={styles["yaklang-engine-hint-wrapper"]}>
                         <div className={styles["hint-left-wrapper"]}>
                             <div className={styles["hint-icon"]}>
-                                <YaklangInstallHintSvgIcon/>
+                                <YaklangInstallHintSvgIcon />
                             </div>
                         </div>
 
@@ -452,8 +448,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                         {yaklangContent.length === 0
                                             ? "管理员未编辑更新通知"
                                             : yaklangContent.map((item, index) => {
-                                                return <div key={`${item}-${index}`}>{item}</div>
-                                            })}
+                                                  return <div key={`${item}-${index}`}>{item}</div>
+                                              })}
                                     </div>
 
                                     <div className={styles["hint-right-btn"]}>

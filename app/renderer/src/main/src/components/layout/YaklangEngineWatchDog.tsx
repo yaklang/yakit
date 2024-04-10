@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react"
-import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import React, {useEffect, useRef, useState} from "react"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
@@ -9,6 +9,7 @@ import {RemoteGV} from "@/yakitGV"
 import {useStore, yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
 import {isEnpriTraceAgent} from "@/utils/envfile"
+import emiter from "@/utils/eventBus/eventBus"
 
 export interface YaklangEngineWatchDogCredential {
     Mode?: YaklangEngineMode
@@ -33,18 +34,20 @@ export interface YaklangEngineWatchDogProps {
     onReady?: () => any
     onFailed?: (failedCount: number) => any
     onKeepaliveShouldChange?: (keepalive: boolean) => any
-    setRunRemote: (v: boolean) => void
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
     (props: YaklangEngineWatchDogProps) => {
-        const {setRunRemote} = props
+        // 是否自动重启引擎进程
         const [autoStartProgress, setAutoStartProgress] = useState(false)
-        const [__startingUp, setIsStartingUp, getIsStartingUp] = useGetState(false)
+        // 是否正在重启引擎进程
+        const startingUp = useRef<boolean>(false)
         const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
         const {userInfo} = useStore()
+
         /** 引擎信息认证 */
         const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {
+            console.log("test-link", JSON.stringify(props.credential))
             // 重置状态
             setAutoStartProgress(false)
             const mode = props.credential.Mode
@@ -66,13 +69,11 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 .invoke("connect-yaklang-engine", props.credential)
                 .then(() => {
                     outputToWelcomeConsole(`连接核心引擎成功！`)
-                    setRunRemote(false)
                     if (props.onKeepaliveShouldChange) {
                         props.onKeepaliveShouldChange(true)
                     }
                     // 如果为远程控制 则修改私有域为
                     if (isDynamicControl) {
-                        // ipcRenderer.send("edit-baseUrl", {baseUrl: "http://192.168.3.100:8080"})
                         // 远程控制生效
                         setDynamicStatus({...dynamicStatus, isDynamicStatus: true})
                         remoteOperation(true, dynamicStatus, userInfo)
@@ -101,12 +102,11 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
         /** 接受连接引擎的指令 */
         useEffect(() => {
-            ipcRenderer.on("engine-ready-link-callback", async (e, isDynamicControl) => {
-                engineTest(isDynamicControl)
+            emiter.on("startAndCreateEngineProcess", (v?: boolean) => {
+                engineTest(!!v)
             })
-
             return () => {
-                ipcRenderer.removeAllListeners("engine-ready-link-callback")
+                emiter.off("startAndCreateEngineProcess")
             }
         }, [])
 
@@ -132,7 +132,6 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }
 
                 // 只有普通模式才涉及到引擎启动的流程
-                outputToWelcomeConsole(`切换模式为: ${mode}`)
                 outputToWelcomeConsole(`开始以普通权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
 
                 setTimeout(() => {
@@ -144,13 +143,13 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 ipcRenderer
                     .invoke("is-port-available", props.credential.Port)
                     .then(() => {
-                        if (getIsStartingUp()) {
+                        if (startingUp.current) {
                             return
                         }
-                        setIsStartingUp(true)
+                        startingUp.current = true
                         ipcRenderer
                             .invoke("start-local-yaklang-engine", {
-                                port: props.credential.Port,
+                                port: 0, //props.credential.Port,
                                 isEnpriTraceAgent: isEnpriTraceAgent()
                             })
                             .then(() => {
@@ -158,9 +157,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             })
                             .catch((e) => {
                                 console.info(e)
+                                outputToWelcomeConsole("引擎启动失败:" + e)
                             })
                             .finally(() => {
-                                setIsStartingUp(false)
+                                startingUp.current = false
                             })
                     })
                     .catch((e) => {
@@ -178,18 +178,23 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             if (!props.engineLink) setAutoStartProgress(false)
         }, [props.engineLink])
 
-        useEffect(() => {
-            const time = props.engineLink ? 5000 : 1000
+        /** 未连接引擎前, 每隔1秒尝试连接一次, 连接引擎后, 每隔5秒尝试连接一次 */
+        const attemptConnectTime = useMemoizedFn(() => {
+            return props.engineLink ? 5000 : 1000
+        })
 
+        /**
+         * 引擎连接尝试逻辑
+         * 引擎连接有效尝试次数: 1-20
+         */
+        useEffect(() => {
             const keepalive = props.keepalive
             if (!keepalive) {
                 if (props.onFailed) {
-                    props.onFailed(10)
+                    props.onFailed(100)
                 }
                 return
             }
-
-            // outputToWelcomeConsole("刷新 keepalive 状态")
 
             let count = 0
             let failedCount = 0
@@ -212,11 +217,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     })
                     .catch((e) => {
                         failedCount++
-                        if (
-                            failedCount < 5 ||
-                            (failedCount < 50 && failedCount % 10 === 0) ||
-                            (failedCount < 1000 && failedCount % 30)
-                        ) {
+                        if (failedCount > 0 && failedCount <= 20) {
                             outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)
                         }
 
@@ -226,12 +227,11 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     })
             }
             connect()
-            const id = setInterval(connect, time)
+            const id = setInterval(connect, attemptConnectTime())
             return () => {
                 clearInterval(id)
             }
-        }, [props.keepalive, props.engineLink, props.onReady, props.onFailed])
-        // outputToWelcomeConsole("刷新状态")
+        }, [props.keepalive, props.onReady, props.onFailed])
         return <></>
     }
 )

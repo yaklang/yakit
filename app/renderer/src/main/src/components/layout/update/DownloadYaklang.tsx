@@ -10,6 +10,7 @@ import {QuestionModal} from "./InstallEngine"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
+import {safeFormatDownloadProcessState} from "../utils"
 
 import classNames from "classnames"
 import styles from "./DownloadYaklang.module.scss"
@@ -104,7 +105,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
             ipcRenderer.on("download-yak-engine-progress", (e: any, state: DownloadingState) => {
                 if (isBreakRef.current) return
-                setDownloadProgress(state)
+                setDownloadProgress(safeFormatDownloadProcessState(state))
             })
 
             return () => {

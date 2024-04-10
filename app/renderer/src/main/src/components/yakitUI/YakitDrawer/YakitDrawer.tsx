@@ -7,6 +7,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {ShowDrawerProps} from "@/utils/showModal"
 import {ErrorBoundary} from "react-error-boundary"
 import {createRoot} from "react-dom/client"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -18,9 +19,9 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
     const {visible} = props
     useEffect(() => {
         if (visible) {
-            ipcRenderer.invoke("update-yakit-header-title-drop", false)
+            emiter.emit("setYakitHeaderDraggable", false)
         } else {
-            ipcRenderer.invoke("update-yakit-header-title-drop", true)
+            emiter.emit("setYakitHeaderDraggable", true)
         }
     }, [visible])
     return (

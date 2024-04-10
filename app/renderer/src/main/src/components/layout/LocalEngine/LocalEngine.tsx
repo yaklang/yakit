@@ -1,4 +1,4 @@
-import React, {forwardRef, memo, useImperativeHandle, useMemo, useState} from "react"
+import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {LocalEngineProps} from "./LocalEngineType"
 import {LocalGVS} from "@/enums/localGlobal"
 import {getLocalValue} from "@/utils/kv"
@@ -9,14 +9,11 @@ import {failed, info} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {UpdateYakitAndYaklang} from "../update/UpdateYakitAndYaklang"
 
-// import classNames from "classnames"
-// import styles from "./LocalEngine.module.scss"
-
 const {ipcRenderer} = window.require("electron")
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
-        const {system, setLog, onLinkEngine} = props
+        const {system, setLog, onLinkEngine, setYakitStatus} = props
 
         const [localPort, setLocalPort] = useState<number>(0)
 
@@ -24,12 +21,15 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const [latestYakit, setLatestYakit] = useState<string>("")
         const [currentYaklang, setCurrentYaklang] = useState<string>("")
         const [latestYaklang, setLatestYaklang] = useState<string>("")
+        // 是否阻止更新弹窗出现
+        const preventUpdateHint = useRef<boolean>(false)
 
         /**
          * 只在软件打开时|引擎从无到有时执行该逻辑
          * 检查本地数据库权限
          */
         const handleCheckDataBase = useMemoizedFn(() => {
+            console.log("check-database")
             const firstHint = "开始检查数据库权限是否正常"
             setLog([firstHint])
             let isError: boolean = false
@@ -53,6 +53,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /** 获取上次本地连接引擎的端口缓存 */
         const handleLinkEnginePort = useMemoizedFn(() => {
+            console.log("get-port")
             getLocalValue(LocalGVS.YaklangEnginePort)
                 .then((portRaw) => {
                     const port = parseInt(portRaw)
@@ -82,6 +83,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         })
 
         const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async () => {
+            console.log("get-version")
             try {
                 let localYakit = (await ipcRenderer.invoke("fetch-yakit-version")) || ""
                 setCurrentYakit(localYakit)
@@ -93,10 +95,14 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
                 setCurrentYaklang(localYaklang)
                 setTimeout(() => {
+                    preventUpdateHint.current = true
                     // 这里的2秒是判断是否有更新弹窗出现
                     handleLinkLocalEnging()
                 }, 2000)
-            } catch (error) {}
+            } catch (error) {
+                setLog(["获取引擎版本号...", `错误: ${error}`])
+                setYakitStatus("checkError")
+            }
         })
 
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {
@@ -106,6 +112,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     .invoke("fetch-latest-yakit-version")
                     .then((data: string) => {
                         if (!val) {
+                            if (preventUpdateHint.current) return
                             setLatestYakit(data || "")
                         }
                     })
@@ -113,7 +120,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 ipcRenderer
                     .invoke("fetch-latest-yaklang-version")
                     .then((data: string) => {
-                        if (!val) setLatestYaklang(data || "")
+                        if (!val) {
+                            if (preventUpdateHint.current) return
+                            setLatestYaklang(data || "")
+                        }
                     })
                     .catch((err) => {})
             })
@@ -121,23 +131,32 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         // 初始化后的本地连接-前置项检查
         const initLink = useMemoizedFn(() => {
+            preventUpdateHint.current = false
             handleCheckDataBase()
+        })
+        // 检查版本后直接连接
+        const toLink = useMemoizedFn(() => {
+            preventUpdateHint.current = true
+            handleFetchYakitAndYaklangLocalVersion()
         })
 
         useImperativeHandle(
             ref,
             () => ({
                 init: initLink,
-                link: () => {}
+                link: toLink
             }),
             []
         )
 
         // 开始进行本地引擎连接
         const handleLinkLocalEnging = useMemoizedFn(() => {
-            if (isShowUpdate) return
+            if (!preventUpdateHint.current) return
             // 开始连接本地引擎
             onLinkEngine(localPort)
+            // 一旦启动本地连接了，后续就不用再检查更新情况了
+            setLatestYakit("")
+            setLatestYaklang("")
         })
 
         /** ---------- 软件自启的更新检测弹框 Start ---------- */
@@ -155,6 +174,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         }, [currentYakit, latestYakit, currentYaklang, latestYaklang])
 
         const onCancelUpdateHint = useMemoizedFn(() => {
+            preventUpdateHint.current = true
             handleLinkLocalEnging()
         })
         /** ---------- 软件自启的更新检测弹框 End ---------- */

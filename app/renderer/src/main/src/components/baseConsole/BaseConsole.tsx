@@ -19,6 +19,7 @@ import {WindowPositionOP, WindowPositionOPMenu} from "../yakitUI/YakitWindow/Yak
 import {WindowPositionType} from "../yakitUI/YakitWindow/YakitWindowType"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -170,7 +171,7 @@ export const BaseConsole: React.FC<BaseConsoleProps> = (props) => {
     const callBackSource = (v: WindowPositionType) => {
         if (v === "shrink") {
             setIsShowBaseConsole(false)
-            ipcRenderer.invoke("shrink-console-log", {open: true})
+            emiter.emit("openEngineLogTerminal")
         } else {
             setDirection(v)
         }

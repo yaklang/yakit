@@ -241,7 +241,6 @@ module.exports = (win, callback, getClient, newClient) => {
 
     /** 连接引擎 */
     ipcMain.handle("connect-yaklang-engine", async (e, params) => {
-        console.log("info", JSON.stringify(GLOBAL_YAK_SETTING))
         /**
          * connect yaklang engine 实际上是为了设置参数，实际上他是不知道远程还是本地
          * params 中的参数应该有如下：

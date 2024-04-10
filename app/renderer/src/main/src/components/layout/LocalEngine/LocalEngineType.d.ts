@@ -6,6 +6,7 @@ export interface LocalEngineProps {
     system: YakitSystem
     setLog: (log: string[]) => any
     onLinkEngine: (port: number) => any
+    setYakitStatus: (v: YakitStatusType) => any
 }
 
 export interface LocalEngineLinkFuncProps {

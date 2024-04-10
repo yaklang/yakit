@@ -52,16 +52,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("kill-old-engine-process", (e, type) => {
         win.webContents.send("kill-old-engine-process-callback", type)
     })
-    /** 激活 yaklang 或 yakit 的下载更新组件 */
-    ipcMain.handle("receive-download-yaklang-or-yakit", (e, type) => {
-        win.webContents.send("activate-download-yaklang-or-yakit", type)
-    })
-    /** 更新下载 yaklang 或 yakit 成功，稍后安装 */
-    ipcMain.handle("download-update-wait", (e, type) => {
-        win.webContents.send("download-update-wait-callback", type)
-    })
-    /** 连接引擎的指令 */
-    ipcMain.handle("engine-ready-link", (e, isDynamicControl) => {
-        win.webContents.send("engine-ready-link-callback", isDynamicControl)
-    })
 }
