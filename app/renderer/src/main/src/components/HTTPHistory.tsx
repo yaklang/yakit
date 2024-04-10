@@ -58,12 +58,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [defaultFold, setDefaultFold] = useState<boolean>()
     useEffect(() => {
         getRemoteValue("HISTORY_FOLD").then((result: string) => {
-            if (!result) setDefaultFold(false)
+            if (!result) setDefaultFold(true)
             try {
                 const foldResult: boolean = JSON.parse(result)
                 setDefaultFold(foldResult)
             } catch (e) {
-                setDefaultFold(false)
+                setDefaultFold(true)
             }
         })
     }, [])
@@ -289,7 +289,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             selectedFlow={selected}
                                             refresh={refresh}
                                             defaultFold={defaultFold}
-                                            pageType={pageType}
                                             historyId={historyId}
                                             // defaultHeight={detailHeight}
                                         />

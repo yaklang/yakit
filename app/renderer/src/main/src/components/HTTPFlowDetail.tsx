@@ -46,7 +46,7 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
-import { RemoteGV } from "@/yakitGV"
+import {RemoteGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -70,7 +70,6 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     refresh?: boolean
     defaultFold?: boolean
 
-    pageType?: HTTPHistorySourcePageType
     historyId?: string
 }
 
@@ -88,7 +87,6 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
     const [index, setIndex] = useState<number>()
     const [id, setId] = useState(0)
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string>()
 
     useEffect(() => {
         setResponse(rsp.response)
@@ -167,7 +165,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [props.id])
 
     const onCloseDetails = useMemoizedFn((e, res) => {
-        const { type, data } = res
+        const {type, data} = res
         if ((type === "fuzzer" || type === "websocket-fuzzer") && data.openFlag === false) return
         if (props.onClose) props.onClose()
     })
@@ -542,7 +540,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, defaultFold = false, pageType} = props
+    const {id, selectedFlow, refresh, defaultFold = true} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
     const [flowResponse, setFlowResponse] = useState<Uint8Array>()
@@ -683,9 +681,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [infoType])
 
     const mainCol: number = useMemo(() => {
-        if (pageType === "MITM") {
-            return 24
-        }
         let col: number = 19
         if (isFold) {
             col = 24
@@ -708,141 +703,131 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         />
                     )}
                 </Col>
-                {pageType !== "MITM" && (
-                    <>
-                        {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
-                            <Col span={5}>
-                                <NewHTTPPacketEditor
-                                    title={
-                                        <Button.Group size={"small"}>
-                                            {existedInfoType.map((i) => {
-                                                return (
-                                                    <YakitButton
-                                                        size='small'
-                                                        type={infoType === i ? "primary" : "outline2"}
-                                                        onClick={() => {
-                                                            setInfoType(i)
-                                                        }}
-                                                        key={i}
-                                                    >
-                                                        {infoTypeVerbose(i)}
-                                                    </YakitButton>
-                                                )
-                                            })}
-                                        </Button.Group>
-                                    }
-                                    readOnly={true}
-                                    noLineNumber={true}
-                                    noMinimap={true}
-                                    noHex={true}
-                                    hideSearch={true}
-                                    refreshTrigger={infoType}
-                                    loading={infoTypeLoading}
-                                    extraEnd={
-                                        <div className={classNames(styles["http-history-fold-box"])}>
-                                            <div className={styles["http-history-icon-box"]}>
-                                                <Tooltip placement='top' title='向右收起'>
-                                                    <SideBarOpenIcon
-                                                        className={styles["fold-icon"]}
-                                                        onClick={() => {
-                                                            setRemoteValue(
-                                                                "IsFoldValue",
-                                                                JSON.stringify({is: true, id})
-                                                            )
-                                                            setFold(true)
-                                                        }}
-                                                    />
-                                                </Tooltip>
-                                            </div>
-                                        </div>
-                                    }
-                                    originValue={(() => {
-                                        switch (infoType) {
-                                            case "domains":
-                                                return StringToUint8Array(
-                                                    "# 根域 (Root-Domains)\r\n" +
-                                                        (flow?.RootDomains || []).join("\r\n") +
-                                                        "\r\n\r\n# 域名 (Domain) \r\n" +
-                                                        (flow?.Domains || []).join("\r\n")
-                                                )
-                                            case "json":
-                                                return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
-                                            default:
-                                                return new Uint8Array()
-                                        }
-                                    })()}
-                                    editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
-                                    isShowBeautifyRender={false}
-                                />
-                            </Col>
-                        )}
-                        {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
-                            <Col span={5}>
-                                <HTTPFlowExtractedDataTable
-                                    httpFlowHash={flow?.Hash || ""}
-                                    title={
-                                        <div className={styles["table-header"]}>
-                                            <Button.Group size={"small"}>
-                                                {existedInfoType.map((i) => {
-                                                    return (
-                                                        <YakitButton
-                                                            size='small'
-                                                            type={infoType === i ? "primary" : "outline2"}
-                                                            onClick={() => {
-                                                                setInfoType(i)
-                                                            }}
-                                                            key={i}
-                                                        >
-                                                            {infoTypeVerbose(i)}
-                                                        </YakitButton>
-                                                    )
-                                                })}
-                                            </Button.Group>
-                                            <div className={classNames(styles["http-history-fold-box"])}>
-                                                <div className={styles["http-history-icon-box"]}>
-                                                    <Tooltip placement='top' title='向右收起'>
-                                                        <SideBarOpenIcon
-                                                            className={styles["fold-icon"]}
-                                                            onClick={() => {
-                                                                setRemoteValue(
-                                                                    "IsFoldValue",
-                                                                    JSON.stringify({is: true, id})
-                                                                )
-                                                                setFold(true)
-                                                            }}
-                                                        />
-                                                    </Tooltip>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                />
-                            </Col>
-                        )}
-                        {existedInfoType.length === 0 && !isFold && (
-                            <Col span={5}>
-                                <div className={styles["empty-box"]}>
-                                    <div className={classNames(styles["empty-box-fold-box"])}>
-                                        <div className={styles["empty-box-icon-box"]}>
+                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
+                    <Col span={5}>
+                        <NewHTTPPacketEditor
+                            title={
+                                <Button.Group size={"small"}>
+                                    {existedInfoType.map((i) => {
+                                        return (
+                                            <YakitButton
+                                                size='small'
+                                                type={infoType === i ? "primary" : "outline2"}
+                                                onClick={() => {
+                                                    setInfoType(i)
+                                                }}
+                                                key={i}
+                                            >
+                                                {infoTypeVerbose(i)}
+                                            </YakitButton>
+                                        )
+                                    })}
+                                </Button.Group>
+                            }
+                            readOnly={true}
+                            noLineNumber={true}
+                            noMinimap={true}
+                            noHex={true}
+                            hideSearch={true}
+                            refreshTrigger={infoType}
+                            loading={infoTypeLoading}
+                            extraEnd={
+                                <div className={classNames(styles["http-history-fold-box"])}>
+                                    <div className={styles["http-history-icon-box"]}>
+                                        <Tooltip placement='top' title='向右收起'>
+                                            <SideBarOpenIcon
+                                                className={styles["fold-icon"]}
+                                                onClick={() => {
+                                                    setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
+                                                    setFold(true)
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </div>
+                                </div>
+                            }
+                            originValue={(() => {
+                                switch (infoType) {
+                                    case "domains":
+                                        return StringToUint8Array(
+                                            "# 根域 (Root-Domains)\r\n" +
+                                                (flow?.RootDomains || []).join("\r\n") +
+                                                "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                (flow?.Domains || []).join("\r\n")
+                                        )
+                                    case "json":
+                                        return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
+                                    default:
+                                        return new Uint8Array()
+                                }
+                            })()}
+                            editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
+                            isShowBeautifyRender={false}
+                        />
+                    </Col>
+                )}
+                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
+                    <Col span={5}>
+                        <HTTPFlowExtractedDataTable
+                            httpFlowHash={flow?.Hash || ""}
+                            title={
+                                <div className={styles["table-header"]}>
+                                    <Button.Group size={"small"}>
+                                        {existedInfoType.map((i) => {
+                                            return (
+                                                <YakitButton
+                                                    size='small'
+                                                    type={infoType === i ? "primary" : "outline2"}
+                                                    onClick={() => {
+                                                        setInfoType(i)
+                                                    }}
+                                                    key={i}
+                                                >
+                                                    {infoTypeVerbose(i)}
+                                                </YakitButton>
+                                            )
+                                        })}
+                                    </Button.Group>
+                                    <div className={classNames(styles["http-history-fold-box"])}>
+                                        <div className={styles["http-history-icon-box"]}>
                                             <Tooltip placement='top' title='向右收起'>
                                                 <SideBarOpenIcon
                                                     className={styles["fold-icon"]}
                                                     onClick={() => {
-                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
                                                         setFold(true)
                                                     }}
                                                 />
                                             </Tooltip>
                                         </div>
                                     </div>
-                                    <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
                                 </div>
-                            </Col>
-                        )}
-                    </>
+                            }
+                        />
+                    </Col>
+                )}
+                {existedInfoType.length === 0 && !isFold && (
+                    <Col span={5}>
+                        <div className={styles["empty-box"]}>
+                            <div className={classNames(styles["empty-box-fold-box"])}>
+                                <div className={styles["empty-box-icon-box"]}>
+                                    <Tooltip placement='top' title='向右收起'>
+                                        <SideBarOpenIcon
+                                            className={styles["fold-icon"]}
+                                            onClick={() => {
+                                                setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                setFold(true)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                </div>
+                            </div>
+                            <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
+                        </div>
+                    </Col>
                 )}
             </Row>
-            {isFold && pageType !== "MITM" && (
+            {isFold && (
                 <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
                     <div className={classNames(styles["http-history-icon-box"])} style={{height: 32}}>
                         <Tooltip placement='top' title='向左展开'>
@@ -1128,14 +1113,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
     useEffect(() => {
         if (flow) {
-            getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then(res => {
+            getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
                 if (!!res) {
                     setReqTypeOptionVal(res)
                 } else {
                     setReqTypeOptionVal(undefined)
                 }
             })
-            getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then(res => {
+            getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
                 if (!!res) {
                     setResTypeOptionVal(res)
                 } else {
