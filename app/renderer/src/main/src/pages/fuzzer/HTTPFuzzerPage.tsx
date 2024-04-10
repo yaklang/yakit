@@ -734,10 +734,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setAdvancedConfigRuleShow(c === "true")
             }
         })
-        emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+        emiter.on("onSetAdvancedConfigConfigureShow", onSetFuzzerAdvancedConfig)
         emiter.on("onSetAdvancedConfigRuleShow", onSetAdvancedConfigRuleShow)
         return () => {
-            emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+            emiter.off("onSetAdvancedConfigConfigureShow", onSetFuzzerAdvancedConfig)
             emiter.off("onSetAdvancedConfigRuleShow", onSetAdvancedConfigRuleShow)
         }
     }, [])
@@ -753,7 +753,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
-        if (inViewport) onSetAdvancedConfig(!advancedConfig)
+        if (inViewport){
+            const c = !advancedConfig
+            setAdvancedConfig(c)
+            setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
+            emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
+        }
     })
     /**切换规则对应得高级配置显示内容 */
     const onSetAdvancedConfigRuleShow = useMemoizedFn(() => {
@@ -1517,11 +1522,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
         }
         setAdvancedConfigValue(newValue)
-    })
-    const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
-        setAdvancedConfig(c)
-        setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
-        emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
     })
 
     const httpResponse: FuzzerResponse = useMemo(() => {

@@ -959,6 +959,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         </YakitButton>
                                     </>
                                 }
+                                className={styles["panel-wrapper"]}
                             >
                                 <div className={styles["matchers-heard"]}>
                                     <div className={styles["matchers-heard-left"]}>

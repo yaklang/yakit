@@ -1,5 +1,6 @@
 export type WebFuzzerEventProps = {
-    onSetFuzzerAdvancedConfigShow?: string
+    /**设置【配置】tab中得高级配置显示 */
+    onSetAdvancedConfigConfigureShow?: string
     onRefWebFuzzer?: string
     onGetFuzzerAdvancedConfigShow: string
     onImportYamlPopEditorContent: string
@@ -11,8 +12,8 @@ export type WebFuzzerEventProps = {
     onOpenFuzzerModal: string
     /**切换 Fuzzer 规则和配置 用来显示高级配置的内容 */
     onFuzzerAdvancedConfigShowType: string
-    /**fuzzer 切换规则对应得高级配置显示内容 */
-    onSetAdvancedConfigRuleShow: string
+    /**设置【规则】tab中得高级配置显示 */
+    onSetAdvancedConfigRuleShow?: string
     /**切换【序列】包裹层的type */
     onSwitchTypeFuzzerSequenceWrapper: string
     /** 切换【配置】/【规则】包裹层的type */

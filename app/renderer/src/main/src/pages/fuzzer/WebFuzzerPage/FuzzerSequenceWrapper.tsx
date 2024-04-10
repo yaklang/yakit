@@ -10,9 +10,6 @@ const {ipcRenderer} = window.require("electron")
 
 /**只包裹序列 */
 const FuzzerSequenceWrapper: React.FC<FuzzerSequenceWrapperProps> = React.memo((props) => {
-    const webFuzzerRef = useRef<any>(null)
-    const [inViewport] = useInViewport(webFuzzerRef)
-
     /**点击切换tab，带其他操作 */
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         switch (key) {
@@ -25,7 +22,7 @@ const FuzzerSequenceWrapper: React.FC<FuzzerSequenceWrapperProps> = React.memo((
         }
     })
     return (
-        <div className={styles["web-fuzzer"]} ref={webFuzzerRef}>
+        <div className={styles["web-fuzzer"]}>
             <div className={styles["web-fuzzer-tab"]}>
                 {webFuzzerTabs.map((item) => (
                     <div
@@ -43,7 +40,7 @@ const FuzzerSequenceWrapper: React.FC<FuzzerSequenceWrapperProps> = React.memo((
                     </div>
                 ))}
             </div>
-            <div className={classNames(styles["web-fuzzer-tab-content"])}>我是序列{props.children}</div>
+            <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
         </div>
     )
 })

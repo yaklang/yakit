@@ -39,7 +39,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     // 监听tab栏打开或关闭 【配置】
     const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(false)
     // 监听tab栏打开或关闭 【规则】
-    const [ruleAdvancedConfigShow, setRuleAdvancedConfigShow] = useState<boolean>(false)
+    const [advancedConfigRuleShow, setAdvancedConfigRuleShow] = useState<boolean>(false)
 
     const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
@@ -68,9 +68,9 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         })
         getRemoteValue(WEB_FUZZ_Rule_Switch_Checked).then((c) => {
             if (c === "") {
-                setRuleAdvancedConfigShow(true)
+                setAdvancedConfigRuleShow(true)
             } else {
-                setRuleAdvancedConfigShow(c === "true")
+                setAdvancedConfigRuleShow(c === "true")
             }
         })
     }, [])
@@ -98,13 +98,17 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
             default:
                 // 设置MainOperatorContent层type变化用来控制是否展示【配置】/【规则】
                 ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-                // 设置【配置】/【规则】的高级配置项的展示
+                // 切换【配置】/【规则】的高级配置项的展示
                 emiter.emit("onFuzzerAdvancedConfigShowType", JSON.stringify({type: key}))
                 if (type === key) {
                     switch (key) {
                         case "config":
                             // 设置【配置】的高级配置的隐藏或显示
-                            emiter.emit("onSetFuzzerAdvancedConfigShow")
+                            emiter.emit("onSetAdvancedConfigConfigureShow")
+                            break
+                        case "rule":
+                            // 设置【规则】的高级配置的隐藏或显示
+                            emiter.emit("onSetAdvancedConfigRuleShow")
                             break
                         default:
                             break
@@ -126,7 +130,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                         setAdvancedConfigShow(value.checked)
                         break
                     case "rule":
-                        setRuleAdvancedConfigShow(value.checked)
+                        setAdvancedConfigRuleShow(value.checked)
                         break
                     default:
                         break
@@ -141,11 +145,15 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         } catch (error) {}
     })
     const isUnShow = useCreation(() => {
-        if (type === "sequence") {
-            return false
+        switch (type) {
+            case "config":
+                return !advancedConfigShow
+            case "rule":
+                return !advancedConfigRuleShow
+            default:
+                return false
         }
-        return !advancedConfigShow || !ruleAdvancedConfigShow
-    }, [type, advancedConfigShow, ruleAdvancedConfigShow])
+    }, [type, advancedConfigShow, advancedConfigRuleShow])
     return (
         <div className={styles["web-fuzzer"]} ref={webFuzzerRef}>
             <div className={styles["web-fuzzer-tab"]}>
