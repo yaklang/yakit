@@ -187,6 +187,20 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
+        if (yakitStatus === "control-remote-timeout") {
+            return (
+                <YakitButton
+                    loading={restartLoading}
+                    className={styles["btn-style"]}
+                    type='outline2'
+                    size='max'
+                    onClick={() => btnClickCallback("local")}
+                >
+                    返回本地连接
+                </YakitButton>
+            )
+        }
+
         return <></>
     }, [yakitStatus, restartLoading, remoteControlRefreshLoading, engineMode, showEngineLog])
 

@@ -669,6 +669,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 .invoke("Codec", {Type: "base64-decode", Text: resultObj.pubpem, Params: [], ScriptName: ""})
                 .then((res) => {
                     onSetYakitStatus("control-remote")
+                    setCheckLog(["远程控制连接中..."])
                     onDisconnect()
 
                     setCredential(() => {
@@ -960,24 +961,40 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
         onSetEngineLink(false)
 
-        // 远程控制异常退出
-        // 明天测试下流程-关于这个逻辑
-        if (dynamicStatus.isDynamicStatus && count > 5) {
-            failed("远程控制异常退出, 无法连接。")
-            setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
-            remoteOperation(false, dynamicStatus, userInfo)
+        if (dynamicStatus.isDynamicStatus && cacheYakitStatus.current !== "control-remote") {
+            setCheckLog(["远程控制重连中..."])
+            onSetYakitStatus("control-remote")
+            return
+        } else {
+            if (cacheYakitStatus.current === "control-remote") {
+                if (count === 5) {
+                    setCheckLog(["远程控制异常退出, 无法连接"])
+                    failed("远程控制异常退出, 无法连接。")
+                    setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
+                    remoteOperation(false, dynamicStatus, userInfo)
+                    onSetYakitStatus("control-remote-timeout")
+                    onDisconnect()
+                }
+                return
+            }
+        }
+
+        if (cacheYakitStatus.current === "error" && count === 20) {
+            // 连接断开后的20次尝试过后，不在进行尝试
+            setCheckLog(["连接超时, 请手动启动引擎"])
             return
         }
 
         if (cacheYakitStatus.current === "link" || cacheYakitStatus.current === "ready") {
-            if (count > 8) {
-                if (cacheEngineMode.current === "remote") {
-                    failed("远程连接已断开")
-                    onDisconnect()
-                    onSetYakitStatus("")
-                }
-                if (cacheEngineMode.current === "local") {
-                    setCheckLog(["引擎连接超时, 请重试"])
+            // 连接中或正在连接中触发
+            if (cacheEngineMode.current === "remote") {
+                failed("远程连接已断开")
+                onDisconnect()
+                onSetYakitStatus("")
+            }
+            if (cacheEngineMode.current === "local") {
+                setCheckLog(["引擎连接超时, 正在尝试重连"])
+                if (count > 8) {
                     onSetYakitStatus("error")
                 }
             }
@@ -996,6 +1013,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         onKeepaliveShouldChange={setKeepalive}
                         onReady={onReady}
                         onFailed={onFailed}
+                        setLog={setCheckLog}
+                        setYakitStatus={onSetYakitStatus}
                     />
                     <div id='yakit-header' className={styles["ui-layout-header"]}>
                         {system === "Darwin" ? (

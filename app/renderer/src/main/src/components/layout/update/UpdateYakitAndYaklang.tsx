@@ -173,7 +173,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
 
     const yakitDownload = () => {
         let version = ""
-        if (latestYakit.startsWith("v")) version = latestYakit.substr(1)
+        if (latestYakit.startsWith("v")) version = latestYakit.slice(1)
         isYakitBreak.current = false
         setInstallYakit(true)
         ipcRenderer
@@ -222,8 +222,10 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     const yaklangDownload = useMemoizedFn(() => {
         isYaklangBreak.current = false
         setInstallYaklang(true)
+        let version = ""
+        if (latestYakit.startsWith("v")) version = latestYaklang.slice(1)
         ipcRenderer
-            .invoke("download-latest-yak", latestYaklang)
+            .invoke("download-latest-yak", version)
             .then(() => {
                 if (isYaklangBreak.current) return
 
@@ -259,8 +261,10 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         }, 300)
     })
     const yaklangUpdate = useMemoizedFn(() => {
+        let version = ""
+        if (latestYakit.startsWith("v")) version = latestYaklang.slice(1)
         ipcRenderer
-            .invoke("install-yak-engine", latestYaklang)
+            .invoke("install-yak-engine", version)
             .then(() => {
                 success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
             })

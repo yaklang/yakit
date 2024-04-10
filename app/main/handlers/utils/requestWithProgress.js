@@ -1,9 +1,6 @@
 const axios = require('axios');
 const fs = require('fs');
 const {throttle} = require('throttle-debounce');
-const urlUtils = require('url');
-const https = require("https");
-const {caBundle} = require("../missedCABundle");
 
 // 函数用于编码URL中的中文字符
 function encodeChineseCharacters(url) {

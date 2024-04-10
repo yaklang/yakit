@@ -55,7 +55,9 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
-            .then((data: string) => (latestVersion.current = data))
+            .then((data: string) => {
+                latestVersion.current = data.startsWith("v") ? data.slice(1) : data
+            })
             .catch((e: any) => {
                 if (isBreakRef.current) return
                 failed(`获取引擎最新版本失败 ${e}`)

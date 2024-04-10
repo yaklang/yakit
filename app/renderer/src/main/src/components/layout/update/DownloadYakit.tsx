@@ -60,7 +60,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                     .invoke("fetch-latest-yakit-version")
                     .then((data: string) => {
                         let version = data
-                        if (version.startsWith("v")) version = version.substr(1)
+                        if (version.startsWith("v")) version = version.slice(1)
 
                         ipcRenderer
                             .invoke("download-latest-yakit", version, isEnterpriseEdition())

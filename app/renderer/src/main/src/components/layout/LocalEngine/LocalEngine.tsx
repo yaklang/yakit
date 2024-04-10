@@ -21,8 +21,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const [latestYakit, setLatestYakit] = useState<string>("")
         const [currentYaklang, setCurrentYaklang] = useState<string>("")
         const [latestYaklang, setLatestYaklang] = useState<string>("")
-        // 是否阻止更新弹窗出现
-        const preventUpdateHint = useRef<boolean>(false)
 
         /**
          * 只在软件打开时|引擎从无到有时执行该逻辑
@@ -82,6 +80,17 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             }, 500)
         })
 
+        /** 是否阻止更新弹窗出现 */
+        const preventUpdateHint = useRef<boolean>(false)
+        /** 检查版本后，延迟2000毫秒执行连接(如遇更新，则清除定时器) */
+        const linkTimeRef = useRef<any>(null)
+        const clearLinkTime = useMemoizedFn(() => {
+            if (linkTimeRef.current) {
+                clearTimeout(linkTimeRef.current)
+                linkTimeRef.current = null
+            }
+        })
+
         const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async () => {
             console.log("get-version")
             try {
@@ -94,8 +103,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
                 setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
                 setCurrentYaklang(localYaklang)
-                setTimeout(() => {
-                    preventUpdateHint.current = true
+                linkTimeRef.current = setTimeout(() => {
                     // 这里的2秒是判断是否有更新弹窗出现
                     handleLinkLocalEnging()
                 }, 2000)
@@ -131,7 +139,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         // 初始化后的本地连接-前置项检查
         const initLink = useMemoizedFn(() => {
-            preventUpdateHint.current = false
+            preventUpdateHint.current = isCommunityEdition() ? false : true
             handleCheckDataBase()
         })
         // 检查版本后直接连接
@@ -164,9 +172,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             if (!isCommunityEdition()) return false
 
             if (!!currentYakit && !!latestYakit && `v${currentYakit}` !== latestYakit) {
+                clearLinkTime()
                 return true
             }
             if (!!currentYaklang && !!latestYaklang && currentYaklang !== latestYaklang) {
+                clearLinkTime()
                 return true
             }
 

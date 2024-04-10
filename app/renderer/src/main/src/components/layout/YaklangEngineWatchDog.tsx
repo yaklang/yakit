@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
-import {YaklangEngineMode} from "@/yakitGVDefine"
+import {YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
@@ -34,6 +34,9 @@ export interface YaklangEngineWatchDogProps {
     onReady?: () => any
     onFailed?: (failedCount: number) => any
     onKeepaliveShouldChange?: (keepalive: boolean) => any
+
+    setLog: (arr: string[]) => any
+    setYakitStatus: (v: YakitStatusType) => any
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
@@ -91,6 +94,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             return
                         case "remote":
                             outputToWelcomeConsole("远程模式不自动启动本地引擎")
+                            if (isDynamicControl) {
+                                props.setLog(["远程控制异常退出, 无法连接"])
+                                props.setYakitStatus("control-remote-timeout")
+                            }
                             failed(`${e}`)
                             return
                     }
@@ -149,7 +156,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         startingUp.current = true
                         ipcRenderer
                             .invoke("start-local-yaklang-engine", {
-                                port: 0, //props.credential.Port,
+                                port: props.credential.Port,
                                 isEnpriTraceAgent: isEnpriTraceAgent()
                             })
                             .then(() => {

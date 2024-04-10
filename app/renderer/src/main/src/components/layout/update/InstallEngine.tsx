@@ -190,9 +190,8 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     })
 
     const downloadEngine = useMemoizedFn(() => {
-        console.log(`v${latestVersionRef.current}`)
         ipcRenderer
-            .invoke("download-latest-yak", `v${latestVersionRef.current}`)
+            .invoke("download-latest-yak", `${latestVersionRef.current}`)
             .then(() => {
                 if (isBreakDownload.current) return
 
@@ -210,7 +209,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                 success("下载完毕")
                 /** 安装yaklang引擎 */
                 ipcRenderer
-                    .invoke("install-yak-engine", `v${latestVersionRef.current}`)
+                    .invoke("install-yak-engine", `${latestVersionRef.current}`)
                     .then(() => {
                         if (isBreakDownload.current) return
                         success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)

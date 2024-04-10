@@ -37,6 +37,7 @@ export type YakitStatusType =
     | "link" // 引擎连接成功
     | "ready" // 开始尝试连接引擎
     | "control-remote" // 远程控制中(不是远程连接)
+    | "control-remote-timeout" // 远程控制连接超时
     | ""
 
 /** @name funcDomain组件-全局setting功能的点击回调事件类型 */

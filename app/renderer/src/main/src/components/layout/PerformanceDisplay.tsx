@@ -257,7 +257,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                             >
                                                 Details
                                             </YakitButton>
-                                            {isDev ? (
+                                            {isDev.current ? (
                                                 <Popconfirm
                                                     title={<>确定是否切换连接的引擎,</>}
                                                     onConfirm={async () => {
@@ -335,13 +335,13 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                             <div></div>
                             <Popconfirm
                                 title={
-                                    <>
+                                    <div style={{width: 330}}>
                                         确定关闭将会强制关闭进程,
                                         <br />
                                         如为当前连接引擎,未关闭Yakit再次连接引擎,
                                         <br />
                                         则需在加载页点击"其他连接模式-手动启动引擎"
-                                    </>
+                                    </div>
                                 }
                                 onConfirm={() => allClose()}
                             >
