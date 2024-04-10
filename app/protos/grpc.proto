@@ -3824,6 +3824,7 @@ message CodecParam {
   string Regex = 6; // 正则
   string Label = 7; // 参数文本标签
   string DefaultValue = 8; // 默认值
+  CodecParam Connector = 9; // 连接组件
 }
 
 // Yak Invoker
