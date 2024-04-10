@@ -1203,7 +1203,6 @@ export declare namespace API {
     by_head_img: string;
     reply_num: number;
     is_stars?: boolean;
-    reply_content?: CommentListData[];
   }
   export interface CollaboratorInfo {
     user_id: number;

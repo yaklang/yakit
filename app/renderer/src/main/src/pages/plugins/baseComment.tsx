@@ -69,6 +69,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const [parentComment, setParentComment] = useState<API.CommentListData>()
     const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
     const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
+    const [commentAllNum,setCommentAllNum] = useState<number>(0)
 
     const ref = useRef(null)
     const size = useSize(ref)
@@ -98,7 +99,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             params
         })
             .then((res) => {
-                // console.log("comment---", res.data, plugin)
+                // console.log("comment---", res, plugin)
 
                 if (!res.data) {
                     res.data = []
@@ -110,6 +111,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 const isMore =
                     res.data.length < limit || newCommentResponses.data.length === commentResponses.pagemeta.total
                 ishasMore.current = !isMore
+                setCommentAllNum(res.pagemeta.total)
                 setCommentResponses({
                     data: [...newCommentResponses.data],
                     pagemeta: res.pagemeta
@@ -169,6 +171,8 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
         })
             .then((res) => {
                 success("评论成功")
+                // console.log("评论成功---",data);
+                
                 if (data.by_user_id && data.by_user_id > 0) {
                     // 刷新modal中子评论列表
                     setCommenData({
@@ -306,7 +310,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             <div className={styles["info-comment-box"]}>
                 <div className={styles["box-header"]}>
                     <span className={styles["header-title"]}>评论</span>
-                    <span className={styles["header-subtitle"]}>{plugin.comment_num || 0}</span>
+                    <span className={styles["header-subtitle"]}>{commentAllNum || 0}</span>
                 </div>
                 {isLogin && (
                     <PluginCommentUpload
@@ -511,7 +515,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                         })}
                     </>
                 )} */}
-                {isOperation && info.reply_num > 2 && (
+                {isOperation && info.reply_num > 0 && (
                     <a
                         className={styles["comment-reply"]}
                         onClick={() => {
@@ -935,6 +939,8 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
             params
         })
             .then((res) => {
+                // console.log("comments/reply",res.data);
+                
                 if (!res.data) {
                     res.data = []
                 }
