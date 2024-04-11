@@ -2156,7 +2156,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     }, [pageItem.multipleLength])
     useUpdateEffect(() => {
-        if (type === "config") {
+        if (type!=='sequence') {
             emiter.emit("onRefWebFuzzer")
         }
     }, [type])

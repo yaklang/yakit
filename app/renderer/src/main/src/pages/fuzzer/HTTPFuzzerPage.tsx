@@ -337,14 +337,6 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
         .finally()
 }
 
-interface FuzzResponseFilter {
-    MinBodySize: number
-    MaxBodySize: number
-    Regexps: string[]
-    Keywords: string[]
-    StatusCode: string[]
-}
-
 export function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
     ipcRenderer
         .invoke("ExtractUrl", f)
@@ -657,6 +649,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
         initWebFuzzerPageInfo().advancedConfigValue
     ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
+    // 切换【规则】/【配置】刷新高级配置中的表单
+    const [triggerRefresh, setTriggerRefresh] = useState<boolean>(false)
     const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
     // 【规则】高级配置的隐藏/显示
     const [advancedConfigRuleShow, setAdvancedConfigRuleShow] = useState<boolean>(false)
@@ -809,6 +803,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             const value = JSON.parse(data)
             setAdvancedConfigShowType(value.type)
+            setTriggerRefresh(!triggerRefresh)
         } catch (error) {}
     })
     /**更新请求包 */
@@ -827,6 +822,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (!inViewport) return
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
         if (!currentItem) return
+        console.log('currentItem',currentItem.pageParamsInfo.webFuzzerPageInfo)
         let newAdvancedConfigValue = currentItem.pageParamsInfo.webFuzzerPageInfo?.advancedConfigValue
         if (!newAdvancedConfigValue) return
         setAdvancedConfigValue({...newAdvancedConfigValue})
@@ -1381,6 +1377,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 advancedConfigValue,
                 request: requestRef.current
             }
+            console.log('sendFuzzerSettingInfo',webFuzzerPageInfo)
             onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
         {wait: 500}
@@ -1461,6 +1458,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setAdvancedConfig(shareContent.advancedConfig)
             setAdvancedConfigRuleShow(shareContent.advancedConfigRuleShow)
             requestRef.current = shareContent.request
+            console.log('setUpShareContent',newAdvancedConfigValue)
             setAdvancedConfigValue(newAdvancedConfigValue)
         } catch (error) {
             yakitNotify("error", "获取的数据结构不是最新版,请分享人/被分享人更新版本")
@@ -1886,6 +1884,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         id={props.id}
                         matchSubmitFun={matchSubmitFun}
                         showFormContentType={advancedConfigShowType}
+                        triggerRefresh={triggerRefresh}
                     />
                 </React.Suspense>
                 <div className={styles["http-fuzzer-page"]}>
