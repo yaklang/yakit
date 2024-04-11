@@ -822,7 +822,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (!inViewport) return
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
         if (!currentItem) return
-        console.log('currentItem',currentItem.pageParamsInfo.webFuzzerPageInfo)
         let newAdvancedConfigValue = currentItem.pageParamsInfo.webFuzzerPageInfo?.advancedConfigValue
         if (!newAdvancedConfigValue) return
         setAdvancedConfigValue({...newAdvancedConfigValue})
@@ -1377,7 +1376,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 advancedConfigValue,
                 request: requestRef.current
             }
-            console.log('sendFuzzerSettingInfo',webFuzzerPageInfo)
             onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
         {wait: 500}
@@ -1458,7 +1456,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setAdvancedConfig(shareContent.advancedConfig)
             setAdvancedConfigRuleShow(shareContent.advancedConfigRuleShow)
             requestRef.current = shareContent.request
-            console.log('setUpShareContent',newAdvancedConfigValue)
             setAdvancedConfigValue(newAdvancedConfigValue)
         } catch (error) {
             yakitNotify("error", "获取的数据结构不是最新版,请分享人/被分享人更新版本")
