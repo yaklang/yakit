@@ -45,7 +45,7 @@ import {v4 as uuidv4} from "uuid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
+import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI, NewCodecTextAreaUI} from "./NewCodecUIStore"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -53,7 +53,7 @@ import {EnterOutlined} from "@ant-design/icons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import { pluginTypeToName } from "../plugins/builtInData"
+import {pluginTypeToName} from "../plugins/builtInData"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -70,7 +70,7 @@ interface NewCodecRightEditorBoxProps {
 }
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
-    const {isExpand, setExpand, outputEditorByte, inputEditor, setInputEditor, outputEditor,runLoading} = props
+    const {isExpand, setExpand, outputEditorByte, inputEditor, setInputEditor, outputEditor, runLoading} = props
     const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
     const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
     const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
@@ -377,112 +377,118 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                 secondNode={
                     <div className={classNames(styles["output-box"], styles["editor-box"])}>
                         <YakitSpin spinning={runLoading}>
-                        <div className={styles["header"]}>
-                            <div className={styles["title"]}>
-                                <span className={styles["text"]}>Output</span>
-                                {outPutObj.hidden && (
-                                    <Tooltip
-                                        title={size && size.width > 450 ? null : "超大输出，请点击保存下载文件查看"}
-                                    >
-                                        <YakitTag style={{marginLeft: 8}} color='danger'>
-                                            <div className={styles["tag-box"]}>
-                                                <ExclamationIcon className={styles["icon-style"]} />
-                                                {size && size.width > 450 && (
-                                                    <span>超大输出，请点击保存下载文件查看</span>
-                                                )}
-                                            </div>
-                                        </YakitTag>
-                                    </Tooltip>
-                                )}
-                            </div>
-                            <div className={styles["extra"]}>
-                                {size && size.width > 300 ? (
-                                    <>
-                                        <Tooltip title={"保存"}>
-                                            <div className={styles["extra-icon"]} onClick={onSave}>
-                                                <OutlineStorageIcon />
-                                            </div>
+                            <div className={styles["header"]}>
+                                <div className={styles["title"]}>
+                                    <span className={styles["text"]}>Output</span>
+                                    {outPutObj.hidden && (
+                                        <Tooltip
+                                            title={size && size.width > 450 ? null : "超大输出，请点击保存下载文件查看"}
+                                        >
+                                            <YakitTag style={{marginLeft: 8}} color='danger'>
+                                                <div className={styles["tag-box"]}>
+                                                    <ExclamationIcon className={styles["icon-style"]} />
+                                                    {size && size.width > 450 && (
+                                                        <span>超大输出，请点击保存下载文件查看</span>
+                                                    )}
+                                                </div>
+                                            </YakitTag>
                                         </Tooltip>
-                                        <Tooltip title={"将Output替换至Input"}>
-                                            <div className={styles["extra-icon"]} onClick={onReplace}>
-                                                <OutlineArrowBigUpIcon />
-                                            </div>
-                                        </Tooltip>
-                                        <Tooltip title={"复制"}>
-                                            <div className={styles["extra-icon"]} onClick={onCopy}>
-                                                <OutlineDocumentduplicateIcon />
-                                            </div>
-                                        </Tooltip>
-                                        <Tooltip title={"不自动换行"}>
-                                            <YakitButton
-                                                size={"small"}
-                                                type={noOutputWordwrap ? "text" : "primary"}
-                                                icon={<EnterOutlined />}
-                                                onClick={() => {
-                                                    setNoOutputWordwrap(!noOutputWordwrap)
-                                                }}
-                                            />
-                                        </Tooltip>
-                                    </>
-                                ) : (
-                                    <YakitDropdownMenu
-                                        menu={{
-                                            data: outputMenuData as YakitMenuItemProps[],
-                                            onClick: ({key}) => {
-                                                setOutputMenuOpen(false)
-                                                switch (key) {
-                                                    case "save":
-                                                        onSave()
-                                                        break
-                                                    case "replace":
-                                                        onReplace()
-                                                        break
-                                                    case "copy":
-                                                        onCopy()
-                                                        break
-                                                    case "wordwrap":
+                                    )}
+                                </div>
+                                <div className={styles["extra"]}>
+                                    {size && size.width > 300 ? (
+                                        <>
+                                            <Tooltip title={"保存"}>
+                                                <div className={styles["extra-icon"]} onClick={onSave}>
+                                                    <OutlineStorageIcon />
+                                                </div>
+                                            </Tooltip>
+                                            <Tooltip title={"将Output替换至Input"}>
+                                                <div className={styles["extra-icon"]} onClick={onReplace}>
+                                                    <OutlineArrowBigUpIcon />
+                                                </div>
+                                            </Tooltip>
+                                            <Tooltip title={"复制"}>
+                                                <div className={styles["extra-icon"]} onClick={onCopy}>
+                                                    <OutlineDocumentduplicateIcon />
+                                                </div>
+                                            </Tooltip>
+                                            <Tooltip title={"不自动换行"}>
+                                                <YakitButton
+                                                    size={"small"}
+                                                    type={noOutputWordwrap ? "text" : "primary"}
+                                                    icon={<EnterOutlined />}
+                                                    onClick={() => {
                                                         setNoOutputWordwrap(!noOutputWordwrap)
-                                                        break
-                                                    default:
-                                                        break
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </>
+                                    ) : (
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: outputMenuData as YakitMenuItemProps[],
+                                                onClick: ({key}) => {
+                                                    setOutputMenuOpen(false)
+                                                    switch (key) {
+                                                        case "save":
+                                                            onSave()
+                                                            break
+                                                        case "replace":
+                                                            onReplace()
+                                                            break
+                                                        case "copy":
+                                                            onCopy()
+                                                            break
+                                                        case "wordwrap":
+                                                            setNoOutputWordwrap(!noOutputWordwrap)
+                                                            break
+                                                        default:
+                                                            break
+                                                    }
                                                 }
-                                            }
-                                        }}
-                                        dropdown={{
-                                            overlayClassName: styles["codec-output-menu"],
-                                            trigger: ["click"],
-                                            placement: "bottomRight",
-                                            onVisibleChange: (v) => {
-                                                setOutputMenuOpen(v)
-                                            },
-                                            visible: outputMenuOpen
-                                        }}
-                                    >
-                                        <div className={styles["extra-icon"]}>
-                                            <OutlineDotshorizontalIcon />
-                                        </div>
-                                    </YakitDropdownMenu>
-                                )}
+                                            }}
+                                            dropdown={{
+                                                overlayClassName: styles["codec-output-menu"],
+                                                trigger: ["click"],
+                                                placement: "bottomRight",
+                                                onVisibleChange: (v) => {
+                                                    setOutputMenuOpen(v)
+                                                },
+                                                visible: outputMenuOpen
+                                            }}
+                                        >
+                                            <div className={styles["extra-icon"]}>
+                                                <OutlineDotshorizontalIcon />
+                                            </div>
+                                        </YakitDropdownMenu>
+                                    )}
 
-                                <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
-                                {Expand()}
+                                    <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
+                                    {Expand()}
+                                </div>
                             </div>
-                        </div>
-                        <div className={styles["editor"]}>
-                            <YakitEditor
-                                readOnly={true}
-                                type='plaintext'
-                                value={outPutObj.value}
-                                noWordWrap={noOutputWordwrap}
-                                // loading={loading}
-                            />
-                        </div>
+                            <div className={styles["editor"]}>
+                                <YakitEditor
+                                    readOnly={true}
+                                    type='plaintext'
+                                    value={outPutObj.value}
+                                    noWordWrap={noOutputWordwrap}
+                                    // loading={loading}
+                                />
+                            </div>
                         </YakitSpin>
                     </div>
                 }
             />
         </div>
     )
+}
+
+interface ValueByUIProps {
+    index: number
+    type: string
+    val: any
 }
 
 interface NewCodecMiddleTypeItemProps {
@@ -536,27 +542,46 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
     })
 
     // 更改控件值
-    const setValueByUI = useMemoizedFn((val: any, index: number) => {
+    const setValueByUI = useMemoizedFn((obj: ValueByUIProps) => {
+        const {val, index, type} = obj
         const itemArr = rightItems.filter((item) => item.key === outerKey)
         const newNode = itemArr[0]?.node
         if (Array.isArray(newNode)) {
             if (newNode[index].type !== "flex") {
-                const initNode = newNode as RightItemsTypeProps[]
-                initNode[index].value = val
-                const newRightItems = rightItems.map((item) => {
-                    if (item.key === outerKey) {
-                        item.node = initNode
+                if (newNode[index].type === "inputSelect") {
+                    // 联合控件 - Input/Select
+                    const initNode = newNode as RightItemsTypeProps[]
+                    initNode[index][type].value = val
+                    const newRightItems = rightItems.map((item) => {
+                        if (item.key === outerKey) {
+                            item.node = initNode
+                            return item
+                        }
                         return item
-                    }
-                    return item
-                })
-                setRightItems(newRightItems)
+                    })
+                    setRightItems(newRightItems)
+                } else {
+                    const initNode = newNode as RightItemsTypeNoUniteProps[]
+                    initNode[index].value = val
+                    const newRightItems = rightItems.map((item) => {
+                        if (item.key === outerKey) {
+                            item.node = initNode
+                            return item
+                        }
+                        return item
+                    })
+                    setRightItems(newRightItems)
+                }
             }
         }
     })
 
     // 控件
-    const onShowUI = useMemoizedFn((item: RightItemsTypeProps, index: number) => {
+    const onShowUI = useMemoizedFn((item: RightItemsTypeProps, index: number, direction?: "left" | "right") => {
+        const params = {
+            index,
+            type: item.type
+        }
         switch (item.type) {
             case "input":
                 // 输入框模块
@@ -567,7 +592,20 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                         require={item.require}
                         defaultValue={item.defaultValue}
                         value={item.value}
-                        onChange={(e) => setValueByUI(e.target.value, index)}
+                        onChange={(e) => setValueByUI({...params, val: e.target.value})}
+                        direction={direction}
+                    />
+                )
+            case "text":
+                // 文本域模块
+                return (
+                    <NewCodecTextAreaUI
+                        title={item.title}
+                        disabled={itemStatus === "shield" || item.disabled}
+                        require={item.require}
+                        defaultValue={item.defaultValue}
+                        value={item.value}
+                        onChange={(e) => setValueByUI({...params, val: e.target.value})}
                     />
                 )
             case "checkbox":
@@ -577,7 +615,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                         disabled={itemStatus === "shield" || item.disabled}
                         options={item.checkArr}
                         value={item.value}
-                        onChange={(checkedValues: CheckboxValueType[]) => setValueByUI(checkedValues, index)}
+                        onChange={(checkedValues: CheckboxValueType[]) => setValueByUI({...params, val: checkedValues})}
                     />
                 )
             case "select":
@@ -591,7 +629,8 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                         options={item.selectArr}
                         value={item.value}
                         isPlugin={item.isPlugin}
-                        onSelect={(val) => setValueByUI(val, index)}
+                        onSelect={(val) => setValueByUI({...params, val})}
+                        directionBox={direction}
                     />
                 )
             case "editor":
@@ -602,7 +641,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                         title={item.title}
                         require={item.require}
                         value={item.value}
-                        onChange={(val) => setValueByUI(val, index)}
+                        onChange={(val) => setValueByUI({...params, val})}
                     />
                 )
             default:
@@ -667,7 +706,10 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                     case "flex":
                         // 左右布局
                         return (
-                            <div style={{display: "flex", flexDirection: "row", gap: 8}} key={`${data.key}-${index}`}>
+                            <div
+                                style={{display: "flex", flexDirection: "row", gap: 8, marginTop: 8}}
+                                key={`${data.key}-${index}`}
+                            >
                                 <div style={{flex: item.leftFlex || 3}}>
                                     {/* 左 */}
                                     {onShowUI(item.leftNode, index)}
@@ -678,8 +720,37 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                                 </div>
                             </div>
                         )
+                    case "inputSelect":
+                        return (
+                            <div
+                                style={{display: "flex", flexDirection: "row", marginTop: 8}}
+                                key={`${data.key}-${index}`}
+                            >
+                                <div style={{flex: 3}}>
+                                    {/* 左 */}
+                                    {onShowUI(item.input, index, "left")}
+                                </div>
+                                <div style={{flex: 2, borderLeft: "1px solid #EAECF3"}}>
+                                    {/* 右 */}
+                                    {onShowUI(item.select, index, "right")}
+                                </div>
+                            </div>
+                        )
+                    case "checkbox":
+                        return (
+                            <div
+                                key={`${data.key}-${index}`}
+                                style={{display: "inline-block", marginTop: 8, marginRight: 8}}
+                            >
+                                {onShowUI(item, index)}
+                            </div>
+                        )
                     default:
-                        return <div key={`${data.key}-${index}`}>{onShowUI(item, index)}</div>
+                        return (
+                            <div key={`${data.key}-${index}`} style={{marginTop: 8}}>
+                                {onShowUI(item, index)}
+                            </div>
+                        )
                 }
             })}
         </div>
@@ -972,7 +1043,18 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             if (Array.isArray(item.node)) {
                 const node = item.node as RightItemsTypeProps[]
                 node.forEach((itemIn) => {
-                    if (itemIn.type === "checkbox") {
+                    if (itemIn.type === "inputSelect") {
+                        const {input,select} = itemIn
+                        obj.Params.push({
+                            Key: input.name,
+                            Value: input.value||""
+                        })
+                        obj.Params.push({
+                            Key: select.name,
+                            Value: select.value||""
+                        })
+                        
+                    } else if (itemIn.type === "checkbox") {
                         const {name, value = []} = itemIn
                         obj.Params.push({
                             Key: name,
@@ -990,6 +1072,8 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             newCodecParams.WorkFlow.push(obj)
         })
         setRunLoading(true)
+        // console.log("newCodecParams---",newCodecParams);
+        
         ipcRenderer
             .invoke("NewCodec", newCodecParams)
             .then((data: {Result: string; RawResult: Uint8Array}) => {
@@ -1022,7 +1106,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             const {key, title} = item
             if (Array.isArray(item.node)) {
                 item.node.forEach((itemIn, indexIn) => {
-                    if (itemIn.type === "input") {
+                    if (itemIn.type === "input" || itemIn.type === "text") {
                         const rightItem = itemIn as RightItemsInputProps
                         const {require, value, regex} = rightItem
                         // 校验是否必填
@@ -1040,7 +1124,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                 checkFail.push({
                                     key,
                                     index: indexIn,
-                                    message: `${title}-${rightItem.title}:校验不通过`
+                                    message: `${title}-${rightItem.title}-${regexp}:校验不通过`
                                 })
                             }
                         }
@@ -1068,7 +1152,41 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                 message: `${title}-${rightItem.title}:为必填项`
                             })
                         }
-                    } else if (itemIn.type === "flex") {
+                    } 
+                    else if(itemIn.type === "inputSelect"){
+                        const rightItem = itemIn as RightItemsInputSelectProps
+                        const inputItem = rightItem.input
+                        const selectItem = rightItem.select
+                        const {require, value, regex} = inputItem
+                        // 校验input是否必填
+                        if (require && !value) {
+                            checkFail.push({
+                                key,
+                                index: indexIn,
+                                message: `${title}-${inputItem.title}:为必填项`
+                            })
+                        }
+                        // 校验input正则
+                        if (regex && value) {
+                            const regexp = new RegExp(regex)
+                            if (!regexp.test(value)) {
+                                checkFail.push({
+                                    key,
+                                    index: indexIn,
+                                    message: `${title}-${inputItem.title}-${regexp}:校验不通过`
+                                })
+                            }
+                        }
+                        // 校验select是否必填
+                        if (selectItem.require && !selectItem.value) {
+                            checkFail.push({
+                                key,
+                                index: indexIn,
+                                message: `${title}-${selectItem.title}:为必填项`
+                            })
+                        }
+                    }
+                    else if (itemIn.type === "flex") {
                         // 此处为布局预留
                     }
                 })
@@ -1563,7 +1681,7 @@ interface RightItemsInputProps {
     // 正则校验
     regex?: string
     // 控件类型
-    type: "input"
+    type: "input" | "text"
 }
 
 // 多选框
@@ -1620,7 +1738,23 @@ interface RightItemsEditorProps {
     type: "editor"
 }
 
-type RightItemsTypeProps = RightItemsInputProps | RightItemsCheckProps | RightItemsSelectProps | RightItemsEditorProps
+// 联合控件 - Input/Select
+interface RightItemsInputSelectProps {
+    input: RightItemsInputProps
+    select: RightItemsSelectProps
+    // 控件类型
+    type: "inputSelect"
+}
+
+// 除去联合控件
+type RightItemsTypeNoUniteProps =
+    | RightItemsInputProps
+    | RightItemsCheckProps
+    | RightItemsSelectProps
+    | RightItemsEditorProps
+
+// 所有控件
+type RightItemsTypeProps = RightItemsTypeNoUniteProps | RightItemsInputSelectProps
 
 // 左右布局
 interface RightItemsFlexProps {
@@ -1644,42 +1778,16 @@ interface RightItemsProps {
 const initialRightItems: RightItemsProps[] = [
     // {
     //     title: "Item A",
+    //     codecType:"55",
+    //     key:"QQ",
     //     node: [
-    //         {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
-    //         {checkArr: [{
-    //             label:"严格校验",
-    //             value:"严格校验"
-    //         }, {label:"自动丢弃不合规片段",value:"自动丢弃不合规片段"}], type: "checkbox"},
-    //         {selectArr: ["B", "K", "M"], type: "select"},
-    //         {title: "Key", require: true, type: "input"},
     //         {
-    //             leftNode: {type: "input", title: "IV"},
-    //             rightNode: {selectArr: ["B", "K", "M"], type: "select"},
+    //             leftNode: {name:"DD",type: "input", title: "IV"},
+    //             rightNode: {name:"BB",selectArr: [{label:"B",value:"B"}, {label:"K",value:"K"},{label:"M",value:"M"}], type: "select"},
     //             type: "flex"
     //         },
-    //         {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
-    //         {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
     //     ]
     // },
-    // {
-    //     title: "Item B",
-    //     node: [
-    //         {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
-    //         {checkArr: [{
-    //             label:"严格校验",
-    //             value:"严格校验"
-    //         }, {label:"自动丢弃不合规片段",value:"自动丢弃不合规片段"}], type: "checkbox"},
-    //         {selectArr: ["B", "K", "M"], type: "select"},
-    //         {title: "Key", require: true, type: "input"},
-    //         {
-    //             leftNode: {type: "input", title: "IV"},
-    //             rightNode: {selectArr: ["B", "K", "M"], type: "select"},
-    //             type: "flex"
-    //         },
-    //         {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
-    //         {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
-    //     ]
-    // }
 ]
 export interface CodecParam {
     Name: string
@@ -1690,6 +1798,7 @@ export interface CodecParam {
     Desc: string
     Regex: string
     Label: string
+    Connector: CodecParam
 }
 export interface CodecMethod {
     Tag: string
@@ -1726,7 +1835,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     const [outputEditor, setOutputEditor] = useState<string>("")
     const [outputEditorByte, setOutputEditorByte] = useState<Uint8Array>()
     // 是否正在执行
-    const [runLoading,setRunLoading] = useState<boolean>(false)
+    const [runLoading, setRunLoading] = useState<boolean>(false)
     // 是否为点击添加至执行列表
     const isClickToRunList = useRef<boolean>(false)
 
@@ -1775,6 +1884,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             const otherItem = data.splice(index, 1)[0]
             data.push(otherItem)
         }
+        // console.log("initLeftData---", data, Methods)
         setLeftData(data)
     })
 
@@ -1845,58 +1955,87 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
 
     const initNode = useMemoizedFn((codecItem: CodecMethod) => {
         return codecItem.Params.map((item) => {
-            const {Type, Options, Label, Name, Required, DefaultValue, Regex, Desc} = item
-            switch (Type) {
-                case "select":
-                    return {
-                        type: "select",
-                        selectArr: Options.map((item) => ({label: item, value: item})),
-                        title: Label,
-                        name: Name,
-                        require: Required,
-                        value: DefaultValue || undefined
-                    } as RightItemsSelectProps
-                case "input":
-                    return {
-                        type: "input",
-                        title: Label,
-                        name: Name,
-                        require: Required,
-                        regex: Regex
-                    } as RightItemsInputProps
-                case "checkbox":
-                    let checkArr = [{label: Label, value: Name}]
-                    return {
-                        type: "checkbox",
-                        name: Name,
-                        checkArr,
-                        require: Required
-                    } as RightItemsCheckProps
-                case "monaco":
-                    return {
-                        type: "editor",
-                        title: Label,
-                        name: Name,
-                        require: Required,
-                        value: pluginTypeToName["codec"]?.content
-                    } as RightItemsEditorProps
-                case "search":
-                    // search控件的selectArr来源于接口请求
-                    return {
-                        type: "select",
-                        selectArr: [],
-                        title: Label,
-                        name: Name,
-                        require: Required,
-                        isPlugin: true,
-                        showSearch: true
-                    } as RightItemsSelectProps
-                default:
-                    return {
-                        title: "未识别数据",
-                        require: false,
-                        type: "input"
-                    } as RightItemsInputProps
+            try {
+                const {Type, Options, Label, Name, Required, DefaultValue, Regex, Desc} = item
+                switch (Type) {
+                    case "select":
+                        return {
+                            type: "select",
+                            selectArr: Options.map((item) => ({label: item, value: item})),
+                            title: Label,
+                            name: Name,
+                            require: Required,
+                            value: DefaultValue || undefined
+                        } as RightItemsSelectProps
+                    case "text":
+                    case "input":
+                        return {
+                            type: Type,
+                            title: Label,
+                            name: Name,
+                            require: Required,
+                            regex: Regex
+                        } as RightItemsInputProps
+                    case "checkbox":
+                        let checkArr = [{label: Label, value: Name}]
+                        return {
+                            type: "checkbox",
+                            name: Name,
+                            checkArr,
+                            require: Required
+                        } as RightItemsCheckProps
+                    case "monaco":
+                        return {
+                            type: "editor",
+                            title: Label,
+                            name: Name,
+                            require: Required,
+                            value: pluginTypeToName["codec"]?.content
+                        } as RightItemsEditorProps
+                    case "search":
+                        // search控件的selectArr来源于接口请求
+                        return {
+                            type: "select",
+                            selectArr: [],
+                            title: Label,
+                            name: Name,
+                            require: Required,
+                            isPlugin: true,
+                            showSearch: true
+                        } as RightItemsSelectProps
+                    // 联合控件 - Input/Select
+                    case "inputSelect":
+                        return {
+                            type: "inputSelect",
+                            input: {
+                                type: "input",
+                                title: Label,
+                                name: Name,
+                                require: Required,
+                                regex: Regex
+                            },
+                            select: {
+                                type: "select",
+                                selectArr: item.Connector.Options.map((item) => ({label: item, value: item})),
+                                title: item.Connector.Label,
+                                name: item.Connector.Name,
+                                require: item.Connector.Required,
+                                value: item.Connector.DefaultValue || undefined
+                            }
+                        } as RightItemsInputSelectProps
+                    default:
+                        return {
+                            title: "未识别数据",
+                            require: false,
+                            type: "input"
+                        } as RightItemsInputProps
+                }
+            } catch (error) {
+                return {
+                    title: "未识别数据",
+                    require: false,
+                    type: "input"
+                } as RightItemsInputProps
             }
         })
     })
