@@ -98,7 +98,6 @@ import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
-const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -170,7 +169,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
-    const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
 
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
@@ -807,9 +805,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         setCurrentSequenceItem({...val})
     })
-    const onSetShowAllResponse = useMemoizedFn(() => {
-        setShowAllResponse(false)
-    })
 
     const setHotPatchCode = useMemoizedFn((val) => {
         hotPatchCodeRef.current = val
@@ -974,7 +969,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
-                                    setShowAllResponse(true)
+                                    setShowAllDataRes(true)
                                 }}
                                 getHttpParams={getHttpParams}
                             />
@@ -1006,14 +1001,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     setShowAllDataRes={() => setShowAllDataRes(false)}
                 />
             </React.Suspense>
-
-            {/* <React.Suspense fallback={<>loading allFuzzerSequenceList ...</>}>
-                <ResponseCard
-                    showAllResponse={showAllResponse}
-                    responseMap={responseMap}
-                    setShowAllResponse={onSetShowAllResponse}
-                />
-            </React.Suspense> */}
         </>
     )
 })

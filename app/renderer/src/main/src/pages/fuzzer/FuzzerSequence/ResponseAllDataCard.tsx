@@ -1,5 +1,5 @@
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import React, {useMemo, useState} from "react"
+import React, {useEffect, useState} from "react"
 import {ResponseAllDataCardProps} from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
 import {OutlineReplyIcon} from "@/assets/icon/outline"
@@ -10,13 +10,12 @@ const ResponseAllDataCard: React.FC<ResponseAllDataCardProps> = React.memo((prop
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
     const [refresh, setRefresh] = useState<boolean>(false)
 
-    const isShow = useMemo(() => {
+    useEffect(() => {
         setOnlyShowFirstNode(true)
         setRefresh(!refresh)
-        return showAllDataRes
     }, [showAllDataRes])
 
-    return isShow ? (
+    return showAllDataRes ? (
         <div className={styles["all-sequence-response-list"]} style={{display: ""}}>
             <div className={styles["all-sequence-response-heard"]}>
                 <div className={styles["display-flex-center"]}>
@@ -40,6 +39,8 @@ const ResponseAllDataCard: React.FC<ResponseAllDataCardProps> = React.memo((prop
                     isOnlyTable={onlyShowFirstNode}
                     onIsOnlyTable={setOnlyShowFirstNode}
                     refresh={refresh}
+                    toWebFuzzer={true}
+                    showBatchActions={true}
                 ></CurrentHttpFlow>
             </div>
         </div>
