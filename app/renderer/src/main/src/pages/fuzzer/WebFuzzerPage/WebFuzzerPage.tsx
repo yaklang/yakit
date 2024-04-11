@@ -51,10 +51,10 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
 
     useEffect(() => {
         emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
-        emiter.on("onSwitchTypeWebFuzzerPage", onSwitchType)
+        emiter.on("sequenceSendSwitchTypeToFuzzer", onSwitchType)
         return () => {
             emiter.off("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
-            emiter.off("onSwitchTypeWebFuzzerPage", onSwitchType)
+            emiter.off("sequenceSendSwitchTypeToFuzzer", onSwitchType)
         }
     }, [])
 
@@ -75,14 +75,14 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         })
     }, [])
 
-    const onSetSequence = useMemoizedFn((key) => {
+    const onSetSequence = useMemoizedFn(() => {
         const pageChildrenList: PageNodeItemProps[] = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId) || []
         if (props.id && pageChildrenList.length === 0) {
             // 新建组
             onAddGroup(props.id)
         } else {
             // 设置MainOperatorContent层type变化用来控制是否展示【序列】
-            ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
+            emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: "sequence"}))
         }
     })
     const onAddGroup = useMemoizedFn((id: string) => {
@@ -92,13 +92,13 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         switch (key) {
             case "sequence":
-                onSetSequence("sequence")
+                onSetSequence()
                 break
             default:
                 // 设置MainOperatorContent层type变化用来控制是否展示【配置】/【规则】
-                ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-                // 切换【配置】/【规则】的高级配置项的展示
-                emiter.emit("onFuzzerAdvancedConfigShowType", JSON.stringify({type: key}))
+                emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: key}))
+                // 发送到HTTPFuzzerPage组件中 切换【配置】/【规则】tab 得选中type
+                emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
                 if (type === key) {
                     switch (key) {
                         case "config":
@@ -143,9 +143,10 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         try {
             const value = JSON.parse(data)
             const type = value.type as WebFuzzerType
+            if (type === "sequence") return
             setType(type)
-            // 切换【配置】/【规则】的高级配置项的展示
-            emiter.emit("onFuzzerAdvancedConfigShowType", JSON.stringify({type}))
+            // 发送到HTTPFuzzerPage组件中 切换【配置】/【规则】tab 得选中type
+            emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type}))
         } catch (error) {}
     })
     const isUnShow = useCreation(() => {

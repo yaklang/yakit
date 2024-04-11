@@ -16,9 +16,9 @@ const FuzzerSequenceWrapper: React.FC<FuzzerSequenceWrapperProps> = React.memo((
             case "sequence":
                 break
             default:
-                ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-                // 先切换展示的tab再发送事件,切换【配置】/【规则】包裹层的type
-                emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
+                emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: key}))
+                // 先切换展示的tab再发送事件,切换【配置】/【规则】tab 得选中type
+                emiter.emit("sequenceSendSwitchTypeToFuzzer", JSON.stringify({type: key}))
                 break
         }
     })

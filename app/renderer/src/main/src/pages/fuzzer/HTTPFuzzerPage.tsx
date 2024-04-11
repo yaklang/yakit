@@ -745,15 +745,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (inViewport) {
             onRefWebFuzzerValue()
             emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
-            emiter.on("onFuzzerAdvancedConfigShowType", onFuzzerAdvancedConfigShowType)
+            emiter.on("onSwitchTypeWebFuzzerPage", onFuzzerAdvancedConfigShowType)
         }
         return () => {
             emiter.off("onRefWebFuzzer", onRefWebFuzzerValue)
-            emiter.off("onFuzzerAdvancedConfigShowType", onFuzzerAdvancedConfigShowType)
+            emiter.off("onSwitchTypeWebFuzzerPage", onFuzzerAdvancedConfigShowType)
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
-        if (inViewport){
+        if (inViewport) {
             const c = !advancedConfig
             setAdvancedConfig(c)
             setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
@@ -790,6 +790,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * 规则和配置之前得type切换，与序列无关
      * */
     const onFuzzerAdvancedConfigShowType = useMemoizedFn((data) => {
+        if (!inViewport) return
         try {
             const value = JSON.parse(data)
             setAdvancedConfigShowType(value.type)
