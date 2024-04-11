@@ -9,7 +9,7 @@ import "video-react/dist/video-react.css" // import css
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import emiter from "@/utils/eventBus/eventBus"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {WEB_FUZZ_Advanced_Config_Switch_Checked, WEB_FUZZ_Rule_Switch_Checked} from "../HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")
 
@@ -100,18 +100,8 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 // 发送到HTTPFuzzerPage组件中 切换【配置】/【规则】tab 得选中type
                 emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
                 if (type === key) {
-                    switch (key) {
-                        case "config":
-                            // 设置【配置】的高级配置的隐藏或显示
-                            emiter.emit("onSetAdvancedConfigConfigureShow")
-                            break
-                        case "rule":
-                            // 设置【规则】的高级配置的隐藏或显示
-                            emiter.emit("onSetAdvancedConfigRuleShow")
-                            break
-                        default:
-                            break
-                    }
+                    // 设置【规则】/【规则】的高级配置的隐藏或显示
+                    emiter.emit("onSetAdvancedConfigShow", JSON.stringify({type: key}))
                 }
                 // 设置【配置】/【规则】选中
                 setType(key)

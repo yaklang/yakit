@@ -33,7 +33,6 @@ import {
     ChevronRightIcon,
     ChromeSvgIcon,
     ClockIcon,
-    FilterIcon,
     PaperAirplaneIcon,
     SearchIcon,
     StopIcon,
@@ -45,7 +44,7 @@ import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -60,8 +59,7 @@ import {
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
-import ReactDOM from "react-dom"
-import {OtherMenuListProps, YakitIMonacoEditor} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
@@ -103,18 +101,14 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
-import {CopyableField} from "@/utils/inputUtil"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
 import {createRoot} from "react-dom/client"
-import {SolidPauseIcon, SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
+import {SolidPauseIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitWindow} from "@/components/yakitUI/YakitWindow/YakitWindow"
-import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "../spaceEngine/utils"
-import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
-import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
 import blastingIdmp4 from "@/assets/blasting-id.mp4"
 import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
@@ -127,8 +121,13 @@ const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAl
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
+    /**【配置】高级配置显示/隐藏 */
     advancedConfig: boolean
+    /**【规则】高级配置显示/隐藏 */
+    advancedConfigRuleShow: boolean
+    /**请求包 */
     request: string
+    /**高级配置的数据 */
     advancedConfiguration: AdvancedConfigValueProps
 }
 
@@ -734,11 +733,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setAdvancedConfigRuleShow(c === "true")
             }
         })
-        emiter.on("onSetAdvancedConfigConfigureShow", onSetFuzzerAdvancedConfig)
-        emiter.on("onSetAdvancedConfigRuleShow", onSetAdvancedConfigRuleShow)
+        emiter.on("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
         return () => {
-            emiter.off("onSetAdvancedConfigConfigureShow", onSetFuzzerAdvancedConfig)
-            emiter.off("onSetAdvancedConfigRuleShow", onSetAdvancedConfigRuleShow)
+            emiter.off("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
         }
     }, [])
     useEffect(() => {
@@ -752,6 +749,24 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             emiter.off("onSwitchTypeWebFuzzerPage", onFuzzerAdvancedConfigShowType)
         }
     }, [inViewport])
+    /**高级配置显示/隐藏 【序列】tab没有下列操作*/
+    const onSetAdvancedConfigShow = useMemoizedFn((data) => {
+        try {
+            const value = JSON.parse(data)
+            const {type} = value
+            switch (type as WebFuzzerType) {
+                case "config":
+                    onSetFuzzerAdvancedConfig()
+                    break
+                case "rule":
+                    onSetAdvancedConfigRuleShow()
+                    break
+                default:
+                    break
+            }
+        } catch (error) {}
+    })
+    /**切换【配置】对应得高级配置显示内容 */
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         if (inViewport) {
             const c = !advancedConfig
@@ -760,7 +775,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
         }
     })
-    /**切换规则对应得高级配置显示内容 */
+    /**切换【规则】对应得高级配置显示内容 */
     const onSetAdvancedConfigRuleShow = useMemoizedFn(() => {
         if (inViewport) {
             const c = !advancedConfigRuleShow
@@ -1431,6 +1446,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         delete advancedConfiguration.batchTarget
         const params: ShareValueProps = {
             advancedConfig,
+            advancedConfigRuleShow,
             request: requestRef.current,
             advancedConfiguration: advancedConfiguration
         }
@@ -1443,6 +1459,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             const newAdvancedConfigValue = {...advancedConfigValue, ...shareContent.advancedConfiguration}
             setAdvancedConfig(shareContent.advancedConfig)
+            setAdvancedConfigRuleShow(shareContent.advancedConfigRuleShow)
             requestRef.current = shareContent.request
             setAdvancedConfigValue(newAdvancedConfigValue)
         } catch (error) {

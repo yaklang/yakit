@@ -1,7 +1,6 @@
 export type WebFuzzerEventProps = {
-    /**设置【配置】tab中得高级配置显示 */
-    onSetAdvancedConfigConfigureShow?: string
     onRefWebFuzzer?: string
+    /**设置fuzzer tab高级配置显示/隐藏对应得tab样式 */
     onGetFuzzerAdvancedConfigShow: string
     onImportYamlPopEditorContent: string
     onImportYamlEditorChange: string
@@ -10,8 +9,8 @@ export type WebFuzzerEventProps = {
     onGetExportFuzzerCallBack: string
     onOpenMatchingAndExtractionCard: string
     onOpenFuzzerModal: string
-    /**设置【规则】tab中得高级配置显示/隐藏 */
-    onSetAdvancedConfigRuleShow?: string
+    /**设置tab【配置】/【规则】中得高级配置显示/隐藏 */
+    onSetAdvancedConfigShow: string
     /** 发送到HTTPFuzzerPage 切换【配置】/【规则】tab 得选中type */
     onSwitchTypeWebFuzzerPage: string
     /**
