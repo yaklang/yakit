@@ -2097,7 +2097,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const {pageItem, index, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache} = props
     // webFuzzer 序列化
     const [type, setType] = useState<WebFuzzerType>("config")
-    
+
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
         id: "0",
@@ -2112,13 +2112,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     useEffect(() => {
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            ipcRenderer.on("fetch-webFuzzer-setType", onSetType)
+            emiter.on("sendSwitchSequenceToMainOperatorContent", onSetType)
         }
         ipcRenderer.on("fetch-add-group", onAddGroup)
         ipcRenderer.on("fetch-open-subMenu-item", onSelectSubMenuById)
 
         return () => {
-            ipcRenderer.removeListener("fetch-webFuzzer-setType", onSetType)
+            emiter.off("sendSwitchSequenceToMainOperatorContent", onSetType)
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
             ipcRenderer.removeListener("fetch-open-subMenu-item", onSelectSubMenuById)
         }
@@ -2160,9 +2160,12 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             emiter.emit("onRefWebFuzzer")
         }
     }, [type])
-    const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
+    const onSetType = useMemoizedFn((res) => {
         if (!inViewport) return
-        setType(res.type)
+        try {
+            const value = JSON.parse(res)
+            setType(value.type)
+        } catch (error) {}
     })
     /**页面聚焦 */
     const onFocusPage = useMemoizedFn(() => {
