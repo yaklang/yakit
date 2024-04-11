@@ -649,11 +649,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
         initWebFuzzerPageInfo().advancedConfigValue
     ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
-    // 切换【规则】/【配置】刷新高级配置中的表单
-    const [triggerRefresh, setTriggerRefresh] = useState<boolean>(false)
+
     const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
     // 【规则】高级配置的隐藏/显示
     const [advancedConfigRuleShow, setAdvancedConfigRuleShow] = useState<boolean>(false)
+
     // 【配置】/【规则】高级内容显示
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
@@ -803,7 +803,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             const value = JSON.parse(data)
             setAdvancedConfigShowType(value.type)
-            setTriggerRefresh(!triggerRefresh)
         } catch (error) {}
     })
     /**更新请求包 */
@@ -1881,7 +1880,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         id={props.id}
                         matchSubmitFun={matchSubmitFun}
                         showFormContentType={advancedConfigShowType}
-                        triggerRefresh={triggerRefresh}
                     />
                 </React.Suspense>
                 <div className={styles["http-fuzzer-page"]}>
