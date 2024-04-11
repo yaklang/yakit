@@ -14,8 +14,6 @@ export type WebFuzzerEventProps = {
     onFuzzerAdvancedConfigShowType: string
     /**设置【规则】tab中得高级配置显示 */
     onSetAdvancedConfigRuleShow?: string
-    /**切换【序列】包裹层的type */
-    onSwitchTypeFuzzerSequenceWrapper: string
     /** 切换【配置】/【规则】包裹层的type */
     onSwitchTypeWebFuzzerPage: string
 }

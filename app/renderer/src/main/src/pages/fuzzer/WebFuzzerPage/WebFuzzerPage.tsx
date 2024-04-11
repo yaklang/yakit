@@ -83,13 +83,12 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         } else {
             // 设置MainOperatorContent层type变化用来控制是否展示【序列】
             ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-            // 设置 【序列】的选中
-            emiter.emit("onSwitchTypeFuzzerSequenceWrapper", JSON.stringify({type: key}))
         }
     })
     const onAddGroup = useMemoizedFn((id: string) => {
         ipcRenderer.invoke("send-add-group", {pageId: id})
     })
+    /**本组件中切换tab展示的事件 */
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         switch (key) {
             case "sequence":
@@ -138,10 +137,15 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
             } catch (error) {}
         }
     })
+    /**FuzzerSequenceWrapper组件中发送的信号，切换【配置】/【规则】包裹层的type */
     const onSwitchType = useMemoizedFn((data) => {
+        if (!inViewport) return
         try {
             const value = JSON.parse(data)
-            setType(value.type as WebFuzzerType)
+            const type = value.type as WebFuzzerType
+            setType(type)
+            // 切换【配置】/【规则】的高级配置项的展示
+            emiter.emit("onFuzzerAdvancedConfigShowType", JSON.stringify({type}))
         } catch (error) {}
     })
     const isUnShow = useCreation(() => {
