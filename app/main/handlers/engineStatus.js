@@ -7,7 +7,7 @@ const {getLocalYaklangEngine, engineLog, YakitProjectPath} = require("../filePat
 const net = require("net")
 const fs = require("fs")
 const path = require("path")
-const { getNowTime } = require("../toolsFunc")
+const {getNowTime} = require("../toolsFunc")
 
 /** 引擎错误日志 */
 const logPath = path.join(engineLog, `engine-log-${getNowTime()}.txt`)
@@ -181,6 +181,7 @@ module.exports = (win, callback, getClient, newClient) => {
                 })
                 subprocess.on("error", (err) => {
                     toLog(`本地引擎遭遇错误，错误原因为：${err}`)
+                    win.webContents.send("start-yaklang-engine-error", `本地引擎遭遇错误，错误原因为：${err}`)
                     reject(err)
                 })
                 subprocess.on("close", async (e) => {

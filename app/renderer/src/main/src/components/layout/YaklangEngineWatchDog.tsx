@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
-import {YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
+import {EngineWatchDogCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
@@ -35,8 +35,7 @@ export interface YaklangEngineWatchDogProps {
     onFailed?: (failedCount: number) => any
     onKeepaliveShouldChange?: (keepalive: boolean) => any
 
-    setLog: (arr: string[]) => any
-    setYakitStatus: (v: YakitStatusType) => any
+    failedCallback: (type: EngineWatchDogCallbackType) => any
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
@@ -95,8 +94,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         case "remote":
                             outputToWelcomeConsole("远程模式不自动启动本地引擎")
                             if (isDynamicControl) {
-                                props.setLog(["远程控制异常退出, 无法连接"])
-                                props.setYakitStatus("control-remote-timeout")
+                                props.failedCallback("control-remote-connect-failed")
+                            } else {
+                                props.failedCallback("remote-connect-failed")
                             }
                             failed(`${e}`)
                             return

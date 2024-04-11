@@ -42,3 +42,6 @@ export type YakitStatusType =
 
 /** @name funcDomain组件-全局setting功能的点击回调事件类型 */
 export type YakitSettingCallbackType = "console" | "break" | "changeProject" | "encryptionProject" | "plaintextProject"
+
+/** @name engineWatchDog-处理过程的回调事件 */
+export type EngineWatchDogCallbackType = "remote-connect-failed" | "control-remote-connect-failed"

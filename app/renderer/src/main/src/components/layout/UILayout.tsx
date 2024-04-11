@@ -6,7 +6,13 @@ import {FuncDomain} from "./FuncDomain"
 import {TemporaryProjectPop, WinUIOp} from "./WinUIOp"
 import {GlobalState} from "./GlobalState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
-import {YakitSettingCallbackType, YakitStatusType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
+import {
+    EngineWatchDogCallbackType,
+    YakitSettingCallbackType,
+    YakitStatusType,
+    YakitSystem,
+    YaklangEngineMode
+} from "@/yakitGVDefine"
 import {failed, info, warn, yakitFailed} from "@/utils/notification"
 import {LocalGV, RemoteGV} from "@/yakitGV"
 import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
@@ -138,6 +144,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */
     const handleBuiltInCheck = useMemoizedFn(() => {
+        console.log("bug-cve")
         ipcRenderer
             .invoke("InitCVEDatabase")
             .then(() => {
@@ -156,6 +163,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 4、引擎是否存在
      */
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
+        console.log("check-hardware")
         try {
             isDev.current = !!(await ipcRenderer.invoke("is-dev"))
         } catch (error) {}
@@ -177,6 +185,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** 获取上次连接引擎的模式 */
     const handleLinkEngineMode = useMemoizedFn(() => {
+        console.log("init-link-mode")
         setCheckLog(["获取上次连接引擎的模式..."])
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
             switch (val) {
@@ -221,6 +230,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     // 切换本地模式
     const handleLinkLocalMode = useMemoizedFn(() => {
+        console.log("check-local-install")
         if (isEngineInstalled.current) {
             if (!isInitLocalLink.current) {
                 setLinkLocalEngine()
@@ -267,7 +277,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             handleFetchBaseInfo(() => {
                 handleLinkEngineMode()
             })
-        }, 2000)
+        }, 1000)
     }, [])
 
     /**
@@ -296,11 +306,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     if (isEngineInstalled.current === flag) return
                     isEngineInstalled.current = flag
                     isInitLocalLink.current = true
+                    // 清空主进程yaklang版本缓存
+                    ipcRenderer.invoke("clear-local-yaklang-version-cache")
                 })
             }, waitTime)
             return () => {
                 clearInterval(id)
             }
+        } else {
+            // 清空主进程yaklang版本缓存
+            ipcRenderer.invoke("clear-local-yaklang-version-cache")
         }
     }, [engineLink])
     /** ---------- 引擎状态和连接相关逻辑 End ---------- */
@@ -308,12 +323,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- 软件状态与是否连接引擎相关方法 Start ---------- */
     // 断开连接
     const onDisconnect = useMemoizedFn(() => {
+        console.log("disconnect")
         setCredential({...DefaultCredential})
         setKeepalive(false)
         onSetEngineLink(false)
     })
     // 开始连接引擎
     const onStartLinkEngine = useMemoizedFn((isDynamicControl?: boolean) => {
+        console.log("start-link")
         setTimeout(() => {
             emiter.emit("startAndCreateEngineProcess", isDynamicControl)
         }, 100)
@@ -416,6 +433,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [engineLink])
     // Loading页面切换引擎连接模式
     const loadingClickCallback = useMemoizedFn((type: YaklangEngineMode | YakitStatusType) => {
+        console.log(`loading-callback-${type}`)
         switch (type) {
             case "checkError":
                 // 引擎权限错误-手动重启引擎
@@ -454,12 +472,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     const handleOperations = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode) => {
+        console.log(`operation-${type}`)
         switch (type) {
             case "break":
                 if (cacheYakitStatus.current === "link") {
                     onSetYakitStatus("break")
                     setTimeout(() => {
-                        setCheckLog(["已主动断开引擎连接"])
+                        setCheckLog(["已主动断开, 请点击手动连接引擎"])
                         onDisconnect()
                     }, 100)
                 }
@@ -545,6 +564,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     // kill完引擎进程后开始更新引擎
     const killedEngineToUpdate = useMemoizedFn(() => {
+        console.log("killed-engine-to-update")
         setYaklangKillPss(false)
         if (!yaklangDownload) {
             onSetEngineLink(false)
@@ -554,6 +574,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     const onDownloadedYaklang = useMemoizedFn(() => {
+        console.log(`updated-yaklang`)
         setYaklangDownload(false)
         setLinkLocalEngine()
     })
@@ -935,7 +956,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setTimeout(() => onSetEngineLink(true), 100)
     })
 
+    /**
+     * 启动引擎进程的监听，用于显示启动进程错误时的报错信息
+     */
+    useEffect(() => {
+        ipcRenderer.on("start-yaklang-engine-error", (_, error: string) => {
+            setCheckLog((arr) => arr.concat([`${error}`]))
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("start-yaklang-engine-error")
+        }
+    }, [])
+
     const onReady = useMemoizedFn(() => {
+        console.log("link-success")
         if (!cacheEngineLink.current) {
             isEnpriTraceAgent() ? SELinkedEngine() : onLinkedEngine()
         }
@@ -981,7 +1015,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
         if (cacheYakitStatus.current === "error" && count === 20) {
             // 连接断开后的20次尝试过后，不在进行尝试
-            setCheckLog(["连接超时, 请手动启动引擎"])
+            setCheckLog((arr) => {
+                return arr.slice(1).concat(["连接超时, 请手动启动引擎"])
+            })
             return
         }
 
@@ -993,11 +1029,28 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 onSetYakitStatus("")
             }
             if (cacheEngineMode.current === "local") {
-                setCheckLog(["引擎连接超时, 正在尝试重连"])
+                if (cacheYakitStatus.current === "link") setCheckLog(["引擎连接超时, 正在尝试重连"])
                 if (count > 8) {
                     onSetYakitStatus("error")
                 }
             }
+        }
+    })
+
+    const onWatchDogCallback = useMemoizedFn((type: EngineWatchDogCallbackType) => {
+        switch (type) {
+            case "control-remote-connect-failed":
+                setCheckLog(["远程控制异常退出, 无法连接"])
+                onSetYakitStatus("control-remote-timeout")
+                return
+            case "remote-connect-failed":
+                setTimeout(() => {
+                    setRemoteLinkLoading(false)
+                }, 300)
+                return
+
+            default:
+                return
         }
     })
 
@@ -1013,8 +1066,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         onKeepaliveShouldChange={setKeepalive}
                         onReady={onReady}
                         onFailed={onFailed}
-                        setLog={setCheckLog}
-                        setYakitStatus={onSetYakitStatus}
+                        failedCallback={onWatchDogCallback}
                     />
                     <div id='yakit-header' className={styles["ui-layout-header"]}>
                         {system === "Darwin" ? (

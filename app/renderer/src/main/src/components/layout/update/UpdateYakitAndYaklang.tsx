@@ -172,8 +172,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     })
 
     const yakitDownload = () => {
-        let version = ""
-        if (latestYakit.startsWith("v")) version = latestYakit.slice(1)
+        let version = latestYakit
+        if (version.startsWith("v")) version = version.slice(1)
         isYakitBreak.current = false
         setInstallYakit(true)
         ipcRenderer
@@ -222,8 +222,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     const yaklangDownload = useMemoizedFn(() => {
         isYaklangBreak.current = false
         setInstallYaklang(true)
-        let version = ""
-        if (latestYakit.startsWith("v")) version = latestYaklang.slice(1)
+        let version = latestYaklang
+        if (version.startsWith("v")) version = version.slice(1)
         ipcRenderer
             .invoke("download-latest-yak", version)
             .then(() => {
@@ -241,6 +241,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     // @ts-ignore
                     size: getYaklangProgress().size
                 })
+                // 清空主进程yaklang版本缓存
+                ipcRenderer.invoke("clear-local-yaklang-version-cache")
                 yaklangUpdate()
             })
             .catch((e: any) => {
@@ -261,8 +263,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         }, 300)
     })
     const yaklangUpdate = useMemoizedFn(() => {
-        let version = ""
-        if (latestYakit.startsWith("v")) version = latestYaklang.slice(1)
+        let version = latestYaklang
+        if (version.startsWith("v")) version = version.slice(1)
         ipcRenderer
             .invoke("install-yak-engine", version)
             .then(() => {

@@ -116,24 +116,24 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {
             if (!isCommunityEdition()) return
             getLocalValue(LocalGVS.NoAutobootLatestVersionCheck).then((val: boolean) => {
-                ipcRenderer
-                    .invoke("fetch-latest-yakit-version")
-                    .then((data: string) => {
-                        if (!val) {
+                if (val) preventUpdateHint.current = true
+
+                if (!val) {
+                    ipcRenderer
+                        .invoke("fetch-latest-yakit-version")
+                        .then((data: string) => {
                             if (preventUpdateHint.current) return
                             setLatestYakit(data || "")
-                        }
-                    })
-                    .catch((err) => {})
-                ipcRenderer
-                    .invoke("fetch-latest-yaklang-version")
-                    .then((data: string) => {
-                        if (!val) {
+                        })
+                        .catch((err) => {})
+                    ipcRenderer
+                        .invoke("fetch-latest-yaklang-version")
+                        .then((data: string) => {
                             if (preventUpdateHint.current) return
                             setLatestYaklang(data || "")
-                        }
-                    })
-                    .catch((err) => {})
+                        })
+                        .catch((err) => {})
+                }
             })
         })
 

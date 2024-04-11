@@ -207,6 +207,8 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                     size: getDownloadProgress().size
                 })
                 success("下载完毕")
+                // 清空主进程yaklang版本缓存
+                ipcRenderer.invoke("clear-local-yaklang-version-cache")
                 /** 安装yaklang引擎 */
                 ipcRenderer
                     .invoke("install-yak-engine", `${latestVersionRef.current}`)

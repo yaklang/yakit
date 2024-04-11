@@ -229,6 +229,12 @@ module.exports = {
         let isFetchingVersion = false;
         let latestVersionCache = null;
 
+        /** clear latestVersionCache value */
+        ipcMain.handle("clear-local-yaklang-version-cache", async (e) => {
+            latestVersionCache = null
+            return
+        })
+
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {

@@ -85,6 +85,8 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                             // @ts-ignore
                             size: getDownloadProgress().size
                         })
+                        // 清空主进程yaklang版本缓存
+                        ipcRenderer.invoke("clear-local-yaklang-version-cache")
                         onUpdate()
                     })
                     .catch((e: any) => {

@@ -1538,12 +1538,14 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 if (yaklangVersion !== data) setYaklangLastVersion(data)
             })
             .catch((err) => {})
-        ipcRenderer
-            .invoke("get-current-yak")
-            .then((data: string) => {
-                !isRemoteMode && setYaklangLocalVersion(data)
-            })
-            .catch(() => {})
+        if (!isRemoteMode) {
+            ipcRenderer
+                .invoke("get-current-yak")
+                .then((data: string) => {
+                    !isRemoteMode && setYaklangLocalVersion(data)
+                })
+                .catch(() => {})
+        }
         /** 获取社区版yaklang更新内容 */
         NetWorkApi<FetchUpdateContentProp, any>({
             diyHome: "https://www.yaklang.com",
