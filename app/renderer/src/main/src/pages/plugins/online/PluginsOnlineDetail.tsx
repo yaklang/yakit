@@ -23,7 +23,7 @@ import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {API} from "@/services/swagger/resposeType"
-import { PluginComment } from "../baseComment"
+import {PluginComment} from "../baseComment"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -324,10 +324,6 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                         </div>
                     </TabPane>
                     <TabPane tab='评论' key='comment'>
-                        {/* <div className={styles["plugin-comment-wrapper"]} id='online-plugin-info-scroll'>
-                            <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin, default_open: false}} />
-                        </div> */}
-
                         <div className={styles["plugin-comment-wrapper"]}>
                             <PluginDetailHeader
                                 pluginName={plugin.script_name}
@@ -372,7 +368,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                 }))}
                                 type={plugin.type}
                             />
-                                <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin, default_open: false}} />
+                            <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin, default_open: false}} />
                         </div>
                     </TabPane>
                     <TabPane tab='日志' key='log'>

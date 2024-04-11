@@ -69,16 +69,20 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const [parentComment, setParentComment] = useState<API.CommentListData>()
     const [commentChildVisible, setCommentChildVisible] = useState<boolean>(false)
     const [commentSecondShow, setCommentSencondShow] = useState<boolean>(false)
-    const [commentAllNum,setCommentAllNum] = useState<number>(0)
+    const [commentAllNum, setCommentAllNum] = useState<number>(0)
 
     const ref = useRef(null)
     const size = useSize(ref)
+    const [inViewport] = useInViewport(ref)
     useEffect(() => {
         getComment(1)
         setFiles([])
         setCommentText("")
-        handleClearTimeList()
     }, [plugin.id])
+
+    useEffect(() => {
+        handleClearTimeList()
+    }, [plugin.id, inViewport])
     useEffect(() => {
         if (!isLogin) {
             setFiles([])
@@ -159,6 +163,20 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
         addComment(params)
     })
 
+    const setCommentResponsesReplyNum = useMemoizedFn(() => {
+        const newData: API.CommentListData[] = JSON.parse(JSON.stringify(commentResponses.data))
+        const addData = newData.map((item) => {
+            if (item.id === parentComment?.id) {
+                item.reply_num = item.reply_num + 1
+            }
+            return item
+        })
+        setCommentResponses({
+            data: addData,
+            pagemeta: commentResponses.pagemeta
+        })
+    })
+
     // 全局监听是否刷新子评论列表状态
     const {setCommenData} = useCommenStore()
     // 登录框状态
@@ -172,7 +190,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             .then((res) => {
                 success("评论成功")
                 // console.log("评论成功---",data);
-                
+
                 if (data.by_user_id && data.by_user_id > 0) {
                     // 刷新modal中子评论列表
                     setCommenData({
@@ -180,6 +198,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                     })
                 }
                 if (data.parent_id === 0) getComment(1)
+                if (data.parent_id && data.parent_id !== 0) setCommentResponsesReplyNum()
                 if (commentText) setCommentText("")
                 if (files.length > 0) setFiles([])
                 if (commentInputText) setCommentInputText("")
@@ -221,6 +240,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
             by_user_id: currentComment.user_id,
             message: commentInputText
         }
+
         addComment(params)
     })
     const pluginCommentStar = useMemoizedFn((item: API.CommentListData) => {
@@ -298,8 +318,6 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 return 1
             } else if (size?.height < 300) {
                 return 2
-            } else if (size?.height < 400) {
-                return 3
             }
         }
     }, [size?.height])
@@ -320,7 +338,7 @@ export const PluginComment: React.FC<PluginCommentProps> = (props) => {
                         files={files}
                         setFiles={setFiles}
                         onSubmit={pluginComment}
-                        rows={rowsNum}
+                        rows={rowsNum || 3}
                     />
                 )}
             </div>
@@ -561,8 +579,9 @@ const PluginCommentImages: React.FC<PluginCommentImagesProps> = (props) => {
                         onClick={(e) => {
                             e.stopPropagation()
                         }}
+                        style={{width: size, height: size}}
                     >
-                        <Image src={item as any} className={styles["opt-pic"]} style={{width: size, height: size}} />
+                        <Image src={item as any} className={styles["opt-pic"]} preview={false} />
                         <div
                             className={styles["mask-box"]}
                             onClick={() => {
@@ -671,11 +690,14 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
     }
 
     const disabled = useMemo(() => {
-        if (value.length > limit || value.length === 0) {
+        if (value.length > limit) {
+            return true
+        }
+        if (value.length === 0 && files.length === 0) {
             return true
         }
         return false
-    }, [value, limit])
+    }, [value, limit, files])
 
     // 是否展示底部元素
     const isShowdDom = useMemo(() => {
@@ -818,14 +840,16 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
                                             return true
                                         }}
                                     >
-                                        <div
-                                            className={classNames(styles["photograph-icon"], {
-                                                [styles["photograph-icon-disabled"]]: files.length >= 3,
-                                                [styles["photograph-icon-loading"]]: filesLoading
-                                            })}
-                                        >
-                                            {filesLoading ? <LoadingOutlined /> : <OutlinePhotographIcon />}
-                                        </div>
+                                        {filesLoading ? (
+                                            <LoadingOutlined size={28} />
+                                        ) : (
+                                            <YakitButton
+                                                size='large'
+                                                disabled={files.length >= 3}
+                                                icon={<OutlinePhotographIcon />}
+                                                type='text2'
+                                            />
+                                        )}
                                     </Upload>
                                 </div>
                                 <div className={styles["upload-box-right"]}>
@@ -940,7 +964,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
         })
             .then((res) => {
                 // console.log("comments/reply",res.data);
-                
+
                 if (!res.data) {
                     res.data = []
                 }
