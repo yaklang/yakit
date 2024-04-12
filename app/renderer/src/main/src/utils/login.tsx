@@ -1,9 +1,9 @@
-import {UserInfoProps, DynamicStatusProps} from "@/store"
+import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {getRemoteValue, setRemoteValue} from "./kv"
-import {GetReleaseEdition, isCommunityEdition, globalUserLogout, isEnpriTraceAgent, isEnpriTrace} from "@/utils/envfile"
-import {RemoteGV} from "@/yakitGV"
+import {getRemoteValue} from "./kv"
+import {globalUserLogout, isEnpriTraceAgent} from "@/utils/envfile"
+import emiter from "./eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 export const loginOut = async (userInfo: UserInfoProps) => {
@@ -37,6 +37,7 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
             })
             .finally(() => {
                 ipcRenderer.send("user-sign-out")
+                emiter.emit("onRefLocalPluginList", "")
             })
     })
 }
