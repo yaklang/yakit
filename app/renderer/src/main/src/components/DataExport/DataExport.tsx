@@ -310,17 +310,18 @@ interface ExportSelectProps {
     fileName?: string
     /* limit */
     pageSize?: number
+    initCheckValue?: string[]
 }
 // 导出字段选择
 export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
-    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize} = props
+    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue} = props
     const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
     useEffect(() => {
         getRemoteValue(exportKey).then((setting) => {
             if (!setting) {
                 // 第一次进入 默认勾选所有导出字段
                 setExportTitle(exportValue as string[])
-                setCheckValue(exportValue)
+                setCheckValue(initCheckValue || exportValue)
             } else {
                 const values = JSON.parse(setting)
                 setCheckValue(values?.checkedValues)

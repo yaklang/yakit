@@ -1583,15 +1583,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 )
             }
         }
-        const WebPayloads: ColumnsTypeProps = {
-            title: "Payloads",
-            dataKey: "WebPayloads",
-            width: 300,
-            sorterProps: {
-                sorter: true
-            },
-            render: (v) => (v ? v.join(",") : "-")
-        }
         const Url: ColumnsTypeProps = {
             title: "URL",
             dataKey: "Url",
@@ -1605,6 +1596,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const HtmlTitle: ColumnsTypeProps = {
             title: "Title",
             dataKey: "HtmlTitle"
+        }
+        const WebPayloads: ColumnsTypeProps = {
+            title: "Payloads",
+            dataKey: "WebPayloads",
+            width: 300,
+            render: (v) => (v ? v.join(",") : "-")
         }
         const Tags: ColumnsTypeProps = {
             title: "Tags",
@@ -1868,9 +1865,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ID,
                 Method,
                 StatusCode,
-                WebPayloads,
                 Url,
                 HtmlTitle,
+                WebPayloads,
                 Tags,
                 IPAddress,
                 BodyLength,
@@ -2211,6 +2208,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     key: "response"
                 },
                 {
+                    title: "Payloads",
+                    key: "web_payloads"
+                },
+                {
                     title: "Tags",
                     key: "tags"
                 },
@@ -2308,9 +2309,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             content: (
                 <ExportSelect
                     exportValue={exportValue}
+                    initCheckValue={
+                        toWebFuzzer ? exportValue.filter((i) => !["参数", "请求包", "响应包"].includes(i)) : exportValue
+                    }
                     setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
-                    exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
-                    fileName='History'
+                    exportKey={toWebFuzzer ? "WEBFUZZER-HISTORY-EXPORT-KEY" : "MITM-HTTP-HISTORY-EXPORT-KEY"}
+                    fileName={!toWebFuzzer ? "History" : "WebFuzzer"}
                     getData={(pagination) => getExcelData(pagination, list)}
                 />
             ),
@@ -2360,7 +2364,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 10,
             webSocket: true,
             default: false,
-            toWebFuzzer: true,
+            toWebFuzzer: false,
             children: [
                 {
                     key: "sendAndJumpToWS",
@@ -2917,7 +2921,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         width={150}
                                         selectedKeys={[]}
                                         data={menuData
-                                            .filter((f) => toWebFuzzer ? f.onClickBatch && f.toWebFuzzer : f.onClickBatch)
+                                            .filter((f) =>
+                                                toWebFuzzer ? f.onClickBatch && f.toWebFuzzer : f.onClickBatch
+                                            )
                                             .map((m) => {
                                                 return {
                                                     key: m.key,
