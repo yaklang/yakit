@@ -1299,7 +1299,7 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
             return
         }
         const pluginStarsRequest: PluginStarsRequest = {
-            id: data.id,
+            uuid: data.uuid,
             operation: data.is_stars ? "remove" : "add"
         }
         setStarsLoading(true)

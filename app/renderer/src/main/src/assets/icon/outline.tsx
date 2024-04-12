@@ -4295,6 +4295,21 @@ export const OutlineThumbupIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineThumbup} {...props} />
 }
 
+const OutlineThumbupActive = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M1.59961 8.39961C1.59961 7.73687 2.13687 7.19961 2.79961 7.19961C3.46235 7.19961 3.99961 7.73687 3.99961 8.39961V13.1996C3.99961 13.8624 3.46235 14.3996 2.79961 14.3996C2.13687 14.3996 1.59961 13.8624 1.59961 13.1996V8.39961Z" fill="currentColor"/>
+        <path d="M4.79961 8.26628V12.6108C4.79961 13.2168 5.14201 13.7708 5.68407 14.0418L5.72394 14.0618C6.16828 14.2839 6.65824 14.3996 7.15503 14.3996H11.4879C12.2506 14.3996 12.9073 13.8613 13.0569 13.1134L14.0169 8.3134C14.2149 7.32333 13.4576 6.39961 12.4479 6.39961H9.59961V3.19961C9.59961 2.31595 8.88326 1.59961 7.99961 1.59961C7.55778 1.59961 7.19961 1.95778 7.19961 2.39961V2.93294C7.19961 3.62533 6.97504 4.29903 6.55961 4.85294L5.43961 6.34628C5.02418 6.90018 4.79961 7.57389 4.79961 8.26628Z" fill="currentColor"/>
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/Outlinethumb-up-active
+ */
+export const OutlineThumbupActiveIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineThumbupActive} {...props} />
+}
+
+
 const OutlineTicket = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path

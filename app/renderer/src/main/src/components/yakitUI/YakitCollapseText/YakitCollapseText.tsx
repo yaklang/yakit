@@ -9,11 +9,12 @@ import styles from "./YakitCollapseText.module.scss"
  * @description 只适合纯文字
  */
 export const YakitCollapseText: React.FC<YakitCollapseTextProps> = memo((props) => {
-    const {content, rows = 3, lineHeight = 16, wrapperClassName} = props
+    const {content, rows = 3, lineHeight = 16, fontSize = 12, wrapperClassName} = props
 
     /** 内容行高 */
     const textStyle = useMemo(() => {
         const styles: CSSProperties = {}
+        if (fontSize) styles["fontSize"] = `${fontSize || 12}px`
         if (lineHeight) styles["lineHeight"] = `${lineHeight || 16}px`
         if (rows) styles["maxHeight"] = `${rows * (lineHeight || 16)}px`
 

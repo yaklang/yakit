@@ -130,7 +130,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                         isItem={false}
                         select={{
                             showSearch: true,
-                            style: {width: 360},
+                            wrapperStyle: {width: 360},
                             allowClear: true,
                             onClear: onClear,
                             data: userList.data || [],
@@ -157,7 +157,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                         isItem={false}
                         select={{
                             showSearch: true,
-                            style: {width: 360},
+                            wrapperStyle: {width: 360},
                             allowClear: true,
                             onClear: onClear,
                             data: [

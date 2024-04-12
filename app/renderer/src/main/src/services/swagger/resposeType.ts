@@ -1036,6 +1036,14 @@ export declare namespace API {
     operation_plugin_id: string;
     extra?: string;
   }
+  export interface NewComments {
+    uuid: string;
+    by_user_id?: number;
+    message_img?: string[];
+    parent_id?: number;
+    root_id?: number;
+    message?: string;
+  }
   export interface NewComment {
     plugin_id: number;
     by_user_id?: number;

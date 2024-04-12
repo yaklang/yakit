@@ -12,7 +12,6 @@ import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "lodash/cloneDeep"
 import {thousandthConversion} from "../pluginReducer"
 import {useStore} from "@/store"
-import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
@@ -24,6 +23,7 @@ import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {API} from "@/services/swagger/resposeType"
+import {PluginComment} from "../baseComment"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -324,7 +324,50 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                         </div>
                     </TabPane>
                     <TabPane tab='评论' key='comment'>
-                        <div className={styles["plugin-comment-wrapper"]} id='online-plugin-info-scroll'>
+                        <div className={styles["plugin-comment-wrapper"]}>
+                            <PluginDetailHeader
+                                pluginName={plugin.script_name}
+                                help={plugin.help}
+                                tags={plugin.tags}
+                                wrapperClassName={styles["plugin-comment-detail-header"]}
+                                extraNode={
+                                    <div className={styles["plugin-info-extra-header"]}>
+                                        <OnlineExtraOperate
+                                            data={plugin}
+                                            isLogin={userInfo.isLogin}
+                                            dispatch={dispatch}
+                                            likeProps={{
+                                                active: plugin.is_stars,
+                                                likeNumber: plugin.starsCountString || "",
+                                                onLikeClick: onLikeClick
+                                            }}
+                                            commentProps={{
+                                                commentNumber: plugin.commentCountString || ""
+                                                // onCommentClick: onCommentClick
+                                            }}
+                                            downloadProps={{
+                                                downloadNumber: plugin.downloadedTotalString || "",
+                                                onDownloadClick: onDownloadClick
+                                            }}
+                                        />
+                                        <FuncBtn
+                                            maxWidth={1100}
+                                            icon={<OutlineCursorclickIcon />}
+                                            name={"去使用"}
+                                            onClick={onUse}
+                                        />
+                                    </div>
+                                }
+                                img={plugin.head_img}
+                                user={plugin.authors}
+                                pluginId={plugin.uuid}
+                                updated_at={plugin.updated_at}
+                                prImgs={(plugin.collaborator || []).map((ele) => ({
+                                    headImg: ele.head_img,
+                                    userName: ele.user_name
+                                }))}
+                                type={plugin.type}
+                            />
                             <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin, default_open: false}} />
                         </div>
                     </TabPane>

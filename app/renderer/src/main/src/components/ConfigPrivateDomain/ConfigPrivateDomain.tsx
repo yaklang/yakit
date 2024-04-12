@@ -258,7 +258,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         {
             validator: (_, value) => {
                 let re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
-                if (re.test(value)) {
+                if(/\s/.test(value)){
+                    return Promise.reject("私有域地址存在空格")
+                }
+                else if (re.test(value)) {
                     return Promise.resolve()
                 } else {
                     return Promise.reject("请输入符合要求的私有域地址")
