@@ -278,7 +278,9 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 )
             })
             .finally(() => {
-                yaklangLater()
+                setTimeout(() => {
+                    yaklangLater()
+                }, 50);
             })
     })
 

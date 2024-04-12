@@ -49,7 +49,6 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
         /** 引擎信息认证 */
         const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {
-            console.log("test-link", JSON.stringify(props.credential))
             // 重置状态
             setAutoStartProgress(false)
             const mode = props.credential.Mode

@@ -144,7 +144,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */
     const handleBuiltInCheck = useMemoizedFn(() => {
-        console.log("bug-cve")
         ipcRenderer
             .invoke("InitCVEDatabase")
             .then(() => {
@@ -163,7 +162,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
      * 4、引擎是否存在
      */
     const handleFetchBaseInfo = useMemoizedFn(async (nextFunc?: () => any) => {
-        console.log("check-hardware")
         try {
             isDev.current = !!(await ipcRenderer.invoke("is-dev"))
         } catch (error) {}
@@ -185,7 +183,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** 获取上次连接引擎的模式 */
     const handleLinkEngineMode = useMemoizedFn(() => {
-        console.log("init-link-mode")
         setCheckLog(["获取上次连接引擎的模式..."])
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
             switch (val) {
@@ -214,14 +211,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 切换远程模式
     const handleLinkRemoteMode = useMemoizedFn(() => {
-        console.log("start-remote")
         onDisconnect()
         onSetYakitStatus("")
         onSetEngineMode("remote")
     })
     // 本地连接的状态设置
     const setLinkLocalEngine = useMemoizedFn(() => {
-        console.log("start-local")
         onDisconnect()
         onSetYakitStatus("")
         onSetEngineMode("local")
@@ -230,7 +225,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     // 切换本地模式
     const handleLinkLocalMode = useMemoizedFn(() => {
-        console.log("check-local-install")
         if (isEngineInstalled.current) {
             if (!isInitLocalLink.current) {
                 setLinkLocalEngine()
@@ -272,7 +266,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     useEffect(() => {
         setTimeout(() => {
-            console.log("start-yakit")
             handleBuiltInCheck()
             handleFetchBaseInfo(() => {
                 handleLinkEngineMode()
@@ -323,14 +316,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- 软件状态与是否连接引擎相关方法 Start ---------- */
     // 断开连接
     const onDisconnect = useMemoizedFn(() => {
-        console.log("disconnect")
         setCredential({...DefaultCredential})
         setKeepalive(false)
         onSetEngineLink(false)
     })
     // 开始连接引擎
     const onStartLinkEngine = useMemoizedFn((isDynamicControl?: boolean) => {
-        console.log("start-link")
         setTimeout(() => {
             emiter.emit("startAndCreateEngineProcess", isDynamicControl)
         }, 100)
@@ -340,7 +331,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const handleStatusCompleted = useMemoizedFn((type: YakitStatusType) => {
         switch (type) {
             case "install":
-                console.log("installed")
                 // 安装引擎完成后
                 setCheckLog([])
                 isEngineInstalled.current = true
@@ -354,7 +344,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 开始本地连接引擎
     const handleLinkLocalEngine = useMemoizedFn((port: number) => {
-        console.log("link-local")
         setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${port}`])
         setCredential({
             Host: "127.0.0.1",
@@ -371,7 +360,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)
     // 开始远程连接引擎
     const handleLinkRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
-        console.log("link-remote")
         setRemoteLinkLoading(true)
         setCredential({
             Host: info.host,
@@ -385,7 +373,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     // 远程切换本地
     const handleRemoteToLocal = useMemoizedFn(() => {
-        console.log("remote-switch-local")
         onSetEngineMode(undefined)
         handleChangeLinkMode()
     })
@@ -433,7 +420,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [engineLink])
     // Loading页面切换引擎连接模式
     const loadingClickCallback = useMemoizedFn((type: YaklangEngineMode | YakitStatusType) => {
-        console.log(`loading-callback-${type}`)
         switch (type) {
             case "checkError":
                 // 引擎权限错误-手动重启引擎
@@ -472,7 +458,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     const handleOperations = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode) => {
-        console.log(`operation-${type}`)
         switch (type) {
             case "break":
                 if (cacheYakitStatus.current === "link") {
@@ -564,7 +549,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     // kill完引擎进程后开始更新引擎
     const killedEngineToUpdate = useMemoizedFn(() => {
-        console.log("killed-engine-to-update")
         setYaklangKillPss(false)
         if (!yaklangDownload) {
             onSetEngineLink(false)
@@ -574,7 +558,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     const onDownloadedYaklang = useMemoizedFn(() => {
-        console.log(`updated-yaklang`)
         setYaklangDownload(false)
         setLinkLocalEngine()
     })
@@ -969,7 +952,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
 
     const onReady = useMemoizedFn(() => {
-        console.log("link-success")
         if (!cacheEngineLink.current) {
             isEnpriTraceAgent() ? SELinkedEngine() : onLinkedEngine()
         }
@@ -986,7 +968,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
     const onFailed = useMemoizedFn((count: number) => {
-        console.log("failed", count)
         // 20以上的次数属于无效次数
         if (count > 20) {
             setKeepalive(false)
@@ -1239,7 +1220,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 system={system}
                                 onSuccess={() => handleStatusCompleted("install")}
                                 onRemoreLink={() => {
-                                    console.log("install-switch-remote")
                                     setCheckLog([])
                                     handleLinkRemoteMode()
                                 }}

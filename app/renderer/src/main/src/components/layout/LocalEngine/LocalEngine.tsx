@@ -27,7 +27,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * 检查本地数据库权限
          */
         const handleCheckDataBase = useMemoizedFn(() => {
-            console.log("check-database")
             const firstHint = "开始检查数据库权限是否正常"
             setLog([firstHint])
             let isError: boolean = false
@@ -51,7 +50,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /** 获取上次本地连接引擎的端口缓存 */
         const handleLinkEnginePort = useMemoizedFn(() => {
-            console.log("get-port")
             getLocalValue(LocalGVS.YaklangEnginePort)
                 .then((portRaw) => {
                     const port = parseInt(portRaw)
@@ -82,17 +80,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /** 是否阻止更新弹窗出现 */
         const preventUpdateHint = useRef<boolean>(false)
-        /** 检查版本后，延迟2000毫秒执行连接(如遇更新，则清除定时器) */
-        const linkTimeRef = useRef<any>(null)
-        const clearLinkTime = useMemoizedFn(() => {
-            if (linkTimeRef.current) {
-                clearTimeout(linkTimeRef.current)
-                linkTimeRef.current = null
-            }
-        })
+        /** 是否已弹出更新框 */
+        const isShowedUpdateHint = useRef<boolean>(false)
 
         const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async () => {
-            console.log("get-version")
             try {
                 let localYakit = (await ipcRenderer.invoke("fetch-yakit-version")) || ""
                 setCurrentYakit(localYakit)
@@ -103,7 +94,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
                 setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
                 setCurrentYaklang(localYaklang)
-                linkTimeRef.current = setTimeout(() => {
+                setTimeout(() => {
+                    if (isShowedUpdateHint.current) return
+                    preventUpdateHint.current = true
                     // 这里的2秒是判断是否有更新弹窗出现
                     handleLinkLocalEnging()
                 }, 2000)
@@ -114,7 +107,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         })
 
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {
-            if (!isCommunityEdition()) return
+            if (!isCommunityEdition()) {
+                // 非CE版本不检查更新
+                preventUpdateHint.current = true
+                return
+            }
             getLocalValue(LocalGVS.NoAutobootLatestVersionCheck).then((val: boolean) => {
                 if (val) preventUpdateHint.current = true
 
@@ -139,11 +136,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         // 初始化后的本地连接-前置项检查
         const initLink = useMemoizedFn(() => {
+            isShowedUpdateHint.current = false
             preventUpdateHint.current = isCommunityEdition() ? false : true
             handleCheckDataBase()
         })
         // 检查版本后直接连接
         const toLink = useMemoizedFn(() => {
+            isShowedUpdateHint.current = false
             preventUpdateHint.current = true
             handleFetchYakitAndYaklangLocalVersion()
         })
@@ -159,7 +158,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         // 开始进行本地引擎连接
         const handleLinkLocalEnging = useMemoizedFn(() => {
-            if (!preventUpdateHint.current) return
             // 开始连接本地引擎
             onLinkEngine(localPort)
             // 一旦启动本地连接了，后续就不用再检查更新情况了
@@ -172,11 +170,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             if (!isCommunityEdition()) return false
 
             if (!!currentYakit && !!latestYakit && `v${currentYakit}` !== latestYakit) {
-                clearLinkTime()
+                isShowedUpdateHint.current = true
                 return true
             }
             if (!!currentYaklang && !!latestYaklang && currentYaklang !== latestYaklang) {
-                clearLinkTime()
+                isShowedUpdateHint.current = true
                 return true
             }
 
