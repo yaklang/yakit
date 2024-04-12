@@ -13,6 +13,7 @@ export const YAK_FORMATTER_COMMAND_ID = "yak-formatter";
 const { ipcRenderer } = window.require("electron");
 const { CompletionItemKind } = monaco.languages;
 var modelToEditorMap = new Map<monaco.editor.ITextModel, monaco.editor.ICodeEditor>();
+var editorToSignatureHelpRangeMap = new Map<monaco.editor.ICodeEditor, monaco.Range>();
 
 const editorContextMap = new Map<monaco.editor.ICodeEditor, Map<string, string>>();
 
@@ -431,6 +432,45 @@ monaco.editor.onDidCreateEditor((editor) => {
     editor.onDidDispose(() => {
         editorContextMap.delete(editor)
     })
+    editor.onDidChangeCursorPosition((e) => {
+        const range = editorToSignatureHelpRangeMap.get(editor);
+        if (!range) {
+            return 
+        }
+        const position = e.position;
+
+        // 如果光标不在函数签名提示的范围内，关闭函数签名提示
+        if (range.containsPosition(position)) {
+            return 
+        }
+        editor.trigger('keyboard', 'closeParameterHints', null); 
+        editorToSignatureHelpRangeMap.delete(editor);
+    })
+    editor.onDidChangeModelContent((e) => {
+        // 修改函数签名提示的范围
+        let range = editorToSignatureHelpRangeMap.get(editor);
+        if (!range) {
+            return 
+        }
+        e.changes.forEach(change => {
+            if (!range) {
+                return
+            }
+            if (range.containsRange(change.range)) {
+                const model = editor.getModel();
+                if (!model) {
+                    return 
+                }
+                const LParenMatch = model.findPreviousMatch("(", new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
+                const RParenMatch = model.findNextMatch(")",  new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
+                if (LParenMatch && RParenMatch) {
+                    const startPosition = LParenMatch.range.getStartPosition();
+                    const endPosition = RParenMatch.range.getStartPosition();
+                    range =  new monaco.Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
+                }
+            }   
+        })
+    })
 })
 
 monaco.editor.onWillDisposeModel((model) => {
@@ -445,13 +485,16 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             let newPosition = new monaco.Position(position.lineNumber, position.column - 1)
             const editor = modelToEditorMap.get(model);
             if (editor) { // 修复在补全后的函数签名提示问题
-                const selection = editor.getSelection();
                 // 补全后一般会选择某些内容
-                if (selection) {
-                    const match = model.findPreviousMatch("(", newPosition, false, false, null, false);
-                    if (match) {
-                        newPosition = match.range.getStartPosition();
-                    }
+                const LParenMatch = model.findPreviousMatch("(", newPosition, false, false, null, false);
+                if (LParenMatch) {
+                    newPosition = LParenMatch.range.getStartPosition();
+                }
+                const RParenMatch = model.findNextMatch(")", newPosition, false, false, null, false);
+                // 如果找到了右括号，证明是一个完整的函数调用，可以设置editorToSignatureHelpRangeMap
+                if (RParenMatch) {
+                    const RParenPosition = RParenMatch.range.getStartPosition();
+                    editorToSignatureHelpRangeMap.set(editor, new monaco.Range(newPosition.lineNumber, newPosition.column, RParenPosition.lineNumber, RParenPosition.column));
                 }
             }
             const iWord = getWordWithPointAtPosition(model, newPosition);
@@ -504,7 +547,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             })
         })
     },
-    signatureHelpTriggerCharacters: ['(']
+    signatureHelpTriggerCharacters: ['(', ')']
 })
 
 monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
