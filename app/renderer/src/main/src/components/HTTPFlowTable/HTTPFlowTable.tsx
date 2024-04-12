@@ -1006,13 +1006,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         if (runTimeId) {
             if (toWebFuzzer) {
-                query.RuntimeIDs = runTimeId
+                query.RuntimeIDs = runTimeId.split(',')
                 query.WithPayload = true
             } else {
                 query.RuntimeId = runTimeId
             }
         }
-        console.log("查询数据", type)
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
@@ -1608,7 +1607,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             title: "Payloads",
             dataKey: "Payloads",
             width: 300,
-            render: (v) => (v ? v.join(",") : "-")
+            render: (v) => {
+                return v ? v.filter((i) => i !== "").join(",") : "-"
+            }
         }
         const Tags: ColumnsTypeProps = {
             title: "Tags",
