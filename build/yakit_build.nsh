@@ -166,10 +166,6 @@ FunctionEnd
 !macroend
 
 !macro customInstall 
-    
-!macroend
-
-Section "Main" SectionMain
     ; create new directory if not installed 
     ${If} $IS_INSTALLED != "true"
         StrCpy $INSTDIR "$INSTDIR\$EXE_NAME"
@@ -196,7 +192,11 @@ Section "Main" SectionMain
     ; 创建 yakit-projects 文件夹
     DetailPrint "创建yakit-projects文件夹..."
     CreateDirectory "$INSTDIR\yakit-projects"
-    DetailPrint "正在安装..."
+    DetailPrint "正在安装..." 
+!macroend
+
+Section "Main" SectionMain
+   
 SectionEnd
 
 Section "Uninstall"
