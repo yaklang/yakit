@@ -648,6 +648,28 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             })
                         } catch (e) { }
                     })()
+
+                    ; (() => {
+                        try {
+                            ;[
+                                { regexp: /\nHost:\s*?.+/, classType: "host" },
+                            ].map((detail) => {
+                                // handle host
+                                const match = detail.regexp.exec(text)
+                                if (!match) {
+                                    return
+                                }
+                                const start = model.getPositionAt(match.index)
+                                const end = model.getPositionAt(match.index + match[0].indexOf(":"))
+                                dec.push({
+                                    id: detail.classType + match.index,
+                                    ownerId: 0,
+                                    range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                                    options: { afterContentClassName: detail.classType }
+                                } as YakitIModelDecoration)
+                            })
+                        } catch (e) { }
+                    })()
                 }
                 if (props.type === "html" || props.type === "http") {
                     ; (() => {
