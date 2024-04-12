@@ -113,7 +113,7 @@ import blastingIdmp4 from "@/assets/blasting-id.mp4"
 import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
-import {CacheDropDownGV} from "@/yakitGV"
+import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
@@ -121,10 +121,8 @@ const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAl
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
-    /**【配置】高级配置显示/隐藏 */
-    advancedConfig: boolean
-    /**【规则】高级配置显示/隐藏 */
-    advancedConfigRuleShow: boolean
+    /**高级配置显示/隐藏 */
+    advancedConfigShow: AdvancedConfigShowProps
     /**请求包 */
     request: string
     /**高级配置的数据 */
@@ -231,10 +229,7 @@ Host: www.example.com
 export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 export const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 export const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
-/**【配置】高级配置显示缓存字段 */
-export const WEB_FUZZ_Advanced_Config_Switch_Checked = "WEB_FUZZ_Advanced_Config_Switch_Checked"
-/**【规则】高级配置显示缓存字段 */
-export const WEB_FUZZ_Rule_Switch_Checked = "WEB_FUZZ_Rule_Switch_Checked"
+
 export const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
 export const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
 
@@ -301,6 +296,8 @@ export interface FuzzerRequestProps {
     /**@name fuzzer Tab的唯一key */
     FuzzerTabIndex?: string
 }
+
+export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence">, boolean>
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
     ipcRenderer
@@ -650,11 +647,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         initWebFuzzerPageInfo().advancedConfigValue
     ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
 
-    const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
-    // 【规则】高级配置的隐藏/显示
-    const [advancedConfigRuleShow, setAdvancedConfigRuleShow] = useState<boolean>(false)
+    // 高级配置的隐藏/显示
+    const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
+        config: true,
+        rule: true
+    })
 
-    // 【配置】/【规则】高级内容显示
+    // 切换【配置】/【规则】高级内容显示 type
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
@@ -713,19 +712,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowResponseInfoSecondEditor(true)
             })
         /** 有分享内容按照分享内容中的 advancedConfig 为准 */
-        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
-            if (c === "") {
-                setAdvancedConfig(true)
-            } else {
-                setAdvancedConfig(c === "true")
-            }
-        })
-        getRemoteValue(WEB_FUZZ_Rule_Switch_Checked).then((c) => {
-            if (c === "") {
-                setAdvancedConfigRuleShow(true)
-            } else {
-                setAdvancedConfigRuleShow(c === "true")
-            }
+        getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
+            if (!c) return
+            try {
+                const value = JSON.parse(c)
+                setAdvancedConfigShow({
+                    ...value
+                })
+            } catch (error) {}
         })
         emiter.on("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
         return () => {
@@ -745,38 +739,20 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [inViewport])
     /**高级配置显示/隐藏 【序列】tab没有下列操作*/
     const onSetAdvancedConfigShow = useMemoizedFn((data) => {
+        if (!inViewport) return
         try {
             const value = JSON.parse(data)
             const {type} = value
-            switch (type as WebFuzzerType) {
-                case "config":
-                    onSetFuzzerAdvancedConfig()
-                    break
-                case "rule":
-                    onSetAdvancedConfigRuleShow()
-                    break
-                default:
-                    break
+            if (type === "sequence") return
+            const c = !advancedConfigShow[type]
+            const newValue = {
+                ...advancedConfigShow,
+                [type]: c
             }
+            setAdvancedConfigShow(newValue)
+            setRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow, JSON.stringify(newValue))
+            emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
         } catch (error) {}
-    })
-    /**切换【配置】对应得高级配置显示内容 */
-    const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
-        if (inViewport) {
-            const c = !advancedConfig
-            setAdvancedConfig(c)
-            setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
-            emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
-        }
-    })
-    /**切换【规则】对应得高级配置显示内容 */
-    const onSetAdvancedConfigRuleShow = useMemoizedFn(() => {
-        if (inViewport) {
-            const c = !advancedConfigRuleShow
-            setAdvancedConfigRuleShow(c)
-            setRemoteValue(WEB_FUZZ_Rule_Switch_Checked, `${c}`)
-            emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
-        }
     })
     const onRefWebFuzzerValue = useMemoizedFn(() => {
         if (!inViewport) return
@@ -1439,8 +1415,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const advancedConfiguration = {...advancedConfigValue}
         delete advancedConfiguration.batchTarget
         const params: ShareValueProps = {
-            advancedConfig,
-            advancedConfigRuleShow,
+            advancedConfigShow,
             request: requestRef.current,
             advancedConfiguration: advancedConfiguration
         }
@@ -1452,8 +1427,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
         try {
             const newAdvancedConfigValue = {...advancedConfigValue, ...shareContent.advancedConfiguration}
-            setAdvancedConfig(shareContent.advancedConfig)
-            setAdvancedConfigRuleShow(shareContent.advancedConfigRuleShow)
+            if (newAdvancedConfigValue.hasOwnProperty("advancedConfig")) {
+                // 兼容只有【配置】的时候的高级配置显隐,低版本分享给高版本
+                setAdvancedConfigShow({
+                    config: newAdvancedConfigValue["advancedConfig"],
+                    rule: true
+                })
+            } else {
+                setAdvancedConfigShow(shareContent.advancedConfigShow)
+            }
             requestRef.current = shareContent.request
             setAdvancedConfigValue(newAdvancedConfigValue)
         } catch (error) {
@@ -1854,13 +1836,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const advancedConfigVisible = useCreation(() => {
         switch (advancedConfigShowType) {
             case "config":
-                return advancedConfig
+                return advancedConfigShow.config
             case "rule":
-                return advancedConfigRuleShow
+                return advancedConfigShow.rule
             default:
                 return false
         }
-    }, [advancedConfigShowType, advancedConfigRuleShow, advancedConfig])
+    }, [advancedConfigShowType, advancedConfigShow])
     return (
         <>
             <div className={styles["http-fuzzer-body"]} ref={fuzzerRef} style={{display: showAllDataRes ? "none" : ""}}>

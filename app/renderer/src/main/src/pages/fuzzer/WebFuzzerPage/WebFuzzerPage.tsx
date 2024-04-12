@@ -10,7 +10,10 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import emiter from "@/utils/eventBus/eventBus"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {WEB_FUZZ_Advanced_Config_Switch_Checked, WEB_FUZZ_Rule_Switch_Checked} from "../HTTPFuzzerPage"
+import {
+    AdvancedConfigShowProps,
+} from "../HTTPFuzzerPage"
+import {RemoteGV} from "@/yakitGV"
 const {ipcRenderer} = window.require("electron")
 
 export const webFuzzerTabs = [
@@ -36,10 +39,11 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const [inViewport] = useInViewport(webFuzzerRef)
 
     const [type, setType] = useState<WebFuzzerType>(props.defaultType || "config")
-    // 监听tab栏打开或关闭 【配置】
-    const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(false)
-    // 监听tab栏打开或关闭 【规则】
-    const [advancedConfigRuleShow, setAdvancedConfigRuleShow] = useState<boolean>(false)
+    // 高级配置的隐藏/显示
+    const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
+        config: true,
+        rule: true
+    })
 
     const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
@@ -59,19 +63,14 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
-            if (c === "") {
-                setAdvancedConfigShow(true)
-            } else {
-                setAdvancedConfigShow(c === "true")
-            }
-        })
-        getRemoteValue(WEB_FUZZ_Rule_Switch_Checked).then((c) => {
-            if (c === "") {
-                setAdvancedConfigRuleShow(true)
-            } else {
-                setAdvancedConfigRuleShow(c === "true")
-            }
+        getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
+            if (!c) return
+            try {
+                const value = JSON.parse(c)
+                setAdvancedConfigShow({
+                    ...value
+                })
+            } catch (error) {}
         })
     }, [])
 
@@ -114,16 +113,13 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
             try {
                 const value = JSON.parse(data)
                 const key = value.type as WebFuzzerType
-                switch (key) {
-                    case "config":
-                        setAdvancedConfigShow(value.checked)
-                        break
-                    case "rule":
-                        setAdvancedConfigRuleShow(value.checked)
-                        break
-                    default:
-                        break
+                if (key === "sequence") return
+                const c = !advancedConfigShow[key]
+                const newValue = {
+                    ...advancedConfigShow,
+                    [key]: c
                 }
+                setAdvancedConfigShow(newValue)
             } catch (error) {}
         }
     })
@@ -142,13 +138,13 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const isUnShow = useCreation(() => {
         switch (type) {
             case "config":
-                return !advancedConfigShow
+                return !advancedConfigShow.config
             case "rule":
-                return !advancedConfigRuleShow
+                return !advancedConfigShow.rule
             default:
                 return false
         }
-    }, [type, advancedConfigShow, advancedConfigRuleShow])
+    }, [type, advancedConfigShow, advancedConfigShow])
     return (
         <div className={styles["web-fuzzer"]} ref={webFuzzerRef}>
             <div className={styles["web-fuzzer-tab"]}>

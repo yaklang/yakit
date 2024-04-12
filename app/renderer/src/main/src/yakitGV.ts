@@ -78,7 +78,9 @@ export enum RemoteGV {
     /**@name 专项漏洞关键词搜索缓存 */
     PocPluginKeywords = "poc-plugin-keywords",
     /**@name MITM 用户数据是否保存 */
-    MITMUserDataSave = "mitm_user_data_save"
+    MITMUserDataSave = "mitm_user_data_save",
+    /**@name WebFuzzer高级配置内容的显/隐 */
+    WebFuzzerAdvancedConfigShow='web_fuzzer_advanced_config_show'
 }
 
 /** 项目逻辑全局变量 */
