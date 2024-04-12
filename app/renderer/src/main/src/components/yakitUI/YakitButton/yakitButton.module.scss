@@ -1,7 +1,7 @@
 @import "../../../theme/themeify.scss";
 
 @mixin generatePrimary($type) {
-    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: fetch-color($type, "color-5");
     color: var(--ui-text-inverse-color);
@@ -46,7 +46,7 @@
 }
 
 @mixin generateSecondary2($type) {
-    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: var(--yakit-background-color);
     color: var(---ui-text-color);
@@ -115,7 +115,7 @@
 }
 
 @mixin generateOutline1($type) {
-    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: transparent;
     color: fetch-color($type, "color-5");
@@ -160,7 +160,7 @@
 }
 
 @mixin generateOutline2($type) {
-    --button-wave-shadow-color: #{fetch-color($type, "color-2")};
+    --antd-wave-shadow-color: #{fetch-color($type, "color-5")};
 
     background: var(--ui-background-color);
     color: var(--ui-text-color);
@@ -233,7 +233,7 @@
 }
 
 @mixin generateText($type) {
-    --button-wave-shadow-color: transparent;
+    --antd-wave-shadow-color: transparent;
 
     background: transparent;
     color: fetch-color($type, "color-5");
@@ -278,7 +278,7 @@
 }
 
 @mixin generateText2($type) {
-    --button-wave-shadow-color: transparent;
+    --antd-wave-shadow-color: transparent;
 
     background: transparent;
     color: var(--ui-text-color);

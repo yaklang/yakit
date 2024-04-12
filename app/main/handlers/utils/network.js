@@ -1,5 +1,5 @@
-const https = require("https");
-const {caBundle} = require("../missedCABundle");
+// const https = require("https");
+// const {caBundle} = require("../missedCABundle");
 const axios = require("axios");
 const url = require("url");
 const process = require("process");
@@ -9,10 +9,10 @@ const events = require("events");
 const ossDomains = ["aliyun-oss.yaklang.com", "yaklang.oss-cn-beijing.aliyuncs.com", "yaklang.oss-accelerate.aliyuncs.com"];
 
 const getHttpsAgentByDomain = (domain) => {
-    if (domain.endsWith('.yaklang.com')) {
-        console.info(`use ssl ca-bundle for ${domain}`);
-        return new https.Agent({ca: caBundle, rejectUnauthorized: true}) // unsafe...
-    }
+    // if (domain.endsWith('.yaklang.com')) {
+    //     console.info(`use ssl ca-bundle for ${domain}`);
+    //     return new https.Agent({ca: caBundle, rejectUnauthorized: true}) // unsafe...
+    // }
     console.info(`skip ssl ca-bundle for ${domain}`);
     return undefined
 }

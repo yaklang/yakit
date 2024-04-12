@@ -7,7 +7,7 @@ const {getLocalYaklangEngine, engineLog, YakitProjectPath} = require("../filePat
 const net = require("net")
 const fs = require("fs")
 const path = require("path")
-const { getNowTime } = require("../toolsFunc")
+const {getNowTime} = require("../toolsFunc")
 
 /** 引擎错误日志 */
 const logPath = path.join(engineLog, `engine-log-${getNowTime()}.txt`)
@@ -181,6 +181,7 @@ module.exports = (win, callback, getClient, newClient) => {
                 })
                 subprocess.on("error", (err) => {
                     toLog(`本地引擎遭遇错误，错误原因为：${err}`)
+                    win.webContents.send("start-yaklang-engine-error", `本地引擎遭遇错误，错误原因为：${err}`)
                     reject(err)
                 })
                 subprocess.on("close", async (e) => {
@@ -241,7 +242,6 @@ module.exports = (win, callback, getClient, newClient) => {
 
     /** 连接引擎 */
     ipcMain.handle("connect-yaklang-engine", async (e, params) => {
-        console.log("info", JSON.stringify(GLOBAL_YAK_SETTING))
         /**
          * connect yaklang engine 实际上是为了设置参数，实际上他是不知道远程还是本地
          * params 中的参数应该有如下：

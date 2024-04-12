@@ -80,7 +80,7 @@ const loadSecrets = () => {
                 name: i["name"] || `${i["host"]}:${i["port"]}`,
                 host: i["host"],
                 port: i["port"],
-                tls: i["tls"] | false,
+                tls: i["tls"] || false,
                 password: i["password"] || "",
                 caPem: i["caPem"] || "",
             })
@@ -229,6 +229,12 @@ module.exports = {
         let isFetchingVersion = false;
         let latestVersionCache = null;
 
+        /** clear latestVersionCache value */
+        ipcMain.handle("clear-local-yaklang-version-cache", async (e) => {
+            latestVersionCache = null
+            return
+        })
+
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
@@ -325,15 +331,6 @@ module.exports = {
         })
         ipcMain.handle('diagnosing-yak-version', async (e, params) => {
             return diagnosingYakVersion()
-        })
-
-        /** 获取Yakit Yaklang本地版本号 操作系统 架构 */
-        ipcMain.handle("fetch-local-basic-info", async (e) => {
-            const localYakit = app.getVersion()
-            const localYaklang = await asyncGetCurrentLatestYakVersion()
-            return {
-                system: process.platform, arch: process.arch, localYakit, localYaklang
-            }
         })
 
         // asyncDownloadLatestYak wrapper
@@ -456,11 +453,6 @@ module.exports = {
 
         ipcMain.handle("install-yak-engine", async (e, version) => {
             return await installYakEngine(version);
-        })
-
-        // 获取当前是否是 arm64？
-        ipcMain.handle("get-platform-and-arch", (e) => {
-            return `${process.platform}-${process.arch}`;
         })
 
         // 获取yak code文件根目录路径

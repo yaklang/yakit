@@ -1,15 +1,13 @@
 import React, {useEffect, useRef, useState} from "react"
 import {MacUIOpCloseSvgIcon, MacUIOpMaxSvgIcon, MacUIOpMinSvgIcon, MacUIOpRestoreSvgIcon} from "./icons"
 import {useMemoizedFn} from "ahooks"
-import classNames from "classnames"
-import styles from "./uiOperate.module.scss"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {useRunNodeStore} from "@/store/runNode"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {TemporaryProjectPop} from "./WinUIOp"
-import emiter from "@/utils/eventBus/eventBus"
 import {yakitFailed} from "@/utils/notification"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import classNames from "classnames"
+import styles from "./uiOperate.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -41,12 +39,10 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectNoPromptFlag} =
-        useTemporaryProjectStore()
+    const {temporaryProjectId, temporaryProjectNoPromptFlag} = useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
-    const temporaryProjectPopRef = useRef<any>(null)
 
     useEffect(() => {
         lastTemporaryProjectNoPromptRef.current = temporaryProjectNoPromptFlag
@@ -156,14 +152,8 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
                         title='关闭Yakit'
-                        content={
-                            <>
-                                关闭Yakit会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据
-                            </>
-                        }
-                        ref={temporaryProjectPopRef}
+                        content='关闭Yakit会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据'
                         onOk={async () => {
-                            setTemporaryProjectNoPromptFlag(temporaryProjectPopRef.current.temporaryProjectNoPrompt)
                             setCloseTemporaryProjectVisible(false)
                             operate("close")
                         }}

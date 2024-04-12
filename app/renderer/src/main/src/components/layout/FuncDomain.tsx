@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip, Avatar, Upload, Spin, Progress, Form} from "antd"
+import {Badge, Modal, Tooltip, Avatar, Form} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
@@ -53,7 +53,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {addToTab} from "@/pages/MainTabs"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
-import {ExclamationCircleOutlined, InboxOutlined, LoadingOutlined} from "@ant-design/icons"
+import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
 import {DynamicControl, SelectControlType, ControlMyself, ControlOther} from "../../pages/dynamicControl/DynamicControl"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {MacKeyborad, WinKeyborad} from "../yakitUI/YakitEditor/editorUtils"
@@ -61,19 +61,17 @@ import {ScrecorderModal} from "@/pages/screenRecorder/ScrecorderModal"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {YakitRoute} from "@/routes/newRoute"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
-import {RcFile} from "antd/lib/upload"
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
-import { useTemporaryProjectStore } from "@/store/temporaryProject"
-import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
+import {useTemporaryProjectStore} from "@/store/temporaryProject"
+import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
+import {serverPushStatus} from "@/utils/duplex/duplex"
 
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
-import { serverPushStatus } from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
-const {Dragger} = Upload
 
 export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean) => {
     const {companyHeadImg, companyName} = userInfo
@@ -280,9 +278,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             }
             setUserMenu(cacheMenu)
         } else {
-            setUserMenu([
-                {key: "sign-out", title: "退出登录"}
-            ])
+            setUserMenu([{key: "sign-out", title: "退出登录"}])
         }
     }, [userInfo.role, userInfo.checkPlugin, userInfo.companyHeadImg, dynamicConnect])
 
@@ -821,7 +817,7 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "webshell-manager",
                     label: "网站管理"
-                },
+                }
             ]
         },
         {type: "divider"},
@@ -882,7 +878,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [isDiffUpdate, setIsDiffUpdate] = useState(false)
     const {dynamicStatus} = yakitDynamicStatus()
     const {delTemporaryProject} = useTemporaryProjectStore()
-        
+
     useEffect(() => {
         onIsCVEDatabaseReady()
     }, [])
@@ -897,7 +893,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             })
     })
     const menuSelect = useMemoizedFn((type: string) => {
-        if(show) setShow(false)
+        if (show) setShow(false)
         switch (type) {
             case "cve-database-all-update":
                 setDataBaseUpdateVisible(true)
@@ -951,6 +947,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     return
                 }
                 if (type === engineMode) {
+                    warn("已为本地连接")
                     return
                 }
                 onEngineModeChange(type)
@@ -1025,7 +1022,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 content={menu}
                 visible={show}
                 onVisibleChange={(visible) => setShow(visible)}
-                trigger="click"
+                trigger='click'
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
@@ -1535,12 +1532,20 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     })
     /** 获取最新Yaklang版本号和本地版本号 */
     const fetchYaklangLastVersion = useMemoizedFn(() => {
-        ipcRenderer.invoke("fetch-latest-yaklang-version").then((data: string) => {
-            if (yaklangVersion !== data) setYaklangLastVersion(data)
-        }).catch((err) => {})
-        ipcRenderer.invoke("get-current-yak").then((data: string) => {
-            !isRemoteMode && setYaklangLocalVersion(data)
-        }).catch(()=>{})
+        ipcRenderer
+            .invoke("fetch-latest-yaklang-version")
+            .then((data: string) => {
+                if (yaklangVersion !== data) setYaklangLastVersion(data)
+            })
+            .catch((err) => {})
+        if (!isRemoteMode) {
+            ipcRenderer
+                .invoke("get-current-yak")
+                .then((data: string) => {
+                    !isRemoteMode && setYaklangLocalVersion(data)
+                })
+                .catch(() => {})
+        }
         /** 获取社区版yaklang更新内容 */
         NetWorkApi<FetchUpdateContentProp, any>({
             diyHome: "https://www.yaklang.com",
@@ -1606,18 +1611,19 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     }, [isEngineLink])
 
     const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
-        ipcRenderer.invoke("receive-download-yaklang-or-yakit", type)
+        emiter.emit("activeUpdateYakitOrYaklang", type)
     })
 
     const [isYakitUpdateWait, setIsYakitUpdateWait] = useState<boolean>(false)
     /** 监听下载 yaklang 或 yakit 成功后是否稍后安装 */
     useEffect(() => {
-        ipcRenderer.on("download-update-wait-callback", (e: any, type: "yakit") => {
-            if (type === "yakit") setIsYakitUpdateWait(true)
-        })
+        const onsetIsYakitUpdateWait = () => {
+            setIsYakitUpdateWait(true)
+        }
 
+        emiter.on("downloadedYakitFlag", onsetIsYakitUpdateWait)
         return () => {
-            ipcRenderer.removeAllListeners("download-update-wait-callback")
+            emiter.off("downloadedYakitFlag", onsetIsYakitUpdateWait)
         }
     }, [])
 
@@ -1827,7 +1833,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 centered={true}
                 closable={true}
                 type='white'
-                size="large"
+                size='large'
                 visible={editShow.visible}
                 cancelButtonProps={{loading: editLoading}}
                 okButtonProps={{loading: editLoading}}
@@ -1933,9 +1939,9 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                     update()
                     emiter.on("onRefreshQueryNewRisk", update)
                     // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
-                    if(!serverPushStatus){
-                        timeRef.current = setInterval(()=>{
-                            if(serverPushStatus){
+                    if (!serverPushStatus) {
+                        timeRef.current = setInterval(() => {
+                            if (serverPushStatus) {
                                 if (timeRef.current) clearInterval(timeRef.current)
                                 timeRef.current = null
                                 return
@@ -2233,7 +2239,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 content={menu}
                 visible={show}
                 onVisibleChange={(visible) => setShow(visible)}
-                trigger={'click'}
+                trigger={"click"}
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>

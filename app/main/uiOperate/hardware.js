@@ -102,6 +102,11 @@ module.exports = (win, getClient) => {
         return OS.type()
     })
 
+    /** 获取CPU架构 */
+    ipcMain.handle("fetch-cpu-arch", () => {
+        return `${process.arch}`
+    })
+
     /** 获取<操作系统-CPU架构>信息 */
     ipcMain.handle("fetch-system-and-arch", () => {
         /** @return {String} */
@@ -116,6 +121,11 @@ module.exports = (win, getClient) => {
     /** 打开 yakit 文件所在文件夹 */
     ipcMain.handle("open-yakit-path", (e) => {
         return shell.openPath(yakitInstallDir)
+    })
+
+    /** 获取远程连接配置信息文件路径 */
+    ipcMain.handle("fetch-remote-file-path", (e) => {
+        return remoteLinkDir
     })
 
     /** 打开远程连接配置信息文件夹 */

@@ -58,11 +58,6 @@ module.exports = (win, getClient) => {
         win.webContents.send("ref-local-script-list", params)
     })
 
-    /** 缩放日志的打开通信 */
-    ipcMain.handle("shrink-console-log", async (e, params) => {
-        win.webContents.send("callback-shrink-console-log", params)
-    })
-
     /** 方向日志的打开通信 */
     ipcMain.handle("direction-console-log", async (e, params) => {
         win.webContents.send("callback-direction-console-log", params)
@@ -70,10 +65,6 @@ module.exports = (win, getClient) => {
     // 打开自定义菜单
     ipcMain.handle("open-customize-menu", (e, params) => {
         win.webContents.send("fetch-open-customize-menu", params)
-    })
-    /** 顶部菜单拖拽开启通信 */
-    ipcMain.handle("update-yakit-header-title-drop", (e, params) => {
-        win.webContents.send("fetch-yakit-header-title-drop", params)
     })
     /** 风车切换引擎 */
     ipcMain.handle("switch-conn-refresh", (e, params) => {

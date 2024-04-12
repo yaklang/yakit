@@ -1800,7 +1800,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     const handleExportTemporaryProject = () => {
         if (isExportTemporaryProjectFlag) {
             setIsExportTemporaryProjectFlag(false)
-            // 发送信号到ProjectManage去执行 getPageInfo
+            // 发送信号到ProjectManage去执行 getPageInfo(同时删除临时项目也是在这里操作的)
             // 由于 NewProjectAndFolder 该组件是在UILayout中使用
             emiter.emit("onGetProjectInfo")
         }
@@ -2157,7 +2157,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         // 当是加密导出 点击组件TransferProject取消时不执行删除操作
         if (isExportTemporaryProjectFlag && usedBy !== "NewProjectAndFolder") {
             setIsExportTemporaryProjectFlag(false)
-            // 发送信号到ProjectManage去执行 getPageInfo
+            // 发送信号到ProjectManage去执行 getPageInfo(同时删除临时项目也是在这里操作的)
             emiter.emit("onGetProjectInfo")
         }
     }

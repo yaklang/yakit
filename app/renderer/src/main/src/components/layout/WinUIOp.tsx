@@ -1,13 +1,13 @@
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {WinUIOpCloseSvgIcon, WinUIOpMaxSvgIcon, WinUIOpMinSvgIcon, WinUIOpRestoreSvgIcon} from "./icons"
 import {useMemoizedFn} from "ahooks"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {useRunNodeStore} from "@/store/runNode"
-
-import styles from "./uiOperate.module.scss"
-import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {yakitFailed} from "@/utils/notification"
+import {useTemporaryProjectStore} from "@/store/temporaryProject"
+
+import styles from "./uiOperate.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -40,12 +40,10 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectNoPromptFlag} =
-        useTemporaryProjectStore()
+    const {temporaryProjectId, temporaryProjectNoPromptFlag} = useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
-    const temporaryProjectPopRef = useRef<any>(null)
 
     useEffect(() => {
         lastTemporaryProjectNoPromptRef.current = temporaryProjectNoPromptFlag
@@ -141,14 +139,8 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
                         title='关闭Yakit'
-                        content={
-                            <>
-                                关闭Yakit会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据
-                            </>
-                        }
-                        ref={temporaryProjectPopRef}
+                        content='关闭Yakit会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据'
                         onOk={async () => {
-                            setTemporaryProjectNoPromptFlag(temporaryProjectPopRef.current.temporaryProjectNoPrompt)
                             setCloseTemporaryProjectVisible(false)
                             operate("close")
                         }}
@@ -163,19 +155,21 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
 })
 
 interface TemporaryProjectPopProp {
-    ref: React.Ref<any>
     onOk: () => void
     onCancel: () => void
     title?: string
     content?: any
 }
 
-export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = React.forwardRef((props, ref) => {
+export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = (props) => {
     const [temporaryProjectNoPrompt, setTemporaryProjectNoPrompt] = useState<boolean>(false)
 
-    useImperativeHandle(ref, () => ({
-        temporaryProjectNoPrompt
-    }))
+    const {setTemporaryProjectNoPromptFlag} = useTemporaryProjectStore()
+
+    const onok = useMemoizedFn(() => {
+        setTemporaryProjectNoPromptFlag(temporaryProjectNoPrompt)
+        props.onOk()
+    })
 
     return (
         <YakitHint
@@ -201,8 +195,8 @@ export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = React.forw
                     </>
                 )
             }
-            onOk={props.onOk}
+            onOk={onok}
             onCancel={props.onCancel}
         />
     )
-})
+}

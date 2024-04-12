@@ -1,14 +1,12 @@
 import React, {useState} from "react"
-import {failed, info, yakitFailed} from "@/utils/notification"
+import {failed, info, warn} from "@/utils/notification"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {yakProcess} from "./PerformanceDisplay"
-import {Loading3QuartersSvgIcon, YaklangInstallHintSvgIcon} from "./icons"
+import {useTemporaryProjectStore} from "@/store/temporaryProject"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {OutlineLoadingIcon} from "@/assets/icon/outline"
 
-import classNames from "classnames"
 import styles from "./AllKillEngineConfirm.module.scss"
-import { useTemporaryProjectStore } from "@/store/temporaryProject"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,6 +24,12 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
     const [currentPort, setCurrentPort] = useState<number>(0)
     const [process, setProcess] = useState<yakProcess[]>([])
 
+    const onLoadingToFalse = useMemoizedFn(() => {
+        setTimeout(() => {
+            setLoading(false)
+        }, 300)
+    })
+
     const fetchProcess = useMemoizedFn((callback: () => any) => {
         setLoading(true)
         ipcRenderer
@@ -38,7 +42,6 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
             })
             .catch((e) => {
                 failed(`获取连接引擎端口错误 ${e}`)
-                setTimeout(() => setLoading(false), 300)
             })
             .finally(() => {
                 ipcRenderer
@@ -58,29 +61,35 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
                     })
                     .catch((e) => {
                         failed(`PS | GREP yak failed ${e}`)
-                        setTimeout(() => setLoading(false), 300)
                     })
                     .finally(() => {
-                        if (getLoading())
-                            setTimeout(() => {
-                                callback()
-                            }, 300)
+                        setTimeout(() => {
+                            callback()
+                        }, 300)
                     })
             })
     })
 
     const onExecute = useMemoizedFn(async () => {
-        const currentPS = process.filter((item) => +item.port === currentPort)[0]
+        if (process.length === 0) {
+            warn("未识别到已启动的引擎进程")
+            onLoadingToFalse()
+            return
+        }
+
+        const currentPS = process.find((item) => +item.port === currentPort)
         const otherPS = process.filter((item) => +item.port !== currentPort)
         /** 关闭是否正常进行标识位 */
         let killFlag: string = ""
 
         if (otherPS.length > 0) {
             for (let i of otherPS) {
-                killFlag = await ipcRenderer.invoke("kill-yak-grpc", i.pid)
+                try {
+                    killFlag = await ipcRenderer.invoke("kill-yak-grpc", i.pid)
+                } catch (error) {}
                 if (!!killFlag) {
                     failed(`引擎进程(pid:${i.pid},port:${i.port})关闭失败 ${killFlag}`)
-                    setLoading(false)
+                    onLoadingToFalse()
                     return
                 } else {
                     info(`KILL yak PROCESS: ${i.pid}`)
@@ -88,73 +97,49 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
             }
         }
         if (currentPS) {
-            const flag: string = await ipcRenderer.invoke("kill-yak-grpc", currentPS.pid)
-            if (!!flag) return
+            let killFlag: string = ""
+            try {
+                killFlag = await ipcRenderer.invoke("kill-yak-grpc", currentPS.pid)
+            } catch (error) {}
+            if (!!killFlag) {
+                failed(`引擎进程(pid:${currentPS.pid},port:${currentPS.port})关闭失败 ${killFlag}`)
+                onLoadingToFalse()
+                return
+            }
             info(`KILL yak PROCESS: ${currentPS.pid}`)
         }
-        if (process.length === 0) return
+
         onSuccess()
     })
 
-    const onCancel = () => {
+    const onCancel = useMemoizedFn(() => {
         setCurrentPort(0)
         setProcess([])
         setVisible(false)
-    }
+    })
 
     const {delTemporaryProject} = useTemporaryProjectStore()
 
-    const onOK = async () => {
+    const onOK = useMemoizedFn(async () => {
         // 删掉临时项目
         await delTemporaryProject()
         fetchProcess(() => {
             onExecute()
         })
-    }
+    })
 
     return (
-        <YakitModal
-            hiddenHeader={true}
-            wrapClassName={styles["center-modal"]}
+        <YakitHint
             visible={visible}
-            footer={null}
-            closable={false}
-            maskClosable={false}
-            keyboard={false}
-            width={448}
-            bodyStyle={{padding: 24}}
-        >
-            <div className={styles["all-kill-engine-wrapper"]}>
-                <div>
-                    {loading ? (
-                        <Loading3QuartersSvgIcon className={styles["icon-rotate-animation"]} />
-                    ) : (
-                        <YaklangInstallHintSvgIcon />
-                    )}
-                </div>
-
-                <div className={styles["confirm-body"]}>
-                    <div className={classNames(styles["body-title"], {[styles["loading-body-title"]]: loading})}>
-                        {loading ? "进程关闭中，请稍等 ..." : "更新引擎，需关闭所有本地进程"}
-                    </div>
-                    {!loading && (
-                        <div className={styles["body-content"]}>
-                            关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。
-                        </div>
-                    )}
-
-                    {!loading && (
-                        <div className={styles["body-btn"]}>
-                            <YakitButton loading={loading} type='outline2' size='max' onClick={onCancel}>
-                                稍后再说
-                            </YakitButton>
-                            <YakitButton loading={loading} size='max' onClick={onOK}>
-                                立即关闭
-                            </YakitButton>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </YakitModal>
+            heardIcon={loading ? <OutlineLoadingIcon className={styles["icon-rotate-animation"]} /> : undefined}
+            title={loading ? "进程关闭中，请稍等 ..." : "更新引擎，需关闭所有本地进程"}
+            content='关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。'
+            okButtonText='立即关闭'
+            okButtonProps={{loading: loading}}
+            onOk={onOK}
+            cancelButtonText='稍后再说'
+            cancelButtonProps={{loading: loading}}
+            onCancel={onCancel}
+        />
     )
 })

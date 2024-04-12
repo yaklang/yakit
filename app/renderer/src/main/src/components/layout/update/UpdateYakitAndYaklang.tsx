@@ -5,15 +5,15 @@ import {Progress} from "antd"
 import {DownloadingState} from "@/yakitGVDefine"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
-import {LocalGV} from "@/yakitGV"
 import {failed, success} from "@/utils/notification"
-import {getReleaseEditionName, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
+import {getReleaseEditionName, isEnterpriseEdition} from "@/utils/envfile"
 import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
+import {LocalGVS} from "@/enums/localGlobal"
+import {safeFormatDownloadProcessState} from "../utils"
 
 import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
-import {safeFormatDownloadProcessState} from "@/components/layout/UILayout";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -92,11 +92,9 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     const data: UpdateContentProp = JSON.parse(res)
                     if (data.version !== latestYakit) return
                     setYakitUpdateContent({...data})
-                } catch (error) {
-                }
+                } catch (error) {}
             })
-            .catch((err) => {
-            })
+            .catch((err) => {})
     })
     /** 获取 yaklang 更新内容 */
     const fetchYaklangLastVersion = useMemoizedFn(() => {
@@ -114,17 +112,17 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     const data: UpdateContentProp = JSON.parse(res)
                     if (data.version !== latestYaklang) return
                     setYaklangUpdateContent({...data})
-                } catch (error) {
-                }
+                } catch (error) {}
             })
-            .catch((err) => {
-            })
+            .catch((err) => {})
     })
 
     useEffect(() => {
         if (latestYakit) fetchYakitLastVersion()
+    }, [latestYakit])
+    useEffect(() => {
         if (latestYaklang) fetchYaklangLastVersion()
-    }, [latestYakit, latestYaklang])
+    }, [latestYaklang])
 
     useEffect(() => {
         ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
@@ -134,7 +132,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
 
         ipcRenderer.on("download-yak-engine-progress", (e: any, state: DownloadingState) => {
             if (isYaklangBreak.current) return
-            setYaklangProgress(state)
+            setYaklangProgress(safeFormatDownloadProcessState(state))
         })
 
         return () => {
@@ -144,22 +142,21 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [])
 
     const isShowYakit = useMemo(() => {
-        if (isEnpriTraceAgent()) return false
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
         if (`v${currentYakit}` !== latestYakit) return true
-        else return false
+        return false
     }, [currentYakit, latestYakit, isShow])
     const isShowYaklang = useMemo(() => {
         if (!isShow) return false
         if (!currentYaklang || !latestYaklang) return false
         if (currentYaklang !== latestYaklang) return true
-        else return false
+        return false
     }, [currentYaklang, latestYaklang, isShow])
 
     /** 不再提示 */
     const noHint = () => {
-        setLocalValue(LocalGV.NoAutobootLatestVersionCheck, true)
+        setLocalValue(LocalGVS.NoAutobootLatestVersionCheck, true)
         setLatestYakit("")
         setLatestYaklang("")
         onCancel()
@@ -175,8 +172,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     })
 
     const yakitDownload = () => {
-        let version = ""
-        if (latestYakit.startsWith("v")) version = latestYakit.substr(1)
+        let version = latestYakit
+        if (version.startsWith("v")) version = version.slice(1)
         isYakitBreak.current = false
         setInstallYakit(true)
         ipcRenderer
@@ -225,8 +222,10 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     const yaklangDownload = useMemoizedFn(() => {
         isYaklangBreak.current = false
         setInstallYaklang(true)
+        let version = latestYaklang
+        if (version.startsWith("v")) version = version.slice(1)
         ipcRenderer
-            .invoke("download-latest-yak", latestYaklang)
+            .invoke("download-latest-yak", version)
             .then(() => {
                 if (isYaklangBreak.current) return
 
@@ -242,6 +241,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     // @ts-ignore
                     size: getYaklangProgress().size
                 })
+                // 清空主进程yaklang版本缓存
+                ipcRenderer.invoke("clear-local-yaklang-version-cache")
                 yaklangUpdate()
             })
             .catch((e: any) => {
@@ -262,8 +263,10 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         }, 300)
     })
     const yaklangUpdate = useMemoizedFn(() => {
+        let version = latestYaklang
+        if (version.startsWith("v")) version = version.slice(1)
         ipcRenderer
-            .invoke("install-yak-engine", latestYaklang)
+            .invoke("install-yak-engine", version)
             .then(() => {
                 success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
             })
@@ -275,7 +278,9 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 )
             })
             .finally(() => {
-                yaklangLater()
+                setTimeout(() => {
+                    yaklangLater()
+                }, 50);
             })
     })
 
@@ -291,7 +296,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     <div className={styles["yaklang-engine-hint-wrapper"]}>
                         <div className={styles["hint-left-wrapper"]}>
                             <div className={styles["hint-icon"]}>
-                                <YaklangInstallHintSvgIcon/>
+                                <YaklangInstallHintSvgIcon />
                             </div>
                         </div>
 
@@ -352,21 +357,18 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                 </div>
                             ) : (
                                 <>
-                                    <div
-                                        className={styles["hint-right-title"]}>检测到 {getReleaseEditionName()} 版本升级
+                                    <div className={styles["hint-right-title"]}>
+                                        检测到 {getReleaseEditionName()} 版本升级
                                     </div>
                                     <div className={styles["hint-right-content"]}>
-                                        {/* {`当前版本：v${currentYakit}`}
-                                        <br />
-                                        {`最新版本：${latestYakit}`} */}
                                         {`${getReleaseEditionName()} ${latestYakit} 更新说明 :`}
                                     </div>
                                     <div className={styles["hint-right-update-content"]}>
                                         {yakitContent.length === 0
                                             ? "管理员未编辑更新通知"
                                             : yakitContent.map((item, index) => {
-                                                return <div key={`${item}-${index}`}>{item}</div>
-                                            })}
+                                                  return <div key={`${item}-${index}`}>{item}</div>
+                                              })}
                                     </div>
 
                                     <div className={styles["hint-right-btn"]}>
@@ -401,7 +403,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     <div className={styles["yaklang-engine-hint-wrapper"]}>
                         <div className={styles["hint-left-wrapper"]}>
                             <div className={styles["hint-icon"]}>
-                                <YaklangInstallHintSvgIcon/>
+                                <YaklangInstallHintSvgIcon />
                             </div>
                         </div>
 
@@ -454,8 +456,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                         {yaklangContent.length === 0
                                             ? "管理员未编辑更新通知"
                                             : yaklangContent.map((item, index) => {
-                                                return <div key={`${item}-${index}`}>{item}</div>
-                                            })}
+                                                  return <div key={`${item}-${index}`}>{item}</div>
+                                              })}
                                     </div>
 
                                     <div className={styles["hint-right-btn"]}>

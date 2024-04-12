@@ -433,7 +433,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     const onStartExecute = useMemoizedFn(() => {
         if (form) {
             form.validateFields()
-                .then((value: HTTPRequestBuilderParams) => {
+                .then((value: any) => {
                     // console.log("插件执行时的表单值", value)
                     // 保存参数-请求路径的选项
                     if (pathRef && pathRef.current) {
@@ -461,7 +461,13 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                         case "mitm":
                         case "port-scan":
                         case "nuclei":
-                            requestParams.HTTPRequestTemplate = {...value}
+                            requestParams.HTTPRequestTemplate = {
+                                ...value,
+                                IsRawHTTPRequest: value.requestType === "original",
+                                RawHTTPRequest: value.RawHTTPRequest
+                                    ? Buffer.from(value.RawHTTPRequest, "utf8")
+                                    : Buffer.from("", "utf8")
+                            }
                             break
                         default:
                             break
