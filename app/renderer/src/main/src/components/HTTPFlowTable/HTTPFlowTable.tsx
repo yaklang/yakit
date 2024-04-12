@@ -977,6 +977,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.Pagination
         delete copyQuery.AfterId
         delete copyQuery.BeforeId
+        delete copyQuery.RuntimeId
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
         copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
         setQueryParams(JSON.stringify(copyQuery))
@@ -1017,7 +1018,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
-                console.log("获取数据", type, resData.length)
                 const newData: HTTPFlow[] = getClassNameData(resData)
                 if (type === "top") {
                     if (newData.length <= 0) {

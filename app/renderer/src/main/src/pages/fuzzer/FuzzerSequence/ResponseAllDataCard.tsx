@@ -19,7 +19,7 @@ const ResponseAllDataCard: React.FC<ResponseAllDataCardProps> = React.memo((prop
         <div className={styles["all-sequence-response-list"]} style={{display: ""}}>
             <div className={styles["all-sequence-response-heard"]}>
                 <div className={styles["display-flex-center"]}>
-                    <span style={{marginRight: 8}}>Responses runtimeId: {runtimeId}</span>
+                    <span style={{marginRight: 8}}>Responses</span>
                 </div>
                 <div className={styles["all-sequence-response-heard-extra"]}>
                     <YakitButton

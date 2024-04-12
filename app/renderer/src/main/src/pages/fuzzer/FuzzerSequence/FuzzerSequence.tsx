@@ -169,6 +169,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
+    const [showAllRes, setShowAllRes] = useState<boolean>(false)
 
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
@@ -378,6 +379,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     runtimeIdBufferRef.current.set(FuzzerIndex, [Response.RuntimeID])
                 }
             }
+            // [
+            //     ...new Set(Array.from(runtimeIdBufferRef.current.values()).reduce((acc, curr) => acc.concat(curr), []))
+            // ]
 
             const r = {
                 ...Response,
@@ -812,6 +816,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const setHotPatchCodeWithParamGetter = useMemoizedFn((val) => {
         hotPatchCodeWithParamGetterRef.current = val
     })
+
+    const allRuntimeIds = () => {
+        const myArray1 = Array.from(responseMap)
+        const length = myArray1.length
+        const runtimeIdsFuzzer: string[] = []
+        for (let index = 0; index < length; index++) {
+            const element = myArray1[index][1]
+            if (element) {
+                runtimeIdsFuzzer.push(...element.runtimeIdFuzzer)
+            }
+        }
+        return [...new Set(runtimeIdsFuzzer)]
+    }
+
     return (
         <>
             <div
@@ -969,6 +987,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
+                                    setShowAllRes(true)
                                     setShowAllDataRes(true)
                                 }}
                                 getHttpParams={getHttpParams}
@@ -996,9 +1015,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
             <React.Suspense fallback={<>loading...</>}>
                 <ResponseAllDataCard
-                    runtimeId={currentSelectResponse?.runtimeIdFuzzer.join(",") || ""}
+                    runtimeId={
+                        showAllRes ? allRuntimeIds().join(",") : currentSelectResponse?.runtimeIdFuzzer.join(",") || ""
+                    }
                     showAllDataRes={showAllDataRes}
-                    setShowAllDataRes={() => setShowAllDataRes(false)}
+                    setShowAllDataRes={() => {
+                        setShowAllRes(false)
+                        setShowAllDataRes(false)
+                    }}
                 />
             </React.Suspense>
         </>
