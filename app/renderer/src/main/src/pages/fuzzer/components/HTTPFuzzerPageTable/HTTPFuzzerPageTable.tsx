@@ -337,7 +337,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           sorterProps: {
                               sorter: true
                           },
-                          render: (v) => (v ? v.join(",") : "-")
+                          render: (v) => {
+                              return v ? v.filter((i) => i !== "").join(",") : "-"
+                          }
                       },
                       {
                           title: "提取数据",
@@ -502,7 +504,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           sorterProps: {
                               sorter: true
                           },
-                          render: (v) => v.join(",")
+                          render: (v) => {
+                              return v ? v.filter((i) => i !== "").join(",") : "-"
+                          }
                       }
                   ]
         }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData, isShowDebug])
