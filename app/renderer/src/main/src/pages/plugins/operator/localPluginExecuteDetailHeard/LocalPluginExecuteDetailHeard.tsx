@@ -73,7 +73,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     } = props
 
     const [form] = Form.useForm()
-    const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+    const requestType = Form.useWatch("requestType", form)
 
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -259,12 +259,12 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             case "mitm":
             case "port-scan":
             case "nuclei":
-                if (isRawHTTPRequest) return false
+                if (requestType !== "input") return false
                 return true
             default:
                 return extraParamsGroup.length > 0
         }
-    }, [extraParamsGroup.length, plugin.Type, isRawHTTPRequest])
+    }, [extraParamsGroup.length, plugin.Type, requestType])
     const executeExtraParams: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue = useMemo(() => {
         switch (plugin.Type) {
             case "yak":
