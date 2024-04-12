@@ -312,7 +312,7 @@ export interface HTTPFlowTableProp {
     historyId?: string
     // 筛选控件隐藏
     onlyShowSearch?: boolean
-    // 此控件显示的页面
+    // 表格主要应用类型分为History和mitm两种，若其他页面需要使用此表格，pageType需要默认为History，需要额外再新加参数区分进行使用
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     includeInUrl?: string | string[]
@@ -1295,7 +1295,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 RefreshRequest
             })
             .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                const tags = rsp.Tags
+                const tags = rsp.Tags.filter(item => toWebFuzzer ? item.Value === "webfuzzer" : item.Value)
                 setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
             })
             .catch((e: any) => {
