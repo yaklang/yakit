@@ -115,12 +115,13 @@ import blastingCountmp4 from "@/assets/blasting-count.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
+import cloneDeep from "lodash/cloneDeep"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 
 const {ipcRenderer} = window.require("electron")
 
-interface ShareValueProps {
+export interface ShareValueProps {
     /**高级配置显示/隐藏 */
     advancedConfigShow: AdvancedConfigShowProps
     /**请求包 */
@@ -167,11 +168,7 @@ export interface RedirectRequestParams {
 }
 
 export interface HTTPFuzzerPageProp {
-    isHttps?: boolean
-    isGmTLS?: boolean
-    request?: string
     system?: string
-    shareContent?: string
     id: string
 }
 
@@ -497,7 +494,32 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
     })
 }
 
-const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
+export interface FuzzerCacheDataProps {
+    proxy: string[]
+    dnsServers: string[]
+    etcHosts: KVPair[]
+    advancedConfigShow:AdvancedConfigShowProps
+}
+/**获取fuzzer高级配置中得 proxy dnsServers etcHosts */
+export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
+    return new Promise(async (resolve, rejects) => {
+        try {
+            const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
+            const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
+            const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
+            const advancedConfigShow = await getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow)
+            const value: FuzzerCacheDataProps = {
+                proxy: !!proxy ? proxy.split(",") : [],
+                dnsServers: !!dnsServers ? JSON.parse(dnsServers) : [],
+                etcHosts: !!etcHosts ? JSON.parse(etcHosts) : [],
+                advancedConfigShow:!!advancedConfigShow?JSON.parse(advancedConfigShow):defaultAdvancedConfigShow
+            }
+            resolve(value)
+        } catch (error) {
+            rejects(error)
+        }
+    })
+}
 
 export const emptyFuzzer: FuzzerResponse = {
     BodyLength: 0,
@@ -622,6 +644,10 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 
 // WebFuzzer表格最多显示多少数据
 export const FuzzerTableMaxData = 20000
+export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
+    config: true,
+    rule: true
+}
 
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -638,7 +664,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
             return {
                 pageId: props.id,
-                advancedConfigValue: defaultAdvancedConfigValue,
+                advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
+                advancedConfigShow: {...defaultAdvancedConfigShow},
                 request: defaultPostTemplate
             }
         }
@@ -649,8 +676,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 高级配置的隐藏/显示
     const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
-        config: true,
-        rule: true
+        ...(initWebFuzzerPageInfo().advancedConfigShow || defaultAdvancedConfigShow)
     })
 
     // 切换【配置】/【规则】高级内容显示 type
@@ -711,16 +737,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .catch(() => {
                 setShowResponseInfoSecondEditor(true)
             })
-        /** 有分享内容按照分享内容中的 advancedConfig 为准 */
-        getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
-            if (!c) return
-            try {
-                const value = JSON.parse(c)
-                setAdvancedConfigShow({
-                    ...value
-                })
-            } catch (error) {}
-        })
         emiter.on("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
         return () => {
             emiter.off("onSetAdvancedConfigShow", onSetAdvancedConfigShow)
@@ -825,11 +841,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
-    useEffect(() => {
-        if (props.shareContent) {
-            setUpShareContent(JSON.parse(props.shareContent))
-        }
-    }, [props.shareContent])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -921,50 +932,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
         refreshRequest()
     }, [historyTask])
-    const proxyRef = useRef<string[]>([])
-    const dnsServersRef = useRef<string[]>([])
-    const etcHostsRef = useRef<KVPair[]>([])
     const retryRef = useRef<boolean>(false)
     const matchRef = useRef<boolean>(false)
-    useEffect(() => {
-        getCacheData()
-    }, [])
-    const getCacheData = useMemoizedFn(async () => {
-        if (props.shareContent) return
-        try {
-            const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
-            const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
-            const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
-            proxyRef.current = proxy ? proxy.split(",") : []
-            dnsServersRef.current = dnsServers ? JSON.parse(dnsServers) : []
-            etcHostsRef.current = etcHosts ? JSON.parse(etcHosts) : []
-            if (
-                !_.isEqual(proxyRef.current, advancedConfigValue.proxy) ||
-                !_.isEqual(dnsServersRef.current, advancedConfigValue.dnsServers) ||
-                !_.isEqual(etcHostsRef.current, advancedConfigValue.etcHosts)
-            ) {
-                setAdvancedConfigValue({
-                    ...advancedConfigValue,
-                    proxy: proxyRef.current,
-                    dnsServers: dnsServersRef.current,
-                    etcHosts: etcHostsRef.current
-                })
-            }
-        } catch (error) {}
-    })
 
-    useUpdateEffect(() => {
-        if (props.shareContent) return
-        setAdvancedConfigValue({
-            ...advancedConfigValue,
-            isHttps: !!props.isHttps,
-            isGmTLS: !!props.isGmTLS
-        })
-        if (props.request) {
-            requestRef.current = props.request
-            resetResponse()
-        }
-    }, [props.isHttps, props.isGmTLS, props.request])
 
     const refreshRequest = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
@@ -1421,27 +1391,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         callback(params)
     })
-    /**
-     * 6.16更改分享的数据结构，报错需提示用户更新版本
-     */
-    const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
-        try {
-            const newAdvancedConfigValue = {...advancedConfigValue, ...shareContent.advancedConfiguration}
-            if (newAdvancedConfigValue.hasOwnProperty("advancedConfig")) {
-                // 兼容只有【配置】的时候的高级配置显隐,低版本分享给高版本
-                setAdvancedConfigShow({
-                    config: newAdvancedConfigValue["advancedConfig"],
-                    rule: true
-                })
-            } else {
-                setAdvancedConfigShow(shareContent.advancedConfigShow)
-            }
-            requestRef.current = shareContent.request
-            setAdvancedConfigValue(newAdvancedConfigValue)
-        } catch (error) {
-            yakitNotify("error", "获取的数据结构不是最新版,请分享人/被分享人更新版本")
-        }
-    })
+   
 
     const cachedTotal = successFuzzer.length + failedFuzzer.length
     const [currentPage, setCurrentPage] = useState<number>(0)
