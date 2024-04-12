@@ -32,6 +32,8 @@ export interface YakQueryHTTPFlowRequest {
     IsWebsocket?: string
     FromPlugin?: string
     RuntimeId?: string
+    WithPayload?: boolean
+    RuntimeIDs?: string[]
 }
 
 export interface Paging {

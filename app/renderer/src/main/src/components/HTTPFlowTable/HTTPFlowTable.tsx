@@ -638,7 +638,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             SourceType: "mitm",
             Tags: []
         }),
-        SourceType: props.params?.SourceType || "mitm"
+        SourceType: props.params?.SourceType || "mitm",
+        RuntimeId: toWebFuzzer ? undefined : runTimeId || undefined
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -978,6 +979,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.AfterId
         delete copyQuery.BeforeId
         delete copyQuery.RuntimeId
+        delete copyQuery.WithPayload
+        delete copyQuery.RuntimeIDs
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
         copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
         setQueryParams(JSON.stringify(copyQuery))
@@ -989,6 +992,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             clearInterval(extraTimerRef.current)
         }
     }, [])
+
+    useEffect(() => {
+        if (toWebFuzzer && runTimeId) {
+            setParams({
+                ...params,
+                WithPayload: true,
+                RuntimeIDs: runTimeId.split(",")
+            })
+        }
+    }, [toWebFuzzer, runTimeId])
+
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
@@ -1005,14 +1019,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (isGrpcRef.current) return
         isGrpcRef.current = true
 
-        if (runTimeId) {
-            if (toWebFuzzer) {
-                query.RuntimeIDs = runTimeId.split(',')
-                query.WithPayload = true
-            } else {
-                query.RuntimeId = runTimeId
-            }
-        }
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
@@ -1301,7 +1307,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 RefreshRequest
             })
             .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                const tags = rsp.Tags.filter(item => toWebFuzzer ? item.Value === "webfuzzer" : item.Value)
+                const tags = rsp.Tags.filter((item) => (toWebFuzzer ? item.Value === "webfuzzer" : item.Value))
                 setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
             })
             .catch((e: any) => {
