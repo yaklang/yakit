@@ -404,8 +404,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             }
             try {
                 const res = await apiFetchOnlineList(query)
-                console.log("获取插件商店列表",res);
-                
                 if (!res.data) res.data = []
                 const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
                 setHasMore(length < +res.pagemeta.total)
