@@ -1004,7 +1004,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (isGrpcRef.current) return
         isGrpcRef.current = true
 
-        if (runTimeId) query.RuntimeId = runTimeId
+        if (runTimeId) {
+            if (toWebFuzzer) {
+                query.RuntimeIDs = runTimeId
+                query.WithPayload = true
+            } else {
+                query.RuntimeId = runTimeId
+            }
+        }
         console.log("查询数据", type)
         // 查询数据
         ipcRenderer
@@ -1599,7 +1606,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const WebPayloads: ColumnsTypeProps = {
             title: "Payloads",
-            dataKey: "WebPayloads",
+            dataKey: "Payloads",
             width: 300,
             render: (v) => (v ? v.join(",") : "-")
         }
@@ -2209,7 +2216,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 },
                 {
                     title: "Payloads",
-                    key: "web_payloads"
+                    key: "payloads"
                 },
                 {
                     title: "Tags",
