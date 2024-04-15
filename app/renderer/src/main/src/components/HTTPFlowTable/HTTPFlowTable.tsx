@@ -1559,7 +1559,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const HtmlTitle: ColumnsTypeProps = {
             title: "Title",
-            dataKey: "HtmlTitle"
+            dataKey: "HtmlTitle",
+            width: 200
         }
         const WebPayloads: ColumnsTypeProps = {
             title: "Payloads",
@@ -1714,6 +1715,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const GetParamsTotal: ColumnsTypeProps = {
             title: "参数",
             dataKey: "GetParamsTotal",
+            width: 100,
             filterProps: {
                 filterKey: "HaveParamsTotal",
                 filtersType: "select",
@@ -1746,6 +1748,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const ContentType: ColumnsTypeProps = {
             title: "响应类型",
             dataKey: "ContentType",
+            width: 150,
             render: (text) => {
                 let contentTypeFixed =
                     text
@@ -1783,13 +1786,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filtersType: "dateTime"
             },
             // fixed: "right",
+            width: 200,
             render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
         }
         const RequestSizeVerbose: ColumnsTypeProps = {
             title: "请求大小",
             dataKey: "RequestSizeVerbose",
             // fixed: "right",
-            enableDrag: false
+            enableDrag: false,
+            width: 200,
         }
         const action: ColumnsTypeProps = {
             title: "操作",
