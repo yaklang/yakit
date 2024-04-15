@@ -919,7 +919,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams({
                 ...params,
                 ...filter,
-                StatusCode: filter.StatusCode ? filter.StatusCode.join(",") : undefined,
                 Tags: [...tagsFilter],
                 bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
             })
@@ -983,6 +982,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.RuntimeIDs
         delete copyQuery.AfterUpdatedAt
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
+        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : undefined,
         setQueryParams(JSON.stringify(copyQuery))
     }
 
