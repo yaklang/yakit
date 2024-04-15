@@ -6,14 +6,14 @@ import classNames from "classnames"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import emiter from "@/utils/eventBus/eventBus"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {
-    AdvancedConfigShowProps,
-} from "../HTTPFuzzerPage"
+import {getRemoteValue} from "@/utils/kv"
+import {AdvancedConfigShowProps} from "../HTTPFuzzerPage"
 import {RemoteGV} from "@/yakitGV"
+
+import cloneDeep from "lodash/cloneDeep"
 const {ipcRenderer} = window.require("electron")
 
 export const webFuzzerTabs = [
@@ -35,23 +35,35 @@ export const webFuzzerTabs = [
 ]
 /**包裹 配置和规则，不包裹序列 */
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
+    const {id} = props
+    const {queryPagesDataById, selectGroupId, getPagesDataByGroupId} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
+            getPagesDataByGroupId: s.getPagesDataByGroupId
+        }),
+        shallow
+    )
+    const initWebFuzzerPageInfo = useMemoizedFn(() => {
+        if (!id) {
+            return cloneDeep(defaultWebFuzzerPageInfo)
+        }
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, id)
+        if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
+            return currentItem.pageParamsInfo.webFuzzerPageInfo
+        } else {
+            return cloneDeep(defaultWebFuzzerPageInfo)
+        }
+    })
+
     const webFuzzerRef = useRef<any>(null)
     const [inViewport] = useInViewport(webFuzzerRef)
-
     const [type, setType] = useState<WebFuzzerType>(props.defaultType || "config")
     // 高级配置的隐藏/显示
     const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
         config: true,
         rule: true
     })
-
-    const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
-        (s) => ({
-            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
-            getPagesDataByGroupId: s.getPagesDataByGroupId
-        }),
-        shallow
-    )
 
     useEffect(() => {
         emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
@@ -66,10 +78,15 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
             if (!c) return
             try {
-                const value = JSON.parse(c)
-                setAdvancedConfigShow({
-                    ...value
-                })
+                const newAdvancedConfigShow = initWebFuzzerPageInfo().advancedConfigShow
+                if (newAdvancedConfigShow) {
+                    setAdvancedConfigShow({...newAdvancedConfigShow})
+                } else {
+                    const value = JSON.parse(c)
+                    setAdvancedConfigShow({
+                        ...value
+                    })
+                }
             } catch (error) {}
         })
     }, [])
