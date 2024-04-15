@@ -338,7 +338,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               sorter: true
                           },
                           render: (v) => {
-                              return v ? v.filter((i) => i !== "").join(",") : "-"
+                              return v ? v.join(",") : "-"
                           }
                       },
                       {
@@ -505,7 +505,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               sorter: true
                           },
                           render: (v) => {
-                              return v ? v.filter((i) => i !== "").join(",") : "-"
+                              return v ? v.join(",") : "-"
                           }
                       }
                   ]

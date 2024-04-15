@@ -639,7 +639,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Tags: []
         }),
         SourceType: props.params?.SourceType || "mitm",
-        RuntimeId: toWebFuzzer ? undefined : runTimeId || undefined
+        WithPayload: toWebFuzzer,
+        RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+        RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -917,10 +919,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams({
                 ...params,
                 ...filter,
+                StatusCode: filter.StatusCode ? filter.StatusCode.join(",") : undefined,
                 Tags: [...tagsFilter],
-                bodyLength: !!(afterBodyLength || beforeBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
-                AfterBodyLength: afterBodyLength,
-                BeforeBodyLength: beforeBodyLength
+                bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
             })
             sortRef.current = sort
             setTimeout(() => {
@@ -978,11 +979,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.Pagination
         delete copyQuery.AfterId
         delete copyQuery.BeforeId
-        delete copyQuery.RuntimeId
         delete copyQuery.WithPayload
         delete copyQuery.RuntimeIDs
+        delete copyQuery.AfterUpdatedAt
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
-        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
         setQueryParams(JSON.stringify(copyQuery))
     }
 
@@ -993,33 +993,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [])
 
-    useEffect(() => {
-        if (toWebFuzzer && runTimeId) {
-            setParams({
-                ...params,
-                WithPayload: true,
-                RuntimeIDs: runTimeId.split(",")
-            })
-        }
-    }, [toWebFuzzer, runTimeId])
-
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
-        if (toPlugin && !runTimeId) {
+        if ((toPlugin || toWebFuzzer) && !runTimeId) {
             setTimeout(() => {
                 setLoading(false)
                 isGrpcRef.current = false
             }, 100)
             return
         }
-        updateQueryParams(query)
-        query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
 
         // 查询数据
+        console.log("查询数据", query)
+        updateQueryParams(query)
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1146,18 +1136,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         const query = {
             ...params,
-            Tags: params.Tags,
             Pagination: {...paginationProps},
-            AfterId: maxIdRef.current,
-            AfterBodyLength: params.AfterBodyLength
-                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                : undefined,
-            BeforeBodyLength: params.BeforeBodyLength
-                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                : undefined
-        }
-        if (checkBodyLength && !query.AfterBodyLength) {
-            query.AfterBodyLength = 1
+            AfterId: maxIdRef.current
         }
         if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
             updateMITMPageQuery(query, "top")
@@ -1182,19 +1162,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         const query = {
             ...params,
-            Tags: params.Tags,
             BeforeId: ["desc", "none"].includes(paginationProps.Order) ? minIdRef.current : undefined,
             AfterId: ["desc", "none"].includes(paginationProps.Order) ? undefined : maxIdRef.current,
-            Pagination: {...paginationProps},
-            AfterBodyLength: params.AfterBodyLength
-                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                : undefined,
-            BeforeBodyLength: params.BeforeBodyLength
-                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                : undefined
-        }
-        if (checkBodyLength && !query.AfterBodyLength) {
-            query.AfterBodyLength = 1
+            Pagination: {...paginationProps}
         }
         if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
             updateMITMPageQuery(query, "bottom")
@@ -1218,17 +1188,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             const query = {
                 ...params,
-                Tags: params.Tags,
-                Pagination: {...paginationProps},
-                AfterBodyLength: params.AfterBodyLength
-                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                    : undefined,
-                BeforeBodyLength: params.BeforeBodyLength
-                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                    : undefined
-            }
-            if (checkBodyLength && !query.AfterBodyLength) {
-                query.AfterBodyLength = 1
+                Pagination: {...paginationProps}
             }
             if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
                 updateMITMPageQuery(query, "update")
@@ -1255,20 +1215,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const query = {
             ...params,
-            Tags: params.Tags,
-            Color: color ? color : undefined,
-            AfterBodyLength: params.AfterBodyLength
-                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                : undefined,
-            BeforeBodyLength: params.BeforeBodyLength
-                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                : undefined,
             AfterId: maxIdRef.current,
             Pagination: {...paginationProps}
-        }
-
-        if (props.params?.SourceType) {
-            query.SourceType = props.params?.SourceType
         }
 
         if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
@@ -1492,6 +1440,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onCheckThan0 = useDebounceFn(
         (check: boolean) => {
             setCheckBodyLength(check)
+            if (check && !params.AfterBodyLength) {
+                params.AfterBodyLength = 1
+            }
+            setParams(params)
             setTimeout(() => {
                 updateData()
             }, 100)
@@ -1614,7 +1566,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             dataKey: "Payloads",
             width: 300,
             render: (v) => {
-                return v ? v.filter((i) => i !== "").join(",") : "-"
+                return v ? v.join(",") : "-"
             }
         }
         const Tags: ColumnsTypeProps = {
@@ -1697,18 +1649,28 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         onReset={() => {
                             setParams({
                                 ...getParams(),
-                                AfterBodyLength: getAfterBodyLength(),
-                                BeforeBodyLength: getBeforeBodyLength()
+                                AfterBodyLength: checkBodyLength ? 1 : undefined,
+                                BeforeBodyLength: undefined
                             })
                             setBeforeBodyLength(undefined)
                             setAfterBodyLength(undefined)
                             setBodyLengthUnit("B")
                         }}
                         onSure={() => {
+                            const afterBodyLen = getAfterBodyLength()
+                            const beforeBodyLen = getBeforeBodyLength()
+
                             setParams({
                                 ...getParams(),
-                                AfterBodyLength: getAfterBodyLength(),
-                                BeforeBodyLength: getBeforeBodyLength()
+                                AfterBodyLength:
+                                    checkBodyLength && !afterBodyLen
+                                        ? 1
+                                        : afterBodyLen
+                                        ? onConvertBodySizeByUnit(afterBodyLen, getBodyLengthUnit())
+                                        : undefined,
+                                BeforeBodyLength: beforeBodyLen
+                                    ? onConvertBodySizeByUnit(beforeBodyLen, getBodyLengthUnit())
+                                    : undefined
                             })
                             setTimeout(() => {
                                 updateData()
@@ -2179,25 +2141,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const l = data.length
             const query: any = {
                 ...params,
-                Tags: params.Tags,
                 Pagination: {...pagination},
                 // OffsetId:
                 //     pagination.Page === 1
                 //         ? undefined
                 //         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
                 OffsetId: undefined,
-                AfterBodyLength: params.AfterBodyLength
-                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                    : undefined,
-                BeforeBodyLength: params.BeforeBodyLength
-                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                    : undefined,
                 Full: false
             }
 
-            if (checkBodyLength && !query.AfterBodyLength) {
-                query.AfterBodyLength = 1
-            }
             let exportParams: any = {}
             // 这里的key值 不一定和表格的key对应的上
             const arrList = [

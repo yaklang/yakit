@@ -379,9 +379,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     runtimeIdBufferRef.current.set(FuzzerIndex, [Response.RuntimeID])
                 }
             }
-            // [
-            //     ...new Set(Array.from(runtimeIdBufferRef.current.values()).reduce((acc, curr) => acc.concat(curr), []))
-            // ]
 
             const r = {
                 ...Response,
