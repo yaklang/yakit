@@ -100,7 +100,7 @@ import {
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
-import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
+import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, defaultWebFuzzerPageInfo} from "@/store/pageInfo"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
@@ -498,7 +498,7 @@ export interface FuzzerCacheDataProps {
     proxy: string[]
     dnsServers: string[]
     etcHosts: KVPair[]
-    advancedConfigShow:AdvancedConfigShowProps
+    advancedConfigShow: AdvancedConfigShowProps | null
 }
 /**获取fuzzer高级配置中得 proxy dnsServers etcHosts */
 export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
@@ -512,7 +512,7 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
                 proxy: !!proxy ? proxy.split(",") : [],
                 dnsServers: !!dnsServers ? JSON.parse(dnsServers) : [],
                 etcHosts: !!etcHosts ? JSON.parse(etcHosts) : [],
-                advancedConfigShow:!!advancedConfigShow?JSON.parse(advancedConfigShow):defaultAdvancedConfigShow
+                advancedConfigShow: !!advancedConfigShow ? JSON.parse(advancedConfigShow) : null
             }
             resolve(value)
         } catch (error) {
@@ -662,12 +662,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
             return currentItem.pageParamsInfo.webFuzzerPageInfo
         } else {
-            return {
-                pageId: props.id,
-                advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
-                advancedConfigShow: {...defaultAdvancedConfigShow},
-                request: defaultPostTemplate
-            }
+            return cloneDeep(defaultWebFuzzerPageInfo)
         }
     })
     const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
@@ -841,7 +836,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
-
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
     const isSaveFuzzerLabelFun = useMemoizedFn(() => {
@@ -934,7 +928,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [historyTask])
     const retryRef = useRef<boolean>(false)
     const matchRef = useRef<boolean>(false)
-
 
     const refreshRequest = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
@@ -1319,7 +1312,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
                 pageId: props.id,
                 advancedConfigValue,
-                request: requestRef.current
+                request: requestRef.current,
+                advancedConfigShow
             }
             onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
@@ -1342,6 +1336,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     pageId: param.pageId,
                     advancedConfigValue: {
                         ...param.advancedConfigValue
+                    },
+                    advancedConfigShow: {
+                        ...(param.advancedConfigShow as AdvancedConfigShowProps)
                     },
                     request: param.request
                 }
@@ -1391,7 +1388,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         callback(params)
     })
-   
 
     const cachedTotal = successFuzzer.length + failedFuzzer.length
     const [currentPage, setCurrentPage] = useState<number>(0)

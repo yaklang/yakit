@@ -741,7 +741,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             proxy: [],
             dnsServers: [],
             etcHosts: [],
-            advancedConfigShow: defaultAdvancedConfigShow
+            advancedConfigShow: null
         }
         let newAdvancedConfigValue = {
             ...advancedConfigValue,
@@ -749,10 +749,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             dnsServers: cacheData.dnsServers,
             etcHosts: cacheData.etcHosts
         }
-        let newAdvancedConfigShow: AdvancedConfigShowProps = cacheData.advancedConfigShow || {
-            config: true,
-            rule: true
-        }
+        let newAdvancedConfigShow = cacheData.advancedConfigShow
         let newIsHttps = !!isHttps
         let newIsGmTLS = !!isGmTLS
         let newRequest = request || defaultPostTemplate
@@ -1407,7 +1404,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         getFuzzerSequenceCache()
     }, [])
 
-
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
             try {
@@ -1430,7 +1426,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 proxy: [],
                 dnsServers: [],
                 etcHosts: [],
-                advancedConfigShow: defaultAdvancedConfigShow
+                advancedConfigShow: null
             }
             const defaultCache = {
                 proxy: cacheData.proxy,
