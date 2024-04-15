@@ -4,7 +4,7 @@ import { removeRepeatedParams } from "@/pages/invoker/YakScriptParamsSetter";
 import { YakExecutorParam } from "@/pages/invoker/YakExecutorParams";
 import { monaco } from "react-monaco-editor";
 import { log } from "console";
-import { getModelContext } from "./yakEditor";
+import { getModelContext, getModelCacheText } from "./yakEditor";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -576,14 +576,13 @@ export const newYaklangCompletionHandlerProvider = (model: editor.ITextModel, po
             return
         }
         const iWord = getWordWithPointAtPosition(model, position);
-
-
         const type = getModelContext(model, "plugin") || "yak"
+        let modelValue = getModelCacheText(model) || model.getValue();
 
         await ipcRenderer.invoke("YaklangLanguageSuggestion", {
             InspectType: "completion",
             YakScriptType: type,
-            YakScriptCode: model.getValue(),
+            YakScriptCode: modelValue,
             Range: {
                 Code: iWord.word,
                 StartLine: position.lineNumber,

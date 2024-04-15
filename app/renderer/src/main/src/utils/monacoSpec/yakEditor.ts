@@ -12,10 +12,10 @@ export const YAK_FORMATTER_COMMAND_ID = "yak-formatter";
 
 const { ipcRenderer } = window.require("electron");
 const { CompletionItemKind } = monaco.languages;
-var modelToEditorMap = new Map<monaco.editor.ITextModel, monaco.editor.ICodeEditor>();
-var editorToSignatureHelpRangeMap = new Map<monaco.editor.ICodeEditor, monaco.Range>();
-
+const modelToEditorMap = new Map<monaco.editor.ITextModel, monaco.editor.ICodeEditor>();
+const editorToSignatureHelpRangeMap = new Map<monaco.editor.ICodeEditor, monaco.Range>();
 const editorContextMap = new Map<monaco.editor.ICodeEditor, Map<string, string>>();
+const modelTextCacheMap = new Map<monaco.editor.ITextModel, string>();
 
 export function setEditorContext(editor: monaco.editor.IStandaloneCodeEditor, key: string, value: string) {
     let context = editorContextMap.get(editor);
@@ -37,6 +37,11 @@ export function getModelContext(model: monaco.editor.ITextModel, key: string): s
 function getEditorContext(editor: monaco.editor.ICodeEditor, key: string): string {
     const context = editorContextMap.get(editor);
     return context?.get(key) || "";
+}
+
+export function getModelCacheText(model: monaco.editor.ITextModel): string {
+    const cache = modelTextCacheMap.get(model);
+    return cache || "";
 }
 
 monaco.languages.register({
@@ -187,7 +192,7 @@ export const setUpYaklangMonaco = () => {
         symbols: /[=><!~?:&|+\-*\/\^%]+/,
         escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4})/,
         inlineExpr: /\$\{[^}]*\}/,
-        invalidInlineExpr:  /\$\{[^}]*$/,
+        invalidInlineExpr: /\$\{[^}]*$/,
         tokenizer: {
             root: [
 
@@ -256,7 +261,7 @@ export const setUpYaklangMonaco = () => {
                 // delimiter: after number because of .\d floats
                 [/[;,.]/, 'delimiter'],
 
-                
+
 
                 // characters
                 [/'[^\\']'/, 'string'],
@@ -373,7 +378,7 @@ export const setUpYaklangMonaco = () => {
             ],
 
             string: [
-                [/@escapes/, 'string.escape'],                
+                [/@escapes/, 'string.escape'],
                 [/[^\\"]/, 'string'],
                 [/\\./, 'string.invalid'],
                 [/"/, 'string', '@pop']
@@ -421,6 +426,26 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
     triggerCharacters: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.']
 });
 
+monaco.editor.onDidChangeMarkers(e => {
+    // 缓存最后一次没有语法错误的代码
+    e.forEach((v) => {
+        const model = monaco.editor.getModel(v);
+        if (!model) {
+            return
+        }
+        var ok = true;
+        monaco.editor.getModelMarkers({}).forEach(marker => {
+            if (marker.severity === monaco.MarkerSeverity.Error && marker.message.includes("Syntax Error")) {
+                ok = false;
+            }
+        })
+        if (ok) {
+            modelTextCacheMap.set(model, model.getValue());
+        }
+    })
+})
+
+
 monaco.editor.onDidCreateEditor((editor) => {
     editor.onDidChangeModel((e) => {
         const model = editor.getModel();
@@ -430,46 +455,49 @@ monaco.editor.onDidCreateEditor((editor) => {
         modelToEditorMap.set(model, editor);
     })
     editor.onDidDispose(() => {
+        const model = editor.getModel();
+        if (model) {
+            modelToEditorMap.delete(model);
+            modelTextCacheMap.delete(model);
+        }
         editorContextMap.delete(editor)
+        editorToSignatureHelpRangeMap.delete(editor);
     })
     editor.onDidChangeCursorPosition((e) => {
         const range = editorToSignatureHelpRangeMap.get(editor);
         if (!range) {
-            return 
+            return
         }
         const position = e.position;
 
         // 如果光标不在函数签名提示的范围内，关闭函数签名提示
         if (range.containsPosition(position)) {
-            return 
+            return
         }
-        editor.trigger('keyboard', 'closeParameterHints', null); 
+        editor.trigger('keyboard', 'closeParameterHints', null);
         editorToSignatureHelpRangeMap.delete(editor);
     })
     editor.onDidChangeModelContent((e) => {
         // 修改函数签名提示的范围
         let range = editorToSignatureHelpRangeMap.get(editor);
-        if (!range) {
-            return 
+        const model = editor.getModel();
+        if (range && model) {
+            e.changes.forEach(change => {
+                if (!range) {
+                    return
+                }
+                if (range.containsRange(change.range)) {
+                    const LParenMatch = model.findPreviousMatch("(", new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
+                    const RParenMatch = model.findNextMatch(")", new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
+                    if (LParenMatch && RParenMatch) {
+                        const startPosition = LParenMatch.range.getStartPosition();
+                        const endPosition = RParenMatch.range.getStartPosition();
+                        range = new monaco.Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
+                    }
+                }
+            })
         }
-        e.changes.forEach(change => {
-            if (!range) {
-                return
-            }
-            if (range.containsRange(change.range)) {
-                const model = editor.getModel();
-                if (!model) {
-                    return 
-                }
-                const LParenMatch = model.findPreviousMatch("(", new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
-                const RParenMatch = model.findNextMatch(")",  new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
-                if (LParenMatch && RParenMatch) {
-                    const startPosition = LParenMatch.range.getStartPosition();
-                    const endPosition = RParenMatch.range.getStartPosition();
-                    range =  new monaco.Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
-                }
-            }   
-        })
+
     })
 })
 
@@ -484,6 +512,8 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
         return new Promise(async (resolve, reject) => {
             let newPosition = new monaco.Position(position.lineNumber, position.column - 1)
             const editor = modelToEditorMap.get(model);
+            // 使用缓存
+            let modelValue = modelTextCacheMap.get(model) || model.getValue();
             if (editor) { // 修复在补全后的函数签名提示问题
                 // 补全后一般会选择某些内容
                 const LParenMatch = model.findPreviousMatch("(", newPosition, false, false, null, false);
@@ -508,7 +538,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             await ipcRenderer.invoke("YaklangLanguageSuggestion", {
                 InspectType: "signature",
                 YakScriptType: type,
-                YakScriptCode: model.getValue(),
+                YakScriptCode: modelValue,
                 Range: {
                     Code: iWord.word,
                     StartLine: position.lineNumber,
@@ -555,11 +585,12 @@ monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
         return new Promise(async (resolve, reject) => {
             const iWord = getWordWithPointAtPosition(model, position);
             let desc = "";
+            let modelValue = modelTextCacheMap.get(model) || model.getValue();
             const type = getModelContext(model, "plugin") || "yak"
             await ipcRenderer.invoke("YaklangLanguageSuggestion", {
                 InspectType: "hover",
                 YakScriptType: type,
-                YakScriptCode: model.getValue(),
+                YakScriptCode: modelValue,
                 Range: {
                     Code: iWord.word,
                     StartLine: position.lineNumber,
