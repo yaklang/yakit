@@ -1008,7 +1008,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         isGrpcRef.current = true
 
         // 查询数据
-        console.log("查询数据", query)
+        // console.log("查询数据", query)
         updateQueryParams(query)
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
