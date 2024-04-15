@@ -296,7 +296,7 @@ export const getValueByType = (defaultValue, type: string): number | string | bo
             value = parseFloat(defaultValue || "0.0")
             break
         case "boolean":
-            value = defaultValue === "true"
+            value = defaultValue === "true" || defaultValue === true
             break
         case "http-packet":
         case "yak":
