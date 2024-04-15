@@ -1637,53 +1637,58 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </>
     )
 
-    const secondNodeTitle = () => (
-        <>
-            <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
-            <SecondNodeTitle
-                cachedTotal={cachedTotal}
-                onlyOneResponse={onlyOneResponse}
-                rsp={httpResponse}
-                successFuzzerLength={getSuccessCount()}
-                failedFuzzerLength={getFailedCount()}
-                showSuccess={showSuccess}
-                setShowSuccess={(v) => {
-                    setShowSuccess(v)
-                    setQuery(undefined)
-                }}
-            />
-            {successFuzzer.length >= FuzzerTableMaxData && (
-                <>
-                    {+(secondNodeSize?.width || 0) <= 750 ? (
-                        <Tooltip title='查看全部'>
+    const secondNodeTitle = () => {
+        let isShow: boolean = true;
+        if (+(secondNodeSize?.width || 0) < 700 && (getSuccessCount() > 999 || getFailedCount() > 999)) isShow = false;
+
+        return (
+            <>
+                {isShow && <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>}
+                <SecondNodeTitle
+                    cachedTotal={cachedTotal}
+                    onlyOneResponse={onlyOneResponse}
+                    rsp={httpResponse}
+                    successFuzzerLength={getSuccessCount()}
+                    failedFuzzerLength={getFailedCount()}
+                    showSuccess={showSuccess}
+                    setShowSuccess={(v) => {
+                        setShowSuccess(v)
+                        setQuery(undefined)
+                    }}
+                />
+                {successFuzzer.length >= FuzzerTableMaxData && (
+                    <>
+                        {+(secondNodeSize?.width || 0) <= 750 ? (
+                            <Tooltip title='查看全部'>
+                                <YakitButton
+                                    style={{marginLeft: 8}}
+                                    type='outline2'
+                                    size='small'
+                                    icon={<OutlineEyeIcon />}
+                                    onClick={() => {
+                                        setShowAllDataRes(true)
+                                    }}
+                                    disabled={loading}
+                                />
+                            </Tooltip>
+                        ) : (
                             <YakitButton
-                                style={{marginLeft: 8}}
-                                type='outline2'
+                                type='primary'
                                 size='small'
-                                icon={<OutlineEyeIcon />}
+                                style={{marginLeft: 8}}
                                 onClick={() => {
                                     setShowAllDataRes(true)
                                 }}
                                 disabled={loading}
-                            />
-                        </Tooltip>
-                    ) : (
-                        <YakitButton
-                            type='primary'
-                            size='small'
-                            style={{marginLeft: 8}}
-                            onClick={() => {
-                                setShowAllDataRes(true)
-                            }}
-                            disabled={loading}
-                        >
-                            查看全部
-                        </YakitButton>
-                    )}
-                </>
-            )}
-        </>
-    )
+                            >
+                                查看全部
+                            </YakitButton>
+                        )}
+                    </>
+                )}
+            </>
+        )
+    }
 
     const matchSubmitFun = useMemoizedFn(() => {
         matchRef.current = true
@@ -2837,11 +2842,11 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
                     options={[
                         {
                             value: true,
-                            label: `成功[${successFuzzerLength}]`
+                            label: `成功[${successFuzzerLength > 9999 ? "9999+" : successFuzzerLength}]`
                         },
                         {
                             value: false,
-                            label: `失败[${failedFuzzerLength}]`
+                            label: `失败[${failedFuzzerLength > 9999 ? "9999+" : failedFuzzerLength}]`
                         }
                     ]}
                 />
