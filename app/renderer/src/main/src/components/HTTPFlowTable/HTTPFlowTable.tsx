@@ -2766,7 +2766,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
             SearchURL: "",
-            IncludeInUrl: []
+            IncludeInUrl: [],
+            WithPayload: toWebFuzzer,
+            RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+            RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
         }
         setParams(newParams)
         setIsReset(!isReset)

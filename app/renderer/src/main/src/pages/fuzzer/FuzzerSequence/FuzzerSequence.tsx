@@ -1654,6 +1654,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                     onClick={() => {
                                         onShowAll()
                                     }}
+                                    disabled={loading}
                                 />
                             </Tooltip>
                         ) : (
@@ -1664,6 +1665,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                 onClick={() => {
                                     onShowAll()
                                 }}
+                                disabled={loading}
                             >
                                 查看全部
                             </YakitButton>

@@ -1682,6 +1682,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onClick={() => {
                                     setShowAllDataRes(true)
                                 }}
+                                disabled={loading}
                             />
                         </Tooltip>
                     ) : (
@@ -1692,6 +1693,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onClick={() => {
                                 setShowAllDataRes(true)
                             }}
+                            disabled={loading}
                         >
                             查看全部
                         </YakitButton>
