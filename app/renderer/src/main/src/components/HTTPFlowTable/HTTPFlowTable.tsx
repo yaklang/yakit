@@ -982,7 +982,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.RuntimeIDs
         delete copyQuery.AfterUpdatedAt
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
-        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : undefined,
+        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
         setQueryParams(JSON.stringify(copyQuery))
     }
 
@@ -1440,8 +1440,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onCheckThan0 = useDebounceFn(
         (check: boolean) => {
             setCheckBodyLength(check)
-            if (check && !params.AfterBodyLength) {
-                params.AfterBodyLength = 1
+            if (!getAfterBodyLength()) {
+                params.AfterBodyLength = check ? 1 : undefined
             }
             setParams(params)
             setTimeout(() => {
