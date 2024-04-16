@@ -1,6 +1,5 @@
 import {yakitNotify} from "@/utils/notification"
 import {PortScanExecuteExtraFormValue} from "./NewPortScanType"
-import {LastRecordProps} from "@/pages/simpleDetect/SimpleDetect"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
 
 const {ipcRenderer} = window.require("electron")
@@ -41,6 +40,13 @@ export const apiCancelPortScan: (token: string) => Promise<null> = (token) => {
                 reject(e)
             })
     })
+}
+
+export interface LastRecordProps {
+    ExtraInfo: string
+    YakScriptOnlineGroup: string
+    Percent: number
+    LastRecordPtr: number
 }
 export interface RecordPortScanRequest {
     LastRecord?: LastRecordProps
