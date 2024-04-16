@@ -406,7 +406,7 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                     >
                         <YakitSwitch />
                     </Form.Item>
-                    {skippedHostAliveScan && (
+                    {!skippedHostAliveScan && (
                         <>
                             <Form.Item label='存活检测并发' name='HostAliveConcurrent'>
                                 <YakitInputNumber type='horizontal' min={0} />
