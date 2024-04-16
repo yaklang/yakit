@@ -27,7 +27,6 @@ const {YakitPanel} = YakitCollapse
 interface NewPortScanExtraParamsDrawerProps {
     extraParamsValue: PortScanExecuteExtraFormValue
     visible: boolean
-    setVisible: (b: boolean) => void
     onSave: (v: PortScanExecuteExtraFormValue) => void
 }
 /**其他配置 */

@@ -251,14 +251,11 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
 })
 
 export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
-    // -------start 表单放外面的字段
     Ports: defaultPorts,
     Mode: "fingerprint",
     Concurrent: 50,
     SkippedHostAliveScan: false,
-    // -------end 表单放外面的字段
 
-    // Targets: props.sendTarget ? JSON.parse(props.sendTarget || "[]").join(",") : "",
     Targets: "",
     Active: true,
     FingerprintMode: "all",
@@ -527,7 +524,6 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                     <NewPortScanExtraParamsDrawer
                         extraParamsValue={extraParamsValue}
                         visible={extraParamsVisible}
-                        setVisible={setExtraParamsVisible}
                         onSave={onSaveExtraParams}
                     />
                 </React.Suspense>
