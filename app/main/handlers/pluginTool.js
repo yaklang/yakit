@@ -50,37 +50,6 @@ module.exports = (win, getClient) => {
         params.Token = USER_INFO.token
         return await asyncDownloadOnlinePluginById(params)
     })
-    const asyncDownloadOnlinePluginByIds = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().DownloadOnlinePluginByIds(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    // 下载插件
-    ipcMain.handle("DownloadOnlinePluginByIds", async (e, params) => {
-        params.Token = USER_INFO.token
-        return await asyncDownloadOnlinePluginByIds(params)
-    })
-    // 全部添加
-    const streamDownloadOnlinePluginAll = new Map()
-    ipcMain.handle("cancel-DownloadOnlinePluginAll", handlerHelper.cancelHandler(streamDownloadOnlinePluginAll))
-    ipcMain.handle("DownloadOnlinePluginAll", (e, params, token) => {
-        // params传Token，登录时调用：添加该用户名下的所有插件；不传Token：添加所有的
-        const newParams = {
-            ...params
-        }
-        if (params.isAddToken) {
-            newParams.Token = USER_INFO.token
-        }
-        delete newParams.isAddToken
-        let stream = getClient().DownloadOnlinePluginAll(newParams)
-        handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
-    })
 
     const asyncDownloadOnlinePluginBatch = (params) => {
         return new Promise((resolve, reject) => {

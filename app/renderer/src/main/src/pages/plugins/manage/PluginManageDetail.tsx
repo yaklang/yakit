@@ -568,7 +568,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             onBack({allCheck, selectList, search: searchs, filter: filters})
         })
 
-        const optExtra = useMemoizedFn((data: API.YakitPluginDetail) => {
+        const optExtra = useMemoizedFn((data: API.PluginsDetail) => {
             return statusTag[`${data.status}`]
         })
 
@@ -655,7 +655,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     renderRow: (info, i) => {
                         const check = allCheck || selectUUIDs.includes(info.uuid)
                         return (
-                            <PluginDetailsListItem<API.YakitPluginDetail>
+                            <PluginDetailsListItem<API.PluginsDetail>
                                 order={i}
                                 plugin={info as any}
                                 selectUUId={plugin.uuid}
@@ -764,7 +764,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                             userName: ele.user_name
                                         }))}
                                         type={plugin.type}
-                                        wrapperClassName={styles['plugin-info-header']}
+                                        wrapperClassName={styles["plugin-info-header"]}
                                     />
 
                                     {+plugin.status === 0 ? (

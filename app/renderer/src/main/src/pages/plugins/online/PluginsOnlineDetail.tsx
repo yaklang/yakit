@@ -368,7 +368,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                 }))}
                                 type={plugin.type}
                             />
-                            <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin, default_open: false}} />
+                            <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin}} />
                         </div>
                     </TabPane>
                     <TabPane tab='日志' key='log'>

@@ -421,7 +421,7 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
     return toolDelInvalidKV(data)
 }
 
-/**下载插件 */
+/**下载插件 非进度条版本 */
 export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
@@ -505,6 +505,22 @@ export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => P
             yakitNotify("error", "插件管理插件失败:" + error)
             reject(error)
         }
+    })
+}
+
+/** 其他情况，不区分私密公开 下载插件 */
+export const apiDownloadPluginOther: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        const newQuery = {
+            ...(query || {}),
+            ListType: "other"
+        }
+        apiDownloadPluginBase(newQuery)
+            .then(resolve)
+            .catch((err) => {
+                yakitNotify("error", "插件导入失败:" + err)
+                reject(err)
+            })
     })
 }
 

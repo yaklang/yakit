@@ -13,7 +13,7 @@ export interface ReadOnlyBatchExecutorByRecoverUidProp {
     Uid?: string
     BaseProgress?: number
 }
-
+/**@deprecated 感觉是没有用到了，但是批量执行那边还没有做任务列表得功能，所以暂时保留，到时候做参考 */
 export const ReadOnlyBatchExecutorByRecoverUid: React.FC<ReadOnlyBatchExecutorByRecoverUidProp> = (props: ReadOnlyBatchExecutorByRecoverUidProp) => {
     const [target, setTarget] = useState<string>("");
     const [query, setQuery] = useState<SimpleQueryYakScriptSchema>({

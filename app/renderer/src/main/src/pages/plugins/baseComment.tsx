@@ -32,7 +32,7 @@ const {ipcRenderer} = window.require("electron")
 
 const limit = 20
 interface PluginCommentProps {
-    plugin: API.YakitPluginDetail
+    plugin: API.PluginsDetail
     isLogin: boolean
 }
 
@@ -901,7 +901,7 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
 }
 
 interface PluginCommentChildModalProps {
-    plugin: API.YakitPluginDetail
+    plugin: API.PluginsDetail
     visible: boolean
     isLogin: boolean
     parentInfo?: API.CommentListData

@@ -271,7 +271,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
      */
     const batchDownloadPlugin = useMemoizedFn((menus: EnhancedPrivateRouteMenuProps[], pluginName: string[]) => {
         ipcRenderer
-            .invoke("DownloadOnlinePluginByScriptNames", {
+            .invoke("DownloadOnlinePluginByPluginName", {
                 ScriptNames: pluginName,
                 Token: userInfo.token
             })
@@ -437,7 +437,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     /** 下载单个插件菜单 */
     const singleDownloadPlugin = useMemoizedFn((menuItem: RouteToPageProps, callback?: () => any) => {
         ipcRenderer
-            .invoke("DownloadOnlinePluginByScriptNames", {
+            .invoke("DownloadOnlinePluginByPluginName", {
                 ScriptNames: [menuItem.pluginName],
                 Token: userInfo.token
             })

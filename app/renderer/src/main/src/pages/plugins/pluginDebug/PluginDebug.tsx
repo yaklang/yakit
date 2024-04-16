@@ -357,7 +357,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     }
 
     /** 请求类型-为原始请求则不展示额外参数 */
-    const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+    const requestType = Form.useWatch("requestType", form)
 
     const pathRef = useRef<YakitBaseSelectRef>({
         onGetRemoteValues: () => {},
@@ -540,7 +540,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                             }}
                         >
                             <div className={styles["custom-params-wrapper"]}>{pluginRequiredItem(pluginType)}</div>
-                            {isRawHTTPRequest ? null : pluginOptionalItem(pluginType)}
+                            {requestType !== "input" ? null : pluginOptionalItem(pluginType)}
                         </Form>
                     </div>
                 </YakitCard>
