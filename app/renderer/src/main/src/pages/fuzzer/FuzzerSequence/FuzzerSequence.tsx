@@ -838,6 +838,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (element) {
                 if (element.successCount >= FuzzerTableMaxData) {
                     flag = true
+                    return flag
                 }
             }
         }
