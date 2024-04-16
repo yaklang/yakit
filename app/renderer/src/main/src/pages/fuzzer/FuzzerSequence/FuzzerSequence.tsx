@@ -98,6 +98,7 @@ import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
+const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -170,6 +171,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
     const [showAllRes, setShowAllRes] = useState<boolean>(false)
+    const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
 
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
@@ -827,11 +829,26 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         return [...new Set(runtimeIdsFuzzer)]
     }
 
+    const judgeMoreFuzzerTableMaxData = () => {
+        const myArray1 = Array.from(responseMap)
+        const length = myArray1.length
+        let flag: boolean = false
+        for (let index = 0; index < length; index++) {
+            const element = myArray1[index][1]
+            if (element) {
+                if (element.successCount >= FuzzerTableMaxData) {
+                    flag = true
+                }
+            }
+        }
+        return flag
+    }
+
     return (
         <>
             <div
                 className={styles["fuzzer-sequence"]}
-                style={{display: showAllDataRes ? "none" : ""}}
+                style={{display: showAllDataRes || showAllResponse ? "none" : ""}}
                 ref={fuzzerSequenceRef}
             >
                 <div className={styles["fuzzer-sequence-left"]}>
@@ -984,8 +1001,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
-                                    setShowAllRes(true)
-                                    setShowAllDataRes(true)
+                                    if (judgeMoreFuzzerTableMaxData()) {
+                                        setShowAllRes(true)
+                                        setShowAllDataRes(true)
+                                    } else {
+                                        setShowAllResponse(true)
+                                    }
                                 }}
                                 getHttpParams={getHttpParams}
                             />
@@ -1021,6 +1042,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         setShowAllDataRes(false)
                     }}
                 />
+            </React.Suspense>
+
+            <React.Suspense fallback={<>loading...</>}>
+                <ResponseCard
+                    showAllResponse={showAllResponse}
+                    responseMap={responseMap}
+                    setShowAllResponse={() => setShowAllResponse(false)}
+                ></ResponseCard>
             </React.Suspense>
         </>
     )
