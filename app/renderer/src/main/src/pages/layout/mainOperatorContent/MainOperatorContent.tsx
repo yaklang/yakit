@@ -94,6 +94,8 @@ import {
     defaultPocPageInfo,
     defaultScanPortPageInfo,
     saveFuzzerCache,
+    defaultSimpleDetectPageInfo,
+    defaultSpaceEnginePageInfo,
     usePageInfo
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
@@ -1096,6 +1098,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.Mod_ScanPort:
                             onScanPortPage(node, order)
                             break
+                        case YakitRoute.SimpleDetect:
+                            onSetSimpleDetectData(node, order)
+                            break
                         default:
                             break
                     }
@@ -1122,6 +1127,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.Mod_ScanPort:
                             onScanPortPage(node, 1)
+                            break
+                        case YakitRoute.SimpleDetect:
+                            onSetSimpleDetectData(node, 1)
                             break
                         default:
                             break
@@ -1707,10 +1715,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageGroupId: node.groupId,
             pageId: node.id,
             pageName: node.verbose,
-            pageParamsInfo: {},
+            pageParamsInfo: {
+                spaceEnginePageInfo: {...(node?.pageParams?.spaceEnginePageInfo || defaultSpaceEnginePageInfo)}
+            },
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.Space_Engine, newPageNode)
+    })
+    /**简易版 安全检测 */
+    const onSetSimpleDetectData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.SimpleDetect,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                simpleDetectPageInfo: {...(node?.pageParams?.simpleDetectPageInfo || defaultSimpleDetectPageInfo)}
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.SimpleDetect, newPageNode)
     })
     /**
      * @description 设置专项漏洞
