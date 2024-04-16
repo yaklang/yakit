@@ -10,6 +10,7 @@ interface SimpleDetectForm {
     scanType: "基础扫描" | "专项扫描"
     scanDeep: number
     SkippedHostAliveScan: boolean
+    pluginGroup: string[]
 }
 export interface SimpleDetectFormContentProps {
     disabled: boolean

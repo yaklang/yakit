@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {SimpleDetectFormContentProps, SimpleDetectProps} from "./SimpleDetectType"
-import {Button, Form, Popconfirm, Progress, Slider} from "antd"
+import {Button, Checkbox, Form, Popconfirm, Progress, Slider} from "antd"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
@@ -17,7 +17,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {useStore} from "@/store"
-import {DownloadOnlinePluginsRequest} from "../plugins/utils"
+import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal} from "../plugins/utils"
 import {DownloadOnlinePluginAllResProps} from "../yakitStore/YakitStorePage"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -25,6 +25,8 @@ import {YakitRoute, YakitRouteToPageInfo} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {SliderMarks} from "antd/lib/slider"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {GroupCount} from "../invoker/schema"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
@@ -39,11 +41,11 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         shallow
     )
     const initSpaceEnginePageInfo = useMemoizedFn(() => {
-        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Space_Engine, pageId)
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.SimpleDetect, pageId)
         if (currentItem && currentItem.pageName) {
             return currentItem.pageName
         }
-        return YakitRouteToPageInfo[YakitRoute.Space_Engine].label
+        return YakitRouteToPageInfo[YakitRoute.SimpleDetect].label
     })
     const [form] = Form.useForm()
     const [tabName, setTabName] = useState<string>(initSpaceEnginePageInfo())
@@ -261,7 +263,11 @@ const marks: SliderMarks = {
 }
 const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.memo((props) => {
     const {disabled, inViewport, form} = props
+    const [groupOptions, setGroupOptions] = useState<string[]>([])
     const scanType = Form.useWatch("scanType", form)
+    useEffect(() => {
+        if (inViewport) getPluginGroup()
+    }, [inViewport])
     const scanTypeExtra = useCreation(() => {
         let str: string = ""
         switch (scanType) {
@@ -274,6 +280,15 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
         }
         return str
     }, [scanType])
+    const getPluginGroup = () => {
+        apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
+            const newGroup: string[] = group
+                .map((item) => item.Value)
+                .filter((item) => item !== "基础扫描")
+                .concat("弱口令")
+            setGroupOptions([...new Set(newGroup)])
+        })
+    }
     return (
         <>
             <YakitFormDraggerContent
@@ -290,7 +305,27 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
                 help='可将TXT、Excel文件拖入框内或'
                 disabled={disabled}
             />
-            <Form.Item label='扫描模式' name='scanType' initialValue='基础扫描' extra={scanTypeExtra}>
+            <Form.Item
+                label='扫描模式'
+                name='scanType'
+                initialValue='基础扫描'
+                extra={
+                    <>
+                        {scanTypeExtra}
+                        {scanType === "专项扫描" && (
+                            <Form.Item noStyle name='pluginGroup'>
+                                <Checkbox.Group className={styles["plugin-group-wrapper"]} disabled={disabled}>
+                                    {groupOptions.map((ele) => (
+                                        <YakitCheckbox key={ele} value={ele}>
+                                            {ele}
+                                        </YakitCheckbox>
+                                    ))}
+                                </Checkbox.Group>
+                            </Form.Item>
+                        )}
+                    </>
+                }
+            >
                 <YakitRadioButtons buttonStyle='solid' options={ScanTypeOptions} />
             </Form.Item>
             <Form.Item name='scanDeep' label='扫描速度' extra='扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择'>

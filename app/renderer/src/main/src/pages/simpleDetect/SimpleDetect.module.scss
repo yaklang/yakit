@@ -53,6 +53,15 @@
         }
     }
 }
+.plugin-group-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-gap: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    background: var(--yakit-card-background-color);
+    margin-top: 8px;
+}
 .form-extra {
     @extend %flex-center;
     gap: 8px 0;
