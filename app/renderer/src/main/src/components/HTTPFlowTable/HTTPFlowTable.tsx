@@ -1008,13 +1008,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         isGrpcRef.current = true
 
         // 查询数据
-        // console.log("查询数据", query)
+        console.log("查询数据", query)
         updateQueryParams(query)
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
+                console.log('获取数据', newData.length, '条');
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
@@ -2046,7 +2047,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ...(props.params || {SourceType: "mitm"}),
                     SourceType: props.params?.SourceType || "mitm",
                     ExcludeId: params.ExcludeId,
-                    ExcludeInUrl: params.ExcludeInUrl
+                    ExcludeInUrl: params.ExcludeInUrl,
+                    WithPayload: toWebFuzzer,
+                    RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+                    RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
                 }
                 setParams({...newParams})
                 updateData()
@@ -2770,8 +2774,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             SourceType: props.params?.SourceType || "mitm",
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
-            SearchURL: "",
-            IncludeInUrl: [],
             WithPayload: toWebFuzzer,
             RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
             RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
