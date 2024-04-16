@@ -104,8 +104,6 @@ interface UIEngineListProp {
 
 /** @name 已启动引擎列表 */
 const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
-    const isDev = useRef<boolean>(false)
-
     const {engineMode, typeCallback} = props
 
     const [show, setShow] = useState<boolean>(false)
@@ -159,7 +157,6 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     }
     useEffect(() => {
         if (inViewport) {
-            ipcRenderer.invoke("is-dev").then((flag: boolean) => (isDev.current = flag))
             fetchPSList()
             fetchCurrentPort()
 
@@ -257,44 +254,44 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                             >
                                                 Details
                                             </YakitButton>
-                                            {isDev.current ? (
-                                                <Popconfirm
-                                                    title={<>确定是否切换连接的引擎,</>}
-                                                    onConfirm={async () => {
-                                                        if (+i.port !== port) {
-                                                            await delTemporaryProject()
-                                                        }
-                                                        const switchEngine: YaklangEngineWatchDogCredential = {
-                                                            Mode: "local",
-                                                            Port: i.port,
-                                                            Host: "127.0.0.1"
-                                                        }
-                                                        ipcRenderer.invoke("switch-conn-refresh", true)
-                                                        ipcRenderer
-                                                            .invoke("connect-yaklang-engine", switchEngine)
-                                                            .then(() => {
-                                                                setTimeout(() => {
-                                                                    success(`切换核心引擎成功！`)
-                                                                    if (!isEnpriTraceAgent() && +i.port !== port) {
-                                                                        emiter.emit("onSwitchEngine")
-                                                                    }
-                                                                    ipcRenderer.invoke("switch-conn-refresh", false)
-                                                                }, 500)
-                                                            })
-                                                            .catch((e) => {
-                                                                failed(e)
-                                                            })
-                                                    }}
+
+                                            <Popconfirm
+                                                title={<>确定是否切换连接的引擎,</>}
+                                                onConfirm={async () => {
+                                                    if (+i.port !== port) {
+                                                        await delTemporaryProject()
+                                                    }
+                                                    const switchEngine: YaklangEngineWatchDogCredential = {
+                                                        Mode: "local",
+                                                        Port: i.port,
+                                                        Host: "127.0.0.1"
+                                                    }
+                                                    ipcRenderer.invoke("switch-conn-refresh", true)
+                                                    ipcRenderer
+                                                        .invoke("connect-yaklang-engine", switchEngine)
+                                                        .then(() => {
+                                                            setTimeout(() => {
+                                                                success(`切换核心引擎成功！`)
+                                                                if (!isEnpriTraceAgent() && +i.port !== port) {
+                                                                    emiter.emit("onSwitchEngine")
+                                                                }
+                                                                ipcRenderer.invoke("switch-conn-refresh", false)
+                                                            }, 500)
+                                                        })
+                                                        .catch((e) => {
+                                                            failed(e)
+                                                        })
+                                                }}
+                                            >
+                                                <YakitButton
+                                                    type='outline1'
+                                                    colors='success'
+                                                    disabled={+i.port === 0 || (isLocal && +i.port === port)}
                                                 >
-                                                    <YakitButton
-                                                        type='outline1'
-                                                        colors='success'
-                                                        disabled={+i.port === 0 || (isLocal && +i.port === port)}
-                                                    >
-                                                        切换引擎
-                                                    </YakitButton>
-                                                </Popconfirm>
-                                            ) : null}
+                                                    切换引擎
+                                                </YakitButton>
+                                            </Popconfirm>
+
                                             <Popconfirm
                                                 title={
                                                     <>

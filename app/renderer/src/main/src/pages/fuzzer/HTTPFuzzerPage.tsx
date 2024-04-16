@@ -1356,6 +1356,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             closable: false,
             hiddenHeader: true,
             style: {top: "10%"},
+            keyboard: false,
             content: (
                 <HTTPFuzzerHotPatch
                     initialHotPatchCode={hotPatchCodeRef.current}
