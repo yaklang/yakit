@@ -168,7 +168,7 @@ export declare namespace API {
         /**
          * up 增 down 减
          */
-        dayActiveGainUpOrDown?: string
+        dayActiveGainUpOrDown: string
         /**
          * 周增量
          */
@@ -192,7 +192,7 @@ export declare namespace API {
         /**
          * up 增 down 减
          */
-        weekActiveGainUpOrDown?: string
+        weekActiveGainUpOrDown: string
         /**
          * 月增量
          */
@@ -216,7 +216,34 @@ export declare namespace API {
         /**
          * up 增 down 减
          */
-        monthActiveGainUpOrDown?: string
+        monthActiveGainUpOrDown: string
+        dayTimes: number
+        /**
+         * 当天时长增率
+         */
+        dayTimesGain: string
+        /**
+         * up 增 down 减
+         */
+        dayTimesGainUpOrDown: string
+        weekTimes: number
+        /**
+         * 本周时长增率
+         */
+        weekTimesGain: string
+        /**
+         * up 增 down 减
+         */
+        weekTimesGainUpOrDown: string
+        monthTimes: number
+        /**
+         * 本月时长增率
+         */
+        monthTimesGain: string
+        /**
+         * up 增 down 减
+         */
+        monthTimesGainUpOrDown: string
     }
     export interface TouristActiveResponse {
         data: TouristActiveDetail[]
@@ -781,6 +808,14 @@ export declare namespace API {
         trigger_user_unique_id: string
         operation_plugin_id: string
         extra?: string
+    }
+    export interface NewComments {
+        uuid: string
+        by_user_id?: number
+        message_img?: string[]
+        parent_id?: number
+        root_id?: number
+        message?: string
     }
     export interface NewComment {
         plugin_id: number
