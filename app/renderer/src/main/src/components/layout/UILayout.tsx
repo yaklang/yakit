@@ -266,6 +266,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     useEffect(() => {
         setTimeout(() => {
+            /**
+             * dev环境下，如果已连接本地引擎，则不需要再次连接
+             */
+            if (isDev.current) {
+                if (cacheEngineLink.current && cacheEngineMode.current === "local") return
+            }
+
             handleBuiltInCheck()
             handleFetchBaseInfo(() => {
                 handleLinkEngineMode()
