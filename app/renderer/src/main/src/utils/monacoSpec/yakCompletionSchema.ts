@@ -576,14 +576,13 @@ export const newYaklangCompletionHandlerProvider = (model: editor.ITextModel, po
             return
         }
         const iWord = getWordWithPointAtPosition(model, position);
-
-
         const type = getModelContext(model, "plugin") || "yak"
 
         await ipcRenderer.invoke("YaklangLanguageSuggestion", {
             InspectType: "completion",
             YakScriptType: type,
             YakScriptCode: model.getValue(),
+            ModelID: model.id,
             Range: {
                 Code: iWord.word,
                 StartLine: position.lineNumber,

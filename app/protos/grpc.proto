@@ -1864,10 +1864,11 @@ message YaklangInspectInformationRequest {
 }
 
 message YaklangLanguageSuggestionRequest {
-  string InspectType = 1;// completion(补全) / hover(提示) / signature(签名)
-  string YakScriptType = 2;
-  string YakScriptCode = 3;
-  Range Range = 4;
+    string InspectType = 1;// completion(补全) / hover(提示) / signature(签名)
+    string YakScriptType = 2;
+    string YakScriptCode = 3;
+    Range Range = 4;
+    string ModelID = 5;
 }
 
 
