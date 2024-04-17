@@ -33,6 +33,7 @@ import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import emiter from "@/utils/eventBus/eventBus"
 import { serverPushStatus } from "@/utils/duplex/duplex"
+import MITMCertificateDownloadModal from "@/pages/mitm/MITMServerStartForm/MITMCertificateDownloadModal";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -223,6 +224,28 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 })
         })
     })
+    const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
+    const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
+
+    const updateMITMCert = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("VerifySystemCertificate")
+                .then((res) => {
+                    console.log(res)
+                    if (res.Valid) {
+                        setShowMITMCertWarn(false)
+                    } else {
+                        setShowMITMCertWarn(true)
+                    }
+                    if ((res.Reason) != "" ){
+                        reject(`error-mitm-cert ${res.Reason}`)
+                    }
+                })
+                .catch((e) => reject(`error-mitm-cert ${e}`))
+
+        })
+    })
 
     const [state, setState] = useState<string>("error")
     const [stateNum, setStateNum] = useState<number>(0)
@@ -245,6 +268,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             status = "warning"
             count = count + 1
         }
+        if (showMITMCertWarn) {
+            status = "warning"
+            count = count + 1
+        }
+
         if (!pcap.IsPrivileged) {
             status = system === "Windows_NT" ? "warning" : "error"
             count = count + 1
@@ -266,13 +294,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             updateSystemProxy(),
             updateGlobalReverse(),
             updatePcap(),
-            updateChromePath()
+            updateChromePath(),
+            updateMITMCert()
         ]:[
             updateSystemProxy(),
             updateGlobalReverse(),
             updatePcap(),
             updatePluginTotal(),
-            updateChromePath()
+            updateChromePath(),
+            updateMITMCert()
         ])
             .then((values) => {
                 isRunRef.current = false
@@ -499,6 +529,32 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             )}
                         </div>
                     )}
+                    {/* MITM 证书 */}
+                    {showMITMCertWarn && (
+                        <div className={styles["body-info"]}>
+                            <div className={styles["info-left"]}>
+                                {!showMITMCertWarn ? <SuccessIcon /> : <ErrorIcon />}
+                                <div className={styles["left-body"]}>
+                                    <div className={styles["title-style"]}>MITM证书</div>
+                                    <div className={styles["subtitle-style"]}>
+                                        MITM证书不在系统信任列表中，请重新安装
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={styles["info-right"]}>
+                                <YakitButton
+                                    type='text'
+                                    className={styles["btn-style"]}
+                                    onClick={() => {
+                                        setShow(false)
+                                        setDownloadVisible(true)
+                                    }}
+                                >
+                                    {!showMITMCertWarn ? "已配置" : "下载安装"}
+                                </YakitButton>
+                            </div>
+                        </div>
+                    )}
                     {/* 本地插件下载 */}
                     {pluginTotal === 0 && (
                         <div className={styles["body-info"]}>
@@ -702,6 +758,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         }}
                     />
                 </div>
+                <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
+
             </div>
         )
     }, [

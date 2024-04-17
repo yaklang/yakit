@@ -665,4 +665,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("YaklangLanguageSuggestion", async (e, params) => {
         return await asyncYaklangLanguageSuggestion(params)
     })
+
+
+    const asyncVerifySystemCertificate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().VerifySystemCertificate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("VerifySystemCertificate", async (e, params) => {
+        return await asyncVerifySystemCertificate(params)
+    })
 }

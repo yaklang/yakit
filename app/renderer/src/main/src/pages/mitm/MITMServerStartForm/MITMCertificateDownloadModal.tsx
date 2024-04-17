@@ -13,7 +13,7 @@ interface MITMCertificateDownloadModalProps {
     visible: boolean
     setVisible: (b: boolean) => void
 }
-const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModalProps> = React.memo((props) => {
+export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModalProps> = React.memo((props) => {
     const {visible, setVisible} = props
     const [caCerts, setCaCerts] = useState<CaCertData>({
         CaCerts: new Buffer(""),
