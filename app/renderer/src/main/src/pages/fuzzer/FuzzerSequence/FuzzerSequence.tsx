@@ -377,7 +377,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 Headers: Response.Headers || [],
                 UUID: Response.UUID,
                 Count: countRef.current.get(FuzzerIndex),
-                cellClassName: Response.MatchedByMatcher ? `color-opacity-bg-${Response.HitColor}` : ""
+                cellClassName: Response.MatchedByMatcher ? `color-opacity-bg-${Response.HitColor} color-text-${Response.HitColor} color-font-weight-${Response.HitColor}` : ""
             } as FuzzerResponse
             if (Response.Ok) {
                 let successList = successBufferRef.current.get(FuzzerIndex)
