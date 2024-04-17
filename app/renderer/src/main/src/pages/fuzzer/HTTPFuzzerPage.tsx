@@ -629,7 +629,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 }
 
 // WebFuzzer表格最多显示多少数据
-export const FuzzerTableMaxData = 200
+export const FuzzerTableMaxData = 20000
 
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
