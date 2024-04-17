@@ -137,7 +137,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                     </YakitButton>
                 </div>
             </div>
-            <div ref={secondNodeRef} className={styles["all-sequence-response-table"]}>
+            <div ref={secondNodeRef} className={styles["all-sequence-response-table"]} style={{border: '1px solid var(--yakit-border-color)'}}>
                 {showSuccess && (
                     <HTTPFuzzerPageTable
                         isRefresh={isRefresh}
