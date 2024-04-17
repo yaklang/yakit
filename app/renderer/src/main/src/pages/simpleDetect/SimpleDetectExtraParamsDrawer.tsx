@@ -6,6 +6,12 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useMemoizedFn} from "ahooks"
 import {useEffect, useState} from "react"
 import React from "react"
+import { BruteExecuteExtraFormValue } from "../securityTool/newBrute/NewBruteType"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import { BruteSettings } from "../securityTool/newBrute/BruteExecuteParamsDrawer"
+
+const {YakitPanel} = YakitCollapse
 interface SimpleDetectExtraParamsDrawerProps {
     extraParamsValue: PortScanExecuteExtraFormValue
     visible: boolean
@@ -46,6 +52,38 @@ const SimpleDetectExtraParamsDrawer: React.FC<SimpleDetectExtraParamsDrawerProps
 
 export default SimpleDetectExtraParamsDrawer
 
+interface BruteSettingsPanelProps {
+    onReset: (s: string) => void
+    visible: boolean
+    form: FormInstance<BruteExecuteExtraFormValue>
+}
+export const BruteSettingsPanel: React.FC<BruteSettingsPanelProps> = React.memo((props) => {
+    const {onReset, visible, form, ...restProps} = props
+    return (
+        <>
+            <YakitPanel
+                {...restProps} // 仅为了让Panel正确得渲染/展开折叠，暂无其他作用
+                header='弱口令设置'
+                key='弱口令设置'
+                extra={
+                    <YakitButton
+                        type='text'
+                        colors='danger'
+                        size='small'
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onReset("弱口令设置")
+                        }}
+                    >
+                        重置
+                    </YakitButton>
+                }
+            >
+                <BruteSettings visible={visible} form={form} />
+            </YakitPanel>
+        </>
+    )
+})
 interface SimpleDetectExtraParamsProps {
     form: FormInstance<PortScanExecuteExtraFormValue>
     visible: boolean
