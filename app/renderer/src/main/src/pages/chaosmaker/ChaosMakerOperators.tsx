@@ -89,7 +89,7 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
 
     }} layout={"vertical"} disabled={props.running}>
         <Form.Item help={"如果添加探针，模拟攻击流量将会额外对探针进行发送"}>
-            <Space>
+            <div style={{display: 'flex', gap: '8px'}}>
                 {availableAddrs.map(i => {
                     return <AutoCard
                         onClick={e => {
@@ -136,7 +136,7 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                         }
                     })()}]</AutoCard>
                 })}
-                <AutoCard style={{height: 40, width: 40, borderRadius: '6px'}}>
+                <AutoCard style={{height: 60, width: 200, borderRadius: '6px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                     <YakitButton type={"text"} onClick={(e) => {
                         showByCursorMenu({
                             content: [
@@ -180,9 +180,10 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                 {
                     props.couldBeenReset ? <AutoCard
                         style={{
-                            height: 40, width: 40, borderRadius: '6px',
+                            height: 60, width: 200, borderRadius: '6px',
                             border: '1px solid var(--yakit-primary-5)',
                             backgroundColor: '#e01f1f',
+                            display: 'flex', justifyContent: 'center', alignItems: 'center'
                         }}
                         hoverable={true}
                         onClick={() => {
@@ -195,9 +196,10 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                             重置 BAS 操作台
                         </div>
                     </AutoCard> : <AutoCard style={{
-                        height: 40, width: 40, borderRadius: '6px',
+                        height: 60, width: 200, borderRadius: '6px',
                         border: '1px solid var(--yakit-primary-3)',
                         backgroundColor: '#F28B44',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center'
                     }} hoverable={true} onClick={() => {
                         if (props.onExecute) {
                             props.onExecute(params)
@@ -209,7 +211,7 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                     </AutoCard>
                 }
 
-            </Space>
+            </div>
         </Form.Item>
     </Form>
 };
