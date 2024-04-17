@@ -1139,6 +1139,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             taskIDRef.current = data.TaskId
+            console.log('获取runtimeID', data.RuntimeID);
             setRuntimeId(data.RuntimeID)
 
             if (count === 0) {
@@ -1902,6 +1903,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             <HTTPFuzzerHistorySelector
                                                 currentSelectId={currentSelectId}
                                                 onSelect={(e, page, showAll) => {
+                                                    console.log(123, e, page, showAll);
                                                     cancelCurrentHTTPFuzzer()
                                                     if (!showAll) setCurrentPage(page)
                                                     loadHistory(e)

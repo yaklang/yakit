@@ -996,6 +996,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
+        console.log('httpflowtable接收', runTimeId);
         if ((toPlugin || toWebFuzzer) && !runTimeId) {
             setTimeout(() => {
                 setLoading(false)
