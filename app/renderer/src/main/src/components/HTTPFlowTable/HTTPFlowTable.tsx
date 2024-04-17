@@ -996,7 +996,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
-        console.log('httpflowtable接收', runTimeId);
         if ((toPlugin || toWebFuzzer) && !runTimeId) {
             setTimeout(() => {
                 setLoading(false)
@@ -1009,14 +1008,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         isGrpcRef.current = true
 
         // 查询数据
-        console.log("查询数据", query)
         updateQueryParams(query)
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
-                console.log('获取数据', newData.length, '条');
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
