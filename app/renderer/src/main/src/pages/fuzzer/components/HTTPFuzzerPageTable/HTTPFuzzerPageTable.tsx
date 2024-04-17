@@ -370,6 +370,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                   e.stopPropagation()
                                                   onViewExecResults(item)
                                               }}
+                                              style={{
+                                                  color: !hasRedOpacityBg(record.cellClassName) ? undefined : "#fff"
+                                              }}
                                           >
                                               详情
                                           </YakitButton>
