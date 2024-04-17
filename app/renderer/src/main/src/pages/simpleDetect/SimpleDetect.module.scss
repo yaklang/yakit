@@ -21,6 +21,9 @@
             font-weight: 600;
             line-height: 24px; /* 150% */
         }
+        .simple-detect-heard-operate {
+            @extend %flex-center;
+        }
     }
     .simple-detect-content {
         padding: 16px;

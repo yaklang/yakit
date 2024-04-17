@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {SimpleDetectFormContentProps, SimpleDetectProps} from "./SimpleDetectType"
+import {SimpleDetectForm, SimpleDetectFormContentProps, SimpleDetectProps} from "./SimpleDetectType"
 import {Button, Checkbox, Form, Popconfirm, Progress, Slider} from "antd"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useGetState, useInViewport, useMemoizedFn} from "ahooks"
@@ -17,7 +17,12 @@ import cloneDeep from "lodash/cloneDeep"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {useStore} from "@/store"
-import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal} from "../plugins/utils"
+import {
+    DownloadOnlinePluginsRequest,
+    apiDeleteLocalPluginsByWhere,
+    apiFetchQueryYakScriptGroupLocal,
+    defaultDeleteLocalPluginsByWhereRequest
+} from "../plugins/utils"
 import {DownloadOnlinePluginAllResProps} from "../yakitStore/YakitStorePage"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -27,6 +32,12 @@ import {SliderMarks} from "antd/lib/slider"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {GroupCount} from "../invoker/schema"
+import {getLinkPluginConfig} from "../plugins/singlePluginExecution/SinglePluginExecution"
+import {PresetPorts} from "../portscan/schema"
+import {defaultSearch} from "../plugins/baseTemplate"
+import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
@@ -60,8 +71,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const [extraParamsValue, setExtraParamsValue] = useState<PortScanExecuteExtraFormValue>(
         cloneDeep(defPortScanExecuteExtraFormValue)
     )
+    const [refreshGroup, setRefreshGroup] = useState<boolean>(false)
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
     const [runtimeId, setRuntimeId] = useState<string>("")
+
+    const scanDeep = Form.useWatch("scanDeep", form)
 
     const simpleDetectWrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(simpleDetectWrapperRef)
@@ -93,6 +108,23 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     })
 
     useEffect(() => {
+        switch (scanDeep) {
+            // 快速
+            case 3:
+                setExtraParamsValue((v) => ({...v, Ports: PresetPorts["fast"]}))
+                break
+            // 适中
+            case 2:
+                setExtraParamsValue((v) => ({...v, Ports: PresetPorts["middle"]}))
+                break
+            // 慢速
+            case 1:
+                setExtraParamsValue((v) => ({...v, Ports: PresetPorts["slow"]}))
+                break
+        }
+    }, [scanDeep])
+
+    useEffect(() => {
         if (inViewport) emiter.on("secondMenuTabDataChange", onSetTabName)
         return () => {
             emiter.off("secondMenuTabDataChange", onSetTabName)
@@ -105,13 +137,66 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const onExpand = useMemoizedFn(() => {
         setIsExpand(!isExpand)
     })
-    const onStartExecute = useMemoizedFn((value) => {
+    const onStartExecute = useMemoizedFn((value: SimpleDetectForm) => {
+        if (value.scanType === "专项扫描" && (value.pluginGroup?.length || 0) === 0) {
+            warn("请选择专项扫描项目")
+            return
+        }
+        const pluginGroup = value.scanType !== "专项扫描" ? ["基础扫描"] : value.pluginGroup || []
+        const linkPluginConfig = getLinkPluginConfig(
+            [],
+            {
+                search: cloneDeep(defaultSearch),
+                filters: {
+                    plugin_group: pluginGroup.map((ele) => ({value: ele, label: ele, count: 0}))
+                }
+            },
+            true
+        )
+        let portScanRequestParams: PortScanExecuteExtraFormValue = {
+            ...extraParamsValue,
+            EnableBrute: value.pluginGroup?.includes("弱口令"),
+            LinkPluginConfig: linkPluginConfig,
+            Targets: value.Targets,
+            SkippedHostAliveScan: !!value.SkippedHostAliveScan
+        }
+        switch (value.scanDeep) {
+            // 快速
+            case 3:
+                // 指纹并发
+                portScanRequestParams.Concurrent = 100
+                // SYN 并发
+                portScanRequestParams.SynConcurrent = 2000
+                portScanRequestParams.ProbeTimeout = 3
+                // 指纹详细程度
+                portScanRequestParams.ProbeMax = 3
+                // portScanRequestParams.Ports = PresetPorts["fast"]
+                break
+            // 适中
+            case 2:
+                portScanRequestParams.Concurrent = 80
+                portScanRequestParams.SynConcurrent = 1000
+                portScanRequestParams.ProbeTimeout = 5
+                portScanRequestParams.ProbeMax = 5
+                // portScanRequestParams.Ports = PresetPorts["middle"]
+                break
+            // 慢速
+            case 1:
+                portScanRequestParams.Concurrent = 50
+                portScanRequestParams.SynConcurrent = 1000
+                portScanRequestParams.ProbeTimeout = 7
+                portScanRequestParams.ProbeMax = 7
+                // portScanRequestParams.Ports = PresetPorts["slow"]
+                break
+            default:
+                break
+        }
+        const params: RecordPortScanRequest = {
+            PortScanRequest: {...portScanRequestParams}
+        }
         simpleDetectStreamEvent.reset()
         setExecuteStatus("process")
         setRuntimeId("")
-        const params: RecordPortScanRequest = {
-            ...value
-        }
         apiSimpleDetect(params, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpand(false)
@@ -149,9 +234,22 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             SkippedHostAliveScan: v.SkippedHostAliveScan
         })
     })
+    const onImportPlugin = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setVisibleOnline(true)
+    })
+    const onRemoveAllLocalPlugin = useMemoizedFn((e) => {
+        e.stopPropagation()
+        apiDeleteLocalPluginsByWhere(defaultDeleteLocalPluginsByWhereRequest).then(() => {
+            setRefreshGroup(!refreshGroup)
+        })
+    })
     const isShowResult = useCreation(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
+    const progressList = useCreation(() => {
+        return streamInfo.progressState || []
+    }, [streamInfo])
     return (
         <>
             <div className={styles["simple-detect-wrapper"]} ref={simpleDetectWrapperRef}>
@@ -162,7 +260,47 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                     status={executeStatus}
                 >
                     <span className={styles["simple-detect-heard-tabName"]}>{tabName}</span>
-                    <div>
+                    <div className={styles["simple-detect-heard-operate"]}>
+                        {progressList.length === 1 && (
+                            <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+                        )}
+                        {!isExecuting ? (
+                            <>
+                                <YakitPopconfirm
+                                    title={"确定将插件商店所有数据导入到本地吗?"}
+                                    onConfirm={onImportPlugin}
+                                    okText='Yes'
+                                    cancelText='No'
+                                    placement={"left"}
+                                >
+                                    <YakitButton
+                                        type='text'
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    >
+                                        一键导入插件
+                                    </YakitButton>
+                                </YakitPopconfirm>
+                                <YakitPopconfirm
+                                    title={"确定将插件商店所有本地数据清除吗?"}
+                                    onConfirm={onRemoveAllLocalPlugin}
+                                    okText='Yes'
+                                    cancelText='No'
+                                    placement={"left"}
+                                >
+                                    <YakitButton
+                                        type='text'
+                                        danger
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    >
+                                        一键清除插件
+                                    </YakitButton>
+                                </YakitPopconfirm>
+                            </>
+                        ) : null}
                         {isExecuting
                             ? !isExpand && (
                                   <>
@@ -196,7 +334,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                             }}
                             labelWrap={true}
                         >
-                            <SimpleDetectFormContent disabled={isExecuting} inViewport={inViewport} form={form} />
+                            <SimpleDetectFormContent
+                                disabled={isExecuting}
+                                inViewport={inViewport}
+                                form={form}
+                                refreshGroup={refreshGroup}
+                            />
                             <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                                 <div className={styles["simple-detect-form-operate"]}>
                                     {isExecuting ? (
@@ -236,6 +379,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                     onSave={onSaveExtraParams}
                 />
             </React.Suspense>
+            {visibleOnline && (
+                <YakitGetOnlinePlugin
+                    visible={visibleOnline}
+                    setVisible={(v) => {
+                        setVisibleOnline(v)
+                        setRefreshGroup(!refreshGroup)
+                    }}
+                />
+            )}
         </>
     )
 })
@@ -262,12 +414,12 @@ const marks: SliderMarks = {
     }
 }
 const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.memo((props) => {
-    const {disabled, inViewport, form} = props
+    const {disabled, inViewport, form, refreshGroup} = props
     const [groupOptions, setGroupOptions] = useState<string[]>([])
     const scanType = Form.useWatch("scanType", form)
     useEffect(() => {
         if (inViewport) getPluginGroup()
-    }, [inViewport])
+    }, [inViewport, refreshGroup])
     const scanTypeExtra = useCreation(() => {
         let str: string = ""
         switch (scanType) {
@@ -280,7 +432,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
         }
         return str
     }, [scanType])
-    const getPluginGroup = () => {
+    const getPluginGroup = useMemoizedFn(() => {
         apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
             const newGroup: string[] = group
                 .map((item) => item.Value)
@@ -288,7 +440,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
                 .concat("弱口令")
             setGroupOptions([...new Set(newGroup)])
         })
-    }
+    })
     return (
         <>
             <YakitFormDraggerContent
@@ -313,7 +465,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
                     <>
                         {scanTypeExtra}
                         {scanType === "专项扫描" && (
-                            <Form.Item noStyle name='pluginGroup'>
+                            <Form.Item noStyle name='pluginGroup' initialValue={["弱口令"]}>
                                 <Checkbox.Group className={styles["plugin-group-wrapper"]} disabled={disabled}>
                                     {groupOptions.map((ele) => (
                                         <YakitCheckbox key={ele} value={ele}>

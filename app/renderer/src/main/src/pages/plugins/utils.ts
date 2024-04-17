@@ -850,6 +850,13 @@ export const apiDeleteYakScriptByIds: (query: DeleteYakScriptRequestByIdsProps) 
     })
 }
 
+export const defaultDeleteLocalPluginsByWhereRequest: DeleteLocalPluginsByWhereRequestProps = {
+    Keywords: "",
+    Type: "",
+    UserName: "",
+    Tags: "",
+    Groups: []
+}
 /** grpc接口 DeleteLocalPluginsByWhere 请求参数 */
 export interface DeleteLocalPluginsByWhereRequestProps {
     Keywords: string

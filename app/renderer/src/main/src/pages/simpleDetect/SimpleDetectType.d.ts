@@ -5,7 +5,7 @@ export interface SimpleDetectProps {
     pageId: string
 }
 
-interface SimpleDetectForm {
+export interface SimpleDetectForm {
     Targets: string
     scanType: "基础扫描" | "专项扫描"
     scanDeep: number
@@ -16,4 +16,5 @@ export interface SimpleDetectFormContentProps {
     disabled: boolean
     inViewport: boolean
     form: FormInstance<SimpleDetectForm>
+    refreshGroup:boolean
 }
