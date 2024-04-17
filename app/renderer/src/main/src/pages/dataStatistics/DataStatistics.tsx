@@ -417,7 +417,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         title: {
             show: false,
             text: 0,
-            subtext: "Total",
+            subtext: "总用户数",
             top: "32%",
             left: "49%",
             // right: "50%",
@@ -839,7 +839,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                     <div className={styles["count"]}>
                                         {userData ? numeral(userData.touristTotal).format("0,0") : ""}
                                     </div>
-                                    <div className={styles["sub-title"]}>总用户数</div>
+                                    <div className={styles["sub-title"]}>机构用户数</div>
                                 </div>
                             </div>
                             <div className={styles["login-user"]}>
