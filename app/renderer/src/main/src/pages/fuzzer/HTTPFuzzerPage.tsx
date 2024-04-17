@@ -1084,7 +1084,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const resumeAndPause = useMemoizedFn(async () => {
         try {
             if (!taskIDRef.current) return
-            await ipcRenderer.invoke("HTTPFuzzer", {PauseTaskID: taskIDRef.current, IsPause: isPause}, tokenRef.current)
+            await ipcRenderer.invoke("HTTPFuzzer", {PauseTaskID: taskIDRef.current, IsPause: isPause, SetPauseStatus:true}, tokenRef.current)
             setLoading(!isPause)
             setIsPause(!isPause)
         } catch (error) {

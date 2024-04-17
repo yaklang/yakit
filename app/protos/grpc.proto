@@ -4098,6 +4098,7 @@ message FuzzerRequest {
   bool IsPause = 53;
 
   repeated MutateMethod MutateMethods = 54;
+  bool SetPauseStatus = 55;
 }
 
 message MutateMethod {
