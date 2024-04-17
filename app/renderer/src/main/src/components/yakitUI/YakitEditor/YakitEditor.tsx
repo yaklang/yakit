@@ -752,8 +752,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useKeyPress(
         (e) => true,
         (e) => {
-            e.stopPropagation()
-            // e.preventDefault()
             const filterKey = [16, 17, 18, 93]
             if (filterKey.includes(e.keyCode)) return
 
@@ -769,6 +767,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             const keyToMenu = keyBindingRef.current[activeKey.join("-")]
             if (!keyToMenu) return
 
+            e.stopPropagation()
             menuItemHandle(keyToMenu[0], keyToMenu)
         },
         { target: wrapperRef }
