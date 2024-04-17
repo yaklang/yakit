@@ -117,6 +117,7 @@ import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import cloneDeep from "lodash/cloneDeep"
 
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 
 const {ipcRenderer} = window.require("electron")
@@ -1010,11 +1011,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             retryRef.current = false
             const retryTaskID = failedFuzzer.length > 0 ? failedFuzzer[0].TaskId : undefined
             if (retryTaskID) {
+                cancelCurrentHTTPFuzzer()
                 const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "")}
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
             }
         } else if (matchRef.current) {
+            cancelCurrentHTTPFuzzer()
             matchRef.current = false
             const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
@@ -1087,6 +1090,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             yakitFailed(error + "")
         }
     })
+
+    // 目前按钮处于发送请求状态
+    const isbuttonIsSendReqStatus = useMemo(() => {
+        return !loading && isPause
+    }, [loading, isPause])
 
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
@@ -1416,7 +1424,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
     const onPrePage = useMemoizedFn(() => {
-        if (currentPage === 0 || currentPage === 1) {
+        if (!isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1) {
             return
         }
         setCurrentPage(currentPage - 1)
@@ -1424,6 +1432,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     const onNextPage = useMemoizedFn(() => {
         if (!Number(total)) return
+        if (!isbuttonIsSendReqStatus) return
         if (currentPage >= Number(total)) {
             return
         }
@@ -1525,13 +1534,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 <div className={styles["fuzzer-flipping-pages"]}>
                     <ChevronLeftIcon
                         className={classNames(styles["chevron-icon"], {
-                            [styles["chevron-icon-disable"]]: currentPage === 0 || currentPage === 1
+                            [styles["chevron-icon-disable"]]:
+                                !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
                         })}
                         onClick={() => onPrePage()}
                     />
                     <ChevronRightIcon
                         className={classNames(styles["chevron-icon"], {
-                            [styles["chevron-icon-disable"]]: currentPage >= Number(total) || !Number(total)
+                            [styles["chevron-icon-disable"]]:
+                                !isbuttonIsSendReqStatus || currentPage >= Number(total) || !Number(total)
                         })}
                         onClick={() => onNextPage()}
                     />
@@ -1738,6 +1749,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }}
                 extractedMap={extractedMap}
                 pageId={props.id}
+                noPopconfirm={isbuttonIsSendReqStatus}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -2267,6 +2279,7 @@ interface SecondNodeExtraProps {
     matchSubmit?: () => void
     pageId?: string
     extractedMap?: Map<string, string>
+    noPopconfirm?: boolean
 }
 
 /**
@@ -2295,7 +2308,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         isShowMatch = false,
         matchSubmit,
         extractedMap,
-        pageId
+        pageId,
+        noPopconfirm = true
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -2595,26 +2609,51 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 {isShowMatch && (
                     <>
                         {+(secondNodeSize?.width || 0) >= 610 ? (
-                            <YakitButton
-                                type='outline2'
-                                size={size}
-                                onClick={() => {
-                                    matchSubmit && matchSubmit()
-                                }}
-                            >
-                                仅匹配
-                            </YakitButton>
+                            <>
+                                {noPopconfirm ? (
+                                    <YakitButton
+                                        type='outline2'
+                                        size={size}
+                                        onClick={() => {
+                                            matchSubmit && matchSubmit()
+                                        }}
+                                    >
+                                        仅匹配
+                                    </YakitButton>
+                                ) : (
+                                    <YakitPopconfirm
+                                        title={"操作仅匹配会结束暂停状态，是否确定操作？"}
+                                        onConfirm={() => {
+                                            matchSubmit && matchSubmit()
+                                        }}
+                                        placement='top'
+                                    >
+                                        <YakitButton type='outline2' size={size}>
+                                            仅匹配
+                                        </YakitButton>
+                                    </YakitPopconfirm>
+                                )}
+                            </>
                         ) : (
-                            <Tooltip title='仅匹配'>
-                                <YakitButton
-                                    type='outline2'
-                                    size={size}
-                                    icon={<OutlinePlugsIcon />}
-                                    onClick={() => {
-                                        matchSubmit && matchSubmit()
-                                    }}
-                                />
-                            </Tooltip>
+                            <>
+                                {noPopconfirm ? (
+                                    <Tooltip title='仅匹配'>
+                                        <YakitButton type='outline2' size={size} icon={<OutlinePlugsIcon />} />
+                                    </Tooltip>
+                                ) : (
+                                    <YakitPopconfirm
+                                        title={"操作仅匹配会结束暂停状态，是否确定操作？"}
+                                        onConfirm={() => {
+                                            matchSubmit && matchSubmit()
+                                        }}
+                                        placement='top'
+                                    >
+                                        <Tooltip title='仅匹配'>
+                                            <YakitButton type='outline2' size={size} icon={<OutlinePlugsIcon />} />
+                                        </Tooltip>
+                                    </YakitPopconfirm>
+                                )}
+                            </>
                         )}
                     </>
                 )}
