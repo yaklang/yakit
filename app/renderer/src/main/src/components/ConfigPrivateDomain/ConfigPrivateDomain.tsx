@@ -3,7 +3,7 @@ import {AutoComplete, Button, Form, Input, Select, Tooltip} from "antd"
 import "./ConfigPrivateDomain.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, yakitFailed} from "@/utils/notification"
-import {loginOut, aboutLoginUpload} from "@/utils/login"
+import {loginOut, aboutLoginUpload, loginHTTPFlowsToOnline} from "@/utils/login"
 import {useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useStore} from "@/store"
@@ -96,6 +96,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     setStoreUserInfo(user)
                     if (data?.next) {
                         aboutLoginUpload(res.token)
+                        loginHTTPFlowsToOnline(res.token)
                         success("企业登录成功")
                         onClose && onClose()
                         onSuccee && onSuccee()
