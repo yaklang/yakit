@@ -2644,7 +2644,16 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             <>
                                 {noPopconfirm ? (
                                     <Tooltip title='仅匹配'>
-                                        <YakitButton type='outline2' size={size} icon={<OutlinePlugsIcon />} />
+                                        <YakitButton
+                                            type='outline2'
+                                            size={size}
+                                            icon={
+                                                <OutlinePlugsIcon />
+                                            }
+                                            onClick={() => {
+                                                matchSubmit && matchSubmit()
+                                            }}
+                                        />
                                     </Tooltip>
                                 ) : (
                                     <YakitPopconfirm
