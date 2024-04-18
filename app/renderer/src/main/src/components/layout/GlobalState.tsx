@@ -32,8 +32,9 @@ import {useRunNodeStore} from "@/store/runNode"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import emiter from "@/utils/eventBus/eventBus"
-import { serverPushStatus } from "@/utils/duplex/duplex"
-import MITMCertificateDownloadModal from "@/pages/mitm/MITMServerStartForm/MITMCertificateDownloadModal";
+import {serverPushStatus} from "@/utils/duplex/duplex"
+import {openABSFileLocated} from "@/utils/openWebsite"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -225,7 +226,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
     const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
+    const [mitmCertBeDetected, setMitmCertBeDetected] = useState<boolean>(false)
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
+    const [mitmCertPath, setMitmCertPath] = useState<string>("") // 证书路径
 
     const updateMITMCert = useMemoizedFn(() => {
         return new Promise((resolve, reject) => {
@@ -233,17 +236,17 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 .invoke("VerifySystemCertificate")
                 .then((res) => {
                     console.log(res)
-                    if (res.Valid) {
+                    setMitmCertBeDetected(true)
+                    if (res.valid) {
                         setShowMITMCertWarn(false)
                     } else {
                         setShowMITMCertWarn(true)
                     }
-                    if ((res.Reason) != "" ){
+                    if (res.Reason != "") {
                         reject(`error-mitm-cert ${res.Reason}`)
                     }
                 })
                 .catch((e) => reject(`error-mitm-cert ${e}`))
-
         })
     })
 
@@ -276,6 +279,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             status = "error"
             count = count + 1
         }
+        console.log("---", showMITMCertWarn)
         if (showMITMCertWarn) {
             status = "error"
             count = count + 1
@@ -289,25 +293,24 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (isRunRef.current) return
 
         isRunRef.current = true
-        Promise.allSettled(serverPushStatus?[
-            updateSystemProxy(),
-            updateGlobalReverse(),
-            updatePcap(),
-            updateChromePath(),
-            updateMITMCert()
-        ]:[
-            updateSystemProxy(),
-            updateGlobalReverse(),
-            updatePcap(),
-            updatePluginTotal(),
-            updateChromePath(),
-            updateMITMCert()
-        ])
+        Promise.allSettled(
+            serverPushStatus
+                ? [updateSystemProxy(), updateGlobalReverse(), updatePcap(), updateChromePath(), updateMITMCert()]
+                : [
+                      updateSystemProxy(),
+                      updateGlobalReverse(),
+                      updatePcap(),
+                      updatePluginTotal(),
+                      updateChromePath(),
+                      updateMITMCert()
+                  ]
+        )
             .then((values) => {
                 isRunRef.current = false
                 setTimeout(() => updateState(), 100)
             })
-            .catch(() => {})
+            .catch(() => {
+            })
     })
 
     const [timeInterval, setTimeInterval, getTimeInterval] = useGetState<number>(5)
@@ -529,10 +532,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         </div>
                     )}
                     {/* MITM 证书 */}
-                    {showMITMCertWarn && (
+                    {mitmCertBeDetected && (
                         <div className={styles["body-info"]}>
                             <div className={styles["info-left"]}>
-                                {!showMITMCertWarn ? <SuccessIcon /> : <ErrorIcon />}
+                                {showMITMCertWarn ? <ErrorIcon /> : <SuccessIcon />}
                                 <div className={styles["left-body"]}>
                                     <div className={styles["title-style"]}>MITM证书</div>
                                     <div className={styles["subtitle-style"]}>
@@ -546,10 +549,28 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     className={styles["btn-style"]}
                                     onClick={() => {
                                         setShow(false)
-                                        setDownloadVisible(true)
+                                        const m = showYakitModal({
+                                            title: "标题",
+                                            width: "600px",
+                                            centered: true,
+                                            content: <div style={{padding: 15}}>文案</div>,
+                                            onOk: () => {
+                                                ipcRenderer
+                                                    .invoke("is-file-exists", mitmCertPath)
+                                                    .then((flag: boolean) => {
+                                                        if (flag) {
+                                                            openABSFileLocated(mitmCertPath)
+                                                        } else {
+                                                            failed("目标文件已不存在!")
+                                                        }
+                                                    })
+                                                    .catch(() => {})
+                                                m.destroy()
+                                            }
+                                        })
                                     }}
                                 >
-                                    {!showMITMCertWarn ? "已配置" : "下载安装"}
+                                    {showMITMCertWarn ? "下载安装" : "已配置"}
                                 </YakitButton>
                             </div>
                         </div>
@@ -718,7 +739,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 {Array.from(runNodeList).map(([key, value], index) => (
                                     <div className={styles["run-node-item"]} key={key}>
                                         <Row>
-                                            <Col span={6} className={styles["ellipsis"]}>{JSON.parse(key).nodename}</Col>
+                                            <Col span={6} className={styles["ellipsis"]}>
+                                                {JSON.parse(key).nodename}
+                                            </Col>
                                             <Col span={15} className={styles["ellipsis"]}>
                                                 {JSON.parse(key).ipOrdomain}:{JSON.parse(key).port}
                                             </Col>
@@ -757,8 +780,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         }}
                     />
                 </div>
-                <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
-
             </div>
         )
     }, [
@@ -769,6 +790,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         systemProxy,
         timeInterval,
         isAlreadyChromePath,
+        mitmCertPath,
+        mitmCertBeDetected,
         showMITMCertWarn,
         stateNum,
         downloadVisible,

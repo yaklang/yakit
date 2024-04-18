@@ -20,9 +20,6 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
         LocalFile: ""
     })
     useEffect(() => {
-        console.log(123, visible);
-    }, [visible])
-    useEffect(() => {
         ipcRenderer.invoke("DownloadMITMCert", {}).then((data: CaCertData) => {
             setCaCerts(data)
         })
