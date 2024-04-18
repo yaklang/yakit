@@ -47,15 +47,15 @@ const SimpleDetectExtraParamsDrawer: React.FC<SimpleDetectExtraParamsDrawerProps
     const onClose = useMemoizedFn(() => {
         onSaveSetting()
     })
-    /**额外参数的保存目前没有必填项，不需要校验 */
     const onSaveSetting = useMemoizedFn(() => {
         const bruteFormValue = bruteForm.getFieldsValue()
-        const portScanFormValue = portScanForm.getFieldsValue()
-        const formValue = {
-            bruteExecuteParam: bruteFormValue,
-            portScanParam: portScanFormValue
-        }
-        onSave(formValue)
+        portScanForm.validateFields().then((portScanFormValue) => {
+            const formValue = {
+                bruteExecuteParam: bruteFormValue,
+                portScanParam: portScanFormValue
+            }
+            onSave(formValue)
+        })
     })
 
     return (
@@ -127,7 +127,6 @@ interface SimpleDetectExtraParamsProps {
 }
 const SimpleDetectExtraParams: React.FC<SimpleDetectExtraParamsProps> = React.memo((props) => {
     const {visible} = props
-    const form = Form.useFormInstance()
     const [activeKey, setActiveKey] = useState<string[]>(["网卡配置", "指纹扫描配置", "基础爬虫配置", "其他配置"])
 
     return (

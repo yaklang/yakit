@@ -30,7 +30,6 @@ import {YakitRoute, YakitRouteToPageInfo} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {SliderMarks} from "antd/lib/slider"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {GroupCount} from "../invoker/schema"
 import {getLinkPluginConfig} from "../plugins/singlePluginExecution/SinglePluginExecution"
 import {PresetPorts} from "../portscan/schema"
@@ -39,7 +38,9 @@ import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetai
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
-import {defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
+import {convertStartBruteParams, defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
+import {v4 as uuidv4} from "uuid"
+import {StartBruteParams} from "../brute/BrutePage"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
@@ -83,7 +84,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             ...defPortScanExecuteExtraFormValue,
             scanDeep: defaultScanDeep,
             presetPort: scanDeepMapPresetPort[defaultScanDeep],
-            Ports: PresetPorts[scanDeepMapPresetPort[defaultScanDeep]]
+            Ports: PresetPorts[scanDeepMapPresetPort[defaultScanDeep]],
+            HostAliveConcurrent: 200
         }),
         bruteExecuteParam: cloneDeep(defaultBruteExecuteExtraFormValue)
     })
@@ -167,6 +169,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             warn("请选择专项扫描项目")
             return
         }
+        let taskNameTimeTarget: string = value?.Targets.split(",")[0].split(/\n/)[0] || "漏洞扫描任务"
+        const taskName = `${value.scanType}-${taskNameTimeTarget}` + "-" + uuidv4()
         const pluginGroup = value.scanType !== "专项扫描" ? ["基础扫描"] : value.pluginGroup || []
         const linkPluginConfig = getLinkPluginConfig(
             [],
@@ -180,10 +184,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         )
         let portScanRequestParams: PortScanExecuteExtraFormValue = {
             ...extraParamsValue.portScanParam,
+            Mode: "all",
+            Proto: ["tcp"],
             EnableBrute: value.pluginGroup?.includes("弱口令"),
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
-            SkippedHostAliveScan: !!value.SkippedHostAliveScan
+            SkippedHostAliveScan: !!value.SkippedHostAliveScan,
+            TaskName: taskName
         }
         switch (value.scanDeep) {
             // 快速
@@ -216,7 +223,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             default:
                 break
         }
+        const newStartBruteParams: StartBruteParams = {
+            ...convertStartBruteParams(extraParamsValue.bruteExecuteParam)
+        }
         const params: RecordPortScanRequest = {
+            StartBruteParams: {
+                ...newStartBruteParams
+            },
             PortScanRequest: {...portScanRequestParams}
         }
         simpleDetectStreamEvent.reset()
