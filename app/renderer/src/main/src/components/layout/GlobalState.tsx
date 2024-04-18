@@ -247,6 +247,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     }
                 })
                 .catch((e) => reject(`error-mitm-cert ${e}`))
+                .finally(() => {
+                    resolve("mitm-cert")
+                })
         })
     })
 
@@ -279,7 +282,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             status = "error"
             count = count + 1
         }
-        console.log("---", showMITMCertWarn)
         if (showMITMCertWarn) {
             status = "error"
             count = count + 1
