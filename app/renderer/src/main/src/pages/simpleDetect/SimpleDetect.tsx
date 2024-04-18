@@ -41,6 +41,7 @@ import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
 import {convertStartBruteParams, defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
 import {v4 as uuidv4} from "uuid"
 import {StartBruteParams} from "../brute/BrutePage"
+import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
@@ -56,6 +57,8 @@ const scanDeepMapPresetPort = {
 
 export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const {pageId} = props
+    // 全局登录状态
+    const {userInfo} = useStore()
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -96,6 +99,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 
     const scanDeep = Form.useWatch("scanDeep", form)
 
+    const taskNameRef = useRef<string>("")
     const simpleDetectWrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(simpleDetectWrapperRef)
     const tokenRef = useRef<string>(randomString(40))
@@ -171,6 +175,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         }
         let taskNameTimeTarget: string = value?.Targets.split(",")[0].split(/\n/)[0] || "漏洞扫描任务"
         const taskName = `${value.scanType}-${taskNameTimeTarget}` + "-" + uuidv4()
+        taskNameRef.current = taskName
         const pluginGroup = value.scanType !== "专项扫描" ? ["基础扫描"] : value.pluginGroup || []
         const linkPluginConfig = getLinkPluginConfig(
             [],
@@ -186,7 +191,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             ...extraParamsValue.portScanParam,
             Mode: "all",
             Proto: ["tcp"],
-            EnableBrute: value.pluginGroup?.includes("弱口令"),
+            EnableBrute: value.scanType === "基础扫描" || !!value.pluginGroup?.includes("弱口令"),
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
             SkippedHostAliveScan: !!value.SkippedHostAliveScan,
@@ -277,6 +282,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     })
     const onImportPlugin = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (!userInfo.isLogin) {
+            warn("我的插件需要先登录才能下载，请先登录")
+            return
+        }
         setVisibleOnline(true)
     })
     const onRemoveAllLocalPlugin = useMemoizedFn((e) => {
@@ -284,6 +293,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         apiDeleteLocalPluginsByWhere(defaultDeleteLocalPluginsByWhereRequest).then(() => {
             setRefreshGroup(!refreshGroup)
         })
+    })
+    /**生成报告 */
+    const onCreateReport = useMemoizedFn(() => {
+        if (executeStatus === "default") return
     })
     const isShowResult = useCreation(() => {
         return isExecuting || runtimeId
@@ -340,6 +353,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                         一键清除插件
                                     </YakitButton>
                                 </YakitPopconfirm>
+                                <YakitButton
+                                    icon={<OutlineClipboardlistIcon />}
+                                    disabled={executeStatus === "default"}
+                                    onClick={onCreateReport}
+                                >
+                                    生成报告
+                                </YakitButton>
                             </>
                         ) : null}
                         {isExecuting
