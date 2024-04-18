@@ -104,6 +104,7 @@ import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {PluginGroupType} from "@/pages/plugins/group/PluginGroups"
+import { ExpandAndRetractExcessiveState } from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -3776,15 +3777,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     })
 )
 
-interface SimpleTabInterface {
+export interface SimpleTabInterface {
     tabId: string
-    status: "run" | "stop" | "success"
+    status: ExpandAndRetractExcessiveState
 }
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
-    const [tabStatus, setTabStatus] = useState<string>("")
+    const [tabStatus, setTabStatus] = useState<ExpandAndRetractExcessiveState>()
     useEffect(() => {
         emiter.on("simpleDetectTabEvent", onSimpleDetectTabEvent)
         return () => {
@@ -3814,7 +3815,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                             [styles["tab-menu-sub-item-active"]]: isActive,
                             [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
                             [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor,
-                            [styles[`tab-menu-sub-item-${tabStatus}`]]: tabStatus.length > 0
+                            [styles[`tab-menu-sub-item-${tabStatus}`]]: !!tabStatus
                         })}
                         onClick={() => {
                             setSelectSubMenu({...subItem})

@@ -42,6 +42,7 @@ import {convertStartBruteParams, defaultBruteExecuteExtraFormValue} from "../sec
 import {v4 as uuidv4} from "uuid"
 import {StartBruteParams} from "../brute/BrutePage"
 import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
+import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
@@ -111,18 +112,25 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         ]
     }, [])
 
+    const onEnd = useMemoizedFn(() => {
+        simpleDetectStreamEvent.stop()
+        setTimeout(() => {
+            setIsExecuting(false)
+            if (executeStatus !== "error") {
+                setExecuteStatus("finished")
+            }
+        }, 300)
+    })
+
     const [streamInfo, simpleDetectStreamEvent] = useHoldGRPCStream({
         tabs: defaultTabs,
         taskName: "SimpleDetect",
         apiKey: "SimpleDetect",
         token: tokenRef.current,
-        onEnd: () => {
-            simpleDetectStreamEvent.stop()
-            setTimeout(() => {
-                setExecuteStatus("finished")
-                setIsExecuting(false)
-            }, 300)
+        onError: () => {
+            setExecuteStatus("error")
         },
+        onEnd,
         setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             setRuntimeId(rId)
@@ -161,6 +169,14 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             emiter.off("secondMenuTabDataChange", onSetTabName)
         }
     }, [inViewport])
+    useEffect(() => {
+        const simpleTab: SimpleTabInterface = {
+            tabId: pageId,
+            status: executeStatus
+        }
+        emiter.emit("simpleDetectTabEvent", JSON.stringify(simpleTab))
+    }, [executeStatus])
+
     const onSetTabName = useMemoizedFn(() => {
         setTabName(initSpaceEnginePageInfo())
     })
