@@ -484,7 +484,7 @@ module.exports = {
                         } else {
                             // 如果不是 Windows，给脚本文件添加执行权限
                             if (!isWindows) {
-                                fs.chmodSync(targetPath, '755');
+                                fs.chmodSync(targetPath, 0o755);
                             }
                             resolve(targetPath)
                         }
