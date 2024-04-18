@@ -1016,7 +1016,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setIsPause(true)
             }
         } else if (matchRef.current) {
-            cancelCurrentHTTPFuzzer()
             matchRef.current = false
             const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
@@ -1750,6 +1749,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 extractedMap={extractedMap}
                 pageId={props.id}
                 noPopconfirm={isbuttonIsSendReqStatus}
+                retryNoPopconfirm={!(!loading && !isPause)}
+                cancelCurrentHTTPFuzzer={cancelCurrentHTTPFuzzer}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -2280,6 +2281,8 @@ interface SecondNodeExtraProps {
     pageId?: string
     extractedMap?: Map<string, string>
     noPopconfirm?: boolean
+    retryNoPopconfirm?: boolean
+    cancelCurrentHTTPFuzzer?: () => void
 }
 
 /**
@@ -2309,7 +2312,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         matchSubmit,
         extractedMap,
         pageId,
-        noPopconfirm = true
+        noPopconfirm = true,
+        retryNoPopconfirm = true,
+        cancelCurrentHTTPFuzzer
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -2624,6 +2629,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     <YakitPopconfirm
                                         title={"操作仅匹配会结束暂停状态，是否确定操作？"}
                                         onConfirm={() => {
+                                            cancelCurrentHTTPFuzzer && cancelCurrentHTTPFuzzer()
                                             matchSubmit && matchSubmit()
                                         }}
                                         placement='top'
@@ -2805,16 +2811,47 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     }
     if (!onlyOneResponse && cachedTotal > 1 && !showSuccess) {
         return (
-            <YakitButton
-                type={"primary"}
-                size='small'
-                onClick={() => {
-                    retrySubmit && retrySubmit()
-                }}
-                disabled={failedFuzzer.length === 0}
-            >
-                一键重试
-            </YakitButton>
+            <>
+                <YakitButton
+                    type={"primary"}
+                    size='small'
+                    onClick={() => {
+                        retrySubmit && retrySubmit()
+                    }}
+                    disabled={failedFuzzer.length === 0}
+                >
+                    一键重试
+                </YakitButton>
+                {/* {retryNoPopconfirm ? (
+                    <YakitButton
+                        type={"primary"}
+                        size='small'
+                        onClick={() => {
+                            retrySubmit && retrySubmit()
+                        }}
+                        disabled={failedFuzzer.length === 0}
+                    >
+                        一键重试
+                    </YakitButton>
+                ) : (
+                    <YakitPopconfirm
+                        title={"操作一键重试会结束暂停状态，是否确定操作？"}
+                        onConfirm={() => {
+                            cancelCurrentHTTPFuzzer && cancelCurrentHTTPFuzzer()
+                            retrySubmit && retrySubmit()
+                        }}
+                        placement='top'
+                    >
+                        <YakitButton
+                            type={"primary"}
+                            size='small'
+                            disabled={failedFuzzer.length === 0}
+                        >
+                            一键重试
+                        </YakitButton>
+                    </YakitPopconfirm>
+                )} */}
+            </>
         )
     }
     return <></>
