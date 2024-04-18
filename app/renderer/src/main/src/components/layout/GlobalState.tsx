@@ -40,10 +40,10 @@ const {ipcRenderer} = window.require("electron")
 
 /** 不同状态下展示的ICON */
 const ShowIcon: Record<string, ReactNode> = {
-    error: <ExclamationIcon className={styles["icon-style"]} />,
-    warning: <ExclamationIcon className={styles["icon-style"]} />,
-    success: <RocketIcon className={styles["icon-style"]} />,
-    help: <RocketOffIcon className={styles["icon-style"]} />
+    error: <ExclamationIcon className={styles["icon-style"]}/>,
+    warning: <ExclamationIcon className={styles["icon-style"]}/>,
+    success: <RocketIcon className={styles["icon-style"]}/>,
+    help: <RocketOffIcon className={styles["icon-style"]}/>
 }
 /** 不同状态下组件展示的颜色 */
 const ShowColorClass: Record<string, string> = {
@@ -57,6 +57,7 @@ export interface GlobalReverseStateProp {
     isEngineLink: boolean
     system: YakitSystem
 }
+
 /** 全局反连服务器配置参数 */
 interface ReverseDetail {
     PublicReverseIP: string
@@ -200,7 +201,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("GetSystemProxy", {})
-                .then((res: {CurrentProxy: string; Enable: boolean}) => {
+                .then((res: { CurrentProxy: string; Enable: boolean }) => {
                     setSystemProxy(res)
                     resolve("system-proxy")
                 })
@@ -299,13 +300,13 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             serverPushStatus
                 ? [updateSystemProxy(), updateGlobalReverse(), updatePcap(), updateChromePath(), updateMITMCert()]
                 : [
-                      updateSystemProxy(),
-                      updateGlobalReverse(),
-                      updatePcap(),
-                      updatePluginTotal(),
-                      updateChromePath(),
-                      updateMITMCert()
-                  ]
+                    updateSystemProxy(),
+                    updateGlobalReverse(),
+                    updatePcap(),
+                    updatePluginTotal(),
+                    updateChromePath(),
+                    updateMITMCert()
+                ]
         )
             .then((values) => {
                 isRunRef.current = false
@@ -424,7 +425,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const {firstRunNodeFlag, runNodeList, delRunNode, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
     const [noPrompt, setNoPrompt] = useState<boolean>(false) // 决定确认弹窗是否需要显示
-    const [delRunNodeItem, setDelRunNodeItem] = useState<{key: string; pid: string} | undefined>()
+    const [delRunNodeItem, setDelRunNodeItem] = useState<{ key: string; pid: string } | undefined>()
 
     useEffect(() => {
         // 第一次运行节点显示提示框
@@ -500,7 +501,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             {system !== "Windows_NT" ? (
                                 <>
                                     <div className={styles["info-left"]}>
-                                        <ErrorIcon />
+                                        <ErrorIcon/>
                                         <div className={styles["left-body"]}>
                                             <div className={styles["title-style"]}>网卡权限未修复</div>
                                             <div className={styles["subtitle-style"]}>
@@ -524,7 +525,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 </>
                             ) : (
                                 <div className={styles["info-left"]}>
-                                    <WarningIcon />
+                                    <WarningIcon/>
                                     <div className={styles["left-body"]}>
                                         <div className={styles["title-style"]}>建议使用管理员身份运行软件</div>
                                         <div className={styles["subtitle-style"]}>普通权限可能会影响部分功能的使用</div>
@@ -537,11 +538,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     {mitmCertBeDetected && (
                         <div className={styles["body-info"]}>
                             <div className={styles["info-left"]}>
-                                {showMITMCertWarn ? <ErrorIcon /> : <SuccessIcon />}
+                                {showMITMCertWarn ? <ErrorIcon/> : <SuccessIcon/>}
                                 <div className={styles["left-body"]}>
                                     <div className={styles["title-style"]}>MITM证书</div>
                                     <div className={styles["subtitle-style"]}>
-                                        MITM证书不在系统信任列表中，请重新安装
+                                        {showMITMCertWarn ? "MITM证书不在系统信任列表中，请重新安装" : "MITM证书已在系统信任列表中"}
                                     </div>
                                 </div>
                             </div>
@@ -552,21 +553,33 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     onClick={() => {
                                         setShow(false)
                                         const m = showYakitModal({
-                                            title: "标题",
+                                            title: "生成自动安装脚本",
                                             width: "600px",
                                             centered: true,
-                                            content: <div style={{padding: 15}}>文案</div>,
+                                            content: <div style={{padding: 15}}>
+                                                请按照以下步骤进行操作：<br/>
+                                                <br/>
+                                                1. 点击确定后将会打开脚本存放的目录。<br/>
+                                                2. 双击打开 "auto-install-cert.bat/auto-install-cert.sh" 的文件执行安装。<br/>
+                                                3. 如果安装成功，您将看到“Certificate successfully installed.”的提示。<br/>
+                                                <br/>
+                                                请确保在运行脚本之前关闭任何可能会阻止安装的应用程序。<br/>
+                                                安装完成后，您将能够顺利使用 MITM。<br/>
+                                                <br/>
+                                                如有任何疑问或需要进一步帮助，请随时联系我们。
+                                            </div>,
                                             onOk: () => {
                                                 ipcRenderer
-                                                    .invoke("is-file-exists", mitmCertPath)
-                                                    .then((flag: boolean) => {
-                                                        if (flag) {
-                                                            openABSFileLocated(mitmCertPath)
+                                                    .invoke("generate-install-script", {})
+                                                    .then((p: string) => {
+                                                        if (p) {
+                                                            openABSFileLocated(p)
                                                         } else {
-                                                            failed("目标文件已不存在!")
+                                                            failed("生成失败")
                                                         }
                                                     })
-                                                    .catch(() => {})
+                                                    .catch(() => {
+                                                    })
                                                 m.destroy()
                                             }
                                         })
@@ -581,7 +594,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     {pluginTotal === 0 && (
                         <div className={styles["body-info"]}>
                             <div className={styles["info-left"]}>
-                                <ErrorIcon />
+                                <ErrorIcon/>
                                 <div className={styles["left-body"]}>
                                     <div className={styles["title-style"]}>暂无本地插件</div>
                                     <div className={styles["subtitle-style"]}>可一键获取官方云端插件源</div>
@@ -600,7 +613,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             {!isReverseState && (
                                 <div className={styles["body-info"]}>
                                     <div className={styles["info-left"]}>
-                                        <WarningIcon />
+                                        <WarningIcon/>
                                         <div className={styles["left-body"]}>
                                             <div className={styles["title-style"]}>全局反连未配置</div>
                                             <div className={styles["subtitle-style"]}>可能会影响部分功能的使用</div>
@@ -617,7 +630,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                                     width: 800,
                                                     content: (
                                                         <div style={{width: 800}}>
-                                                            <ConfigGlobalReverse />
+                                                            <ConfigGlobalReverse/>
                                                         </div>
                                                     )
                                                 })
@@ -632,7 +645,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             {showChromeWarn && (
                                 <div className={styles["body-info"]}>
                                     <div className={styles["info-left"]}>
-                                        {isAlreadyChromePath ? <SuccessIcon /> : <WarningIcon />}
+                                        {isAlreadyChromePath ? <SuccessIcon/> : <WarningIcon/>}
                                         <div className={styles["left-body"]}>
                                             <div className={styles["title-style"]}>Chrome启动路径</div>
                                             <div className={styles["subtitle-style"]}>
@@ -657,7 +670,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             {/* 系统代理 */}
                             <div className={styles["body-info"]}>
                                 <div className={styles["info-left"]}>
-                                    {systemProxy.Enable ? <SuccessIcon /> : <HelpIcon />}
+                                    {systemProxy.Enable ? <SuccessIcon/> : <HelpIcon/>}
                                     <div className={styles["left-body"]}>
                                         <div className={styles["system-proxy-title"]}>
                                             系统代理
@@ -703,7 +716,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     {isEnpriTraceAgent() && state === "success" && (
                         <div className={styles["body-info"]}>
                             <div className={styles["info-left"]}>
-                                <SuccessIcon />
+                                <SuccessIcon/>
                                 <div className={styles["left-body"]}>
                                     <div className={styles["system-proxy-title"]}>所有配置均正常</div>
                                 </div>
@@ -716,7 +729,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         <>
                             <div className={styles["body-info"]}>
                                 <div className={styles["info-left"]}>
-                                    <SuccessIcon />
+                                    <SuccessIcon/>
                                     <div className={styles["left-body"]}>
                                         <div className={styles["title-style"]}>
                                             启用节点
@@ -816,7 +829,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             </YakitPopover>
             <YakitHint
                 visible={pcapHintShow}
-                heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
+                heardIcon={pcapResult ? <AllShieldCheckIcon/> : undefined}
                 title={pcapResult ? "已有网卡操作权限" : "当前引擎不具有网卡操作权限"}
                 content={
                     pcapResult
