@@ -482,6 +482,10 @@ module.exports = {
                         if (!fs.existsSync(targetPath)) {
                             reject(`Extract Cert Script Failed`)
                         } else {
+                            // 如果不是 Windows，给脚本文件添加执行权限
+                            if (!isWindows) {
+                                fs.chmodSync(targetPath, '755');
+                            }
                             resolve(targetPath)
                         }
                         zipHandler.close();
