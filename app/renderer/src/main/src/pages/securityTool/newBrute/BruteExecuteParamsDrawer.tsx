@@ -140,8 +140,8 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
 
 interface SelectPayloadProps extends Omit<YakitSelectProps, "value" | "onChange"> {
     visible: boolean
-    contentValue?: string | number
-    setContentValue?: (s: string | number) => void
+    contentValue?: string | string[]
+    setContentValue?: (s: string | string[]) => void
 }
 const SelectPayload: React.FC<SelectPayloadProps> = React.memo((props) => {
     const {visible, contentValue, setContentValue, ...restProps} = props
@@ -151,6 +151,11 @@ const SelectPayload: React.FC<SelectPayloadProps> = React.memo((props) => {
     useEffect(() => {
         if (visible) fetchList()
     }, [visible])
+    useEffect(() => {
+        if (contentValue?.length === 0) {
+            setValueSelect(undefined)
+        }
+    }, [contentValue])
     const fetchList = () => {
         apiGetAllPayloadGroup()
             .then((data: PayloadGroupNodeProps[]) => {
