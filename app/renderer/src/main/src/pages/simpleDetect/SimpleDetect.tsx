@@ -295,7 +295,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         })
     })
     /**生成报告 */
-    const onCreateReport = useMemoizedFn(() => {
+    const onCreateReport = useMemoizedFn((e) => {
+        e.stopPropagation()
         if (executeStatus === "default") return
     })
     const isShowResult = useCreation(() => {
@@ -353,15 +354,17 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                         一键清除插件
                                     </YakitButton>
                                 </YakitPopconfirm>
-                                <YakitButton
-                                    icon={<OutlineClipboardlistIcon />}
-                                    disabled={executeStatus === "default"}
-                                    onClick={onCreateReport}
-                                >
-                                    生成报告
-                                </YakitButton>
+                                <div className={styles["divider-style"]}></div>
                             </>
                         ) : null}
+                        <YakitButton
+                            icon={<OutlineClipboardlistIcon />}
+                            disabled={executeStatus === "default"}
+                            onClick={onCreateReport}
+                            style={{marginRight: 8}}
+                        >
+                            生成报告
+                        </YakitButton>
                         {isExecuting
                             ? !isExpand && (
                                   <>
@@ -373,7 +376,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                             : !isExpand && (
                                   <>
                                       <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
-                                      <div className={styles["divider-style"]}></div>
                                   </>
                               )}
                     </div>

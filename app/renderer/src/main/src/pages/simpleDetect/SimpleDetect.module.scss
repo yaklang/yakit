@@ -1,3 +1,5 @@
+@use "../securityTool/securityTool.scss" as securityTool;
+
 %flex-center {
     display: flex;
     align-items: center;
@@ -69,4 +71,9 @@
     @extend %flex-center;
     gap: 8px 0;
     flex-wrap: wrap;
+}
+
+.divider-style {
+    @extend %divider-style;
+    margin: 0 8px;
 }
