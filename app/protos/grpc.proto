@@ -1075,10 +1075,6 @@ message GlobalNetworkConfig {
 
   repeated string ExcludePluginScanURIs = 15;
   repeated string IncludePluginScanURIs = 16;
-
-  // AI Primary Config 首选 AI 配置项
-  // openai / chatglm
-  string PrimaryAIType = 17;
 }
 
 message AuthInfo {
@@ -3829,7 +3825,7 @@ message CodecMethod {
 
 message CodecParam {
   string Name = 1;
-  string Type = 2; // input | select | checkbox | search | monaco | inputSelect
+  string Type = 2; // input | select | checkbox | search | monaco
   repeated string Options = 3; // 可选值
   bool  Required = 4; // 就算是false也需要传
   string Desc = 5; // 描述
