@@ -746,10 +746,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 <Form.Item colon={false} label={" "}>
                                     <Space>
                                         <YakitButton type='primary' htmlType='submit'>
-                                            更新全局网络配置
+                                            更新全局配置
                                         </YakitButton>
                                         <YakitPopconfirm
-                                            title={"确定需要重置网络配置吗？"}
+                                            title={"确定需要重置配置吗？"}
                                             onConfirm={() => {
                                                 onResetDelPrivatePlugin()
                                                 ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
@@ -759,7 +759,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             }}
                                             placement='top'
                                         >
-                                            <YakitButton type='outline1'> 重置网络配置 </YakitButton>
+                                            <YakitButton type='outline1'> 重置配置 </YakitButton>
                                         </YakitPopconfirm>
                                     </Space>
                                 </Form.Item>

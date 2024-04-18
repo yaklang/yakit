@@ -359,6 +359,13 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     /** 请求类型-为原始请求则不展示额外参数 */
     const requestType = Form.useWatch("requestType", form)
 
+    /** 是否隐藏非必填参数项 */
+    const isShowGroupParams = useMemo(() => {
+        if (pluginType === "yak" || pluginType === "lua") return false
+        if (requestType !== "input") return true
+        return false
+    }, [pluginType, requestType])
+
     const pathRef = useRef<YakitBaseSelectRef>({
         onGetRemoteValues: () => {},
         onSetRemoteValues: (s: string[]) => {}
@@ -540,7 +547,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                             }}
                         >
                             <div className={styles["custom-params-wrapper"]}>{pluginRequiredItem(pluginType)}</div>
-                            {requestType !== "input" ? null : pluginOptionalItem(pluginType)}
+                            {isShowGroupParams ? null : pluginOptionalItem(pluginType)}
                         </Form>
                     </div>
                 </YakitCard>
