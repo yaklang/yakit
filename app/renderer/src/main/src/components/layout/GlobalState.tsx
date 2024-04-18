@@ -233,7 +233,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             ipcRenderer
                 .invoke("VerifySystemCertificate")
                 .then((res) => {
-                    console.log(res)
                     if (res.valid) {
                         setShowMITMCertWarn(false)
                     } else {
