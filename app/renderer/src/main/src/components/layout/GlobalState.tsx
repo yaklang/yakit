@@ -771,6 +771,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         isAlreadyChromePath,
         showMITMCertWarn,
         stateNum,
+        downloadVisible,
         Array.from(runNodeList).length
     ])
 
