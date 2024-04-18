@@ -870,6 +870,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 ? `${i.Key} => ${i.Value}`
                                                 : ""
                                         }
+                                        key={`${i.Key} => ${i.Value}`}
                                     >
                                         <YakitTag
                                             closable={true}

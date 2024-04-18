@@ -15,6 +15,7 @@ import styles from "./FuzzerSequence.module.scss"
 import {Divider, Result} from "antd"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {OutlineReplyIcon} from "@/assets/icon/outline"
+import { CurrentHttpFlow } from "@/pages/yakitStore/viewers/base"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,6 +37,8 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
     const isShowRef = useRef<boolean>(false)
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
+
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
 
     useEffect(() => {
         ipcRenderer.on(
@@ -126,12 +129,15 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         setShowResponseInfoSecondEditor={()=>{}}
                     />
                     <Divider type='vertical' style={{marginRight: 0}} />
-                    <YakitButton onClick={() => setShowAllResponse()} type='text2' icon={<OutlineReplyIcon />}>
+                    <YakitButton onClick={() => {
+                        setOnlyShowFirstNode(true)
+                        setShowAllResponse()
+                    }} type='text2' icon={<OutlineReplyIcon />}>
                         返回
                     </YakitButton>
                 </div>
             </div>
-            <div ref={secondNodeRef} className={styles["all-sequence-response-table"]}>
+            <div ref={secondNodeRef} className={styles["all-sequence-response-table"]} style={{border: '1px solid var(--yakit-border-color)'}}>
                 {showSuccess && (
                     <HTTPFuzzerPageTable
                         isRefresh={isRefresh}

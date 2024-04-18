@@ -46,6 +46,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         } = props
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
 
+        const [newRequest, setNewRequest] = useState<string>(request) // 由于传过来的request是ref 值变化并不会导致重渲染 这里拿到的request还是旧值
+
         useImperativeHandle(
             ref,
             () => ({
@@ -142,7 +144,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                     onRun: (editor, key) => {
                         switch (key) {
                             case "copy-as-url":
-                                copyAsUrl({Request: request, IsHTTPS: isHttps})
+                                copyAsUrl({Request: newRequest, IsHTTPS: isHttps})
                                 return
                             case "copy-as-curl":
                                 execCodec("packet-to-curl", request, undefined, undefined, undefined, [
@@ -158,7 +160,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                     }
                 }
             }
-        }, [request, isHttps])
+        }, [newRequest, isHttps])
 
         return (
             <NewHTTPPacketEditor
@@ -173,7 +175,10 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 originValue={StringToUint8Array(request)}
                 contextMenu={editorRightMenu}
                 onEditor={setReqEditor}
-                onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
+                onChange={(i) => {
+                    setNewRequest(Uint8ArrayToString(i, "utf8"))
+                    setRequest(Uint8ArrayToString(i, "utf8"))
+                }}
                 editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                 extraEditorProps={{
                     isShowSelectRangeMenu: true

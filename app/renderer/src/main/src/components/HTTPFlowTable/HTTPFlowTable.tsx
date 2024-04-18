@@ -76,7 +76,7 @@ import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
-import { serverPushStatus } from "@/utils/duplex/duplex"
+import {serverPushStatus} from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -312,7 +312,7 @@ export interface HTTPFlowTableProp {
     historyId?: string
     // 筛选控件隐藏
     onlyShowSearch?: boolean
-    // 此控件显示的页面
+    // 表格主要应用类型分为History和mitm两种，若其他页面需要使用此表格，pageType需要默认为History，需要额外再新加参数区分进行使用
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     includeInUrl?: string | string[]
@@ -324,6 +324,10 @@ export interface HTTPFlowTableProp {
     toPlugin?: boolean
     /** RuntimeId 流量过滤条件(RuntimeId) */
     runTimeId?: string
+    /** 是否为webFuzzer使用 */
+    toWebFuzzer?: boolean
+    /** 是否显示批量操作 */
+    showBatchActions?: boolean
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -622,7 +626,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         titleHeight = 38,
         containerClassName = "",
         toPlugin = false,
-        runTimeId
+        runTimeId,
+        toWebFuzzer = false,
+        showBatchActions = true
     } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
@@ -632,7 +638,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             SourceType: "mitm",
             Tags: []
         }),
-        SourceType: props.params?.SourceType || "mitm"
+        SourceType: props.params?.SourceType || "mitm",
+        WithPayload: toWebFuzzer,
+        RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+        RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -744,8 +753,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     return item.Id + "" === obj.id
                 })
                 if (scrollToIndex !== undefined) {
-                    // 加随机值触发更新渲染执行表格跳转方法 
-                    setScrollToIndex(scrollToIndex + '_' + Math.random())
+                    // 加随机值触发更新渲染执行表格跳转方法
+                    setScrollToIndex(scrollToIndex + "_" + Math.random())
                 }
             }
         } catch (error) {}
@@ -911,9 +920,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ...params,
                 ...filter,
                 Tags: [...tagsFilter],
-                bodyLength: !!(afterBodyLength || beforeBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
-                AfterBodyLength: afterBodyLength,
-                BeforeBodyLength: beforeBodyLength
+                bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
             })
             sortRef.current = sort
             setTimeout(() => {
@@ -971,6 +978,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.Pagination
         delete copyQuery.AfterId
         delete copyQuery.BeforeId
+        delete copyQuery.WithPayload
+        delete copyQuery.RuntimeIDs
+        delete copyQuery.AfterUpdatedAt
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
         copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
         setQueryParams(JSON.stringify(copyQuery))
@@ -982,25 +992,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             clearInterval(extraTimerRef.current)
         }
     }, [])
+
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
-        if (toPlugin && !runTimeId) {
+        if ((toPlugin || toWebFuzzer) && !runTimeId) {
             setTimeout(() => {
                 setLoading(false)
                 isGrpcRef.current = false
             }, 100)
             return
         }
-        updateQueryParams(query)
-        query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
 
-        if (runTimeId) query.RuntimeId = runTimeId
-
         // 查询数据
+        updateQueryParams(query)
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1009,7 +1017,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
-                        serverPushStatus&&setIsLoop(false)
+                        serverPushStatus && setIsLoop(false)
                         return
                     }
 
@@ -1026,7 +1034,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 } else if (type === "bottom") {
                     if (newData.length <= 0) {
                         // 没有数据
-                        serverPushStatus&&setIsLoop(false)
+                        serverPushStatus && setIsLoop(false)
                         return
                     }
                     const arr = [...data, ...newData]
@@ -1040,7 +1048,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 } else if (type === "offset") {
                     if (resData.length <= 0) {
                         // 没有数据
-                        serverPushStatus&&setIsLoop(false)
+                        serverPushStatus && setIsLoop(false)
                         return
                     }
                     if (["desc", "none"].includes(query.Pagination.Order)) {
@@ -1052,7 +1060,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
                     if (resData.length <= 0) {
                         // 没有数据
-                        serverPushStatus&&setIsLoop(false)
+                        serverPushStatus && setIsLoop(false)
                     }
                     setSelectedRowKeys([])
                     setSelectedRows([])
@@ -1086,10 +1094,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const getAddDataByGrpc = useMemoizedFn((query) => {
-        if(!isLoop) return
+        if (!isLoop) return
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         // 解决页面未显示时 此接口轮询导致接口锁死
-        if(clientHeight === 0) return
+        if (clientHeight === 0) return
         const copyQuery = structuredClone(query)
         copyQuery.Pagination = {
             Page: 1,
@@ -1127,18 +1135,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         const query = {
             ...params,
-            Tags: params.Tags,
             Pagination: {...paginationProps},
-            AfterId: maxIdRef.current,
-            AfterBodyLength: params.AfterBodyLength
-                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                : undefined,
-            BeforeBodyLength: params.BeforeBodyLength
-                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                : undefined
-        }
-        if (checkBodyLength && !query.AfterBodyLength) {
-            query.AfterBodyLength = 1
+            AfterId: maxIdRef.current
         }
         if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
             updateMITMPageQuery(query, "top")
@@ -1163,19 +1161,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         const query = {
             ...params,
-            Tags: params.Tags,
             BeforeId: ["desc", "none"].includes(paginationProps.Order) ? minIdRef.current : undefined,
             AfterId: ["desc", "none"].includes(paginationProps.Order) ? undefined : maxIdRef.current,
-            Pagination: {...paginationProps},
-            AfterBodyLength: params.AfterBodyLength
-                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                : undefined,
-            BeforeBodyLength: params.BeforeBodyLength
-                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                : undefined
-        }
-        if (checkBodyLength && !query.AfterBodyLength) {
-            query.AfterBodyLength = 1
+            Pagination: {...paginationProps}
         }
         if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
             updateMITMPageQuery(query, "bottom")
@@ -1199,25 +1187,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             const query = {
                 ...params,
-                Tags: params.Tags,
-                Pagination: {...paginationProps},
-                AfterBodyLength: params.AfterBodyLength
-                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                    : undefined,
-                BeforeBodyLength: params.BeforeBodyLength
-                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                    : undefined
-            }
-            if (checkBodyLength && !query.AfterBodyLength) {
-                query.AfterBodyLength = 1
+                Pagination: {...paginationProps}
             }
             if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
                 updateMITMPageQuery(query, "update")
                 return
             }
             setIsRefresh(!isRefresh)
+            setSelectedRowKeys([])
+            setSelectedRows([])
+            setScrollToIndex(0)
+            setCurrentIndex(undefined)
             getDataByGrpc(query, "update")
-        } else{
+        } else {
             setIsLoop(true)
         }
     })
@@ -1232,20 +1214,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const query = {
             ...params,
-            Tags: params.Tags,
-            Color: color ? color : undefined,
-            AfterBodyLength: params.AfterBodyLength
-                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                : undefined,
-            BeforeBodyLength: params.BeforeBodyLength
-                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                : undefined,
             AfterId: maxIdRef.current,
             Pagination: {...paginationProps}
-        }
-
-        if (props.params?.SourceType) {
-            query.SourceType = props.params?.SourceType
         }
 
         if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
@@ -1284,7 +1254,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 RefreshRequest
             })
             .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                const tags = rsp.Tags
+                const tags = rsp.Tags.filter((item) => (toWebFuzzer ? item.Value === "webfuzzer" : item.Value))
                 setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
             })
             .catch((e: any) => {
@@ -1337,25 +1307,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [selected])
 
     // 是否循环接口
-    const [isLoop,setIsLoop] = useState<boolean>(!serverPushStatus)
+    const [isLoop, setIsLoop] = useState<boolean>(!serverPushStatus)
 
-    const onRefreshQueryHTTPFlowsFun = useMemoizedFn(()=>{
+    const onRefreshQueryHTTPFlowsFun = useMemoizedFn(() => {
         setIsLoop(true)
     })
-    useEffect(()=>{
+    useEffect(() => {
         emiter.on("onRefreshQueryHTTPFlows", onRefreshQueryHTTPFlowsFun)
         return () => {
             emiter.off("onRefreshQueryHTTPFlows", onRefreshQueryHTTPFlowsFun)
         }
-    },[])
+    }, [])
 
-    useEffect(()=>{
-        let sTop,cHeight,sHeight
-        let id = setInterval(()=>{
+    useEffect(() => {
+        let sTop, cHeight, sHeight
+        let id = setInterval(() => {
             const scrollTop = tableRef.current?.containerRef?.scrollTop
             const clientHeight = tableRef.current?.containerRef?.clientHeight
             const scrollHeight = tableRef.current?.containerRef?.scrollHeight
-            if(sTop!==scrollTop||cHeight!==clientHeight||sHeight!==scrollHeight){
+            if (sTop !== scrollTop || cHeight !== clientHeight || sHeight !== scrollHeight) {
                 setIsLoop(true)
             }
             sTop = scrollTop
@@ -1363,7 +1333,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             sHeight = scrollHeight
         }, 1000)
         return () => clearInterval(id)
-    },[])
+    }, [])
 
     // 设置是否自动刷新
     useEffect(() => {
@@ -1375,7 +1345,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
         return () => clearInterval(id)
-    }, [inViewport,isLoop,scrollUpdate])
+    }, [inViewport, isLoop, scrollUpdate])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -1469,6 +1439,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onCheckThan0 = useDebounceFn(
         (check: boolean) => {
             setCheckBodyLength(check)
+            if (!getAfterBodyLength()) {
+                params.AfterBodyLength = check ? 1 : undefined
+            }
+            setParams(params)
             setTimeout(() => {
                 updateData()
             }, 100)
@@ -1476,381 +1450,431 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {wait: 200}
     ).run
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
-        return [
-            {
-                title: "序号",
-                dataKey: "Id",
-                fixed: "left",
-                ellipsis: false,
-                width: 96,
-                enableDrag: false,
-                sorterProps: {
-                    sorter: true
-                }
-            },
-            {
-                title: "方法",
-                dataKey: "Method",
-                width: 80,
-                filterProps: {
-                    filterKey: "Methods",
-                    filtersType: "select",
-                    filtersSelectAll: {
-                        isAll: true
-                    },
-                    filters: [
-                        {
-                            label: "GET",
-                            value: "GET"
-                        },
-                        {
-                            label: "POST",
-                            value: "POST"
-                        },
-                        {
-                            label: "HEAD",
-                            value: "HEAD"
-                        },
-                        {
-                            label: "PUT",
-                            value: "PUT"
-                        },
-                        {
-                            label: "DELETE",
-                            value: "DELETE"
-                        }
-                    ]
-                }
-            },
-            {
-                title: "状态码",
-                dataKey: "StatusCode",
-                width: 100,
-                filterProps: {
-                    filterMultiple: true,
-                    filtersType: "select",
-                    filterSearchInputProps: {
-                        size: "small"
-                    },
-                    filterOptionRender: (item: FiltersItemProps) => (
-                        <div>
-                            <span>{item.value}</span>
-                            <span>{item.total}</span>
-                        </div>
-                    ),
-                    filters: [
-                        {
-                            value: "100-199",
-                            label: "[100,200)"
-                        },
-                        {
-                            value: "200-299",
-                            label: "[200-300)"
-                        },
-                        {
-                            value: "300-399",
-                            label: "[300-400)"
-                        },
-                        {
-                            value: "400-499",
-                            label: "[400-500)"
-                        },
-                        {
-                            value: "500-600",
-                            label: "[500-600]"
-                        }
-                    ]
+        const ID: ColumnsTypeProps = {
+            title: "序号",
+            dataKey: "Id",
+            fixed: "left",
+            ellipsis: false,
+            width: 96,
+            enableDrag: false,
+            sorterProps: {
+                sorter: true
+            }
+        }
+        const Method: ColumnsTypeProps = {
+            title: "方法",
+            dataKey: "Method",
+            width: 80,
+            filterProps: {
+                filterKey: "Methods",
+                filtersType: "select",
+                filtersSelectAll: {
+                    isAll: true
                 },
-                render: (text, rowData) => {
-                    return (
-                        <div
-                            className={classNames({
-                                [style["status-code"]]: !hasRedOpacityBg(rowData.cellClassName)
-                            })}
-                        >
-                            {text}
-                        </div>
-                    )
-                }
-            },
-            {
-                title: "URL",
-                dataKey: "Url",
-                width: 400,
-                filterProps: {
-                    filterKey: "SearchURL",
-                    filtersType: "input",
-                    filterIcon: (
-                        <OutlineSearchIcon
-                            className={style["filter-icon"]}
-                        />
-                    ),
-                }
-            },
-            {
-                title: "Title",
-                dataKey: "HtmlTitle"
-            },
-            {
-                title: "Tags",
-                dataKey: "Tags",
-                width: 150,
-                render: (text) => {
-                    return text
-                        ? `${text}`
-                              .split("|")
-                              .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                              .join(", ")
-                        : ""
-                },
-                filterProps: {
-                    filterKey: "Tags",
-                    filterMultiple: true,
-                    filterIcon: (
-                        <OutlineSearchIcon
-                            className={style["filter-icon"]}
-                            onClick={() => getHTTPFlowsFieldGroup(true)}
-                        />
-                    ),
-                    filterRender: (closePopover: () => void) => {
-                        return (
-                            <MultipleSelect
-                                filterProps={{
-                                    filterSearch: true,
-                                    filterSearchInputProps: {
-                                        prefix: <OutlineSearchIcon className='search-icon' />,
-                                        allowClear: true
-                                    }
-                                }}
-                                originalList={tags}
-                                value={tagsFilter}
-                                onSelect={(v, item) => {
-                                    if (Array.isArray(v)) {
-                                        setTagsFilter(v)
-                                    }
-                                }}
-                                onClose={() => {
-                                    closePopover()
-                                }}
-                                onQuery={() => {
-                                    // 这里重置过后的 tagsFilter 不一定是最新的
-                                    setParams({
-                                        ...getParams(),
-                                        Tags: []
-                                    })
-                                    setTimeout(() => {
-                                        updateData()
-                                    }, 100)
-                                }}
-                            ></MultipleSelect>
-                        )
+                filters: [
+                    {
+                        label: "GET",
+                        value: "GET"
+                    },
+                    {
+                        label: "POST",
+                        value: "POST"
+                    },
+                    {
+                        label: "HEAD",
+                        value: "HEAD"
+                    },
+                    {
+                        label: "PUT",
+                        value: "PUT"
+                    },
+                    {
+                        label: "DELETE",
+                        value: "DELETE"
                     }
-                }
-            },
-            {
-                title: "IP",
-                dataKey: "IPAddress",
-                width: 200
-            },
-            {
-                title: "响应长度",
-                dataKey: "BodyLength",
-                width: 200,
-                minWidth: 140,
-                beforeIconExtra: (
-                    <div className={classNames(style["body-length-checkbox"])}>
-                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
-                        <span className={style["tip"]}>大于0</span>
+                ]
+            }
+        }
+        const StatusCode: ColumnsTypeProps = {
+            title: "状态码",
+            dataKey: "StatusCode",
+            width: 100,
+            filterProps: {
+                filterMultiple: true,
+                filtersType: "select",
+                filterSearchInputProps: {
+                    size: "small"
+                },
+                filterOptionRender: (item: FiltersItemProps) => (
+                    <div>
+                        <span>{item.value}</span>
+                        <span>{item.total}</span>
                     </div>
                 ),
-                filterProps: {
-                    filterKey: "bodyLength",
-                    filterRender: () => (
-                        <RangeInputNumberTable
-                            minNumber={getAfterBodyLength()}
-                            setMinNumber={setAfterBodyLength}
-                            maxNumber={getBeforeBodyLength()}
-                            setMaxNumber={setBeforeBodyLength}
-                            onReset={() => {
-                                setParams({
-                                    ...getParams(),
-                                    AfterBodyLength: getAfterBodyLength(),
-                                    BeforeBodyLength: getBeforeBodyLength()
-                                })
-                                setBeforeBodyLength(undefined)
-                                setAfterBodyLength(undefined)
-                                setBodyLengthUnit("B")
+                filters: [
+                    {
+                        value: "100-199",
+                        label: "[100,200)"
+                    },
+                    {
+                        value: "200-299",
+                        label: "[200-300)"
+                    },
+                    {
+                        value: "300-399",
+                        label: "[300-400)"
+                    },
+                    {
+                        value: "400-499",
+                        label: "[400-500)"
+                    },
+                    {
+                        value: "500-600",
+                        label: "[500-600]"
+                    }
+                ]
+            },
+            render: (text, rowData) => {
+                return (
+                    <div
+                        className={classNames({
+                            [style["status-code"]]: !hasRedOpacityBg(rowData.cellClassName)
+                        })}
+                    >
+                        {text}
+                    </div>
+                )
+            }
+        }
+        const Url: ColumnsTypeProps = {
+            title: "URL",
+            dataKey: "Url",
+            width: 400,
+            filterProps: {
+                filterKey: "SearchURL",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
+            }
+        }
+        const HtmlTitle: ColumnsTypeProps = {
+            title: "Title",
+            dataKey: "HtmlTitle",
+            width: 200
+        }
+        const WebPayloads: ColumnsTypeProps = {
+            title: "Payloads",
+            dataKey: "Payloads",
+            width: 300,
+            render: (v) => {
+                return v ? v.join(",") : "-"
+            }
+        }
+        const Tags: ColumnsTypeProps = {
+            title: "Tags",
+            dataKey: "Tags",
+            width: 150,
+            render: (text) => {
+                return text
+                    ? `${text}`
+                          .split("|")
+                          .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                          .join(", ")
+                    : ""
+            },
+            filterProps: {
+                filterKey: "Tags",
+                filterMultiple: true,
+                filterIcon: (
+                    <OutlineSearchIcon className={style["filter-icon"]} onClick={() => getHTTPFlowsFieldGroup(true)} />
+                ),
+                filterRender: (closePopover: () => void) => {
+                    return (
+                        <MultipleSelect
+                            filterProps={{
+                                filterSearch: true,
+                                filterSearchInputProps: {
+                                    prefix: <OutlineSearchIcon className='search-icon' />,
+                                    allowClear: true
+                                }
                             }}
-                            onSure={() => {
+                            originalList={tags}
+                            value={tagsFilter}
+                            onSelect={(v, item) => {
+                                if (Array.isArray(v)) {
+                                    setTagsFilter(v)
+                                }
+                            }}
+                            onClose={() => {
+                                closePopover()
+                            }}
+                            onQuery={() => {
+                                // 这里重置过后的 tagsFilter 不一定是最新的
                                 setParams({
                                     ...getParams(),
-                                    AfterBodyLength: getAfterBodyLength(),
-                                    BeforeBodyLength: getBeforeBodyLength()
+                                    Tags: []
                                 })
                                 setTimeout(() => {
                                     updateData()
                                 }, 100)
                             }}
-                            extra={
-                                <YakitSelect
-                                    value={getBodyLengthUnit()}
-                                    onSelect={(val) => {
-                                        setBodyLengthUnit(val)
-                                    }}
-                                    wrapperClassName={style["unit-select"]}
-                                    size='small'
-                                >
-                                    <YakitSelect value='B'>B</YakitSelect>
-                                    <YakitSelect value='K'>K</YakitSelect>
-                                    <YakitSelect value='M'>M</YakitSelect>
-                                </YakitSelect>
-                            }
-                        />
-                    )
-                },
-                render: (_, rowData) => {
-                    return (
-                        <>
-                            {/* 1M 以上的话，是红色*/}
-                            {rowData.BodyLength !== -1 && (
-                                <div
-                                    className={classNames({
-                                        [style["body-length-text-red"]]:
-                                            rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
-                                    })}
-                                >
-                                    {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
-                                </div>
-                            )}
-                        </>
-                    )
-                }
-            },
-            {
-                title: "参数",
-                dataKey: "GetParamsTotal",
-                filterProps: {
-                    filterKey: "HaveParamsTotal",
-                    filtersType: "select",
-                    filtersSelectAll: {
-                        isAll: true
-                    },
-                    filters: [
-                        {
-                            label: "有",
-                            value: "true"
-                        },
-                        {
-                            label: "无",
-                            value: "false"
-                        }
-                    ]
-                },
-                render: (_, rowData) => (
-                    <div className={style["check-circle"]}>
-                        {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
-                            <CheckCircleIcon
-                                className={classNames({
-                                    [style["check-circle-icon"]]: !hasRedOpacityBg(rowData.cellClassName)
-                                })}
-                            />
-                        )}
-                    </div>
-                )
-            },
-            {
-                title: "响应类型",
-                dataKey: "ContentType",
-                render: (text) => {
-                    let contentTypeFixed =
-                        text
-                            .split(";")
-                            .map((el: any) => el.trim())
-                            .filter((i: any) => !i.startsWith("charset"))
-                            .join(",") || "-"
-                    if (contentTypeFixed.includes("/")) {
-                        const contentTypeFixedNew = contentTypeFixed.split("/").pop()
-                        if (!!contentTypeFixedNew) {
-                            contentTypeFixed = contentTypeFixedNew
-                        }
-                    }
-                    return <div>{contentTypeFixed === "null" ? "" : contentTypeFixed}</div>
-                },
-                filterProps: {
-                    filtersType: "select",
-                    filterMultiple: true,
-                    filterSearchInputProps: {
-                        size: "small"
-                    },
-                    filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
-                    filters: contentType
-                }
-            },
-            {
-                title: "请求时间",
-                dataKey: "UpdatedAt",
-                // sorterProps: {
-                //     sorterKey: "updated_at",
-                //     sorter: true
-                // },
-                filterProps: {
-                    filterKey: "UpdatedAt",
-                    filtersType: "dateTime"
-                },
-                // fixed: "right",
-                render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
-            },
-            {
-                title: "请求大小",
-                dataKey: "RequestSizeVerbose",
-                // fixed: "right",
-                enableDrag: false
-            },
-            {
-                title: "操作",
-                dataKey: "action",
-                width: 80,
-                fixed: "right",
-                render: (_, rowData) => {
-                    if (!rowData.Hash) return <></>
-                    return (
-                        <div className={style["action-btn-group"]}>
-                            <ChromeFrameSvgIcon
-                                className={classNames(style["icon-hover"], {
-                                    [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
-                                })}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    ipcRenderer
-                                        .invoke("GetHTTPFlowById", {Id: rowData?.Id})
-                                        .then((i: HTTPFlow) => {
-                                            showResponseViaResponseRaw(i?.Response)
-                                        })
-                                        .catch((e: any) => {
-                                            yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-                                        })
-                                }}
-                            />
-                            <div className={style["divider-style"]}></div>
-
-                            <ArrowCircleRightSvgIcon
-                                className={classNames(style["icon-hover"], {
-                                    [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
-                                })}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    let m = showDrawer({
-                                        width: "80%",
-                                        content: onExpandHTTPFlow(rowData, () => m.destroy())
-                                    })
-                                }}
-                            />
-                        </div>
+                        ></MultipleSelect>
                     )
                 }
             }
+        }
+        const IPAddress: ColumnsTypeProps = {
+            title: "IP",
+            dataKey: "IPAddress",
+            width: 200
+        }
+        const BodyLength: ColumnsTypeProps = {
+            title: "响应长度",
+            dataKey: "BodyLength",
+            width: 200,
+            minWidth: 140,
+            beforeIconExtra: (
+                <div className={classNames(style["body-length-checkbox"])}>
+                    <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
+                    <span className={style["tip"]}>大于0</span>
+                </div>
+            ),
+            filterProps: {
+                filterKey: "bodyLength",
+                filterRender: () => (
+                    <RangeInputNumberTable
+                        minNumber={getAfterBodyLength()}
+                        setMinNumber={setAfterBodyLength}
+                        maxNumber={getBeforeBodyLength()}
+                        setMaxNumber={setBeforeBodyLength}
+                        onReset={() => {
+                            setParams({
+                                ...getParams(),
+                                AfterBodyLength: checkBodyLength ? 1 : undefined,
+                                BeforeBodyLength: undefined
+                            })
+                            setBeforeBodyLength(undefined)
+                            setAfterBodyLength(undefined)
+                            setBodyLengthUnit("B")
+                        }}
+                        onSure={() => {
+                            const afterBodyLen = getAfterBodyLength()
+                            const beforeBodyLen = getBeforeBodyLength()
+
+                            setParams({
+                                ...getParams(),
+                                AfterBodyLength:
+                                    checkBodyLength && !afterBodyLen
+                                        ? 1
+                                        : afterBodyLen
+                                        ? onConvertBodySizeByUnit(afterBodyLen, getBodyLengthUnit())
+                                        : undefined,
+                                BeforeBodyLength: beforeBodyLen
+                                    ? onConvertBodySizeByUnit(beforeBodyLen, getBodyLengthUnit())
+                                    : undefined
+                            })
+                            setTimeout(() => {
+                                updateData()
+                            }, 100)
+                        }}
+                        extra={
+                            <YakitSelect
+                                value={getBodyLengthUnit()}
+                                onSelect={(val) => {
+                                    setBodyLengthUnit(val)
+                                }}
+                                wrapperClassName={style["unit-select"]}
+                                size='small'
+                            >
+                                <YakitSelect value='B'>B</YakitSelect>
+                                <YakitSelect value='K'>K</YakitSelect>
+                                <YakitSelect value='M'>M</YakitSelect>
+                            </YakitSelect>
+                        }
+                    />
+                )
+            },
+            render: (_, rowData) => {
+                return (
+                    <>
+                        {/* 1M 以上的话，是红色*/}
+                        {rowData.BodyLength !== -1 && (
+                            <div
+                                className={classNames({
+                                    [style["body-length-text-red"]]:
+                                        rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
+                                })}
+                            >
+                                {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
+                            </div>
+                        )}
+                    </>
+                )
+            }
+        }
+        const GetParamsTotal: ColumnsTypeProps = {
+            title: "参数",
+            dataKey: "GetParamsTotal",
+            width: 100,
+            filterProps: {
+                filterKey: "HaveParamsTotal",
+                filtersType: "select",
+                filtersSelectAll: {
+                    isAll: true
+                },
+                filters: [
+                    {
+                        label: "有",
+                        value: "true"
+                    },
+                    {
+                        label: "无",
+                        value: "false"
+                    }
+                ]
+            },
+            render: (_, rowData) => (
+                <div className={style["check-circle"]}>
+                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
+                        <CheckCircleIcon
+                            className={classNames({
+                                [style["check-circle-icon"]]: !hasRedOpacityBg(rowData.cellClassName)
+                            })}
+                        />
+                    )}
+                </div>
+            )
+        }
+        const ContentType: ColumnsTypeProps = {
+            title: "响应类型",
+            dataKey: "ContentType",
+            width: 150,
+            render: (text) => {
+                let contentTypeFixed =
+                    text
+                        .split(";")
+                        .map((el: any) => el.trim())
+                        .filter((i: any) => !i.startsWith("charset"))
+                        .join(",") || "-"
+                if (contentTypeFixed.includes("/")) {
+                    const contentTypeFixedNew = contentTypeFixed.split("/").pop()
+                    if (!!contentTypeFixedNew) {
+                        contentTypeFixed = contentTypeFixedNew
+                    }
+                }
+                return <div>{contentTypeFixed === "null" ? "" : contentTypeFixed}</div>
+            },
+            filterProps: {
+                filtersType: "select",
+                filterMultiple: true,
+                filterSearchInputProps: {
+                    size: "small"
+                },
+                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
+                filters: contentType
+            }
+        }
+        const UpdatedAt: ColumnsTypeProps = {
+            title: "请求时间",
+            dataKey: "UpdatedAt",
+            // sorterProps: {
+            //     sorterKey: "updated_at",
+            //     sorter: true
+            // },
+            filterProps: {
+                filterKey: "UpdatedAt",
+                filtersType: "dateTime"
+            },
+            // fixed: "right",
+            width: 200,
+            render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
+        }
+        const RequestSizeVerbose: ColumnsTypeProps = {
+            title: "请求大小",
+            dataKey: "RequestSizeVerbose",
+            // fixed: "right",
+            enableDrag: false,
+            width: 200,
+        }
+        const action: ColumnsTypeProps = {
+            title: "操作",
+            dataKey: "action",
+            width: 80,
+            fixed: "right",
+            render: (_, rowData) => {
+                if (!rowData.Hash) return <></>
+                return (
+                    <div className={style["action-btn-group"]}>
+                        <ChromeFrameSvgIcon
+                            className={classNames(style["icon-hover"], {
+                                [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                            })}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                ipcRenderer
+                                    .invoke("GetHTTPFlowById", {Id: rowData?.Id})
+                                    .then((i: HTTPFlow) => {
+                                        showResponseViaResponseRaw(i?.Response)
+                                    })
+                                    .catch((e: any) => {
+                                        yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                                    })
+                            }}
+                        />
+                        <div className={style["divider-style"]}></div>
+
+                        <ArrowCircleRightSvgIcon
+                            className={classNames(style["icon-hover"], {
+                                [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                            })}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                let m = showDrawer({
+                                    width: "80%",
+                                    content: onExpandHTTPFlow(rowData, () => m.destroy())
+                                })
+                            }}
+                        />
+                    </div>
+                )
+            }
+        }
+
+        // toWebFuzzer
+        if (toWebFuzzer) {
+            return [
+                ID,
+                Method,
+                StatusCode,
+                Url,
+                HtmlTitle,
+                WebPayloads,
+                Tags,
+                IPAddress,
+                BodyLength,
+                GetParamsTotal,
+                ContentType,
+                UpdatedAt,
+                RequestSizeVerbose,
+                action
+            ]
+        }
+
+        return [
+            ID,
+            Method,
+            StatusCode,
+            Url,
+            HtmlTitle,
+            Tags,
+            IPAddress,
+            BodyLength,
+            GetParamsTotal,
+            ContentType,
+            UpdatedAt,
+            RequestSizeVerbose,
+            action
         ]
-    }, [tags, tagsFilter, checkBodyLength])
+    }, [tags, tagsFilter, checkBodyLength, toWebFuzzer])
 
     // 背景颜色是否标注为红色
     const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
@@ -2021,7 +2045,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ...(props.params || {SourceType: "mitm"}),
                     SourceType: props.params?.SourceType || "mitm",
                     ExcludeId: params.ExcludeId,
-                    ExcludeInUrl: params.ExcludeInUrl
+                    ExcludeInUrl: params.ExcludeInUrl,
+                    WithPayload: toWebFuzzer,
+                    RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+                    RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
                 }
                 setParams({...newParams})
                 updateData()
@@ -2121,25 +2148,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const l = data.length
             const query: any = {
                 ...params,
-                Tags: params.Tags,
                 Pagination: {...pagination},
                 // OffsetId:
                 //     pagination.Page === 1
                 //         ? undefined
                 //         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
                 OffsetId: undefined,
-                AfterBodyLength: params.AfterBodyLength
-                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                    : undefined,
-                BeforeBodyLength: params.BeforeBodyLength
-                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                    : undefined,
                 Full: false
             }
 
-            if (checkBodyLength && !query.AfterBodyLength) {
-                query.AfterBodyLength = 1
-            }
             let exportParams: any = {}
             // 这里的key值 不一定和表格的key对应的上
             const arrList = [
@@ -2162,6 +2179,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     title: "Title",
                     key: "response"
+                },
+                {
+                    title: "Payloads",
+                    key: "payloads"
                 },
                 {
                     title: "Tags",
@@ -2261,9 +2282,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             content: (
                 <ExportSelect
                     exportValue={exportValue}
+                    initCheckValue={
+                        toWebFuzzer ? exportValue.filter((i) => !["参数", "请求包", "响应包"].includes(i)) : exportValue
+                    }
                     setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
-                    exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
-                    fileName='History'
+                    exportKey={toWebFuzzer ? "WEBFUZZER-HISTORY-EXPORT-KEY" : "MITM-HTTP-HISTORY-EXPORT-KEY"}
+                    fileName={!toWebFuzzer ? "History" : "WebFuzzer"}
                     getData={(pagination) => getExcelData(pagination, list)}
                 />
             ),
@@ -2291,6 +2315,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "发送到 Web Fuzzer",
             number: 10,
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             children: [
                 {
                     key: "sendAndJumpToWebFuzzer",
@@ -2306,11 +2332,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             onClickBatch: () => {}
         },
         {
-            key: "发送到WS Fuzzer",
-            label: "发送到WS Fuzzer",
+            key: "发送到 WS Fuzzer",
+            label: "发送到 WS Fuzzer",
             number: 10,
             webSocket: true,
             default: false,
+            toWebFuzzer: false,
             children: [
                 {
                     key: "sendAndJumpToWS",
@@ -2330,6 +2357,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "数据包扫描",
             number: 10,
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
@@ -2343,6 +2372,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 30,
             webSocket: true,
             default: true,
+            toWebFuzzer: true,
             onClickSingle: (v) => callCopyToClipboard(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length === 0) {
@@ -2362,6 +2392,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "下载 Response Body",
             label: "下载 Response Body",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             onClickSingle: (v) => {
                 ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
@@ -2372,6 +2404,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "浏览器中打开",
             label: "浏览器中打开",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             onClickSingle: (v) => {
                 showResponseViaHTTPFlowID(v)
             }
@@ -2380,6 +2414,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "复制为 CSRF Poc",
             label: "复制为 CSRF Poc",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             onClickSingle: (v) => {
                 const flow = v as HTTPFlow
                 if (!flow) return
@@ -2392,6 +2428,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "复制为 Yak PoC 模版",
             label: "复制为 Yak PoC 模版",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2408,6 +2446,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "标注颜色",
             label: "标注颜色",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             number: 20,
             onClickSingle: () => {},
             onClickBatch: () => {},
@@ -2424,6 +2464,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "移除颜色",
             label: "移除颜色",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             number: 20,
             onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
             onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
@@ -2432,6 +2474,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "发送到对比器",
             label: "发送到对比器",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2451,6 +2495,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "屏蔽",
             webSocket: true,
             default: true,
+            toWebFuzzer: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -2472,6 +2517,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "删除",
             webSocket: true,
             default: true,
+            toWebFuzzer: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             all: true,
@@ -2517,6 +2563,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "分享数据包",
             number: 30,
             default: true,
+            webSocket: false,
+            toWebFuzzer: false,
             onClickSingle: (v) => onShareData([v.Id], 50),
             onClickBatch: (list, n) => {
                 const ids: string[] = list.map((ele) => ele.Id)
@@ -2527,6 +2575,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "导出数据",
             label: "导出数据",
             default: true,
+            webSocket: false,
+            toWebFuzzer: true,
             onClickSingle: (v) => onExcelExport([v]),
             onClickBatch: (list, n) => onExcelExport(list)
         }
@@ -2565,7 +2615,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 width: 180,
                 data: contextMenuKeybindingHandle(menuData)
-                    .filter((item) => (rowData.IsWebsocket ? item.webSocket : item.default))
+                    .filter((item) =>
+                        rowData.IsWebsocket ? item.webSocket : toWebFuzzer ? item.toWebFuzzer : item.default
+                    )
                     .map((ele) => {
                         return {
                             label: ele.label,
@@ -2720,8 +2772,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             SourceType: props.params?.SourceType || "mitm",
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
-            SearchURL: "",
-            IncludeInUrl: []
+            WithPayload: toWebFuzzer,
+            RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+            RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
         }
         setParams(newParams)
         setIsReset(!isReset)
@@ -2786,8 +2839,214 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     })
 
+    const searchEle = useMemoizedFn(() => {
+        return (
+            <>
+                {size?.width && size?.width < 1000 ? (
+                    <YakitPopover trigger='click' placement='bottomRight' content={searchNode}>
+                        <YakitButton icon={<OutlineSearchIcon />} type='outline2' />
+                    </YakitPopover>
+                ) : (
+                    <YakitInput.Search
+                        className={style["http-history-table-right-search"]}
+                        placeholder='请输入关键词搜索'
+                        value={params.Keyword}
+                        onChange={(e) => {
+                            setParams({...params, Keyword: e.target.value})
+                        }}
+                        onSearch={() => {
+                            setTimeout(() => {
+                                updateData()
+                            }, 50)
+                        }}
+                        // 这个事件很关键哈，不要用 onChange
+                        onBlur={(e) => {
+                            if (props.onSearch) {
+                                props.onSearch(e.target.value)
+                            }
+                        }}
+                    />
+                )}
+            </>
+        )
+    })
+
+    const batchActions = useMemoizedFn(() => {
+        return (
+            <>
+                {size?.width && size?.width >= 1000 && (
+                    <>
+                        {(selectedRowKeys.length === 0 && (
+                            <YakitButton
+                                type='outline2'
+                                disabled={selectedRowKeys.length === 0}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                }}
+                            >
+                                批量操作
+                                <ChevronDownIcon style={{color: "#85899E"}} />
+                            </YakitButton>
+                        )) || (
+                            <YakitPopover
+                                overlayClassName={style["http-history-table-drop-down-popover"]}
+                                content={
+                                    <YakitMenu
+                                        width={150}
+                                        selectedKeys={[]}
+                                        data={menuData
+                                            .filter((f) =>
+                                                toWebFuzzer ? f.onClickBatch && f.toWebFuzzer : f.onClickBatch
+                                            )
+                                            .map((m) => {
+                                                return {
+                                                    key: m.key,
+                                                    label: m.label,
+                                                    children: m.children?.map((ele) => ({
+                                                        key: ele.key,
+                                                        label: ele.label
+                                                    }))
+                                                }
+                                            })}
+                                        onClick={({key, keyPath}) => {
+                                            if (keyPath.includes("数据包扫描")) {
+                                                if (isAllSelect) {
+                                                    yakitNotify("warning", "该批量操作不支持全选")
+                                                    return
+                                                }
+                                                const currentItemScan = menuData.find(
+                                                    (f) => f.onClickBatch && f.key === "数据包扫描"
+                                                )
+                                                const currentItemPacketScan = packetScanDefaultValue.find(
+                                                    (f) => f.Verbose === key
+                                                )
+                                                if (!currentItemScan || !currentItemPacketScan) return
+
+                                                onBatchExecPacketScan({
+                                                    httpFlowIds: selectedRowKeys,
+                                                    maxLength: currentItemScan.number || 0,
+                                                    currentPacketScan: currentItemPacketScan
+                                                })
+                                                return
+                                            }
+                                            if (keyPath.includes("标注颜色")) {
+                                                const currentItemColor = menuData.find(
+                                                    (f) => f.onClickBatch && f.key === "标注颜色"
+                                                )
+                                                const colorItem = availableColors.find((e) => e.title === key)
+                                                if (!currentItemColor || !colorItem) return
+                                                CalloutColorBatch(
+                                                    selectedRows,
+                                                    currentItemColor?.number || 0,
+                                                    colorItem
+                                                )
+                                                return
+                                            }
+                                            switch (key) {
+                                                case "删除记录":
+                                                    onRemoveHttpHistory({
+                                                        Id: selectedRowKeys
+                                                    })
+                                                    break
+                                                case "删除URL":
+                                                    const urls = selectedRows.map((ele) => ele.Url)
+                                                    onRemoveHttpHistory({
+                                                        Filter: {
+                                                            IncludeInUrl: urls
+                                                        }
+                                                    })
+                                                    break
+                                                case "删除域名":
+                                                    const hosts = selectedRows.map((ele) => ele.HostPort?.split(":")[0])
+                                                    onRemoveHttpHistory({
+                                                        Filter: {
+                                                            IncludeInUrl: hosts
+                                                        }
+                                                    })
+                                                    break
+                                                case "sendAndJumpToWebFuzzer":
+                                                    const currentItemJumpToFuzzer = menuData.find(
+                                                        (f) => f.onClickBatch && f.key === "发送到 Web Fuzzer"
+                                                    )
+                                                    if (!currentItemJumpToFuzzer) return
+                                                    onBatch(
+                                                        onSendToTab,
+                                                        currentItemJumpToFuzzer?.number || 0,
+                                                        selectedRowKeys.length === total
+                                                    )
+
+                                                    break
+                                                case "sendToWebFuzzer":
+                                                    const currentItemToFuzzer = menuData.find(
+                                                        (f) => f.onClickBatch && f.key === "发送到 Web Fuzzer"
+                                                    )
+                                                    if (!currentItemToFuzzer) return
+                                                    onBatch(
+                                                        (el) => onSendToTab(el, false),
+                                                        currentItemToFuzzer?.number || 0,
+                                                        selectedRowKeys.length === total
+                                                    )
+                                                    break
+                                                case "sendAndJumpToWS":
+                                                    const currentItemJumpToWS = menuData.find(
+                                                        (f) => f.onClickBatch && f.key === "发送到WS Fuzzer"
+                                                    )
+                                                    if (!currentItemJumpToWS) return
+                                                    onBatch(
+                                                        (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
+                                                        currentItemJumpToWS?.number || 0,
+                                                        selectedRowKeys.length === total
+                                                    )
+
+                                                    break
+                                                case "sendToWS":
+                                                    const currentItemToWS = menuData.find(
+                                                        (f) => f.onClickBatch && f.key === "发送到WS Fuzzer"
+                                                    )
+                                                    if (!currentItemToWS) return
+                                                    onBatch(
+                                                        (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),
+                                                        currentItemToWS?.number || 0,
+                                                        selectedRowKeys.length === total
+                                                    )
+                                                    break
+                                                default:
+                                                    const currentItem = menuData.find(
+                                                        (f) => f.onClickBatch && f.key === key
+                                                    )
+                                                    if (!currentItem) return
+                                                    if (currentItem.onClickBatch)
+                                                        currentItem.onClickBatch(selectedRows, currentItem.number)
+                                                    break
+                                            }
+                                            setBatchVisible(false)
+                                        }}
+                                    />
+                                }
+                                trigger='click'
+                                placement='bottomLeft'
+                                onVisibleChange={setBatchVisible}
+                                visible={batchVisible}
+                            >
+                                <YakitButton
+                                    type='outline2'
+                                    disabled={selectedRowKeys.length === 0}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    批量操作
+                                    <ChevronDownIcon />
+                                </YakitButton>
+                            </YakitPopover>
+                        )}
+                    </>
+                )}
+            </>
+        )
+    })
+
     return (
-        // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <ReactResizeDetector
                 onResize={(width, height) => {
@@ -2884,7 +3143,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     </div>
                                 </div>
                                 <div className={style["http-history-table-right"]}>
-                                    {!onlyShowSearch && (
+                                    {onlyShowSearch ? (
+                                        <>
+                                            {searchEle()}
+                                            {showBatchActions && <div style={{marginLeft: 8}}>{batchActions()}</div>}
+                                        </>
+                                    ) : (
                                         <>
                                             <YakitButton
                                                 type='text'
@@ -2925,36 +3189,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
                                                 </YakitSelect>
                                             </div>
-                                        </>
-                                    )}
-                                    {size?.width && size?.width < 1000 ? (
-                                        <YakitPopover trigger='click' placement='bottomRight' content={searchNode}>
-                                            <YakitButton icon={<OutlineSearchIcon />} type='outline2' />
-                                        </YakitPopover>
-                                    ) : (
-                                        <YakitInput.Search
-                                            className={style["http-history-table-right-search"]}
-                                            placeholder='请输入关键词搜索'
-                                            value={params.Keyword}
-                                            onChange={(e) => {
-                                                setParams({...params, Keyword: e.target.value})
-                                            }}
-                                            onSearch={() => {
-                                                setTimeout(() => {
-                                                    updateData()
-                                                }, 50)
-                                            }}
-                                            // 这个事件很关键哈，不要用 onChange
-                                            onBlur={(e) => {
-                                                if (props.onSearch) {
-                                                    props.onSearch(e.target.value)
-                                                }
-                                            }}
-                                        />
-                                    )}
-
-                                    {!onlyShowSearch && (
-                                        <>
+                                            {searchEle()}
                                             <div className={style["http-history-table-color-swatch"]}>
                                                 <YakitPopover
                                                     overlayClassName={style["http-history-table-color-popover"]}
@@ -2984,219 +3219,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     </YakitButton>
                                                 </YakitPopover>
                                             </div>
-                                            {size?.width && size?.width >= 1000 && (
-                                                <>
-                                                    {(selectedRowKeys.length === 0 && (
-                                                        <YakitButton
-                                                            type='outline2'
-                                                            disabled={selectedRowKeys.length === 0}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                            }}
-                                                        >
-                                                            批量操作
-                                                            <ChevronDownIcon style={{color: "#85899E"}} />
-                                                        </YakitButton>
-                                                    )) || (
-                                                        <YakitPopover
-                                                            overlayClassName={
-                                                                style["http-history-table-drop-down-popover"]
-                                                            }
-                                                            content={
-                                                                <YakitMenu
-                                                                    width={150}
-                                                                    selectedKeys={[]}
-                                                                    data={menuData
-                                                                        .filter((f) => f.onClickBatch)
-                                                                        .map((m) => {
-                                                                            return {
-                                                                                key: m.key,
-                                                                                label: m.label,
-                                                                                children: m.children?.map((ele) => ({
-                                                                                    key: ele.key,
-                                                                                    label: ele.label
-                                                                                }))
-                                                                            }
-                                                                        })}
-                                                                    onClick={({key, keyPath}) => {
-                                                                        if (keyPath.includes("数据包扫描")) {
-                                                                            if (isAllSelect) {
-                                                                                yakitNotify(
-                                                                                    "warning",
-                                                                                    "该批量操作不支持全选"
-                                                                                )
-                                                                                return
-                                                                            }
-                                                                            const currentItemScan = menuData.find(
-                                                                                (f) =>
-                                                                                    f.onClickBatch &&
-                                                                                    f.key === "数据包扫描"
-                                                                            )
-                                                                            const currentItemPacketScan =
-                                                                                packetScanDefaultValue.find(
-                                                                                    (f) => f.Verbose === key
-                                                                            )
-                                                                            if (
-                                                                                !currentItemScan ||
-                                                                                !currentItemPacketScan
-                                                                            )
-                                                                            return
-                                                                            
-                                                                            onBatchExecPacketScan({
-                                                                                httpFlowIds: selectedRowKeys,
-                                                                                maxLength: currentItemScan.number || 0,
-                                                                                currentPacketScan: currentItemPacketScan
-                                                                            })
-                                                                            return
-                                                                        }
-                                                                        if (keyPath.includes("标注颜色")) {
-                                                                            const currentItemColor = menuData.find(
-                                                                                (f) =>
-                                                                                    f.onClickBatch &&
-                                                                                    f.key === "标注颜色"
-                                                                            )
-                                                                            const colorItem = availableColors.find(
-                                                                                (e) => e.title === key
-                                                                            )
-                                                                            if (!currentItemColor || !colorItem) return
-                                                                            CalloutColorBatch(
-                                                                                selectedRows,
-                                                                                currentItemColor?.number || 0,
-                                                                                colorItem
-                                                                            )
-                                                                            return
-                                                                        }
-                                                                        switch (key) {
-                                                                            case "删除记录":
-                                                                                onRemoveHttpHistory({
-                                                                                    Id: selectedRowKeys
-                                                                                })
-                                                                                break
-                                                                            case "删除URL":
-                                                                                const urls = selectedRows.map(
-                                                                                    (ele) => ele.Url
-                                                                                )
-                                                                                onRemoveHttpHistory({
-                                                                                    Filter: {
-                                                                                        IncludeInUrl: urls
-                                                                                    }
-                                                                                })
-                                                                                break
-                                                                            case "删除域名":
-                                                                                const hosts = selectedRows.map(
-                                                                                    (ele) => ele.HostPort?.split(":")[0]
-                                                                                )
-                                                                                onRemoveHttpHistory({
-                                                                                    Filter: {
-                                                                                        IncludeInUrl: hosts
-                                                                                    }
-                                                                                })
-                                                                                break
-                                                                            case "sendAndJumpToWebFuzzer":
-                                                                                const currentItemJumpToFuzzer =
-                                                                                    menuData.find(
-                                                                                        (f) =>
-                                                                                            f.onClickBatch &&
-                                                                                            f.key ===
-                                                                                                "发送到 Web Fuzzer"
-                                                                                    )
-                                                                                if (!currentItemJumpToFuzzer) return
-                                                                                onBatch(
-                                                                                    onSendToTab,
-                                                                                    currentItemJumpToFuzzer?.number ||
-                                                                                        0,
-                                                                                    selectedRowKeys.length === total
-                                                                                )
-
-                                                                                break
-                                                                            case "sendToWebFuzzer":
-                                                                                const currentItemToFuzzer =
-                                                                                    menuData.find(
-                                                                                        (f) =>
-                                                                                            f.onClickBatch &&
-                                                                                            f.key ===
-                                                                                                "发送到 Web Fuzzer"
-                                                                                    )
-                                                                                if (!currentItemToFuzzer) return
-                                                                                onBatch(
-                                                                                    (el) => onSendToTab(el, false),
-                                                                                    currentItemToFuzzer?.number || 0,
-                                                                                    selectedRowKeys.length === total
-                                                                                )
-                                                                                break
-                                                                            case "sendAndJumpToWS":
-                                                                                const currentItemJumpToWS =
-                                                                                    menuData.find(
-                                                                                        (f) =>
-                                                                                            f.onClickBatch &&
-                                                                                            f.key === "发送到WS Fuzzer"
-                                                                                    )
-                                                                                if (!currentItemJumpToWS) return
-                                                                                onBatch(
-                                                                                    (el) =>
-                                                                                        newWebsocketFuzzerTab(
-                                                                                            el.IsHTTPS,
-                                                                                            el.Request
-                                                                                        ),
-                                                                                    currentItemJumpToWS?.number || 0,
-                                                                                    selectedRowKeys.length === total
-                                                                                )
-
-                                                                                break
-                                                                            case "sendToWS":
-                                                                                const currentItemToWS = menuData.find(
-                                                                                    (f) =>
-                                                                                        f.onClickBatch &&
-                                                                                        f.key === "发送到WS Fuzzer"
-                                                                                )
-                                                                                if (!currentItemToWS) return
-                                                                                onBatch(
-                                                                                    (el) =>
-                                                                                        newWebsocketFuzzerTab(
-                                                                                            el.IsHTTPS,
-                                                                                            el.Request,
-                                                                                            false
-                                                                                        ),
-                                                                                    currentItemToWS?.number || 0,
-                                                                                    selectedRowKeys.length === total
-                                                                                )
-                                                                                break
-                                                                            default:
-                                                                                const currentItem = menuData.find(
-                                                                                    (f) =>
-                                                                                        f.onClickBatch && f.key === key
-                                                                                )
-                                                                                if (!currentItem) return
-                                                                                if (currentItem.onClickBatch)
-                                                                                    currentItem.onClickBatch(
-                                                                                        selectedRows,
-                                                                                        currentItem.number
-                                                                                    )
-                                                                                break
-                                                                        }
-                                                                        setBatchVisible(false)
-                                                                    }}
-                                                                />
-                                                            }
-                                                            trigger='click'
-                                                            placement='bottomLeft'
-                                                            onVisibleChange={setBatchVisible}
-                                                            visible={batchVisible}
-                                                        >
-                                                            <YakitButton
-                                                                type='outline2'
-                                                                disabled={selectedRowKeys.length === 0}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                }}
-                                                            >
-                                                                批量操作
-                                                                <ChevronDownIcon />
-                                                            </YakitButton>
-                                                        </YakitPopover>
-                                                    )}
-                                                </>
-                                            )}
+                                            {showBatchActions && batchActions()}
                                         </>
                                     )}
                                     <div className={style["empty-button"]}>
@@ -3336,7 +3359,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 searchContentType={searchContentType}
             />
         </div>
-        // </AutoCard>
     )
 })
 
@@ -3725,7 +3747,8 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
                 newData.push(item)
             }
             setData(newData)
-        }).catch((e) => {
+        })
+        .catch((e) => {
             yakitFailed(e + "")
         })
 }

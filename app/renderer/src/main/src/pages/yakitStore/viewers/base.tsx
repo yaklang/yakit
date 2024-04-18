@@ -453,6 +453,10 @@ interface CurrentHttpFlowProp {
      * @param queryParams 流量表筛选条件JSON
      */
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
+    refresh?: boolean // 是否刷新表格
+
+    toWebFuzzer?: boolean // 是否是在webFuzzer使用
+    showBatchActions?: boolean
 }
 
 export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
@@ -466,7 +470,10 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
         onIsOnlyTable,
         showDetail,
         pageType,
-        onQueryParams
+        onQueryParams,
+        refresh = true,
+        toWebFuzzer = false,
+        showBatchActions = false
     } = props
     const [highlightSearch, setHighlightSearch] = useState("")
     const lasetIdRef = useRef<number>()
@@ -570,11 +577,14 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                             ...(httpHistoryTableTitleStyle||{}),
                         }}
                         onlyShowSearch={true}
+                        showBatchActions={showBatchActions}
                         historyId={historyId}
                         titleHeight={47}
                         containerClassName={containerClassName}
                         pageType={pageType}
                         onQueryParams={onQueryParams}
+                        refresh={refresh}
+                        toWebFuzzer={toWebFuzzer}
                     />
                 }
                 secondNode={

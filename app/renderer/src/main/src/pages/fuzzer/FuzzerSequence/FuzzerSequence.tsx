@@ -36,6 +36,7 @@ import {
 import {
     OutlineArrowcirclerightIcon,
     OutlineCodeIcon,
+    OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
     OutlineQuestionmarkcircleIcon,
@@ -53,6 +54,7 @@ import {
     FuzzerExtraShow,
     FuzzerRequestProps,
     FuzzerResponse,
+    FuzzerTableMaxData,
     ResponseViewer,
     SecondNodeExtra,
     SecondNodeTitle,
@@ -95,6 +97,7 @@ import sequencemp4 from "@/assets/sequence.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
 
+const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
 const {ipcRenderer} = window.require("electron")
@@ -166,6 +169,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
+    const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
+    const [showAllRes, setShowAllRes] = useState<boolean>(false)
     const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
 
     // Request
@@ -283,6 +288,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const failedCountRef = useRef<Map<string, number>>(new Map())
     const successBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
     const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
+    const countRef = useRef<Map<string, number>>(new Map())
+    const runtimeIdBufferRef = useRef<Map<string, string[]>>(new Map())
 
     useEffect(() => {
         if (currentSequenceItem) {
@@ -321,14 +328,19 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     )
     const fuzzerIndexArr = useRef<string[]>([])
+
     useEffect(() => {
         const token = fuzzTokenRef.current
         const dataToken = `${token}-data`
         const errToken = `${token}-error`
         const endToken = `${token}-end`
+
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
+
+            if (onIsDropped(Response, FuzzerIndex)) return
+
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -349,18 +361,42 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
             }
             onSetFirstAsSelected(FuzzerIndex)
-            if (onIsDropped(Response, FuzzerIndex)) return
+
+            // 用于数据项请求字段
+            let count = countRef.current.get(FuzzerIndex)
+            if (count !== undefined) {
+                count++
+                countRef.current.set(FuzzerIndex, count)
+            } else {
+                countRef.current.set(FuzzerIndex, 0)
+            }
+
+            // 主要用于查看全部数据
+            if (Response.RuntimeID) {
+                let runtimeId = runtimeIdBufferRef.current.get(FuzzerIndex)
+                if (runtimeId) {
+                    runtimeId.push(Response.RuntimeID)
+                    runtimeIdBufferRef.current.set(FuzzerIndex, [...new Set(runtimeId)])
+                } else {
+                    runtimeIdBufferRef.current.set(FuzzerIndex, [Response.RuntimeID])
+                }
+            }
+
             const r = {
                 ...Response,
                 Headers: Response.Headers || [],
                 UUID: Response.UUID,
-                Count: 0,
+                Count: countRef.current.get(FuzzerIndex),
                 cellClassName: Response.MatchedByMatcher ? `color-opacity-bg-${Response.HitColor}` : ""
             } as FuzzerResponse
             if (Response.Ok) {
                 let successList = successBufferRef.current.get(FuzzerIndex)
                 if (successList) {
                     successList.push(r)
+                    // 超过最大显示 展示最新数据
+                    if (successList.length > FuzzerTableMaxData) {
+                        successList.shift()
+                    }
                     successBufferRef.current.set(FuzzerIndex, successList)
                 } else {
                     successBufferRef.current.set(FuzzerIndex, [r])
@@ -378,7 +414,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
                 fuzzerIndexArr.current.push(FuzzerIndex)
             }
-            // updateData(FuzzerIndex)
         })
         ipcRenderer.on(endToken, () => {
             setTimeout(() => {
@@ -444,6 +479,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         (fuzzerIndex: string) => {
             const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
             const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
+            const runtimeIdBuffer = runtimeIdBufferRef.current.get(fuzzerIndex) || []
             if (failedBuffer.length + successBuffer.length === 0) {
                 return
             }
@@ -461,6 +497,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
             let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
             let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+
             if (successBuffer.length + failedBuffer.length === 1) {
                 const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
                 // 设置第一个 response
@@ -470,7 +507,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     successCount: currentSuccessCount,
                     failedCount: currentFailedCount,
                     successFuzzer: successBuffer,
-                    failedFuzzer: failedBuffer
+                    failedFuzzer: failedBuffer,
+                    runtimeIdFuzzer: runtimeIdBuffer
                 })
                 return
             }
@@ -482,7 +520,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 successCount: currentSuccessCount,
                 failedCount: currentFailedCount,
                 successFuzzer: [...successBuffer],
-                failedFuzzer: [...failedBuffer]
+                failedFuzzer: [...failedBuffer],
+                runtimeIdFuzzer: [...runtimeIdBuffer]
             }
             setResponse(fuzzerIndex, newResponse)
         },
@@ -494,6 +533,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         failedCountRef.current.clear()
         successBufferRef.current.clear()
         failedBufferRef.current.clear()
+        countRef.current.clear()
+        runtimeIdBufferRef.current.clear()
     })
     /**
      * 组内的webFuzzer页面高级配置或者request发生变化，或者组发生变化，
@@ -767,9 +808,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         setCurrentSequenceItem({...val})
     })
-    const onSetShowAllResponse = useMemoizedFn(() => {
-        setShowAllResponse(false)
-    })
 
     const setHotPatchCode = useMemoizedFn((val) => {
         hotPatchCodeRef.current = val
@@ -777,11 +815,41 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const setHotPatchCodeWithParamGetter = useMemoizedFn((val) => {
         hotPatchCodeWithParamGetterRef.current = val
     })
+
+    const allRuntimeIds = () => {
+        const myArray1 = Array.from(responseMap)
+        const length = myArray1.length
+        const runtimeIdsFuzzer: string[] = []
+        for (let index = 0; index < length; index++) {
+            const element = myArray1[index][1]
+            if (element) {
+                runtimeIdsFuzzer.push(...element.runtimeIdFuzzer)
+            }
+        }
+        return [...new Set(runtimeIdsFuzzer)]
+    }
+
+    const judgeMoreFuzzerTableMaxData = () => {
+        const myArray1 = Array.from(responseMap)
+        const length = myArray1.length
+        let flag: boolean = false
+        for (let index = 0; index < length; index++) {
+            const element = myArray1[index][1]
+            if (element) {
+                if (element.successCount >= FuzzerTableMaxData) {
+                    flag = true
+                    return flag
+                }
+            }
+        }
+        return flag
+    }
+
     return (
         <>
             <div
                 className={styles["fuzzer-sequence"]}
-                style={{display: showAllResponse ? "none" : ""}}
+                style={{display: showAllDataRes || showAllResponse ? "none" : ""}}
                 ref={fuzzerSequenceRef}
             >
                 <div className={styles["fuzzer-sequence-left"]}>
@@ -934,7 +1002,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
-                                    setShowAllResponse(true)
+                                    if (judgeMoreFuzzerTableMaxData()) {
+                                        setShowAllRes(true)
+                                        setShowAllDataRes(true)
+                                    } else {
+                                        setShowAllResponse(true)
+                                    }
                                 }}
                                 getHttpParams={getHttpParams}
                             />
@@ -948,6 +1021,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                                 setHotPatchCode={setHotPatchCode}
                                 setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                                onShowAll={() => {
+                                    setShowAllDataRes(true)
+                                }}
                             />
                         </>
                     ) : (
@@ -955,12 +1031,26 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     )}
                 </div>
             </div>
-            <React.Suspense fallback={<>loading allFuzzerSequenceList ...</>}>
+
+            <React.Suspense fallback={<>loading...</>}>
+                <ResponseAllDataCard
+                    runtimeId={
+                        showAllRes ? allRuntimeIds().join(",") : currentSelectResponse?.runtimeIdFuzzer.join(",") || ""
+                    }
+                    showAllDataRes={showAllDataRes}
+                    setShowAllDataRes={() => {
+                        setShowAllRes(false)
+                        setShowAllDataRes(false)
+                    }}
+                />
+            </React.Suspense>
+
+            <React.Suspense fallback={<>loading...</>}>
                 <ResponseCard
                     showAllResponse={showAllResponse}
                     responseMap={responseMap}
-                    setShowAllResponse={onSetShowAllResponse}
-                />
+                    setShowAllResponse={() => setShowAllResponse(false)}
+                ></ResponseCard>
             </React.Suspense>
         </>
     )
@@ -1356,7 +1446,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             hotPatchCode,
             setHotPatchCode,
             hotPatchCodeWithParamGetter,
-            setHotPatchCodeWithParamGetter
+            setHotPatchCodeWithParamGetter,
+            onShowAll
         } = props
         const {
             id: responseInfoId,
@@ -1573,14 +1664,44 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                     cachedTotal={cachedTotal}
                     onlyOneResponse={onlyOneResponse}
                     rsp={httpResponse}
-                    successFuzzerLength={(successFuzzer || []).length}
-                    failedFuzzerLength={(failedFuzzer || []).length}
+                    successFuzzerLength={successCount}
+                    failedFuzzerLength={failedCount}
                     showSuccess={showSuccess}
                     setShowSuccess={(v) => {
                         setShowSuccess(v)
                         setQuery({})
                     }}
                 />
+                {successFuzzer.length >= FuzzerTableMaxData && (
+                    <>
+                        {+(secondNodeSize?.width || 0) <= 750 ? (
+                            <Tooltip title='查看全部'>
+                                <YakitButton
+                                    style={{marginLeft: 8}}
+                                    type='outline2'
+                                    size='small'
+                                    icon={<OutlineEyeIcon />}
+                                    onClick={() => {
+                                        onShowAll()
+                                    }}
+                                    disabled={loading}
+                                />
+                            </Tooltip>
+                        ) : (
+                            <YakitButton
+                                type='primary'
+                                size='small'
+                                style={{marginLeft: 8}}
+                                onClick={() => {
+                                    onShowAll()
+                                }}
+                                disabled={loading}
+                            >
+                                查看全部
+                            </YakitButton>
+                        )}
+                    </>
+                )}
             </>
         )
 
@@ -1765,6 +1886,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         onDebug={onDebug}
+                                                        moreLimtAlertMsg='响应数量超过2w，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击”查看全部“查看所有数据'
                                                     />
                                                 )}
                                                 {!showSuccess && (

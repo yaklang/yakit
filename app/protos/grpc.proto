@@ -4098,6 +4098,7 @@ message FuzzerRequest {
   bool IsPause = 53;
 
   repeated MutateMethod MutateMethods = 54;
+  bool SetPauseStatus = 55;
 }
 
 message MutateMethod {
@@ -4210,6 +4211,8 @@ message FuzzerResponse {
   string TooLargeResponseHeaderFile = 50;
   string TooLargeResponseBodyFile = 51;
   bool DisableRenderStyles = 52;
+  
+  string RuntimeID = 53;
 }
 
 message RedirectHTTPFlow {
@@ -4288,6 +4291,9 @@ message QueryHTTPFlowRequest {
   repeated string IncludeSuffix = 36;
   repeated string ExcludeSuffix = 37;
   repeated string ExcludeContentType = 38;
+
+  bool WithPayload = 39;
+  repeated string RuntimeIDs = 40;
 }
 
 message ExportHTTPFlowsRequest {
@@ -4388,6 +4394,9 @@ message HTTPFlow {
   string TooLargeResponseHeaderFile = 44;
   string TooLargeResponseBodyFile = 45;
   bool DisableRenderStyles = 46;
+
+  // http_flows 与 web_fuzzer_responses 表关联下取到Payload
+  repeated string Payloads = 47;
 }
 
 message FuzzableParam {

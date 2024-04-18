@@ -234,7 +234,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useHotkeys(
         "up",
         () => {
-            if (!useUpAndDown) return
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {
@@ -268,7 +267,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        {enabled: inViewport},
+        {enabled: inViewport && useUpAndDown},
         [data, currentRow, containerRef.current]
     )
     const upKey = useDebounceFn(
@@ -297,7 +296,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useHotkeys(
         "down",
         () => {
-            if (!useUpAndDown) return
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {
@@ -333,7 +331,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        {enabled: inViewport},
+        {enabled: inViewport && useUpAndDown},
         [data, currentRow, containerRef.current]
     )
     const downKey = useDebounceFn(
