@@ -268,16 +268,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             status = "warning"
             count = count + 1
         }
-        if (showMITMCertWarn) {
-            status = "warning"
-            count = count + 1
-        }
-
         if (!pcap.IsPrivileged) {
             status = system === "Windows_NT" ? "warning" : "error"
             count = count + 1
         }
         if (pluginTotal === 0) {
+            status = "error"
+            count = count + 1
+        }
+        if (showMITMCertWarn) {
             status = "error"
             count = count + 1
         }
@@ -770,6 +769,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         systemProxy,
         timeInterval,
         isAlreadyChromePath,
+        showMITMCertWarn,
+        stateNum,
         Array.from(runNodeList).length
     ])
 
