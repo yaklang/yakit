@@ -91,7 +91,7 @@ import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
 import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager"
 import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage"
-import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
+import HTTPFuzzerPage, {AdvancedConfigShowProps} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
 import {WebShellViewer} from "@/pages/webShell/WebShellViewer"
@@ -385,12 +385,15 @@ export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRo
 export interface ComponentParams {
     // 是否跳转到新开页面 默认跳转
     openFlag?: boolean
-    // Route.HTTPFuzzer 参数
+    // Route.HTTPFuzzer 参数---start
     isHttps?: boolean
     isGmTLS?: boolean
     request?: string
     system?: string
     advancedConfigValue?: AdvancedConfigValueProps
+    advancedConfigShow?: AdvancedConfigShowProps | null
+    // Route.HTTPFuzzer 参数---end
+
     // order?: string
     /**@param id 页面唯一标识id HTTPFuzzer/SimpleDetect必须要有的，其他页面可以不用 */
     id?: string
@@ -500,15 +503,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.HTTPFuzzer:
             return (
                 <Suspense fallback={<PageLoading />}>
-                    <WebFuzzerPage type='config' id={params?.id || ""}>
-                        <HTTPFuzzerPage
-                            isHttps={params?.isHttps}
-                            isGmTLS={params?.isGmTLS}
-                            request={params?.request}
-                            system={params?.system}
-                            id={params?.id || ""}
-                            shareContent={params?.shareContent}
-                        />
+                    <WebFuzzerPage defaultType='config' id={params?.id || ""}>
+                        <HTTPFuzzerPage system={params?.system} id={params?.id || ""} />
                     </WebFuzzerPage>
                 </Suspense>
             )

@@ -106,11 +106,6 @@ module.exports = (win, getClient) => {
         win.webContents.send("fetch-open-matcher-and-extraction", params)
     })
 
-    // 设置webFuzzer type ,
-    ipcMain.handle("send-webFuzzer-setType", (e, params) => {
-        win.webContents.send("fetch-webFuzzer-setType", params)
-    })
-
     // 新建组 onAddGroup
     ipcMain.handle("send-add-group", (e, params) => {
         win.webContents.send("fetch-add-group", params)

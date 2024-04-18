@@ -69,13 +69,15 @@ import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeTyp
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
 import {
-    WEB_FUZZ_DNS_Hosts_Config,
-    WEB_FUZZ_DNS_Server_Config,
-    WEB_FUZZ_PROXY,
+    AdvancedConfigShowProps,
+    FuzzerCacheDataProps,
+    ShareValueProps,
+    defaultAdvancedConfigShow,
     defaultAdvancedConfigValue,
-    defaultPostTemplate
+    defaultPostTemplate,
+    getFuzzerCacheData
 } from "@/pages/fuzzer/HTTPFuzzerPage"
-import {AdvancedConfigValueProps, KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSequence"
@@ -733,24 +735,59 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
-    const addFuzzer = useMemoizedFn((res: any) => {
+    const addFuzzer = useMemoizedFn(async (res: any) => {
         const {isHttps, isGmTLS, request, advancedConfigValue, openFlag = true} = res || {}
-        if (request) {
-            openMenuPage(
-                {route: YakitRoute.HTTPFuzzer},
-                {
-                    openFlag,
-                    pageParams: {
-                        isHttps: isHttps || false,
-                        isGmTLS: isGmTLS || false,
-                        request: request || "",
-                        system: system,
-                        shareContent: res.shareContent,
-                        advancedConfigValue: advancedConfigValue
+        const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
+            proxy: [],
+            dnsServers: [],
+            etcHosts: [],
+            advancedConfigShow: null
+        }
+        let newAdvancedConfigValue = {
+            ...advancedConfigValue,
+            proxy: cacheData.proxy,
+            dnsServers: cacheData.dnsServers,
+            etcHosts: cacheData.etcHosts
+        }
+        let newAdvancedConfigShow = cacheData.advancedConfigShow
+        let newIsHttps = !!isHttps
+        let newIsGmTLS = !!isGmTLS
+        let newRequest = request || defaultPostTemplate
+        // 有分享内容，数据以分享内容为准
+        if (res.hasOwnProperty("shareContent")) {
+            try {
+                const shareContent: ShareValueProps = JSON.parse(res.shareContent)
+                newIsHttps = shareContent.advancedConfiguration.isHttps
+                newIsGmTLS = shareContent.advancedConfiguration.isGmTLS
+                newRequest = shareContent.request || defaultPostTemplate
+
+                newAdvancedConfigValue = shareContent.advancedConfiguration
+                newAdvancedConfigShow = shareContent.advancedConfigShow
+                if (shareContent.hasOwnProperty("advancedConfig")) {
+                    // 兼容只有【配置】的时候的高级配置显隐,低版本分享给高版本
+                    newAdvancedConfigShow = {
+                        config: shareContent["advancedConfig"],
+                        rule: true
                     }
                 }
-            )
+            } catch (error) {}
         }
+        openMenuPage(
+            {route: YakitRoute.HTTPFuzzer},
+            {
+                openFlag,
+                pageParams: {
+                    request: newRequest,
+                    system: system,
+                    advancedConfigValue: {
+                        ...newAdvancedConfigValue,
+                        isHttps: newIsHttps,
+                        isGmTLS: newIsGmTLS
+                    },
+                    advancedConfigShow: newAdvancedConfigShow
+                }
+            }
+        )
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
     const addWebsocketFuzzer = useMemoizedFn(
@@ -1175,16 +1212,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         addPagesDataCache(YakitRoute.Mod_ScanPort, newPageNode)
     })
     /** @name 多开页面的额外处理逻辑(针对web-fuzzer页面) */
-    const openMultipleMenuPage = useMemoizedFn((route: RouteToPageProps) => {
-        if (route.route === YakitRoute.HTTPFuzzer) {
-            // const time = new Date().getTime().toString()
-            openMenuPage(route, {
-                pageParams: {
-                    system: system
-                    // order: time
-                }
-            })
-        } else openMenuPage(route)
+    const openMultipleMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
+        switch (routeInfo.route) {
+            case YakitRoute.HTTPFuzzer:
+                addFuzzer({})
+                break
+
+            default:
+                openMenuPage(routeInfo)
+                break
+        }
     })
     /** @name 判断页面是否打开，打开则定位该页面，未打开则打开页面 */
     const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
@@ -1359,39 +1396,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         shallow
     )
     // web-fuzzer多开页面缓存数据
-    const proxyRef = useRef<string[]>([])
-    const dnsServersRef = useRef<string[]>([])
-    const etcHostsRef = useRef<KVPair[]>([])
     useEffect(() => {
-        getFuzzerDefaultCache()
+        if (!isEnpriTraceAgent()) {
+            // 触发获取web-fuzzer的缓存
+            fetchFuzzerList()
+        }
         getFuzzerSequenceCache()
     }, [])
-
-    /**@description 获取Fuzzer默认缓存 */
-    const getFuzzerDefaultCache = useMemoizedFn(async () => {
-        try {
-            const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
-            const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
-            const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
-
-            const newProxy = proxy ? proxy.split(",") : []
-            const newDnsServers = dnsServers ? JSON.parse(dnsServers) : []
-            const newEtcHosts = etcHosts ? JSON.parse(etcHosts) : []
-            if (
-                !_.isEqual(proxyRef.current, newProxy) ||
-                !_.isEqual(dnsServersRef.current, newDnsServers) ||
-                !_.isEqual(etcHostsRef.current, newEtcHosts)
-            ) {
-                proxyRef.current = newProxy
-                dnsServersRef.current = newDnsServers
-                etcHostsRef.current = newEtcHosts
-            }
-            if (!isEnpriTraceAgent()) {
-                // 触发获取web-fuzzer的缓存
-                fetchFuzzerList()
-            }
-        } catch (error) {}
-    })
 
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
@@ -1405,11 +1416,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
 
     // 获取数据库中缓存的web-fuzzer页面信息
-    const fetchFuzzerList = useMemoizedFn(() => {
+    const fetchFuzzerList = useMemoizedFn(async () => {
         try {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1) return
+
             setLoading(true)
+            const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
+                proxy: [],
+                dnsServers: [],
+                etcHosts: [],
+                advancedConfigShow: null
+            }
+            const defaultCache = {
+                proxy: cacheData.proxy,
+                dnsServers: cacheData.dnsServers,
+                etcHosts: cacheData.etcHosts
+            }
             getRemoteProjectValue(RemoteGV.FuzzerCache)
                 .then((res: any) => {
                     const cache = JSON.parse(res || "[]")
@@ -1425,11 +1448,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     let multipleNodeListLength: number = 0
                     const multipleNodeList: MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
                     const pLength = multipleNodeList.length
-                    const defaultCache = {
-                        proxy: proxyRef.current || [],
-                        dnsServers: dnsServersRef.current || [],
-                        etcHosts: etcHostsRef.current || []
-                    }
                     for (let index = 0; index < pLength; index++) {
                         const parentItem: MultipleNodeInfo = multipleNodeList[index]
                         const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
@@ -1456,6 +1474,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                             ...defaultCache,
                                             ...nodeItem.pageParams
                                         },
+                                        advancedConfigShow: cacheData.advancedConfigShow,
                                         request: nodeItem.pageParams?.request || ""
                                     }
                                 },
@@ -1489,6 +1508,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                         ...defaultCache,
                                         ...parentItem.pageParams
                                     },
+                                    advancedConfigShow: cacheData.advancedConfigShow,
                                     request: parentItem.pageParams?.request || ""
                                 }
                             },
@@ -1538,10 +1558,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 新增缓存数据
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose */
     const addFuzzerList = useMemoizedFn((key: string, node: MultipleNodeInfo, order: number) => {
-        const clonePageParams = structuredClone(node.pageParams) || {}
-        if ("advancedConfigValue" in clonePageParams) {
-            delete clonePageParams.advancedConfigValue
-        }
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,
             routeKey: YakitRoute.HTTPFuzzer,
@@ -1553,9 +1569,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     pageId: node.id,
                     advancedConfigValue: {
                         ...defaultAdvancedConfigValue,
-                        ...clonePageParams,
                         ...node.pageParams?.advancedConfigValue
                     },
+                    advancedConfigShow: node.pageParams?.advancedConfigShow,
                     request: node.pageParams?.request || defaultPostTemplate
                 }
             },
@@ -2112,13 +2128,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     useEffect(() => {
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            ipcRenderer.on("fetch-webFuzzer-setType", onSetType)
+            emiter.on("sendSwitchSequenceToMainOperatorContent", onSetType)
         }
         ipcRenderer.on("fetch-add-group", onAddGroup)
         ipcRenderer.on("fetch-open-subMenu-item", onSelectSubMenuById)
 
         return () => {
-            ipcRenderer.removeListener("fetch-webFuzzer-setType", onSetType)
+            emiter.off("sendSwitchSequenceToMainOperatorContent", onSetType)
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
             ipcRenderer.removeListener("fetch-open-subMenu-item", onSelectSubMenuById)
         }
@@ -2156,16 +2172,16 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     }, [pageItem.multipleLength])
     useUpdateEffect(() => {
-        if (type === "config") {
+        if (type !== "sequence") {
             emiter.emit("onRefWebFuzzer")
         }
     }, [type])
-    const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
+    const onSetType = useMemoizedFn((res) => {
         if (!inViewport) return
-        setType(res.type)
-        if (type === res.type && res.type === "config") {
-            emiter.emit("onSetFuzzerAdvancedConfigShow")
-        }
+        try {
+            const value = JSON.parse(res)
+            setType(value.type)
+        } catch (error) {}
     })
     /**页面聚焦 */
     const onFocusPage = useMemoizedFn(() => {

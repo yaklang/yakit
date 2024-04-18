@@ -2,7 +2,7 @@ import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/H
 import {YakitRoute} from "@/routes/newRoute"
 import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
-import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {AdvancedConfigShowProps, defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
 import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
@@ -73,10 +73,18 @@ export interface PluginBatchExecutorPageInfoProps {
     /**请求包 */
     request: Uint8Array
 }
+export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
+    pageId: "",
+    advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
+    advancedConfigShow: null,
+    request: defaultPostTemplate
+}
+
 export interface WebFuzzerPageInfoProps {
     pageId: string
     advancedConfigValue: AdvancedConfigValueProps
     request: string
+    advancedConfigShow?: AdvancedConfigShowProps | null
 }
 
 export const defaultPocPageInfo: PocPageInfoProps = {

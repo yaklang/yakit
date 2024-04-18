@@ -1,4 +1,5 @@
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 
 export type FilterMode = "drop" | "match" | "onlyMatch"
 
@@ -106,6 +107,8 @@ export interface HttpQueryAdvancedConfigProps {
     inViewportCurrent?: boolean
     id: string
     matchSubmitFun: () => void
+    /**根据type 显示高级配置中得内容 */
+    showFormContentType: WebFuzzerType
 }
 
 export interface KVPair {

@@ -117,14 +117,10 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
             })
     })
     const handleWebFuzzerShare = useMemoizedFn((res: API.ExtractResponse) => {
-        const shareContent = JSON.parse(res.extract_content)
         ipcRenderer
             .invoke("send-to-tab", {
                 type: res.module,
                 data: {
-                    isHttps: shareContent.isHttps,
-                    isGmTLS: shareContent.isGmTLS,
-                    request: shareContent.request,
                     shareContent: res.extract_content
                 }
             })

@@ -217,6 +217,13 @@
         padding-top: 12px;
         padding-bottom: 24px;
     }
+    .panel-wrapper {
+        :global {
+            .ant-collapse-header {
+                border-top: 0 !important;
+            }
+        }
+    }
 }
 
 @keyframes show {

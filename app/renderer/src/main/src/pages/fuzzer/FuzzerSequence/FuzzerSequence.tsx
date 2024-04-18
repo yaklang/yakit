@@ -62,7 +62,6 @@ import {
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
     advancedConfigValueToFuzzerRequests,
     defaultAdvancedConfigValue,
-    defaultPostTemplate,
     emptyFuzzer
 } from "../HTTPFuzzerPage"
 import {randomString} from "@/utils/randomUtil"
@@ -84,14 +83,13 @@ import {ArrowsExpandIcon, ArrowsRetractIcon, QuestionMarkCircleIcon} from "@/ass
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {shallow} from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
-import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, WebFuzzerPageInfoProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {monacoEditorWrite} from "../fuzzerTemplates"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {ShareImportExportData} from "../components/ShareImportExportData"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import sequencemp4 from "@/assets/sequence.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
@@ -125,14 +123,6 @@ const reorder = (list: any[], startIndex: number, endIndex: number) => {
     const [removed] = result.splice(startIndex, 1)
     result.splice(endIndex, 0, removed)
     return result
-}
-
-const defaultPageParams: WebFuzzerPageInfoProps = {
-    pageId: "",
-    advancedConfigValue: {
-        ...defaultAdvancedConfigValue
-    },
-    request: defaultPostTemplate
 }
 
 const isEmptySequence = (list: SequenceProps[]) => {
@@ -576,7 +566,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     pageName: "",
                     inheritCookies: true,
                     inheritVariables: true
-                    // pageParams: defaultPageParams
                 }
                 newSequenceList.push(newItem)
             }
@@ -643,7 +632,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             pageId: item.pageId,
             pageGroupId: item.pageGroupId,
             pageName: item.pageName,
-            pageParams: item.pageParamsInfo.webFuzzerPageInfo || defaultPageParams,
+            pageParams: item.pageParamsInfo.webFuzzerPageInfo || defaultWebFuzzerPageInfo,
             inheritCookies: true,
             inheritVariables: true
         }))
@@ -763,7 +752,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             pageGroupId: "",
             inheritCookies: true,
             inheritVariables: true
-            // pageParams: defaultPageParams
         }
         setCurrentSequenceItem({...addItem})
         setSequenceList([...sequenceList, addItem])
@@ -789,7 +777,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 pageName: "",
                 inheritCookies: true,
                 inheritVariables: true
-                // pageParams: defaultPageParams
             }
             setSequenceList([newItem])
             setCurrentSequenceItem({...newItem})

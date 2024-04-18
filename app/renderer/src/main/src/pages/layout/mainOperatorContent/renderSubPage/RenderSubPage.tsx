@@ -1,16 +1,14 @@
-import {NoPaddingRoute, RouteToPage, RouteToPageItem, YakitRoute} from "@/routes/newRoute"
-import React, {useContext, useEffect, useMemo, useReducer, useRef, useState} from "react"
-import {useMap, useDebounceEffect, useMemoizedFn, useWhyDidYouUpdate} from "ahooks"
+import {NoPaddingRoute, RouteToPageItem, YakitRoute} from "@/routes/newRoute"
+import React, {useEffect, useMemo, useRef} from "react"
+import {useMap, useMemoizedFn} from "ahooks"
 import styles from "./RenderSubPage.module.scss"
-import {PageItemProps, RenderFuzzerSequenceProps, RenderSubPageItemProps, RenderSubPageProps} from "./RenderSubPageType"
-import {MultipleNodeInfo} from "../MainOperatorContentType"
+import {PageItemProps, RenderFuzzerSequenceProps, RenderSubPageProps} from "./RenderSubPageType"
 import FuzzerSequence from "@/pages/fuzzer/FuzzerSequence/FuzzerSequence"
-import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
-import {FuzzerSequenceListProps, useFuzzerSequence} from "@/store/fuzzerSequence"
+import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageLoading} from "@ant-design/pro-layout"
 import {usePageInfo} from "@/store/pageInfo"
 
-const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
+const FuzzerSequenceWrapper = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper"))
 
 export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
     (props) => {
@@ -37,7 +35,11 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
                                     }}
                                     className={styles["page-body"]}
                                 >
-                                    <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.pageParams} />
+                                    <PageItem
+                                        routeKey={route}
+                                        yakScriptId={+(pluginId || 0)}
+                                        params={subItem.pageParams}
+                                    />
                                 </div>
                             </React.Fragment>
                         )
@@ -94,9 +96,9 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
                                     style={{display: selectGroupId === ele.groupId ? "" : "none"}}
                                 >
                                     <React.Suspense fallback={<PageLoading />}>
-                                        <WebFuzzerPage type='sequence' groupId={ele.groupId}>
+                                        <FuzzerSequenceWrapper>
                                             <FuzzerSequence groupId={ele.groupId} setType={setType} />
-                                        </WebFuzzerPage>
+                                        </FuzzerSequenceWrapper>
                                     </React.Suspense>
                                 </div>
                             )
