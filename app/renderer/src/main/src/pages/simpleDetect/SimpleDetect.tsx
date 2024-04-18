@@ -541,7 +541,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
                     </>
                 }
             >
-                <YakitRadioButtons buttonStyle='solid' options={ScanTypeOptions} />
+                <YakitRadioButtons buttonStyle='solid' options={ScanTypeOptions} disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='scanDeep'
