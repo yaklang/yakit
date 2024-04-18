@@ -6,34 +6,58 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useMemoizedFn} from "ahooks"
 import {useEffect, useState} from "react"
 import React from "react"
-import { BruteExecuteExtraFormValue } from "../securityTool/newBrute/NewBruteType"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import {BruteExecuteExtraFormValue} from "../securityTool/newBrute/NewBruteType"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import { BruteSettings } from "../securityTool/newBrute/BruteExecuteParamsDrawer"
+import {BruteSettings} from "../securityTool/newBrute/BruteExecuteParamsDrawer"
+import {defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
+import {
+    BasicCrawlerSettingsPanel,
+    FingerprintSettingsPanel,
+    NetworkCardSettingsPanel,
+    ScanOtherSettingsPanel,
+    defaultExtraParamsFormValue
+} from "../securityTool/newPortScan/NewPortScanExtraParamsDrawer"
 
 const {YakitPanel} = YakitCollapse
+
+export interface SimpleDetectExtraParam {
+    portScanParam: PortScanExecuteExtraFormValue
+    bruteExecuteParam: BruteExecuteExtraFormValue
+}
 interface SimpleDetectExtraParamsDrawerProps {
-    extraParamsValue: PortScanExecuteExtraFormValue
+    extraParamsValue: SimpleDetectExtraParam
     visible: boolean
-    onSave: (v: PortScanExecuteExtraFormValue) => void
+    onSave: (v: SimpleDetectExtraParam) => void
 }
 
 const SimpleDetectExtraParamsDrawer: React.FC<SimpleDetectExtraParamsDrawerProps> = React.memo((props) => {
     const {extraParamsValue, visible, onSave} = props
-    const [form] = Form.useForm()
+
+    const [activeKey, setActiveKey] = useState<string[]>(["弱口令配置"])
+
+    const [bruteForm] = Form.useForm()
+    const [portScanForm] = Form.useForm()
     useEffect(() => {
         if (visible) {
-            form.setFieldsValue({...extraParamsValue})
+            bruteForm.setFieldsValue({...extraParamsValue.bruteExecuteParam})
+            portScanForm.setFieldsValue({...extraParamsValue.portScanParam})
         }
     }, [visible, extraParamsValue])
     const onClose = useMemoizedFn(() => {
         onSaveSetting()
     })
+    /**额外参数的保存目前没有必填项，不需要校验 */
     const onSaveSetting = useMemoizedFn(() => {
-        form.validateFields().then((formValue) => {
-            onSave(formValue)
-        })
+        const bruteFormValue = bruteForm.getFieldsValue()
+        const portScanFormValue = portScanForm.getFieldsValue()
+        const formValue = {
+            bruteExecuteParam: bruteFormValue,
+            portScanParam: portScanFormValue
+        }
+        onSave(formValue)
     })
+
     return (
         <YakitDrawer
             className={styles["simple-detect-execute-extra-params-drawer"]}
@@ -42,10 +66,20 @@ const SimpleDetectExtraParamsDrawer: React.FC<SimpleDetectExtraParamsDrawerProps
             width='65%'
             title='额外参数'
         >
-            <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
-                <SimpleDetectExtraParams form={form} visible={visible} />
-                <div className={styles["to-end"]}>已经到底啦～</div>
+            <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={bruteForm} style={{marginBottom: 8}}>
+                <YakitCollapse
+                    destroyInactivePanel={false}
+                    activeKey={activeKey}
+                    onChange={(key) => setActiveKey(key as string[])}
+                    bordered={false}
+                >
+                    <BruteSettingsPanel key='弱口令配置' visible={visible} />
+                </YakitCollapse>
             </Form>
+            <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={portScanForm}>
+                <SimpleDetectExtraParams visible={visible} />
+            </Form>
+            <div className={styles["to-end"]}>已经到底啦～</div>
         </YakitDrawer>
     )
 })
@@ -53,12 +87,16 @@ const SimpleDetectExtraParamsDrawer: React.FC<SimpleDetectExtraParamsDrawerProps
 export default SimpleDetectExtraParamsDrawer
 
 interface BruteSettingsPanelProps {
-    onReset: (s: string) => void
     visible: boolean
-    form: FormInstance<BruteExecuteExtraFormValue>
 }
 export const BruteSettingsPanel: React.FC<BruteSettingsPanelProps> = React.memo((props) => {
-    const {onReset, visible, form, ...restProps} = props
+    const {visible, ...restProps} = props
+    const form = Form.useFormInstance()
+    const onResetBrute = useMemoizedFn(() => {
+        form.setFieldsValue({
+            ...defaultBruteExecuteExtraFormValue
+        })
+    })
     return (
         <>
             <YakitPanel
@@ -72,7 +110,7 @@ export const BruteSettingsPanel: React.FC<BruteSettingsPanelProps> = React.memo(
                         size='small'
                         onClick={(e) => {
                             e.stopPropagation()
-                            onReset("弱口令设置")
+                            onResetBrute()
                         }}
                     >
                         重置
@@ -85,10 +123,26 @@ export const BruteSettingsPanel: React.FC<BruteSettingsPanelProps> = React.memo(
     )
 })
 interface SimpleDetectExtraParamsProps {
-    form: FormInstance<PortScanExecuteExtraFormValue>
     visible: boolean
 }
 const SimpleDetectExtraParams: React.FC<SimpleDetectExtraParamsProps> = React.memo((props) => {
-    const [activeKey, setActiveKey] = useState<string[]>(["指纹扫描配置", "弱口令配置", "基础爬虫配置", "其他配置"])
-    return <div></div>
+    const {visible} = props
+    const form = Form.useFormInstance()
+    const [activeKey, setActiveKey] = useState<string[]>(["网卡配置", "指纹扫描配置", "基础爬虫配置", "其他配置"])
+
+    return (
+        <>
+            <YakitCollapse
+                destroyInactivePanel={false}
+                activeKey={activeKey}
+                onChange={(key) => setActiveKey(key as string[])}
+                bordered={false}
+            >
+                <NetworkCardSettingsPanel key='网卡配置' visible={visible} />
+                <FingerprintSettingsPanel key='指纹扫描配置' isSimpleDetect={true} />
+                <BasicCrawlerSettingsPanel key='基础爬虫配置' />
+                <ScanOtherSettingsPanel key='其他配置' />
+            </YakitCollapse>
+        </>
+    )
 })

@@ -38,10 +38,20 @@ import {defaultSearch} from "../plugins/baseTemplate"
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
+import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
+import {defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
 const {ipcRenderer} = window.require("electron")
+
+const defaultScanDeep = 3
+
+const scanDeepMapPresetPort = {
+    3: "fast",
+    2: "middle",
+    1: "slow"
+}
 
 export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const {pageId} = props
@@ -68,9 +78,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 
     /**额外参数弹出框 */
     const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
-    const [extraParamsValue, setExtraParamsValue] = useState<PortScanExecuteExtraFormValue>(
-        cloneDeep(defPortScanExecuteExtraFormValue)
-    )
+    const [extraParamsValue, setExtraParamsValue] = useState<SimpleDetectExtraParam>({
+        portScanParam: cloneDeep({
+            ...defPortScanExecuteExtraFormValue,
+            scanDeep: defaultScanDeep,
+            presetPort: scanDeepMapPresetPort[defaultScanDeep],
+            Ports: PresetPorts[scanDeepMapPresetPort[defaultScanDeep]]
+        }),
+        bruteExecuteParam: cloneDeep(defaultBruteExecuteExtraFormValue)
+    })
     const [refreshGroup, setRefreshGroup] = useState<boolean>(false)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
@@ -111,15 +127,24 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         switch (scanDeep) {
             // 快速
             case 3:
-                setExtraParamsValue((v) => ({...v, Ports: PresetPorts["fast"]}))
+                setExtraParamsValue((v) => ({
+                    ...v,
+                    portScanParam: {...v.portScanParam, Ports: PresetPorts["fast"], presetPort: ["fast"]}
+                }))
                 break
             // 适中
             case 2:
-                setExtraParamsValue((v) => ({...v, Ports: PresetPorts["middle"]}))
+                setExtraParamsValue((v) => ({
+                    ...v,
+                    portScanParam: {...v.portScanParam, Ports: PresetPorts["middle"], presetPort: ["middle"]}
+                }))
                 break
             // 慢速
             case 1:
-                setExtraParamsValue((v) => ({...v, Ports: PresetPorts["slow"]}))
+                setExtraParamsValue((v) => ({
+                    ...v,
+                    portScanParam: {...v.portScanParam, Ports: PresetPorts["slow"], presetPort: ["slow"]}
+                }))
                 break
         }
     }, [scanDeep])
@@ -154,7 +179,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             true
         )
         let portScanRequestParams: PortScanExecuteExtraFormValue = {
-            ...extraParamsValue,
+            ...extraParamsValue.portScanParam,
             EnableBrute: value.pluginGroup?.includes("弱口令"),
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
@@ -222,16 +247,19 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsValue({
             ...extraParamsValue,
-            SkippedHostAliveScan: form.getFieldValue("SkippedHostAliveScan")
+            portScanParam: {
+                ...extraParamsValue.portScanParam,
+                SkippedHostAliveScan: form.getFieldValue("SkippedHostAliveScan")
+            }
         })
         setExtraParamsVisible(true)
     })
     /**保存额外参数 */
-    const onSaveExtraParams = useMemoizedFn((v: PortScanExecuteExtraFormValue) => {
-        setExtraParamsValue({...v} as PortScanExecuteExtraFormValue)
+    const onSaveExtraParams = useMemoizedFn((v: SimpleDetectExtraParam) => {
+        setExtraParamsValue({...v} as SimpleDetectExtraParam)
         setExtraParamsVisible(false)
         form.setFieldsValue({
-            SkippedHostAliveScan: v.SkippedHostAliveScan
+            SkippedHostAliveScan: !!v.portScanParam?.SkippedHostAliveScan
         })
     })
     const onImportPlugin = useMemoizedFn((e) => {
@@ -480,7 +508,12 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
             >
                 <YakitRadioButtons buttonStyle='solid' options={ScanTypeOptions} />
             </Form.Item>
-            <Form.Item name='scanDeep' label='扫描速度' extra='扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择'>
+            <Form.Item
+                name='scanDeep'
+                label='扫描速度'
+                extra='扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择'
+                initialValue={defaultScanDeep}
+            >
                 <Slider tipFormatter={null} min={1} max={3} marks={marks} disabled={disabled} />
             </Form.Item>
             <Form.Item label={" "} colon={false}>

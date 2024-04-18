@@ -1,11 +1,11 @@
 import React, {useEffect, useRef, useState} from "react"
 import {PortScanExecuteExtraFormValue} from "./NewPortScanType"
-import {Form, FormInstance} from "antd"
+import {Checkbox, Form, FormInstance, Tooltip} from "antd"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import styles from "./NewPortScanExtraParamsDrawer.module.scss"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {ScanKind, ScanKindKeys} from "@/pages/portscan/PortScanPage"
+import {ScanKind, ScanKindKeys, defaultPorts} from "@/pages/portscan/PortScanPage"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -20,6 +20,10 @@ import {defPortScanExecuteExtraFormValue} from "./NewPortScan"
 import {yakitInfo} from "@/utils/notification"
 import {apiGetGlobalNetworkConfig, apiGetPcapMetadata, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import cloneDeep from "lodash/cloneDeep"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import {CheckboxValueType} from "antd/lib/checkbox/Group"
+import {PresetPorts} from "@/pages/portscan/schema"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -62,7 +66,7 @@ const defaultSYNSetting = {
 const defaultNetworkCard = {
     SynScanNetInterface: defPortScanExecuteExtraFormValue.SynScanNetInterface
 }
-const defaultExtraParamsFormValue = {
+export const defaultExtraParamsFormValue = {
     网卡配置: defaultNetworkCard,
     "SYN 配置": defaultSYNSetting,
     指纹扫描配置: defaultFingerprintSetting,
@@ -135,7 +139,7 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
     const synCollapseNode = useMemoizedFn(() => {
         return (
             <>
-                <NetworkCardSettingsPanel key='网卡配置' onReset={onReset} visible={visible} form={form} />
+                <NetworkCardSettingsPanel key='网卡配置' visible={visible} />
                 <YakitPanel
                     header='SYN 配置'
                     key='SYN 配置'
@@ -172,16 +176,16 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                 return (
                     <>
                         {synCollapseNode()}
-                        <ScanOtherSettingsPanel key='其他配置' onReset={onReset} form={form} />
+                        <ScanOtherSettingsPanel key='其他配置' />
                     </>
                 )
             //指纹
             case "fingerprint":
                 return (
                     <>
-                        <FingerprintSettingsPanel key='指纹扫描配置' onReset={onReset} />
-                        <BasicCrawlerSettingsPanel key='基础爬虫配置' onReset={onReset} form={form} />
-                        <ScanOtherSettingsPanel key='其他配置' onReset={onReset} form={form} />
+                        <FingerprintSettingsPanel key='指纹扫描配置' />
+                        <BasicCrawlerSettingsPanel key='基础爬虫配置' />
+                        <ScanOtherSettingsPanel key='其他配置' />
                     </>
                 )
             // all SYN+指纹
@@ -189,9 +193,9 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
                 return (
                     <>
                         {synCollapseNode()}
-                        <FingerprintSettingsPanel key='指纹扫描配置' onReset={onReset} />
-                        <BasicCrawlerSettingsPanel key='基础爬虫配置' onReset={onReset} form={form} />
-                        <ScanOtherSettingsPanel key='其他配置' onReset={onReset} form={form} />
+                        <FingerprintSettingsPanel key='指纹扫描配置' />
+                        <BasicCrawlerSettingsPanel key='基础爬虫配置' />
+                        <ScanOtherSettingsPanel key='其他配置' />
                     </>
                 )
         }
@@ -224,17 +228,16 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
 })
 
 interface NetworkCardSettingsPanelProps {
-    onReset: (s: string) => void
     visible: boolean
-    form: FormInstance<PortScanExecuteExtraFormValue>
     key: string
 }
 /**网卡配置 */
 export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> = React.memo((props) => {
-    const {onReset, visible, form, key, ...restProps} = props
+    const {visible, key, ...restProps} = props
     const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
 
     const globalNetworkConfig = useRef<GlobalNetworkConfig | undefined>(cloneDeep(defaultParams))
+    const form = Form.useFormInstance()
     useEffect(() => {
         if (!visible) return
         apiGetGlobalNetworkConfig()
@@ -267,6 +270,12 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
             yakitInfo("更新配置成功")
         })
     })
+    const onReset = useMemoizedFn(() => {
+        const value = defaultExtraParamsFormValue["网卡配置"]
+        form.setFieldsValue({
+            ...value
+        })
+    })
     return (
         <>
             <YakitPanel
@@ -280,7 +289,7 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
                         size='small'
                         onClick={(e) => {
                             e.stopPropagation()
-                            onReset("网卡配置")
+                            onReset()
                         }}
                     >
                         重置
@@ -291,9 +300,11 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
                 <Form.Item
                     label='网卡选择'
                     extra={
-                        <YakitButton type='text' style={{paddingLeft: 0}} onClick={updateGlobalNetworkConfig}>
-                            同步到全局配置
-                        </YakitButton>
+                        !isEnpriTraceAgent() && (
+                            <YakitButton type='text' style={{paddingLeft: 0}} onClick={updateGlobalNetworkConfig}>
+                                同步到全局配置
+                            </YakitButton>
+                        )
                     }
                     name='SynScanNetInterface'
                     style={{marginBottom: 0}}
@@ -306,12 +317,45 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
 })
 
 interface FingerprintSettingsPanelProps {
-    onReset: (s: string) => void
+    isSimpleDetect?: boolean
     key: string
 }
 /**指纹扫描配置 */
 export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> = React.memo((props) => {
-    const {onReset, key, ...restProps} = props
+    const {key, isSimpleDetect, ...restProps} = props
+    const form = Form.useFormInstance()
+    /**选择预设端口设置Ports值 */
+    const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
+        let res: string = (checkedValue || [])
+            .map((i) => {
+                return PresetPorts[i as string] || ""
+            })
+            .join(",")
+        if (checkedValue.includes("all")) {
+            res = PresetPorts["all"] || ""
+        }
+
+        if (!!res) {
+            form.setFieldsValue({Ports: res})
+        }
+    })
+    const onReset = useMemoizedFn(() => {
+        const value = defaultExtraParamsFormValue["指纹扫描配置"]
+        if (isSimpleDetect) {
+            form.setFieldsValue({
+                ...value,
+                Ports: PresetPorts["fast"],
+                presetPort: ["fast"]
+            })
+        } else {
+            form.setFieldsValue({
+                ...value
+            })
+        }
+    })
+    const onResetPort = useMemoizedFn(() => {
+        form.setFieldsValue({Ports: PresetPorts["fast"], presetPort: ["fast"]})
+    })
     return (
         <>
             <YakitPanel
@@ -325,13 +369,50 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                         size='small'
                         onClick={(e) => {
                             e.stopPropagation()
-                            onReset("指纹扫描配置")
+                            onReset()
                         }}
                     >
                         重置
                     </YakitButton>
                 }
             >
+                {isSimpleDetect && (
+                    <>
+                        <Form.Item label='预设端口' name='presetPort'>
+                            <Checkbox.Group
+                                className={styles["preset-port-group-wrapper"]}
+                                onChange={onCheckPresetPort}
+                            >
+                                <YakitCheckbox value={"fast"}>快速默认端口</YakitCheckbox>
+                                <YakitCheckbox value={"middle"}>适中默认端口</YakitCheckbox>
+                                <YakitCheckbox value={"slow"}>慢速默认端口</YakitCheckbox>
+                                <YakitCheckbox value={"top100"}>常见100端口</YakitCheckbox>
+                                <YakitCheckbox value={"topweb"}>常见 Web 端口</YakitCheckbox>
+                                <YakitCheckbox value={"top1000+"}>常见一两千</YakitCheckbox>
+                                <YakitCheckbox value={"topdb"}>常见数据库与 MQ</YakitCheckbox>
+                                <YakitCheckbox value={"topudp"}>常见 UDP 端口</YakitCheckbox>
+                                <YakitCheckbox value={"defect"}>常见弱口令端口</YakitCheckbox>
+                                <YakitCheckbox value={"all"}>全端口</YakitCheckbox>
+                            </Checkbox.Group>
+                        </Form.Item>
+                        <Form.Item
+                            label='扫描端口'
+                            name='Ports'
+                            extra={
+                                <div className={styles["ports-form-extra"]}>
+                                    <Tooltip title={"重置为默认扫描端口"}>
+                                        <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={onResetPort}>
+                                            默认配置
+                                        </YakitButton>
+                                    </Tooltip>
+                                </div>
+                            }
+                            initialValue={defaultPorts}
+                        >
+                            <YakitInput.TextArea rows={3} />
+                        </Form.Item>
+                    </>
+                )}
                 <Form.Item label='指纹扫描并发' name='Concurrent'>
                     <YakitInputNumber type='horizontal' min={0} />
                 </Form.Item>
@@ -395,15 +476,19 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
 })
 
 interface BasicCrawlerSettingsPanelProps {
-    onReset: (s: string) => void
-    form: FormInstance<PortScanExecuteExtraFormValue>
     key: string
 }
 /** 基础爬虫配置 */
 export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps> = React.memo((props) => {
-    const {onReset, form, key, ...restProps} = props
+    const {key, ...restProps} = props
+    const form = Form.useFormInstance()
     const enableBasicCrawler = Form.useWatch("EnableBasicCrawler", form)
-
+    const onReset = useMemoizedFn(() => {
+        const value = defaultExtraParamsFormValue["基础爬虫配置"]
+        form.setFieldsValue({
+            ...value
+        })
+    })
     return (
         <>
             <YakitPanel
@@ -417,7 +502,7 @@ export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps>
                         size='small'
                         onClick={(e) => {
                             e.stopPropagation()
-                            onReset("基础爬虫配置")
+                            onReset()
                         }}
                     >
                         重置
@@ -453,14 +538,19 @@ export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps>
 })
 
 interface ScanOtherSettingsPanelProps {
-    onReset: (s: string) => void
-    form: FormInstance<PortScanExecuteExtraFormValue>
     key: string
 }
 export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = React.memo((props) => {
-    const {onReset, form, key, ...restProps} = props
+    const {key, ...restProps} = props
+    const form = Form.useFormInstance()
     const skippedHostAliveScan = Form.useWatch("SkippedHostAliveScan", form)
     const saveToDB = Form.useWatch("SaveToDB", form)
+    const onReset = useMemoizedFn(() => {
+        const value = defaultExtraParamsFormValue["其他配置"]
+        form.setFieldsValue({
+            ...value
+        })
+    })
     return (
         <>
             <YakitPanel
@@ -474,7 +564,7 @@ export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = Rea
                         size='small'
                         onClick={(e) => {
                             e.stopPropagation()
-                            onReset("其他配置")
+                            onReset()
                         }}
                     >
                         重置
