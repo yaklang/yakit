@@ -2650,6 +2650,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     <YakitPopconfirm
                                         title={"操作仅匹配会结束暂停状态，是否确定操作？"}
                                         onConfirm={() => {
+                                            cancelCurrentHTTPFuzzer && cancelCurrentHTTPFuzzer()
                                             matchSubmit && matchSubmit()
                                         }}
                                         placement='top'
