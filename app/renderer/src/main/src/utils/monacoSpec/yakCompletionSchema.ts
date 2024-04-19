@@ -26,7 +26,7 @@ export interface SuggestionDescription {
     Kind: string
 }
 export interface YaklangLanguageSuggestionRequest {
-    InspectType: "completion" | "hover" | "signature"
+    InspectType: "completion" | "hover" | "signature" | "definition" | "reference"
     YakScriptType: "yak" | "mitm" | "port-scan" | "codec"
     YakScriptCode: string
     Range: Range
@@ -35,6 +35,11 @@ export interface YaklangLanguageSuggestionRequest {
 
 export interface YaklangLanguageSuggestionResponse {
     SuggestionMessage: SuggestionDescription[]
+}
+
+export interface YaklangLanguageFindResponse {
+    URI: string
+    Ranges: Range[]
 }
 
 export interface CompletionSchema {
