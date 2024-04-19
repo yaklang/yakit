@@ -644,7 +644,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 }
 
 // WebFuzzer表格最多显示多少数据
-export const FuzzerTableMaxData = 20000
+export const FuzzerTableMaxData = 10000
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
     config: true,
     rule: true

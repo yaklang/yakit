@@ -640,8 +640,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }),
         SourceType: props.params?.SourceType || "mitm",
         WithPayload: toWebFuzzer,
-        RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-        RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+        // RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+        RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
+        // RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -1009,11 +1011,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         // 查询数据
         updateQueryParams(query)
+        console.log(query)
+
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
+                console.log(newData.length)
+
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
@@ -1793,7 +1799,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             dataKey: "RequestSizeVerbose",
             // fixed: "right",
             enableDrag: false,
-            width: 200,
+            width: 200
         }
         const action: ColumnsTypeProps = {
             title: "操作",
@@ -2047,8 +2053,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ExcludeId: params.ExcludeId,
                     ExcludeInUrl: params.ExcludeInUrl,
                     WithPayload: toWebFuzzer,
-                    RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-                    RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+                    // RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+                    // RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+                    RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+                    RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
                 }
                 setParams({...newParams})
                 updateData()
@@ -2773,8 +2781,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
             WithPayload: toWebFuzzer,
-            RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-            RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+            // RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
+            // RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+            RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+            RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
         }
         setParams(newParams)
         setIsReset(!isReset)
