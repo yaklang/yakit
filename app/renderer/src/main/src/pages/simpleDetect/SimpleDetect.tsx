@@ -348,6 +348,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                 <YakitPopconfirm
                                     title={"确定将插件商店所有数据导入到本地吗?"}
                                     onConfirm={onImportPlugin}
+                                    onCancel={(e) => {
+                                        if (e) e.stopPropagation()
+                                    }}
                                     okText='Yes'
                                     cancelText='No'
                                     placement={"left"}
@@ -364,6 +367,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                 <YakitPopconfirm
                                     title={"确定将插件商店所有本地数据清除吗?"}
                                     onConfirm={onRemoveAllLocalPlugin}
+                                    onCancel={(e) => {
+                                        if (e) e.stopPropagation()
+                                    }}
                                     okText='Yes'
                                     cancelText='No'
                                     placement={"left"}
