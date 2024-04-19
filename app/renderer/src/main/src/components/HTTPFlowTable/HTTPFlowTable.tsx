@@ -1009,14 +1009,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         // 查询数据
         updateQueryParams(query)
-        console.log(query)
 
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
-                console.log(newData.length)
 
                 if (type === "top") {
                     if (newData.length <= 0) {
