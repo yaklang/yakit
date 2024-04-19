@@ -470,7 +470,8 @@ module.exports = {
                 const all = "auto-install-cert.zip"
                 const output_name = isWindows ? `auto-install-cert.bat` : `auto-install-cert.sh`
                 if (!fs.existsSync(loadExtraFilePath(path.join("bins/scripts", all)))) {
-                    reject(script + " not found")
+                    reject(all + " not found")
+                    return
                 }
                 console.log("start to gen cert script")
                 const zipHandler = new zip({
