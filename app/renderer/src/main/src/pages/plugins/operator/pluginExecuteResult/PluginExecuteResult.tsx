@@ -443,7 +443,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
         const newColumns = columns.map((ele) => ({
             ...ele,
             sorterProps: {
-                sorter: !isNaN(Number(item[ele.dataKey]))
+                sorter: !Number.isNaN(Number(item[ele.dataKey]))
             },
             filterProps: {
                 filtersType: "input"
