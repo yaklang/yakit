@@ -34,3 +34,15 @@
 .ant-slider-handle:focus {
     box-shadow: 0 0 0 5px var(--yakit-primary-1);
 }
+.ant-slider-disabled .ant-slider-track {
+    background-color: var(--yakit-background-color) !important;
+}
+.ant-slider-disabled .ant-slider-handle,
+.ant-slider-disabled .ant-slider-dot {
+    background-color: var(--yakit-background-color);
+    border-color: var(--yakit-disable-text-color) !important;
+}
+.ant-slider-disabled .ant-slider-mark-text,
+.ant-slider-disabled .ant-slider-dot {
+    color: var(--yakit-disable-text-color);
+}
