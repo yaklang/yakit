@@ -95,6 +95,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     })
     const [refreshGroup, setRefreshGroup] = useState<boolean>(false)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
 
     const [runtimeId, setRuntimeId] = useState<string>("")
 
@@ -306,9 +307,16 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     })
     const onRemoveAllLocalPlugin = useMemoizedFn((e) => {
         e.stopPropagation()
-        apiDeleteLocalPluginsByWhere(defaultDeleteLocalPluginsByWhereRequest).then(() => {
-            setRefreshGroup(!refreshGroup)
-        })
+        setRemoveLoading(true)
+        apiDeleteLocalPluginsByWhere(defaultDeleteLocalPluginsByWhereRequest)
+            .then(() => {
+                setRefreshGroup(!refreshGroup)
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setRemoveLoading(false)
+                }, 200)
+            )
     })
     /**生成报告 */
     const onCreateReport = useMemoizedFn((e) => {
@@ -366,6 +374,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                         }}
+                                        loading={removeLoading}
                                     >
                                         一键清除插件
                                     </YakitButton>
