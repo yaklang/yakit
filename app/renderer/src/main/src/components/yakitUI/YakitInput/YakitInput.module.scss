@@ -449,6 +449,9 @@
             pointer-events: none;
             background-color: #fff;
         }
+        .ant-input-disabled + .textArea-resizer-icon {
+            background-color: var(--yakit-background-color);
+        }
     }
 }
 .yakit-textArea-resize-hide {
