@@ -75,7 +75,7 @@ const {ipcRenderer} = window.require("electron")
 
 // 替换指定位置的功能
 const reorder = (list: EnhancedCustomRouteMenuProps[], startIndex: number, endIndex: number) => {
-    const result = Array.from(list)
+    const result = [...list]
     const [removed] = result.splice(startIndex, 1)
     result.splice(endIndex, 0, removed)
     return result
