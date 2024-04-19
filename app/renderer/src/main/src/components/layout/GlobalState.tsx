@@ -32,7 +32,9 @@ import {useRunNodeStore} from "@/store/runNode"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import emiter from "@/utils/eventBus/eventBus"
-import { serverPushStatus } from "@/utils/duplex/duplex"
+import {serverPushStatus} from "@/utils/duplex/duplex"
+import {openABSFileLocated} from "@/utils/openWebsite"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -55,6 +57,7 @@ export interface GlobalReverseStateProp {
     isEngineLink: boolean
     system: YakitSystem
 }
+
 /** 全局反连服务器配置参数 */
 interface ReverseDetail {
     PublicReverseIP: string
@@ -223,6 +226,28 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 })
         })
     })
+    const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
+
+    const updateMITMCert = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("VerifySystemCertificate")
+                .then((res) => {
+                    if (res.valid) {
+                        setShowMITMCertWarn(false)
+                    } else {
+                        setShowMITMCertWarn(true)
+                    }
+                    if (res.Reason != "") {
+                        reject(`error-mitm-cert ${res.Reason}`)
+                    }
+                })
+                .catch((e) => reject(`error-mitm-cert ${e}`))
+                .finally(() => {
+                    resolve("mitm-cert")
+                })
+        })
+    })
 
     const [state, setState] = useState<string>("error")
     const [stateNum, setStateNum] = useState<number>(0)
@@ -253,6 +278,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             status = "error"
             count = count + 1
         }
+        if (showMITMCertWarn) {
+            status = "error"
+            count = count + 1
+        }
         setState(status)
         setStateNum(count)
     })
@@ -262,18 +291,18 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (isRunRef.current) return
 
         isRunRef.current = true
-        Promise.allSettled(serverPushStatus?[
-            updateSystemProxy(),
-            updateGlobalReverse(),
-            updatePcap(),
-            updateChromePath()
-        ]:[
-            updateSystemProxy(),
-            updateGlobalReverse(),
-            updatePcap(),
-            updatePluginTotal(),
-            updateChromePath()
-        ])
+        Promise.allSettled(
+            serverPushStatus
+                ? [updateSystemProxy(), updateGlobalReverse(), updatePcap(), updateChromePath(), updateMITMCert()]
+                : [
+                      updateSystemProxy(),
+                      updateGlobalReverse(),
+                      updatePcap(),
+                      updatePluginTotal(),
+                      updateChromePath(),
+                      updateMITMCert()
+                  ]
+        )
             .then((values) => {
                 isRunRef.current = false
                 setTimeout(() => updateState(), 100)
@@ -499,6 +528,71 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             )}
                         </div>
                     )}
+                    {/* MITM 证书 */}
+                    {showMITMCertWarn && (
+                        <div className={styles["body-info"]}>
+                            <div className={styles["info-left"]}>
+                                <ErrorIcon />
+                                <div className={styles["left-body"]}>
+                                    <div className={styles["title-style"]}>MITM证书</div>
+                                    <div className={styles["subtitle-style"]}>
+                                        MITM证书不在系统信任列表中，请重新安装
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={styles["info-right"]}>
+                                <YakitButton
+                                    type='text'
+                                    className={styles["btn-style"]}
+                                    onClick={() => {
+                                        setShow(false)
+                                        const m = showYakitModal({
+                                            title: "生成自动安装脚本",
+                                            width: "600px",
+                                            centered: true,
+                                            content: (
+                                                <div style={{padding: 15}}>
+                                                    请按照以下步骤进行操作：
+                                                    <br />
+                                                    <br />
+                                                    1. 点击确定后将会打开脚本存放的目录。
+                                                    <br />
+                                                    2. 双击打开 "auto-install-cert.bat/auto-install-cert.sh"
+                                                    的文件执行安装。
+                                                    <br />
+                                                    3. 如果安装成功，您将看到“Certificate successfully
+                                                    installed.”的提示。
+                                                    <br />
+                                                    <br />
+                                                    请确保在运行脚本之前关闭任何可能会阻止安装的应用程序。
+                                                    <br />
+                                                    安装完成后，您将能够顺利使用 MITM。
+                                                    <br />
+                                                    <br />
+                                                    如有任何疑问或需要进一步帮助，请随时联系我们。
+                                                </div>
+                                            ),
+                                            onOk: () => {
+                                                ipcRenderer
+                                                    .invoke("generate-install-script", {})
+                                                    .then((p: string) => {
+                                                        if (p) {
+                                                            openABSFileLocated(p)
+                                                        } else {
+                                                            failed("生成失败")
+                                                        }
+                                                    })
+                                                    .catch(() => {})
+                                                m.destroy()
+                                            }
+                                        })
+                                    }}
+                                >
+                                    下载安装
+                                </YakitButton>
+                            </div>
+                        </div>
+                    )}
                     {/* 本地插件下载 */}
                     {pluginTotal === 0 && (
                         <div className={styles["body-info"]}>
@@ -663,7 +757,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 {Array.from(runNodeList).map(([key, value], index) => (
                                     <div className={styles["run-node-item"]} key={key}>
                                         <Row>
-                                            <Col span={6} className={styles["ellipsis"]}>{JSON.parse(key).nodename}</Col>
+                                            <Col span={6} className={styles["ellipsis"]}>
+                                                {JSON.parse(key).nodename}
+                                            </Col>
                                             <Col span={15} className={styles["ellipsis"]}>
                                                 {JSON.parse(key).ipOrdomain}:{JSON.parse(key).port}
                                             </Col>
@@ -712,6 +808,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         systemProxy,
         timeInterval,
         isAlreadyChromePath,
+        showMITMCertWarn,
+        stateNum,
         Array.from(runNodeList).length
     ])
 

@@ -465,6 +465,46 @@ module.exports = {
             return shell.showItemInFolder(path)
         })
 
+        const generateInstallScript = () => {
+            return new Promise((resolve, reject) => {
+                const all = "auto-install-cert.zip"
+                const output_name = isWindows ? `auto-install-cert.bat` : `auto-install-cert.sh`
+                if (!fs.existsSync(loadExtraFilePath(path.join("bins/scripts", all)))) {
+                    reject(all + " not found")
+                    return
+                }
+                console.log("start to gen cert script")
+                const zipHandler = new zip({
+                    file: loadExtraFilePath(path.join("bins/scripts", all)), storeEntries: true,
+                })
+                zipHandler.on("ready", () => {
+                    const targetPath = path.join(YakitProjectPath, output_name)
+                    zipHandler.extract(output_name, targetPath, (err, res) => {
+                        if (!fs.existsSync(targetPath)) {
+                            reject(`Extract Cert Script Failed`)
+                        } else {
+                            // 如果不是 Windows，给脚本文件添加执行权限
+                            if (!isWindows) {
+                                fs.chmodSync(targetPath, 0o755);
+                            }
+                            resolve(targetPath)
+                        }
+                        zipHandler.close();
+                    })
+                })
+                zipHandler.on("error", err => {
+                    console.info(err)
+                    reject(`${err}`)
+                    zipHandler.close()
+                })
+            })
+        }
+
+
+        ipcMain.handle("generate-install-script", async (e) => {
+            return await generateInstallScript()
+        })
+
         // asyncInitBuildInEngine wrapper
         const asyncInitBuildInEngine = (params) => {
             return new Promise((resolve, reject) => {
