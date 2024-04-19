@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
 import Draggable from "react-draggable"
 import {useSize} from "ahooks"
 import type {DraggableEvent, DraggableData} from "react-draggable"
@@ -108,6 +108,31 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
         }
     }, [xtermRef])
 
+    const systemRef = useRef<YakitSystem>("Darwin")
+    useEffect(() => {
+        ipcRenderer
+            .invoke("fetch-system-name")
+            .then((res) => (systemRef.current = res))
+            .catch(() => {})
+    }, [])
+
+    const setCopy = useDebounceFn(
+        useMemoizedFn((content: string) => {
+            ipcRenderer.invoke("set-copy-clipboard", content)
+        }),
+        {wait: 10}
+    ).run
+    const onCopy = useMemoizedFn((e: KeyboardEvent) => {
+        const isActiveCOrM = systemRef.current === "Darwin" ? e.metaKey : e.ctrlKey
+        const isCopy = e.code === "KeyC" && isActiveCOrM
+        if (isCopy) {
+            const str = xtermRef.current.terminal.getSelection()
+            setCopy(str || "")
+            return false
+        }
+        return true
+    })
+
     return (
         <div
             className={classNames(styles["engine-console"], {
@@ -127,7 +152,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <XTerm ref={xtermRef} options={defaultXTermOptions} />
+            <XTerm ref={xtermRef} customKeyEventHandler={onCopy} options={defaultXTermOptions} />
         </div>
     )
 }

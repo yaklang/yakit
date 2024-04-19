@@ -1,9 +1,10 @@
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {getRemoteValue} from "./kv"
+import {getLocalValue, getRemoteValue} from "./kv"
 import {globalUserLogout, isEnpriTraceAgent} from "@/utils/envfile"
 import emiter from "./eventBus/eventBus"
+import {LocalGVS} from "@/enums/localGlobal"
 const {ipcRenderer} = window.require("electron")
 
 export const loginOut = async (userInfo: UserInfoProps) => {
@@ -26,19 +27,29 @@ export const loginOut = async (userInfo: UserInfoProps) => {
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
-    getRemoteValue("httpSetting").then((setting) => {
+    getRemoteValue("httpSetting").then(async (setting) => {
         if (!setting) return
         const values = JSON.parse(setting)
         const OnlineBaseUrl: string = values.BaseUrl
-        ipcRenderer
-            .invoke("DeletePluginByUserID", {
-                UserID: userInfo.user_id,
-                OnlineBaseUrl
-            })
-            .finally(() => {
-                ipcRenderer.send("user-sign-out")
-                emiter.emit("onRefLocalPluginList", "")
-            })
+
+        let isDelPrivate: boolean = false
+        try {
+            isDelPrivate = !!(await getLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout))
+        } catch (error) {}
+
+        if (isDelPrivate) {
+            ipcRenderer
+                .invoke("DeletePluginByUserID", {
+                    UserID: userInfo.user_id,
+                    OnlineBaseUrl
+                })
+                .finally(() => {
+                    ipcRenderer.send("user-sign-out")
+                    emiter.emit("onRefLocalPluginList", "")
+                })
+        } else {
+            ipcRenderer.send("user-sign-out")
+        }
     })
 }
 

@@ -73,6 +73,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 closable:false,
                 style:{ top: '10%' },
                 hiddenHeader: true,
+                keyboard: false,
                 content: (
                     <HTTPFuzzerHotPatch
                         initialHotPatchCode={hotPatchCode}

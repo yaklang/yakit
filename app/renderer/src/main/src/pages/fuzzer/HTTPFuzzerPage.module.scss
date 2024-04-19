@@ -342,6 +342,7 @@
         line-height: 16px;
         border-bottom: 1px solid var(--yakit-border-color);
         .resize-card-heard-title {
+            white-space: nowrap;
             font-weight: 500;
             font-size: 12px;
             color: var(--yakit-header-color);

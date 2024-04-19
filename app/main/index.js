@@ -1,4 +1,4 @@
-const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol} = require("electron")
+const {app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, Menu} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
 const url = require("url")
@@ -11,6 +11,7 @@ const fs = require("fs")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
 const {clearFolder} = require("./toolsFunc")
+const {MenuTemplate} = require("./menu")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -55,7 +56,7 @@ const createWindow = () => {
             sandbox: true
         },
         frame: false,
-        titleBarStyle: "hidden"
+        titleBarStyle: "hidden",
     })
     win.setSize(mainWindowState.width, mainWindowState.height)
     mainWindowState.manage(win)
@@ -96,6 +97,13 @@ const createWindow = () => {
     //     win.webContents.send("open-screenCap-modal")
     // })
 }
+
+/**
+ * set software menu
+ */
+
+const menu = Menu.buildFromTemplate(MenuTemplate)
+Menu.setApplicationMenu(menu)
 
 app.whenReady().then(() => {
     // 截图功能的注册(功能和全局快捷键的注册)

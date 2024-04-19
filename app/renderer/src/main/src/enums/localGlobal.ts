@@ -8,5 +8,8 @@ export enum LocalGVS {
     YaklangRemoteEngineCredential = "yaklang-remote-engine-credential",
 
     /** @name 是否自启最新版本检测 */
-    NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check"
+    NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check",
+
+    /** @name 退出登陆是否删除账号的私密插件 */
+    IsDeletePrivatePluginsOnLogout = "is-delete-private-plugins-on-logout",
 }
