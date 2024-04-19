@@ -662,6 +662,19 @@ module.exports = (win, getClient) => {
             })
         })
     }
+
+    const asyncYaklangLanguageFind = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().YaklangLanguageFind(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
     ipcMain.handle("YaklangLanguageSuggestion", async (e, params) => {
         return await asyncYaklangLanguageSuggestion(params)
     })
@@ -680,5 +693,9 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("VerifySystemCertificate", async (e, params) => {
         return await asyncVerifySystemCertificate(params)
+    })
+
+    ipcMain.handle("YaklangLanguageFind",async (e, params) => {
+        return await asyncYaklangLanguageFind(params)
     })
 }

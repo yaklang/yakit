@@ -1,5 +1,5 @@
 import { monaco } from "react-monaco-editor";
-import { newYaklangCompletionHandlerProvider, yaklangCompletionHandlerProvider, getCompletions, getGlobalCompletions, Range, SuggestionDescription, YaklangLanguageSuggestionRequest, YaklangLanguageSuggestionResponse, getWordWithPointAtPosition } from "./yakCompletionSchema";
+import { newYaklangCompletionHandlerProvider, yaklangCompletionHandlerProvider, getCompletions, getGlobalCompletions, Range, SuggestionDescription, YaklangLanguageSuggestionRequest, YaklangLanguageSuggestionResponse, getWordWithPointAtPosition, YaklangLanguageFindResponse } from "./yakCompletionSchema";
 import { languages } from "monaco-editor";
 import CodeAction = languages.CodeAction;
 import CodeActionList = languages.CodeActionList;
@@ -187,7 +187,7 @@ export const setUpYaklangMonaco = () => {
         symbols: /[=><!~?:&|+\-*\/\^%]+/,
         escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4})/,
         inlineExpr: /\$\{[^}]*\}/,
-        invalidInlineExpr:  /\$\{[^}]*$/,
+        invalidInlineExpr: /\$\{[^}]*$/,
         tokenizer: {
             root: [
 
@@ -256,7 +256,7 @@ export const setUpYaklangMonaco = () => {
                 // delimiter: after number because of .\d floats
                 [/[;,.]/, 'delimiter'],
 
-                
+
 
                 // characters
                 [/'[^\\']'/, 'string'],
@@ -373,7 +373,7 @@ export const setUpYaklangMonaco = () => {
             ],
 
             string: [
-                [/@escapes/, 'string.escape'],                
+                [/@escapes/, 'string.escape'],
                 [/[^\\"]/, 'string'],
                 [/\\./, 'string.invalid'],
                 [/"/, 'string', '@pop']
@@ -435,22 +435,22 @@ monaco.editor.onDidCreateEditor((editor) => {
     editor.onDidChangeCursorPosition((e) => {
         const range = editorToSignatureHelpRangeMap.get(editor);
         if (!range) {
-            return 
+            return
         }
         const position = e.position;
 
         // 如果光标不在函数签名提示的范围内，关闭函数签名提示
         if (range.containsPosition(position)) {
-            return 
+            return
         }
-        editor.trigger('keyboard', 'closeParameterHints', null); 
+        editor.trigger('keyboard', 'closeParameterHints', null);
         editorToSignatureHelpRangeMap.delete(editor);
     })
     editor.onDidChangeModelContent((e) => {
         // 修改函数签名提示的范围
         let range = editorToSignatureHelpRangeMap.get(editor);
         if (!range) {
-            return 
+            return
         }
         e.changes.forEach(change => {
             if (!range) {
@@ -459,16 +459,16 @@ monaco.editor.onDidCreateEditor((editor) => {
             if (range.containsRange(change.range)) {
                 const model = editor.getModel();
                 if (!model) {
-                    return 
+                    return
                 }
                 const LParenMatch = model.findPreviousMatch("(", new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
-                const RParenMatch = model.findNextMatch(")",  new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
+                const RParenMatch = model.findNextMatch(")", new monaco.Position(range.startLineNumber, range.endColumn), false, false, null, false);
                 if (LParenMatch && RParenMatch) {
                     const startPosition = LParenMatch.range.getStartPosition();
                     const endPosition = RParenMatch.range.getStartPosition();
-                    range =  new monaco.Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
+                    range = new monaco.Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
                 }
-            }   
+            }
         })
     })
 })
@@ -592,6 +592,80 @@ monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
 
     }
 })
+
+
+monaco.languages.registerDefinitionProvider(YaklangMonacoSpec, {
+    provideDefinition: function (model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): languages.ProviderResult<languages.Definition> {
+        return new Promise(async (resolve, reject) => {
+            const iWord = getWordWithPointAtPosition(model, position);
+            let desc = "";
+            const type = getModelContext(model, "plugin") || "yak"
+            await ipcRenderer.invoke("YaklangLanguageFind", {
+                InspectType: "definition",
+                YakScriptType: type,
+                YakScriptCode: model.getValue(),
+                Range: {
+                    Code: iWord.word,
+                    StartLine: position.lineNumber,
+                    StartColumn: iWord.startColumn,
+                    EndLine: position.lineNumber,
+                    EndColumn: iWord.endColumn,
+                } as Range,
+            } as YaklangLanguageSuggestionRequest).then((r: YaklangLanguageFindResponse) => {
+                if (r.Ranges.length == 0) {
+                    return
+                }
+                resolve(r.Ranges.map(v => {
+                    return {
+                        uri: model.uri,
+                        range: new monaco.Range(Number(v.StartLine), Number(v.StartColumn), Number(v.EndLine), Number(v.EndColumn))
+                    }
+                }))
+            })
+
+
+            resolve(null);
+        })
+    }
+}
+)
+
+
+monaco.languages.registerReferenceProvider(YaklangMonacoSpec, {
+    provideReferences: function (model: monaco.editor.ITextModel, position: monaco.Position, context: languages.ReferenceContext, token: monaco.CancellationToken): languages.ProviderResult<languages.Location[]> {
+        return new Promise(async (resolve, reject) => {
+            const iWord = getWordWithPointAtPosition(model, position);
+            let desc = "";
+            const type = getModelContext(model, "plugin") || "yak"
+            await ipcRenderer.invoke("YaklangLanguageFind", {
+                InspectType: "reference",
+                YakScriptType: type,
+                YakScriptCode: model.getValue(),
+                Range: {
+                    Code: iWord.word,
+                    StartLine: position.lineNumber,
+                    StartColumn: iWord.startColumn,
+                    EndLine: position.lineNumber,
+                    EndColumn: iWord.endColumn,
+                } as Range,
+            } as YaklangLanguageSuggestionRequest).then((r: YaklangLanguageFindResponse) => {
+                if (r.Ranges.length == 0) {
+                    return
+                }
+                console.log(r.Ranges)
+                resolve(r.Ranges.map(v => {
+                    return {
+                        uri: model.uri,
+                        range: new monaco.Range(Number(v.StartLine), Number(v.StartColumn), Number(v.EndLine), Number(v.EndColumn))
+                    }
+                }))
+            })
+
+            resolve(null);
+        })
+    }
+}
+)
 
 // monaco.languages.registerCodeActionProvider(YaklangMonacoSpec, {
 //     provideCodeActions: (model, range, context, token) => {
