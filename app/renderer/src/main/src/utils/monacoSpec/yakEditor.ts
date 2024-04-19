@@ -1,6 +1,6 @@
 import { monaco } from "react-monaco-editor";
 import { newYaklangCompletionHandlerProvider, yaklangCompletionHandlerProvider, getCompletions, getGlobalCompletions, Range, SuggestionDescription, YaklangLanguageSuggestionRequest, YaklangLanguageSuggestionResponse, getWordWithPointAtPosition, YaklangLanguageFindResponse } from "./yakCompletionSchema";
-import { languages } from "monaco-editor";
+import { KeyCode, KeyMod, languages } from "monaco-editor";
 import CodeAction = languages.CodeAction;
 import CodeActionList = languages.CodeActionList;
 import { EditorContext } from "@uiw/react-md-editor";
@@ -421,7 +421,19 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
     triggerCharacters: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.']
 });
 
+
 monaco.editor.onDidCreateEditor((editor) => {
+    monaco.editor.addKeybindingRules([
+        {
+            keybinding: KeyMod.Alt | KeyCode.KeyR,
+            command: 'editor.action.goToReferences',
+        },
+        {
+            keybinding: KeyMod.Alt | KeyCode.KeyD,
+            command: 'editor.action.revealDefinition',
+        },
+    ],
+    )
     editor.onDidChangeModel((e) => {
         const model = editor.getModel();
         if (!model) {
