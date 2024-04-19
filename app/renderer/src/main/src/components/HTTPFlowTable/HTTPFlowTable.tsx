@@ -1009,11 +1009,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         // 查询数据
         updateQueryParams(query)
+
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
+
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
@@ -1793,7 +1795,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             dataKey: "RequestSizeVerbose",
             // fixed: "right",
             enableDrag: false,
-            width: 200,
+            width: 200
         }
         const action: ColumnsTypeProps = {
             title: "操作",
