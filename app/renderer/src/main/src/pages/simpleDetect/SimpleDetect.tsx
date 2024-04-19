@@ -588,21 +588,18 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
 })
 
 interface DownloadAllPluginProps {
-    type?: "modal" | "default"
     setDownloadPlugin?: (v: boolean) => void
     onClose?: () => void
-    delAllPlugins?: () => void
 }
 
 export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
-    const {setDownloadPlugin, onClose, delAllPlugins} = props
-    const type = props.type || "default"
+    const {setDownloadPlugin, onClose} = props
     // 全局登录状态
     const {userInfo} = useStore()
     // 全部添加进度条
     const [addLoading, setAddLoading] = useState<boolean>(false)
     // 全部添加进度
-    const [percent, setPercent, getPercent] = useGetState<number>(0)
+    const [percent, setPercent] = useState<number>(0)
     const [taskToken, setTaskToken] = useState(randomString(40))
     useEffect(() => {
         if (!taskToken) {
@@ -614,7 +611,6 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         })
         ipcRenderer.on(`${taskToken}-end`, () => {
             setTimeout(() => {
-                type === "default" && setAddLoading(false)
                 setPercent(0)
                 setDownloadPlugin && setDownloadPlugin(false)
                 onClose && onClose()
@@ -650,88 +646,33 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
             failed(`停止添加失败:${e}`)
         })
     }
-    const onRemoveAllLocalPlugin = () => {
-        // 全部删除
-        ipcRenderer
-            .invoke("DeleteLocalPluginsByWhere", {})
-            .then(() => {
-                delAllPlugins && delAllPlugins()
-                success("全部删除成功")
-            })
-            .catch((e) => {
-                failed(`删除所有本地插件错误:${e}`)
-            })
-    }
-    if (type === "modal") {
-        return (
-            <div className={styles["download-all-plugin-modal"]}>
-                {addLoading ? (
-                    <div>
-                        <div>下载进度</div>
-                        <div className={styles["filter-opt-progress-modal"]}>
-                            <Progress
-                                size='small'
-                                status={!addLoading && percent !== 0 ? "exception" : undefined}
-                                percent={percent}
-                            />
-                        </div>
-                        <div style={{textAlign: "center", marginTop: 10}}>
-                            <Button type='primary' onClick={StopAllPlugin}>
-                                取消
-                            </Button>
-                        </div>
-                    </div>
-                ) : (
-                    <div>
-                        <div>检测到本地未下载任何插件，无法进行安全检测，请点击“一键导入”进行插件下载</div>
-                        <div style={{textAlign: "center", marginTop: 10}}>
-                            <Button type='primary' onClick={AddAllPlugin}>
-                                一键导入
-                            </Button>
-                        </div>
-                    </div>
-                )}
-            </div>
-        )
-    }
     return (
-        <div className={styles["download-all-plugin"]}>
-            {addLoading && (
-                <div className={styles["filter-opt-progress"]}>
-                    <Progress
-                        size='small'
-                        status={!addLoading && percent !== 0 ? "exception" : undefined}
-                        percent={percent}
-                    />
-                </div>
-            )}
+        <div className={styles["download-all-plugin-modal"]}>
             {addLoading ? (
-                <Button style={{marginLeft: 12}} size='small' type='primary' danger onClick={StopAllPlugin}>
-                    停止
-                </Button>
+                <div>
+                    <div>下载进度</div>
+                    <div className={styles["filter-opt-progress-modal"]}>
+                        <Progress
+                            size='small'
+                            status={!addLoading && percent !== 0 ? "exception" : undefined}
+                            percent={percent}
+                        />
+                    </div>
+                    <div style={{textAlign: "center", marginTop: 10}}>
+                        <YakitButton type='primary' onClick={StopAllPlugin}>
+                            取消
+                        </YakitButton>
+                    </div>
+                </div>
             ) : (
-                <Popconfirm
-                    title={"确定将插件商店所有数据导入到本地吗?"}
-                    onConfirm={AddAllPlugin}
-                    okText='Yes'
-                    cancelText='No'
-                    placement={"left"}
-                >
-                    <div className={styles["operation-text"]}>一键导入插件</div>
-                </Popconfirm>
-            )}
-            {userInfo.role !== "admin" && (
-                <Popconfirm
-                    title={"确定将插件商店所有本地数据清除吗?"}
-                    onConfirm={onRemoveAllLocalPlugin}
-                    okText='Yes'
-                    cancelText='No'
-                    placement={"left"}
-                >
-                    <YakitButton type='text' colors='danger' className={styles["clean-local-plugin"]}>
-                        一键清除插件
-                    </YakitButton>
-                </Popconfirm>
+                <div>
+                    <div>检测到本地未下载任何插件，无法进行安全检测，请点击“一键导入”进行插件下载</div>
+                    <div style={{textAlign: "center", marginTop: 10}}>
+                        <YakitButton type='primary' onClick={AddAllPlugin}>
+                            一键导入
+                        </YakitButton>
+                    </div>
+                </div>
             )}
         </div>
     )

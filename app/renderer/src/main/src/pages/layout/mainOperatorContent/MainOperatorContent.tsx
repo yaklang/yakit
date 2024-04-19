@@ -52,7 +52,6 @@ import {useStore} from "@/store"
 import {getRemoteProjectValue, getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
 import {GroupCount, QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import {showModal} from "@/utils/showModal"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -1373,9 +1372,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             ipcRenderer.invoke("QueryYakScript", newParams).then((item: QueryYakScriptsResponse) => {
                 if (item.Data.length === 0) {
-                    const m = showModal({
+                    const m = showYakitModal({
                         title: "导入插件",
-                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()} />
+                        type:'white',
+                        content: <DownloadAllPlugin onClose={() => m.destroy()} />,
+                        bodyStyle:{padding:24},
+                        footer:null
                     })
                     return m
                 }
