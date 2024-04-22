@@ -41,7 +41,6 @@ import {useStore, yakitDynamicStatus} from "@/store"
 import yakitCattle from "@/assets/yakitCattle.png"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
-import {saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
 import {RemoteEngine} from "./RemoteEngine/RemoteEngine"
 import {RemoteLinkInfo} from "./RemoteEngine/RemoteEngineType"
 import {LocalEngine} from "./LocalEngine/LocalEngine"
@@ -856,9 +855,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setRemoteValue(ChatCSGV.KnowChatCS, "true")
     })
 
-    // fuzzer-tab页数据订阅事件
-    const unFuzzerCacheData = useRef<any>(null)
-
     useEffect(() => {
         if (engineLink) {
             getRemoteValue(ChatCSGV.KnowChatCS)
@@ -867,25 +863,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     else setShowChatCS(false)
                 })
                 .catch(() => {})
-
-            // 开启fuzzer-tab页内数据的订阅事件
-            if (unFuzzerCacheData.current) {
-                unFuzzerCacheData.current()
-            }
-            unFuzzerCacheData.current = usePageInfo.subscribe(
-                (state) => state.pages.get("httpFuzzer") || [],
-                (selectedState, previousSelectedState) => {
-                    saveFuzzerCache(selectedState)
-                }
-            )
-
-            return () => {
-                // 注销fuzzer-tab页内数据的订阅事件
-                if (unFuzzerCacheData.current) {
-                    unFuzzerCacheData.current()
-                    unFuzzerCacheData.current = null
-                }
-            }
         }
     }, [engineLink])
 

@@ -93,6 +93,7 @@ import {
     defaultPluginBatchExecutorPageInfo,
     defaultPocPageInfo,
     defaultScanPortPageInfo,
+    saveFuzzerCache,
     usePageInfo
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
@@ -319,26 +320,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     const [loading, setLoading] = useState(false)
 
-    const {
-        setPagesData,
-        setSelectGroupId,
-        addPagesDataCache,
-        pages,
-        clearAllData,
-        updatePagesDataCacheById,
-        getCurrentSelectPageId
-    } = usePageInfo(
-        (s) => ({
-            setPagesData: s.setPagesData,
-            setSelectGroupId: s.setSelectGroupId,
-            addPagesDataCache: s.addPagesDataCache,
-            pages: s.pages,
-            clearAllData: s.clearAllData,
-            updatePagesDataCacheById: s.updatePagesDataCacheById,
-            getCurrentSelectPageId: s.getCurrentSelectPageId
-        }),
-        shallow
-    )
+    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, getCurrentSelectPageId} =
+        usePageInfo(
+            (s) => ({
+                setPagesData: s.setPagesData,
+                setSelectGroupId: s.setSelectGroupId,
+                addPagesDataCache: s.addPagesDataCache,
+                pages: s.pages,
+                clearAllData: s.clearAllData,
+                getCurrentSelectPageId: s.getCurrentSelectPageId
+            }),
+            shallow
+        )
 
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
@@ -1395,6 +1388,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }),
         shallow
     )
+    // fuzzer-tab页数据订阅事件
+    const unFuzzerCacheData = useRef<any>(null)
     // web-fuzzer多开页面缓存数据
     useEffect(() => {
         if (!isEnpriTraceAgent()) {
@@ -1402,11 +1397,30 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             fetchFuzzerList()
         }
         getFuzzerSequenceCache()
+        // 开启fuzzer-tab页内数据的订阅事件
+        if (unFuzzerCacheData.current) {
+            unFuzzerCacheData.current()
+        }
+        unFuzzerCacheData.current = usePageInfo.subscribe(
+            (state) => state.pages.get("httpFuzzer") || [],
+            (selectedState, previousSelectedState) => {
+                saveFuzzerCache(selectedState)
+            }
+        )
+
+        return () => {
+            // 注销fuzzer-tab页内数据的订阅事件
+            if (unFuzzerCacheData.current) {
+                unFuzzerCacheData.current()
+                unFuzzerCacheData.current = null
+            }
+        }
     }, [])
 
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
             try {
+                clearFuzzerSequence()
                 const cache = JSON.parse(res || "[]")
                 setFuzzerSequenceCacheData(cache)
             } catch (error) {
@@ -1435,6 +1449,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             getRemoteProjectValue(RemoteGV.FuzzerCache)
                 .then((res: any) => {
+                    clearAllData()
                     const cache = JSON.parse(res || "[]")
                     // 菜单在代码内的名字
                     const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
@@ -1540,9 +1555,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     } else {
                         oldPageCache.splice(index, 1, webFuzzerPage)
                     }
+                    setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
                     setPageCache(oldPageCache)
                     setCurrentTabKey(key)
-                    setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
                     const lastPage = multipleNodeList[multipleNodeList.length - 1]
                     if (lastPage && lastPage.id.includes("group")) {
                         // 最后一个是组的时候，需要设置当前选中组
