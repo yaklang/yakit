@@ -640,8 +640,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }),
         SourceType: props.params?.SourceType || "mitm",
         WithPayload: toWebFuzzer,
-        RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-        RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+        RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -2049,8 +2049,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ExcludeId: params.ExcludeId,
                     ExcludeInUrl: params.ExcludeInUrl,
                     WithPayload: toWebFuzzer,
-                    RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-                    RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+                    RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+                    RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
                 }
                 setParams({...newParams})
                 updateData()
@@ -2775,8 +2775,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
             WithPayload: toWebFuzzer,
-            RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-            RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+            RuntimeIDs: runTimeId && runTimeId.indexOf(',') !== -1 ? runTimeId.split(",") : undefined,
+            RuntimeId: runTimeId && runTimeId.indexOf(',') === -1 ? runTimeId : undefined
         }
         setParams(newParams)
         setIsReset(!isReset)
