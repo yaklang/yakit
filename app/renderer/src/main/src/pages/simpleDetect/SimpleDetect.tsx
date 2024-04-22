@@ -1,11 +1,11 @@
 import React, {useEffect, useRef, useState} from "react"
 import {SimpleDetectForm, SimpleDetectFormContentProps, SimpleDetectProps} from "./SimpleDetectType"
-import {Button, Checkbox, Form, Popconfirm, Progress, Slider} from "antd"
+import {Checkbox, Form, Progress, Slider} from "antd"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useCreation, useGetState, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {failed, success, warn, yakitNotify} from "@/utils/notification"
+import {failed, warn, yakitNotify} from "@/utils/notification"
 import {RecordPortScanRequest, apiCancelSimpleDetect, apiSimpleDetect} from "../securityTool/newPortScan/utils"
 import styles from "./SimpleDetect.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -43,6 +43,7 @@ import {v4 as uuidv4} from "uuid"
 import {StartBruteParams} from "../brute/BrutePage"
 import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
+import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
@@ -108,8 +109,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 
     const defaultTabs = useCreation(() => {
         return [
+            {tabName: "漏洞与风险", type: "risk"},
             {tabName: "扫描端口列表", type: "port"},
-            {tabName: "日志", type: "log"}
+            {tabName: "日志", type: "log"},
+            {tabName: "Console", type: "console"}
         ]
     }, [])
 
@@ -208,7 +211,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             ...extraParamsValue.portScanParam,
             Mode: "all",
             Proto: ["tcp"],
-            EnableBrute: value.scanType === "基础扫描" || !!value.pluginGroup?.includes("弱口令"),
+            EnableBrute: !!value.pluginGroup?.includes("弱口令"),
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
             SkippedHostAliveScan: !!value.SkippedHostAliveScan,
@@ -322,6 +325,11 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const onCreateReport = useMemoizedFn((e) => {
         e.stopPropagation()
         if (executeStatus === "default") return
+        const params: CreateReportContentProps = {
+            reportName: taskNameRef.current,
+            runtimeId
+        }
+        onCreateReportModal(params)
     })
     const isShowResult = useCreation(() => {
         return isExecuting || runtimeId

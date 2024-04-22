@@ -95,41 +95,40 @@ export interface ExecParamItem {
     Key: string
     Value: string
 }
-export interface ExecRequest {
-    Params: ExecParamItem[]
-    Script: string
-    ScriptId?: string
-    YakScriptId?: string
-    RunnerParamRaw?: string
-    NoDividedEngine?: boolean
+export interface CreatReportRequest {
+    ReportName: string
+    RuntimeId: string
 }
 /**
  * @description 生成报告  企业版
  */
-export const apiExecYakCode: (params: ExecRequest, token: string) => Promise<null> = (params, token) => {
+export const apiSimpleDetectCreatReport: (params: CreatReportRequest, token: string) => Promise<null> = (
+    params,
+    token
+) => {
     return new Promise((resolve, reject) => {
-        let executeParams: ExecRequest = {
+        let executeParams: CreatReportRequest = {
             ...params
         }
         ipcRenderer
-            .invoke("ExecYakCode", executeParams, token)
+            .invoke("SimpleDetectCreatReport", executeParams, token)
             .then(() => {
                 resolve(null)
             })
             .catch((e: any) => {
-                yakitNotify("error", "端口扫描执行出错:" + e)
+                yakitNotify("error", "生成报告执行出错:" + e)
                 reject(e)
             })
     })
 }
 
 /**
- * @description 取消 ExecYakCode
+ * @description 取消 SimpleDetectCreatReport
  */
-export const apiCancelExecYakCode: (token: string) => Promise<null> = (token) => {
+export const apiCancelSimpleDetectCreatReport: (token: string) => Promise<null> = (token) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke(`cancel-ExecYakCode`, token)
+            .invoke(`cancel-SimpleDetectCreatReport`, token)
             .then(() => {
                 resolve(null)
             })

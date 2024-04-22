@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const { ipcMain } = require("electron");
 const FS = require("fs")
 const xlsx = require("node-xlsx")
 const handlerHelper = require("./handleStreamWithContext");
@@ -50,10 +50,10 @@ module.exports = (win, getClient) => {
                 } else {
                     resolve(data)
                 }
-  
-            // 处理 .pfx 文件的内容，例如解析证书
-            // 这里可能需要使用 `crypto` 模块进行进一步的处理
-            // 例如：crypto.createCredentials
+
+                // 处理 .pfx 文件的内容，例如解析证书
+                // 这里可能需要使用 `crypto` 模块进行进一步的处理
+                // 例如：crypto.createCredentials
             });
         })
     }
@@ -66,6 +66,15 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SimpleDetect", (e, params, token) => {
         let stream = getClient().SimpleDetect(params);
         handlerHelper.registerHandler(win, stream, streamSimpleDetectMap, token)
+    })
+
+    const streamSimpleDetectCreatReportMap = new Map();
+
+    ipcMain.handle("cancel-SimpleDetectCreatReport", handlerHelper.cancelHandler(streamSimpleDetectCreatReportMap));
+
+    ipcMain.handle("SimpleDetectCreatReport", (e, params, token) => {
+        let stream = getClient().SimpleDetectCreatReport(params);
+        handlerHelper.registerHandler(win, stream, streamSimpleDetectCreatReportMap, token)
     })
 
     const asyncSaveCancelSimpleDetect = (params) => {

@@ -45,7 +45,7 @@ import {RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPort
 import {CheckboxValueType} from "antd/es/checkbox/Group"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {yakitNotify} from "@/utils/notification"
-import {onCreateReportModal} from "@/pages/portscan/CreateReport"
+import {CreateReportContentProps, onCreateReportModal} from "@/pages/portscan/CreateReport"
 import {v4 as uuidv4} from "uuid"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
@@ -376,12 +376,11 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         /**生成报告 */
         const onCreateReport = useMemoizedFn(() => {
             if (executeStatus === "default") return
-            onCreateReportModal({
-                infoState: streamInfo,
-                runPluginCount: selectNum,
+            const params: CreateReportContentProps = {
                 reportName: taskNameRef.current,
-                uuid: uuidRef.current
-            })
+                runtimeId
+            }
+            onCreateReportModal(params)
         })
 
         /**开始执行 */

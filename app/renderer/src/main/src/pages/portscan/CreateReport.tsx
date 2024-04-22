@@ -9,9 +9,11 @@ import {CreatReportScript} from "../simpleDetect/CreatReportScript"
 import {InfoState} from "@/hook/useHoldingIPCRStream"
 import {YakitRoute} from "@/routes/newRoute"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {v4 as uuidv4} from "uuid"
-import {ExecParamItem, ExecRequest, apiCancelExecYakCode, apiExecYakCode} from "../securityTool/newPortScan/utils"
+import {
+    CreatReportRequest,
+    apiCancelSimpleDetectCreatReport,
+    apiSimpleDetectCreatReport
+} from "../securityTool/newPortScan/utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import emiter from "@/utils/eventBus/eventBus"
@@ -199,22 +201,20 @@ export const onCreateReportModal = (createReportContent: CreateReportContentProp
     const m = showYakitModal({
         title: "下载报告",
         footer: null,
-        content: <CreateReportContent {...createReportContent} onCancel={() => m.destroy()} />,
+        content: <CreateReportContent onCancel={() => m.destroy()} {...createReportContent} />,
         onCancel: () => {
             m.destroy()
         },
         bodyStyle: {padding: 24}
     })
 }
-interface CreateReportContentProps {
+export interface CreateReportContentProps {
     reportName: string
+    runtimeId: string
     onCancel?: () => void
-    infoState: HoldGRPCStreamInfo
-    runPluginCount: number
-    uuid: string
 }
 const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((props) => {
-    const {infoState, runPluginCount, onCancel, uuid} = props
+    const {onCancel, runtimeId} = props
     const [reportName, setReportName] = useState<string>(props.reportName || "默认报告名称")
     // 是否展示报告生成进度
     const [showReportPercent, setShowReportPercent] = useState<boolean>(false)
@@ -227,30 +227,11 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
 
     /** 下载报告 */
     const downloadReport = () => {
-        // 脚本数据
-        const scriptData = CreatReportScript
-        let Params: ExecParamItem[] = [
-            {Key: "task_name", Value: `${reportName}-${uuid}`},
-            {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
-            {Key: "report_name", Value: reportName},
-            {Key: "plugins", Value: `${runPluginCount}`},
-            {Key: "host_total", Value: getCardForId("扫描主机数")},
-            {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
-            {Key: "port_total", Value: getCardForId("扫描端口数")}
-        ]
-        const reqParams: ExecRequest = {
-            Script: scriptData,
-            Params
+        const reqParams: CreatReportRequest = {
+            ReportName: reportName,
+            RuntimeId: runtimeId
         }
-        apiExecYakCode(reqParams, tokenRef.current)
-    }
-    /** 获取扫描主机数 扫描端口数 */
-    const getCardForId = (id: string) => {
-        const item = infoState.cardState.filter((item) => item.tag === id)
-        if (item.length > 0) {
-            return item[0].info[0].Data
-        }
-        return ""
+        apiSimpleDetectCreatReport(reqParams, tokenRef.current)
     }
     /** 获取生成报告返回结果 */
     useEffect(() => {
@@ -258,13 +239,15 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
             if (data.IsMessage) {
                 const obj = JSON.parse(Buffer.from(data.Message).toString())
                 if (obj?.type === "progress") {
-                    setReportPercent(obj.content.progress)
+                    const percent = obj.content.progress
+                    setReportPercent(Math.trunc(percent * 100))
                 }
                 reportIdRef.current = parseInt(obj.content.data)
             }
         })
         ipcRenderer.on(`${tokenRef.current}-error`, (e: any, error: any) => {
-            failed(`[Mod] ExecYakCode error: ${error}`)
+            setReportLoading(false)
+            failed(`[Mod] SimpleDetectCreatReport error: ${error}`)
         })
         ipcRenderer.on(`${tokenRef.current}-end`, (e: any, error: any) => {
             onOpenReport()
@@ -312,7 +295,7 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
                 <YakitButton
                     style={{marginRight: 8}}
                     onClick={() => {
-                        apiCancelExecYakCode(tokenRef.current)
+                        apiCancelSimpleDetectCreatReport(tokenRef.current)
                         if (onCancel) onCancel()
                     }}
                     type='outline2'
