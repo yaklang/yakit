@@ -978,7 +978,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         <div className={styles["virtual-table-heard-right-item"]}>
                                             <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
                                             <span className={styles["virtual-table-heard-right-number"]}>
-                                                {rowSelection?.selectedRowKeys?.length || 0}
+                                                {rowSelection?.isAll
+                                                    ? pagination?.total || 0
+                                                    : rowSelection?.selectedRowKeys?.length || 0}
                                             </span>
                                         </div>
                                     </div>
@@ -1202,7 +1204,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 <div className={styles["virtual-title"]}>
                     {/* 这个不要用 module ，用来拖拽最小宽度*/}
                     <div className='virtual-col-title' style={{width: "100%", display: "flex", alignItems: "center"}}>
-                        {cIndex === 0 && rowSelection && (
+                        {cIndex === 0 && rowSelection && rowSelection?.isShowAll !== false && (
                             <>
                                 {rowSelection.type !== "radio" && (
                                     <YakitProtoCheckbox
