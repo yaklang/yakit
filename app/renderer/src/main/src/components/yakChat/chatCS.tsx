@@ -1461,13 +1461,16 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                 defaultActiveKey = "Console"
                 break
         }
-
-        addToTab(YakitRoute.BatchExecutorPage, {
-            pluginBatchExecutorPageInfo: {
-                runtimeId,
-                defaultActiveKey
-            }
-        })
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.BatchExecutorPage,
+                params: {
+                    runtimeId,
+                    defaultActiveKey
+                }
+            })
+        )
     })
 
     return (
