@@ -403,9 +403,18 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                         一键清除插件
                                     </YakitButton>
                                 </YakitPopconfirm>
-                                <div className={styles["divider-style"]}></div>
                             </>
                         ) : null}
+                        <YakitButton
+                            type='text'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
+                            disabled={true}
+                        >
+                            任务列表
+                        </YakitButton>
+                        <div className={styles["divider-style"]}></div>
                         <YakitButton
                             icon={<OutlineClipboardlistIcon />}
                             disabled={disabledReport}
