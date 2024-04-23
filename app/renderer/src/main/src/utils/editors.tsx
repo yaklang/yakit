@@ -1042,9 +1042,13 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     info("数据包为空")
                                                     return
                                                 }
-                                                generateCSRFPocByRequest(StringToUint8Array(text, "utf8"),props.defaultHttps||false, (code) => {
-                                                    callCopyToClipboard(code)
-                                                })
+                                                generateCSRFPocByRequest(
+                                                    StringToUint8Array(text, "utf8"),
+                                                    props.defaultHttps || false,
+                                                    (code) => {
+                                                        callCopyToClipboard(code)
+                                                    }
+                                                )
                                             } catch (e) {
                                                 failed("自动生成 CSRF 失败")
                                             }
@@ -1473,15 +1477,16 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             if (originValue) {
                 beautifyCode()
             }
+        } else if (typeOptionVal === "render") {
+            if (originValue) {
+                renderCode()
+            }
         }
     }, [typeOptionVal, originValue])
 
     const beautifyCode = useDebounceFn(
         useMemoizedFn(async () => {
-            const encoder = new TextEncoder()
-            const bytes = encoder.encode(Uint8ArrayToString(originValue))
-            const mb = bytes.length / 1024 / 1024
-            if (!isShowBeautifyRenderRef.current || mb > 0.5) return
+            if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === "beautify") === -1) return
             setTypeLoading(true)
             setRenderHTML(undefined)
             if (originValue.length > 0) {
@@ -1498,12 +1503,18 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     ).run
 
-    const renderCode = async () => {
-        setTypeLoading(true)
-        let renderValue = await prettifyPacketRender(originValue)
-        setRenderHTML(<iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />)
-        setTypeLoading(false)
-    }
+    const renderCode = useDebounceFn(
+        useMemoizedFn(async () => {
+            if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === "render") === -1) return
+            setTypeLoading(true)
+            let renderValue = await prettifyPacketRender(originValue)
+            setRenderHTML(
+                <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />
+            )
+            setTypeLoading(false)
+        }),
+        {wait: 300}
+    ).run
 
     useUpdateEffect(() => {
         onTypeOptionVal && onTypeOptionVal(type)
@@ -1513,9 +1524,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         } else if (originValue && type === "beautify") {
             beautifyCode()
         } else if (originValue && type === "render") {
-            setTimeout(() => {
-                renderCode()
-            }, 200)
+            renderCode()
         }
     }, [type])
 

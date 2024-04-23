@@ -1246,7 +1246,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         language={flow?.DisableRenderStyles ? "text" : undefined}
                         typeOptionVal={resTypeOptionVal}
                         onTypeOptionVal={(typeOptionVal) => {
-                            if (typeOptionVal === "beautify") {
+                            if (typeOptionVal !== undefined) {
                                 setResTypeOptionVal(typeOptionVal)
                                 setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, typeOptionVal)
                             } else {
