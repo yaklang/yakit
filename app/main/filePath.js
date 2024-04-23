@@ -102,6 +102,8 @@ const extraLocalCachePath = path.join(basicDir, "yakit-extra-local.json")
 const engineLog = path.join(YakitProjectPath, "engine-log")
 /** 渲染端错误日志 */
 const renderLog = path.join(YakitProjectPath, "render-log")
+/** 可以问题的打印日志 */
+const printLog = path.join(YakitProjectPath, "print-log")
 
 /** 远程连接配置信息储存文件夹 */
 const remoteLinkDir = path.join(YakitProjectPath, "auth")
@@ -120,6 +122,7 @@ const htmlTemplateDir = loadExtraFilePath(path.join("report"))
 const windowStatePatch = path.join(basicDir)
 
 module.exports = {
+    appPath,
     YakitProjectPath,
 
     yaklangEngineDir,
@@ -132,6 +135,7 @@ module.exports = {
     extraLocalCachePath,
     engineLog,
     renderLog,
+    printLog,
 
     remoteLinkDir,
     remoteLinkFile,

@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
+import {isEngineConnectionAlive, outputToPrintLog, outputToWelcomeConsole} from "@/components/layout/WelcomeConsoleUtil"
 import {EngineWatchDogCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
@@ -49,6 +49,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
         /** 引擎信息认证 */
         const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {
+            outputToPrintLog(
+                `engineTest-start:\nmode:${props.credential.Mode}|port:${props.credential.Port}|isDynamicControl:${isDynamicControl}`
+            )
             // 重置状态
             setAutoStartProgress(false)
             const mode = props.credential.Mode
@@ -69,6 +72,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             ipcRenderer
                 .invoke("connect-yaklang-engine", props.credential)
                 .then(() => {
+                    outputToPrintLog(`engineTest-success: mode:${props.credential.Mode}`)
                     outputToWelcomeConsole(`连接核心引擎成功！`)
                     if (props.onKeepaliveShouldChange) {
                         props.onKeepaliveShouldChange(true)
@@ -84,6 +88,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     }
                 })
                 .catch((e) => {
+                    outputToPrintLog(`engineTest-failed: mode:${props.credential.Mode}`)
                     outputToWelcomeConsole("未连接到引擎，尝试启动引擎进程")
                     switch (mode) {
                         case "local":
@@ -137,6 +142,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     return
                 }
 
+                outputToPrintLog(`尝试启动新引擎进程: port:${props.credential.Port}`)
+
                 // 只有普通模式才涉及到引擎启动的流程
                 outputToWelcomeConsole(`开始以普通权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
 
@@ -160,10 +167,12 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             })
                             .then(() => {
                                 outputToWelcomeConsole("引擎启动成功！")
+                                outputToPrintLog(`本地新引擎进程启动成功`)
                             })
                             .catch((e) => {
                                 console.info(e)
                                 outputToWelcomeConsole("引擎启动失败:" + e)
+                                outputToPrintLog(`本地新引擎进程启动失败: ${e}`)
                             })
                             .finally(() => {
                                 startingUp.current = false
@@ -174,6 +183,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             `端口被占用，无法启动本地引擎（${EngineModeVerbose(mode as YaklangEngineMode)}）`
                         )
                         outputToWelcomeConsole(`错误原因为: ${e}`)
+                        outputToPrintLog(`端口被占用: ${e}`)
                     })
             },
             [autoStartProgress, props.onKeepaliveShouldChange, props.credential],
@@ -201,6 +211,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }
                 return
             }
+            outputToPrintLog(`开始检测引擎进程是否启动`)
 
             let count = 0
             let failedCount = 0
@@ -209,6 +220,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 count++
                 isEngineConnectionAlive()
                     .then(() => {
+                        outputToPrintLog(`keepalive状态: ${keepalive}`)
                         if (!keepalive) {
                             return
                         }

@@ -6,7 +6,7 @@ const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
 const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const {windowStatePatch, engineLog, renderLog} = require("./filePath")
+const {windowStatePatch, engineLog, renderLog, printLog} = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
@@ -56,7 +56,7 @@ const createWindow = () => {
             sandbox: true
         },
         frame: false,
-        titleBarStyle: "hidden",
+        titleBarStyle: "hidden"
     })
     win.setSize(mainWindowState.width, mainWindowState.height)
     mainWindowState.manage(win)
@@ -156,9 +156,14 @@ app.whenReady().then(() => {
         fs.mkdirSync(engineLog, {recursive: true})
     }
     if (fs.existsSync(renderLog)) {
-        clearFolder(renderLog, 5)
+        clearFolder(renderLog, 9)
     } else {
         fs.mkdirSync(renderLog, {recursive: true})
+    }
+    if (fs.existsSync(printLog)) {
+        clearFolder(printLog, 9)
+    } else {
+        fs.mkdirSync(printLog, {recursive: true})
     }
 
     // 软件退出的逻辑
