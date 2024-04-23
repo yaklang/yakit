@@ -650,6 +650,8 @@ export const getWordWithPointAtPosition = (model: monaco.editor.ITextModel, posi
         let lastWord = model.getWordAtPosition(new monaco.Position(position.lineNumber, iWord.startColumn - 2));
         if (lastWord !== null) {
             iWord = { word: lastWord.word + "." + word, startColumn: lastWord.startColumn, endColumn: iWord.endColumn };
+        } else {
+            iWord = { word: "." + word, startColumn: iWord.startColumn - 1, endColumn: iWord.endColumn };
         }
     }
 
