@@ -639,9 +639,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Tags: []
         }),
         SourceType: props.params?.SourceType || "mitm",
-        WithPayload: toWebFuzzer,
-        RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-        RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+        WithPayload: false,
+        RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
@@ -1842,24 +1842,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         // toWebFuzzer
-        if (toWebFuzzer) {
-            return [
-                ID,
-                Method,
-                StatusCode,
-                Url,
-                HtmlTitle,
-                WebPayloads,
-                Tags,
-                IPAddress,
-                BodyLength,
-                GetParamsTotal,
-                ContentType,
-                UpdatedAt,
-                RequestSizeVerbose,
-                action
-            ]
-        }
+        // if (toWebFuzzer) {
+        //     return [
+        //         ID,
+        //         Method,
+        //         StatusCode,
+        //         Url,
+        //         HtmlTitle,
+        //         WebPayloads,
+        //         Tags,
+        //         IPAddress,
+        //         BodyLength,
+        //         GetParamsTotal,
+        //         ContentType,
+        //         UpdatedAt,
+        //         RequestSizeVerbose,
+        //         action
+        //     ]
+        // }
 
         return [
             ID,
@@ -2048,9 +2048,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     SourceType: props.params?.SourceType || "mitm",
                     ExcludeId: params.ExcludeId,
                     ExcludeInUrl: params.ExcludeInUrl,
-                    WithPayload: toWebFuzzer,
-                    RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-                    RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+                    WithPayload: false,
+                    RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+                    RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
                 }
                 setParams({...newParams})
                 updateData()
@@ -2181,10 +2181,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     title: "Title",
                     key: "response"
-                },
-                {
-                    title: "Payloads",
-                    key: "payloads"
                 },
                 {
                     title: "Tags",
@@ -2566,7 +2562,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 30,
             default: true,
             webSocket: false,
-            toWebFuzzer: false,
+            toWebFuzzer: true,
             onClickSingle: (v) => onShareData([v.Id], 50),
             onClickBatch: (list, n) => {
                 const ids: string[] = list.map((ele) => ele.Id)
@@ -2774,9 +2770,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             SourceType: props.params?.SourceType || "mitm",
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
-            WithPayload: toWebFuzzer,
-            RuntimeIDs: toWebFuzzer && runTimeId ? runTimeId.split(",") : undefined,
-            RuntimeId: !toWebFuzzer ? runTimeId || undefined : undefined
+            WithPayload: false,
+            RuntimeIDs: runTimeId && runTimeId.indexOf(',') !== -1 ? runTimeId.split(",") : undefined,
+            RuntimeId: runTimeId && runTimeId.indexOf(',') === -1 ? runTimeId : undefined
         }
         setParams(newParams)
         setIsReset(!isReset)
