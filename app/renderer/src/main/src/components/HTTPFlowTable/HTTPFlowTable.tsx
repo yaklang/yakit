@@ -324,7 +324,7 @@ export interface HTTPFlowTableProp {
     toPlugin?: boolean
     /** RuntimeId 流量过滤条件(RuntimeId) */
     runTimeId?: string
-    /** 是否为webFuzzer使用 暂时webFuzzer页面传false 由于不要payloads字段 */
+    /** 是否为webFuzzer使用 */
     toWebFuzzer?: boolean
     /** 是否显示批量操作 */
     showBatchActions?: boolean
