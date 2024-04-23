@@ -324,7 +324,7 @@ export interface HTTPFlowTableProp {
     toPlugin?: boolean
     /** RuntimeId 流量过滤条件(RuntimeId) */
     runTimeId?: string
-    /** 是否为webFuzzer使用 */
+    /** 是否为webFuzzer使用 暂时webFuzzer页面传false 由于不要payloads字段 */
     toWebFuzzer?: boolean
     /** 是否显示批量操作 */
     showBatchActions?: boolean
@@ -639,7 +639,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Tags: []
         }),
         SourceType: props.params?.SourceType || "mitm",
-        WithPayload: toWebFuzzer,
+        WithPayload: false,
         RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
         RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
     })
@@ -1842,24 +1842,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         // toWebFuzzer
-        if (toWebFuzzer) {
-            return [
-                ID,
-                Method,
-                StatusCode,
-                Url,
-                HtmlTitle,
-                WebPayloads,
-                Tags,
-                IPAddress,
-                BodyLength,
-                GetParamsTotal,
-                ContentType,
-                UpdatedAt,
-                RequestSizeVerbose,
-                action
-            ]
-        }
+        // if (toWebFuzzer) {
+        //     return [
+        //         ID,
+        //         Method,
+        //         StatusCode,
+        //         Url,
+        //         HtmlTitle,
+        //         WebPayloads,
+        //         Tags,
+        //         IPAddress,
+        //         BodyLength,
+        //         GetParamsTotal,
+        //         ContentType,
+        //         UpdatedAt,
+        //         RequestSizeVerbose,
+        //         action
+        //     ]
+        // }
 
         return [
             ID,
@@ -2048,7 +2048,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     SourceType: props.params?.SourceType || "mitm",
                     ExcludeId: params.ExcludeId,
                     ExcludeInUrl: params.ExcludeInUrl,
-                    WithPayload: toWebFuzzer,
+                    WithPayload: false,
                     RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
                     RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
                 }
@@ -2181,10 +2181,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     title: "Title",
                     key: "response"
-                },
-                {
-                    title: "Payloads",
-                    key: "payloads"
                 },
                 {
                     title: "Tags",
@@ -2566,7 +2562,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 30,
             default: true,
             webSocket: false,
-            toWebFuzzer: false,
+            toWebFuzzer: true,
             onClickSingle: (v) => onShareData([v.Id], 50),
             onClickBatch: (list, n) => {
                 const ids: string[] = list.map((ele) => ele.Id)
@@ -2774,7 +2770,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             SourceType: props.params?.SourceType || "mitm",
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
-            WithPayload: toWebFuzzer,
+            WithPayload: false,
             RuntimeIDs: runTimeId && runTimeId.indexOf(',') !== -1 ? runTimeId.split(",") : undefined,
             RuntimeId: runTimeId && runTimeId.indexOf(',') === -1 ? runTimeId : undefined
         }
