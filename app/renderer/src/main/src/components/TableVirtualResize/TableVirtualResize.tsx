@@ -912,7 +912,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     ))
 
     useEffect(() => {
-        if (Object.keys(opensPopover).filter((key) => opensPopover[key]).length === 0) {
+        const popoverKeys = Object.keys(opensPopover)
+        if (popoverKeys.length > 0 && popoverKeys.filter((key) => opensPopover[key]).length === 0) {
             if (onChangTable) onChangTable()
         }
     }, [opensPopover])
