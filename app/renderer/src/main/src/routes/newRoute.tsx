@@ -601,16 +601,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.SimpleDetect:
-            return (
-                <SimpleDetect
-                    pageId={params?.id || ""}
-                    // tabId={params?.id || ""}
-                    // Uid={params?.recoverUid}
-                    // BaseProgress={params?.recoverBaseProgress}
-                    // YakScriptOnlineGroup={params?.recoverOnlineGroup}
-                    // TaskName={params?.recoverTaskName}
-                />
-            )
+            return <SimpleDetect pageId={params?.id || ""} />
         case YakitRoute.ScreenRecorderPage:
             return <ScreenRecorderPage />
         case YakitRoute.DB_ChaosMaker:
