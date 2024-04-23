@@ -120,6 +120,7 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 import {CheckOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 /** 将 new Date 转换为日期 */
