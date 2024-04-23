@@ -41,7 +41,6 @@ import {useStore, yakitDynamicStatus} from "@/store"
 import yakitCattle from "@/assets/yakitCattle.png"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
-import {saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
 import {RemoteEngine} from "./RemoteEngine/RemoteEngine"
 import {RemoteLinkInfo} from "./RemoteEngine/RemoteEngineType"
 import {LocalEngine} from "./LocalEngine/LocalEngine"
@@ -848,16 +847,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
     /** ---------- 切换引擎时的逻辑 End ---------- */
 
-    /** ---------- ChatCS & fuzzer-tab数据订阅  Start ---------- */
+    /** ---------- ChatCS Start ---------- */
     /** chat-cs 功能逻辑 */
     const [showChatCS, setShowChatCS] = useState<boolean>(true)
     const onChatCS = useMemoizedFn(() => {
         setShowChatCS(false)
         setRemoteValue(ChatCSGV.KnowChatCS, "true")
     })
-
-    // fuzzer-tab页数据订阅事件
-    const unFuzzerCacheData = useRef<any>(null)
 
     useEffect(() => {
         if (engineLink) {
@@ -867,29 +863,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     else setShowChatCS(false)
                 })
                 .catch(() => {})
-
-            // 开启fuzzer-tab页内数据的订阅事件
-            if (unFuzzerCacheData.current) {
-                unFuzzerCacheData.current()
-            }
-            unFuzzerCacheData.current = usePageInfo.subscribe(
-                (state) => state.pages.get("httpFuzzer") || [],
-                (selectedState, previousSelectedState) => {
-                    saveFuzzerCache(selectedState)
-                }
-            )
-
-            return () => {
-                // 注销fuzzer-tab页内数据的订阅事件
-                if (unFuzzerCacheData.current) {
-                    unFuzzerCacheData.current()
-                    unFuzzerCacheData.current = null
-                }
-            }
         }
     }, [engineLink])
 
-    /** ---------- ChatCS & fuzzer-tab数据订阅 End ---------- */
+    /** ---------- ChatCS End ---------- */
 
     /** ---------- 软件顶部展示录屏中状态 Start ---------- */
     const {screenRecorderInfo} = useScreenRecorder()
