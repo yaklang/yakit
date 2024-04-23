@@ -521,6 +521,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
                 InspectType: "signature",
                 YakScriptType: type,
                 YakScriptCode: model.getValue(),
+                ModelID: model.id,
                 Range: {
                     Code: iWord.word,
                     StartLine: position.lineNumber,
@@ -572,6 +573,7 @@ monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
                 InspectType: "hover",
                 YakScriptType: type,
                 YakScriptCode: model.getValue(),
+                ModelID: model.id,
                 Range: {
                     Code: iWord.word,
                     StartLine: position.lineNumber,
