@@ -847,7 +847,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
     /** ---------- 切换引擎时的逻辑 End ---------- */
 
-    /** ---------- ChatCS & fuzzer-tab数据订阅  Start ---------- */
+    /** ---------- ChatCS Start ---------- */
     /** chat-cs 功能逻辑 */
     const [showChatCS, setShowChatCS] = useState<boolean>(true)
     const onChatCS = useMemoizedFn(() => {
@@ -866,7 +866,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineLink])
 
-    /** ---------- ChatCS & fuzzer-tab数据订阅 End ---------- */
+    /** ---------- ChatCS End ---------- */
 
     /** ---------- 软件顶部展示录屏中状态 Start ---------- */
     const {screenRecorderInfo} = useScreenRecorder()
