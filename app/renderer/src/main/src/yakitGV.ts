@@ -69,12 +69,14 @@ export enum RemoteGV {
     PluginGroupDelNoPrompt = "plugin_group_del_no_prompt",
     /** @name mitm劫持左侧tabs */
     MitmHijackedLeftTabs = "mitm_hijacked_left_tabs",
-    /** @name history编辑器响应美化 */
+    /** @name history编辑器响应美化&渲染 */
     HistoryResponseEditorBeautify = "history_response_editor_beautify",
-    /** @name history编辑器请求美化 */
+    /** @name history编辑器请求美化&渲染 */
     HistoryRequestEditorBeautify = "history_request_editor_beautify",
     /** @name WebFuzzer编辑器美化 */
     WebFuzzerEditorBeautify = "webFuzzer_editor_beautify",
+    /** @name WebFuzzer编辑器美化&渲染 */
+    WebFuzzerOneResEditorBeautifyRender = "webFuzzer_one_res_editor_beautify_render",
     /**@name 专项漏洞关键词搜索缓存 */
     PocPluginKeywords = "poc-plugin-keywords",
     /**@name MITM 用户数据是否保存 */

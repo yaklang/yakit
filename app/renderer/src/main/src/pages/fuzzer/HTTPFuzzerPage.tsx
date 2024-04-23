@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Form, Modal, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
-import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
+import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info, RenderTypeOptionVal} from "../../utils/editors"
 import {showDrawer} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
@@ -1649,12 +1649,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     )
 
     const secondNodeTitle = () => {
-        let isShow: boolean = true;
-        if (+(secondNodeSize?.width || 0) < 700 && (getSuccessCount() > 999 || getFailedCount() > 999)) isShow = false;
+        let isShow: boolean = true
+        if (+(secondNodeSize?.width || 0) < 700 && (getSuccessCount() > 999 || getFailedCount() > 999)) isShow = false
 
         return (
             <>
-                {isShow && <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>}
+                {isShow && (
+                    <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
+                )}
                 <SecondNodeTitle
                     cachedTotal={cachedTotal}
                     onlyOneResponse={onlyOneResponse}
@@ -2653,9 +2655,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         <YakitButton
                                             type='outline2'
                                             size={size}
-                                            icon={
-                                                <OutlinePlugsIcon />
-                                            }
+                                            icon={<OutlinePlugsIcon />}
                                             onClick={() => {
                                                 matchSubmit && matchSubmit()
                                             }}
@@ -3125,6 +3125,21 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const onClose = useMemoizedFn(() => {
             setShowMatcherAndExtraction(false)
         })
+
+        // 一个响应的编辑器美化渲染缓存
+        const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
+        useEffect(() => {
+            if (fuzzerResponse.ResponseRaw) {
+                getRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
+                    if (!!res) {
+                        setResTypeOptionVal(res)
+                    } else {
+                        setResTypeOptionVal(undefined)
+                    }
+                })
+            }
+        }, [fuzzerResponse])
+
         return (
             <>
                 <YakitResizeBox
@@ -3188,6 +3203,16 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             webFuzzerValue={props.webFuzzerValue}
                             extraEditorProps={{
                                 isShowSelectRangeMenu: true
+                            }}
+                            typeOptionVal={resTypeOptionVal}
+                            onTypeOptionVal={(typeOptionVal) => {
+                                if (typeOptionVal !== undefined) {
+                                    setResTypeOptionVal(typeOptionVal)
+                                    setRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender, typeOptionVal)
+                                } else {
+                                    setResTypeOptionVal(undefined)
+                                    setRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender, "")
+                                }
                             }}
                             {...otherEditorProps}
                         />
