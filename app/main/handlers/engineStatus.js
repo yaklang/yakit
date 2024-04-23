@@ -90,6 +90,7 @@ module.exports = (win, callback, getClient, newClient) => {
         try {
             getClient().Version({}, async (err, data) => {
                 if (win && data.Version) win.webContents.send("fetch-yak-version-callback", data.Version)
+                else win.webContents.send("fetch-yak-version-callback", "")
             })
         } catch (e) {
             win.webContents.send("fetch-yak-version-callback", "")

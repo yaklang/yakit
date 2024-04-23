@@ -1,8 +1,9 @@
 const {ipcMain, app} = require("electron")
+const path = require("path")
 const fs = require("fs")
 const https = require("https")
-const {getLocalYaklangEngine} = require("../filePath")
-const {fetchLatestYakEngineVersion} = require("../handlers/utils/network");
+const {getLocalYaklangEngine, appPath} = require("../filePath")
+const {fetchLatestYakEngineVersion} = require("../handlers/utils/network")
 
 module.exports = (win, getClient) => {
     /** yaklang引擎是否安装 */
@@ -14,11 +15,13 @@ module.exports = (win, getClient) => {
     /** 获取Yaklang引擎最新版本号 */
     const asyncFetchLatestYaklangVersion = () => {
         return new Promise((resolve, reject) => {
-            fetchLatestYakEngineVersion().then(version => {
-                resolve(`${version}`.trim())
-            }).catch(err => {
-                reject(err)
-            })
+            fetchLatestYakEngineVersion()
+                .then((version) => {
+                    resolve(`${version}`.trim())
+                })
+                .catch((err) => {
+                    reject(err)
+                })
         })
     }
     /** 获取Yaklang引擎最新版本号 */
@@ -51,5 +54,19 @@ module.exports = (win, getClient) => {
     /** 以更新引擎但未关闭内存中的老版本引擎进程(mac) */
     ipcMain.handle("kill-old-engine-process", (e, type) => {
         win.webContents.send("kill-old-engine-process-callback", type)
+    })
+
+    /** 获取软件当前版本对应的引擎版本号 */
+    ipcMain.handle("fetch-built-in-engine-version", (e) => {
+        const versionPath = path.join(appPath, "bins", "engine-version.txt")
+        if (fs.existsSync(versionPath)) {
+            try {
+                return fs.readFileSync(versionPath).toString("utf8")
+            } catch (error) {
+                return ""
+            }
+        } else {
+            return ""
+        }
     })
 }
