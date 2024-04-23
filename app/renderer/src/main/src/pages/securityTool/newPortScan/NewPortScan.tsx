@@ -179,6 +179,16 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
         e.stopPropagation()
         executeContentRef.current?.onCreateReport()
     })
+    const disabledReport = useCreation(() => {
+        switch (executeStatus) {
+            case "finished":
+                return false
+            case "error":
+                return false
+            default:
+                return true
+        }
+    }, [executeStatus])
     return (
         <div className={styles["port-scan-execute-wrapper"]}>
             <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
@@ -213,7 +223,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                         <>
                             <YakitButton
                                 icon={<OutlineClipboardlistIcon />}
-                                disabled={executeStatus === "default"}
+                                disabled={disabledReport}
                                 onClick={onCreateReport}
                             >
                                 生成报告

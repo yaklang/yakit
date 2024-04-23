@@ -337,6 +337,16 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const progressList = useCreation(() => {
         return streamInfo.progressState || []
     }, [streamInfo])
+    const disabledReport = useCreation(() => {
+        switch (executeStatus) {
+            case "finished":
+                return false
+            case "error":
+                return false
+            default:
+                return true
+        }
+    }, [executeStatus])
     return (
         <>
             <div className={styles["simple-detect-wrapper"]} ref={simpleDetectWrapperRef}>
@@ -398,7 +408,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                         ) : null}
                         <YakitButton
                             icon={<OutlineClipboardlistIcon />}
-                            disabled={executeStatus === "default"}
+                            disabled={disabledReport}
                             onClick={onCreateReport}
                             style={{marginRight: 8}}
                         >
