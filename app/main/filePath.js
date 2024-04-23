@@ -122,7 +122,6 @@ const htmlTemplateDir = loadExtraFilePath(path.join("report"))
 const windowStatePatch = path.join(basicDir)
 
 module.exports = {
-    appPath,
     YakitProjectPath,
 
     yaklangEngineDir,

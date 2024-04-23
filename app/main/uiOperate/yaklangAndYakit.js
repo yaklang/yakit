@@ -2,7 +2,7 @@ const {ipcMain, app} = require("electron")
 const path = require("path")
 const fs = require("fs")
 const https = require("https")
-const {getLocalYaklangEngine, appPath} = require("../filePath")
+const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath")
 const {fetchLatestYakEngineVersion} = require("../handlers/utils/network")
 
 module.exports = (win, getClient) => {
@@ -58,7 +58,7 @@ module.exports = (win, getClient) => {
 
     /** 获取软件当前版本对应的引擎版本号 */
     ipcMain.handle("fetch-built-in-engine-version", (e) => {
-        const versionPath = path.join(appPath, "bins", "engine-version.txt")
+        const versionPath = loadExtraFilePath(path.join("bins", "engine-version.txt"))
         if (fs.existsSync(versionPath)) {
             try {
                 return fs.readFileSync(versionPath).toString("utf8")
