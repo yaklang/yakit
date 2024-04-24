@@ -68,6 +68,7 @@ import classNames from "classnames"
 import style from "./HeardMenu.module.scss"
 import {ExtraMenu} from "../publicMenu/ExtraMenu"
 import emiter from "@/utils/eventBus/eventBus"
+import {SolidPayloadIcon} from "@/assets/icon/solid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -693,7 +694,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {!isEnpriTraceAgent() && (
+                    {!isEnpriTraceAgent() ? (
                         <>
                             <ExtraMenu onMenuSelect={onRouteMenuSelect} />
                             <Dropdown
@@ -764,6 +765,18 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                     </div>
                                 </YakitButton>
                             </Dropdown>
+                        </>
+                    ) : (
+                        <>
+                            <YakitButton
+                                type='secondary2'
+                                onClick={() => {
+                                    onRouteMenuSelect({route: YakitRoute.PayloadManager})
+                                }}
+                                icon={<SolidPayloadIcon />}
+                            >
+                                Payload
+                            </YakitButton>
                         </>
                     )}
                     {!isExpand && (
