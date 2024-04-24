@@ -2178,13 +2178,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             emiter.on("sendSwitchSequenceToMainOperatorContent", onSetType)
         }
+        emiter.on("switchSubMenuItem", onSelectSubMenuById)
         ipcRenderer.on("fetch-add-group", onAddGroup)
-        ipcRenderer.on("fetch-open-subMenu-item", onSelectSubMenuById)
 
         return () => {
             emiter.off("sendSwitchSequenceToMainOperatorContent", onSetType)
+            emiter.on("switchSubMenuItem", onSelectSubMenuById)
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
-            ipcRenderer.removeListener("fetch-open-subMenu-item", onSelectSubMenuById)
         }
     }, [currentTabKey])
 
@@ -2281,15 +2281,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
         return newData
     }, [subPage])
-    const onSelectSubMenuById = useMemoizedFn((e, res: {pageId: string}) => {
-        if (!inViewport) return
-        const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
-        if (index === -1) return
-        const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}
-        setSelectSubMenu({...newSubPage})
-        if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            setType("config")
-        }
+    const onSelectSubMenuById = useMemoizedFn((resVal) => {
+        try {
+            const res = JSON.parse(resVal)
+            if (!inViewport) return
+            const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
+            if (index === -1) return
+            const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}
+            setSelectSubMenu({...newSubPage})
+            if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                setType("config")
+            }
+        } catch (error) {}
     })
     return (
         <div
