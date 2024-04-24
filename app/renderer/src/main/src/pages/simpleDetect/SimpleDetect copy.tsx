@@ -1,13 +1,15 @@
-import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
+/**
+ * @deprecated 已废弃
+ * TODO 简易版安全检测做完未完成任务的功能后，删除
+ */
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     Space,
-    Tag,
     Progress,
     Divider,
     Form,
     Input,
     Button,
-    Card,
     Spin,
     Radio,
     Popconfirm,
@@ -17,7 +19,6 @@ import {
     Row,
     Col,
     Slider,
-    Tooltip,
     Timeline
 } from "antd"
 import {AutoCard} from "@/components/AutoCard"
@@ -32,11 +33,11 @@ import {
 } from "../invoker/batch/UnfinishedBatchTaskList"
 import {useGetState, useMemoizedFn, useDebounceEffect, useInViewport} from "ahooks"
 import type {SliderMarks} from "antd/es/slider"
-import {showDrawer, showModal} from "../../utils/showModal"
+import {showDrawer} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams} from "../portscan/PortScanPage"
 import {ExecResult, GroupCount, YakScript} from "../invoker/schema"
 import {useStore} from "@/store"
-import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
+import {DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
 import {SimpleCardBox, StatusCardInfoProps} from "../yakitStore/viewers/base"
 import moment from "moment"
@@ -55,7 +56,7 @@ import {YakitRoute} from "@/routes/newRoute"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
 import emiter from "@/utils/eventBus/eventBus"
 import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal} from "../plugins/utils"
-import { LastRecordProps } from "../securityTool/newPortScan/utils"
+import {LastRecordProps} from "../securityTool/newPortScan/utils"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
