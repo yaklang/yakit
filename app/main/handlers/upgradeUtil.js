@@ -479,7 +479,7 @@ module.exports = {
                 })
                 zipHandler.on("ready", () => {
                     const targetPath = path.join(YakitProjectPath, output_name)
-                    zipHandler.extract(output_name, targetPath, (err, res) => {
+                    zipHandler.extract(output_name, targetPath, (err, res) => {   
                         if (!fs.existsSync(targetPath)) {
                             reject(`Extract Cert Script Failed`)
                         } else {
@@ -630,6 +630,53 @@ module.exports = {
                 throw e
             }
             return await asyncInitBuildInEngine({})
+        })
+
+        // 解压 start-engine.zip
+        const generateStartEngineGRPC = () => {
+            return new Promise((resolve, reject) => {
+                const all = "start-engine.zip"
+                const output_name = isWindows ? `start-engine-grpc.bat` : `start-engine-grpc.sh`
+
+                // 如果存在就不在解压
+                if(fs.existsSync(path.join(yaklangEngineDir,output_name))){
+                    resolve("")
+                    return
+                }
+
+                if (!fs.existsSync(loadExtraFilePath(path.join("bins/scripts", all)))) {
+                    reject(all + " not found")
+                    return
+                }
+                const zipHandler = new zip({
+                    file: loadExtraFilePath(path.join("bins/scripts", all)), storeEntries: true,
+                })
+                zipHandler.on("ready", () => {
+                    const targetPath = path.join(yaklangEngineDir, output_name)
+                    zipHandler.extract(output_name, targetPath, (err, res) => {
+                        if (!fs.existsSync(targetPath)) {
+                            reject(`Extract Start Engine GRPC Script Failed`)
+                        } else {
+                            // 如果不是 Windows，给脚本文件添加执行权限
+                            if (!isWindows) {
+                                fs.chmodSync(targetPath, 0o755);
+                            }
+                            resolve("")
+                        }
+                        zipHandler.close();
+                    })
+                })
+                zipHandler.on("error", err => {
+                    console.info(err)
+                    reject(`${err}`)
+                    zipHandler.close()
+                })
+            })
+        }
+
+
+        ipcMain.handle("generate-start-engine", async (e) => {
+            return await generateStartEngineGRPC()
         })
     },
 }

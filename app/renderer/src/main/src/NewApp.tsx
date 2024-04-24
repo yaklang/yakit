@@ -35,6 +35,11 @@ function NewApp() {
     /** 是否展示用户协议 */
     const [agreed, setAgreed] = useState(false)
 
+    useEffect(() => {
+        // 解压命令执行引擎脚本压缩包
+        ipcRenderer.invoke("generate-start-engine")
+    }, [])
+
     /**
      * 渲染端全局错误监听，并收集到错误信息文件里
      */
