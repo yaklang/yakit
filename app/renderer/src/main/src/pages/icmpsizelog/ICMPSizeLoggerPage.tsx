@@ -1,17 +1,18 @@
-import React, {useEffect, useState} from "react";
-import {AutoCard} from "../../components/AutoCard";
-import {Alert, Button, Divider, Form, Space, Spin, Table, Tag} from "antd";
-import {CopyableField, InputInteger} from "../../utils/inputUtil";
-import {useDebounce, useMemoizedFn} from "ahooks";
-import {formatTimestamp} from "../../utils/timeUtil";
-import {success} from "../../utils/notification";
-import {ReloadOutlined} from "@ant-design/icons";
+import React, {useEffect, useState} from "react"
+import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
+import {Alert, Divider, Space} from "antd"
+import {useDebounce, useMemoizedFn} from "ahooks"
+import {ReloadOutlined} from "@ant-design/icons"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {formatTimestamp} from "@/utils/timeUtil"
+import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import style from "./ICMPSizeLoggerPage.module.scss"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
-export interface ICMPSizeLoggerPageProp {
-
-}
-
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 interface ICMPSizeLoggerInfo {
     Size: number
@@ -24,35 +25,42 @@ interface ICMPSizeLoggerInfo {
     Hash: string
 }
 
+export interface ICMPSizeLoggerPageProp {}
 export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
-    const [size, setSize] = useState<number>(0);
-    const [records, setRecords] = useState<ICMPSizeLoggerInfo[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [host, setHost] = useState("");
+    const [size, setSize] = useState<number>(0)
+    const [records, setRecords] = useState<ICMPSizeLoggerInfo[]>([])
+    const [loading, setLoading] = useState(false)
+    const [host, setHost] = useState("")
 
-    const sizeNow = useDebounce(size, {maxWait: 500});
+    const sizeNow = useDebounce(size, {maxWait: 500})
 
     const update = useMemoizedFn(() => {
-        ipcRenderer.invoke("QueryICMPTrigger", {
-            Length: sizeNow,
-        }).then((data: { Notification?: ICMPSizeLoggerInfo[] }) => {
-            if (data?.Notification) {
-                setRecords(data.Notification)
-            }
-        }).catch(e => {
-            setRecords([])
-        })
+        ipcRenderer
+            .invoke("QueryICMPTrigger", {
+                Length: sizeNow
+            })
+            .then((data: {Notification?: ICMPSizeLoggerInfo[]}) => {
+                if (data?.Notification) {
+                    setRecords(data.Notification)
+                }
+            })
+            .catch((e) => {
+                setRecords([])
+            })
     })
 
     const refreshSize = useMemoizedFn(() => {
         setLoading(true)
-        ipcRenderer.invoke("RequireICMPRandomLength", {}).then((d: { Length: number } | any) => {
-            setSize(d.Length)
-            setRecords([])
-        }).catch(() => {
-        }).finally(() => {
-            setTimeout(() => setLoading(false), 100)
-        })
+        ipcRenderer
+            .invoke("RequireICMPRandomLength", {})
+            .then((d: {Length: number} | any) => {
+                setSize(d.Length)
+                setRecords([])
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => setLoading(false), 100)
+            })
     })
 
     useEffect(() => {
@@ -68,73 +76,104 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
         }
     }, [sizeNow])
 
-    return <AutoCard title={<Space>
-        ICMP Size Logger
-        <div style={{color: "#999", fontSize: 12}}>
-            使用 ping 携带特定长度数据包判定 ICMP 反连
-        </div>
-        <Divider type={"vertical"}/>
-        <Form onSubmitCapture={e => {
-            e.preventDefault()
-
-            setLoading(true)
-            ipcRenderer.invoke("RequireICMPRandomLength", {}).then((d: { Length: number, ExternalHost: string } | any) => {
-                setSize(d.Length)
-                setHost(d.ExternalHost)
-                setRecords([])
-            }).finally(() => {
-                setTimeout(() => setLoading(false), 300)
-            })
-        }} layout={"inline"} size={"small"}>
-            <InputInteger
-                disable={true}
-                label={"设置 Ping 包大小"}
-                setValue={setSize}
-                value={size}
+    return (
+        <YakitCard
+            headStyle={{padding: "25px 15px"}}
+            title={
+                <Space>
+                    ICMP Size Logger
+                    <div className={style["description-text"]}>使用 ping 携带特定长度数据包判定 ICMP 反连</div>
+                    <Divider type={"vertical"} />
+                    <div className={style["set-ping-size-wrap"]}>
+                        设置 Ping 包大小：
+                        <YakitInputNumber
+                            disabled={true}
+                            value={size}
+                            className={style["ping-size-input-number"]}
+                        />
+                    </div>
+                    <YakitButton
+                        disabled={loading}
+                        onClick={() => {
+                            setLoading(true)
+                            ipcRenderer
+                                .invoke("RequireICMPRandomLength", {})
+                                .then((d: {Length: number; ExternalHost: string} | any) => {
+                                    setSize(d.Length)
+                                    setHost(d.ExternalHost)
+                                    setRecords([])
+                                })
+                                .finally(() => {
+                                    setTimeout(() => setLoading(false), 300)
+                                })
+                        }}
+                    >
+                        随机生成可用长度
+                    </YakitButton>
+                    <YakitButton type='text' disabled={loading} icon={<ReloadOutlined />} onClick={update}>
+                        刷新
+                    </YakitButton>
+                </Space>
+            }
+        >
+            <Alert
+                type={"success"}
+                message={
+                    <Space direction={"vertical"} style={{width: "100%"}}>
+                        <h4>ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器</h4>
+                        <Space>
+                            <div>在 Windows 系统中，使用</div>
+                            {host === "" || sizeNow <= 0 ? (
+                                <YakitSpin />
+                            ) : (
+                                <YakitCopyText
+                                    showText={`ping -l ${sizeNow} ${host}`}
+                                    wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
+                                />
+                            )}
+                            <div>命令</div>
+                        </Space>
+                        <Space>
+                            <div>在 MacOS/Linux/*nix 系统中，使用</div>
+                            {host === "" || sizeNow <= 0 ? (
+                                <YakitSpin />
+                            ) : (
+                                <YakitCopyText
+                                    showText={`ping -c 4 -s ${sizeNow} ${host}`}
+                                    wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
+                                />
+                            )}
+                            <div>命令</div>
+                        </Space>
+                    </Space>
+                }
             />
-            <Form.Item colon={false} label={" "}>
-                <Space>
-                    <Button disabled={loading} type="primary" htmlType="submit"> 随机生成可用长度 </Button>
-                    <Button disabled={loading} type="link" onClick={() => {
-                        update()
-                    }} icon={<ReloadOutlined/>}> 刷新 </Button>
-                </Space>
-            </Form.Item>
-        </Form>
-    </Space>} bordered={false}>
-        <Space style={{width: "100%"}} direction={"vertical"}>
-            <Alert type={"success"} message={<Space direction={"vertical"} style={{width: "100%"}}>
-                <h4>ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器</h4>
-                <Space>
-                    <div>在 Windows 系统中，使用</div>
-                    {host === "" || sizeNow <= 0 ? <Spin/> :
-                        <CopyableField mark={true} text={`ping -l ${sizeNow} ${host}`}/>}
-                    <div>命令</div>
-                </Space>
-                <Space>
-                    <div>在 MacOS/Linux/*nix 系统中，使用</div>
-                    {host === "" || sizeNow <= 0 ? <Spin/> :
-                        <CopyableField mark={true} text={`ping -c 4 -s ${sizeNow} ${host}`}/>}
-                    <div>命令</div>
-                </Space>
-            </Space>}/>
-            <Table<ICMPSizeLoggerInfo>
-                size={"small"}
-                dataSource={records}
-                rowKey={i => `${i.CurrentRemoteAddr}`}
-                pagination={false}
-                columns={[
-                    {title: "ICMP/Ping 长度", render: (i: ICMPSizeLoggerInfo) => <Tag color={"geekblue"}>{sizeNow}</Tag>},
-                    {title: "远端IP", dataIndex: "CurrentRemoteAddr"},
-                    {
-                        title: "触发时间",
-                        render: (i: ICMPSizeLoggerInfo) => <Tag
-                            color={"geekblue"}>{formatTimestamp(i.TriggerTimestamp)}</Tag>
-                    },
-                ]}
-            >
-
-            </Table>
-        </Space>
-    </AutoCard>
-};
+            <div style={{marginTop: 15}}>
+                <TableVirtualResize<ICMPSizeLoggerInfo>
+                    isRefresh={loading}
+                    titleHeight={0.01}
+                    renderTitle={<></>}
+                    renderKey='CurrentRemoteAddr'
+                    data={records}
+                    loading={loading}
+                    columns={[
+                        {
+                            title: "ICMP/Ping 长度",
+                            dataKey: "Size",
+                            render: (text) => <YakitTag color={"bluePurple"}>{text}</YakitTag>
+                        },
+                        {
+                            title: "远端IP",
+                            dataKey: "CurrentRemoteAddr"
+                        },
+                        {
+                            title: "触发时间",
+                            dataKey: "TriggerTimestamp",
+                            render: (text) => <YakitTag color={"bluePurple"}>{formatTimestamp(text)}</YakitTag>
+                        }
+                    ]}
+                />
+            </div>
+        </YakitCard>
+    )
+}

@@ -1,0 +1,7 @@
+:global {
+    .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled),
+    .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled):hover {
+        background-color: var(--yakit-primary-1);
+        color: var(--yakit-primary-5);
+    }
+}

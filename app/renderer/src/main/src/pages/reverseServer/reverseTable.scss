@@ -19,16 +19,17 @@
             display: flex;
             align-items: center;
             .header-title-total {
-                margin-left: 4px;
                 height: 20px;
                 box-sizing: border-box;
                 display: inline-flex;
                 flex-direction: row;
                 align-items: center;
-                padding: 1px 8px;
-                border: 1px solid #d9d9d9;
-                border-radius: 2px;
                 font-size: 12px;
+                color: var(--yakit-helper-text-color);
+                &-number {
+                    color: var(--yakit-primary-5);
+                    margin-left: 5px;
+                }
             }
         }
         .header-extra {
@@ -99,10 +100,9 @@
 }
 
 .reverse-table-padding {
-    padding: 0 24px;
+    padding-bottom: 6px;
     .header-style {
         height: 64px;
-        padding: 16px 8px;
         .title-style {
             font-size: 16px;
         }
@@ -116,10 +116,8 @@
     }
 }
 .payload-table-padding {
-    padding: 0 0 0 16px;
     .header-style {
         height: 48px;
-        padding: 8px 0px;
         .title-style {
             font-size: 14px;
         }

@@ -1,15 +1,8 @@
 import React, {useRef, useEffect, useState, useMemo} from "react"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {
-    InputNumber,
-    Button,
     Form,
-    Cascader,
-    Switch,
-    Input,
-    Select,
     Tooltip,
-    Radio,
     Alert,
     Space,
     Typography,
@@ -32,22 +25,28 @@ import {
     SettingReverseParamsInfo
 } from "../reverseServer/NewReverseServerPage"
 import {randomString} from "@/utils/randomUtil"
-import {AutoCard} from "@/components/AutoCard"
-import {AutoSpin} from "@/components/AutoSpin"
 import {YakCodeEditor} from "@/utils/editors"
 import {callCopyToClipboard} from "@/utils/basic"
-import {CopyableField} from "@/utils/inputUtil"
 import {ReverseNotification, ReverseTable} from "../reverseServer/ReverseTable"
 import {getRemoteValue} from "@/utils/kv"
 import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
-import HexEditor from "react-hex-editor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import ReactResizeDetector from "react-resize-detector"
 
 import "./javaPayloadPage.scss"
 import {NetInterface} from "@/models/Traffic"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import YakitCascader from "@/components/yakitUI/YakitCascader/YakitCascader"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -396,23 +395,29 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                 isStart ? (
                                     <></>
                                 ) : !params.useGadget ? (
-                                    <Form size='small' labelCol={{span: 8}} wrapperCol={{span: 16}} colon={false}>
+                                    <Form
+                                        size='small'
+                                        labelCol={{span: 9}}
+                                        wrapperCol={{span: 15}}
+                                        colon={false}
+                                        className='from-common-style'
+                                    >
                                         <Form.Item
                                             label={
                                                 <div className='form-item-label-title'>
                                                     高级设置
                                                     <Tooltip placement='bottom' title='配置反连服务器参数'>
-                                                        <ExclamationCircleOutlined className='question-icon' />
+                                                        <ExclamationCircleOutlined className='setting-payload-icon' />
                                                     </Tooltip>
                                                 </div>
                                             }
                                         >
-                                            <Switch checked={showAddr} onChange={(check) => setShowAddr(check)} />
+                                            <YakitSwitch checked={showAddr} onChange={(check) => setShowAddr(check)} />
                                         </Form.Item>
                                         {showAddr && (
                                             <>
                                                 <Form.Item label='启用公网穿透'>
-                                                    <Switch
+                                                    <YakitSwitch
                                                         checked={addrParams.IsRemote}
                                                         onChange={(IsRemote) =>
                                                             setAddrParams({...addrParams, IsRemote})
@@ -432,13 +437,12 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                                         title={
                                                                             <div style={{color: "#fff"}}>
                                                                                 在自己的服务器安装 yak 核心引擎，执行{" "}
-                                                                                <Typography.Text
-                                                                                    code={true}
-                                                                                    copyable={true}
-                                                                                    style={{color: "#fff"}}
-                                                                                >
-                                                                                    yak bridge --secret [your-pass]
-                                                                                </Typography.Text>{" "}
+                                                                                <YakitCopyText
+                                                                                    showText={
+                                                                                        "yak bridge --secret [your-pass]"
+                                                                                    }
+                                                                                    wrapStyle={{color: "#fff"}}
+                                                                                />{" "}
                                                                                 启动 Yak Bridge 公网服务{" "}
                                                                                 <Divider type={"vertical"} />
                                                                                 <Typography.Text
@@ -449,12 +453,12 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                                             </div>
                                                                         }
                                                                     >
-                                                                        <ExclamationCircleOutlined className='question-icon' />
+                                                                        <ExclamationCircleOutlined className='setting-payload-icon' />
                                                                     </Tooltip>
                                                                 </div>
                                                             }
                                                         >
-                                                            <Input
+                                                            <YakitInput
                                                                 allowClear={true}
                                                                 value={addrParams.BridgeParam.Addr}
                                                                 onChange={(e) => {
@@ -464,7 +468,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                             />
                                                         </Form.Item>
                                                         <Form.Item label='密码'>
-                                                            <Input
+                                                            <YakitInput
                                                                 allowClear={true}
                                                                 value={addrParams.BridgeParam.Secret}
                                                                 onChange={(e) => {
@@ -484,7 +488,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                             </>
                                                         }
                                                     >
-                                                        <Input
+                                                        <YakitInput
                                                             allowClear={true}
                                                             value={addrParams.ReverseHost}
                                                             onChange={(e) =>
@@ -504,7 +508,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                                         </>
                                                     }
                                                 >
-                                                    <InputNumber
+                                                    <YakitInputNumber
                                                         width='100%'
                                                         min={0}
                                                         max={65535}
@@ -542,11 +546,10 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             <div className={`reverse-${isStart && !codeExtra ? "info" : "hidden"}-wrapper`}>
                 <div className='wrapper-body'>
                     <div className='body-left'>
-                        <AutoCard
+                        <YakitCard
                             title='反连地址'
                             className='info-addr-card'
-                            size='small'
-                            bodyStyle={{padding: "0 16px 16px 16px"}}
+                            bodyStyle={{padding: "6px 12px"}}
                         >
                             <Alert
                                 type={"info"}
@@ -556,34 +559,28 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                     <Space direction={"vertical"}>
                                         <div className='addr-body'>
                                             HTTP反连地址&nbsp;&nbsp;
-                                            <CopyableField
-                                                width={340}
-                                                text={`http://${reverseAddr}/${
+                                            <YakitCopyText
+                                                showText={`http://${reverseAddr}/${
                                                     paramsRef.current?.className || ""
                                                 }.class`}
-                                                style={{color: "blue"}}
                                             />
                                         </div>
                                         <div className='addr-body'>
                                             RMI反连地址&nbsp;&nbsp;
-                                            <CopyableField
-                                                width={340}
-                                                text={`rmi://${reverseAddr}/${paramsRef.current?.className || ""}`}
-                                                style={{color: "blue"}}
+                                            <YakitCopyText
+                                                showText={`rmi://${reverseAddr}/${paramsRef.current?.className || ""}`}
                                             />
                                         </div>
                                         <div className='addr-body'>
                                             LDAP反连地址&nbsp;&nbsp;
-                                            <CopyableField
-                                                width={340}
-                                                text={`ldap://${reverseAddr}/${paramsRef.current?.className || ""}`}
-                                                style={{color: "blue"}}
+                                            <YakitCopyText
+                                                showText={`ldap://${reverseAddr}/${paramsRef.current?.className || ""}`}
                                             />
                                         </div>
                                     </Space>
                                 }
                             ></Alert>
-                        </AutoCard>
+                        </YakitCard>
                     </div>
 
                     <div className='body-right'>
@@ -852,10 +849,9 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     })
 
     return (
-        <AutoCard
+        <YakitCard
             className='setting-payload-wrapper'
-            size='small'
-            bodyStyle={{padding: "20px 16px", overflow: "auto"}}
+            bodyStyle={{padding: "20px 15px", overflow: "auto"}}
             title={
                 <div>
                     JavaPayload 配置
@@ -867,31 +863,29 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
             extra={
                 <div>
                     {!isReverse && (
-                        <Button
+                        <YakitButton
                             loading={loading}
                             className='setting-payload-btn'
-                            type='primary'
-                            ghost={true}
+                            type='outline1'
                             danger={isStart}
                             size='small'
                             onClick={formStart}
                         >
                             {isStart ? "关闭反连" : "启动反连"}
-                        </Button>
+                        </YakitButton>
                     )}
                     {isReverse && (
-                        <Button
+                        <YakitButton
                             className='setting-payload-btn'
                             type='primary'
                             danger={isShowCode}
-                            ghost={true}
                             size='small'
                             onClick={showCode}
                         >
                             {isShowCode ? "关闭代码" : "显示代码"}
-                        </Button>
+                        </YakitButton>
                     )}
-                    <Button
+                    <YakitButton
                         loading={loading}
                         className='setting-payload-btn'
                         size='small'
@@ -899,33 +893,34 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                         onClick={formApply}
                     >
                         生成
-                    </Button>
+                    </YakitButton>
                 </div>
             }
         >
-            <AutoSpin wrapperClassName='form-common-style' spinning={loading}>
+            <YakitSpin spinning={loading}>
                 <Form
                     form={formInstance}
                     name='form'
                     size='small'
-                    labelCol={{span: 8}}
-                    wrapperCol={{span: 16}}
+                    labelCol={{span: 9}}
+                    wrapperCol={{span: 15}}
                     colon={false}
                     initialValues={{...paramsRef.current}}
                     autoComplete='off'
+                    className='from-common-style'
                 >
                     <Form.Item
                         label={
                             <div className='form-item-label-title'>
                                 使用利用链
                                 <Tooltip placement='bottom' title='关闭则不使用利用链,只生成恶意类'>
-                                    <ExclamationCircleOutlined className='question-icon' />
+                                    <ExclamationCircleOutlined className='setting-payload-icon' />
                                 </Tooltip>
                             </div>
                         }
                         name='useGadget'
                     >
-                        <Switch
+                        <YakitSwitch
                             checked={useGadget}
                             onChange={(check) => {
                                 setUseGadget(check)
@@ -954,7 +949,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                         name={useGadget ? "[Gadget,Class]" : "Class"}
                     >
                         {useGadget ? (
-                            <Cascader
+                            <YakitCascader
                                 fieldNames={{label: "NameVerbose", value: "Name", children: "children"}}
                                 loadData={loadClassOptions}
                                 options={options}
@@ -1027,7 +1022,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                         {item.KeyVerbose}
                                         {!!item.Help && (
                                             <Tooltip placement='bottom' title={item.Help}>
-                                                <ExclamationCircleOutlined className='question-icon' />
+                                                <ExclamationCircleOutlined className='setting-payload-icon' />
                                             </Tooltip>
                                         )}
                                     </div>
@@ -1049,7 +1044,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                 ]}
                             >
                                 {(item.Type === FormParamsType.String || item.Type === FormParamsType.Base64Bytes) && (
-                                    <Input
+                                    <YakitInput
                                         allowClear={true}
                                         placeholder={
                                             item.Type === FormParamsType.Base64Bytes
@@ -1061,14 +1056,14 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                     />
                                 )}
                                 {item.Type === FormParamsType.StringPort && (
-                                    <InputNumber
+                                    <YakitInputNumber
                                         precision={0}
                                         value={+params[item.Key]}
                                         onChange={(value) => setParamsValue([{key: item.Key, value: value as number}])}
                                     />
                                 )}
                                 {item.Type === FormParamsType.StringBool && (
-                                    <Switch
+                                    <YakitSwitch
                                         checked={!!params[item.Key]}
                                         onChange={(check) => {
                                             const info: {key: string; value: string | boolean}[] = [
@@ -1096,8 +1091,8 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     })}
                 </Form>
                 {!!extraNode && extraNode}
-            </AutoSpin>
-        </AutoCard>
+            </YakitSpin>
+        </YakitCard>
     )
 })
 
@@ -1252,35 +1247,29 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
     })
 
     return (
-        <AutoCard
+        <YakitCard
             className='code-payload-wrapper'
-            size='small'
             bodyStyle={{padding: 0, overflow: "hidden"}}
             title={
                 <div>
                     代码
-                    <Radio.Group
+                    <YakitRadioButtons
                         className='code-type-radio'
                         size='small'
                         buttonStyle='solid'
                         value={type}
                         onChange={({target: {value}}) => typeChange(value)}
-                    >
-                        {CodeType.map((item) => (
-                            <Radio.Button key={item.value} value={item.value}>
-                                {item.label}
-                            </Radio.Button>
-                        ))}
-                    </Radio.Group>
+                        options={CodeType}
+                    />
                 </div>
             }
             extra={
                 width < 510 || (isMin && !codeExtra) ? (
                     <div>
                         {type === "yak" ? (
-                            <Button
+                            <YakitButton
                                 loading={loading}
-                                type='link'
+                                type='text'
                                 size='small'
                                 icon={
                                     <Tooltip title='Yak Runner'>
@@ -1293,9 +1282,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                             <></>
                         )}
                         {type === "hex" ? (
-                            <Button
+                            <YakitButton
                                 loading={loading}
-                                type='link'
+                                type='text'
                                 size='small'
                                 icon={
                                     <Tooltip title='下载文件'>
@@ -1308,9 +1297,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                             <></>
                         )}
 
-                        <Button
+                        <YakitButton
                             loading={loading}
-                            type='link'
+                            type='text'
                             size='small'
                             icon={
                                 <Tooltip title='复制代码'>
@@ -1319,8 +1308,8 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                             }
                             onClick={() => codeOperate("copy")}
                         />
-                        <Button
-                            type='link'
+                        <YakitButton
+                            type='text'
                             size='small'
                             icon={codeExtra ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                             onClick={() => codeOperate("extra")}
@@ -1329,38 +1318,36 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 ) : (
                     <div className='extra-btns'>
                         {type === "yak" ? (
-                            <Button
+                            <YakitButton
                                 loading={loading}
                                 type='primary'
-                                ghost={true}
                                 size='small'
                                 icon={<ThunderboltOutlined />}
                                 onClick={() => codeOperate("yakRunning")}
                             >
                                 Yak Runner
-                            </Button>
+                            </YakitButton>
                         ) : (
                             <></>
                         )}
                         {type === "hex" ? (
-                            <Button
+                            <YakitButton
                                 loading={loading}
                                 type='primary'
                                 size='small'
-                                ghost={true}
                                 onClick={() => codeOperate("download")}
                             >
                                 下载文件
-                            </Button>
+                            </YakitButton>
                         ) : (
                             <></>
                         )}
 
-                        <Button loading={loading} type='primary' size='small' onClick={() => codeOperate("copy")}>
+                        <YakitButton loading={loading} type='primary' size='small' onClick={() => codeOperate("copy")}>
                             复制代码
-                        </Button>
-                        <Button
-                            type='link'
+                        </YakitButton>
+                        <YakitButton
+                            type='text'
                             size='small'
                             icon={codeExtra ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                             onClick={() => codeOperate("extra")}
@@ -1378,13 +1365,13 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <AutoSpin spinning={loading}>
+            <YakitSpin spinning={loading}>
                 {type === "hex" ? (
-                    <YakCodeEditor readOnly={true} originValue={Buffer.from(code, "utf8")} />
+                    <YakitEditor readOnly={true} value={code} />
                 ) : (
-                    <YakCodeEditor readOnly={true} originValue={Buffer.from(code, "utf8")} />
+                    <YakitEditor readOnly={true} value={code} />
                 )}
-            </AutoSpin>
-        </AutoCard>
+            </YakitSpin>
+        </YakitCard>
     )
 })

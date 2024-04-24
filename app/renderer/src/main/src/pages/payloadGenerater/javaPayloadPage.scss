@@ -31,6 +31,7 @@
             width: 416px;
             height: 100%;
             overflow: hidden;
+            margin-top: -1px;
             .info-addr-card {
                 .ant-card-head {
                     border-bottom: 0px;
@@ -56,6 +57,8 @@
         .body-right {
             flex: 1;
             overflow: hidden;
+            margin-left: -1px;
+            margin-top: -1px;
         }
     }
 }
@@ -70,7 +73,7 @@
         margin-left: 8px;
     }
 
-    .form-common-style {
+    .from-common-style {
         .ant-form-item {
             margin-bottom: 16px;
         }
@@ -90,7 +93,8 @@
 
         .form-item-label-title {
             position: relative;
-            padding-right: 20px;
+            display: flex;
+            align-items: center;
             .question-icon {
                 position: absolute;
                 font-size: 12px;
@@ -109,25 +113,6 @@
                 right: 6px;
             }
         }
-        .form-type-btn {
-            margin-bottom: 0;
-            .ant-btn {
-                padding: 4px 6px;
-            }
-            .primary-btn {
-                color: #fff;
-                border-color: #40a9ff;
-                background: #40a9ff;
-            }
-            .other-btn {
-                color: #40a9ff;
-                border-color: #40a9ff;
-                background: #fff;
-            }
-            .ant-btn + .ant-btn {
-                margin-left: 8px;
-            }
-        }
     }
 }
 
@@ -139,6 +124,8 @@
         }
     }
     .extra-btns {
+        display: flex;
+        align-items: center;
         .ant-btn + .ant-btn {
             margin-left: 8px;
         }

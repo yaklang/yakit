@@ -68,6 +68,7 @@
         .payload-code {
             flex: 5;
             overflow: hidden;
+            margin-top: -1px;
         }
         .payload-hidden-code {
             flex: 0;
@@ -85,8 +86,7 @@
             flex-direction: column;
             .reverse-server-pagehead {
                 width: 100%;
-                padding: 16px 24px 0 24px;
-
+                padding: 0;
                 .pagehead-extra-body {
                     height: 32px;
                     display: flex;

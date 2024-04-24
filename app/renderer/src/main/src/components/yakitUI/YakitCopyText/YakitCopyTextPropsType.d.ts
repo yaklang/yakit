@@ -7,4 +7,5 @@ export interface YakitCopyTextProps {
     showText: string
     onAfterCopy?: (e: MouseEvent) => void
     iconColor?: string
+    wrapStyle?: CSSProperties
 }
