@@ -43,6 +43,7 @@ import {StartBruteParams} from "../brute/BrutePage"
 import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
+import {v4 as uuidv4} from "uuid"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 
@@ -214,7 +215,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
             SkippedHostAliveScan: !!value.SkippedHostAliveScan,
-            TaskName: taskName
+            TaskName: `${taskName}-${uuidv4()}`
         }
         switch (value.scanDeep) {
             // 快速
