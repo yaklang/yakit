@@ -264,7 +264,7 @@ function NewApp() {
             ipcRenderer.removeAllListeners("close-windows-renderer")
             ipcRenderer.removeAllListeners("minimize-windows-renderer")
         }
-    }, [dynamicStatus.isDynamicStatus])
+    }, [dynamicStatus.isDynamicStatus,userInfo])
 
     if (!agreed) {
         return (
