@@ -261,6 +261,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             })
     })
 
+    useEffect(() => {
+        if (curTabKey === "hot-patch") {
+            if (!script.Id) {
+                getRemoteValue(RemoteGV.MITMHotPatchCodeSave).then((setting: string) => {
+                    if (setting) {
+                        setScript({...script, Content: setting})
+                    } else {
+                        setScript({...script, Content: MITMPluginTemplateShort})
+                    }
+                    onRefresh()
+                })
+            }
+        }
+    }, [curTabKey])
+
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (curTabKey) {
             case "hot-patch":
@@ -278,6 +293,18 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 <RefreshIcon />
                             </YakitButton>
                         </YakitPopconfirm>
+                        {!script.Id && (
+                            <YakitButton
+                                type='outline1'
+                                onClick={() => {
+                                    setRemoteValue(RemoteGV.MITMHotPatchCodeSave, script.Content).then(() => {
+                                        yakitNotify("success", `保存成功`)
+                                    })
+                                }}
+                            >
+                                保存
+                            </YakitButton>
+                        )}
                         <YakitButton
                             type='outline1'
                             onClick={() => {
@@ -492,7 +519,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 i.contShow = false
             }
         })
-        setRemoteValue(RemoteGV.MitmHijackedLeftTabs, JSON.stringify({ mitmTabs: copyMitmTabs, curTabKey: item.key }))
+        setRemoteValue(RemoteGV.MitmHijackedLeftTabs, JSON.stringify({mitmTabs: copyMitmTabs, curTabKey: item.key}))
         setMitmTabs(copyMitmTabs)
         setCurTabKey(item.key)
     }
@@ -525,9 +552,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         overflowY: "hidden"
                     }}
                 >
-                    <div className={styles["mitm-plugin-hijack-heard"]}>
-                        {onRenderHeardExtra()}
-                    </div>
+                    <div className={styles["mitm-plugin-hijack-heard"]}>{onRenderHeardExtra()}</div>
                     {onRenderContent()}
                 </div>
             </div>
