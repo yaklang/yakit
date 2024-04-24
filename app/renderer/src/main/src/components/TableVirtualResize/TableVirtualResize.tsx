@@ -966,7 +966,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     <div className={classNames(styles["virtual-table-heard-title"])}>{title}</div>
                                 )}
                                 {title && React.isValidElement(title) && title}
-                                {props.isShowTotal && pagination?.total && (
+                                {props.isShowTotal && pagination?.total > 0 && (
                                     <div className={styles["virtual-table-heard-right"]}>
                                         <div className={styles["virtual-table-heard-right-item"]}>
                                             <span className={styles["virtual-table-heard-right-text"]}>Total</span>

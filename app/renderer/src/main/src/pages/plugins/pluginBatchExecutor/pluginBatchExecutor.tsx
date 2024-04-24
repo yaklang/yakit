@@ -2,15 +2,12 @@ import React, {useRef, useState, useEffect, forwardRef, useImperativeHandle} fro
 import {defaultSearch} from "../baseTemplate"
 import {useMemoizedFn, useCreation, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
-import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
+import {PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
     PluginBatchExecutorInputValueProps,
     PluginInfoProps,
-    apiCancelHybridScan,
     PluginBatchExecutorTaskProps,
-    apiGetPluginByGroup,
     apiHybridScan,
     apiQueryHybridScan,
     apiStopHybridScan,
@@ -56,6 +53,7 @@ import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/YakPoC"
 import {Uint8ArrayToString} from "@/utils/str"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
+const PluginBatchRaskListDrawer = React.lazy(() => import("./PluginBatchRaskListDrawer"))
 
 interface PluginBatchExecutorProps {
     id: string
@@ -112,6 +110,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [refreshList, setRefreshList] = useState<boolean>(false)
     const [selectNum, setSelectNum] = useState<number>(0)
     const [pluginExecuteLog, setPluginExecuteLog] = useState<StreamResult.PluginExecuteLog[]>([])
+
+    // 任务列表抽屉
+    const [visibleRaskList, setVisibleRaskList] = useState<boolean>(false)
 
     const userInfo = useStore((s) => s.userInfo)
 
@@ -253,6 +254,16 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             {progressList.length === 1 && (
                                 <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
                             )}
+                            <YakitButton
+                                type='text'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setVisibleRaskList(true)
+                                }}
+                                style={{padding: 0}}
+                            >
+                                任务列表
+                            </YakitButton>
                             {isExecuting
                                 ? !isExpand && (
                                       <>
@@ -301,6 +312,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                     </div>
                 </div>
             </div>
+            <React.Suspense fallback={<>loading...</>}>
+                <PluginBatchRaskListDrawer visible={visibleRaskList} setVisible={setVisibleRaskList} />
+            </React.Suspense>
         </PluginLocalListDetails>
     )
 })
