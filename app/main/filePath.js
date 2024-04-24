@@ -5,7 +5,12 @@ const path = require("path")
 const process = require("process")
 const fs = require("fs")
 
-/** 软件根目录 */
+/**
+ * 软件根目录
+ * 注意: mac和win系统下，可执行程序所在文件夹位置不一样
+ * path.dirname(app.getPath("exe"))只适合win系统使用
+ * mac系统应该用app.getAppPath()进行软件文件夹的定位
+ */
 const appPath = app.isPackaged ? path.dirname(app.getPath("exe")) : app.getAppPath()
 /** 系统用户根路径 */
 const osHome = os.homedir()

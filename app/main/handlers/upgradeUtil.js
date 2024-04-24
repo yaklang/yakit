@@ -7,7 +7,6 @@ const fs = require("fs");
 const https = require("https");
 const EventEmitter = require('events');
 const zip = require('node-stream-zip');
-const {YakitProjectPath} = require("../filePath")
 
 const {
     YakitProjectPath,
@@ -17,7 +16,8 @@ const {
     remoteLinkFile,
     codeDir,
     loadExtraFilePath,
-    yakitInstallDir
+    yakitInstallDir,
+    enginePath
 } = require("../filePath")
 const {
     fetchLatestYakitVersion,
@@ -28,7 +28,6 @@ const {
     downloadYakEngine
 } = require("./utils/network");
 
-const codeDir = path.join(YakitProjectPath, "code");
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
 const authMeta = [];
 

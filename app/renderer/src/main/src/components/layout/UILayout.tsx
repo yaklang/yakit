@@ -953,7 +953,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const onFailed = useMemoizedFn((count: number) => {
         // 20以上的次数属于无效次数
-        if (count > 20) {
+        /**
+         * win7特供版-共享文件夹环境时
+         * 尝试50次后终止
+         */
+        if (count > 50) {
             setKeepalive(false)
             return
         }
@@ -978,7 +982,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }
         }
 
-        if (cacheYakitStatus.current === "error" && count === 20) {
+        /**
+         * win7特供版-共享文件夹环境时
+         * 尝试50次后终止
+         */
+        if (cacheYakitStatus.current === "error" && count === 50) {
             // 连接断开后的20次尝试过后，不在进行尝试
             setCheckLog((arr) => {
                 return arr.slice(1).concat(["连接超时, 请手动启动引擎"])
