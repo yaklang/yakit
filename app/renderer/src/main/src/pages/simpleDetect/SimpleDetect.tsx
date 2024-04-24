@@ -39,7 +39,6 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
 import {convertStartBruteParams, defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
-import {v4 as uuidv4} from "uuid"
 import {StartBruteParams} from "../brute/BrutePage"
 import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
@@ -194,7 +193,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             return
         }
         let taskNameTimeTarget: string = value?.Targets.split(",")[0].split(/\n/)[0] || "漏洞扫描任务"
-        const taskName = `${value.scanType}-${taskNameTimeTarget}` + "-" + uuidv4()
+        const taskName = `${value.scanType}-${taskNameTimeTarget}`
         taskNameRef.current = taskName
         const pluginGroup = value.scanType !== "专项扫描" ? ["基础扫描"] : value.pluginGroup || []
         const linkPluginConfig = getLinkPluginConfig(
