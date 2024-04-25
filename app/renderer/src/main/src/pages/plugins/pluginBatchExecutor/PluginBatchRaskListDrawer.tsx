@@ -20,6 +20,8 @@ import {Divider, Tooltip} from "antd"
 import {YakitRoute} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon} from "@/assets/icon/solid"
+import {PageNodeItemProps, defaultPluginBatchExecutorPageInfo, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 interface PluginBatchRaskListDrawerProps {
     visible: boolean
@@ -78,6 +80,14 @@ interface PluginBatchRaskListProps {
 }
 const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
     forwardRef((props, ref) => {
+        const {getBatchExecutorByRuntimeId, queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
+            (s) => ({
+                getBatchExecutorByRuntimeId: s.getBatchExecutorByRuntimeId,
+                queryPagesDataById: s.queryPagesDataById,
+                updatePagesDataCacheById: s.updatePagesDataCacheById
+            }),
+            shallow
+        )
         const {visible, setVisible} = props
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [params, setParams] = useState<QueryHybridScanTaskRequest>({
@@ -99,15 +109,14 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             ref,
             () => ({
                 onRemove: () => {
-                    onRemove()
+                    onRemoveAll()
                 }
             }),
             []
         )
-
         useEffect(() => {
             update(1)
-        }, [])
+        }, [visible])
         const getStatusNode = useMemoizedFn((text: string) => {
             switch (text) {
                 case "done":
@@ -258,7 +267,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                                 type='text'
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    onDetails(record.TaskId)
+                                    onDetails(record.TaskId, "status")
                                 }}
                             >
                                 查看
@@ -318,17 +327,41 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         const onRefresh = useMemoizedFn(() => {
             update(1)
         })
-        const onDetails = useMemoizedFn((runtimeId: string) => {
-            emiter.emit(
-                "openPage",
-                JSON.stringify({
-                    route: YakitRoute.BatchExecutorPage,
-                    params: {
-                        runtimeId
-                    }
-                })
-            )
+        const onDetails = useMemoizedFn((runtimeId: string, hybridScanMode: string) => {
+            const current: PageNodeItemProps | undefined = getBatchExecutorByRuntimeId(runtimeId)
+            if (!!current) {
+                emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
+                onUpdatePluginBatchExecutorPageInfo(current.pageId, {runtimeId, hybridScanMode})
+            } else {
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.BatchExecutorPage,
+                        params: {
+                            runtimeId,
+                            hybridScanMode
+                        }
+                    })
+                )
+            }
             setVisible(false)
+        })
+        /**更新该页面最新的runtimeId */
+        const onUpdatePluginBatchExecutorPageInfo = useMemoizedFn((pageId, params) => {
+            if (!pageId) return
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.BatchExecutorPage, pageId)
+            if (!currentItem) return
+            const newCurrentItem: PageNodeItemProps = {
+                ...currentItem,
+                pageParamsInfo: {
+                    pluginBatchExecutorPageInfo: {
+                        ...defaultPluginBatchExecutorPageInfo,
+                        ...currentItem.pageParamsInfo.pluginBatchExecutorPageInfo,
+                        ...params
+                    }
+                }
+            }
+            updatePagesDataCacheById(YakitRoute.BatchExecutorPage, {...newCurrentItem})
         })
         const onRemoveSingle = useMemoizedFn((taskId: string) => {
             const removeParams: DeleteHybridScanTaskRequest = {
@@ -349,10 +382,10 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                     }, 300)
                 )
         })
-        const onRemove = useMemoizedFn(() => {
+        const onRemoveAll = useMemoizedFn(() => {
             const removeParams: DeleteHybridScanTaskRequest = {
                 TaskId: selectedRowKeys.join(","),
-                DeleteAll: false
+                DeleteAll: true
             }
             setLoading(true)
             apiDeleteHybridScanTask(removeParams)
@@ -378,9 +411,13 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             }
         })
         /**暂停任务 */
-        const onPaused = useMemoizedFn((record: HybridScanTask) => {})
+        const onPaused = useMemoizedFn((record: HybridScanTask) => {
+            onDetails(record.TaskId, "pause")
+        })
         /**继续任务 */
-        const onContinue = useMemoizedFn((record: HybridScanTask) => {})
+        const onContinue = useMemoizedFn((record: HybridScanTask) => {
+            onDetails(record.TaskId, "resume")
+        })
         return (
             <TableVirtualResize<HybridScanTask>
                 query={params}
@@ -399,7 +436,6 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                     onChange: update
                 }}
                 onChange={onTableChange}
-                currentSelectItem={undefined}
                 isShowTotal={true}
                 rowSelection={{
                     isAll: isAllSelect,

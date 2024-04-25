@@ -23,7 +23,12 @@ import {pluginTypeToName} from "./builtInData"
 import {YakitRoute} from "@/routes/newRoute"
 import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
-import {HybridScanControlAfterRequest, HybridScanControlRequest, HybridScanPluginConfig} from "@/models/HybridScan"
+import {
+    HybridScanControlAfterRequest,
+    HybridScanControlRequest,
+    HybridScanModeType,
+    HybridScanPluginConfig
+} from "@/models/HybridScan"
 import {defPluginBatchExecuteExtraFormValue} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultFilter, defaultSearch} from "./baseTemplate"
@@ -1439,13 +1444,18 @@ export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => 
 }
 
 /**
- * @description HybridScan 批量执行查询详情
+ * @description HybridScan 批量执行查询/恢复/暂停操作
  */
-export const apiQueryHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
+export const apiQueryHybridScan: (
+    runtimeId: string,
+    hybridScanMode: HybridScanModeType,
+    token: string
+) => Promise<null> = (runtimeId, hybridScanMode, token) => {
     return new Promise((resolve, reject) => {
+        if (hybridScanMode === "new") return
         const params: HybridScanControlRequest = {
             Control: true,
-            HybridScanMode: "status",
+            HybridScanMode: hybridScanMode,
             ResumeTaskId: runtimeId
         }
         ipcRenderer
