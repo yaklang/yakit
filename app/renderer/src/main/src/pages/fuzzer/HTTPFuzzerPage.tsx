@@ -2844,24 +2844,31 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         一键重试
                     </YakitButton>
                 ) : (
-                    <YakitPopconfirm
-                        title={"操作一键重试会结束暂停状态，是否确定操作？"}
-                        onConfirm={() => {
-                            resumeAndPause && resumeAndPause()
-                            setTimeout(() => {
-                                retrySubmit && retrySubmit()
-                            }, 300)
-                        }}
-                        placement='top'
+                    // <YakitPopconfirm
+                    //     title={"操作一键重试会结束暂停状态，是否确定操作？"}
+                    //     onConfirm={() => {
+                    //         resumeAndPause && resumeAndPause()
+                    //         setTimeout(() => {
+                    //             retrySubmit && retrySubmit()
+                    //         }, 300)
+                    //     }}
+                    //     placement='top'
+                    // >
+                    //     <YakitButton
+                    //         type={"primary"}
+                    //         size='small'
+                    //         disabled={failedFuzzer.length === 0}
+                    //     >
+                    //         一键重试
+                    //     </YakitButton>
+                    // </YakitPopconfirm>
+                    <YakitButton
+                        type={"primary"}
+                        size='small'
+                        disabled={true}
                     >
-                        <YakitButton
-                            type={"primary"}
-                            size='small'
-                            disabled={failedFuzzer.length === 0}
-                        >
-                            一键重试
-                        </YakitButton>
-                    </YakitPopconfirm>
+                        一键重试
+                    </YakitButton>
                 )}
             </>
         )
