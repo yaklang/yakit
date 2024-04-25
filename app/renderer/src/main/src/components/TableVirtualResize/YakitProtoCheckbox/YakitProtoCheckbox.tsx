@@ -3,7 +3,7 @@ import styles from "./YakitProtoCheckbox.module.scss"
 import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
 
-interface YakitProtoCheckboxProps {
+export interface YakitProtoCheckboxProps {
     checked?: boolean
     indeterminate?: boolean
     onChange?: (e) => void
@@ -15,7 +15,7 @@ interface YakitProtoCheckboxProps {
  * @description: 原生 多选框
  */
 export const YakitProtoCheckbox: React.FC<YakitProtoCheckboxProps> = React.memo((props) => {
-    const {wrapperClassName, indeterminate, wrapperStyle, ...resProps} = props
+    const {wrapperClassName, indeterminate, wrapperStyle,...resProps} = props
     const [focus, setFocus] = useState<boolean>(false)
 
     return (
@@ -28,7 +28,8 @@ export const YakitProtoCheckbox: React.FC<YakitProtoCheckboxProps> = React.memo(
                     [styles["yakit-checkbox-checked"]]: props.checked,
                     [styles["yakit-proto-checkbox-focus"]]: focus,
                     [styles["yakit-checkbox-checked-focus"]]: props.checked && focus,
-                    [styles["yakit-checkbox-indeterminate"]]: indeterminate
+                    [styles["yakit-checkbox-indeterminate"]]: indeterminate,
+                    [styles["yakit-checkbox-disabled"]]: props.disabled
                 })}
             >
                 <input
