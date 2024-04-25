@@ -2048,9 +2048,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                         >{`# ${"插件调试执行"}`}</div>
                                                     )}
                                                     {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
-                                                    {(typeof item.end === "boolean"? item.end :true) ? (
-                                                        <ChatMarkdown content={item.content} />
-                                                    ) : (
+                                                    {!(typeof item.end === "boolean"? item.end :true)&&
                                                         <div className={styles["load-content-box"]}>
                                                             {item.load_content.map((itemIn, IndexIn) => (
                                                                 <div
@@ -2067,8 +2065,8 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                                     <div>{itemIn.result}</div>
                                                                 </div>
                                                             ))}
-                                                        </div>
-                                                    )}
+                                                        </div>}
+                                                    <ChatMarkdown content={item.content} />
                                                 </React.Fragment>
                                             )
                                         })}
@@ -2097,19 +2095,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                         )}
                                                         <>
                                                             {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
-                                                            {(typeof item.end === "boolean"? item.end :true) ? (
-                                                                <>
-                                                                    {renderType === "plugin-list" ? (
-                                                                        <PluginListContent
-                                                                            setPluginRun={setPluginRun}
-                                                                            onStartExecute={onStartExecute}
-                                                                            data={item.content}
-                                                                        />
-                                                                    ) : (
-                                                                        <ChatMarkdown content={item.content} />
-                                                                    )}
-                                                                </>
-                                                            ) : (
+                                                            {!(typeof item.end === "boolean"? item.end :true) && 
                                                                 <div className={styles["load-content-box"]}>
                                                                     {item.load_content.map((itemIn, IndexIn) => (
                                                                         <div
@@ -2129,8 +2115,18 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                                             <div>{itemIn.result}</div>
                                                                         </div>
                                                                     ))}
-                                                                </div>
-                                                            )}
+                                                                </div>}
+                                                                <>
+                                                                    {renderType === "plugin-list" ? (
+                                                                        <PluginListContent
+                                                                            setPluginRun={setPluginRun}
+                                                                            onStartExecute={onStartExecute}
+                                                                            data={item.content}
+                                                                        />
+                                                                    ) : (
+                                                                        <ChatMarkdown content={item.content} />
+                                                                    )}
+                                                                </>
                                                         </>
                                                     </React.Fragment>
                                                 )
