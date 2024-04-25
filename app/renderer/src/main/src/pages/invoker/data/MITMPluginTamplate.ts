@@ -268,6 +268,22 @@ hijackHTTPResponseEx = func(isHttps, url, req, rsp, forward, drop) {
     // }
 }
 
+// 在发送到服务端之前的hook
+beforeRequest = func(ishttps, oreq/*原始请求*/, req/*hijack修改后的请求*/){
+	// if str.Contains(string(req), "凝聚磅礴的中国文学力量") {
+    //     modified = poc.FixHTTPResponse(str.ReplaceAll(req, "凝聚磅礴的中国文学力量", "AAAAAAAAAAAAAAAA"))
+    //     return []byte(modified)
+    // }
+}
+
+// 在回复给浏览器之前的hook
+afterRequest = func(ishttps, oreq/*原始请求*/ ,req/*hiajck修改之后的请求*/ ,orsp/*原始响应*/ ,rsp/*hijack修改后的响应*/){
+	// if str.Contains(string(rsp), "凝聚磅礴的中国文学力量") {
+    //     modified = poc.FixHTTPResponse(str.ReplaceAll(rsp, "凝聚磅礴的中国文学力量", "AAAAAAAAAAAAAAAA"))
+    //     return []byte(modified)
+    // }
+}
+
 # hijackSaveHTTPFlow 是 Yakit 开放的 MITM 存储过程的 Hook 函数
 # 这个函数允许用户在 HTTP 数据包存入数据库前进行过滤或者修改，增加字段，染色等
 # 类似 hijackHTTPRequest
