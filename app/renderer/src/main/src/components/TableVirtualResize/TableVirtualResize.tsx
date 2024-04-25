@@ -409,9 +409,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         getTableRef(containerRef.current)
     }, [containerRef.current])
     useEffect(() => {
-        if (tableRef.current && tableRef.current.getBoundingClientRect()) {
-            tablePosition.current = tableRef.current.getBoundingClientRect()
-        }
+        setTimeout(() => {
+            if (tableRef.current && tableRef.current.getBoundingClientRect()) {
+                tablePosition.current = tableRef.current.getBoundingClientRect()
+            }
+        }, 200)
     }, [tableRef.current, width])
     useClickAway(() => {
         setSelectedRows([])
