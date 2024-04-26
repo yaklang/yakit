@@ -238,20 +238,20 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                         },
                         filters: [
                             {
-                                label: "done",
-                                value: "已完成"
+                                label: "已完成",
+                                value: "done"
                             },
                             {
-                                label: "executing",
-                                value: "执行中"
+                                label: "执行中",
+                                value: "executing"
                             },
                             {
-                                label: "paused",
-                                value: "暂停"
+                                label: "暂停",
+                                value: "paused"
                             },
                             {
-                                label: "error",
-                                value: "失败"
+                                label: "失败",
+                                value: "error"
                             }
                         ]
                     }
