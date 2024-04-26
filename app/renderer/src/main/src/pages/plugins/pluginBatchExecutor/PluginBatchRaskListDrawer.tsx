@@ -1,4 +1,4 @@
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import React, {ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import styles from "./PluginBatchExecutor.module.scss"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -22,6 +22,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon} from "@/assets/icon/solid"
 import {PageNodeItemProps, defaultPluginBatchExecutorPageInfo, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 interface PluginBatchRaskListDrawerProps {
     visible: boolean
@@ -31,7 +32,7 @@ const PluginBatchRaskListDrawer: React.FC<PluginBatchRaskListDrawerProps> = Reac
     const {visible, setVisible} = props
 
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
-
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const pluginBatchRaskListRef = useRef<PluginBatchRaskListForwardedRefProps>({
         onRemove: () => {}
     })
@@ -57,14 +58,30 @@ const PluginBatchRaskListDrawer: React.FC<PluginBatchRaskListDrawerProps> = Reac
             title='任务列表'
             extra={
                 <>
-                    <YakitButton loading={removeLoading} type='primary' danger onClick={onRemove}>
-                        清空
-                    </YakitButton>
+                    {selectedRowKeys.length === 0 ? (
+                        <YakitPopconfirm title='该操作会清空下面所有数据' onConfirm={onRemove}>
+                            <YakitButton loading={removeLoading} type='primary' danger>
+                                清空
+                            </YakitButton>
+                        </YakitPopconfirm>
+                    ) : (
+                        <YakitPopconfirm title='该操作会删除勾选数据' onConfirm={onRemove}>
+                            <YakitButton loading={removeLoading} type='primary' danger>
+                                删除
+                            </YakitButton>
+                        </YakitPopconfirm>
+                    )}
                 </>
             }
             bodyStyle={{overflow: "hidden"}}
         >
-            <PluginBatchRaskList visible={visible} setVisible={setVisible} ref={pluginBatchRaskListRef} />
+            <PluginBatchRaskList
+                visible={visible}
+                setVisible={setVisible}
+                ref={pluginBatchRaskListRef}
+                selectedRowKeys={selectedRowKeys}
+                setSelectedRowKeys={setSelectedRowKeys}
+            />
         </YakitDrawer>
     )
 })
@@ -77,6 +94,8 @@ interface PluginBatchRaskListProps {
     ref?: ForwardedRef<PluginBatchRaskListForwardedRefProps>
     visible: boolean
     setVisible: (b: boolean) => void
+    selectedRowKeys: string[]
+    setSelectedRowKeys: (s: string[]) => void
 }
 const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
     forwardRef((props, ref) => {
@@ -103,13 +122,16 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             Data: [],
             Total: 0
         })
-        const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-
+        const [selectedRowKeys, setSelectedRowKeys] = useControllableValue<string[]>(props, {
+            defaultValue: [],
+            valuePropName: "selectedRowKeys",
+            trigger: "setSelectedRowKeys"
+        })
         useImperativeHandle(
             ref,
             () => ({
                 onRemove: () => {
-                    onRemoveAll()
+                    onBatchRemove()
                 }
             }),
             []
@@ -382,10 +404,10 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                     }, 300)
                 )
         })
-        const onRemoveAll = useMemoizedFn(() => {
+        const onBatchRemove = useMemoizedFn(() => {
             const removeParams: DeleteHybridScanTaskRequest = {
                 TaskId: selectedRowKeys.join(","),
-                DeleteAll: true
+                DeleteAll: selectedRowKeys.length === 0
             }
             setLoading(true)
             apiDeleteHybridScanTask(removeParams)
@@ -418,6 +440,11 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         const onContinue = useMemoizedFn((record: HybridScanTask) => {
             onDetails(record.TaskId, "resume")
         })
+        const getCheckboxProps = useMemoizedFn((record: HybridScanTask) => {
+            return {
+                disabled: record.Status === "executing"
+            }
+        })
         return (
             <TableVirtualResize<HybridScanTask>
                 query={params}
@@ -438,11 +465,13 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                 onChange={onTableChange}
                 isShowTotal={true}
                 rowSelection={{
+                    isShowAll: false,
                     isAll: isAllSelect,
                     type: "checkbox",
                     selectedRowKeys: selectedRowKeys,
                     onSelectAll,
-                    onChangeCheckboxSingle
+                    onChangeCheckboxSingle,
+                    getCheckboxProps
                 }}
             />
         )
