@@ -353,7 +353,10 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             const current: PageNodeItemProps | undefined = getBatchExecutorByRuntimeId(runtimeId)
             if (!!current) {
                 emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
-                onUpdatePluginBatchExecutorPageInfo(current.pageId, {runtimeId, hybridScanMode})
+                // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
+                if (hybridScanMode !== "status") {
+                    onUpdatePluginBatchExecutorPageInfo(current.pageId, {runtimeId, hybridScanMode})
+                }
             } else {
                 emiter.emit(
                     "openPage",
