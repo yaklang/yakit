@@ -15,7 +15,7 @@ jobs:
     #          - windows-latest
     #          - macos-latest
     #          - ubuntu-latest
-    runs-on: macos-latest
+    runs-on: macos-13
     if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-') || startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
     steps:
       - uses: actions/checkout@v2
