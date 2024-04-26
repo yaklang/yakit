@@ -447,9 +447,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             if (!setting) {
                 ipcRenderer.invoke("GetChromePath").then((chromePath: string) => {
                     setChromePath(chromePath)
-                    setTimeout(() => {
-                        onSetChromePath()
-                    }, 300)
+                    onSetChromePath(chromePath)
                 })
             } else {
                 const values: string = JSON.parse(setting)
@@ -461,8 +459,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         let file_index = file_name.lastIndexOf(".")
         return file_name.slice(file_index, file_name.length)
     }
-    const onSetChromePath = useMemoizedFn(() => {
-        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(chromePath))
+    const onSetChromePath = useMemoizedFn((value?: string) => {
+        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(value || chromePath))
     })
     const onResetChromePath = useMemoizedFn(() => {
         let path = ""
