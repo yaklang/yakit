@@ -1,7 +1,8 @@
-import { ReactNode } from "react"
-import { SearchProps } from "antd/lib/input"
-import { SelectProps } from "antd"
-import { YakitInputProps } from "../yakitUI/YakitInput/YakitInputType"
+import {ReactNode} from "react"
+import {SearchProps} from "antd/lib/input"
+import {SelectProps} from "antd"
+import {YakitInputProps} from "../yakitUI/YakitInput/YakitInputType"
+import {YakitProtoCheckboxProps} from "./YakitProtoCheckbox/YakitProtoCheckbox"
 
 /**
  * @description:表格的props描述，包裹虚拟表格的父元素需要设置高度
@@ -56,7 +57,7 @@ export interface TableVirtualResizeProps<T> {
     rowSelection?: RowSelectionProps<T>
     enableDrag?: boolean
     onRowClick?: (record: T) => void
-    onRowContextMenu?: (record: T,recordList:T[], e: React.MouseEvent) => void
+    onRowContextMenu?: (record: T, recordList: T[], e: React.MouseEvent) => void
     pagination?: PaginationProps
     onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void
     loading?: boolean
@@ -64,7 +65,7 @@ export interface TableVirtualResizeProps<T> {
     isReset?: boolean //重置表格条件 滚动至0
     isShowTotal?: boolean
     currentIndex?: number // 当前row的index
-    setCurrentIndex?: (v?:number) => void
+    setCurrentIndex?: (v?: number) => void
     scrollToIndex?: number | string // 滚动到指定index
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
@@ -133,7 +134,7 @@ interface FilterSearchInputProps extends SearchProps {
     isShowIcon?: boolean
 }
 
-interface FilterSearchMultipleProps extends SelectProps { }
+interface FilterSearchMultipleProps extends SelectProps {}
 
 export interface SorterProps {
     sorterKey?: string
@@ -186,6 +187,7 @@ export interface FiltersSelectAllProps {
  *  @property {string[]} selectedRowKeys 选中的key值，传入的renderKey
  *  @event (c: boolean, selectedRowsKey: string, selectedRows: T) => void onChangeCheckboxSingle 多选的单个选中
  *  @event (selectedRows: string[], selected: T[], checked: boolean) => void onSelectAll 全选
+ *  @property  getCheckboxProps	选择框的默认属性配置
  */
 export interface RowSelectionProps<T> {
     isAll?: boolean
@@ -193,6 +195,8 @@ export interface RowSelectionProps<T> {
     selectedRowKeys?: string[]
     onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows: T) => void
     onSelectAll?: (selectedRows: string[], selected: T[], checked: boolean) => void
+    /**	选择框的默认属性配置 */
+    getCheckboxProps?: (record: T) => YakitProtoCheckboxProps
 }
 
 export interface PaginationProps {

@@ -44,7 +44,7 @@ import {HTML5Backend} from "react-dnd-html5-backend"
 import type {Identifier, XYCoord} from "dnd-core"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-import {YakitProtoCheckbox} from "./YakitProtoCheckbox/YakitProtoCheckbox"
+import {YakitProtoCheckbox, YakitProtoCheckboxProps} from "./YakitProtoCheckbox/YakitProtoCheckbox"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {randomString} from "@/utils/randomUtil"
 import cloneDeep from "lodash/cloneDeep"
@@ -174,6 +174,19 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         overscan: 10
     })
 
+    const checkboxPropsMap = useCreation(() => {
+        const map = new Map<React.Key, Partial<YakitProtoCheckboxProps>>()
+        const {getCheckboxProps} = rowSelection || {}
+        if (!!getCheckboxProps) {
+            data.forEach((record, index) => {
+                const key = record[renderKey]
+                const checkboxProps = getCheckboxProps(record) || {}
+                map.set(key, checkboxProps)
+            })
+        }
+        return map
+    }, [data, rowSelection?.getCheckboxProps])
+
     useEffect(() => {
         setCurrentRow(currentSelectItem)
     }, [currentSelectItem])
@@ -220,7 +233,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useEffect(() => {
         if (scrollToIndex !== undefined) {
             if (typeof scrollToIndex === "string") {
-                const indexStr = scrollToIndex.split('_')[0]
+                const indexStr = scrollToIndex.split("_")[0]
                 scrollTo(+indexStr)
             } else {
                 scrollTo(scrollToIndex)
@@ -1068,6 +1081,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         enableDragSort={enableDragSort}
                                         moveRowEnd={moveRowEnd}
                                         size={size}
+                                        checkboxPropsMap={checkboxPropsMap}
                                     />
                                 ))}
                             </div>
@@ -1325,6 +1339,7 @@ interface ColRenderProps {
     enableDragSort?: boolean
     moveRowEnd?: () => void
     size: "small" | "middle" | "large"
+    checkboxPropsMap: Map<React.Key, Partial<YakitProtoCheckboxProps>>
 }
 const ColRender = React.memo((props: ColRenderProps) => {
     const {
@@ -1348,7 +1363,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
         width,
         enableDragSort,
         moveRowEnd,
-        size
+        size,
+        checkboxPropsMap
     } = props
 
     return (
@@ -1401,6 +1417,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                     enableDragSort={enableDragSort}
                                     moveRowEnd={moveRowEnd}
                                     size={size}
+                                    checkboxPropsMap={checkboxPropsMap}
                                 />
                             )) || (
                                 <CellRender
@@ -1602,8 +1619,11 @@ const CellRender = React.memo(
         return true
     }
 )
+interface CellRenderDropProps extends CellRenderProps {
+    checkboxPropsMap: Map<React.Key, Partial<YakitProtoCheckboxProps>>
+}
 const CellRenderDrop = React.memo(
-    (props: CellRenderProps) => {
+    (props: CellRenderDropProps) => {
         const {
             item,
             columnsItem,
@@ -1625,7 +1645,8 @@ const CellRenderDrop = React.memo(
             moveRowEnd,
             size,
             currentRow,
-            selectedRows
+            selectedRows,
+            checkboxPropsMap
         } = props
         const dragRef = useRef<any>()
 
@@ -1713,6 +1734,9 @@ const CellRenderDrop = React.memo(
         const rowBgColorFlagFun = (color: string) => {
             return item.data["cellClassName"] && item.data["cellClassName"].indexOf(`color-opacity-bg-${color}`) !== -1
         }
+        const checkboxProps: YakitProtoCheckboxProps = useCreation(() => {
+            return checkboxPropsMap.get(item.data[renderKey]) || {}
+        }, [checkboxPropsMap])
         return (
             <div
                 data-handler-id={handlerId}
@@ -1809,6 +1833,7 @@ const CellRenderDrop = React.memo(
                                     ) !== -1
                                 }
                                 disabled={item.data["disabled"] || item.data["Disabled"]}
+                                {...checkboxProps}
                             />
                         )}
                     </span>

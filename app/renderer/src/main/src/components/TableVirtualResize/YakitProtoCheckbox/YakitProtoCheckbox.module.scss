@@ -37,10 +37,10 @@
         border-radius: 4px;
         border-collapse: separate;
         transition: all 0.1s;
-        &:hover {
+        &:hover:not(.yakit-checkbox-disabled) {
             border-color: var(--yakit-primary-4);
         }
-        &:focus {
+        &:focus:not(.yakit-checkbox-disabled) {
             border-color: var(--yakit-primary-5);
             box-shadow: 0 0 2px 2px var(--yakit-primary-2);
         }
@@ -67,12 +67,14 @@
                 border-left: 0;
                 transform: rotate(45deg) scale(0) translate(-50%, -50%);
                 opacity: 0;
-                transition: all 0.1s cubic-bezier(0.71, -0.46, 0.88, 0.6), opacity 0.1s;
+                transition:
+                    all 0.1s cubic-bezier(0.71, -0.46, 0.88, 0.6),
+                    opacity 0.1s;
                 content: " ";
             }
         }
     }
-    .yakit-proto-checkbox-focus {
+    .yakit-proto-checkbox-focus:not(.yakit-checkbox-disabled) {
         border-color: var(--yakit-primary-5);
         box-shadow: 0 0 2px 2px var(--yakit-primary-2);
     }
@@ -105,7 +107,7 @@
             }
         }
     }
-    .yakit-checkbox-checked-focus {
+    .yakit-checkbox-checked-focus:not(.yakit-checkbox-disabled) {
         border-color: var(--yakit-primary-6);
         background: var(--yakit-primary-6);
     }
@@ -122,7 +124,7 @@
         animation-fill-mode: backwards;
         content: "";
     }
-    .yakit-checkbox-indeterminate {
+    .yakit-checkbox-indeterminate:not(.yakit-checkbox-disabled) {
         background-color: #fff;
         border: 2px solid var(--yakit-primary-5);
         .yakit-proto-checkbox-inner::after {
@@ -140,6 +142,20 @@
                     background-color: var(--yakit-primary-4);
                 }
             }
+        }
+    }
+    .yakit-checkbox-disabled {
+        background-color: var(--yakit-background-color);
+        border: 2px solid var(--yakit-background-color);
+        .yakit-proto-checkbox-inner::after {
+            background-color: var(--yakit-background-color);
+            border: 0;
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            content: " ";
+        }
+        .yakit-checkbox-input {
+            cursor: not-allowed;
         }
     }
 }
