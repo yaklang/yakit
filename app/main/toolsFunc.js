@@ -28,12 +28,16 @@ const clearFolder = (folderPath, length) => {
                     stats: fs.statSync(filePath)
                 }
             })
+            // 有信息的文件集合
+            const validFiles = fileStats.filter((item) => item.stats.size && item.stats.size > 0)
+            // 没信息的文件集合
+            const invalidFiles = fileStats.filter((item) => !item.stats.size || item.stats.size <= 0)
 
             // 按最后修改时间进行排序
-            const sortedFiles = fileStats.sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime())
+            const sortedFiles = validFiles.sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime())
 
             // 保留最近的十个文件，删除其他文件
-            const filesToDelete = sortedFiles.slice(length)
+            const filesToDelete = sortedFiles.slice(length).concat([...invalidFiles])
             filesToDelete.forEach((file) => {
                 fs.unlink(file.path, (err) => {
                     if (err) {

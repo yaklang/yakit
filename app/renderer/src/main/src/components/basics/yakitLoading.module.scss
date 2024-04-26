@@ -115,6 +115,26 @@
             .btn-style {
                 width: 280px;
             }
+
+            .engine-help-wrapper {
+                width: 280px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 4px;
+                line-height: 20px;
+                color: #b4bbca;
+                font-size: 14px;
+                cursor: pointer;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+            }
         }
     }
 }

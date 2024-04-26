@@ -51,6 +51,9 @@ import {DownloadYaklang} from "./update/DownloadYaklang"
 import {HelpDoc} from "./HelpDoc/HelpDoc"
 import {SolidHomeIcon} from "@/assets/icon/solid"
 import {ChatCSGV} from "@/enums/chatCS"
+import {CheckEngineVersion} from "./CheckEngineVersion/CheckEngineVersion"
+import {EngineRemoteGV} from "@/enums/engine"
+import {outputToPrintLog} from "./WelcomeConsoleUtil"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -361,6 +364,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
         onSetYakitStatus("ready")
         onStartLinkEngine()
+        outputToPrintLog("local-start-test-engine-link-status")
     })
 
     const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)
@@ -644,6 +648,73 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
     /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 End ---------- */
+
+    /** ---------- 软件绑定引擎版本检测提示 Start ---------- */
+    const [builtInVersion, setBuiltInVersion] = useState<string>("")
+    const [currentVersion, setCurrentVersion] = useState<string>("")
+    /** 判断版本检测是否已执行过 */
+    const isExecuteRef = useRef<boolean>(false)
+
+    const showCheckVersion = useMemo(() => {
+        if (isExecuteRef.current) return false
+        if (isDev.current) return false
+        if (!builtInVersion) return false
+        if (!currentVersion) return false
+
+        // 判断版本号的库 semver,暂时没用，后续可以用
+        if (currentVersion < builtInVersion) return true
+        return false
+    }, [builtInVersion, currentVersion])
+
+    useEffect(() => {
+        // 监听事件-获取当前连接引擎的版本
+        ipcRenderer.on("fetch-yak-version-callback", async (e: any, v: string) => {
+            if (isExecuteRef.current) return
+            let version = v.replace(/\r?\n/g, "")
+            if (version.startsWith("v")) version = version.slice(1)
+            setCurrentVersion(version)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-yak-version-callback")
+        }
+    }, [])
+
+    useEffect(() => {
+        if (engineLink) {
+            if (isExecuteRef.current) return
+            getRemoteValue(EngineRemoteGV.RemoteCheckEngineVersion)
+                .then((v?: string) => {
+                    if (!v || v === "false") {
+                        // 获取软件对应的内置版本
+                        ipcRenderer
+                            .invoke("fetch-built-in-engine-version")
+                            .then((v: string) => {
+                                if (isExecuteRef.current) return
+                                let version = v.replace(/\r?\n/g, "")
+                                if (version.startsWith("v")) version = version.slice(1)
+                                setBuiltInVersion(version)
+                            })
+                            .catch(() => {})
+                        // 获取当前连接引擎的版本
+                        ipcRenderer.invoke("fetch-yak-version")
+                    } else {
+                        isExecuteRef.current = true
+                    }
+                })
+                .catch(() => {})
+        }
+    }, [engineLink])
+
+    const onCheckVersionCancel = useMemoizedFn((flag: boolean) => {
+        isExecuteRef.current = true
+        if (flag) {
+            if (yaklangKillPss) return
+            setYaklangKillPss(true)
+        }
+        setBuiltInVersion("")
+        setCurrentVersion("")
+    })
+    /** ---------- 软件绑定引擎版本检测提示 End ---------- */
 
     /** ---------- 远程控制(控制端) Start ---------- */
     const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
@@ -936,6 +1007,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
 
     const onReady = useMemoizedFn(() => {
+        outputToPrintLog(`连接成功-start-engineLink:${cacheEngineLink.current}`)
         if (!cacheEngineLink.current) {
             isEnpriTraceAgent() ? SELinkedEngine() : onLinkedEngine()
         }
@@ -957,6 +1029,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setKeepalive(false)
             return
         }
+        outputToPrintLog(`连接失败: ${count}次`)
 
         onSetEngineLink(false)
 
@@ -1274,6 +1347,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 {/* 更新yakit */}
                                 <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
                             </div>
+                        )}
+
+                        {engineLink && (
+                            <CheckEngineVersion
+                                engineMode={engineMode || "local"}
+                                visible={showCheckVersion}
+                                builtInVersion={builtInVersion}
+                                currentVersion={currentVersion}
+                                onCancel={onCheckVersionCancel}
+                            />
                         )}
 
                         <YakitHint

@@ -73,8 +73,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         const onFetchLocalAndLatsVersion = useMemoizedFn(() => {
             setTimeout(() => {
-                handleFetchYakitAndYaklangLatestVersion()
-                handleFetchYakitAndYaklangLocalVersion()
+                handleFetchYakitAndYaklangLocalVersion(handleFetchYakitAndYaklangLatestVersion)
             }, 500)
         })
 
@@ -83,7 +82,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         /** 是否已弹出更新框 */
         const isShowedUpdateHint = useRef<boolean>(false)
 
-        const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async () => {
+        const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async (callback?: () => any) => {
             try {
                 let localYakit = (await ipcRenderer.invoke("fetch-yakit-version")) || ""
                 setCurrentYakit(localYakit)
@@ -104,6 +103,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 setLog(["获取引擎版本号...", `错误: ${error}`])
                 setYakitStatus("checkError")
             }
+
+            if (callback) callback()
         })
 
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {

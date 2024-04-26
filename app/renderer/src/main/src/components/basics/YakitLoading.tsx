@@ -4,10 +4,14 @@ import {YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {DynamicStatusProps} from "@/store"
+import {Tooltip} from "antd"
+import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
 import styles from "./yakitLoading.module.scss"
+
+const {ipcRenderer} = window.require("electron")
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
@@ -260,7 +264,20 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             </div>
                         </div>
 
-                        <div className={styles["engine-log-btn"]}>{btns}</div>
+                        <div className={styles["engine-log-btn"]}>
+                            {btns}
+                            <div
+                                className={styles["engine-help-wrapper"]}
+                                onClick={() => {
+                                    ipcRenderer.invoke("open-yaklang-path")
+                                }}
+                            >
+                                打开引擎所在文件
+                                <Tooltip title={`打开文件夹后运行'start-engine-grpc'，命令行启动引擎查看具体问题`}>
+                                    <OutlineQuestionmarkcircleIcon />
+                                </Tooltip>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
