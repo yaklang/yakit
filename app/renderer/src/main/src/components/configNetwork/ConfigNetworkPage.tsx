@@ -32,8 +32,9 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {PcapMetadata} from "@/models/Traffic"
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {KVPair} from "@/models/kv"
-import {getLocalValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {LocalGVS} from "@/enums/localGlobal"
+import {RemoteGV} from "@/yakitGV"
 
 export interface ConfigNetworkPageProp {}
 
@@ -266,6 +267,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         // 更新 隐私配置 数据
         onSetDelPrivatePlugin()
 
+        // 更新 免配置启动路径
+        onSetChromePath()
+
         if (format === 1) {
             // if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
             //     warn("请添加证书")
@@ -436,6 +440,41 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             </div>
         )
     }, [certificateParams])
+
+    const [chromePath, setChromePath] = useState<string>("")
+    useEffect(() => {
+        getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
+            if (!setting) {
+                ipcRenderer.invoke("GetChromePath").then((chromePath: string) => {
+                    setChromePath(chromePath)
+                    onSetChromePath(chromePath)
+                })
+            } else {
+                const values: string = JSON.parse(setting)
+                setChromePath(values)
+            }
+        })
+    }, [])
+    const suffixFun = (file_name: string) => {
+        let file_index = file_name.lastIndexOf(".")
+        return file_name.slice(file_index, file_name.length)
+    }
+    const onSetChromePath = useMemoizedFn((value?: string) => {
+        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(value || chromePath))
+    })
+    const onResetChromePath = useMemoizedFn(() => {
+        let path = ""
+        ipcRenderer
+            .invoke("GetChromePath")
+            .then((chromePath: string) => {
+                path = chromePath
+            })
+            .finally(() => {
+                setChromePath(path)
+                setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(path))
+            })
+    })
+
     return (
         <>
             <div ref={configRef}>
@@ -701,6 +740,36 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }}
                                     />
                                 </Form.Item>
+                                <Form.Item label={"免配置启动路径"}>
+                                    <YakitInput
+                                        value={chromePath}
+                                        placeholder={"请选择启动路径"}
+                                        size='small'
+                                        onChange={(e) => setChromePath(e.target.value)}
+                                    />
+                                    <Upload
+                                        accept={".exe"}
+                                        multiple={false}
+                                        maxCount={1}
+                                        showUploadList={false}
+                                        beforeUpload={(f) => {
+                                            const file_name = f.name
+                                            const suffix = suffixFun(file_name)
+                                            if (![".exe"].includes(suffix)) {
+                                                warn("上传文件格式错误，请重新上传")
+                                                return false
+                                            }
+                                            // @ts-ignore
+                                            const path: string = f?.path || ""
+                                            if (path.length > 0) {
+                                                setChromePath(path)
+                                            }
+                                            return false
+                                        }}
+                                    >
+                                        <div className={styles["config-select-path"]}>选择路径</div>
+                                    </Upload>
+                                </Form.Item>
                                 <Form.Item
                                     label={"系统代理"}
                                     tooltip='开启以后如未配置代理，会默认走系统代理；如配置其他代理，其优先级高于系统代理'
@@ -752,6 +821,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             title={"确定需要重置配置吗？"}
                                             onConfirm={() => {
                                                 onResetDelPrivatePlugin()
+                                                onResetChromePath()
                                                 ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
                                                     update()
                                                     yakitInfo("重置配置成功")
