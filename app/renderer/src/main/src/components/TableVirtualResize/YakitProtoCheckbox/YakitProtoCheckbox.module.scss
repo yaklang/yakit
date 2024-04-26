@@ -78,7 +78,7 @@
         border-color: var(--yakit-primary-5);
         box-shadow: 0 0 2px 2px var(--yakit-primary-2);
     }
-    .yakit-checkbox-checked {
+    .yakit-checkbox-checked:not(.yakit-checkbox-disabled) {
         background: var(--yakit-primary-5);
         border-color: var(--yakit-primary-5);
         &:hover {
