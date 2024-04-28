@@ -25,15 +25,12 @@ import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
-    ColorSelect,
     ExtractorItem,
     MatcherAndExtractionDrawer,
     MatcherItem,
     defMatcherAndExtractionCode,
     extractorTypeList,
-    filterModeOptions,
-    matcherTypeList,
-    matchersConditionOptions
+    matcherTypeList
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
@@ -55,6 +52,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
+import {MatchersPanel} from "./FuzzerConfigPanels"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -256,6 +254,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     })
 
     const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
+        if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
+            onSwitchCollapse([...activeKey, "匹配器"])
+        }
         if (outsideShowResponseMatcherAndExtraction) {
             if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction(type, "ID:0")
         } else {
@@ -278,13 +279,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     }, [])
 
-    const onRemoveMatcher = useMemoizedFn((i) => {
-        const v = form.getFieldsValue()
-        onSetValue({
-            ...v,
-            matchers: matchersList.filter((m, n) => n !== i)
-        })
-    })
     const onEditMatcher = useMemoizedFn((index) => {
         if (outsideShowResponseMatcherAndExtraction) {
             if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("matchers", `ID:${index}`)
@@ -914,83 +908,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onChange={(key) => onSwitchCollapse(key)}
                             destroyInactivePanel={true}
                         >
-                            <YakitPanel
-                                header={
-                                    <div className={styles["matchers-panel"]}>
-                                        匹配器
-                                        <div className={styles["matchers-number"]}>{matchersList?.length}</div>
-                                    </div>
-                                }
+                            <MatchersPanel
                                 key='匹配器'
-                                extra={
-                                    <>
-                                        <YakitButton
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                const restValue = {
-                                                    matchers: [],
-                                                    filterMode: "drop",
-                                                    hitColor: "red",
-                                                    matchersCondition: "and"
-                                                }
-                                                onReset(restValue)
-                                            }}
-                                            size='small'
-                                        >
-                                            重置
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                            type='text'
-                                            size='small'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
-                                                    onSwitchCollapse([...activeKey, "匹配器"])
-                                                }
-                                                onAddMatchingAndExtractionCard("matchers")
-                                            }}
-                                            className={styles["btn-padding-right-0"]}
-                                        >
-                                            添加/调试
-                                            <HollowLightningBoltIcon />
-                                        </YakitButton>
-                                    </>
-                                }
-                                className={styles["panel-wrapper"]}
-                            >
-                                <div className={styles["matchers-heard"]}>
-                                    <div className={styles["matchers-heard-left"]}>
-                                        <Form.Item name='filterMode' noStyle>
-                                            <YakitRadioButtons
-                                                buttonStyle='solid'
-                                                options={filterModeOptions}
-                                                size='small'
-                                            />
-                                        </Form.Item>
-                                        {filterMode === "onlyMatch" && (
-                                            <Form.Item name='hitColor' noStyle>
-                                                <ColorSelect size='small' />
-                                            </Form.Item>
-                                        )}
-                                    </div>
-                                    <Form.Item name='matchersCondition' noStyle>
-                                        <YakitRadioButtons
-                                            buttonStyle='solid'
-                                            options={matchersConditionOptions}
-                                            size='small'
-                                        />
-                                    </Form.Item>
-                                </div>
-                                <MatchersList
-                                    matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
-                                    onAdd={() => onAddMatchingAndExtractionCard("matchers")}
-                                    onRemove={onRemoveMatcher}
-                                    onEdit={onEditMatcher}
-                                />
-                            </YakitPanel>
+                                onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
+                                onEditMatcher={onEditMatcher}
+                                onSetValue={onSetValue}
+                            />
                             <YakitPanel
                                 header={
                                     <div className={styles["matchers-panel"]}>
@@ -1455,7 +1378,7 @@ interface MatchersListProps {
     onEdit: (index: number) => void
 }
 /**匹配器 */
-const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
+export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matcherValue, onAdd, onRemove, onEdit} = props
     const {matchersList} = matcherValue
     return (
