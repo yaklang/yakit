@@ -64,6 +64,8 @@ export interface GlobalNetworkConfig {
     //
     AppConfigs: ThirdPartyApplicationConfig[]
 
+    AiApiPriority: string[]
+
     AuthInfos: AuthInfo[]
 
     SynScanNetInterface: string
@@ -134,10 +136,11 @@ export const defaultParams: GlobalNetworkConfig = {
     EnableSystemProxyFromEnv: false,
     SkipSaveHTTPFlow: false,
     AppConfigs: [],
+    AiApiPriority:[],
     AuthInfos: [],
     SynScanNetInterface: "",
     ExcludePluginScanURIs: [],
-    IncludePluginScanURIs: []
+    IncludePluginScanURIs: [],
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -670,6 +673,22 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     >
                                         添加第三方应用
                                     </YakitButton>
+                                </Form.Item>
+                                <Form.Item label={"AI使用优先级"}>
+                                    <YakitButton type={"outline1"} onClick={()=>{
+                                        let m = showYakitModal({
+                                            title: "配置AI使用优先级",
+                                            width: 460,
+                                            footer: null,
+                                            closable: true,
+                                            maskClosable: false,
+                                            content: (
+                                                <div style={{margin: 24}}>
+                                                    <AISortContent/>
+                                                </div>
+                                            )
+                                        })
+                                    }}>配置</YakitButton>
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     其他配置
@@ -1255,4 +1274,28 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
             </Form>
         </YakitModal>
     )
+}
+
+interface AISortContentProps {
+
+}
+export const AISortContent: React.FC<AISortContentProps> = (props) => {
+    const sortData = useMemo(()=>{
+        return [
+            {label: "OpenAI", value: "openai"},
+            {label: "Chatglm", value: "chatglm"},
+            {label: "Moonshot", value: "moonshot"},
+        ]
+    },[])
+    return(<div className={styles['ai-sort-content']}>
+        {
+            sortData.map((item)=>{
+                return <div key={item.value}>{item.label}</div>
+            })
+        }
+        <div className={styles['footer']}>
+            <YakitButton type='outline2' size="max">取消</YakitButton>
+            <YakitButton type="primary" size="max">确定</YakitButton>
+        </div>
+    </div>)
 }

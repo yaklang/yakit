@@ -412,10 +412,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         if (!userInfo.isLogin) setChatShow(false)
     }, [userInfo])
     const onChatCS = useMemoizedFn(() => {
-        if (!userInfo.isLogin) {
-            yakitNotify("warning", "请登录后使用")
-            return
-        }
         setChatShow(true)
     })
 

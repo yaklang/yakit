@@ -1078,6 +1078,7 @@ message GlobalNetworkConfig {
 
   repeated string ExcludePluginScanURIs = 15;
   repeated string IncludePluginScanURIs = 16;
+  repeated string AiApiPriority = 18;
 }
 
 message AuthInfo {

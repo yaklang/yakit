@@ -301,3 +301,12 @@
     font-size: 12px;
     cursor: pointer;
 }
+
+
+.ai-sort-content{
+    .footer{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+}
