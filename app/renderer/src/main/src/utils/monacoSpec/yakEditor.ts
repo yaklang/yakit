@@ -499,15 +499,16 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             const editor = modelToEditorMap.get(model);
             if (editor) { // 修复在补全后的函数签名提示问题
                 // 补全后一般会选择某些内容
-                const LParenMatch = model.findPreviousMatch("(", newPosition, false, false, null, false);
+                const LParenMatch = model.findPreviousMatch("(", position, false, false, null, false);
                 if (LParenMatch) {
                     newPosition = LParenMatch.range.getStartPosition();
                 }
-                const RParenMatch = model.findNextMatch(")", newPosition, false, false, null, false);
+                const RParenMatch = model.findNextMatch(")", position, false, false, null, false);
                 // 如果找到了右括号，证明是一个完整的函数调用，可以设置editorToSignatureHelpRangeMap
                 if (RParenMatch) {
                     const RParenPosition = RParenMatch.range.getStartPosition();
-                    editorToSignatureHelpRangeMap.set(editor, new monaco.Range(newPosition.lineNumber, newPosition.column, RParenPosition.lineNumber, RParenPosition.column));
+                    const rng = new monaco.Range(newPosition.lineNumber, newPosition.column, RParenPosition.lineNumber, RParenPosition.column)
+                    editorToSignatureHelpRangeMap.set(editor, rng);
                 }
             }
             const iWord = getWordWithPointAtPosition(model, newPosition);
