@@ -1,15 +1,16 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {showModal} from "../../utils/showModal"
 import {Button, Form} from "antd"
 import {failed, info} from "../../utils/notification"
 import {InputItem, SelectOne} from "../../utils/inputUtil"
 import {StringToUint8Array} from "@/utils/str"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {CacheDropDownGV} from "@/yakitGV"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 
 interface InsertFileFuzzTagProp {
     onFinished: (i: string) => any
@@ -18,30 +19,13 @@ interface InsertFileFuzzTagProp {
 
 type ModeProps = "file" | "file:line" | "file:dir"
 
-const INSERT_FILE_FUZZ_TAG = "insert-file-fuzz-tag"
-
 const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
     const {defaultMode} = props
     const [filename, setFilename] = useState("")
     const [mode, setMode] = useState<ModeProps>(defaultMode || "file")
-    const [autoComplete, setAutoComplete] = useState<string[]>([])
-
-    useEffect(() => {
-        // 缓存数据结构迁移(后续删除)
-        getRemoteValue(INSERT_FILE_FUZZ_TAG).then((data) => {
-            if (!data) return
-            const {fileNameHistory} = JSON.parse(data)
-            setAutoComplete(fileNameHistory)
-
-            setRemoteValue(
-                CacheDropDownGV.WebFuzzerInsertFileFuzzTag,
-                JSON.stringify({defaultValue: "", options: fileNameHistory})
-            )
-        })
-    }, [])
-
-    // 数组去重
-    const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+    const configBaseUrlRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
 
     return (
         <Form
@@ -54,7 +38,6 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     info("选中的文件名为空")
                     return
                 }
-                
                 const index = filename.lastIndexOf(".")
                 if (mode !== "file:dir") {
                     if (index === -1) {
@@ -68,33 +51,7 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     }
                 }
 
-                getRemoteValue(INSERT_FILE_FUZZ_TAG).then((data) => {
-                    if (!data) {
-                        setRemoteValue(
-                            INSERT_FILE_FUZZ_TAG,
-                            JSON.stringify({
-                                fileNameHistory: [filename]
-                            })
-                        )
-                        setRemoteValue(
-                            CacheDropDownGV.WebFuzzerInsertFileFuzzTag,
-                            JSON.stringify({defaultValue: "", options: [filename]})
-                        )
-                        return
-                    }
-                    const {fileNameHistory} = JSON.parse(data)
-                    const newFileNameHistory = filter([filename, ...fileNameHistory]).slice(0, 10)
-                    setRemoteValue(
-                        INSERT_FILE_FUZZ_TAG,
-                        JSON.stringify({
-                            fileNameHistory: newFileNameHistory
-                        })
-                    )
-                    setRemoteValue(
-                        CacheDropDownGV.WebFuzzerInsertFileFuzzTag,
-                        JSON.stringify({defaultValue: "", options: newFileNameHistory})
-                    )
-                })
+                configBaseUrlRef.current.onSetRemoteValues(filename)
 
                 switch (mode) {
                     case "file":
@@ -149,9 +106,8 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                 }}
                 value={filename}
                 autoCompleteProps={{
-                    options: autoComplete.map((i) => {
-                        return {value: i, label: i}
-                    })
+                    ref: configBaseUrlRef,
+                    cacheHistoryDataKey: CacheDropDownGV.WebFuzzerInsertFileFuzzTag
                 }}
             />
             <Form.Item label={<></>} colon={false}>

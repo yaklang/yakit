@@ -1,5 +1,5 @@
 import {Select} from "antd"
-import React, {useEffect, useImperativeHandle, useMemo, useState} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     YakitBaseSelectRef,
     YakitDefaultOptionType,
@@ -11,7 +11,7 @@ import classNames from "classnames"
 import {BaseOptionType} from "antd/lib/select"
 import {YakitTag} from "../YakitTag/YakitTag"
 import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
-import {useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
@@ -39,6 +39,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     }: YakitSelectProps<OptionType>,
     ref: React.Ref<YakitBaseSelectRef>
 ) => {
+    const selectRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(selectRef)
     // 鼠标移入项 用于判断是否显示 ×
     const [mouseEnterItem, setMouseEnterItem] = useState<string>("")
     const [show, setShow] = useState<boolean>(false)
@@ -47,8 +49,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         defaultValue: []
     })
     useEffect(() => {
-        if (cacheHistoryDataKey) onGetRemoteValues()
-    }, [cacheHistoryDataKey])
+        if (cacheHistoryDataKey && inViewport) onGetRemoteValues()
+    }, [cacheHistoryDataKey, inViewport])
     useImperativeHandle(
         ref,
         () => ({
@@ -112,7 +114,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         if (!cacheHistoryDataKey) return
         onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
             const value = cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
-            let newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options)
+            let newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options, !!cacheData.firstUse)
             //非form表单时,设置value
             if (isCacheDefaultValue) {
                 if (props.onChange) props.onChange(value, newOption)
@@ -120,11 +122,11 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             setCacheHistoryData({defaultValue: value, options: newOption as unknown as YakitOptionTypeProps})
         })
     })
-    const getNewOption = useMemoizedFn((options) => {
+    const getNewOption = useMemoizedFn((options, firstUse: boolean) => {
         let newOption: YakitDefaultOptionType[] = []
         if (options.length > 0) {
             newOption = options as YakitDefaultOptionType[]
-        } else if (defaultOptions?.length > 0) {
+        } else if (defaultOptions?.length > 0 && firstUse) {
             newOption = (defaultOptions || []) as YakitDefaultOptionType[]
         } else if ((props?.options?.length || 0) > 0) {
             newOption = props.options as YakitDefaultOptionType[]
@@ -139,7 +141,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 const newHistoryList = cacheHistoryData.options.filter((i) => i.value !== item.value)
                 const cacheData = {
                     options: newHistoryList,
-                    defaultValue: isCacheDefaultValue ? cacheHistoryData.defaultValue : ""
+                    defaultValue: isCacheDefaultValue ? cacheHistoryData.defaultValue.join(",") : ""
                 }
                 const cacheHistory = {
                     options: newHistoryList,
@@ -242,12 +244,13 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             ...extraProps,
             options: supportDelCache
                 ? renderNewOptions.map((item) => renderItem(item))
-                : getNewOption(cacheHistoryData.options),
+                : getNewOption(cacheHistoryData.options, true),
             defaultValue: cacheHistoryData.defaultValue
         }
     }
     return (
         <div
+            ref={selectRef}
             className={classNames(
                 "ant-select",
                 "ant-select-in-form-item",

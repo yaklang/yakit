@@ -111,14 +111,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         visible,
         onInsertYakFuzzer,
         onValuesChange,
-        refreshProxy,
         defaultHttpResponse,
         outsideShowResponseMatcherAndExtraction,
         onShowResponseMatcherAndExtraction,
         inViewportCurrent,
         id,
         matchSubmitFun,
-        showFormContentType
+        showFormContentType,
+        proxyListRef
     } = props
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
@@ -189,47 +189,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     useEffect(() => {
         form.setFieldsValue(advancedConfigValue)
     }, [advancedConfigValue])
-    const proxyListRef = useRef<SelectOptionProps[]>([])
-    useEffect(() => {
-        // 缓存数据结构迁移(后续删除)
-        Promise.allSettled([getRemoteValue(WEB_FUZZ_PROXY_LIST)]).then((cacheRes) => {
-            const defaultValue = form.getFieldValue("proxy") || ""
-            const options =
-                cacheRes[0].status === "fulfilled"
-                    ? !!cacheRes[0].value
-                        ? JSON.parse(cacheRes[0].value)
-                        : [
-                              {
-                                  label: "http://127.0.0.1:7890",
-                                  value: "http://127.0.0.1:7890"
-                              },
-                              {
-                                  label: "http://127.0.0.1:8080",
-                                  value: "http://127.0.0.1:8080"
-                              },
-                              {
-                                  label: "http://127.0.0.1:8082",
-                                  value: "http://127.0.0.1:8082"
-                              }
-                          ]
-                    : [
-                          {
-                              label: "http://127.0.0.1:7890",
-                              value: "http://127.0.0.1:7890"
-                          },
-                          {
-                              label: "http://127.0.0.1:8080",
-                              value: "http://127.0.0.1:8080"
-                          },
-                          {
-                              label: "http://127.0.0.1:8082",
-                              value: "http://127.0.0.1:8082"
-                          }
-                      ]
-            proxyListRef.current = options
-            setRemoteValue(CacheDropDownGV.WebFuzzerProxyList, JSON.stringify({defaultValue, options}))
-        })
-    }, [inViewport, refreshProxy])
 
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...advancedConfigValue, ...allFields}
@@ -324,9 +283,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
         return newRetryActive
     }, [retry, noRetry])
-    const proxyList = useMemo(() => {
-        return proxyListRef.current
-    }, [proxyListRef.current])
 
     const getTextWidth = (text: string) => {
         const tempElement = document.createElement("span")
@@ -511,8 +467,24 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 style={{marginBottom: 5}}
                             >
                                 <YakitSelect
+                                    ref={proxyListRef}
+                                    cacheHistoryDataKey={CacheDropDownGV.WebFuzzerProxyList}
+                                    isCacheDefaultValue={false}
+                                    defaultOptions={[
+                                        {
+                                            label: "http://127.0.0.1:7890",
+                                            value: "http://127.0.0.1:7890"
+                                        },
+                                        {
+                                            label: "http://127.0.0.1:8080",
+                                            value: "http://127.0.0.1:8080"
+                                        },
+                                        {
+                                            label: "http://127.0.0.1:8082",
+                                            value: "http://127.0.0.1:8082"
+                                        }
+                                    ]}
                                     allowClear
-                                    options={proxyList}
                                     placeholder='请输入...'
                                     mode='tags'
                                     size='small'
@@ -1323,14 +1295,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 agentConfigModalVisible={agentConfigModalVisible}
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
-                    const copyProxyList = structuredClone(proxyListRef.current)
-                    copyProxyList.push({label: url, value: url})
-                    proxyListRef.current = copyProxyList.filter(
-                        (item, index, self) => self.findIndex((t) => t.value === item.value) === index
-                    )
                     const v = form.getFieldsValue()
                     const copyProxyArr = structuredClone(v.proxy)
                     copyProxyArr.push(url)
+                    proxyListRef.current.onSetRemoteValues([...new Set(copyProxyArr)])
                     onSetValue({
                         ...v,
                         proxy: [...new Set(copyProxyArr)]

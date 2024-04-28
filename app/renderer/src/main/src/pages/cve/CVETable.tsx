@@ -41,8 +41,9 @@ import {showByContextMenu} from "@/components/functionTemplate/showByContext"
 import {formatDate, formatTimestamp} from "@/utils/timeUtil"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {CacheDropDownGV} from "@/yakitGV"
+import { YakitAutoCompleteRefProps } from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 
 export interface CVETableProp {
     available: boolean
@@ -517,8 +518,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     const [error, setError] = useState<boolean>(false)
     const [percent, setPercent, getPercent] = useGetState<number>(0)
 
+    const proxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
     const [proxy, setProxy] = useState<string>("")
-    const [httpProxyList, setHttpProxyList] = useState<string[]>([])
 
     const errorMessage = useRef<string>("")
     const timer = useRef<number>(0) //超时处理
@@ -575,33 +578,11 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
         setError(false)
         setPercent(0)
         errorMessage.current = ""
-        getProxyListAndProxy()
     }, [visible])
     /**@description 获取代理list历史 和代理 */
-    const getProxyListAndProxy = useMemoizedFn(() => {
-        // 缓存数据结构迁移(后续删除)
-        Promise.allSettled([getRemoteValue("cveProxy"), getRemoteValue("cveProxyList")]).then((cacheRes) => {
-            const defaultValue =
-                cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? cacheRes[0].value : "") : ""
-            const options =
-                cacheRes[1].status === "fulfilled" ? (!!cacheRes[1].value ? JSON.parse(cacheRes[1].value) : []) : []
-            setProxy(defaultValue)
-            setHttpProxyList(options)
-            setRemoteValue(CacheDropDownGV.CVEProxyList, JSON.stringify({defaultValue, options}))
-        })
-    })
     const addProxyList = useMemoizedFn((url) => {
         if (!url) return
-        const index = httpProxyList.findIndex((u) => u === url)
-        if (index === -1) {
-            httpProxyList.push(url)
-            setRemoteValue("cveProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
-        }
-        // 缓存数据结构迁移(后续删除)
-        setRemoteValue(
-            CacheDropDownGV.CVEProxyList,
-            JSON.stringify({defaultValue: url, options: httpProxyList.filter((_, index) => index < 10)})
-        )
+        proxyRef.current.onSetRemoteValues(url)
     })
     const tipNode = useMemo(
         () =>
@@ -640,12 +621,12 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
                             <div className={styles["hint-content-proxy"]}>
                                 <span style={{width: 75}}>设置代理：</span>
                                 <YakitAutoComplete
-                                    options={httpProxyList.map((item) => ({value: item, label: item}))}
+                                    ref={proxyRef}
+                                    cacheHistoryDataKey={CacheDropDownGV.CVEProxyList}
                                     placeholder='设置代理'
                                     value={proxy}
                                     onChange={(v) => {
                                         setProxy(v)
-                                        // addProxyList(proxy)
                                     }}
                                 />
                             </div>

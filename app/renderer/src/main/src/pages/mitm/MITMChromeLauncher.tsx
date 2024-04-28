@@ -40,9 +40,12 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         host: props.host ? props.host : "127.0.0.1",
         port: props.port ? props.port : 8083
     })
+    const userDataDirRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
+    const [defUserDataDir, setDefUserDataDir] = useState<string>("")
     const [isSaveUserData, setSaveUserData] = useState<boolean>(false)
     const [userDataDir, setUserDataDir] = useState<string>("")
-    const [userDataDirArr, setUserDataDirArr] = useState<string[]>([])
 
     useEffect(() => {
         // 获取连接引擎的地址参数
@@ -56,36 +59,14 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
             })
             .catch(() => {})
 
+        getRemoteValue(RemoteGV.MITMUserDataSave).then((cacheRes) => {
+            setSaveUserData(cacheRes === "true")
+        })
+
         ipcRenderer.invoke("getDefaultUserDataDir").then((e: string) => {
-            // 缓存数据结构迁移(后续删除)
-            Promise.allSettled([getRemoteValue("USER_DATA_DIR_ARR")]).then((cacheRes) => {
-                const defaultValue =
-                    cacheRes[0].status === "fulfilled"
-                        ? !!cacheRes[0].value
-                            ? JSON.parse(cacheRes[0].value).userDataDirArr[0]
-                            : e
-                        : e
-                const options =
-                    cacheRes[0].status === "fulfilled"
-                        ? !!cacheRes[0].value
-                            ? JSON.parse(cacheRes[0].value).userDataDirArr
-                            : [e]
-                        : [e]
-                setSaveUserData(
-                    cacheRes[0].status === "fulfilled"
-                        ? !!cacheRes[0].value
-                            ? JSON.parse(cacheRes[0].value).isSaveUserData
-                            : false
-                        : false
-                )
-                setUserDataDir(defaultValue)
-                setUserDataDirArr(options)
-                setRemoteValue(CacheDropDownGV.MITMSaveUserDataDir, JSON.stringify({defaultValue, options}))
-            })
+            setDefUserDataDir(e)
         })
     }, [])
-    // 数组去重
-    const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
     return (
         <Form
             labelCol={{span: 4}}
@@ -103,26 +84,11 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     userDataDir?: string
                     username?: string
                     password?: string
-                } = {...params, username, password}
+                } = {...params, username, password, userDataDir}
 
-                if (isSaveUserData) {
-                    let newUserDataDirArr = filterItem([userDataDir, ...userDataDirArr]).slice(0, 5)
-                    setRemoteValue(
-                        "USER_DATA_DIR_ARR",
-                        JSON.stringify({isSaveUserData: true, userDataDirArr: newUserDataDirArr})
-                    )
-                    newParams.userDataDir = userDataDir
-                } else {
-                    setRemoteValue("USER_DATA_DIR_ARR", JSON.stringify({isSaveUserData: false, userDataDirArr}))
-                }
-
-                // 缓存数据结构迁移(后续删除)
-                setRemoteValue(
-                    CacheDropDownGV.MITMSaveUserDataDir,
-                    JSON.stringify({defaultValue: userDataDir, options: userDataDirArr})
-                )
                 setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + "")
-                
+                userDataDirRef.current.onSetRemoteValues(userDataDir)
+
                 getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
                     if (setting) newParams.chromePath = JSON.parse(setting)
                     ipcRenderer
@@ -168,10 +134,13 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
             {isSaveUserData && (
                 <Form.Item label={" "} colon={false} help={"如要打开新窗口，请设置新路径存储用户数据"}>
                     <YakitAutoComplete
+                        ref={userDataDirRef}
                         style={{width: "calc(100% - 20px)"}}
-                        options={userDataDirArr.map((item) => ({label: item, value: item}))}
-                        placeholder='设置代理'
+                        cacheHistoryDataKey={CacheDropDownGV.MITMSaveUserDataDir}
+                        cacheHistoryListLength={5}
+                        initValue={defUserDataDir}
                         value={userDataDir}
+                        placeholder='设置代理'
                         onChange={(v) => {
                             setUserDataDir(v)
                         }}

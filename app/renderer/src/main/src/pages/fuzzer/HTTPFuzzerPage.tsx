@@ -123,6 +123,8 @@ import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import cloneDeep from "lodash/cloneDeep"
 
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import { defYakitAutoCompleteRef } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import { YakitAutoCompleteRefProps } from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 
 const {ipcRenderer} = window.require("electron")
@@ -689,7 +691,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
     /**@name 是否刷新高级配置中的代理列表 */
-    const [refreshProxy, setRefreshProxy] = useState<boolean>(false)
     const [droppedCount, setDroppedCount] = useState(0)
 
     // state
@@ -729,6 +730,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
+
+    const proxyListRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -1004,8 +1009,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
-            const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
-            getProxyList(proxyToArr)
+            getProxyList(advancedConfigValue.proxy)
         }
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
@@ -1031,51 +1035,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
-        getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
-            try {
-                const preProxyList = remoteData
-                    ? JSON.parse(remoteData)
-                    : [
-                          {
-                              label: "http://127.0.0.1:7890",
-                              value: "http://127.0.0.1:7890"
-                          },
-                          {
-                              label: "http://127.0.0.1:8080",
-                              value: "http://127.0.0.1:8080"
-                          },
-                          {
-                              label: "http://127.0.0.1:8082",
-                              value: "http://127.0.0.1:8082"
-                          }
-                      ]
-
-                const list = [...proxyList, ...preProxyList]
-                const newProxyList: SelectOptionProps[] = []
-                const l = list.length
-
-                for (let i = 0; i < l; i++) {
-                    const oldElement = list[i]
-                    const index = newProxyList.findIndex((ele) => ele.value === oldElement.value)
-                    if (index === -1) {
-                        if (oldElement.value) newProxyList.push(oldElement)
-                    }
-                    if (i >= 9) {
-                        break
-                    }
-                }
-                setRemoteValue(WEB_FUZZ_PROXY_LIST, JSON.stringify(newProxyList)).then(() => {
-                    setRefreshProxy(!refreshProxy)
-                    // 缓存数据结构迁移(后续删除)
-                    setRemoteValue(
-                        CacheDropDownGV.WebFuzzerProxyList,
-                        JSON.stringify({defaultValue: proxyList, options: newProxyList})
-                    )
-                })
-            } catch (error) {
-                yakitFailed("代理列表获取失败:" + error)
-            }
-        })
+        proxyListRef.current.onSetRemoteValues(proxyList)
     })
 
     const [isPause, setIsPause] = useState<boolean>(true) // 暂停或继续请求标识
@@ -1825,7 +1785,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         visible={advancedConfigVisible}
                         onInsertYakFuzzer={onInsertYakFuzzerFun}
                         onValuesChange={onGetFormValue}
-                        refreshProxy={refreshProxy}
                         defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
                         outsideShowResponseMatcherAndExtraction={
                             onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
@@ -1835,6 +1794,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         id={props.id}
                         matchSubmitFun={matchSubmitFun}
                         showFormContentType={advancedConfigShowType}
+                        proxyListRef={proxyListRef}
                     />
                 </React.Suspense>
                 <div className={styles["http-fuzzer-page"]}>
