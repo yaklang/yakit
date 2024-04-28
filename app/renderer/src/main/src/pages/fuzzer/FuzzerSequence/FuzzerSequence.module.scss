@@ -27,10 +27,6 @@
     }
 }
 
-.icon-active {
-    color: var(--yakit-primary-5);
-}
-
 //   ------------------ start ---------------------
 .fuzzer-sequence {
     @extend .display-flex-center;
@@ -142,16 +138,6 @@
                 box-shadow: none;
             }
 
-            // &::after {
-            //     content: "";
-            //     width: 0px;
-            //     height: 8px;
-            //     border-right: 2px solid var(--yakit-helper-text-color);
-            //     position: absolute;
-            //     bottom: -13px;
-            //     left: 50%;
-            //     right: 50%;
-            // }
             &-heard {
                 @extend .display-flex-center;
                 justify-content: space-between;
@@ -162,29 +148,11 @@
                     color: var(--yakit-disable-text-color);
                 }
 
-                .list-item-icon {
-                    @include HTTPFuzzerPageShare.base-icon-card;
-                    color: var(--yakit-body-text-color);
-
-                    path {
-                        stroke-width: 1px
-                    }
-                }
-
-                // .cog-icon {
-                //     @include HTTPFuzzerPageShare.base-icon-card;
-                //     color: var(--yakit-body-text-color);
-                // }
-
                 .drag-sort-disabled-icon {
                     @extend .item-disabled;
                     color: var(--yakit-background-color);
                 }
 
-                .list-item-disabled-icon {
-                    @extend .item-disabled;
-                    color: var(--yakit-disable-text-color);
-                }
 
                 &-title {
                     @extend .display-flex-center;
@@ -205,10 +173,6 @@
         &-item-hover {
             border-color: var(--yakit-primary-5);
             box-shadow: 0 0 2px 2px var(--yakit-primary-2);
-
-            .list-item-icon-hover {
-                background-color: var(--yakit-background-color);
-            }
         }
 
         &-item-hover-none {
@@ -329,12 +293,32 @@
                     font-size: 12px;
                     font-weight: 400;
                     line-height: 16px;
-                    margin-left: 12px
+                    margin-left: 12px;
                 }
             }
         }
     }
 
+    &-midden {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border-right: 1px solid var(--yakit-border-color);
+        width: 300px;
+        flex-shrink: 0;
+        .setting-heard {
+            @extend .display-flex-center;
+            justify-content: space-between;
+            padding: 15px 12px 12px 12px;
+            border-bottom: 1px solid var(--yakit-border-color);
+            height: 49px;
+            font-size: 12px;
+            color: var(--yakit-header-color);
+        }
+    }
+    &-midden-hidden {
+        display: none;
+    }
 }
 
 .cog-popover {

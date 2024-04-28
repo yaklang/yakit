@@ -36,11 +36,13 @@ import {
 import {
     OutlineArrowcirclerightIcon,
     OutlineCodeIcon,
+    OutlineCogIcon,
     OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
     OutlineQuestionmarkcircleIcon,
-    OutlineTrashIcon
+    OutlineTrashIcon,
+    OutlineXIcon
 } from "@/assets/icon/outline"
 import {Divider, Result, Tooltip} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -166,6 +168,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
     const [requestMap, {set: setRequest, get: getRequest}] = useMap<string, AdvancedConfigValueProps>(new Map())
+    const [isShowSetting, setIsShowSetting] = useState<boolean>(false)
 
     // Response
     const [currentSequenceItem, setCurrentSequenceItem] = useState<SequenceProps>()
@@ -377,7 +380,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 Headers: Response.Headers || [],
                 UUID: Response.UUID,
                 Count: countRef.current.get(FuzzerIndex),
-                cellClassName: Response.MatchedByMatcher ? `color-opacity-bg-${Response.HitColor} color-text-${Response.HitColor} color-font-weight-${Response.HitColor}` : ""
+                cellClassName: Response.MatchedByMatcher
+                    ? `color-opacity-bg-${Response.HitColor} color-text-${Response.HitColor} color-font-weight-${Response.HitColor}`
+                    : ""
             } as FuzzerResponse
             if (Response.Ok) {
                 let successList = successBufferRef.current.get(FuzzerIndex)
@@ -793,7 +798,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             yakitNotify("error", "请配置序列后再选中")
             return
         }
+        if (!currentSequenceItem) {
+            setIsShowSetting(true)
+        }
         setCurrentSequenceItem({...val})
+    })
+
+    /**显示页面的高级配置部分参数 */
+    const onShowSetting = useMemoizedFn((val: SequenceProps) => {
+        onSelect(val)
+        if (currentSequenceItem) {
+            setIsShowSetting(!isShowSetting)
+        } else {
+            setIsShowSetting(true)
+        }
     })
 
     const setHotPatchCode = useMemoizedFn((val) => {
@@ -948,7 +966,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                                     onRemove={() => {
                                                                         onRemoveNode(index)
                                                                     }}
-                                                                    onSelect={(val) => onSelect(val)}
+                                                                    onSelect={onSelect}
+                                                                    onShowSetting={onShowSetting}
+                                                                    isShowSetting={isShowSetting}
                                                                 />
                                                             </div>
                                                         )}
@@ -977,6 +997,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         )}
                         <div className={styles["to-end"]}>已经到底啦～</div>
                     </div>
+                </div>
+                <div
+                    className={classNames(styles["fuzzer-sequence-midden"], {
+                        [styles["fuzzer-sequence-midden-hidden"]]: !isShowSetting
+                    })}
+                >
+                    <div className={styles["setting-heard"]}>
+                        <span>{currentSequenceItem?.name}&nbsp;配置</span>
+                        <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setIsShowSetting(false)} />
+                    </div>
+                    <div style={{padding: 12}}>{currentSequenceItem?.pageName}</div>
                 </div>
                 <div className={classNames(styles["fuzzer-sequence-content"])}>
                     {currentSequenceItem && isShowSequenceResponse ? (
@@ -1058,7 +1089,9 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         onUpdateItem,
         onApplyOtherNodes,
         onRemove,
-        onSelect
+        onSelect,
+        onShowSetting,
+        isShowSetting
     } = props
     const [selectVisible, setSelectVisible] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
@@ -1083,6 +1116,9 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
     const onSelectSubMenuById = useMemoizedFn((pageId: string) => {
         ipcRenderer.invoke("send-open-subMenu-item", {pageId})
     })
+    const isActive = useCreation(() => {
+        return isShowSetting && isSelect
+    }, [isShowSetting, isSelect])
     return (
         <>
             {index > 0 && (
@@ -1123,7 +1159,6 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         [styles["fuzzer-sequence-list-item-isDragging"]]: isDragging,
                         [styles["fuzzer-sequence-list-item-isSelect"]]: isSelect,
                         [styles["fuzzer-sequence-list-item-errorIndex"]]: errorIndex === index
-                        // [styles["fuzzer-sequence-list-item-no-line"]]: isShowLine
                     })}
                 >
                     <div className={styles["fuzzer-sequence-list-item-heard"]}>
@@ -1175,10 +1210,11 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                 visible={editNameVisible}
                                 onVisibleChange={setEditNameVisible}
                             >
-                                <OutlinePencilaltIcon
-                                    className={classNames(styles["list-item-icon"], {
-                                        [styles["icon-active"]]: editNameVisible
-                                    })}
+                                <YakitButton
+                                    icon={<OutlinePencilaltIcon />}
+                                    isActive={editNameVisible}
+                                    type='text2'
+                                    disabled={disabled}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                     }}
@@ -1186,15 +1222,27 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                             </YakitPopover>
                         </div>
                         <div className={styles["fuzzer-sequence-list-item-heard-extra"]}>
-                            <OutlineTrashIcon
-                                className={classNames(styles["list-item-icon"], {
-                                    [styles["list-item-disabled-icon"]]: disabled
-                                })}
+                            <YakitButton
+                                icon={<OutlineTrashIcon />}
+                                type='text2'
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     onRemove(item)
                                 }}
+                                disabled={disabled}
                             />
+                            <Divider type='vertical' style={{margin: 0}} />
+                            <YakitButton
+                                icon={<OutlineCogIcon />}
+                                type='text2'
+                                isActive={isActive}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onShowSetting(item)
+                                }}
+                                disabled={disabled}
+                            />
+
                             {index > 0 && (
                                 <>
                                     <Divider type='vertical' style={{margin: 0}} />
@@ -1250,21 +1298,23 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                         }}
                                         overlayClassName={styles["cog-popover"]}
                                     >
-                                        <SolidSwitchConfigurationIcon
-                                            className={classNames(styles["list-item-icon"], {
-                                                [styles["list-item-icon-hover"]]: visible,
-                                                [styles["list-item-disabled-icon"]]: disabled
-                                            })}
+                                        <YakitButton
+                                            icon={<SolidSwitchConfigurationIcon />}
+                                            type='text2'
+                                            disabled={disabled}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
                                         />
                                     </YakitPopover>
                                 </>
                             )}
                             <Divider type='vertical' style={{margin: 0}} />
                             <Tooltip title='前往Fuzzer配置'>
-                                <OutlineArrowcirclerightIcon
-                                    className={classNames(styles["list-item-icon"], {
-                                        [styles["list-item-disabled-icon"]]: disabled
-                                    })}
+                                <YakitButton
+                                    icon={<OutlineArrowcirclerightIcon />}
+                                    type='text2'
+                                    disabled={disabled}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         if (disabled) return
