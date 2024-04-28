@@ -1476,3 +1476,27 @@
         }
     }
 }
+
+.plugin-ai-list{
+    .welcome-plugin-ai {
+        padding: 32px 20px 20px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        .header-title {
+            color: #85899e;
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 40px;
+
+            display: flex;
+            gap: 4px;
+        }
+        .header-subTitle {
+            color: #31343f;
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 40px;
+        }
+    }
+}

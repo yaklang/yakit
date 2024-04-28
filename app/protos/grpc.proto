@@ -1105,6 +1105,7 @@ message GlobalNetworkConfig {
 
   repeated string ExcludePluginScanURIs = 15;
   repeated string IncludePluginScanURIs = 16;
+  repeated string AiApiPriority = 18;
 
   // AI Primary Config 首选 AI 配置项
   // openai / chatglm

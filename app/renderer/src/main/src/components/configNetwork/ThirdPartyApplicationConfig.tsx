@@ -21,6 +21,8 @@ export interface ThirdPartyApplicationConfigProp {
 export function getThirdPartyAppExtraParams(type: string) {
     switch (type) {
         case "openai":
+        case "chatglm":
+        case "moonshot":
             return [
                 {label: "模型名称", key: "model"},
                 {label: "第三方加速域名", key: "domain"},
@@ -67,13 +69,15 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
         {label: "Hunter", value: "hunter"},
         {label: "Quake", value: "quake"},
         {label: "Fofa", value: "fofa"},
-        {label: "OpenAI", value: "openai"}
+        {label: "OpenAI", value: "openai"},
+        {label: "Chatglm", value: "chatglm"},
+        {label: "Moonshot", value: "moonshot"},
     ])
     return (
         <Form
             layout={"horizontal"}
-            labelCol={{span: 4}}
-            wrapperCol={{span: 20}}
+            labelCol={{span: 5}}
+            wrapperCol={{span: 18}}
             onSubmitCapture={(e) => {
                 e.preventDefault()
             }}
