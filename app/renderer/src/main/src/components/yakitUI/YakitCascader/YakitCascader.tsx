@@ -1,14 +1,16 @@
-import React from "react"
 import {Cascader, CascaderProps} from "antd"
 import styles from "./YakitCascader.module.scss"
-import classNames from "classnames"
+import {BaseOptionType, DefaultOptionType} from "antd/lib/cascader"
 
-const YakitCascader: React.FC<CascaderProps<any>> = React.memo((props) => {
+type YakitCascaderProps<OptionType> = CascaderProps<OptionType> & {}
+const YakitCascader = <OptionType extends DefaultOptionType | BaseOptionType = DefaultOptionType>(
+    props: YakitCascaderProps<OptionType>
+) => {
     return (
-        <div className={styles['yakit-cascader']}>
+        <div className={styles["yakit-cascader"]}>
             <Cascader {...props} />
         </div>
     )
-})
+}
 
 export default YakitCascader
