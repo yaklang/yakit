@@ -10,20 +10,20 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {
     ColorSelect,
     filterModeOptions,
-    matcherTypeList,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
-import {MatchersList} from "./HttpQueryAdvancedConfig"
+import {ExtractorsList, MatchersList} from "./HttpQueryAdvancedConfig"
 import {AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 
 const {YakitPanel} = YakitCollapse
+
 interface MatchersPanelProps {
     onAddMatchingAndExtractionCard: (type: MatchingAndExtraction) => void
-    onEditMatcher: (index: number) => void
+    onEdit: (index: number, type: MatchingAndExtraction) => void
     onSetValue?: (v: AdvancedConfigValueProps) => void
 }
 export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) => {
-    const {onAddMatchingAndExtractionCard, onEditMatcher, onSetValue, ...restProps} = props
+    const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
     const form = Form.useFormInstance()
     const filterMode = Form.useWatch("filterMode", form)
     const matchersCondition = Form.useWatch("matchersCondition", form)
@@ -51,6 +51,9 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                 ...restValue
             })
         }
+    })
+    const onEditMatcher = useMemoizedFn((index: number) => {
+        onEdit(index, "matchers")
     })
     const matcherValue = useCreation(() => {
         return {
@@ -127,6 +130,96 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                     onAdd={() => onAddMatchingAndExtractionCard("matchers")}
                     onRemove={onRemoveMatcher}
                     onEdit={onEditMatcher}
+                />
+            </YakitPanel>
+        </>
+    )
+})
+
+interface ExtractorsPanelProps extends MatchersPanelProps {}
+export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props) => {
+    const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
+    const form = Form.useFormInstance()
+    const extractors = Form.useWatch("extractors", form) || []
+    const onReset = useMemoizedFn((restValue) => {
+        form.setFieldsValue({
+            ...restValue
+        })
+        onChangeValue(restValue)
+    })
+    const onRemoveExtractors = useMemoizedFn((i) => {
+        const newExtractors = extractors.filter((m, n) => n !== i)
+        form.setFieldsValue({
+            extractors: newExtractors
+        })
+        onChangeValue(newExtractors)
+    })
+    /** setFieldsValue不会触发Form onValuesChange，抛出去由外界自行解决 */
+    const onChangeValue = useMemoizedFn((restValue) => {
+        if (onSetValue) {
+            const v = form.getFieldsValue()
+            onSetValue({
+                ...v,
+                ...restValue
+            })
+        }
+    })
+    const onEditExtractors = useMemoizedFn((index: number) => {
+        onEdit(index, "extractors")
+    })
+    const extractorValue = useCreation(() => {
+        return {
+            extractorList: extractors
+        }
+    }, [extractors])
+    return (
+        <>
+            <YakitPanel
+                {...restProps}
+                header={
+                    <div className={styles["matchers-panel"]}>
+                        数据提取器
+                        <div className={styles["matchers-number"]}>{extractors?.length}</div>
+                    </div>
+                }
+                key='数据提取器'
+                extra={
+                    <>
+                        <YakitButton
+                            type='text'
+                            colors='danger'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                const restValue = {
+                                    extractors: []
+                                }
+                                onReset(restValue)
+                            }}
+                            size='small'
+                        >
+                            重置
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        <YakitButton
+                            type='text'
+                            size='small'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onAddMatchingAndExtractionCard("extractors")
+                            }}
+                            className={styles["btn-padding-right-0"]}
+                        >
+                            添加/调试
+                            <HollowLightningBoltIcon />
+                        </YakitButton>
+                    </>
+                }
+            >
+                <ExtractorsList
+                    extractorValue={extractorValue}
+                    onAdd={() => onAddMatchingAndExtractionCard("extractors")}
+                    onRemove={onRemoveExtractors}
+                    onEdit={onEditExtractors}
                 />
             </YakitPanel>
         </>

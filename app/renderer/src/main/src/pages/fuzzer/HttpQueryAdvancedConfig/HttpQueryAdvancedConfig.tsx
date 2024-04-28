@@ -52,7 +52,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
-import {MatchersPanel} from "./FuzzerConfigPanels"
+import {ExtractorsPanel, MatchersPanel} from "./FuzzerConfigPanels"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -254,8 +254,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     })
 
     const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
-        if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
-            onSwitchCollapse([...activeKey, "匹配器"])
+        if (activeKey?.findIndex((ele) => ele === type) === -1) {
+            onSwitchCollapse([...activeKey, type])
         }
         if (outsideShowResponseMatcherAndExtraction) {
             if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction(type, "ID:0")
@@ -279,29 +279,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     }, [])
 
-    const onEditMatcher = useMemoizedFn((index) => {
+    /**修改匹配器和提取器 */
+    const onEdit = useMemoizedFn((index, type: MatchingAndExtraction) => {
         if (outsideShowResponseMatcherAndExtraction) {
             if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("matchers", `ID:${index}`)
         } else {
             setVisibleDrawer(true)
             setDefActiveKey(`ID:${index}`)
-            setType("matchers")
-        }
-    })
-    const onRemoveExtractors = useMemoizedFn((i) => {
-        const v = form.getFieldsValue()
-        onSetValue({
-            ...v,
-            extractors: extractorList.filter((m, n) => n !== i)
-        })
-    })
-    const onEditExtractors = useMemoizedFn((index) => {
-        if (outsideShowResponseMatcherAndExtraction) {
-            if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("extractors", `ID:${index}`)
-        } else {
-            setVisibleDrawer(true)
-            setDefActiveKey(`ID:${index}`)
-            setType("extractors")
+            setType(type)
         }
     })
     const retryActive: string[] = useMemo(() => {
@@ -911,59 +896,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <MatchersPanel
                                 key='匹配器'
                                 onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
-                                onEditMatcher={onEditMatcher}
+                                onEdit={onEdit}
                                 onSetValue={onSetValue}
                             />
-                            <YakitPanel
-                                header={
-                                    <div className={styles["matchers-panel"]}>
-                                        数据提取器
-                                        <div className={styles["matchers-number"]}>{extractorList?.length}</div>
-                                    </div>
-                                }
+                            <ExtractorsPanel
                                 key='数据提取器'
-                                extra={
-                                    <>
-                                        <YakitButton
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                const restValue = {
-                                                    extractors: []
-                                                }
-                                                onReset(restValue)
-                                            }}
-                                            size='small'
-                                        >
-                                            重置
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                            type='text'
-                                            size='small'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (activeKey?.findIndex((ele) => ele === "数据提取器") === -1) {
-                                                    onSwitchCollapse([...activeKey, "数据提取器"])
-                                                }
-                                                onAddMatchingAndExtractionCard("extractors")
-                                            }}
-                                            className={styles["btn-padding-right-0"]}
-                                        >
-                                            添加/调试
-                                            <HollowLightningBoltIcon />
-                                        </YakitButton>
-                                    </>
-                                }
-                            >
-                                <ExtractorsList
-                                    extractorValue={{extractorList}}
-                                    onAdd={() => onAddMatchingAndExtractionCard("extractors")}
-                                    onRemove={onRemoveExtractors}
-                                    onEdit={onEditExtractors}
-                                />
-                            </YakitPanel>
+                                onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
+                                onEdit={onEdit}
+                                onSetValue={onSetValue}
+                            />
                             <YakitPanel
                                 header='设置变量'
                                 key='设置变量'
@@ -1430,7 +1371,7 @@ interface ExtractorsListProps {
     onEdit: (index: number) => void
 }
 /**数据提取器 */
-const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
+export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
     const {extractorValue, onAdd, onRemove, onEdit} = props
     const {extractorList} = extractorValue
     return (
