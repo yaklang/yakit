@@ -358,6 +358,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                         </YakitButton>
                     </>
                 }
+                className={styles["params-panel"]}
             >
                 <VariableList
                     ref={variableRef}

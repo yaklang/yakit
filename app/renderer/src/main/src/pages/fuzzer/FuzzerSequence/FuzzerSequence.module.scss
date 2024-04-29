@@ -153,7 +153,6 @@
                     color: var(--yakit-background-color);
                 }
 
-
                 &-title {
                     @extend .display-flex-center;
                     gap: 4px;
@@ -304,7 +303,7 @@
         flex-direction: column;
         height: 100%;
         border-right: 1px solid var(--yakit-border-color);
-        width: 300px;
+        width: 320px;
         flex-shrink: 0;
         .setting-heard {
             @extend .display-flex-center;

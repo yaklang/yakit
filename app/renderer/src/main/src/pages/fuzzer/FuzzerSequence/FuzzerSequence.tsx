@@ -99,6 +99,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
+const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -849,7 +850,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         return flag
     }
-
+    /**多条数据返回的第一条数据的ResponseRaw,一条数据就返回这一条的 ResponseRaw */
+    const defaultHttpResponse: string = useMemo(() => {
+        if (currentSelectResponse) {
+            const {onlyOneResponse, successFuzzer} = currentSelectResponse
+            if (successFuzzer.length > 1) {
+                const firstSuccessResponse = successFuzzer[0]
+                return Uint8ArrayToString(firstSuccessResponse.ResponseRaw)
+            } else {
+                return Uint8ArrayToString(onlyOneResponse.ResponseRaw)
+            }
+        } else {
+            return Uint8ArrayToString(emptyFuzzer.ResponseRaw)
+        }
+    }, [currentSelectResponse, currentSelectRequest])
     return (
         <>
             <div
@@ -1007,7 +1021,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         <span>{currentSequenceItem?.name}&nbsp;配置</span>
                         <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setIsShowSetting(false)} />
                     </div>
-                    <div style={{padding: 12}}>{currentSequenceItem?.pageName}</div>
+                    {currentSequenceItem && (
+                        <React.Suspense fallback={<>loading...</>}>
+                            <FuzzerPageSetting
+                                pageId={currentSequenceItem.pageId}
+                                defaultHttpResponse={defaultHttpResponse}
+                            />
+                        </React.Suspense>
+                    )}
                 </div>
                 <div className={classNames(styles["fuzzer-sequence-content"])}>
                     {currentSequenceItem && isShowSequenceResponse ? (
