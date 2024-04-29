@@ -472,7 +472,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                                         type='outline2'
                                         onClick={() => {
                                             add({Key: "", Value: "", Type: "raw"})
-                                            setVariableActiveKey([
+                                            onSetActiveKey([
                                                 ...(variableActiveKey || []),
                                                 `${variableActiveKey?.length}`
                                             ])
