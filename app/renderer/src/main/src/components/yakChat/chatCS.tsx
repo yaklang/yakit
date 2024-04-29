@@ -55,11 +55,14 @@ import {
     CacheChatCSProps,
     ChatCSAnswerProps,
     ChatCSMultipleInfoProps,
+    ChatCSPluginAnswerProps,
+    ChatCSPluginProps,
     ChatCSSingleInfoProps,
     ChatInfoProps,
     ChatMeInfoProps,
     ChatPluginListProps,
-    LoadObjProps
+    LoadObjProps,
+    PluginListItemProps
 } from "./chatCSType"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
@@ -446,6 +449,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     objects.push(JSON.parse(itemIn))
                 } catch (error) {}
             })
+        
         let resultAll: string = ""
         objects.map((item, index) => {
             const {id = "", role = "", result = ""} = item
@@ -459,25 +463,58 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         })
 
         return answer
-        // if (!flow) return undefined
-        // const lastIndex = flow.lastIndexOf("data:")
-        // if (lastIndex === -1) return undefined
-        // console.log("flow---",flow);
-
-        // let chunk = flow
-        // chunk = chunk.substring(lastIndex)
-        // if (chunk && chunk.startsWith("data:")) chunk = chunk.slice(5)
-
-        // let answer: ChatCSAnswerProps | undefined = undefined
-        // try {
-        //     answer = JSON.parse(chunk)
-        // } catch (error) {}
-
-        // if (!answer) return analysisFlowData(flow.substring(0, lastIndex))
-        // console.log("answer---",answer);
-
-        // return answer
     })
+
+    /** 解析plugin后端流内的内容数据 */
+    const analysisPluginFlowData: (flow: string) => ChatCSPluginAnswerProps | undefined = useMemoizedFn((flow) => {
+        const objects: ChatCSPluginProps[] = []
+        let answer: ChatCSPluginAnswerProps | undefined = undefined
+        let loadObj: LoadObjProps[] = []
+        // 获取加载中的字符 使用正则表达式匹配
+        const regex = /state:\{([^}]+)\}/g
+        let match
+        while ((match = regex.exec(flow)) !== null) {
+            try {
+                loadObj.push(JSON.parse(`{${match[1]}}`) as LoadObjProps)
+            } catch (error) {}
+        }
+
+        if (loadObj.length > 0) {
+            answer = {id: loadObj[loadObj.length - 1].id, role: "", script: [], loadResult: loadObj,input:""}
+        }
+        flow.split("data:")
+            .filter((item) => item.length !== 0)
+            .forEach((itemIn) => {
+                try {
+                    let newItemIn = itemIn
+                    // plugin返回结构需额外移除掉state
+                    const stateIndex = newItemIn.indexOf('state:');
+                    if(isPlugin && stateIndex !== -1){
+                        newItemIn = newItemIn.substring(0, stateIndex);
+                    }
+                    objects.push(JSON.parse(newItemIn))
+                } catch (error) {}
+            })
+        
+        let resultAll: string[] = []
+        objects.map((item, index) => {
+            const {id = "", role = "", script} = item
+            let input:string = ""
+            try {
+                input = JSON.parse(script.arguments).target
+            } catch (error) {}
+            script && resultAll.push(script.name)
+            if (answer && objects.length === index + 1) {
+                answer = {...answer, id, role, script: resultAll,input}
+            }
+            if (!answer && objects.length === index + 1) {
+                answer = {id, role, script: resultAll, input}
+            }
+        })
+
+        return answer
+    })
+
     const setContentPluginList = useMemoizedFn(
         (info: ChatCSSingleInfoProps, contents: ChatCSMultipleInfoProps, group: CacheChatCSProps[]) => {
             /** 插件调试执行由于接口不是流式，只存在一项 */
@@ -509,32 +546,67 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content: "",
                 id: "",
                 load_content: [],
-                end: true
+                end: false
             }
             return await new Promise((resolve, reject) => {
+                
                 chatCSPlugin({
                     ...params,
                     token: userInfo.token,
-                    plugin_scope: maxNumber
+                    plugin_scope: maxNumber,
+                    /** 流式输出逻辑 */
+                    onDownloadProgress: ({event}) => {
+                        if (!event.target) return
+                        const {responseText} = event.target
+
+                        let answer: ChatCSPluginAnswerProps | undefined = analysisPluginFlowData(responseText)
+                        
+                        if (answer && answer.script.length !== 0) {
+                            let mathYakData = yakData.filter((item) => (answer?.script||[]).includes(item.ScriptName))
+                            const newContent = JSON.stringify({
+                                input: answer.input,
+                                data: mathYakData
+                            })
+                            if (cs.content === newContent) return
+                            if (!cs.id) cs.id = answer.id
+                            cs.content = newContent
+                        }
+
+                        if (answer && answer?.loadResult && answer.loadResult.length !== 0) {
+                            if (JSON.stringify(cs.load_content) === JSON.stringify(answer.loadResult)) return
+                            if (!cs.id) cs.id = answer.id
+                            cs.load_content = answer.loadResult
+                        }
+
+                        // console.log("cs---",cs,answer);
+                        
+                        setContentPluginList(cs, contents, group)
+                    }
                 })
                     .then((res) => {
-                        const {data} = res
-                        const {result, id}: {result: {scripts: string[]; input: string}; id: string} = data
-                        const {scripts = [], input = ""} = result
+                        /** 流式输出逻辑 */
+                        if (cs.content.length === 0) {
+                            cs.is_plugin = false
+                            cs.content = "暂无可用解答"
+                            cs.end = true
+                            setContentPluginList(cs, contents, group)
+                        } else {
+                            cs.end = true
+                            setContentPluginList(cs, contents, group)
+                        }
 
-                        if (!cs.id) cs.id = id
-                        let mathYakData = yakData.filter((item) => scripts.includes(item.ScriptName))
-                        cs.content = JSON.stringify({
-                            input,
-                            data: mathYakData
-                        })
-                        setContentPluginList(cs, contents, group)
-                    })
-                    .finally(() => {
+                        // console.log("结束---",res);
                         resolve(`plugin|success`)
                     })
                     .catch((e) => {
-                        reject(`plugin|error|${e}`)
+                        // console.log("catch---",e);
+                        if (!cs.content) {
+                            cs.is_plugin = false
+                            cs.content = "该类型请求异常，请稍后重试"
+                        }
+                        cs.end = true 
+                        setContentPluginList(cs, contents, group)
+                        resolve(`plugin|error|${e}`)
                     })
             })
         }
@@ -582,7 +654,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
                         let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
 
-                        // console.log("answer---", event.target.responseText, answer)
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
                         if (answer && answer.result.length !== 0) {
                             if (cs.content === answer.result) return
@@ -598,15 +669,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     }
                 })
                     .then((res: any) => {
-                        /** 一次性输出逻辑 */
-                        // const answer: ChatCSAnswerProps | undefined = res?.data
-                        // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
-                        // if (answer) {
-                        //     if (!answer.text) cs.content = "暂无可用解答"
-                        //     else cs.content = answer.text
-                        //     cs.id = answer.id
-                        //     setContentList(cs, contents, group)
-                        // }
 
                         // /** 流式输出逻辑 */
                         if (cs.content.length === 0) {
@@ -622,9 +684,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     .catch((e) => {
                         if (!cs.content) {
                             cs.content = "该类型请求异常，请稍后重试"
-                            cs.end = true
-                            setContentList(cs, contents, group)
                         }
+                        cs.end = true
+                        setContentList(cs, contents, group)
                         resolve(`${params.is_bing && "bing|"}error|${e}`)
                     })
             })
@@ -723,16 +785,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 )
             }
             scrollToBottom()
-            /** 一次性输出逻辑 */
-            // chatHistory.reverse()
-            // const abort = new AbortController()
-            // controller.current.push(abort)
-            // const promise = generatePromise(
-            //     {prompt: params.content, intell_type: params.baseType, history: chatHistory, signal: abort.signal},
-            //     contents,
-            //     group
-            // )
-            // promises.push(promise)
         }
         /** 插件调试与执行 - 新接口 */
         if (params.is_plugin) {
@@ -742,7 +794,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 controller.current = abort
                 await new Promise((resolve, reject) => {
                     ipcRenderer.invoke("QueryYakScriptLocalAll").then(async (item: QueryYakScriptsResponse) => {
-                        let scripts: ScriptsProps[] = item.Data.map((i) => ({
+                        // 因后端要求 - 限制只要mitm和端口扫描插件
+                        let scripts: ScriptsProps[] = item.Data.filter((item)=>(item.Type==="port-scan"||item.Type==="mitm")).map((i) => ({
                             script_name: i.ScriptName,
                             Fields: i.Params
                         }))
@@ -765,27 +818,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             }
             scrollToBottom()
         }
-
-        /** 一次性输出逻辑 */
-        // Promise.allSettled(promises)
-        //     .then((res) => {
-        //         // 清除请求计时器
-        //         if (resTimeRef.current) {
-        //             clearInterval(resTimeRef.current)
-        //             resTimeRef.current = null
-        //         }
-        //         // 记录请求结束的时间,保存数据并更新对话时间
-        //         answers.time = getResTime()
-        //         lists.time = formatDate(+new Date())
-        //         setHistroy([...group])
-        //         setStorage([...group])
-        //         // 重置请求状态变量
-        //         setResTime("")
-        //         setLoadingToken("")
-        //         setLoading(false)
-        //         scrollToCurrent()
-        //     })
-        //     .catch(() => {})
 
         /** 流式输出逻辑 */
         setTimeout(() => {
@@ -814,6 +846,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
         /** 流式输出逻辑 */
         isBreak.current = true
+        // console.log("停止回答",controller.current);
+        
         if (controller.current) {
             controller.current.abort()
         }
@@ -1158,7 +1192,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                         <div ref={contentRef} className={styles["body-content"]}>
                                             {currentChat.map((item) => {
                                                 const {token, isMe, time, info, renderType} = item
-
+                                                
                                                 if (isMe) {
                                                     return (
                                                         <ChatUserContent
@@ -1673,8 +1707,6 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     })
     // 选中项
     const [checkedList, setCheckedList] = useState<string[]>([])
-    // 是否显示暂无数据
-    const [showNoPlugin, setShowNoPlugin] = useState<boolean>(false)
     // 私有域地址
     const privateDomainRef = useRef<string>("")
 
@@ -1685,23 +1717,23 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                 const values = JSON.parse(setting)
                 privateDomainRef.current = values.BaseUrl
             }
+            if(!data) return
             // 私有域获取完成后再解析数据
             try {
                 const arr: ChatPluginListProps = JSON.parse(data)
-                if (arr.data.length === 0) {
-                    setShowNoPlugin(true)
-                    return
-                }
+                if (arr.data.length === 0) return
                 setDatsSource(arr)
             } catch (error) {
                 yakitNotify("error", `解析失败|${error}`)
+                // console.log("解析失败|",data);
+                
             }
         })
     })
 
     useEffect(() => {
         getPrivateDomainAndRefList()
-    }, [])
+    }, [data])
 
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
@@ -1741,7 +1773,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     })
     return (
         <>
-            {showNoPlugin ? (
+            {datsSource.data.length===0 ? (
                 <div>暂无匹配插件</div>
             ) : (
                 <>
@@ -1917,6 +1949,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     }, [streamInfo.progressState])
     /**开始执行 */
     const onStartExecute = useMemoizedFn((selectPluginName: string[], Input: string) => {
+        onStop()
         // 任务配置参数
         const taskParams: PluginBatchExecutorTaskProps = {
             Concurrent: extraParamsValue.Concurrent,
@@ -2078,54 +2111,10 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                         </div>
                     </div>
                     <div className={styles["opt-content"]}>
-                        {token === loadingToken ? (
-                            info.content.length !== 0 && (
-                                <>
-                                    <div className={styles["content-style"]}>
-                                        {info.content.map((item, index) => {
-                                            return (
-                                                <React.Fragment key={item.id + index}>
-                                                    {item.is_bing && (
-                                                        <div
-                                                            className={styles["content-type-title"]}
-                                                        >{`# ${"搜索引擎增强"}`}</div>
-                                                    )}
-                                                    {item.is_plugin && (
-                                                        <div
-                                                            className={styles["content-type-title"]}
-                                                        >{`# ${"插件调试执行"}`}</div>
-                                                    )}
-                                                    {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
-                                                    {!(typeof item.end === "boolean" ? item.end : true) && (
-                                                        <div className={styles["load-content-box"]}>
-                                                            {item.load_content.map((itemIn, IndexIn) => (
-                                                                <div
-                                                                    className={styles["load-content-item"]}
-                                                                    key={IndexIn + itemIn.id + "load"}
-                                                                >
-                                                                    {IndexIn + 1 === item.load_content.length ? (
-                                                                        <YakChatLoading />
-                                                                    ) : (
-                                                                        <CheckOutlined
-                                                                            className={styles["load-content-check"]}
-                                                                        />
-                                                                    )}
-                                                                    <div>{itemIn.result}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                    <ChatMarkdown content={item.content} />
-                                                </React.Fragment>
-                                            )
-                                        })}
-                                    </div>
-                                </>
-                            )
-                        ) : (
+
                             <div className={styles["content-style"]}>
                                 {info.content.length === 0 ? (
-                                    "请求出现错误，请稍候再试"
+                                    token === loadingToken?<></>:"请求出现错误，请稍候再试"
                                 ) : (
                                     <>
                                         <>
@@ -2167,7 +2156,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                                 </div>
                                                             )}
                                                             <>
-                                                                {renderType === "plugin-list" ? (
+                                                                {item.is_plugin ? (
                                                                     <PluginListContent
                                                                         setPluginRun={setPluginRun}
                                                                         onStartExecute={onStartExecute}
@@ -2185,7 +2174,6 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                     </>
                                 )}
                             </div>
-                        )}
 
                         {showLoading && (
                             <div className={styles["loading-wrapper"]}>
