@@ -808,6 +808,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     /**显示页面的高级配置部分参数 */
     const onShowSetting = useMemoizedFn((val: SequenceProps) => {
         onSelect(val)
+        if (currentSequenceItem?.pageId !== val?.pageId) return
         if (currentSequenceItem) {
             setIsShowSetting(!isShowSetting)
         } else {
