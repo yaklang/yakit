@@ -1,6 +1,11 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Form, Modal, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
-import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info, RenderTypeOptionVal} from "../../utils/editors"
+import {
+    IMonacoEditor,
+    NewHTTPPacketEditor,
+    HTTP_PACKET_EDITOR_Response_Info,
+    RenderTypeOptionVal
+} from "../../utils/editors"
 import {showDrawer} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
@@ -2102,58 +2107,54 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         secondNodeExtra={secondNodeExtra}
                                     />
                                 ) : (
-                                    <>
-                                        <div
-                                            className={classNames(styles["resize-card"], styles["resize-card-second"])}
-                                            style={{display: firstFull ? "none" : ""}}
-                                        >
-                                            <div className={classNames(styles["resize-card-heard"])}>
-                                                <div className={styles["resize-card-heard-title"]}>
-                                                    {secondNodeTitle()}
-                                                </div>
-                                                <div className={styles["resize-card-heard-extra"]}></div>
-                                                {secondNodeExtra()}
-                                            </div>
-                                            {cachedTotal >= 1 ? (
-                                                <>
-                                                    {showSuccess && (
-                                                        <HTTPFuzzerPageTable
-                                                            // onSendToWebFuzzer={onSendToWebFuzzer}
-                                                            success={showSuccess}
-                                                            data={successFuzzer}
-                                                            setExportData={setExportData}
-                                                            query={query}
-                                                            setQuery={setQuery}
-                                                            extractedMap={extractedMap}
-                                                            isEnd={loading}
-                                                            pageId={props.id}
-                                                            moreLimtAlertMsg='响应数量超过2w，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击”查看全部“查看所有数据'
-                                                            tableKeyUpDownEnabled={!showAllDataRes}
-                                                        />
-                                                    )}
-                                                    {!showSuccess && (
-                                                        <HTTPFuzzerPageTable
-                                                            success={showSuccess}
-                                                            data={failedFuzzer}
-                                                            query={query}
-                                                            setQuery={setQuery}
-                                                            isEnd={loading}
-                                                            extractedMap={extractedMap}
-                                                            pageId={props.id}
-                                                        />
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <Result
-                                                    status={"warning"}
-                                                    title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                                    subTitle={
-                                                        "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                                    }
-                                                />
-                                            )}
+                                    <div
+                                        className={classNames(styles["resize-card"], styles["resize-card-second"])}
+                                        style={{display: firstFull ? "none" : ""}}
+                                    >
+                                        <div className={classNames(styles["resize-card-heard"])}>
+                                            <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
+                                            <div className={styles["resize-card-heard-extra"]}></div>
+                                            {secondNodeExtra()}
                                         </div>
-                                    </>
+                                        {cachedTotal >= 1 ? (
+                                            <>
+                                                {showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        // onSendToWebFuzzer={onSendToWebFuzzer}
+                                                        success={showSuccess}
+                                                        data={successFuzzer}
+                                                        setExportData={setExportData}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        extractedMap={extractedMap}
+                                                        isEnd={loading}
+                                                        pageId={props.id}
+                                                        moreLimtAlertMsg='响应数量超过2w，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击”查看全部“查看所有数据'
+                                                        tableKeyUpDownEnabled={!showAllDataRes}
+                                                    />
+                                                )}
+                                                {!showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        success={showSuccess}
+                                                        data={failedFuzzer}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        isEnd={loading}
+                                                        extractedMap={extractedMap}
+                                                        pageId={props.id}
+                                                    />
+                                                )}
+                                            </>
+                                        ) : (
+                                            <Result
+                                                status={"warning"}
+                                                title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                                subTitle={
+                                                    "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                                }
+                                            />
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         }
@@ -3297,7 +3298,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
                 <YakitButton type='text2' icon={<OutlineXIcon />} size='small' onClick={() => onClose()} />
             </div>
             <div className={styles["payload-extract-content-body"]} style={{display: type === "payload" ? "" : "none"}}>
-                {fuzzerResponse.Payloads?.map((item) => <p>{item}</p>)}
+                {fuzzerResponse.Payloads?.map((item, index) => <p key={index}>{item}</p>)}
                 {fuzzerResponse.Payloads?.length === 0 && "暂无"}
             </div>
             <div
@@ -3306,7 +3307,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
             >
                 <Descriptions bordered size='small' column={2}>
                     {fuzzerResponse.ExtractedResults.map((item, index) => (
-                        <Descriptions.Item label={<YakitCopyText showText={item.Key} />} span={2}>
+                        <Descriptions.Item label={<YakitCopyText showText={item.Key} />} span={2} key={index}>
                             {item.Value ? <YakitCopyText showText={item.Value} /> : ""}
                         </Descriptions.Item>
                     ))}
