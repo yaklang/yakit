@@ -21,6 +21,7 @@ import {CopyableField} from "@/utils/inputUtil"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
+import {RemoteGV} from "@/yakitGV"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -306,13 +307,15 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
             form.setFieldsValue({
                 params: [...params, {Key: "", Value: "", Type: "raw"}]
             })
-            variableRef.current?.setVariableActiveKey([
-                ...(variableRef.current?.variableActiveKey || []),
-                `${params?.length || 0}`
-            ])
+            onSetActiveKey()
         } else {
             yakitFailed(`请将已添加【变量${index}】设置完成后再进行添加`)
         }
+    })
+
+    const onSetActiveKey = useMemoizedFn(() => {
+        const newActiveKeys = [...(variableRef.current?.variableActiveKey || []), `${params?.length || 0}`]
+        variableRef.current?.setVariableActiveKey([...newActiveKeys])
     })
     const onRemove = useMemoizedFn((index: number) => {
         const newParams = params.filter((_, i) => i !== index)
@@ -361,6 +364,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                 className={styles["params-panel"]}
             >
                 <VariableList
+                    cacheKey={RemoteGV.WebFuzzerVariableActiveKey}
                     ref={variableRef}
                     field='params'
                     onDel={onRemove}

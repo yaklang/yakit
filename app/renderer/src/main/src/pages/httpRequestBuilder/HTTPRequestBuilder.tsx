@@ -1,5 +1,5 @@
-import React, {useState, useImperativeHandle, useRef} from "react"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import React, {useState, useImperativeHandle, useRef, useEffect} from "react"
+import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Divider, Form} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
@@ -16,6 +16,7 @@ import {PluginTypes} from "../pluginDebugger/PluginDebuggerPage"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {SetVariableItem} from "../fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
 import classNames from "classnames"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 const {YakitPanel} = YakitCollapse
 
@@ -392,6 +393,7 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
 }
 
 interface VariableListProps {
+    cacheKey?: string
     field: fields | string
     extra?: (i: number, info: {key; name}) => React.ReactNode
     ref: React.Ref<any>
@@ -399,24 +401,46 @@ interface VariableListProps {
     onDel?: (i: number) => any
 }
 export const VariableList: React.FC<VariableListProps> = React.forwardRef(
-    ({extra, field, collapseWrapperClassName = "", onDel}, ref) => {
+    ({extra, field, collapseWrapperClassName = "", onDel, cacheKey}, ref) => {
         const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
+
+        const formListRef = useRef<HTMLDivElement>(null)
+
+        const [inViewport = true] = useInViewport(formListRef)
 
         useImperativeHandle(ref, () => ({
             variableActiveKey,
             setVariableActiveKey
         }))
 
+        useEffect(() => {
+            if (!cacheKey) return
+            if (inViewport) {
+                getRemoteValue(cacheKey).then((data) => {
+                    try {
+                        const activeKeys = !!data ? JSON.parse(data) : ["0"]
+                        setVariableActiveKey([...activeKeys])
+                    } catch (error) {}
+                })
+            }
+        }, [cacheKey, inViewport])
+        const onSetActiveKey = useMemoizedFn((key: string[] | string) => {
+            setVariableActiveKey(key as string[])
+            if (cacheKey) {
+                setRemoteValue(cacheKey, JSON.stringify(key))
+            }
+        })
         return (
             <Form.List name={field}>
                 {(fields, {add}) => {
                     return (
                         <>
+                            <div ref={formListRef} />
                             <YakitCollapse
                                 destroyInactivePanel={true}
                                 defaultActiveKey={variableActiveKey}
                                 activeKey={variableActiveKey}
-                                onChange={(key) => setVariableActiveKey(key as string[])}
+                                onChange={onSetActiveKey}
                                 className={classNames(styles["variable-list"], collapseWrapperClassName)}
                                 bordered={false}
                             >
