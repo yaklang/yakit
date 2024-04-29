@@ -152,7 +152,7 @@ const SelectPayload: React.FC<SelectPayloadProps> = React.memo((props) => {
         if (visible) fetchList()
     }, [visible])
     useEffect(() => {
-        if (contentValue?.length === 0) {
+        if (!contentValue?.length) {
             setValueSelect(undefined)
         }
     }, [contentValue])

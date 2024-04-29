@@ -1,7 +1,6 @@
-import {E} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
 import {PortScanExecuteExtraFormValue} from "../securityTool/newPortScan/NewPortScanType"
 import styles from "./SimpleDetectExtraParamsDrawer.module.scss"
-import {Form, FormInstance} from "antd"
+import {Form} from "antd"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useMemoizedFn} from "ahooks"
 import {useEffect, useState} from "react"
@@ -15,9 +14,7 @@ import {
     BasicCrawlerSettingsPanel,
     FingerprintSettingsPanel,
     NetworkCardSettingsPanel,
-    ScanOtherSettingsPanel,
-    defaultExtraParamsFormValue
-} from "../securityTool/newPortScan/NewPortScanExtraParamsDrawer"
+    ScanOtherSettingsPanel} from "../securityTool/newPortScan/NewPortScanExtraParamsDrawer"
 
 const {YakitPanel} = YakitCollapse
 

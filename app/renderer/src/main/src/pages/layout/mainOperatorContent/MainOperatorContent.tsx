@@ -68,10 +68,8 @@ import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeTyp
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
 import {
-    AdvancedConfigShowProps,
     FuzzerCacheDataProps,
     ShareValueProps,
-    defaultAdvancedConfigShow,
     defaultAdvancedConfigValue,
     defaultPostTemplate,
     getFuzzerCacheData
