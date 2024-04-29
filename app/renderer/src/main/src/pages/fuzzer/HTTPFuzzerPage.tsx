@@ -3246,7 +3246,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             )}
                         </>
                     }
-                    secondNodeStyle={{display: show ? "" : "none", padding: 0}}
+                    secondNodeStyle={{display: show ? "" : "none", padding: 0, border:"1px solid rgb(240, 240, 240)",borderRadius:"0px 0px 0px 4px"}}
                     lineDirection='bottom'
                     secondMinSize={showMatcherAndExtraction ? 300 : 100}
                     {...ResizeBoxProps}

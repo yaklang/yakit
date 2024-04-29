@@ -71,6 +71,32 @@ export interface ChatCSAnswerProps {
     loadResult?: LoadObjProps[]
 }
 
+export interface PluginListItemProps {
+    name: string
+    arguments: string
+}
+
+export interface ChatCSPluginProps {
+    id: string
+    role: string
+    script: PluginListItemProps
+    // 加载中的字符
+    loadResult?: LoadObjProps[]
+}
+/** 后端返回Plugin的数据结构 */
+export interface ChatCSPluginAnswerProps {
+    id: string
+    role: string
+    // 插件数组
+    script: string[]
+    // 目标
+    input: string
+    // 加载中的字符
+    loadResult?: LoadObjProps[]
+}
+
+
+
 /** 后端返回的响应中数据结构 */
 export interface LoadObjProps {
     result: string

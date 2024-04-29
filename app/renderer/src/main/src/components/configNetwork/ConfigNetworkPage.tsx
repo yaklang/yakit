@@ -35,6 +35,7 @@ import {KVPair} from "@/models/kv"
 import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {LocalGVS} from "@/enums/localGlobal"
 import {RemoteGV} from "@/yakitGV"
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd"
 
 export interface ConfigNetworkPageProp {}
 
@@ -1280,19 +1281,52 @@ interface AISortContentProps {
 
 }
 export const AISortContent: React.FC<AISortContentProps> = (props) => {
-    const sortData = useMemo(()=>{
-        return [
-            {label: "OpenAI", value: "openai"},
-            {label: "Chatglm", value: "chatglm"},
-            {label: "Moonshot", value: "moonshot"},
-        ]
-    },[])
+    const [sortData, setSortData] = useState([{label: "OpenAI", value: "openai"},
+    {label: "Chatglm", value: "chatglm"},
+    {label: "Moonshot", value: "moonshot"}]);
+
+
+    const onDragEnd = useMemoizedFn((sourceIndex, destinationIndex) => {
+        if (destinationIndex === sourceIndex) return;
+    
+        const reorderedItems = Array.from(sortData);
+        const [removed] = reorderedItems.splice(sourceIndex, 1);
+        reorderedItems.splice(destinationIndex, 0, removed);
+    
+        setSortData(reorderedItems);
+    })
+
     return(<div className={styles['ai-sort-content']}>
-        {
-            sortData.map((item)=>{
-                return <div key={item.value}>{item.label}</div>
-            })
-        }
+        <DragDropContext
+            onDragEnd={onDragEnd}
+        >
+        <Droppable droppableId='droppable-payload' direction='vertical'>
+        {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+            {sortData.map((item, index) => {
+                return (
+                    <Draggable
+                        key={item.value}
+                        draggableId={item.value}
+                        index={index}
+                    >
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                            >
+                                <div key={item.value}>{item.label}</div>
+                            </div>
+                        )}
+                    </Draggable>
+                )
+            })}
+            {provided.placeholder}
+        </div>
+        )}
+    </Droppable>
+    </DragDropContext>
         <div className={styles['footer']}>
             <YakitButton type='outline2' size="max">取消</YakitButton>
             <YakitButton type="primary" size="max">确定</YakitButton>
