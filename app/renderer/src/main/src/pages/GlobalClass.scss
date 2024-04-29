@@ -8,6 +8,8 @@
 @use "../theme/componentsTheme/input.scss";
 @use "../theme/componentsTheme/descriptions.scss";
 @use "../theme/componentsTheme/pagination.scss";
+@use "../theme/componentsTheme/slider.scss";
+@use "../theme/componentsTheme/progress.scss";
 
 body{
     color: var(--yakit-header-color);

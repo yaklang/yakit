@@ -268,9 +268,8 @@ export interface YakitGetOnlinePluginProps {
     setVisible: (b: boolean) => void
 }
 /**
- * 额外使用该组件的组件:
- * 1、GlobalState
- * 2、PluginDebuggerPage
+ * 一键下载插件
+ * @param listType 'online'默认首页 mine 个人, recycle 回收站 check 审核页面"
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
     const {listType = "online", visible, setVisible} = props

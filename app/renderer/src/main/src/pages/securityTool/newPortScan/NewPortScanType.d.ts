@@ -54,4 +54,6 @@ export interface NewPortScanExecuteFormProps {
 export interface PortScanExecuteExtraFormValue extends PortScanParams {
     /**扫描协议,前端使用 */
     scanProtocol: "tcp" | "udp"
+    /**简易版 安全检测页面的额外参数 预设端口 */
+    presetPort?: string[]
 }

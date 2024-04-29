@@ -52,7 +52,6 @@ import {useStore} from "@/store"
 import {getRemoteProjectValue, getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
 import {GroupCount, QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import {showModal} from "@/utils/showModal"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -69,10 +68,8 @@ import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeTyp
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
 import {
-    AdvancedConfigShowProps,
     FuzzerCacheDataProps,
     ShareValueProps,
-    defaultAdvancedConfigShow,
     defaultAdvancedConfigValue,
     defaultPostTemplate,
     getFuzzerCacheData
@@ -94,6 +91,8 @@ import {
     defaultPocPageInfo,
     defaultScanPortPageInfo,
     saveFuzzerCache,
+    defaultSimpleDetectPageInfo,
+    defaultSpaceEnginePageInfo,
     usePageInfo
 } from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
@@ -102,6 +101,7 @@ import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {PluginGroupType} from "@/pages/plugins/group/PluginGroups"
+import { ExpandAndRetractExcessiveState } from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -293,7 +293,7 @@ const getItemStyle = (isDragging, draggableStyle) => {
 }
 
 const reorder = (list: any[], startIndex: number, endIndex: number) => {
-    const result = Array.from(list)
+    const result = [...list]
     const [removed] = result.splice(startIndex, 1)
     result.splice(endIndex, 0, removed)
     return result
@@ -1096,6 +1096,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.Mod_ScanPort:
                             onScanPortPage(node, order)
                             break
+                        case YakitRoute.SimpleDetect:
+                            onSetSimpleDetectData(node, order)
+                            break
                         default:
                             break
                     }
@@ -1122,6 +1125,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.Mod_ScanPort:
                             onScanPortPage(node, 1)
+                            break
+                        case YakitRoute.SimpleDetect:
+                            onSetSimpleDetectData(node, 1)
                             break
                         default:
                             break
@@ -1364,9 +1370,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             ipcRenderer.invoke("QueryYakScript", newParams).then((item: QueryYakScriptsResponse) => {
                 if (item.Data.length === 0) {
-                    const m = showModal({
+                    const m = showYakitModal({
                         title: "导入插件",
-                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()} />
+                        type:'white',
+                        content: <DownloadAllPlugin onClose={() => m.destroy()} />,
+                        bodyStyle:{padding:24},
+                        footer:null
                     })
                     return m
                 }
@@ -1707,10 +1716,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageGroupId: node.groupId,
             pageId: node.id,
             pageName: node.verbose,
-            pageParamsInfo: {},
+            pageParamsInfo: {
+                spaceEnginePageInfo: {...(node?.pageParams?.spaceEnginePageInfo || defaultSpaceEnginePageInfo)}
+            },
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.Space_Engine, newPageNode)
+    })
+    /**简易版 安全检测 */
+    const onSetSimpleDetectData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.SimpleDetect,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                simpleDetectPageInfo: {...(node?.pageParams?.simpleDetectPageInfo || defaultSimpleDetectPageInfo)}
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.SimpleDetect, newPageNode)
     })
     /**
      * @description 设置专项漏洞
@@ -3751,15 +3777,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     })
 )
 
-interface SimpleTabInterface {
+export interface SimpleTabInterface {
     tabId: string
-    status: "run" | "stop" | "success"
+    status: ExpandAndRetractExcessiveState
 }
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
-    const [tabStatus, setTabStatus] = useState<string>("")
+    const [tabStatus, setTabStatus] = useState<ExpandAndRetractExcessiveState>()
     useEffect(() => {
         emiter.on("simpleDetectTabEvent", onSimpleDetectTabEvent)
         return () => {
@@ -3789,7 +3815,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                             [styles["tab-menu-sub-item-active"]]: isActive,
                             [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
                             [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor,
-                            [styles[`tab-menu-sub-item-${tabStatus}`]]: tabStatus.length > 0
+                            [styles[`tab-menu-sub-item-${tabStatus}`]]: !!tabStatus
                         })}
                         onClick={() => {
                             setSelectSubMenu({...subItem})

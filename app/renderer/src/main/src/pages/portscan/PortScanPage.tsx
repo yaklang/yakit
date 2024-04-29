@@ -56,6 +56,7 @@ export interface PortScanParams {
     LinkPluginConfig?: HybridScanPluginConfig
     /**爬虫是否启用 JS 解析 */
     BasicCrawlerEnableJSParser?: boolean
+    TaskName?:string
 }
 
 export const ScanKind: {[key: string]: string} = {

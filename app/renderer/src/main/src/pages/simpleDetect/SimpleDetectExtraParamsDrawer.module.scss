@@ -1,0 +1,27 @@
+.simple-detect-execute-extra-params-drawer {
+    :global {
+        .ant-collapse-item:first-child > .ant-collapse-header {
+            border-top: 0;
+        }
+    }
+}
+.simple-detect-params-wrapper{
+    padding: 24px;
+}
+
+.to-end {
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    padding-top: 12px;
+    padding-bottom: 24px;
+}
+
+.form-Panel{
+    padding-bottom: 0;
+}
+.form-no-style-wrapper{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

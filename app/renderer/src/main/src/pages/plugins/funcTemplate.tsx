@@ -92,6 +92,7 @@ import UnLogin from "@/assets/unLogin.png"
 import {v4 as uuidv4} from "uuid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
+import has from "lodash/has"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -468,7 +469,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
     })
 
     const onDelTag = useMemoizedFn((value: TagShowOpt) => {
-        if (filters.hasOwnProperty(value.tagType)) {
+        if (has(filters,value.tagType)) {
             const list: TagShowOpt[] = filters[value.tagType]
             filters[value.tagType] = list.filter((ele) => ele.value !== value.value)
             setFilters({...filters})
@@ -1489,7 +1490,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     /**需求：详情的搜索会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
     const onFinish = useMemoizedFn((value) => {
         for (let name of excludeFilterName) {
-            if (value?.hasOwnProperty(name)) delete value[name]
+            if(has(value,name)) delete value[name]
         }
         onFilter({...value, plugin_group: defaultFilter.plugin_group})
         setVisible(false)

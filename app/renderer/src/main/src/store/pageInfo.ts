@@ -53,7 +53,15 @@ interface PageParamsInfoProps {
     brutePageInfo?: BrutePageInfoProps
     /**端口扫描页面 */
     scanPortPageInfo?: ScanPortPageInfoProps
+    /**空间引擎页面 */
+    spaceEnginePageInfo?: SpaceEnginePageInfoProps
+    /**简易版 安全检测页面 */
+    simpleDetectPageInfo?: SimpleDetectPageInfoProps
 }
+export const defaultSpaceEnginePageInfo: SpaceEnginePageInfoProps = {}
+export interface SpaceEnginePageInfoProps {}
+export const defaultSimpleDetectPageInfo: SimpleDetectPageInfoProps = {}
+export interface SimpleDetectPageInfoProps {}
 export const defaultPluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps = {
     runtimeId: "",
     defaultActiveKey: "",

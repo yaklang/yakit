@@ -1,3 +1,5 @@
+@use "../securityTool.scss" as securityTool;
+
 .port-scan-execute-extra-params-drawer {
     :global {
         .ant-drawer-body {
@@ -27,4 +29,21 @@
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.ports-form-extra {
+    @extend %display-flex-center;
+}
+
+.divider-style {
+    @extend %divider-style;
+}
+
+.preset-port-group-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-gap: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    background: var(--yakit-card-background-color);
 }

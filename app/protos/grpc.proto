@@ -319,6 +319,7 @@ service Yak {
 
   rpc SimpleDetect(RecordPortScanRequest) returns (stream ExecResult);
   rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
+  rpc SimpleDetectCreatReport(CreatReportRequest) returns (stream ExecResult);
 
   rpc GetSimpleDetectUnfinishedTask(Empty) returns (GetSimpleDetectUnfinishedTaskResponse);
   rpc GetSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
@@ -3277,6 +3278,11 @@ message RecordPortScanRequest {
   LastRecord LastRecord = 1;
   StartBruteParams StartBruteParams = 3;
   PortScanRequest PortScanRequest = 2;
+}
+
+message CreatReportRequest {
+  string ReportName = 1;
+  string RuntimeId = 2;
 }
 
 message PortScanRequest {

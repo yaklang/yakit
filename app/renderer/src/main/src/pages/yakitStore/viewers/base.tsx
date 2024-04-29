@@ -729,7 +729,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                 const objQuery = {}
                 ;(props.params["columns"] || []).forEach((ele) => {
                     obj[ele] = {
-                        isFilter: !isNaN(Number(item[ele])) // 只有数字类型才排序
+                        isFilter: !Number.isNaN(Number(item[ele])) // 只有数字类型才排序
                     }
                     objQuery[ele] = ""
                 })

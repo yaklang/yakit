@@ -259,7 +259,7 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
     }, [messageList])
     return (
         <PluginExecuteResultTabContent title='任务额外日志与结果'>
-            <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
+            <Timeline reverse={true} pending={loading} style={{marginTop: 10, marginBottom: 10}}>
                 {list.map((e, index) => {
                     return (
                         <Timeline.Item key={e.id} color={LogLevelToCode(e.level)}>
@@ -443,7 +443,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
         const newColumns = columns.map((ele) => ({
             ...ele,
             sorterProps: {
-                sorter: !isNaN(Number(item[ele.dataKey]))
+                sorter: !Number.isNaN(Number(item[ele.dataKey]))
             },
             filterProps: {
                 filtersType: "input"

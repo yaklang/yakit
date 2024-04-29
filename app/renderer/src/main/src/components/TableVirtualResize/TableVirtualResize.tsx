@@ -1929,7 +1929,6 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
         if (!scrollDom) return
         scrollDomRef.current = scrollDom
     }, [])
-    // const oo = useMemo(() => Array.from(Array(99999).keys()), []);
     const [list] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,

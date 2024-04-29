@@ -177,13 +177,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                     })
                 })
                 handlers.setAll(tmp)
-                setCheckList(Array.from(new Set(cacheTmp)))
+                setCheckList([...new Set(cacheTmp)])
             }
         })
         updateHooks()
         return () => {
             // 组价销毁时进行本地缓存 用于后续页面进入默认选项
-            const localSaveData = Array.from(new Set(cacheTmp))
+            const localSaveData = [...new Set(cacheTmp)]
             setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(localSaveData))
             ipcRenderer.removeAllListeners("client-mitm-hooks")
             ipcRenderer.removeAllListeners("client-mitm-loading")

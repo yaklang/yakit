@@ -21,7 +21,6 @@ import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
 import {HoleCollectPage} from "@/pages/loginOperationMenu/HoleCollectPage"
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
-import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
@@ -119,7 +118,9 @@ import {
     BrutePageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
-    ScanPortPageInfoProps
+    ScanPortPageInfoProps,
+    SimpleDetectPageInfoProps,
+    SpaceEnginePageInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -132,6 +133,7 @@ import {
     EnterpriseDeprecatedFirstMenu,
     EnterpriseDeprecatedSecondMenu
 } from "./deprecatedMenu"
+import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -373,7 +375,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Plugin_OP,
     YakitRoute.PoC,
     YakitRoute.Mod_ScanPort,
-    YakitRoute.Mod_Brute
+    YakitRoute.Mod_Brute,
+    YakitRoute.SimpleDetect
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -465,6 +468,10 @@ export interface ComponentParams {
     brutePageInfo?: BrutePageInfoProps
     /**端口扫描页面 */
     scanPortPageInfo?: ScanPortPageInfoProps
+    /**空间引擎页面 */
+    spaceEnginePageInfo?: SpaceEnginePageInfoProps
+    /**简易版 安全检测页面 */
+    simpleDetectPageInfo?: SimpleDetectPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -594,15 +601,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.SimpleDetect:
-            return (
-                <SimpleDetect
-                    tabId={params?.id || ""}
-                    Uid={params?.recoverUid}
-                    BaseProgress={params?.recoverBaseProgress}
-                    YakScriptOnlineGroup={params?.recoverOnlineGroup}
-                    TaskName={params?.recoverTaskName}
-                />
-            )
+            return <SimpleDetect pageId={params?.id || ""} />
         case YakitRoute.ScreenRecorderPage:
             return <ScreenRecorderPage />
         case YakitRoute.DB_ChaosMaker:

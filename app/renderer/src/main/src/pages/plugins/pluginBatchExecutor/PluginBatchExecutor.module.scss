@@ -58,7 +58,7 @@
 .plugin-batch-executor-body {
     display: flex;
     flex-direction: column;
-    padding-right: 0 !important;
+    padding: 0 !important;
     overflow: auto !important;
     :global {
         .plugin-details-item-wrapper {

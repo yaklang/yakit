@@ -48,7 +48,7 @@ export interface HoldGRPCStreamParams {
     /** @name 数据流结束的回调事件 */
     onEnd?: () => any
     /** @name 数据流报错的回调事件 */
-    onError?: (e:any) => void
+    onError?: (e: any) => void
     /** @name 额外的数据过滤方法 */
     dataFilter?: (obj: StreamResult.Message, content: StreamResult.Log) => boolean
     /** @name 设置run-time-id值 */
@@ -63,6 +63,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         token,
         waitTime = 500,
         onEnd,
+        onError,
         dataFilter,
         setRuntimeId
     } = params
@@ -301,6 +302,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         // token-error
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
             failed(`[Mod] ${taskName} error: ${error}`)
+            if (onError) {
+                onError(error)
+            }
         })
         // token-end
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {

@@ -443,7 +443,9 @@ $keyColor: map-keys($colors);
     justify-content: space-between;
     background-color: var(--yakit-card-background-color);
     font-size: 12px;
-    transition: min-width 0.1s linear, padding 0.1s linear;
+    transition:
+        min-width 0.1s linear,
+        padding 0.1s linear;
     flex-basis: fit-content;
 
     &:hover {
@@ -544,16 +546,16 @@ $keyColor: map-keys($colors);
     max-width: 150px;
     background-color: #fff;
 }
-.tab-menu-sub-item-run{
-    color: #40a9ff;
+.tab-menu-sub-item-process {
+    color: var(--yakit-primary-5);
     font-weight: bold;
 }
-.tab-menu-sub-item-stop{
-    color: red;
+.tab-menu-sub-item-error {
+    color: var(--yakit-danger-5);
     font-weight: bold;
 }
-.tab-menu-sub-item-success{
-    color: rgb(82, 196, 26);
+.tab-menu-sub-item-finished {
+    color: var(--yakit-success-5);
     font-weight: bold;
 }
 .page-body {

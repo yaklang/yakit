@@ -45,7 +45,7 @@ import {RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPort
 import {CheckboxValueType} from "antd/es/checkbox/Group"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {yakitNotify} from "@/utils/notification"
-import {onCreateReportModal} from "@/pages/portscan/CreateReport"
+import {CreateReportContentProps, onCreateReportModal} from "@/pages/portscan/CreateReport"
 import {v4 as uuidv4} from "uuid"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
@@ -179,6 +179,16 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
         e.stopPropagation()
         executeContentRef.current?.onCreateReport()
     })
+    const disabledReport = useCreation(() => {
+        switch (executeStatus) {
+            case "finished":
+                return false
+            case "error":
+                return false
+            default:
+                return true
+        }
+    }, [executeStatus])
     return (
         <div className={styles["port-scan-execute-wrapper"]}>
             <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
@@ -213,7 +223,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
                         <>
                             <YakitButton
                                 icon={<OutlineClipboardlistIcon />}
-                                disabled={executeStatus === "default"}
+                                disabled={disabledReport}
                                 onClick={onCreateReport}
                             >
                                 生成报告
@@ -251,14 +261,11 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
 })
 
 export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
-    // -------start 表单放外面的字段
     Ports: defaultPorts,
     Mode: "fingerprint",
     Concurrent: 50,
     SkippedHostAliveScan: false,
-    // -------end 表单放外面的字段
 
-    // Targets: props.sendTarget ? JSON.parse(props.sendTarget || "[]").join(",") : "",
     Targets: "",
     Active: true,
     FingerprintMode: "all",
@@ -379,12 +386,11 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         /**生成报告 */
         const onCreateReport = useMemoizedFn(() => {
             if (executeStatus === "default") return
-            onCreateReportModal({
-                infoState: streamInfo,
-                runPluginCount: selectNum,
+            const params: CreateReportContentProps = {
                 reportName: taskNameRef.current,
-                uuid: uuidRef.current
-            })
+                runtimeId
+            }
+            onCreateReportModal(params)
         })
 
         /**开始执行 */
@@ -527,7 +533,6 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                     <NewPortScanExtraParamsDrawer
                         extraParamsValue={extraParamsValue}
                         visible={extraParamsVisible}
-                        setVisible={setExtraParamsVisible}
                         onSave={onSaveExtraParams}
                     />
                 </React.Suspense>
