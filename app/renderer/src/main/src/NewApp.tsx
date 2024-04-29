@@ -6,7 +6,7 @@ import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore, yakitDynamicStatus} from "./store"
-import {loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
+import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
 import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
@@ -258,7 +258,10 @@ function NewApp() {
         })
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
-            token.length > 0 && loginHTTPFlowsToOnline(token)
+            if(token.length > 0){
+                aboutLoginUpload(token)
+                loginHTTPFlowsToOnline(token)
+            }
         })
         return () => {
             ipcRenderer.removeAllListeners("close-windows-renderer")
