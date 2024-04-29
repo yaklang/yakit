@@ -905,6 +905,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             extra={[
                                 currentSelectItem?.IsTooLargeResponse && (
                                     <YakitDropdownMenu
+                                        key="allRes"
                                         menu={{
                                             data: [
                                                 {key: "tooLargeResponseHeaderFile", label: "查看Header"},
@@ -961,7 +962,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         </YakitButton>
                                     </YakitDropdownMenu>
                                 ),
-                                <YakitButton size='small' onClick={onExecResults}>
+                                <YakitButton size='small' onClick={onExecResults} key='extractData'>
                                     提取数据
                                 </YakitButton>
                             ]}
