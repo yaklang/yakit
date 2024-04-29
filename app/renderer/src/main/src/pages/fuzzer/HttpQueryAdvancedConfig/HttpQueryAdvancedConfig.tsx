@@ -14,21 +14,19 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {yakitFailed, yakitNotify} from "@/utils/notification"
+import {yakitFailed} from "@/utils/notification"
 import {useInViewport, useMemoizedFn} from "ahooks"
-import {Form, Tooltip, Space, Divider, Descriptions} from "antd"
+import {Form, Tooltip, Space, Divider} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     ExtractorItem,
     MatcherAndExtractionDrawer,
     MatcherItem,
-    defMatcherAndExtractionCode,
     extractorTypeList,
     matcherTypeList
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
@@ -44,7 +42,6 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {CopyableField} from "@/utils/inputUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
@@ -52,28 +49,13 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
-import {ExtractorsPanel, MatchersPanel} from "./FuzzerConfigPanels"
+import {ExtractorsPanel, MatchersPanel, VariablePanel} from "./FuzzerConfigPanels"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
-
-const variableModeOptions = [
-    {
-        value: "nuclei-dsl",
-        label: "nuclei"
-    },
-    {
-        value: "fuzztag",
-        label: "fuzztag"
-    },
-    {
-        value: "raw",
-        label: "raw"
-    }
-]
 
 const fuzzTagModeOptions = [
     {
@@ -252,10 +234,20 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             ...restValue
         })
     })
-
-    const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
+    /**添加的额外操作，例如没有展开的时候点击添加需要展开该项 */
+    const onAddExtra = useMemoizedFn((type: string) => {
         if (activeKey?.findIndex((ele) => ele === type) === -1) {
             onSwitchCollapse([...activeKey, type])
+        }
+    })
+
+    const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
+        const keyMap = {
+            matchers: "匹配器",
+            extractors: "数据提取器"
+        }
+        if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
+            onSwitchCollapse([...activeKey, keyMap[type]])
         }
         if (outsideShowResponseMatcherAndExtraction) {
             if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction(type, "ID:0")
@@ -345,7 +337,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
 
-    const variableRef = useRef<any>()
     const methodGetRef = useRef<any>()
     const methodPostRef = useRef<any>()
     const headersRef = useRef<any>()
@@ -413,42 +404,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }
         }
     )
-    /** @description 变量预览 */
-    const onRenderVariables = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
-        e.stopPropagation()
-        ipcRenderer
-            .invoke("RenderVariables", {
-                Params: form.getFieldValue("params") || [],
-                HTTPResponse: StringToUint8Array(defaultHttpResponse || defMatcherAndExtractionCode)
-            })
-            .then((rsp: {Results: {Key: string; Value: string}[]}) => {
-                showYakitModal({
-                    title: "渲染后变量内容",
-                    footer: <></>,
-                    content: (
-                        <div className={styles["render-variables-modal-content"]}>
-                            <Descriptions size={"small"} column={1} bordered={true}>
-                                {rsp.Results.filter((i) => {
-                                    return !(i.Key === "" && i.Value === "")
-                                }).map((data, index) => {
-                                    return (
-                                        <Descriptions.Item
-                                            label={<CopyableField text={data.Key} maxWidth={100} />}
-                                            key={`${data.Key}-${data.Value}`}
-                                        >
-                                            <CopyableField text={data.Value} maxWidth={300} />
-                                        </Descriptions.Item>
-                                    )
-                                })}
-                            </Descriptions>
-                        </div>
-                    )
-                })
-            })
-            .catch((err) => {
-                yakitNotify("error", "预览失败:" + err)
-            })
-    })
+
     const renderContent = useMemoizedFn(() => {
         switch (showFormContentType) {
             case "config":
@@ -905,67 +861,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 onEdit={onEdit}
                                 onSetValue={onSetValue}
                             />
-                            <YakitPanel
-                                header='设置变量'
+                            <VariablePanel
                                 key='设置变量'
-                                extra={
-                                    <>
-                                        <YakitButton
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) =>
-                                                handleVariableReset(
-                                                    e,
-                                                    "params",
-                                                    {Key: "", Value: "", Type: "raw"},
-                                                    variableRef
-                                                )
-                                            }
-                                            size='small'
-                                        >
-                                            重置
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton type='text' onClick={onRenderVariables} size='small'>
-                                            预览
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                            type='text'
-                                            onClick={(e) =>
-                                                handleVariableAdd(
-                                                    e,
-                                                    "params",
-                                                    "设置变量",
-                                                    {Key: "", Value: "", Type: "raw"},
-                                                    variableRef
-                                                )
-                                            }
-                                            className={styles["btn-padding-right-0"]}
-                                            size='small'
-                                        >
-                                            添加
-                                            <PlusIcon />
-                                        </YakitButton>
-                                    </>
-                                }
-                            >
-                                <VariableList
-                                    ref={variableRef}
-                                    field='params'
-                                    onDel={(i) => handleVariableDel(i, "params")}
-                                    extra={(i, info) => (
-                                        <Form.Item name={[info.name, "Type"]} noStyle wrapperCol={{span: 24}}>
-                                            <YakitRadioButtons
-                                                style={{marginLeft: 4}}
-                                                buttonStyle='solid'
-                                                options={variableModeOptions}
-                                                size={"small"}
-                                            />
-                                        </Form.Item>
-                                    )}
-                                ></VariableList>
-                            </YakitPanel>
+                                defaultHttpResponse={defaultHttpResponse}
+                                onAdd={onAddExtra}
+                            />
                             <YakitPanel
                                 header='GET 参数'
                                 key='GET 参数'

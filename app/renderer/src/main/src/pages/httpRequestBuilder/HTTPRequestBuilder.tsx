@@ -52,8 +52,8 @@ export const getDefaultHTTPRequestBuilderParams = (): HTTPRequestBuilderParams =
         Path: ["/"],
         PostParams: [],
         RawHTTPRequest: new Uint8Array(),
-        IsHttpFlowId:false,
-        HTTPFlowId:[]
+        IsHttpFlowId: false,
+        HTTPFlowId: []
     }
 }
 
@@ -424,7 +424,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                                     <YakitPanel
                                         key={`${key + ""}`}
                                         header={`变量 ${name}`}
-                                        className={styles['variable-list-panel']}
+                                        className={styles["variable-list-panel"]}
                                         extra={
                                             <div className={styles["extra-wrapper"]}>
                                                 <TrashIcon
@@ -447,7 +447,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                                     <YakitButton
                                         type='outline2'
                                         onClick={() => {
-                                            add({Key: "", Value: ""})
+                                            add({Key: "", Value: "", Type: "raw"})
                                             setVariableActiveKey([
                                                 ...(variableActiveKey || []),
                                                 `${variableActiveKey?.length}`
