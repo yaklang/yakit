@@ -1764,6 +1764,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 noPopconfirm={isbuttonIsSendReqStatus}
                 retryNoPopconfirm={!(!loading && !isPause)}
                 cancelCurrentHTTPFuzzer={cancelCurrentHTTPFuzzer}
+                resumeAndPause={resumeAndPause}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -2292,6 +2293,7 @@ interface SecondNodeExtraProps {
     noPopconfirm?: boolean
     retryNoPopconfirm?: boolean
     cancelCurrentHTTPFuzzer?: () => void
+    resumeAndPause?: () => void
 }
 
 /**
@@ -2323,7 +2325,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         pageId,
         noPopconfirm = true,
         retryNoPopconfirm = true,
-        cancelCurrentHTTPFuzzer
+        cancelCurrentHTTPFuzzer,
+        resumeAndPause
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -2829,17 +2832,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     if (!onlyOneResponse && cachedTotal > 1 && !showSuccess) {
         return (
             <>
-                <YakitButton
-                    type={"primary"}
-                    size='small'
-                    onClick={() => {
-                        retrySubmit && retrySubmit()
-                    }}
-                    disabled={failedFuzzer.length === 0}
-                >
-                    一键重试
-                </YakitButton>
-                {/* {retryNoPopconfirm ? (
+                {retryNoPopconfirm ? (
                     <YakitButton
                         type={"primary"}
                         size='small'
@@ -2851,23 +2844,32 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         一键重试
                     </YakitButton>
                 ) : (
-                    <YakitPopconfirm
-                        title={"操作一键重试会结束暂停状态，是否确定操作？"}
-                        onConfirm={() => {
-                            cancelCurrentHTTPFuzzer && cancelCurrentHTTPFuzzer()
-                            retrySubmit && retrySubmit()
-                        }}
-                        placement='top'
+                    // <YakitPopconfirm
+                    //     title={"操作一键重试会结束暂停状态，是否确定操作？"}
+                    //     onConfirm={() => {
+                    //         resumeAndPause && resumeAndPause()
+                    //         setTimeout(() => {
+                    //             retrySubmit && retrySubmit()
+                    //         }, 300)
+                    //     }}
+                    //     placement='top'
+                    // >
+                    //     <YakitButton
+                    //         type={"primary"}
+                    //         size='small'
+                    //         disabled={failedFuzzer.length === 0}
+                    //     >
+                    //         一键重试
+                    //     </YakitButton>
+                    // </YakitPopconfirm>
+                    <YakitButton
+                        type={"primary"}
+                        size='small'
+                        disabled={true}
                     >
-                        <YakitButton
-                            type={"primary"}
-                            size='small'
-                            disabled={failedFuzzer.length === 0}
-                        >
-                            一键重试
-                        </YakitButton>
-                    </YakitPopconfirm>
-                )} */}
+                        一键重试
+                    </YakitButton>
+                )}
             </>
         )
     }
