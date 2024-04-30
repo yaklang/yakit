@@ -32,7 +32,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [host, setHost] = useState("")
 
-    const sizeNow = useDebounce(size, {maxWait: 500})
+    const sizeNow = useDebounce(size, {maxWait: 300})
 
     const update = useMemoizedFn(() => {
         ipcRenderer
@@ -49,15 +49,15 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
             })
     })
 
-    const refreshSize = useMemoizedFn(() => {
+    const refresh = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
             .invoke("RequireICMPRandomLength", {})
-            .then((d: {Length: number} | any) => {
+            .then((d: {Length: number; ExternalHost: string} | any) => {
                 setSize(d.Length)
+                setHost(d.ExternalHost)
                 setRecords([])
             })
-            .catch(() => {})
             .finally(() => {
                 setTimeout(() => setLoading(false), 100)
             })
@@ -65,7 +65,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
 
     useEffect(() => {
         if (sizeNow < 100) {
-            refreshSize()
+            refresh()
             return
         }
 
@@ -94,19 +94,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
                     </div>
                     <YakitButton
                         disabled={loading}
-                        onClick={() => {
-                            setLoading(true)
-                            ipcRenderer
-                                .invoke("RequireICMPRandomLength", {})
-                                .then((d: {Length: number; ExternalHost: string} | any) => {
-                                    setSize(d.Length)
-                                    setHost(d.ExternalHost)
-                                    setRecords([])
-                                })
-                                .finally(() => {
-                                    setTimeout(() => setLoading(false), 300)
-                                })
-                        }}
+                        onClick={refresh}
                     >
                         随机生成可用长度
                     </YakitButton>
