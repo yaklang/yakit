@@ -501,7 +501,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             const {id = "", role = "", script} = item
             let input:string = ""
             try {
-                input = JSON.parse(script.arguments).target
+                input = script.arguments.target
             } catch (error) {}
             script && resultAll.push(script.name)
             if (answer && objects.length === index + 1) {
@@ -560,7 +560,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         const {responseText} = event.target
 
                         let answer: ChatCSPluginAnswerProps | undefined = analysisPluginFlowData(responseText)
-                        
+
                         if (answer && answer.script.length !== 0) {
                             let mathYakData = yakData.filter((item) => (answer?.script||[]).includes(item.ScriptName))
                             const newContent = JSON.stringify({
@@ -1773,9 +1773,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     })
     return (
         <>
-            {datsSource.data.length===0 ? (
-                <div>暂无匹配插件</div>
-            ) : (
+            {datsSource.data.length !== 0 && (
                 <>
                     <div>好的，我为你匹配到 {datsSource.data.length} 个可用插件，是否要开始执行？</div>
                     <div className={styles["plugin-list-content"]}>
