@@ -215,10 +215,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         if (loading) return
 
         const data = [...history]
-        if (data.length >= 5) {
-            setAddShow(true)
-            return
-        }
+        // if (data.length >= 5) {
+        //     setAddShow(true)
+        //     return
+        // }
 
         const lists: CacheChatCSProps = {
             token: randomString(10),
