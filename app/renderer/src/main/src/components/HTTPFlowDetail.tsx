@@ -546,7 +546,6 @@ export interface HighLightText {
     IsMatchRequest?: boolean
 }
 
-
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const {id, selectedFlow, refresh, defaultFold = true} = props
     const [flow, setFlow] = useState<HTTPFlow>()
@@ -1243,7 +1242,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
                             }
                         }}
-                        highLightText={highLightText?.filter(i => i.IsMatchRequest)}
+                        highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => i.IsMatchRequest)}
                     />
                 )
             }}
@@ -1407,7 +1406,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         onEditor={(Editor) => {
                             setResEditor(Editor)
                         }}
-                        highLightText={highLightText?.filter(i => !i.IsMatchRequest)}
+                        highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)}
                     />
                 )
             }}
