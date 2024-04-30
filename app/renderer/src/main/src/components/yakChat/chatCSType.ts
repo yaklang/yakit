@@ -73,7 +73,7 @@ export interface ChatCSAnswerProps {
 
 export interface PluginListItemProps {
     name: string
-    arguments: string
+    arguments: any
 }
 
 export interface ChatCSPluginProps {
