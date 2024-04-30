@@ -1,6 +1,6 @@
 import {YakitRoute} from "@/routes/newRoute"
 import {PageNodeItemProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import React, {useEffect, useState} from "react"
 import {shallow} from "zustand/shallow"
 import cloneDeep from "lodash/cloneDeep"
@@ -51,11 +51,35 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
     }, [])
     useUpdateEffect(() => {
         const newAdvancedConfigValue = initWebFuzzerPageInfo().advancedConfigValue
+        form.setFieldsValue({...newAdvancedConfigValue})
         setAdvancedConfigValue({...newAdvancedConfigValue})
     }, [pageId])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
-        // console.log('allFields',allFields)
+        onUpdatePageInfo(allFields)
     })
+    const onUpdatePageInfo = useDebounceFn(
+        (params: AdvancedConfigValueProps) => {
+            if (!pageId) return
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
+            if (!currentItem) return
+            if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
+                const newCurrentItem: PageNodeItemProps = {
+                    ...currentItem,
+                    pageParamsInfo: {
+                        webFuzzerPageInfo: {
+                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                            advancedConfigValue: {
+                                ...advancedConfigValue,
+                                ...params
+                            }
+                        }
+                    }
+                }
+                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+            }
+        },
+        {wait: 500, leading: true}
+    ).run
     /**
      * @description 切换折叠面板，缓存activeKey
      */
@@ -127,7 +151,12 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
                         onEdit={onEdit}
                         onSetValue={onSetValue}
                     />
-                    <VariablePanel key='设置变量' defaultHttpResponse={defaultHttpResponse} onAdd={onAddExtra} />
+                    <VariablePanel
+                        pageId={pageId}
+                        key='设置变量'
+                        defaultHttpResponse={defaultHttpResponse}
+                        onAdd={onAddExtra}
+                    />
                 </YakitCollapse>
 
                 <div className={styles["to-end"]}>已经到底啦～</div>

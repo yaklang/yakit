@@ -666,11 +666,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         if (index === errorIndex && item.pageId) {
             setErrorIndex(-1)
         }
+        if (!currentSequenceItem || !currentSequenceItem.pageId) {
+            setIsShowSetting(true)
+        }
         const originItem = originSequenceList.find((ele) => ele.pageId === item.pageId)
         if (!originItem) return
         sequenceList[index] = {
             ...item
-            //  pageParams: originItem.pageParams
         }
         setCurrentSequenceItem({...item})
         setSequenceList([...sequenceList])
@@ -799,7 +801,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             yakitNotify("error", "请配置序列后再选中")
             return
         }
-        if (!currentSequenceItem) {
+        if (!currentSequenceItem || !currentSequenceItem.pageId) {
             setIsShowSetting(true)
         }
         setCurrentSequenceItem({...val})

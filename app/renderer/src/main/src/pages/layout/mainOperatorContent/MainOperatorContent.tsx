@@ -101,7 +101,7 @@ import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {PluginGroupType} from "@/pages/plugins/group/PluginGroups"
-import { ExpandAndRetractExcessiveState } from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -1372,10 +1372,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (item.Data.length === 0) {
                     const m = showYakitModal({
                         title: "导入插件",
-                        type:'white',
+                        type: "white",
                         content: <DownloadAllPlugin onClose={() => m.destroy()} />,
-                        bodyStyle:{padding:24},
-                        footer:null
+                        bodyStyle: {padding: 24},
+                        footer: null
                     })
                     return m
                 }
@@ -2215,6 +2215,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     useUpdateEffect(() => {
         if (type !== "sequence") {
             emiter.emit("onRefWebFuzzer")
+            /**VariableList组件从数据中心刷新最新的展开项,从序列切换到其他tab时，inViewport不会发生变化，所以采取信号发送 */
+            emiter.emit("onRefVariableActiveKey")
         }
     }, [type])
     const onSetType = useMemoizedFn((res) => {

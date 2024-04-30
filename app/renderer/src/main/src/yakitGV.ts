@@ -87,8 +87,6 @@ export enum RemoteGV {
     MITMHotPatchCodeSave = "mitm_hot_patch_code_save",
     /**@name fuzzer序列页面中,页面配置内容的显/隐 */
     FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
-    /**@name WebFuzzer页面中变量Panel下多个变量的展开收起activeKey */
-    WebFuzzerVariableActiveKey = "web_fuzzer_variable_active_key"
 }
 
 /** 项目逻辑全局变量 */

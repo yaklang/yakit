@@ -249,11 +249,12 @@ const variableModeOptions = [
     }
 ]
 interface VariablePanelProps {
+    pageId: string
     defaultHttpResponse: string
     onAdd: (s: string) => void
 }
 export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) => {
-    const {defaultHttpResponse, onAdd, ...restProps} = props
+    const {defaultHttpResponse, onAdd, pageId, ...restProps} = props
     const form = Form.useFormInstance()
     const params = Form.useWatch("params", form) || []
 
@@ -364,7 +365,8 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                 className={styles["params-panel"]}
             >
                 <VariableList
-                    cacheKey={RemoteGV.WebFuzzerVariableActiveKey}
+                    cacheType='variableActiveKeys'
+                    pageId={pageId}
                     ref={variableRef}
                     field='params'
                     onDel={onRemove}

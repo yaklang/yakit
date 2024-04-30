@@ -1,5 +1,5 @@
 import React, {useState, useImperativeHandle, useRef, useEffect} from "react"
-import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Divider, Form} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
@@ -16,7 +16,10 @@ import {PluginTypes} from "../pluginDebugger/PluginDebuggerPage"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {SetVariableItem} from "../fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
 import classNames from "classnames"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/routes/newRoute"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {YakitPanel} = YakitCollapse
 
@@ -393,43 +396,90 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
 }
 
 interface VariableListProps {
-    cacheKey?: string
+    /**fuzzer页面数据中心的临时缓存的字段名 */
+    cacheType?: "variableActiveKeys"
+    /**fuzzer页面数据中心缓存的页面id */
+    pageId?: string
     field: fields | string
     extra?: (i: number, info: {key; name}) => React.ReactNode
     ref: React.Ref<any>
     collapseWrapperClassName?: string
     onDel?: (i: number) => any
 }
+
+/**
+ * 目前只有fuzzer的高级配置中使用
+ */
 export const VariableList: React.FC<VariableListProps> = React.forwardRef(
-    ({extra, field, collapseWrapperClassName = "", onDel, cacheKey}, ref) => {
+    ({extra, field, collapseWrapperClassName = "", onDel, pageId, cacheType}, ref) => {
+        const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
+            (s) => ({
+                queryPagesDataById: s.queryPagesDataById,
+                updatePagesDataCacheById: s.updatePagesDataCacheById
+            }),
+            shallow
+        )
         const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
         const formListRef = useRef<HTMLDivElement>(null)
 
         const [inViewport = true] = useInViewport(formListRef)
 
-        useImperativeHandle(ref, () => ({
-            variableActiveKey,
-            setVariableActiveKey
-        }))
+        useImperativeHandle(
+            ref,
+            () => ({
+                variableActiveKey,
+                setVariableActiveKey: onSetActiveKey
+            }),
+            [variableActiveKey]
+        )
 
         useEffect(() => {
-            if (!cacheKey) return
+            if (!cacheType) return
+            if (!pageId) return
             if (inViewport) {
-                getRemoteValue(cacheKey).then((data) => {
-                    try {
-                        const activeKeys = !!data ? JSON.parse(data) : ["0"]
-                        setVariableActiveKey([...activeKeys])
-                    } catch (error) {}
-                })
+                getVariableActiveKey()
+                emiter.on("onRefVariableActiveKey", getVariableActiveKey)
             }
-        }, [cacheKey, inViewport])
+            return () => {
+                emiter.off("onRefVariableActiveKey", getVariableActiveKey)
+            }
+        }, [pageId, inViewport])
         const onSetActiveKey = useMemoizedFn((key: string[] | string) => {
             setVariableActiveKey(key as string[])
-            if (cacheKey) {
-                setRemoteValue(cacheKey, JSON.stringify(key))
+            onUpdateVariableActiveKey(key as string[])
+        })
+        const getVariableActiveKey = useMemoizedFn(() => {
+            if (!cacheType) return
+            if (!pageId) return
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
+            if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
+                const {webFuzzerPageInfo} = currentItem.pageParamsInfo
+                const activeKeys = webFuzzerPageInfo[cacheType] || ["0"]
+                setVariableActiveKey([...activeKeys])
             }
         })
+        const onUpdateVariableActiveKey = useDebounceFn(
+            (key: string[]) => {
+                if (!cacheType) return
+                if (!pageId) return
+                const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
+                if (!currentItem) return
+                if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
+                    const newCurrentItem: PageNodeItemProps = {
+                        ...currentItem,
+                        pageParamsInfo: {
+                            webFuzzerPageInfo: {
+                                ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                                [cacheType]: key
+                            }
+                        }
+                    }
+                    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+                }
+            },
+            {wait: 200, leading: true}
+        ).run
         return (
             <Form.List name={field}>
                 {(fields, {add}) => {

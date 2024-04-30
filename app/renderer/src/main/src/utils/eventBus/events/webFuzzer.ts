@@ -20,4 +20,6 @@ export type WebFuzzerEventProps = {
     sequenceSendSwitchTypeToFuzzer: string
     /**发送到MainOperatorContent层中切换【序列】/(【规则】/配置) */
     sendSwitchSequenceToMainOperatorContent: string
+    /**VariableList组件从数据中心刷新最新的展开项 */
+    onRefVariableActiveKey?: string
 }
