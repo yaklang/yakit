@@ -52,7 +52,6 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             })
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 setData(r.Data)
-                console.log(r.Data);
                 props.onSetHighLightText(r.Data.map((i) => ({startOffset: i.Index, highlightLength: i.Length, hoverVal: i.RuleName, IsMatchRequest: i.IsMatchRequest })))
                 setPagination(r.Pagination)
                 setTotal(r.Total)
@@ -64,6 +63,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         if (!props.httpFlowHash) {
             return
         }
+        setParams({...params, HTTPFlowHash: props.httpFlowHash})
         update(1, 10, props.httpFlowHash)
     }, [props.httpFlowHash])
 
