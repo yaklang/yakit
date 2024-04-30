@@ -21,7 +21,6 @@ import {CopyableField} from "@/utils/inputUtil"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
-import {RemoteGV} from "@/yakitGV"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -252,19 +251,24 @@ interface VariablePanelProps {
     pageId: string
     defaultHttpResponse: string
     onAdd: (s: string) => void
+    onSetValue: (v: AdvancedConfigValueProps) => void
 }
 export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) => {
-    const {defaultHttpResponse, onAdd, pageId, ...restProps} = props
+    const {defaultHttpResponse, onAdd, pageId, onSetValue, ...restProps} = props
     const form = Form.useFormInstance()
     const params = Form.useWatch("params", form) || []
 
     const variableRef = useRef<any>()
 
-    const onReset = useMemoizedFn(() => {
+    const onResetPrams = useMemoizedFn(() => {
+        const newParams = [{Key: "", Value: "", Type: "raw"}]
         form.setFieldsValue({
-            params: [{Key: "", Value: "", Type: "raw"}]
+            params: newParams
         })
         variableRef.current?.setVariableActiveKey(["0"])
+        onChangeValue({
+            params: newParams
+        })
     })
     /** @description 变量预览 */
     const onRenderVariables = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
@@ -306,8 +310,12 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
         onAdd("设置变量")
         const index = params.findIndex((ele: {Key: string; Value: string}) => !ele || (!ele.Key && !ele.Value))
         if (index === -1) {
+            const newParams = [...params, {Key: "", Value: "", Type: "raw"}]
             form.setFieldsValue({
-                params: [...params, {Key: "", Value: "", Type: "raw"}]
+                params: newParams
+            })
+            onChangeValue({
+                params: newParams
             })
             onSetActiveKey()
         } else {
@@ -324,6 +332,19 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
         form.setFieldsValue({
             params: [...newParams]
         })
+        onChangeValue({
+            params: newParams
+        })
+    })
+    /** setFieldsValue不会触发Form onValuesChange，抛出去由外界自行解决 */
+    const onChangeValue = useMemoizedFn((restValue) => {
+        if (onSetValue) {
+            const v = form.getFieldsValue()
+            onSetValue({
+                ...v,
+                ...restValue
+            })
+        }
     })
     return (
         <>
@@ -338,7 +359,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                             colors='danger'
                             onClick={(e) => {
                                 e.stopPropagation()
-                                onReset()
+                                onResetPrams()
                             }}
                             size='small'
                         >

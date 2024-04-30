@@ -866,6 +866,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 defaultHttpResponse={defaultHttpResponse}
                                 onAdd={onAddExtra}
                                 pageId={id}
+                                onSetValue={onSetValue}
                             />
                             <YakitPanel
                                 header='GET 参数'

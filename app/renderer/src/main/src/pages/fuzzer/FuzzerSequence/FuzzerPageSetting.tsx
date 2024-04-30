@@ -1,7 +1,7 @@
 import {YakitRoute} from "@/routes/newRoute"
 import {PageNodeItemProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
-import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
-import React, {useEffect, useState} from "react"
+import {useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import React, {useEffect, useRef, useState} from "react"
 import {shallow} from "zustand/shallow"
 import cloneDeep from "lodash/cloneDeep"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
@@ -40,6 +40,10 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
     const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
         initWebFuzzerPageInfo().advancedConfigValue
     )
+
+    const formBodyRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(formBodyRef)
+
     useEffect(() => {
         getRemoteValue(RemoteGV.FuzzerSequenceSettingShow).then((data) => {
             try {
@@ -50,10 +54,11 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         })
     }, [])
     useUpdateEffect(() => {
+        if (!inViewport) return
         const newAdvancedConfigValue = initWebFuzzerPageInfo().advancedConfigValue
         form.setFieldsValue({...newAdvancedConfigValue})
         setAdvancedConfigValue({...newAdvancedConfigValue})
-    }, [pageId])
+    }, [pageId, inViewport])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         onUpdatePageInfo(allFields)
     })
@@ -119,7 +124,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         }
     })
     return (
-        <div className={styles["form-body"]}>
+        <div className={styles["form-body"]} ref={formBodyRef}>
             <Form
                 form={form}
                 colon={false}
@@ -156,6 +161,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
                         key='设置变量'
                         defaultHttpResponse={defaultHttpResponse}
                         onAdd={onAddExtra}
+                        onSetValue={onSetValue}
                     />
                 </YakitCollapse>
 

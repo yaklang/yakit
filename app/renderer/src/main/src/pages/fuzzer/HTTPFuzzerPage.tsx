@@ -1345,6 +1345,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ...currentItem,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
+                    ...(currentItem.pageParamsInfo?.webFuzzerPageInfo||{}),
                     pageId: param.pageId,
                     advancedConfigValue: {
                         ...param.advancedConfigValue
