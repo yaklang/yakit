@@ -264,6 +264,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
         form.setFieldsValue({
             params: [{Key: "", Value: "", Type: "raw"}]
         })
+        variableRef.current?.setVariableActiveKey(["0"])
     })
     /** @description 变量预览 */
     const onRenderVariables = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
