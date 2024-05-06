@@ -448,11 +448,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                           if (onDebug) {
                                                               onDebug(Uint8ArrayToString(record.ResponseRaw))
                                                           } else {
-                                                              ipcRenderer.invoke("send-open-matcher-and-extraction", {
+                                                              const value = {
                                                                   httpResponseCode: Uint8ArrayToString(
                                                                       record.ResponseRaw
                                                                   )
-                                                              })
+                                                              }
+                                                              emiter.emit(
+                                                                  "openMatcherAndExtraction",
+                                                                  JSON.stringify(value)
+                                                              )
                                                           }
                                                       }}
                                                       style={{
@@ -905,7 +909,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             extra={[
                                 currentSelectItem?.IsTooLargeResponse && (
                                     <YakitDropdownMenu
-                                        key="allRes"
+                                        key='allRes'
                                         menu={{
                                             data: [
                                                 {key: "tooLargeResponseHeaderFile", label: "查看Header"},

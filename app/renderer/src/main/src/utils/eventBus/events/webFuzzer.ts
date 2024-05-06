@@ -22,4 +22,6 @@ export type WebFuzzerEventProps = {
     sendSwitchSequenceToMainOperatorContent: string
     /**VariableList组件从数据中心刷新最新的展开项 */
     onRefVariableActiveKey?: string
+    /**打开匹配器和提取器Modal */
+    openMatcherAndExtraction: string
 }

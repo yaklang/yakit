@@ -101,10 +101,6 @@ module.exports = (win, getClient) => {
         win.webContents.send("fetch-positioning-http-history", params)
     })
 
-    // webfuzzer 打开提取器和匹配器Modal
-    ipcMain.handle("send-open-matcher-and-extraction", (e, params) => {
-        win.webContents.send("fetch-open-matcher-and-extraction", params)
-    })
 
     // 新建组 onAddGroup
     ipcMain.handle("send-add-group", (e, params) => {

@@ -303,6 +303,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         } else {
             setCurrentSelectRequest(undefined)
             setCurrentSelectResponse(undefined)
+            setIsShowSetting(false)
         }
         return () => {
             setCurrentSelectRequest(undefined)

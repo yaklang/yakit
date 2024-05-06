@@ -14,7 +14,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {yakitFailed} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import {Form, Tooltip, Space, Divider} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
@@ -143,7 +143,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }, [inViewport])
 
     useEffect(() => {
-        ipcRenderer.on("fetch-open-matcher-and-extraction", openDrawer)
+        emiter.on("openMatcherAndExtraction", openDrawer)
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
             try {
                 // setTimeout(() => {
@@ -155,15 +155,20 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }
         })
         return () => {
-            ipcRenderer.removeListener("fetch-open-matcher-and-extraction", openDrawer)
+            emiter.off("openMatcherAndExtraction", openDrawer)
         }
     }, [])
 
-    const openDrawer = useMemoizedFn((e, res: {httpResponseCode: string}) => {
-        if (inViewportCurrent && !visibleDrawer) {
-            setVisibleDrawer(true)
+    const openDrawer = useMemoizedFn((val) => {
+        try {
+            const res = JSON.parse(val)
+            if (inViewportCurrent && !visibleDrawer) {
+                setVisibleDrawer(true)
+            }
+            setHttpResponse(res.httpResponseCode)
+        } catch (error) {
+            yakitNotify("error", "openMatcherAndExtraction 解析数据失败")
         }
-        setHttpResponse(res.httpResponseCode)
     })
 
     useEffect(() => {

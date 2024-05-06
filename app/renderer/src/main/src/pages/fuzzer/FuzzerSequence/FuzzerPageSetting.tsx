@@ -110,12 +110,10 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
             onSwitchCollapse([...activeKey, keyMap[type]])
         }
-        // if (outsideShowResponseMatcherAndExtraction) {
-        //     if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction(type, "ID:0")
-        // } else {
-        //     setType(type)
-        //     setVisibleDrawer(true)
+        // const value = {
+        //     httpResponseCode: defaultHttpResponse
         // }
+        // emiter.emit("openMatcherAndExtraction", JSON.stringify(value))
     })
     /**添加的额外操作，例如没有展开的时候点击添加需要展开该项 */
     const onAddExtra = useMemoizedFn((type: string) => {
