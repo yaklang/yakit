@@ -536,7 +536,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             case "idle":
                 return (
                     <>
-                        <PluginGroup selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
+                        <PluginGroup selectGroup={selectGroup} setSelectGroup={setSelectGroup} excludeType={['yak', 'codec', 'nuclei']}/>
                         <div style={{paddingRight: 9}}>
                             <PluginSearch
                                 tag={tags}

@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab} from "../local/PluginsLocalDetail"
@@ -110,6 +110,10 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
             </>
         )
     }, [])
+    const pluginGroupExcludeType = useMemo(() => {
+        const typeArr = filters.plugin_type?.map((i) => i.value) || []
+        return [...new Set([...typeArr, "yak", "codec"])]
+    }, [filters])
     if (!plugin) return null
     return (
         <>
@@ -123,6 +127,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 setFilters={setFilters}
                 allCheck={allCheck}
                 setAllCheck={setAllCheck}
+                pluginGroupExcludeType={pluginGroupExcludeType}
             >
                 <PluginDetailsTab
                     executorShow={!pluginLoading}

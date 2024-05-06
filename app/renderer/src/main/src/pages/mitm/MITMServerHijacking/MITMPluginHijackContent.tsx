@@ -460,6 +460,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         <PluginGroup
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
+                            excludeType={['yak', 'codec', 'nuclei']}
                             wrapperClassName={styles["plugin-group"]}
                         />
                         <YakModuleListHeard

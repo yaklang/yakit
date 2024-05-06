@@ -1499,10 +1499,10 @@ export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = 
 }
 
 /**本地获取插件组数据 */
-export const apiFetchQueryYakScriptGroupLocal: (All?: boolean) => Promise<GroupCount[]> = (All = true) => {
+export const apiFetchQueryYakScriptGroupLocal: (All?: boolean, ExcludeType?: string[]) => Promise<GroupCount[]> = (All = true, ExcludeType = ['yak', 'codec']) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("QueryYakScriptGroup", {All})
+            .invoke("QueryYakScriptGroup", {All, ExcludeType})
             .then((res: QueryYakScriptGroupResponse) => {
                 resolve(res.Group)
             })

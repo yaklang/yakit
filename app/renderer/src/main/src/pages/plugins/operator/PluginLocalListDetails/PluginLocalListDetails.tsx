@@ -29,7 +29,8 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
             fetchListInPageFirstAfter,
             showFilter,
             fixFilterList,
-            defaultFilters
+            defaultFilters,
+            pluginGroupExcludeType = ['yak', 'codec']
         } = props
 
         const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
@@ -267,6 +268,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                         <PluginGroup
                             selectGroup={selectGroup}
                             setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
+                            excludeType={pluginGroupExcludeType}
                         />
                     </>
                 }
