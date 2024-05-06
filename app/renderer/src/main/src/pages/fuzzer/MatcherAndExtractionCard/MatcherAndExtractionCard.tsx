@@ -36,7 +36,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Descriptions} from "antd"
 import classNames from "classnames"
-import {useCreation, useMemoizedFn, useSize} from "ahooks"
+import {useCreation, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -568,11 +568,11 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
 
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props) => {
     const {type, matcher, setMatcher, notEditable, defActiveKey, httpResponse, isSmallMode} = props
-    const [activeKey, setActiveKey] = useState<string>("ID:0")
-    useEffect(() => {
+    const [activeKey, setActiveKey] = useState<string>(defActiveKey)
+    useUpdateEffect(() => {
         setActiveKey(defActiveKey)
     }, [defActiveKey])
-    useEffect(() => {
+    useUpdateEffect(() => {
         const length = matcher.matchersList.length
         setActiveKey(`ID:${length - 1}`)
     }, [matcher.matchersList.length])
@@ -836,14 +836,14 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
 export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((props) => {
     const {type, extractor, setExtractor, defActiveKey, notEditable, httpResponse, isSmallMode} = props
 
-    const [activeKey, setActiveKey] = useState<string>("ID:0")
+    const [activeKey, setActiveKey] = useState<string>(defActiveKey)
     const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
     const [currentIndex, setCurrentIndex] = useState<number>()
 
-    useEffect(() => {
+    useUpdateEffect(() => {
         setActiveKey(defActiveKey)
     }, [defActiveKey])
-    useEffect(() => {
+    useUpdateEffect(() => {
         const length = extractor.extractorList.length
         setActiveKey(`ID:${length - 1}`)
     }, [extractor.extractorList.length])

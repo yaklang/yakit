@@ -1,6 +1,6 @@
 import {YakitRoute} from "@/routes/newRoute"
 import {PageNodeItemProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
-import {useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useControllableValue, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import React, {useEffect, useRef, useState} from "react"
 import {shallow} from "zustand/shallow"
 import cloneDeep from "lodash/cloneDeep"
@@ -14,12 +14,20 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {ExtractorsPanel, MatchersPanel, VariablePanel} from "../HttpQueryAdvancedConfig/FuzzerConfigPanels"
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 
+export interface DebugProps {
+    httpResponse: string
+    type: MatchingAndExtraction
+    activeKey: string
+}
 interface FuzzerPageSettingProps {
     pageId: string
     defaultHttpResponse: string
+    trigger: boolean
+    setTrigger: (b: boolean) => void
+    onDebug: (v: DebugProps) => void
 }
 const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) => {
-    const {pageId, defaultHttpResponse} = props
+    const {pageId, defaultHttpResponse, onDebug} = props
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -41,6 +49,12 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         initWebFuzzerPageInfo().advancedConfigValue
     )
 
+    const [trigger, setTrigger] = useControllableValue<boolean>(props, {
+        defaultValuePropName: "trigger",
+        valuePropName: "trigger",
+        trigger: "setTrigger"
+    })
+
     const formBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(formBodyRef)
 
@@ -58,7 +72,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         const newAdvancedConfigValue = initWebFuzzerPageInfo().advancedConfigValue
         form.setFieldsValue({...newAdvancedConfigValue})
         setAdvancedConfigValue({...newAdvancedConfigValue})
-    }, [pageId, inViewport])
+    }, [pageId, inViewport, trigger])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         onUpdatePageInfo(allFields)
     })
@@ -81,6 +95,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
                     }
                 }
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+                setTrigger(!trigger)
             }
         },
         {wait: 500, leading: true}
@@ -94,13 +109,11 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
     })
     /**修改匹配器和提取器 */
     const onEdit = useMemoizedFn((index, type: MatchingAndExtraction) => {
-        // if (outsideShowResponseMatcherAndExtraction) {
-        //     if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("matchers", `ID:${index}`)
-        // } else {
-        //     setVisibleDrawer(true)
-        //     setDefActiveKey(`ID:${index}`)
-        //     setType(type)
-        // }
+        onDebug({
+            httpResponse: defaultHttpResponse,
+            type,
+            activeKey: `ID:${index}`
+        })
     })
     const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
         const keyMap = {
@@ -110,10 +123,11 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
             onSwitchCollapse([...activeKey, keyMap[type]])
         }
-        // const value = {
-        //     httpResponseCode: defaultHttpResponse
-        // }
-        // emiter.emit("openMatcherAndExtraction", JSON.stringify(value))
+        onDebug({
+            httpResponse: defaultHttpResponse,
+            type,
+            activeKey: `ID:0`
+        })
     })
     /**添加的额外操作，例如没有展开的时候点击添加需要展开该项 */
     const onAddExtra = useMemoizedFn((type: string) => {

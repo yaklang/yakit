@@ -21,6 +21,7 @@ import {
 } from "@/assets/icon/solid"
 import {DragDropContext, Droppable, Draggable, DropResult, ResponderProvided} from "@hello-pangea/dnd"
 import {
+    useControllableValue,
     useCreation,
     useDebounceEffect,
     useDebounceFn,
@@ -96,6 +97,7 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import sequencemp4 from "@/assets/sequence.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
+import {DebugProps} from "./FuzzerPageSetting"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -133,11 +135,12 @@ const isEmptySequence = (list: SequenceProps[]) => {
 }
 
 const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
-    const {queryPagesDataById, selectGroupId, getPagesDataByGroupId} = usePageInfo(
+    const {queryPagesDataById, selectGroupId, getPagesDataByGroupId, updatePagesDataCacheById} = usePageInfo(
         (state) => ({
             queryPagesDataById: state.queryPagesDataById,
             selectGroupId: state.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
-            getPagesDataByGroupId: state.getPagesDataByGroupId
+            getPagesDataByGroupId: state.getPagesDataByGroupId,
+            updatePagesDataCacheById: state.updatePagesDataCacheById
         }),
         shallow
     )
@@ -165,6 +168,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
     const [showAllRes, setShowAllRes] = useState<boolean>(false)
     const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
+
+    // 匹配器和提取器相关
+    const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
+    const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
+    const [activeKey, setActiveKey] = useState<string>("ID:0")
+    const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
+    const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
+
+    const [triggerPageSetting, setTriggerPageSetting] = useState<boolean>(false)
 
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
@@ -700,7 +712,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     ...advancedConfigValueToFuzzerRequests(webFuzzerPageInfo.advancedConfigValue),
                     RequestRaw: Buffer.from(webFuzzerPageInfo.request, "utf8"), // StringToUint8Array(request, "utf8"),
                     HotPatchCode: hotPatchCodeRef.current,
-                    // HotPatchCodeWithParamGetter: item.pageParams.request,
                     HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
                     InheritCookies: item.inheritCookies,
                     InheritVariables: item.inheritVariables,
@@ -711,7 +722,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 httpParams.push(httpParamsItem)
             }
         })
-        // console.log("httpParams", httpParams)
         return httpParams
     })
 
@@ -721,8 +731,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const onValidateMatcherAndExtraction = useMemoizedFn(async () => {
         if (isShowSequenceResponse && sequenceResponseRef && sequenceResponseRef.current) {
-            await sequenceResponseRef.current.validate()
-            onStartExecution()
+            try {
+                await sequenceResponseRef.current.validate()
+                onStartExecution()
+            } catch (error) {
+                yakitNotify("error", "onValidateMatcherAndExtraction 数据验证失败")
+            }
         } else {
             onStartExecution()
         }
@@ -789,6 +803,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
             setSequenceList([newItem])
             setCurrentSequenceItem({...newItem})
+            setIsShowSetting(false)
         } else {
             if (currentSequenceItem?.id === sequenceList[index].id) {
                 setCurrentSequenceItem(sequenceList[index - 1])
@@ -810,6 +825,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     /**显示页面的高级配置部分参数 */
     const onShowSetting = useMemoizedFn((val: SequenceProps) => {
+        if (!val.pageId) {
+            yakitNotify("error", "请选择页面")
+            return
+        }
         onSelect(val)
         if (currentSequenceItem?.pageId !== val?.pageId) return
         if (currentSequenceItem) {
@@ -854,6 +873,60 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         return flag
     }
+    /**调试匹配器和提取器 */
+    const onDebug = useMemoizedFn((value: DebugProps) => {
+        setMatcherAndExtractionHttpResponse(value.httpResponse)
+        setActiveType(value.type)
+        setActiveKey(value.activeKey)
+        if (currentSelectResponse) {
+            const count = currentSelectResponse.failedCount + currentSelectResponse.successCount
+            if (count === 1) {
+                setShowMatcherAndExtraction(true)
+            } else {
+                setVisibleDrawer(true)
+            }
+        } else {
+            setVisibleDrawer(true)
+        }
+    })
+    /**关闭匹配器或提取器 */
+    const onCloseMatcherAndExtractionDrawer = useMemoizedFn(() => {
+        setVisibleDrawer(false)
+    })
+    /**保存匹配器/提取器数据 */
+    const onSaveMatcherAndExtractionDrawer = useMemoizedFn(
+        (matcher: MatcherValueProps, extractor: ExtractorValueProps) => {
+            if (!currentSelectRequest?.pageId) return
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+                YakitRoute.HTTPFuzzer,
+                currentSelectRequest.pageId
+            )
+            if (!currentItem) return
+            if (
+                currentItem.pageParamsInfo.webFuzzerPageInfo &&
+                currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
+            ) {
+                const newCurrentItem: PageNodeItemProps = {
+                    ...currentItem,
+                    pageParamsInfo: {
+                        webFuzzerPageInfo: {
+                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                            advancedConfigValue: {
+                                ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
+                                filterMode: matcher.filterMode,
+                                matchers: matcher.matchersList || [],
+                                matchersCondition: matcher.matchersCondition,
+                                hitColor: matcher.hitColor || "red",
+                                extractors: extractor.extractorList || []
+                            }
+                        }
+                    }
+                }
+                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+                setTriggerPageSetting(!triggerPageSetting)
+            }
+        }
+    )
     /**多条数据返回的第一条数据的ResponseRaw,一条数据就返回这一条的 ResponseRaw */
     const defaultHttpResponse: string = useMemo(() => {
         if (currentSelectResponse) {
@@ -868,6 +941,42 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             return Uint8ArrayToString(emptyFuzzer.ResponseRaw)
         }
     }, [currentSelectResponse, currentSelectRequest])
+    /**提取器和匹配器的值 */
+    const matcherAndExtractionValue: MatcherAndExtractionValueProps = useCreation(() => {
+        const matchData: MatcherValueProps = {
+            filterMode: "drop",
+            matchersList: [],
+            matchersCondition: "and",
+            hitColor: "red"
+        }
+        const extractorData: ExtractorValueProps = {
+            extractorList: []
+        }
+        let data = {
+            matcher: {...matchData},
+            extractor: {...extractorData}
+        }
+        if (!currentSequenceItem) {
+            return data
+        }
+        const currentSequenceRequest = getCurrentSequenceRequest(currentSequenceItem.pageId)
+        if (currentSequenceRequest?.pageParamsInfo.webFuzzerPageInfo) {
+            const {advancedConfigValue} = currentSequenceRequest?.pageParamsInfo.webFuzzerPageInfo || {
+                request: "",
+                advancedConfigValue: {...defaultAdvancedConfigValue}
+            }
+            data.matcher = {
+                filterMode: advancedConfigValue.filterMode,
+                matchersList: advancedConfigValue.matchers || [],
+                matchersCondition: advancedConfigValue.matchersCondition,
+                hitColor: advancedConfigValue.hitColor || "red"
+            }
+            data.extractor = {
+                extractorList: advancedConfigValue.extractors || []
+            }
+        }
+        return data
+    }, [currentSelectRequest, visibleDrawer, showMatcherAndExtraction, triggerPageSetting])
     return (
         <>
             <div
@@ -1025,11 +1134,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         <span>{currentSequenceItem?.name}&nbsp;配置</span>
                         <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setIsShowSetting(false)} />
                     </div>
-                    {currentSequenceItem && (
+                    {currentSequenceItem && !!currentSequenceItem.pageId && (
                         <React.Suspense fallback={<>loading...</>}>
                             <FuzzerPageSetting
                                 pageId={currentSequenceItem.pageId}
                                 defaultHttpResponse={defaultHttpResponse}
+                                trigger={triggerPageSetting}
+                                setTrigger={setTriggerPageSetting}
+                                onDebug={onDebug}
                             />
                         </React.Suspense>
                     )}
@@ -1067,6 +1179,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 onShowAll={() => {
                                     setShowAllDataRes(true)
                                 }}
+                                onDebug={(response) => {
+                                    onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0"})
+                                }}
+                                matcherValue={matcherAndExtractionValue.matcher}
+                                extractorValue={matcherAndExtractionValue.extractor}
+                                showMatcherAndExtraction={showMatcherAndExtraction}
+                                setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                onSaveMatcherAndExtractionDrawer={onSaveMatcherAndExtractionDrawer}
+                                activeType={activeType}
+                                activeKey={activeKey}
                             />
                         </>
                     ) : (
@@ -1095,6 +1217,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     setShowAllResponse={() => setShowAllResponse(false)}
                 ></ResponseCard>
             </React.Suspense>
+            <MatcherAndExtractionDrawer
+                visibleDrawer={visibleDrawer}
+                defActiveType={activeType}
+                httpResponse={matcherAndExtractionHttpResponse}
+                defActiveKey={activeKey}
+                matcherValue={matcherAndExtractionValue.matcher}
+                extractorValue={matcherAndExtractionValue.extractor}
+                onClose={onCloseMatcherAndExtractionDrawer}
+                onSave={onSaveMatcherAndExtractionDrawer}
+            />
         </>
     )
 })
@@ -1509,7 +1641,13 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             setHotPatchCode,
             hotPatchCodeWithParamGetter,
             setHotPatchCodeWithParamGetter,
-            onShowAll
+            onShowAll,
+            onDebug,
+            matcherValue,
+            extractorValue,
+            onSaveMatcherAndExtractionDrawer,
+            activeKey,
+            activeType
         } = props
         const {
             id: responseInfoId,
@@ -1542,20 +1680,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
         // 匹配器和提取器相关
-        const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
-        const [type, setType] = useState<MatchingAndExtraction>("matchers")
-        const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
-        const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
-        const [matcherValue, setMatcherValue] = useState<MatcherValueProps>({
-            filterMode: advancedConfigValue.filterMode,
-            matchersList: advancedConfigValue.matchers || [],
-            matchersCondition: advancedConfigValue.matchersCondition,
-            hitColor: advancedConfigValue.hitColor || "red"
+        const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
+            defaultValuePropName: "showMatcherAndExtraction",
+            valuePropName: "showMatcherAndExtraction",
+            trigger: "setShowMatcherAndExtraction"
         })
-        const [extractorValue, setExtractorValue] = useState<ExtractorValueProps>({
-            extractorList: advancedConfigValue.extractors || []
-        })
-
         const secondNodeRef = useRef(null)
         const secondNodeSize = useSize(secondNodeRef)
 
@@ -1634,18 +1763,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             setIsRefresh(!isRefresh)
             setQuery({})
         }, [responseInfoId])
-
-        useUpdateEffect(() => {
-            setMatcherValue({
-                filterMode: advancedConfigValue.filterMode,
-                matchersList: advancedConfigValue.matchers || [],
-                matchersCondition: advancedConfigValue.matchersCondition,
-                hitColor: advancedConfigValue.hitColor || "red"
-            })
-            setExtractorValue({
-                extractorList: advancedConfigValue.extractors || []
-            })
-        }, [advancedConfigValue])
 
         const onSetRequestHttp = useMemoizedFn((i: string) => {
             requestHttpRef.current = i
@@ -1798,54 +1915,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 </div>
             </>
         )
-        /**调试匹配器和提取器 */
-        const onDebug = useMemoizedFn((response: string) => {
-            setMatcherAndExtractionHttpResponse(response)
-            setVisibleDrawer(true)
-        })
-        /**关闭匹配器或提取器 */
-        const onCloseMatcherAndExtractionDrawer = useMemoizedFn(() => {
-            setVisibleDrawer(false)
-        })
-        /**保存匹配器/提取器数据 */
-        const onSaveMatcherAndExtractionDrawer = useMemoizedFn(
-            (matcher: MatcherValueProps, extractor: ExtractorValueProps) => {
-                if (!pageId) return
-                const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
-                if (!currentItem) return
-                if (
-                    currentItem.pageParamsInfo.webFuzzerPageInfo &&
-                    currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
-                ) {
-                    const newCurrentItem: PageNodeItemProps = {
-                        ...currentItem,
-                        pageParamsInfo: {
-                            webFuzzerPageInfo: {
-                                ...currentItem.pageParamsInfo.webFuzzerPageInfo,
-                                advancedConfigValue: {
-                                    ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
-                                    filterMode: matcher.filterMode,
-                                    matchers: matcher.matchersList || [],
-                                    matchersCondition: matcher.matchersCondition,
-                                    hitColor: matcher.hitColor || "red",
-                                    extractors: extractor.extractorList || []
-                                }
-                            }
-                        }
-                    }
-                    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
-                    setMatcherValue({
-                        filterMode: matcher.filterMode,
-                        matchersList: matcher.matchersList || [],
-                        matchersCondition: matcher.matchersCondition,
-                        hitColor: matcher.hitColor || "red"
-                    })
-                    setExtractorValue({
-                        extractorList: extractor.extractorList || []
-                    })
-                }
-            }
-        )
+
         const hotPatchTrigger = useMemoizedFn(() => {
             let m = showYakitModal({
                 title: null,
@@ -1915,8 +1985,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                     setShowMatcherAndExtraction={setShowMatcherAndExtraction}
                                     matcherValue={matcherValue}
                                     extractorValue={extractorValue}
-                                    defActiveKey={""}
-                                    defActiveType={type}
+                                    defActiveKey={activeKey}
+                                    defActiveType={activeType}
                                     onSaveMatcherAndExtraction={onSaveMatcherAndExtractionDrawer}
                                     showExtra={showExtra}
                                     setShowExtra={setShowExtra}
@@ -1972,16 +2042,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             )}
                         </div>
                     }
-                />
-                <MatcherAndExtractionDrawer
-                    visibleDrawer={visibleDrawer}
-                    defActiveType={type}
-                    httpResponse={matcherAndExtractionHttpResponse}
-                    defActiveKey=''
-                    matcherValue={matcherValue}
-                    extractorValue={extractorValue}
-                    onClose={onCloseMatcherAndExtractionDrawer}
-                    onSave={onSaveMatcherAndExtractionDrawer}
                 />
             </>
         )

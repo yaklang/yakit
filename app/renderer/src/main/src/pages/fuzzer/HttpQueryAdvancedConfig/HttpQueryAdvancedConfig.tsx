@@ -1231,29 +1231,37 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matchersList} = matcherValue
     return (
         <>
-            <Form.Item name='matchers' noStyle>
-                {matchersList.map((matcherItem, index) => (
-                    <div className={styles["matchersList-item"]} key={`ID:${index}`}>
-                        <div className={styles["matchersList-item-heard"]}>
-                            <span className={styles["item-id"]}>ID&nbsp;{index}</span>
-                            <span>[{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]</span>
-                            <span className={styles["item-number"]}>{matcherItem.Group?.length}</span>
-                        </div>
-                        <MatchersAndExtractorsListItemOperate
-                            onRemove={() => onRemove(index)}
-                            onEdit={() => onEdit(index)}
-                            popoverContent={
-                                <MatcherItem
-                                    matcherItem={matcherItem}
-                                    onEdit={() => {}}
-                                    notEditable={true}
-                                    httpResponse=''
-                                />
-                            }
-                        />
-                    </div>
-                ))}
-            </Form.Item>
+            <Form.List name='matchers'>
+                {() => (
+                    <>
+                        {matchersList.map((matcherItem, index) => (
+                            <Form.Item noStyle key={`ID:${index}`}>
+                                <div className={styles["matchersList-item"]} key={`ID:${index}`}>
+                                    <div className={styles["matchersList-item-heard"]}>
+                                        <span className={styles["item-id"]}>ID&nbsp;{index}</span>
+                                        <span>
+                                            [{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]
+                                        </span>
+                                        <span className={styles["item-number"]}>{matcherItem.Group?.length}</span>
+                                    </div>
+                                    <MatchersAndExtractorsListItemOperate
+                                        onRemove={() => onRemove(index)}
+                                        onEdit={() => onEdit(index)}
+                                        popoverContent={
+                                            <MatcherItem
+                                                matcherItem={matcherItem}
+                                                onEdit={() => {}}
+                                                notEditable={true}
+                                                httpResponse=''
+                                            />
+                                        }
+                                    />
+                                </div>
+                            </Form.Item>
+                        ))}
+                    </>
+                )}
+            </Form.List>
             {matchersList?.length === 0 && (
                 <>
                     <YakitButton
@@ -1283,29 +1291,39 @@ export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) 
     const {extractorList} = extractorValue
     return (
         <>
-            <Form.Item name='extractors' noStyle>
-                {extractorList.map((extractorItem, index) => (
-                    <div className={styles["matchersList-item"]} key={`${extractorItem.Name}-${index}`}>
-                        <div className={styles["matchersList-item-heard"]}>
-                            <span className={styles["item-id"]}>{extractorItem.Name || `data_${index}`}</span>
-                            <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
-                            <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>
-                        </div>
-                        <MatchersAndExtractorsListItemOperate
-                            onRemove={() => onRemove(index)}
-                            onEdit={() => onEdit(index)}
-                            popoverContent={
-                                <ExtractorItem
-                                    extractorItem={extractorItem}
-                                    onEdit={() => {}}
-                                    notEditable={true}
-                                    httpResponse=''
-                                />
-                            }
-                        />
-                    </div>
-                ))}
-            </Form.Item>
+            <Form.List name='extractors'>
+                {() => (
+                    <>
+                        {extractorList.map((extractorItem, index) => (
+                            <Form.Item noStyle key={`${extractorItem.Name}-${index}`}>
+                                <div className={styles["matchersList-item"]}>
+                                    <div className={styles["matchersList-item-heard"]}>
+                                        <span className={styles["item-id"]}>
+                                            {extractorItem.Name || `data_${index}`}
+                                        </span>
+                                        <span>
+                                            [{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]
+                                        </span>
+                                        <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>
+                                    </div>
+                                    <MatchersAndExtractorsListItemOperate
+                                        onRemove={() => onRemove(index)}
+                                        onEdit={() => onEdit(index)}
+                                        popoverContent={
+                                            <ExtractorItem
+                                                extractorItem={extractorItem}
+                                                onEdit={() => {}}
+                                                notEditable={true}
+                                                httpResponse=''
+                                            />
+                                        }
+                                    />
+                                </div>
+                            </Form.Item>
+                        ))}
+                    </>
+                )}
+            </Form.List>
             {extractorList?.length === 0 && (
                 <>
                     <YakitButton

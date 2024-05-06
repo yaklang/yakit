@@ -1,7 +1,11 @@
 import {WebFuzzerPageInfoProps} from "../../../store/pageInfo"
 import {FuzzerResponse, FuzzerRequestProps} from "../HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {MatcherAndExtractionRefProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    MatcherAndExtractionRefProps,
+    MatcherValueProps,
+    ExtractorValueProps
+} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 /**
  * @description 序列props
@@ -115,6 +119,12 @@ export interface FuzzerSequenceResponse {
  * @property {string} hotPatchCodeWithParamGetter 热加载相关,具体不清楚,现在好像暂时没有用这个
  * @function setHotPatchCode
  * @function setHotPatchCodeWithParamGetter
+ * @function onDebug
+ * @property {MatcherValueProps} matcherValue
+ * @property {ExtractorValueProps} extractorValue
+ * @property {boolean} showMatcherAndExtraction
+ * @function setShowMatcherAndExtraction
+ * @function onSaveMatcherAndExtractionDrawer
  */
 export interface SequenceResponseProps {
     ref?: React.ForwardedRef<SequenceResponseRefProps>
@@ -127,6 +137,14 @@ export interface SequenceResponseProps {
     setHotPatchCode: (s: string) => void
     setHotPatchCodeWithParamGetter: (s: string) => void
     onShowAll: () => void
+    onDebug: (s: string) => void
+    matcherValue: MatcherValueProps
+    extractorValue: ExtractorValueProps
+    showMatcherAndExtraction?: boolean
+    setShowMatcherAndExtraction?: (b: boolean) => void
+    onSaveMatcherAndExtractionDrawer: (m: MatcherValueProps, e: ExtractorValueProps) => void
+    activeType: MatchingAndExtraction
+    activeKey: string
 }
 
 export interface SequenceResponseRefProps {
