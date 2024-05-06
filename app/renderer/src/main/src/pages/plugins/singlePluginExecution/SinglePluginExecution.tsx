@@ -15,6 +15,7 @@ import {yakitNotify} from "@/utils/notification"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
 import {Tooltip} from "antd"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
+import { pluginTypeToName } from "../builtInData"
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
     // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -112,7 +113,8 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     }, [])
     const pluginGroupExcludeType = useMemo(() => {
         const typeArr = filters.plugin_type?.map((i) => i.value) || []
-        return [...new Set([...typeArr, "yak", "codec"])]
+        const allPluginTypes = Object.keys(pluginTypeToName)
+        return allPluginTypes.filter(type => !typeArr.includes(type))
     }, [filters])
     if (!plugin) return null
     return (

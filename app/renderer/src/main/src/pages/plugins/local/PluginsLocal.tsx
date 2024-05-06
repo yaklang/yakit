@@ -363,6 +363,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             const query: QueryYakScriptRequest = {
                 ...convertLocalPluginsRequestParams({filter:queryFilters, search:querySearch, pageParams:params})
             }
+            if (queryFilters.plugin_group?.length) {
+                query.ExcludeTypes = ["yak", "codec"]
+            }
             queryFetchList.current = query
             try {
                 const res = await apiQueryYakScript(query)
