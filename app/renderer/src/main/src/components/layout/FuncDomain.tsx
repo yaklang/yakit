@@ -1167,6 +1167,8 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         <></>
                     ) : isUpdateWait ? (
                         <YakitButton onClick={() => ipcRenderer.invoke("open-yakit-path")}>{`安装 `}</YakitButton>
+                    ) : lastVersion === "" ? (
+                        "获取失败"
                     ) : isUpdate ? (
                         <div className={styles["update-btn"]} onClick={() => onDownload("yakit")}>
                             <UpdateSvgIcon style={{marginRight: 4}} />
@@ -1256,19 +1258,24 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 </div>
 
                 <div className={styles["header-btn"]}>
-                    {!isRemoteMode && isUpdate && (
-                        <div className={styles["update-btn"]} onClick={() => onDownload("yaklang")}>
-                            <UpdateSvgIcon style={{marginRight: 4}} />
-                            立即更新
-                        </div>
+                    {isRemoteMode ? (
+                        <>{isUpdate && "远程连接无法更新"}</>
+                    ) : (
+                        <>
+                            {isUpdate && (
+                                <div className={styles["update-btn"]} onClick={() => onDownload("yaklang")}>
+                                    <UpdateSvgIcon style={{marginRight: 4}} />
+                                    立即更新
+                                </div>
+                            )}
+                            {isKillEngine && (
+                                <YakitButton
+                                    onClick={() => ipcRenderer.invoke("kill-old-engine-process")}
+                                >{`更新 `}</YakitButton>
+                            )}
+                            {!lastVersion ? "获取失败" : !isUpdate && !isKillEngine && "已是最新"}
+                        </>
                     )}
-                    {!isRemoteMode && isKillEngine && (
-                        <YakitButton
-                            onClick={() => ipcRenderer.invoke("kill-old-engine-process")}
-                        >{`更新 `}</YakitButton>
-                    )}
-                    {!isUpdate && !isKillEngine && "已是最新"}
-                    {isRemoteMode && isUpdate && "远程连接无法更新"}
                     {!isRemoteMode && role === "superAdmin" && (
                         <div
                             className={styles["edit-func"]}
@@ -1464,7 +1471,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 .then((data: string) => {
                     if (yakitVersion !== data) setYakitLastVersion(data)
                 })
-                .catch(() => {})
+                .catch(() => {
+                    setYakitLastVersion("")
+                })
         /** 获取社区版yakit更新内容 */
         isCommunityEdition() &&
             NetWorkApi<FetchUpdateContentProp, any>({
@@ -1537,7 +1546,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             .then((data: string) => {
                 if (yaklangVersion !== data) setYaklangLastVersion(data)
             })
-            .catch((err) => {})
+            .catch((err) => {
+                setYaklangLastVersion("")
+            })
         if (!isRemoteMode) {
             ipcRenderer
                 .invoke("get-current-yak")
