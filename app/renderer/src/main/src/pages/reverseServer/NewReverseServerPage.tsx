@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from "react"
-import {Form, Divider, PageHeader, Alert, Typography, Space} from "antd"
+import {Form, Divider, PageHeader, Typography, Row, Col} from "antd"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {randomString} from "../../utils/randomUtil"
 import {failed, warn, info} from "../../utils/notification"
@@ -22,7 +22,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -215,21 +215,16 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         name='IsRemote'
                         help={
                             params.IsRemote && (
-                                <Alert
-                                    className='setting-isremote-hint'
-                                    type={"success"}
-                                    message={
-                                        <div>
-                                            在自己的服务器安装 yak 核心引擎，执行{" "}
-                                            <YakitCopyText
-                                                showText={`yak bridge --secret [your-pass]`}
-                                                wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
-                                            />{" "}
-                                            启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
-                                            <Text style={{color: "#999"}}>yak version {`>=`} v1.0.11-sp9</Text>
-                                        </div>
-                                    }
-                                />
+                                <div>
+                                    在自己的服务器安装 yak 核心引擎，执行{" "}
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='blue'
+                                        copyText={`yak bridge --secret [your-pass]`}
+                                    ></YakitTag>{" "}
+                                    启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
+                                    <Text style={{color: "#999"}}>yak version {`>=`} v1.0.11-sp9</Text>
+                                </div>
                             )
                         }
                     >
@@ -419,7 +414,10 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         onApply={onApply}
                     />
                 </div>
-                <div className={`payload-${isShowCode ? "" : "hidden-"}code`} style={{marginTop: !codeExtra ? '-1px' : 0}}>
+                <div
+                    className={`payload-${isShowCode ? "" : "hidden-"}code`}
+                    style={{marginTop: !codeExtra ? "-1px" : 0}}
+                >
                     <PayloadCode
                         isMin={true}
                         codeExtra={codeExtra}
@@ -455,36 +453,40 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                             </div>
                         }
                     >
-                        <Alert
-                            type={"info"}
-                            message={
-                                <Space direction={"vertical"}>
-                                    <div className='addr-body'>
-                                        HTTP反连地址&nbsp;&nbsp;
-                                        <YakitCopyText
-                                            showText={`http://${reverseAddr}/${
-                                                classRequest?.className ? classRequest?.className + ".class" : ""
-                                            }`}
-                                            wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
-                                        />
-                                    </div>
-                                    <div className='addr-body'>
-                                        RMI反连地址&nbsp;&nbsp;
-                                        <YakitCopyText
-                                            showText={`rmi://${reverseAddr}/${classRequest?.className || ""}`}
-                                            wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
-                                        />
-                                    </div>
-                                    <div className='addr-body'>
-                                        LDAP反连地址&nbsp;&nbsp;
-                                        <YakitCopyText
-                                            showText={`ldap://${reverseAddr}/${classRequest?.className || ""}`}
-                                            wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
-                                        />
-                                    </div>
-                                </Space>
-                            }
-                        ></Alert>
+                        <Row align='middle'>
+                            <Col>
+                                <div className='addr-body'>
+                                    HTTP反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='blue'
+                                        copyText={`http://${reverseAddr}/${
+                                            classRequest?.className ? classRequest?.className + ".class" : ""
+                                        }`}
+                                    ></YakitTag>
+                                </div>
+                            </Col>
+                            <Col>
+                                <div className='addr-body'>
+                                    RMI反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='success'
+                                        copyText={`rmi://${reverseAddr}/${classRequest?.className || ""}`}
+                                    ></YakitTag>
+                                </div>
+                            </Col>
+                            <Col>
+                                <div className='addr-body'>
+                                    LDAP反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='purple'
+                                        copyText={`ldap://${reverseAddr}/${classRequest?.className || ""}`}
+                                    ></YakitTag>
+                                </div>
+                            </Col>
+                        </Row>
                     </PageHeader>
                     <div className='reverse-server-data'>
                         <ReverseTable total={totalRef.current} data={data} clearData={clearData} />

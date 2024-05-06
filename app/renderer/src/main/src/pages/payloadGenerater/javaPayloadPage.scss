@@ -64,6 +64,9 @@
 }
 
 .setting-payload-wrapper {
+    border-right: 1px solid var(--yakit-border-color);
+    border-top: none;
+    border-left: none;
     .setting-payload-icon {
         font-size: 12px;
         color: gray;

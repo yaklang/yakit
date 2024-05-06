@@ -1,13 +1,6 @@
 import React, {useRef, useEffect, useState, useMemo} from "react"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {
-    Form,
-    Tooltip,
-    Alert,
-    Space,
-    Typography,
-    Divider
-} from "antd"
+import {Form, Tooltip, Space, Typography, Divider} from "antd"
 import {
     QuestionOutlined,
     ExclamationCircleOutlined,
@@ -25,7 +18,6 @@ import {
     SettingReverseParamsInfo
 } from "../reverseServer/NewReverseServerPage"
 import {randomString} from "@/utils/randomUtil"
-import {YakCodeEditor} from "@/utils/editors"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ReverseNotification, ReverseTable} from "../reverseServer/ReverseTable"
 import {getRemoteValue} from "@/utils/kv"
@@ -47,6 +39,7 @@ import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -546,40 +539,33 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             <div className={`reverse-${isStart && !codeExtra ? "info" : "hidden"}-wrapper`}>
                 <div className='wrapper-body'>
                     <div className='body-left'>
-                        <YakitCard
-                            title='反连地址'
-                            className='info-addr-card'
-                            bodyStyle={{padding: "6px 12px"}}
-                        >
-                            <Alert
-                                type={"info"}
-                                className='addr-alert'
-                                style={{alignItems: "baseline", height: "100%"}}
-                                message={
-                                    <Space direction={"vertical"}>
-                                        <div className='addr-body'>
-                                            HTTP反连地址&nbsp;&nbsp;
-                                            <YakitCopyText
-                                                showText={`http://${reverseAddr}/${
-                                                    paramsRef.current?.className || ""
-                                                }.class`}
-                                            />
-                                        </div>
-                                        <div className='addr-body'>
-                                            RMI反连地址&nbsp;&nbsp;
-                                            <YakitCopyText
-                                                showText={`rmi://${reverseAddr}/${paramsRef.current?.className || ""}`}
-                                            />
-                                        </div>
-                                        <div className='addr-body'>
-                                            LDAP反连地址&nbsp;&nbsp;
-                                            <YakitCopyText
-                                                showText={`ldap://${reverseAddr}/${paramsRef.current?.className || ""}`}
-                                            />
-                                        </div>
-                                    </Space>
-                                }
-                            ></Alert>
+                        <YakitCard title='反连地址' className='info-addr-card' bodyStyle={{padding: "6px 12px"}}>
+                            <Space direction={"vertical"}>
+                                <div className='addr-body'>
+                                    HTTP反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='blue'
+                                        copyText={`http://${reverseAddr}/${paramsRef.current?.className || ""}.class`}
+                                    ></YakitTag>
+                                </div>
+                                <div className='addr-body'>
+                                    RMI反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='success'
+                                        copyText={`rmi://${reverseAddr}/${paramsRef.current?.className || ""}`}
+                                    ></YakitTag>
+                                </div>
+                                <div className='addr-body'>
+                                    LDAP反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='purple'
+                                        copyText={`ldap://${reverseAddr}/${paramsRef.current?.className || ""}`}
+                                    ></YakitTag>
+                                </div>
+                            </Space>
                         </YakitCard>
                     </div>
 

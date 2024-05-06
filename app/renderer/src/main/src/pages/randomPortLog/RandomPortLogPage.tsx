@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Alert, Divider, Space, Tooltip} from "antd"
+import {Col, Divider, Row, Space, Tooltip} from "antd"
 import {useMemoizedFn} from "ahooks"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined} from "@ant-design/icons"
@@ -83,6 +83,7 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
 
     return (
         <YakitCard
+            className={style['tcp-wrapper']}
             headStyle={{padding: "25px 15px"}}
             title={
                 <Space>
@@ -106,29 +107,41 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                 </Space>
             }
         >
-            <Alert
-                type={"success"}
-                message={
-                    <Space style={{width: "100%"}} direction={"vertical"}>
-                        <h4>使用以下随机端口尝试触发记录</h4>
-                        {externalAddr !== "" && !loading ? (
-                            <Space direction={"vertical"}>
-                                <YakitCopyText showText={externalAddr} />
-                                <Space>
-                                    使用 NC 命令
-                                    <YakitCopyText
-                                        showText={`nc ${externalAddr.replaceAll(":", " ")}`}
-                                        wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
-                                    />
-                                </Space>
+            <Row align="middle">
+                <Col>使用以下随机端口尝试触发记录：</Col>
+                <Col>
+                    {externalAddr !== "" && !loading ? (
+                        <>
+                            <YakitTag enableCopy={true} color='blue' copyText={externalAddr}></YakitTag>
+                        </>
+                    ) : (
+                        <YakitSpin />
+                    )}
+                </Col>
+                <Col>
+                    {externalAddr !== "" && !loading ? (
+                        <>
+                            <Space>
+                                使用 NC 命令
+                                <YakitTag
+                                    enableCopy={true}
+                                    color='success'
+                                    copyText={`nc ${externalAddr.replaceAll(":", " ")}`}
+                                ></YakitTag>
                             </Space>
-                        ) : (
-                            <YakitSpin />
-                        )}
-                        {randomPort > 0 && !loading ? <YakitCopyText showText={randomPort + ""} /> : <YakitSpin />}
-                    </Space>
-                }
-            />
+                        </>
+                    ) : (
+                        <YakitSpin />
+                    )}
+                </Col>
+                <Col>
+                    {randomPort > 0 && !loading ? (
+                        <YakitTag enableCopy={true} color='purple' copyText={randomPort + ""}></YakitTag>
+                    ) : (
+                        <YakitSpin />
+                    )}
+                </Col>
+            </Row>
             <div style={{marginTop: 15}}>
                 <TableVirtualResize<RandomPortTriggerNotification>
                     isRefresh={loading}

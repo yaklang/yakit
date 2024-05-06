@@ -1,13 +1,12 @@
 import React, {useEffect, useState} from "react"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
-import {Alert, Divider, Space} from "antd"
+import {Col, Divider, Row, Space} from "antd"
 import {useDebounce, useMemoizedFn} from "ahooks"
 import {ReloadOutlined} from "@ant-design/icons"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import style from "./ICMPSizeLoggerPage.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -78,6 +77,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
 
     return (
         <YakitCard
+            className={style['icmp-wrapper']}
             headStyle={{padding: "25px 15px"}}
             title={
                 <Space>
@@ -86,16 +86,9 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
                     <Divider type={"vertical"} />
                     <div className={style["set-ping-size-wrap"]}>
                         设置 Ping 包大小：
-                        <YakitInputNumber
-                            disabled={true}
-                            value={size}
-                            className={style["ping-size-input-number"]}
-                        />
+                        <YakitInputNumber disabled={true} value={size} className={style["ping-size-input-number"]} />
                     </div>
-                    <YakitButton
-                        disabled={loading}
-                        onClick={refresh}
-                    >
+                    <YakitButton disabled={loading} onClick={refresh}>
                         随机生成可用长度
                     </YakitButton>
                     <YakitButton type='text' disabled={loading} icon={<ReloadOutlined />} onClick={update}>
@@ -104,38 +97,35 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
                 </Space>
             }
         >
-            <Alert
-                type={"success"}
-                message={
-                    <Space direction={"vertical"} style={{width: "100%"}}>
-                        <h4>ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器</h4>
-                        <Space>
-                            <div>在 Windows 系统中，使用</div>
-                            {host === "" || sizeNow <= 0 ? (
-                                <YakitSpin />
-                            ) : (
-                                <YakitCopyText
-                                    showText={`ping -l ${sizeNow} ${host}`}
-                                    wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
-                                />
-                            )}
-                            <div>命令</div>
-                        </Space>
-                        <Space>
-                            <div>在 MacOS/Linux/*nix 系统中，使用</div>
-                            {host === "" || sizeNow <= 0 ? (
-                                <YakitSpin />
-                            ) : (
-                                <YakitCopyText
-                                    showText={`ping -c 4 -s ${sizeNow} ${host}`}
-                                    wrapStyle={{backgroundColor: "var(--yakit-primary-2)"}}
-                                />
-                            )}
-                            <div>命令</div>
-                        </Space>
+            <Row align="middle">
+                <Col>ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器：</Col>
+                <Col>
+                    <Space>
+                        在 Windows 系统中，使用
+                        {host === "" || sizeNow <= 0 ? (
+                            <YakitSpin />
+                        ) : (
+                            <YakitTag enableCopy={true} color='blue' copyText={`ping -l ${sizeNow} ${host}`}></YakitTag>
+                        )}
+                        <div>命令&nbsp;&nbsp;&nbsp;&nbsp;</div>
                     </Space>
-                }
-            />
+                </Col>
+                <Col>
+                    <Space>
+                        在 MacOS/Linux/*nix 系统中，使用
+                        {host === "" || sizeNow <= 0 ? (
+                            <YakitSpin />
+                        ) : (
+                            <YakitTag
+                                enableCopy={true}
+                                color='success'
+                                copyText={`ping -c 4 -s ${sizeNow} ${host}`}
+                            ></YakitTag>
+                        )}
+                        <div>命令</div>
+                    </Space>
+                </Col>
+            </Row>
             <div style={{marginTop: 15}}>
                 <TableVirtualResize<ICMPSizeLoggerInfo>
                     isRefresh={loading}
