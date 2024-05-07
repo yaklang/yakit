@@ -91,7 +91,7 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                                 e.stopPropagation()
                                 const restValue = {
                                     matchers: [],
-                                    filterMode: "drop",
+                                    filterMode: "onlyMatch",
                                     hitColor: "red",
                                     matchersCondition: "and"
                                 }

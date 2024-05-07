@@ -568,7 +568,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
 
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo((props) => {
     const {type, matcher, setMatcher, notEditable, defActiveKey, httpResponse, isSmallMode} = props
-    const [activeKey, setActiveKey] = useState<string>(defActiveKey)
+    const [activeKey, setActiveKey] = useState<string>(defActiveKey || "ID:0")
     useUpdateEffect(() => {
         setActiveKey(defActiveKey)
     }, [defActiveKey])
@@ -836,7 +836,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
 export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((props) => {
     const {type, extractor, setExtractor, defActiveKey, notEditable, httpResponse, isSmallMode} = props
 
-    const [activeKey, setActiveKey] = useState<string>(defActiveKey)
+    const [activeKey, setActiveKey] = useState<string>(defActiveKey || "ID:0")
     const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
     const [currentIndex, setCurrentIndex] = useState<number>()
 
