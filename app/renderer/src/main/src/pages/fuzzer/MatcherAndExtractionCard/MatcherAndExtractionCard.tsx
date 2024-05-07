@@ -1156,22 +1156,13 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
     const {list = []} = props
     return (
         <div className={classNames(styles["extract-results"], "yakit-descriptions")}>
-            {/* <Descriptions size={"small"} bordered={true} column={1}>
-                {list.map((i) => {
-                    return (
-                        <Descriptions.Item
-                            key={`${i.Key}-${i.Value}`}
-                            label={<CopyableField maxWidth={150} text={i.Key} />}
-                        >
-                            <CopyableField maxWidth={400} text={i.Value} />
-                        </Descriptions.Item>
-                    )
-                    // return <p key={i.Key}>{`${i.Key}: ${i.Value}`}</p>
-                })}
-            </Descriptions> */}
             <Descriptions bordered size='small' column={2}>
                 {list.map((item, index) => (
-                    <Descriptions.Item label={<YakitCopyText showText={item.Key} />} span={2}>
+                    <Descriptions.Item
+                        label={<YakitCopyText showText={item.Key} />}
+                        key={`${item.Key}-${item.Value}`}
+                        span={2}
+                    >
                         {item.Value ? <YakitCopyText showText={item.Value} /> : ""}
                     </Descriptions.Item>
                 ))}

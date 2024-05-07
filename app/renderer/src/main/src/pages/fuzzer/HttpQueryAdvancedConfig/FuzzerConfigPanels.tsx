@@ -3,12 +3,13 @@ import styles from "./HttpQueryAdvancedConfig.module.scss"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {Descriptions, Divider, Form} from "antd"
+import {Divider, Form} from "antd"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {
     ColorSelect,
+    ExtractionResultsContent,
     defMatcherAndExtractionCode,
     filterModeOptions,
     matchersConditionOptions
@@ -17,7 +18,6 @@ import {ExtractorsList, MatchersList} from "./HttpQueryAdvancedConfig"
 import {AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {StringToUint8Array} from "@/utils/str"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {CopyableField} from "@/utils/inputUtil"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
@@ -282,23 +282,13 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
                 showYakitModal({
                     title: "渲染后变量内容",
                     footer: <></>,
+                    width: "60%",
                     content: (
-                        <div className={styles["render-variables-modal-content"]}>
-                            <Descriptions size={"small"} column={1} bordered={true}>
-                                {rsp.Results.filter((i) => {
-                                    return !(i.Key === "" && i.Value === "")
-                                }).map((data, index) => {
-                                    return (
-                                        <Descriptions.Item
-                                            label={<CopyableField text={data.Key} maxWidth={100} />}
-                                            key={`${data.Key}-${data.Value}`}
-                                        >
-                                            <CopyableField text={data.Value} maxWidth={300} />
-                                        </Descriptions.Item>
-                                    )
-                                })}
-                            </Descriptions>
-                        </div>
+                        <ExtractionResultsContent
+                            list={(rsp.Results || []).filter((i) => {
+                                return !(i.Key === "" && i.Value === "")
+                            })}
+                        />
                     )
                 })
             })

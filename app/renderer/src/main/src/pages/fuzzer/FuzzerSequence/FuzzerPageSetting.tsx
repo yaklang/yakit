@@ -22,12 +22,13 @@ export interface DebugProps {
 interface FuzzerPageSettingProps {
     pageId: string
     defaultHttpResponse: string
-    trigger: boolean
-    setTrigger: (b: boolean) => void
+    triggerIn: boolean
+    triggerOut: boolean
+    setTriggerOut: (b: boolean) => void
     onDebug: (v: DebugProps) => void
 }
 const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) => {
-    const {pageId, defaultHttpResponse, onDebug} = props
+    const {pageId, defaultHttpResponse, onDebug, triggerIn, triggerOut, setTriggerOut} = props
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -49,12 +50,6 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         initWebFuzzerPageInfo().advancedConfigValue
     )
 
-    const [trigger, setTrigger] = useControllableValue<boolean>(props, {
-        defaultValuePropName: "trigger",
-        valuePropName: "trigger",
-        trigger: "setTrigger"
-    })
-
     const formBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(formBodyRef)
 
@@ -70,9 +65,9 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
     useUpdateEffect(() => {
         if (!inViewport) return
         const newAdvancedConfigValue = initWebFuzzerPageInfo().advancedConfigValue
-        form.setFieldsValue({...newAdvancedConfigValue})
+        form.setFieldsValue({...newAdvancedConfigValue}) // form.setFieldsValue不会触发Form表单的 onValuesChange 事件
         setAdvancedConfigValue({...newAdvancedConfigValue})
-    }, [pageId, inViewport, trigger])
+    }, [pageId, inViewport, triggerIn])
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         onUpdatePageInfo(allFields)
     })
@@ -82,20 +77,24 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
             const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
             if (!currentItem) return
             if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
+                const newAdvancedConfigValue = {
+                    ...advancedConfigValue,
+                    ...params
+                }
                 const newCurrentItem: PageNodeItemProps = {
                     ...currentItem,
                     pageParamsInfo: {
                         webFuzzerPageInfo: {
                             ...currentItem.pageParamsInfo.webFuzzerPageInfo,
                             advancedConfigValue: {
-                                ...advancedConfigValue,
-                                ...params
+                                ...newAdvancedConfigValue
                             }
                         }
                     }
                 }
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
-                setTrigger(!trigger)
+                // 主要目的是刷新外界的 pageId 下最新的值
+                setTriggerOut(!triggerOut)
             }
         },
         {wait: 500, leading: true}

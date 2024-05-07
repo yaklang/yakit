@@ -176,7 +176,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
 
-    const [triggerPageSetting, setTriggerPageSetting] = useState<boolean>(false)
+    const [triggerPageSetting, setTriggerPageSetting] = useState<boolean>(false) // 刷新FuzzerPageSetting中的值
+    const [triggerME, setTriggerME] = useState<boolean>(false) // 刷新匹配器和提取器的值
 
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
@@ -924,6 +925,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
                 setTriggerPageSetting(!triggerPageSetting)
+                setShowMatcherAndExtraction(false)
             }
         }
     )
@@ -976,7 +978,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
         }
         return data
-    }, [currentSelectRequest, visibleDrawer, showMatcherAndExtraction, triggerPageSetting])
+    }, [currentSelectRequest, visibleDrawer, showMatcherAndExtraction, triggerME])
     return (
         <>
             <div
@@ -1139,8 +1141,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                             <FuzzerPageSetting
                                 pageId={currentSequenceItem.pageId}
                                 defaultHttpResponse={defaultHttpResponse}
-                                trigger={triggerPageSetting}
-                                setTrigger={setTriggerPageSetting}
+                                triggerIn={triggerPageSetting}
+                                triggerOut={triggerME}
+                                setTriggerOut={setTriggerME}
                                 onDebug={onDebug}
                             />
                         </React.Suspense>

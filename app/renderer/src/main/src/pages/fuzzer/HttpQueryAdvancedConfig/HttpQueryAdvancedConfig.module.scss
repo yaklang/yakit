@@ -338,14 +338,6 @@
         }
     }
 }
-.render-variables-modal-content {
-    padding: 24px;
-    max-height: 80vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
 .variable-item {
     border: 1px solid var(--yakit-border-color);
     border-radius: 4px;
