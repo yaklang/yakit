@@ -107,7 +107,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
                         ) : (
                             <YakitTag enableCopy={true} color='blue' copyText={`ping -l ${sizeNow} ${host}`}></YakitTag>
                         )}
-                        <div>命令&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                        <div>命令，&nbsp;&nbsp;</div>
                     </Space>
                 </Col>
                 <Col>
