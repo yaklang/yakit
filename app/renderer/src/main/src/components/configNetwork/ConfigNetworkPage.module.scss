@@ -135,7 +135,6 @@
     }
 }
 
-
 .form-rule-body {
     display: flex;
     align-items: center;
@@ -193,24 +192,23 @@
     .heard-title {
         display: flex;
         gap: 8px;
-        .title{
-           font-weight: 600;
-        font-size: 14px;
-        color: var(--yakit-header-color);
-        height: 20px;
-        line-height: 20px; 
+        .title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--yakit-header-color);
+            height: 20px;
+            line-height: 20px;
         }
         .table-total {
-        font-weight: 400;
-        font-size: 12px;
-        color: var(--yakit-helper-text-color);
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
 
-        span {
-            color: var(--yakit-primary-5);
+            span {
+                color: var(--yakit-primary-5);
+            }
         }
     }
-    }
-    
 
     .heard-right-operation {
         display: flex;
@@ -221,7 +219,8 @@
             margin-right: 0;
         }
 
-        .button-create,.button-save {
+        .button-create,
+        .button-save {
             margin-right: 8px;
         }
 
@@ -301,12 +300,49 @@
     font-size: 12px;
     cursor: pointer;
 }
+.ai-sort-content {
+    .content {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+        .count-list {
+            .count {
+                height: 36px;
+                display: flex;
+                align-items: center;
+            }
+        }
+        
+        .sort-box {
+            flex: 1;
+            .sort-item-box{
+                padding: 4px 0px 4px 0px;
+            }
+            .sort-item {
+                height: 28px;
+                padding: 2px;
+                display: flex;
+                justify-content: center;
+                border: 1px solid black;
+                // &:hover {
+                //     background-color: var(--yakit-primary-2);
+                // }
+               
+            }
+        }
+    }
 
-
-.ai-sort-content{
-    .footer{
+    .footer {
+        margin-top: 4px;
         display: flex;
         flex-direction: row;
         justify-content: space-around;
     }
+}
+.sort-active-item {
+    padding: 2px;
+    display: flex;
+    justify-content: center;
+    border: 1px solid black;
+    margin-bottom: 8px;
 }
