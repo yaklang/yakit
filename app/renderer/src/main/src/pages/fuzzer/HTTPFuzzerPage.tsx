@@ -123,6 +123,9 @@ import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import cloneDeep from "lodash/cloneDeep"
 
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import { apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from "../spaceEngine/utils"
+import { GlobalNetworkConfig } from "@/components/configNetwork/ConfigNetworkPage"
+import { ThirdPartyApplicationConfigForm } from "@/components/configNetwork/ThirdPartyApplicationConfig"
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 
 const {ipcRenderer} = window.require("electron")
@@ -1230,55 +1233,63 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [yakitWindowVisible, setYakitWindowVisible] = useState<boolean>(false)
     const [menuExecutorParams, setMenuExecutorParams] = useState<{text?: string; scriptName: string}>()
-    // 判断打开 YakitWindow执行框/全局网络配置第三方应用框
+    
+    const openAIByChatCS = useMemoizedFn((obj:{text?: string; scriptName: string})=>{
+        emiter.emit("onRunChatcsAIByFuzzer",JSON.stringify(obj))
+    })
+    
+    // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
     const onFuzzerModal = useMemoizedFn((value) => {
         const val: {text?: string; scriptName: string; pageId: string} = JSON.parse(value)
-        // apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
+        apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
         if (props.id === val.pageId) {
+            const configType = obj.AppConfigs.map((item)=>item.Type).filter((item)=>["openai","chatglm","moonshot"].includes(item))
             // 如若已配置 则打开执行框
-            // if(obj.AppConfigs.length>0){
-            setYakitWindowVisible(true)
-            setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
-            // }
-            // else{
-            //     let m = showYakitModal({
-            //         title: "添加第三方应用",
-            //         width: 600,
-            //         footer: null,
-            //         closable: true,
-            //         maskClosable: false,
-            //         content: (
-            //             <div style={{ margin: 24 }}>
-            //                 <ThirdPartyApplicationConfigForm
-            //                     onAdd={(e) => {
-            //                         let existed = false
-            //                         const existedResult = (obj.AppConfigs || []).map(
-            //                             (i) => {
-            //                                 if (i.Type === e.Type) {
-            //                                     existed = true
-            //                                     return { ...i, ...e }
-            //                                 }
-            //                                 return { ...i }
-            //                             }
-            //                         )
-            //                         if (!existed) {
-            //                             existedResult.push(e)
-            //                         }
-            //                         const params = {...obj, AppConfigs: existedResult}
-            //                         apiSetGlobalNetworkConfig(params).then(() => {
-            //                             setYakitWindowVisible(true)
-            //                             setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
-            //                             m.destroy()
-            //                         })
-            //                     }}
-            //                     onCancel={() => m.destroy()}
-            //                 />
-            //             </div>
-            //         )
-            //     })
-            // }
+            if(configType.length>0){
+                openAIByChatCS({text: val.text, scriptName: val.scriptName})
+                // setYakitWindowVisible(true)
+                // setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
+            }
+            else{
+                let m = showYakitModal({
+                    title: "添加第三方应用",
+                    width: 600,
+                    footer: null,
+                    closable: true,
+                    maskClosable: false,
+                    content: (
+                        <div style={{ margin: 24 }}>
+                            <ThirdPartyApplicationConfigForm
+                                onAdd={(e) => {
+                                    let existed = false
+                                    const existedResult = (obj.AppConfigs || []).map(
+                                        (i) => {
+                                            if (i.Type === e.Type) {
+                                                existed = true
+                                                return { ...i, ...e }
+                                            }
+                                            return { ...i }
+                                        }
+                                    )
+                                    if (!existed) {
+                                        existedResult.push(e)
+                                    }
+                                    const params = {...obj, AppConfigs: existedResult}
+                                    apiSetGlobalNetworkConfig(params).then(() => {
+                                        openAIByChatCS({text: val.text, scriptName: val.scriptName})
+                                        // setYakitWindowVisible(true)
+                                        // setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
+                                        m.destroy()
+                                    })
+                                }}
+                                onCancel={() => m.destroy()}
+                            />
+                        </div>
+                    )
+                })
+            }
         }
-        // })
+        })
     })
 
     useEffect(() => {

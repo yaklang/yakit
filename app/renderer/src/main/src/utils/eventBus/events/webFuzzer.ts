@@ -9,6 +9,7 @@ export type WebFuzzerEventProps = {
     onGetExportFuzzerCallBack: string
     onOpenMatchingAndExtractionCard: string
     onOpenFuzzerModal: string
+    onRunChatcsAIByFuzzer: string
     /**设置tab【配置】/【规则】中得高级配置显示/隐藏 */
     onSetAdvancedConfigShow: string
     /** 发送到HTTPFuzzerPage 切换【配置】/【规则】tab 得选中type */

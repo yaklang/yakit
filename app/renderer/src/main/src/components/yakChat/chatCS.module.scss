@@ -125,6 +125,9 @@
             flex-direction: column;
             overflow: hidden;
         }
+        .layout-body-footer-hidden {
+            display: none;
+        }
         .layout-prompt {
             display: flex;
             width: 402px;
@@ -591,6 +594,15 @@
                 border: 1px solid #eaecf3;
                 background: lightgray 50% / cover no-repeat;
             }
+            .user-show{
+                width: 32px;
+                height: 32px;
+                display: flex;
+                svg{
+                    scale: 1.15;
+                }
+            }
+            
         }
         .header-right {
             display: none;
@@ -628,7 +640,10 @@
             gap: 4px;
         }
     }
-
+    .opt-content-auto {
+        max-height: 400px;
+        overflow: auto;
+    }
     .opt-content {
         padding-left: 40px;
         .content-style {
@@ -648,6 +663,7 @@
                 margin-top: 20px;
             }
         }
+
         .user-content-style {
             width: 100%;
             color: #31343f;
@@ -1408,7 +1424,7 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        .load-content-check{
+        .load-content-check {
             color: var(--yakit-success-5);
             font-size: 16px;
         }
@@ -1477,7 +1493,8 @@
     }
 }
 
-.plugin-ai-list{
+.plugin-ai-list {
+    width: 100%;
     .welcome-plugin-ai {
         padding: 32px 20px 20px 40px;
         display: flex;

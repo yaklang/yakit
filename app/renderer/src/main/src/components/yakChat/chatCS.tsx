@@ -69,7 +69,7 @@ import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {ArrowRightSvgIcon} from "../layout/icons"
+import {ArrowRightSvgIcon, UnLoginSvgIcon} from "../layout/icons"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {chatCS, chatCSPlugin, chatGrade, getPromptList} from "@/services/yakChat"
@@ -124,6 +124,7 @@ import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 import {CheckOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 /** 将 new Date 转换为日期 */
@@ -273,6 +274,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const resTimeRef = useRef<any>(null)
 
     const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">(userInfo.isLogin?"ChatCS":"PluginAI")
+    const [pluginAIParams,setPluginAIParams] = useState<{text?: string; scriptName: string}>()
+    const [pluginAIList, setPluginAIList] = useState<PluginAiItem[]>([])
 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [maxNumber, setMaxNumber] = useState<number>(5)
@@ -333,6 +336,41 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 setMaxNumber(data.maxNumber)
             } catch (error) {}
         })
+    }, [])
+
+    const PluginAIListCache = "PLUGIN_AILIST_CACHE"
+
+    useEffect(()=>{
+        getRemoteValue(PluginAIListCache).then((value: string) => {
+            if (!value) return
+            try {
+                const data: PluginAiItem[] = JSON.parse(value)
+                setPluginAIList(data)
+            } catch (error) {}
+        })
+    },[])
+
+    useUpdateEffect(()=>{
+        setRemoteValue(PluginAIListCache, JSON.stringify(pluginAIList))
+    },[pluginAIList])
+
+    const onFuzzerRunChatcsAI = useMemoizedFn((value)=>{
+        try {
+            const val: {text?: string; scriptName: string} = JSON.parse(value)
+            setVisible(true)
+            setPluginAIParams(val)
+            setChatcsType("PluginAI")
+        } catch (error) {
+            
+        }
+    })
+
+    useEffect(() => {
+        // YakitWindow
+        emiter.on("onRunChatcsAIByFuzzer", onFuzzerRunChatcsAI)
+        return () => {
+            emiter.off("onRunChatcsAIByFuzzer", onFuzzerRunChatcsAI)
+        }
     }, [])
 
     useDebounceEffect(
@@ -1124,7 +1162,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"清空AI插件"}>
                                         <div
                                             className={classNames(styles["small-btn"], styles["btn-style"])}
-                                            onClick={() => {}}
+                                            onClick={() => {setPluginAIList([])}}
                                         >
                                             <TrashIcon />
                                         </div>
@@ -1157,8 +1195,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 </div>
 
                 <div className={styles["layout-main"]}>
-                    {chatcsType === "ChatCS" ? (
-                        <div className={styles["layout-body-footer"]}>
+                   
+                        <div className={classNames(styles["layout-body-footer"],{
+                        [styles["layout-body-footer-hidden"]]: chatcsType !== "ChatCS",
+                        }) }>
                             <div className={styles["layout-body"]}>
                                 <div className={styles["body-wrapper"]}>
                                     {history.length === 0 || currentChat.length === 0 ? (
@@ -1413,9 +1453,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 </div>
                             )}
                         </div>
-                    ) : (
-                        <PluginAIList />
-                    )}
+                   
+
+                    <PluginAIComponent visible={chatcsType === "PluginAI"} params={pluginAIParams} setParams={setPluginAIParams} pluginAIList={pluginAIList} setPluginAIList={setPluginAIList}/>
+                    
                     {isShowPrompt && chatcsType === "ChatCS" && (
                         <PromptWidget
                             setShowPrompt={setShowPrompt}
@@ -1467,9 +1508,10 @@ interface ChatUserContentProps {
     time: string
     info: ChatMeInfoProps
     onDel: () => any
+    classNameContent?: string
 }
 const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
-    const {time, info, onDel} = props
+    const {time, info, onDel,classNameContent} = props
 
     const {userInfo} = useStore()
     const showImg = useMemo(() => {
@@ -1483,7 +1525,11 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
         <div className={classNames(styles["content-opt-wrapper"], styles["content-opt-me-wrapper"])}>
             <div className={styles["opt-header"]}>
                 <div className={styles["header-left"]}>
-                    <img className={styles["img-style"]} src={showImg} />
+                    {
+                        userInfo.isLogin?<img className={styles["img-style"]} src={showImg} />:
+                        <div className={styles['user-show']}><UnLoginSvgIcon /></div>
+                    }
+                    
                     {time}
                 </div>
                 <div className={styles["header-right"]}>
@@ -1492,7 +1538,7 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
                     </div>
                 </div>
             </div>
-            <div className={styles["opt-content"]}>
+            <div className={classNames(styles["opt-content"],classNameContent || "")}>
                 <div className={styles["user-content-style"]}>{info.content}</div>
             </div>
         </div>
@@ -1779,6 +1825,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                                 const check = checkedList.includes(info.ScriptName)
                                 return (
                                     <PluginDetailsListItem<YakScript>
+                                        key={info.Id}
                                         order={i}
                                         plugin={info}
                                         selectUUId={""} //本地用的ScriptName代替uuid
@@ -2529,6 +2576,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             <div className={styles["prompt-label"]}>
                 {PromptLabelArr.map((item) => (
                     <div
+                        key={item}
                         className={classNames(styles["prompt-label-item"], {
                             [styles["prompt-label-item-no-active"]]: item !== selectLabel,
                             [styles["prompt-label-item-active"]]: item === selectLabel
@@ -2546,8 +2594,9 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                 ))}
             </div>
             <div className={styles["prompt-list"]} ref={promptListRef}>
-                {showPromptList.map((item) => (
+                {showPromptList.map((item,index) => (
                     <div
+                        key={`${index}-${item.title}`}
                         className={styles["prompt-item"]}
                         onClick={() => {
                             if (isOther(item.prompt_type)) {
@@ -2565,8 +2614,8 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                             <>
                                 <div className={styles["sub-title"]}>
                                     只需输入
-                                    {item.templateArr.map((itemIn) => (
-                                        <span className={styles["span-label"]}>{itemIn}</span>
+                                    {item.templateArr.map((itemIn,indexIn) => (
+                                        <span key={`${itemIn}-${indexIn}`} className={styles["span-label"]}>{itemIn}</span>
                                     ))}
                                     将自动为你生成 Prompt
                                 </div>
@@ -2644,7 +2693,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
             <div className={styles["form-box"]}>
                 {selectItem.templateArr.map((item) => {
                     return (
-                        <div className={styles["form-item"]}>
+                        <div key={item} className={styles["form-item"]}>
                             <div className={styles["title"]}>{item}：</div>
                             <div className={styles["input-text-area"]}>
                                 <Input.TextArea
@@ -2822,33 +2871,106 @@ interface PluginAiItem {
     info: any
 }
 
-interface PluginAIListProps {}
+interface PluginAIComponentProps {
+    visible: boolean
+    params?: {text?: string; scriptName: string}
+    setParams?: (v?:{text?: string; scriptName: string}) => void
+    pluginAIList: PluginAiItem[]
+    setPluginAIList:(v:any) => void
+}
 
-export const PluginAIList: React.FC<PluginAIListProps> = (props) => {
+export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
+    const {visible,params,setParams,pluginAIList,setPluginAIList} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingToken, setLoadingToken] = useState<string>("")
     const [resTime, setResTime] = useState<string>("")
+    
+    const pluginAIListRef = useRef<HTMLDivElement>(null)    
 
-    const [pluginAIList, setPluginAIList] = useState<PluginAiItem[]>()
-    const pluginAIListRef = useRef<HTMLDivElement>(null)
+    // 添加项
+    const AddAIList = useMemoizedFn((obj:PluginAiItem)=>{
+        setPluginAIList((lastList)=>[...lastList,obj])
+    })
 
-    const onDelContent = useMemoizedFn((item) => {})
+    // 更新最后一项
+    const setAIList = useMemoizedFn((obj:PluginAiItem,token:string)=>{
+        try {
+            const newPluginAIList:PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
+            setPluginAIList(newPluginAIList.map((item)=>{
+                if(item.token === token){
+                    return obj
+                }
+                return item
+            }))
+        } catch (error) {}
+    })
+
+    const scroll = useScroll(pluginAIListRef)
+    // 滚轮触底
+    const scrollToPluginAIBottom = useMemoizedFn(() => {
+        if (pluginAIListRef.current) {
+            const scrollHeight = pluginAIListRef.current?.scrollHeight || 0
+            const top = scroll?.top || 0
+            if (scrollHeight - top < 5) return
+            ;(pluginAIListRef.current as HTMLDivElement).scrollTop = (pluginAIListRef.current as HTMLDivElement).scrollHeight
+        }
+    })
+
+    useEffect(() => {
+        if (visible) scrollToPluginAIBottom()
+    }, [visible])
+
+    useEffect(()=>{
+        if(params){
+            const {text,scriptName} = params
+            AddAIList({info:{content:text},isMe:true,time: formatDate(+new Date()),token: randomString(10)})
+            scrollToPluginAIBottom()
+            const token = randomString(10)
+            setLoading(true)
+            setLoadingToken(token)
+            let obj:PluginAiItem = {info:{content:""},isMe:false,time: formatDate(+new Date()),token}
+            AddAIList(obj)
+            scrollToPluginAIBottom()
+            ipcRenderer
+            .invoke("Codec", {Text: text, ScriptName: scriptName})
+            .then((result: {Result: string}) => {
+                obj.info = {content:result.Result}
+                setAIList(obj,token)
+                scrollToPluginAIBottom()
+            })
+            .catch((e) => {
+                yakitNotify("error", `Codec ${e}`)
+            })
+            .finally(() => {
+                setParams&&setParams(undefined)
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
+        }
+    },[params])
+
+    const onDelContent = useMemoizedFn((item:PluginAiItem) => {
+        setPluginAIList((newPluginAIList)=>newPluginAIList.filter((itemIn)=>itemIn.token!==item.token))
+    })
 
     /** 停止回答(断开请求连接) */
     const onStop = useMemoizedFn(() => {})
     return (
-        <div className={styles["plugin-ai-list"]}>
-            {pluginAIList ? (
-                <div ref={pluginAIListRef}>
+        <>{
+            visible&&<div className={styles["plugin-ai-list"]}>
+            {pluginAIList.length>0 ? (
+                <div style={{overflow:"auto",height:"100%"}} ref={pluginAIListRef}>
                     {pluginAIList.map((item) => {
                         const {token, isMe, time, info} = item
                         if (isMe) {
                             return (
-                                <ChatUserContent key={token} time={time} info={info} onDel={() => onDelContent(item)} />
+                                <ChatUserContent key={token} classNameContent={styles["opt-content-auto"]} time={time} info={info} onDel={() => onDelContent(item)} />
                             )
                         } else {
                             return (
                                 <PluginAIContent
+                                    key={token}
                                     token={token}
                                     loadingToken={loadingToken}
                                     loading={loading}
@@ -2870,6 +2992,8 @@ export const PluginAIList: React.FC<PluginAIListProps> = (props) => {
                 </div>
             )}
         </div>
+        }</>
+       
     )
 }
 
@@ -2879,7 +3003,7 @@ interface PluginAIContentProps {
     /** 当前正在查询的那个回答的唯一标识符 */
     loadingToken: string
     time: string
-    info: ChatCSMultipleInfoProps
+    info: {content:string}
     loading: boolean
     /** 查询的动态运行时间 */
     resTime: string
@@ -2891,13 +3015,13 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
     const {token, loading, loadingToken, time, info, resTime, onStop, onDel} = props
 
     const copyContent = useMemo(() => {
-        let content: string = ""
+        let content: string = info.content
         return content
     }, [resTime, info])
 
     const showLoading = useMemo(() => {
-        return loading
-    }, [loading])
+        return token === loadingToken && loading
+    }, [token, loadingToken, loading])
 
     return (
         <div className={styles["content-opt-wrapper"]}>
@@ -2908,9 +3032,10 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                 </div>
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
                     {showLoading ? (
-                        <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
-                            停止
-                        </YakitButton>
+                        <></>
+                        // <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
+                        //     停止
+                        // </YakitButton>
                     ) : (
                         <>
                             <div className={styles["right-btn"]}>
@@ -2929,36 +3054,39 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
             </div>
             <div className={styles["opt-content"]}>
                 {token === loadingToken ? (
-                    info.content.length !== 0 && (
+                    info.content.length !== 0 ? (
                         <>
                             <div className={styles["content-style"]}>
-                                {info.content.map((item, index) => {
-                                    return (
-                                        <React.Fragment key={item.id + index}>
-                                            <ChatMarkdown content={item.content} />
-                                        </React.Fragment>
-                                    )
-                                })}
+                                <React.Fragment>
+                                    <ChatMarkdown content={info.content} />
+                                </React.Fragment>
                             </div>
                         </>
-                    )
+                    ):<>
+                    {showLoading && (
+                            <div className={styles["loading-wrapper"]}>
+                                <div
+                                    className={classNames(styles["loading-style"], styles["loading-dot-before"])}
+                                ></div>
+                                <div className={classNames(styles["loading-style"], styles["loading-dot"])}></div>
+                                <div className={classNames(styles["loading-style"], styles["loading-dot-after"])}></div>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className={styles["content-style"]}>
                         {info.content.length === 0 ? (
                             "请求出现错误，请稍候再试"
                         ) : (
                             <>
-                                {info.content.map((item, index) => {
-                                    return (
-                                        <React.Fragment key={item.id + index}>
-                                            <ChatMarkdown content={item.content} />
-                                        </React.Fragment>
-                                    )
-                                })}
+                                <React.Fragment>
+                                    <ChatMarkdown content={info.content} />
+                                </React.Fragment>
                             </>
                         )}
                     </div>
                 )}
+                
             </div>
         </div>
     )
