@@ -14,6 +14,7 @@ export interface AdvancedConfigValueProps {
     /**@name 不修复长度 */
     noFixContentLength: boolean
     noSystemProxy: boolean
+    resNumlimit: number
     actualHost: string
     timeout: number
     batchTarget?: Uint8Array
@@ -108,6 +109,7 @@ export interface HttpQueryAdvancedConfigProps {
     /**根据type 显示高级配置中得内容 */
     showFormContentType: WebFuzzerType
     proxyListRef: React.Ref
+    isbuttonIsSendReqStatus: boolean
 }
 
 export interface KVPair {

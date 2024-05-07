@@ -68,6 +68,7 @@ import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeTyp
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
 import {
+    DefFuzzerTableMaxData,
     FuzzerCacheDataProps,
     ShareValueProps,
     defaultAdvancedConfigValue,
@@ -729,18 +730,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn(async (res: any) => {
-        const {isHttps, isGmTLS, request, advancedConfigValue, openFlag = true} = res || {}
+        const {isHttps, isGmTLS, request, advancedConfigValue, openFlag = true, isCache = true} = res || {}
         const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
             proxy: [],
             dnsServers: [],
             etcHosts: [],
-            advancedConfigShow: null
+            advancedConfigShow: null,
+            resNumlimit: DefFuzzerTableMaxData
         }
         let newAdvancedConfigValue = {
-            ...advancedConfigValue,
-            proxy: cacheData.proxy,
-            dnsServers: cacheData.dnsServers,
-            etcHosts: cacheData.etcHosts
+            ...advancedConfigValue
+        }
+        if (isCache) {
+            newAdvancedConfigValue.proxy = cacheData.proxy
+            newAdvancedConfigValue.dnsServers = cacheData.dnsServers
+            newAdvancedConfigValue.etcHosts = cacheData.etcHosts
+            newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
         }
         let newAdvancedConfigShow = cacheData.advancedConfigShow
         let newIsHttps = !!isHttps
@@ -1449,12 +1454,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 proxy: [],
                 dnsServers: [],
                 etcHosts: [],
-                advancedConfigShow: null
+                advancedConfigShow: null,
+                resNumlimit: DefFuzzerTableMaxData
             }
             const defaultCache = {
                 proxy: cacheData.proxy,
                 dnsServers: cacheData.dnsServers,
-                etcHosts: cacheData.etcHosts
+                etcHosts: cacheData.etcHosts,
+                resNumlimit: cacheData.resNumlimit
             }
             getRemoteProjectValue(RemoteGV.FuzzerCache)
                 .then((res: any) => {

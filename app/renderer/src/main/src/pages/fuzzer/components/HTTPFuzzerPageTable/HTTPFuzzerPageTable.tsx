@@ -23,7 +23,7 @@ import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateE
 import classNames from "classnames"
 import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, FuzzerResponse, FuzzerTableMaxData, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, DefFuzzerTableMaxData, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {ArrowRightSvgIcon} from "@/components/layout/icons"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
@@ -61,8 +61,9 @@ interface HTTPFuzzerPageTableProps {
     onDebug?: (res: string) => void
     pageId?: string
     /**超过限制数据，alert文案显示 */
-    moreLimtAlertMsg?: string
+    moreLimtAlertMsg?: React.ReactNode
     tableKeyUpDownEnabled?: boolean
+    fuzzerTableMaxData?: number
 }
 
 /**
@@ -142,8 +143,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             isShowDebug,
             onDebug,
             pageId,
-            moreLimtAlertMsg = "",
-            tableKeyUpDownEnabled = true
+            moreLimtAlertMsg,
+            tableKeyUpDownEnabled = true,
+            fuzzerTableMaxData = DefFuzzerTableMaxData
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
         const listTableRef = useRef<FuzzerResponse[]>([])
@@ -789,7 +791,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
                     firstNode={
                         <div className={styles["fuzzer-page-table-wrap"]}>
-                            {moreLimtAlertMsg && data.length >= FuzzerTableMaxData && (
+                            {moreLimtAlertMsg && data.length >= fuzzerTableMaxData && (
                                 <div>
                                     <ReactResizeDetector
                                         onResize={(w, h) => {
@@ -805,26 +807,26 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     <Alert
                                         message={moreLimtAlertMsg}
                                         type='warning'
-                                        closable
-                                        closeIcon={
-                                            <YakitButton
-                                                style={{float: "right"}}
-                                                type='text2'
-                                                size={"middle"}
-                                                icon={<OutlineXIcon />}
-                                            />
-                                        }
+                                        // closable
+                                        // closeIcon={
+                                        //     <YakitButton
+                                        //         style={{float: "right"}}
+                                        //         type='text2'
+                                        //         size={"middle"}
+                                        //         icon={<OutlineXIcon />}
+                                        //     />
+                                        // }
                                         style={{margin: "5px 0"}}
-                                        onClose={(e) => {
-                                            setAlertClose(true)
-                                        }}
+                                        // onClose={(e) => {
+                                        //     setAlertClose(true)
+                                        // }}
                                     />
                                 </div>
                             )}
                             <div
                                 style={{
                                     height:
-                                        moreLimtAlertMsg && data.length >= FuzzerTableMaxData && !alertClose
+                                        moreLimtAlertMsg && data.length >= fuzzerTableMaxData && !alertClose
                                             ? `calc(100% - ${alertHeight + 10}px)`
                                             : "100%"
                                 }}

@@ -20,7 +20,7 @@ import {Form, Tooltip, Space, Divider} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
-import {SelectOptionProps} from "../HTTPFuzzerPage"
+import {DefFuzzerTableMaxData, SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
@@ -98,7 +98,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         id,
         matchSubmitFun,
         showFormContentType,
-        proxyListRef
+        proxyListRef,
+        isbuttonIsSendReqStatus
     } = props
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
@@ -443,6 +444,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </YakitButton>
                             <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                                 <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item label='响应数据限制' name='resNumlimit' style={{marginBottom: 12}}>
+                                <YakitInputNumber
+                                    type='horizontal'
+                                    size='small'
+                                    min={1}
+                                    max={DefFuzzerTableMaxData}
+                                    disabled={!isbuttonIsSendReqStatus}
+                                />
                             </Form.Item>
                         </div>
                         <YakitCollapse

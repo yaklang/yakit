@@ -21,7 +21,7 @@ import {saveABSFileAnotherOpen} from "@/utils/openWebsite"
 import {Uint8ArrayToString, StringToUint8Array} from "@/utils/str"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitRoute} from "@/routes/newRoute"
-import {FuzzerRequestProps} from "../../HTTPFuzzerPage"
+import {DefFuzzerTableMaxData, FuzzerRequestProps} from "../../HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import emiter from "@/utils/eventBus/eventBus"
 import {randomString} from "@/utils/randomUtil"
@@ -31,13 +31,13 @@ import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorC
 const {ipcRenderer} = window.require("electron")
 
 const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
-
     const resProps: AdvancedConfigValueProps = {
         isHttps: value.IsHTTPS,
         isGmTLS: value.IsGmTLS,
         actualHost: value.ActualAddr,
-        proxy: value.Proxy.split(","),
+        proxy: value.Proxy ? value.Proxy.split(",") : [],
         noSystemProxy: value.NoSystemProxy,
+        resNumlimit: DefFuzzerTableMaxData,
         fuzzTagMode: value.FuzzTagMode,
         fuzzTagSyncIndex: value.FuzzTagSyncIndex,
         noFixContentLength: value.NoFixContentLength,
@@ -71,10 +71,10 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         matchers: value.Matchers,
         extractors: value.Extractors,
         params: value.Params,
-        cookie: value.MutateMethods.find((item) => item.Type === "Cookie")?.Value || [{ Key: "", Value: "" }],
-        headers: value.MutateMethods.find((item) => item.Type === "Headers")?.Value || [{ Key: "", Value: "" }],
-        methodGet: value.MutateMethods.find((item) => item.Type === "Get")?.Value || [{ Key: "", Value: "" }],
-        methodPost: value.MutateMethods.find((item) => item.Type === "Post")?.Value || [{ Key: "", Value: "" }],
+        cookie: value.MutateMethods.find((item) => item.Type === "Cookie")?.Value || [{Key: "", Value: ""}],
+        headers: value.MutateMethods.find((item) => item.Type === "Headers")?.Value || [{Key: "", Value: ""}],
+        methodGet: value.MutateMethods.find((item) => item.Type === "Get")?.Value || [{Key: "", Value: ""}],
+        methodPost: value.MutateMethods.find((item) => item.Type === "Post")?.Value || [{Key: "", Value: ""}],
         inheritCookies: value.InheritCookies,
         inheritVariables: value.InheritVariables
     }
@@ -264,6 +264,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                     await ipcRenderer.invoke("send-to-tab", {
                         type: "fuzzer",
                         data: {
+                            isCache: false,
                             request: Uint8ArrayToString(params.RequestRaw),
                             advancedConfigValue: toFuzzerAdvancedConfigValue(params)
                         }
