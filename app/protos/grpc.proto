@@ -721,7 +721,7 @@ message QueryHybridScanTaskRequest {
 
 message HybridScanTaskFilter {
   repeated string TaskId = 1;
-  string Status = 2;
+  repeated string Status = 2;
   string Target = 3;
   int64 FromId = 4;
   int64  UntilId = 5;
