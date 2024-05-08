@@ -11,6 +11,9 @@
     background-color: var(--yakit-card-background-color);
 
     :global {
+        .ant-radio-button-wrapper {
+            padding: 3px 10px;
+        }
         .ant-form-item {
             margin-bottom: 12px;
         }
