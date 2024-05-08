@@ -730,17 +730,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         return currentSequenceItem && currentSequenceItem.id && currentSelectRequest
     }, [currentSequenceItem, currentSelectRequest])
 
-    const onValidateMatcherAndExtraction = useMemoizedFn(async () => {
-        if (isShowSequenceResponse && sequenceResponseRef && sequenceResponseRef.current) {
-            try {
-                await sequenceResponseRef.current.validate()
+    const onValidateMatcherAndExtraction = useMemoizedFn(() => {
+        validateME()
+            .catch(() => {})
+            .finally(() => {
                 onStartExecution()
-            } catch (error) {
-                yakitNotify("error", "onValidateMatcherAndExtraction 数据验证失败")
-            }
-        } else {
-            onStartExecution()
-        }
+            })
     })
 
     const onStartExecution = useMemoizedFn(() => {
@@ -813,15 +808,34 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             setSequenceList([...sequenceList])
         }
     })
-    const onSelect = useMemoizedFn((val: SequenceProps) => {
+    /**单个返回Response 打开匹配器和提取器编辑，切换选中项或者点击开始执行时，需要先验证用户是否要应用最新得数据 */
+    const validateME = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            if (isShowSequenceResponse && sequenceResponseRef && sequenceResponseRef.current) {
+                sequenceResponseRef.current
+                    .validate()
+                    .then(() => {
+                        resolve(true)
+                    })
+                    .catch(reject)
+            } else {
+                resolve(true)
+            }
+        })
+    })
+    const onSelect = useMemoizedFn(async (val: SequenceProps) => {
         if (!val.pageId) {
             yakitNotify("error", "请配置序列后再选中")
             return
         }
-        if (!currentSequenceItem || !currentSequenceItem.pageId) {
-            setIsShowSetting(true)
-        }
-        setCurrentSequenceItem({...val})
+        validateME()
+            .catch(() => {})
+            .finally(() => {
+                if (!currentSequenceItem || !currentSequenceItem.pageId) {
+                    setIsShowSetting(true)
+                }
+                setCurrentSequenceItem({...val})
+            })
     })
 
     /**显示页面的高级配置部分参数 */
@@ -1729,16 +1743,15 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             .validate()
                             .then((data: MatcherAndExtractionValueProps) => {
                                 onSaveMatcherAndExtractionDrawer(data.matcher, data.extractor)
-                            })
-                            .finally(() => {
                                 resolve(true)
                             })
+                            .catch(reject)
                     } else {
                         resolve(true)
                     }
                 } catch (error) {
                     reject(false)
-                    yakitNotify("error", "匹配器和提取器验证失败:" + error)
+                    yakitNotify("error", `匹配器和提取器验证失败:${error}`)
                 }
             })
         })

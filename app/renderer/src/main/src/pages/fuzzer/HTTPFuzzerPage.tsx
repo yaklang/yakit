@@ -970,6 +970,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         extractors: data.extractor.extractorList || []
                     })
                 })
+                .catch(() => {})
                 .finally(() => {
                     setTimeout(() => {
                         submitToHTTPFuzzer()
@@ -1345,7 +1346,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ...currentItem,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
-                    ...(currentItem.pageParamsInfo?.webFuzzerPageInfo||{}),
+                    ...(currentItem.pageParamsInfo?.webFuzzerPageInfo || {}),
                     pageId: param.pageId,
                     advancedConfigValue: {
                         ...param.advancedConfigValue
@@ -2863,11 +2864,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     //         一键重试
                     //     </YakitButton>
                     // </YakitPopconfirm>
-                    <YakitButton
-                        type={"primary"}
-                        size='small'
-                        disabled={true}
-                    >
+                    <YakitButton type={"primary"} size='small' disabled={true}>
                         一键重试
                     </YakitButton>
                 )}
