@@ -960,6 +960,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                                     const diplay = (selectedOptions || []).map((item: any) => item.Label).join(" / ")
                                     return <>{diplay}</>
                                 }}
+                                
                             />
                         ) : (
                             <YakitSelect
