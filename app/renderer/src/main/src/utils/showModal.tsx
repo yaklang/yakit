@@ -108,6 +108,7 @@ export interface BaseDrawerProp extends DrawerProps, React.ComponentProps<any> {
 }
 
 export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
+    const {afterVisible,afterInvisible,afterClose,...restProps}=props;
     const [visible, setVisible] = useState(false)
 
     useEffect(() => {
@@ -117,7 +118,7 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
     useEffect(() => {
         if (visible) {
             emiter.emit("setYakitHeaderDraggable", false)
-            if (props.afterVisible) props.afterVisible(setVisible)
+            if (afterVisible) afterVisible(setVisible)
         } else {
             emiter.emit("setYakitHeaderDraggable", true)
         }
@@ -125,9 +126,9 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
 
     const close = () => {
         setVisible(false)
-        if (props.afterInvisible) props.afterInvisible(setVisible)
+        if (afterInvisible) afterInvisible(setVisible)
         setTimeout(() => {
-            if (props.afterClose) props.afterClose(setVisible)
+            if (afterClose) afterClose(setVisible)
         }, 1000)
     }
 
@@ -139,7 +140,7 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
             closable={true}
             width={"50%"}
             maskClosable={true}
-            {...props}
+            {...restProps}
         ></Drawer>
     )
 }
