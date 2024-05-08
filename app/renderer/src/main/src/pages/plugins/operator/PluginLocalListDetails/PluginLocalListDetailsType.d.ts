@@ -33,6 +33,8 @@ export interface PluginLocalListDetailsProps {
     fixFilterList?: API.PluginsSearch[]
     allCheck?: boolean
     setAllCheck?: (b: boolean) => void
+    /**插件组排除插件类型 */
+    pluginGroupExcludeType?: string[]
 }
 
 export interface PluginLocalListDetailsRefProps {}

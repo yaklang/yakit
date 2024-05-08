@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab} from "../local/PluginsLocalDetail"
@@ -15,6 +15,7 @@ import {yakitNotify} from "@/utils/notification"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
 import {Tooltip} from "antd"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
+import { pluginTypeToName } from "../builtInData"
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
     // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -110,6 +111,11 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
             </>
         )
     }, [])
+    const pluginGroupExcludeType = useMemo(() => {
+        const typeArr = filters.plugin_type?.map((i) => i.value) || []
+        const allPluginTypes = Object.keys(pluginTypeToName)
+        return allPluginTypes.filter(type => !typeArr.includes(type))
+    }, [filters])
     if (!plugin) return null
     return (
         <>
@@ -123,6 +129,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 setFilters={setFilters}
                 allCheck={allCheck}
                 setAllCheck={setAllCheck}
+                pluginGroupExcludeType={pluginGroupExcludeType}
             >
                 <PluginDetailsTab
                     executorShow={!pluginLoading}

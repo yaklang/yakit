@@ -1,6 +1,6 @@
 import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
-import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {failed, yakitNotify} from "@/utils/notification"
 import style from "../MITMPage.module.scss"
 import ReactResizeDetector from "react-resize-detector"
@@ -455,9 +455,17 @@ interface PluginGroupProps {
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
     wrapperClassName?: string
     isShowGroupMagBtn?: boolean
+    excludeType?: string[]
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
-    const {selectGroup, setSelectGroup, wrapperClassName, isShowGroupMagBtn = true, isOnline = false} = props
+    const {
+        selectGroup,
+        setSelectGroup,
+        wrapperClassName,
+        isShowGroupMagBtn = true,
+        isOnline = false,
+        excludeType = ["yak", "codec"]
+    } = props
 
     const [visible, setVisible] = useState<boolean>(false)
     /**
@@ -469,36 +477,40 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     const [inViewport] = useInViewport(pluginGroupRef)
     const refreshSelectGroupRef = useRef<boolean>(false)
 
-    useEffect(() => {
-        if (inViewport) {
-            // 获取插件组
-            if (isOnline) {
-                apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
-                    const copyGroup = structuredClone(res.data)
-                    const data: YakFilterRemoteObj[] = copyGroup
-                        .filter((item) => !item.default)
-                        .map((item) => ({
-                            name: item.value,
-                            total: item.total
+    useDebounceEffect(
+        () => {
+            if (inViewport) {
+                // 获取插件组
+                if (isOnline) {
+                    apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
+                        const copyGroup = structuredClone(res.data)
+                        const data: YakFilterRemoteObj[] = copyGroup
+                            .filter((item) => !item.default)
+                            .map((item) => ({
+                                name: item.value,
+                                total: item.total
+                            }))
+                        setPlugGroup(data)
+                        filterSelectGroup(data)
+                    })
+                } else {
+                    apiFetchQueryYakScriptGroupLocal(false, excludeType).then((group: GroupCount[]) => {
+                        const copyGroup = structuredClone(group)
+                        const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
+                            name: item.Value,
+                            total: item.Total
                         }))
-                    setPlugGroup(data)
-                    filterSelectGroup(data)
-                })
+                        setPlugGroup(data)
+                        filterSelectGroup(data)
+                    })
+                }
             } else {
-                apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
-                    const copyGroup = structuredClone(group)
-                    const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
-                        name: item.Value,
-                        total: item.Total
-                    }))
-                    setPlugGroup(data)
-                    filterSelectGroup(data)
-                })
+                refreshSelectGroupRef.current = false
             }
-        } else {
-            refreshSelectGroupRef.current = false
-        }
-    }, [inViewport])
+        },
+        [inViewport, excludeType],
+        {wait: 500}
+    )
 
     const filterSelectGroup = (data: YakFilterRemoteObj[]) => {
         if (!refreshSelectGroupRef.current) return
