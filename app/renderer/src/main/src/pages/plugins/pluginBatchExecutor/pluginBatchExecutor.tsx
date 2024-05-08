@@ -10,7 +10,7 @@ import {
     PluginBatchExecutorTaskProps,
     apiHybridScan,
     apiQueryHybridScan,
-    apiStopHybridScan,
+    apiCancelHybridScan,
     convertHybridScanParams,
     hybridScanParamsConvertToInputValue
 } from "../utils"
@@ -629,7 +629,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         /**取消执行 */
         const onStopExecute = useMemoizedFn(() => {
             setStopLoading(true)
-            apiStopHybridScan(runtimeId, tokenRef.current)
+            apiCancelHybridScan(tokenRef.current)
         })
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true

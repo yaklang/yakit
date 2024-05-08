@@ -100,7 +100,6 @@ import {
     PluginBatchExecutorTaskProps,
     apiCancelHybridScan,
     apiHybridScan,
-    apiStopHybridScan,
     convertHybridScanParams
 } from "@/pages/plugins/utils"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
@@ -1904,7 +1903,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     /**取消执行 */
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
-        apiStopHybridScan(runtimeId || "", tokenRef.current).then(() => {
+        apiCancelHybridScan(tokenRef.current).then(() => {
             setPluginRun(false)
         })
     })
