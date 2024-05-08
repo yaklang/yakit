@@ -137,8 +137,8 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         useEffect(() => {
             update(1)
         }, [visible])
-        const getStatusNode = useMemoizedFn((text: string) => {
-            switch (text) {
+        const getStatusNode = useMemoizedFn((record: HybridScanTask) => {
+            switch (record.Status) {
                 case "done":
                     return (
                         <div className={styles["table-status-item"]}>
@@ -165,7 +165,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                         <div className={styles["table-status-item"]}>
                             <SolidXcircleIcon className={styles["icon-danger"]} />
                             <span className={styles["status-text"]}>失败</span>
-                            <Tooltip title='失败原因'>
+                            <Tooltip title={record.Reason || "未知原因"}>
                                 <OutlineQuestionmarkcircleIcon className={styles["icon-question"]} />
                             </Tooltip>
                         </div>
@@ -217,7 +217,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             return [
                 {
                     title: "扫描目标",
-                    dataKey: "TaskId",
+                    dataKey: "FirstTarget",
                     width: 160,
                     fixed: "left",
                     filterProps: {
@@ -229,7 +229,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                     title: "状态",
                     dataKey: "Status",
                     width: 90,
-                    render: (text: string) => getStatusNode(text),
+                    render: (_, record: HybridScanTask) => getStatusNode(record),
                     filterProps: {
                         filtersType: "select",
                         filtersSelectAll: {
@@ -393,7 +393,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             const removeParams: DeleteHybridScanTaskRequest = {
                 Filter: {
                     TaskId: [taskId],
-                    Status: "",
+                    Status: [],
                     Target: ""
                 }
             }

@@ -79,4 +79,6 @@ export interface HybridScanTask {
     TotalTasks: number
     FinishedTasks: number
     FinishedTargets: number
+    FirstTarget: string
+    Reason: string
 }

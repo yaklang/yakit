@@ -5,7 +5,7 @@ const {ipcRenderer} = window.require("electron")
 
 interface HybridScanTaskFilter {
     TaskId?: string[]
-    Status?: string
+    Status?: string[]
     Target?: string
     FromId?: number
     UntilId?: number
