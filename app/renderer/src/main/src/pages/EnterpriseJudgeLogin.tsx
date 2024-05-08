@@ -5,7 +5,7 @@ import LicensePage from "./LicensePage"
 import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivateDomain"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState} from "ahooks"
-import {aboutLoginUpload} from "@/utils/login"
+import {aboutLoginUpload, loginHTTPFlowsToOnline} from "@/utils/login"
 import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
@@ -30,6 +30,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
             .then((e) => {
                 if (e?.isLogin) {
                     aboutLoginUpload(e?.token)
+                    loginHTTPFlowsToOnline(e?.token)
                     setJudgeLogin(true)
                     setJudgeLicense(false)
                 } else {

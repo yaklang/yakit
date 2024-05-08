@@ -1,4 +1,5 @@
 import {Route} from "antd/lib/breadcrumb/Breadcrumb"
+import { ProjectDescription } from "./softwareSettings/ProjectManage"
 
 export interface coordinateProps {
     screenX: number
@@ -53,4 +54,9 @@ export const delSimpleInfo = (key: string) => {
     if (SimpleCloseInfo[key]) {
         delete SimpleCloseInfo[key]
     }
+}
+
+export let NowProjectDescription:ProjectDescription|undefined = undefined
+export const setNowProjectDescription = (v:ProjectDescription|undefined) => {
+    NowProjectDescription = v
 }

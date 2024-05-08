@@ -1,8 +1,10 @@
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {getLocalValue, getRemoteValue} from "./kv"
-import {globalUserLogout, isEnpriTraceAgent} from "@/utils/envfile"
+import {getLocalValue,getRemoteValue, setRemoteValue} from "./kv"
+import {GetReleaseEdition, isCommunityEdition, globalUserLogout, isEnpriTraceAgent, isEnpriTrace} from "@/utils/envfile"
+import {RemoteGV} from "@/yakitGV"
+import {NowProjectDescription} from "@/pages/globalVariable"
 import emiter from "./eventBus/eventBus"
 import {LocalGVS} from "@/enums/localGlobal"
 const {ipcRenderer} = window.require("electron")
@@ -63,16 +65,30 @@ export const refreshToken = (userInfo: UserInfoProps) => {
         .catch((e) => {})
 }
 
-//企业简易版 登录/退出登录前时调用同步
+// 企业/简易版 登录前时调用同步
 export const aboutLoginUpload = (Token: string) => {
-    if (!isEnpriTraceAgent()) return
-    // console.log("登录/退出登录前时调用同步Token",Token);
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("upload-risk-to-online", {Token})
-            .then((res) => {})
-            .finally(() => {
-                resolve(true)
-            })
-    })
+    if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
+        const {ProjectName} = NowProjectDescription
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("upload-risk-to-online", {Token, ProjectName})
+                .then((res) => {})
+                .finally(() => {
+                    resolve(true)
+                })
+        })
+    }
+}
+
+// 企业/简易版 登录前时调用同步
+export const loginHTTPFlowsToOnline = (Token: string) => {
+    if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
+        const {ProjectName} = NowProjectDescription
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("HTTPFlowsToOnline", {Token, ProjectName})
+                .then((res) => {})
+                .finally(() => {})
+        })
+    }
 }

@@ -206,6 +206,7 @@ service Yak {
   rpc HTTPFlowsExtract(HTTPFlowsExtractRequest) returns (Empty);
   rpc GetHTTPFlowBare(HTTPFlowBareRequest) returns (HTTPFlowBareResponse);
   rpc ExportHTTPFlows(ExportHTTPFlowsRequest) returns(QueryHTTPFlowResponse);
+  rpc HTTPFlowsToOnline(HTTPFlowsToOnlineRequest) returns (Empty);
 
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
@@ -1078,6 +1079,10 @@ message GlobalNetworkConfig {
 
   repeated string ExcludePluginScanURIs = 15;
   repeated string IncludePluginScanURIs = 16;
+
+  // AI Primary Config 首选 AI 配置项
+  // openai / chatglm
+  string PrimaryAIType = 17;
 }
 
 message AuthInfo {
@@ -2792,6 +2797,7 @@ message NewRiskReadRequest {
 
 message UploadRiskToOnlineRequest {
   string Token = 1;
+  string ProjectName = 2;
 }
 
 message VerifyTunnelServerDomainParams {
@@ -3840,7 +3846,7 @@ message CodecMethod {
 
 message CodecParam {
   string Name = 1;
-  string Type = 2; // input | select | checkbox | search | monaco
+  string Type = 2; // input | select | checkbox | search | monaco | inputSelect
   repeated string Options = 3; // 可选值
   bool  Required = 4; // 就算是false也需要传
   string Desc = 5; // 描述
@@ -4317,6 +4323,11 @@ message QueryHTTPFlowRequest {
 
   bool WithPayload = 39;
   repeated string RuntimeIDs = 40;
+}
+
+message HTTPFlowsToOnlineRequest {
+  string Token = 1;
+  string ProjectName = 2;
 }
 
 message ExportHTTPFlowsRequest {

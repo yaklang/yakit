@@ -6,13 +6,13 @@ import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useStore, yakitDynamicStatus} from "./store"
-import {refreshToken} from "./utils/login"
+import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
-import {coordinate} from "./pages/globalVariable"
+import {NowProjectDescription, coordinate} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
@@ -34,6 +34,7 @@ interface OnlineProfileProps {
 function NewApp() {
     /** 是否展示用户协议 */
     const [agreed, setAgreed] = useState(false)
+    const {userInfo} = useStore()
 
     useEffect(() => {
         // 解压命令执行引擎脚本压缩包
@@ -255,12 +256,18 @@ function NewApp() {
                 ipcRenderer.invoke("app-exit", {showCloseMessageBox})
             }
         })
-        ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {})
+        ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
+            const {token} = userInfo
+            if(token.length > 0){
+                aboutLoginUpload(token)
+                loginHTTPFlowsToOnline(token)
+            }
+        })
         return () => {
             ipcRenderer.removeAllListeners("close-windows-renderer")
             ipcRenderer.removeAllListeners("minimize-windows-renderer")
         }
-    }, [dynamicStatus.isDynamicStatus])
+    }, [dynamicStatus.isDynamicStatus,userInfo])
 
     if (!agreed) {
         return (

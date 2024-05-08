@@ -57,6 +57,7 @@ import {outputToPrintLog} from "./WelcomeConsoleUtil"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
+import { setNowProjectDescription } from "@/pages/globalVariable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -814,6 +815,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setYakitMode("soft")
         setShowProjectManage(true)
         setCurrentProject(undefined)
+        setNowProjectDescription(undefined)
     }
 
     /** 项目管理的选中项目回调 */
@@ -822,6 +824,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setShowProjectManage(false)
         ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
             setCurrentProject(rsp || undefined)
+            setNowProjectDescription(rsp || undefined)
         })
     })
 
@@ -980,6 +983,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (res) {
                     ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id})
                     setCurrentProject(res)
+                    setNowProjectDescription(res)
                     setShowProjectManage(false)
                     setYakitMode("")
                 }

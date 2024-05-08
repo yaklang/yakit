@@ -283,4 +283,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("ExportHTTPFlows", async (e, params) => {
         return await asyncExportHTTPFlows(params)
     })
+
+    const asyncHTTPFlowsToOnline = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().HTTPFlowsToOnline(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("HTTPFlowsToOnline", async (e, params) => {
+        return await asyncHTTPFlowsToOnline(params)
+    })
 }

@@ -85,7 +85,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
         }
         setLoading(true)
         NetWorkApi<any, API.RiskUploadResponse>({
-            method: "get",
+            method: "post",
             url: "risk",
             params: {...paginationProps},
             data: newbodyParams.current
@@ -285,7 +285,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                 limit: query.Limit || 20
             }
             NetWorkApi<any, API.RiskUploadResponse>({
-                method: "get",
+                method: "post",
                 url: "risk",
                 params: {...paginationProps},
                 data: newbodyParams.current
