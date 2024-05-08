@@ -111,9 +111,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [params, setParams] = useState<QueryHybridScanTaskRequest>({
             Pagination: genDefaultPagination(20, 1),
-            FromId: 0,
-            UntilId: 0,
-            Status: ""
+            Filter: {}
         })
         const [loading, setLoading] = useState<boolean>(false)
         const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
@@ -223,7 +221,8 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                     width: 160,
                     fixed: "left",
                     filterProps: {
-                        filtersType: "input"
+                        filtersType: "input",
+                        filterKey: "Target"
                     }
                 },
                 {
@@ -332,12 +331,14 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         const onTableChange = useDebounceFn(
             (page: number, limit: number, sorter: SortProps, filter: any) => {
                 setParams((oldParams) => ({
-                    ...oldParams,
-                    ...filter,
                     Pagination: {
                         ...oldParams.Pagination,
                         Order: sorter.order === "asc" ? "asc" : "desc",
                         OrderBy: sorter.order === "none" ? "updated_at" : sorter.orderBy
+                    },
+                    Filter: {
+                        ...oldParams.Filter,
+                        ...filter
                     }
                 }))
                 setTimeout(() => {
@@ -390,8 +391,11 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         })
         const onRemoveSingle = useMemoizedFn((taskId: string) => {
             const removeParams: DeleteHybridScanTaskRequest = {
-                TaskId: taskId,
-                DeleteAll: false
+                Filter: {
+                    TaskId: [taskId],
+                    Status: "",
+                    Target: ""
+                }
             }
             apiDeleteHybridScanTask(removeParams)
                 .then(() => {
@@ -408,9 +412,12 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                 )
         })
         const onBatchRemove = useMemoizedFn(() => {
+            const filter = isAllSelect ? {...params.Filter} : {}
             const removeParams: DeleteHybridScanTaskRequest = {
-                TaskId: selectedRowKeys.join(","),
-                DeleteAll: selectedRowKeys.length === 0
+                Filter: {
+                    ...filter,
+                    TaskId: isAllSelect ? [] : selectedRowKeys
+                }
             }
             setLoading(true)
             apiDeleteHybridScanTask(removeParams)
@@ -443,14 +450,9 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         const onContinue = useMemoizedFn((record: HybridScanTask) => {
             onDetails(record.TaskId, "resume")
         })
-        const getCheckboxProps = useMemoizedFn((record: HybridScanTask) => {
-            return {
-                disabled: record.Status === "executing"
-            }
-        })
         return (
             <TableVirtualResize<HybridScanTask>
-                query={params}
+                query={params.Filter}
                 size='middle'
                 extra={<YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />}
                 isRefresh={isRefresh}
@@ -468,13 +470,11 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                 onChange={onTableChange}
                 isShowTotal={true}
                 rowSelection={{
-                    isShowAll: false,
                     isAll: isAllSelect,
                     type: "checkbox",
                     selectedRowKeys: selectedRowKeys,
                     onSelectAll,
-                    onChangeCheckboxSingle,
-                    getCheckboxProps
+                    onChangeCheckboxSingle
                 }}
             />
         )

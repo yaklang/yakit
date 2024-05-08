@@ -3,11 +3,16 @@ import {yakitNotify} from "@/utils/notification"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 const {ipcRenderer} = window.require("electron")
 
+interface HybridScanTaskFilter {
+    TaskId?: string[]
+    Status?: string
+    Target?: string
+    FromId?: number
+    UntilId?: number
+}
 export interface QueryHybridScanTaskRequest {
     Pagination: Paging
-    FromId: number
-    UntilId: number
-    Status: string
+    Filter: HybridScanTaskFilter
 }
 
 export interface QueryHybridScanTaskResponse {
@@ -32,8 +37,11 @@ export const apiQueryHybridScanTask: (query: QueryHybridScanTaskRequest) => Prom
 }
 
 export interface DeleteHybridScanTaskRequest {
-    TaskId: string
-    DeleteAll: boolean
+    /**@deprecated */
+    TaskId?: string
+    /**@deprecated */
+    DeleteAll?: boolean
+    Filter: HybridScanTaskFilter
 }
 /**插件批量执行任务 删除接口 */
 export const apiDeleteHybridScanTask: (query: DeleteHybridScanTaskRequest) => Promise<null> = (query) => {
