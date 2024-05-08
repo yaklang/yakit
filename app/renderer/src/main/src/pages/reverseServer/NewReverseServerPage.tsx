@@ -1,6 +1,5 @@
 import React, {useState, useEffect, useRef} from "react"
-import {Form, Button, Input, Switch, InputNumber, Divider, Spin, PageHeader, Alert, Typography, Space} from "antd"
-import {CopyableField} from "../../utils/inputUtil"
+import {Form, Divider, PageHeader, Typography, Row, Col} from "antd"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {randomString} from "../../utils/randomUtil"
 import {failed, warn, info} from "../../utils/notification"
@@ -18,6 +17,12 @@ import {getRemoteValue} from "@/utils/kv"
 
 import "./reverseServerPage.scss"
 import {NetInterface} from "@/models/Traffic"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -197,7 +202,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
 
     return (
         <div className='setting-reverse-server-wrapper'>
-            <Spin spinning={loading}>
+            <YakitSpin spinning={loading}>
                 <Form
                     form={formInstance}
                     initialValues={{...props.defaultSetting}}
@@ -210,24 +215,23 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         name='IsRemote'
                         help={
                             params.IsRemote && (
-                                <Alert
-                                    className='setting-isremote-hint'
-                                    type={"success"}
-                                    message={
-                                        <div>
-                                            在自己的服务器安装 yak 核心引擎，执行{" "}
-                                            <Text code={true} copyable={true}>
-                                                yak bridge --secret [your-pass]
-                                            </Text>{" "}
-                                            启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
-                                            <Text style={{color: "#999"}}>yak version {`>=`} v1.0.11-sp9</Text>
-                                        </div>
-                                    }
-                                />
+                                <div>
+                                    在自己的服务器安装 yak 核心引擎，执行{" "}
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='blue'
+                                        copyText={`yak bridge --secret [your-pass]`}
+                                    ></YakitTag>{" "}
+                                    启动 Yak Bridge 公网服务 <Divider type={"vertical"} />
+                                    <Text style={{color: "#999"}}>yak version {`>=`} v1.0.11-sp9</Text>
+                                </div>
                             )
                         }
                     >
-                        <Switch checked={params.IsRemote} onChange={(IsRemote) => setValue({...params, IsRemote})} />
+                        <YakitSwitch
+                            checked={params.IsRemote}
+                            onChange={(IsRemote) => setValue({...params, IsRemote})}
+                        />
                     </Form.Item>
 
                     {params.IsRemote && (
@@ -237,7 +241,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                 name={["BridgeParam", "Addr"]}
                                 rules={[{required: true, message: ""}]}
                             >
-                                <Input
+                                <YakitInput
                                     allowClear={true}
                                     value={params.BridgeParam.Addr}
                                     onChange={(e) => {
@@ -247,7 +251,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                                 />
                             </Form.Item>
                             <Form.Item label='密码' name={["BridgeParam", "Secret"]}>
-                                <Input
+                                <YakitInput
                                     allowClear={true}
                                     value={params.BridgeParam.Secret}
                                     onChange={(e) => {
@@ -260,7 +264,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                     )}
                     {!params.IsRemote && (
                         <Form.Item label='反连地址' name='ReverseHost' rules={[{required: true, message: ""}]}>
-                            <Input
+                            <YakitInput
                                 allowClear={true}
                                 value={params.ReverseHost}
                                 onChange={(e) => setValue({...params, ReverseHost: e.target.value})}
@@ -268,7 +272,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                         </Form.Item>
                     )}
                     <Form.Item label='反连端口' name='ReversePort' rules={[{required: true, message: ""}]}>
-                        <InputNumber
+                        <YakitInputNumber
                             width='100%'
                             min={0}
                             max={65535}
@@ -279,12 +283,12 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
                     </Form.Item>
 
                     <Form.Item wrapperCol={{offset: 8}}>
-                        <Button type='primary' htmlType='submit'>
+                        <YakitButton type='primary' htmlType='submit'>
                             启动FacadeServer
-                        </Button>
+                        </YakitButton>
                     </Form.Item>
                 </Form>
-            </Spin>
+            </YakitSpin>
         </div>
     )
 }
@@ -410,7 +414,10 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         onApply={onApply}
                     />
                 </div>
-                <div className={`payload-${isShowCode ? "" : "hidden-"}code`}>
+                <div
+                    className={`payload-${isShowCode ? "" : "hidden-"}code`}
+                    style={{marginTop: !codeExtra ? "-1px" : 0}}
+                >
                     <PayloadCode
                         isMin={true}
                         codeExtra={codeExtra}
@@ -430,15 +437,11 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                         subTitle='使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连'
                         extra={
                             <div className='pagehead-extra-body'>
-                                <div>
+                                <div style={{display: "flex", alignItems: "center"}}>
                                     Payload 配置:{" "}
-                                    <Switch
-                                        size='small'
-                                        checked={isExtra}
-                                        onChange={(checked) => setIsExtra(checked)}
-                                    />
+                                    <YakitSwitch checked={isExtra} onChange={(checked) => setIsExtra(checked)} />
                                 </div>
-                                <Button
+                                <YakitButton
                                     className='body-btn'
                                     type='primary'
                                     danger={true}
@@ -446,43 +449,44 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                                     onClick={() => stop()}
                                 >
                                     关闭反连
-                                </Button>
+                                </YakitButton>
                             </div>
                         }
                     >
-                        <Alert
-                            type={"info"}
-                            message={
-                                <Space direction={"vertical"}>
-                                    <div className='addr-body'>
-                                        HTTP反连地址&nbsp;&nbsp;
-                                        <CopyableField
-                                            width={"80%"}
-                                            text={`http://${reverseAddr}/${
-                                                classRequest?.className ? classRequest?.className + ".class" : ""
-                                            }`}
-                                            style={{color: "blue"}}
-                                        />
-                                    </div>
-                                    <div className='addr-body'>
-                                        RMI反连地址&nbsp;&nbsp;
-                                        <CopyableField
-                                            width={"80%"}
-                                            text={`rmi://${reverseAddr}/${classRequest?.className || ""}`}
-                                            style={{color: "blue"}}
-                                        />
-                                    </div>
-                                    <div className='addr-body'>
-                                        LDAP反连地址&nbsp;&nbsp;
-                                        <CopyableField
-                                            width={"80%"}
-                                            text={`ldap://${reverseAddr}/${classRequest?.className || ""}`}
-                                            style={{color: "blue"}}
-                                        />
-                                    </div>
-                                </Space>
-                            }
-                        ></Alert>
+                        <Row align='middle'>
+                            <Col>
+                                <div className='addr-body'>
+                                    HTTP反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='blue'
+                                        copyText={`http://${reverseAddr}/${
+                                            classRequest?.className ? classRequest?.className + ".class" : ""
+                                        }`}
+                                    ></YakitTag>
+                                </div>
+                            </Col>
+                            <Col>
+                                <div className='addr-body'>
+                                    RMI反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='success'
+                                        copyText={`rmi://${reverseAddr}/${classRequest?.className || ""}`}
+                                    ></YakitTag>
+                                </div>
+                            </Col>
+                            <Col>
+                                <div className='addr-body'>
+                                    LDAP反连地址&nbsp;&nbsp;
+                                    <YakitTag
+                                        enableCopy={true}
+                                        color='purple'
+                                        copyText={`ldap://${reverseAddr}/${classRequest?.className || ""}`}
+                                    ></YakitTag>
+                                </div>
+                            </Col>
+                        </Row>
                     </PageHeader>
                     <div className='reverse-server-data'>
                         <ReverseTable total={totalRef.current} data={data} clearData={clearData} />

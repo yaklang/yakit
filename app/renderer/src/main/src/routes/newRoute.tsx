@@ -348,6 +348,7 @@ export const SingletonPageRoute: YakitRoute[] = [
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.PayloadGenerater_New,
+    YakitRoute.ReverseServer_New,
     YakitRoute.DataCompare,
     YakitRoute.YakScript,
     YakitRoute.HTTPHacker,

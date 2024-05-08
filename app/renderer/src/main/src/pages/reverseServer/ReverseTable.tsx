@@ -1,14 +1,19 @@
 import React, {useMemo, useState} from "react"
-import {Table, Button, Switch, Select, Spin} from "antd"
-import {FullscreenOutlined, FullscreenExitOutlined, SearchOutlined} from "@ant-design/icons"
+import {FullscreenOutlined, FullscreenExitOutlined} from "@ant-design/icons"
 import {CopyableField} from "../../utils/inputUtil"
-import {useDebounce, useGetState} from "ahooks"
+import {useCreation, useDebounce, useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
-import {AutoCard} from "../../components/AutoCard"
-import {YakEditor} from "../../utils/editors"
 
 import "./reverseTable.scss"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import { YakitCopyText } from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 
 const DefaultType: {label: string; value: string}[] = [
     {value: "rmi", label: "RMI连接"},
@@ -55,7 +60,9 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [hasToken, setHasToken] = useState<boolean>(false)
     const [types, setTypes, getTypes] = useGetState<string>("")
-
+    const [currentIndex, setCurrentIndex] = useState<number>()
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
+    const [selectRow, setSelectRow] = useState<ReverseNotification>()
     const [width, setWidth] = useState<number>(1000)
 
     let newData: ReverseNotification[] = useMemo(() => {
@@ -71,6 +78,43 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
         return lists
     }, [data, hasToken, useDebounce(types, {wait: 1000})])
 
+    const onRowClick = useMemoizedFn((rowDate?: ReverseNotification) => {
+        if (rowDate) {
+            setSelectRow(rowDate)
+            setOnlyShowFirstNode(false)
+        } else {
+            setSelectRow(undefined)
+            setOnlyShowFirstNode(true)
+        }
+    })
+    const onSetCurrentRow = useDebounceFn(
+        (rowDate: ReverseNotification) => {
+            onRowClick(rowDate)
+        },
+        {wait: 200, leading: true}
+    ).run
+
+    const onTableChange = useDebounceFn(
+        (page: number, limit: number, sort: SortProps, filter: any) => {
+            if (filter.type) {
+                setTypes(filter.type.join(","))
+            }
+        },
+        {wait: 500}
+    ).run
+
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (onlyShowFirstNode) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [onlyShowFirstNode])
+
     return (
         <div className={`reverse-table-wrapper ${isPayload ? "payload-table-padding" : "reverse-table-padding"}`}>
             <ReactResizeDetector
@@ -82,126 +126,152 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <div className={`reverse-table-header ${width >= maxWidth ? "header-style" : "header-extra-style"}`}>
-                <div className='header-title title-style'>
-                    返回结果
-                    {total !== undefined && <div className='header-title-total'>Total {total}</div>}
-                </div>
-                <Spin spinning={!!loading}>
-                    <div className='header-extra'>
-                        <div className='extra-opt'>
-                            <div className='opt-title'>只看 Token</div>
-                            <Switch
-                                size='small'
-                                checked={hasToken}
-                                onChange={(check) => {
-                                    setHasToken(check)
-                                    setLoading(true)
-                                }}
-                            />
-                        </div>
-
-                        <div className='extra-opt'>
-                            <div className='opt-title' style={{width: 35}}>类型</div>
-                            <YakitSelect
-                                size='small'
-                                mode='multiple'
-                                style={{width: 170}}
-                                value={!types ? [] : types.split(",")}
-                                allowClear={true}
-                                options={DefaultType}
-                                onChange={(newValue: string[]) => {
-                                    setTypes(newValue.length === 0 ? "" : newValue.join(","))
-                                }}
-                                maxTagCount='responsive'
-                            />
-                        </div>
-                        <Button danger={true} size='small' className='extra-opt' onClick={clearData}>
-                            清空
-                        </Button>
-                        {isShowExtra && (
-                            <Button
-                                className='extra-opt'
-                                type='link'
-                                icon={!!isExtra ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-                                onClick={() => {
-                                    if (onExtra) onExtra()
-                                }}
-                            />
-                        )}
-                    </div>
-                </Spin>
-            </div>
-
-            <div className='reverse-table-body'>
-                <Table<ReverseNotification>
-                    size='small'
-                    dataSource={[...newData]}
-                    bordered={true}
-                    pagination={false}
-                    rowKey={(i) => i.uuid}
-                    expandable={{
-                        expandRowByClick: true,
-                        expandedRowRender: (i: ReverseNotification) => {
-                            return (
-                                <div style={{width: "100%", height: 300}}>
-                                    <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
-                                        <YakEditor readOnly={true} valueBytes={i.raw} bytes={true} />
-                                    </AutoCard>
-                                </div>
-                            )
-                        }
-                    }}
-                    columns={[
-                        {
-                            width: 120,
-                            title: "反连类型",
-                            render: (i: ReverseNotification) => {
-                                const selectTag = DefaultType.filter((item) => item.value === i.type)
-                                let label = ""
-                                if (selectTag.length !== 0) label = selectTag[0].label
-                                return (
-                                    <div
-                                        className={`tag-wrapper tag-${!label ? "blue" : DefaultTypeClassName[i.type]}`}
-                                    >
-                                        {!label ? i.type : label}
+            <YakitResizeBox
+                isVer={true}
+                lineDirection='bottom'
+                lineStyle={{display: onlyShowFirstNode ? "none" : ""}}
+                secondNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined, display: onlyShowFirstNode ? "none" : ""}}
+                {...ResizeBoxProps}
+                firstNode={
+                    <div style={{padding: isPayload ? "0 12px" : 0}}>
+                        <TableVirtualResize<ReverseNotification>
+                            renderTitle={
+                                <div
+                                    className={`reverse-table-header ${
+                                        width >= maxWidth ? "header-style" : "header-extra-style"
+                                    }`}
+                                >
+                                    <div className='header-title title-style'>
+                                        {total !== undefined && (
+                                            <div className='header-title-total'>
+                                                Total<span className='header-title-total-number'>{total}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                )
-                            },
-                            filterIcon: () => <SearchOutlined style={{color: !!getTypes() ? "#1890ff" : undefined}} />,
-                            filterDropdown: () => (
-                                <div style={{padding: 8}}>
-                                    <YakitSelect
-                                        mode='multiple'
-                                        style={{width: 200}}
-                                        value={!types ? [] : types.split(",")}
-                                        allowClear={true}
-                                        options={DefaultType}
-                                        onChange={(newValue: string[]) =>
-                                            setTypes(newValue.length === 0 ? "" : newValue.join(","))
-                                        }
-                                        maxTagCount='responsive'
-                                    />
+                                    <div className='header-right'>
+                                        <YakitSpin spinning={!!loading}>
+                                            <div className='header-extra'>
+                                                <div className='extra-opt'>
+                                                    <div className='opt-title'>只看 Token</div>
+                                                    <YakitSwitch
+                                                        checked={hasToken}
+                                                        onChange={(check) => {
+                                                            setHasToken(check)
+                                                            setLoading(true)
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {/* <div className='extra-opt'>
+                                                    <div className='opt-title' style={{width: 35}}>
+                                                        类型
+                                                    </div>
+                                                    <YakitSelect
+                                                        size='small'
+                                                        mode='multiple'
+                                                        style={{width: 170}}
+                                                        value={!types ? [] : types.split(",")}
+                                                        allowClear={true}
+                                                        options={DefaultType}
+                                                        onChange={(newValue: string[]) => {
+                                                            setTypes(newValue.length === 0 ? "" : newValue.join(","))
+                                                        }}
+                                                        maxTagCount='responsive'
+                                                    />
+                                                </div> */}
+                                                <YakitButton
+                                                    danger={true}
+                                                    size='small'
+                                                    className='extra-opt'
+                                                    onClick={() => {
+                                                        setOnlyShowFirstNode(true)
+                                                        setSelectRow(undefined)
+                                                        clearData()
+                                                    }}
+                                                >
+                                                    清空
+                                                </YakitButton>
+                                                {isShowExtra && (
+                                                    <YakitButton
+                                                        type='text'
+                                                        className='extra-opt'
+                                                        icon={
+                                                            !!isExtra ? (
+                                                                <FullscreenExitOutlined />
+                                                            ) : (
+                                                                <FullscreenOutlined />
+                                                            )
+                                                        }
+                                                        onClick={() => {
+                                                            if (onExtra) onExtra()
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+                                        </YakitSpin>
+                                    </div>
                                 </div>
-                            )
-                        },
-                        {
-                            title: "连接来源",
-                            render: (i: ReverseNotification) => (
-                                <CopyableField text={i.remote_addr} noCopy={!i.remote_addr} />
-                            )
-                        },
-                        {
-                            title: "TOKEN",
-                            render: (i: ReverseNotification) => <CopyableField text={i.token} noCopy={!i.token} />
-                        },
-                        {
-                            title: "响应",
-                            render: (i: ReverseNotification) => i.response_info
-                        }
-                    ]}
-                ></Table>
-            </div>
+                            }
+                            data={[...newData]}
+                            renderKey='uuid'
+                            columns={[
+                                {
+                                    title: "反连类型",
+                                    dataKey: "type",
+                                    render: (text) => {
+                                        const selectTag = DefaultType.filter((item) => item.value === text)
+                                        let label = ""
+                                        if (selectTag.length !== 0) label = selectTag[0].label
+                                        return (
+                                            <div
+                                                className={`tag-wrapper tag-${
+                                                    !label ? "blue" : DefaultTypeClassName[text]
+                                                }`}
+                                            >
+                                                {!label ? text : label}
+                                            </div>
+                                        )
+                                    },
+                                    filterProps: {
+                                        filterMultiple: true,
+                                        filtersType: "select",
+                                        filters: DefaultType
+                                    }
+                                },
+                                {
+                                    title: "连接来源",
+                                    dataKey: "remote_addr",
+                                    render: (text) => <YakitCopyText showText={text} />
+                                },
+                                {
+                                    title: "TOKEN",
+                                    dataKey: "token",
+                                    render: (text) => <YakitCopyText showText={text} />
+                                },
+                                {
+                                    title: "响应",
+                                    dataKey: "response_info"
+                                }
+                            ]}
+                            useUpAndDown={true}
+                            currentIndex={currentIndex}
+                            setCurrentIndex={setCurrentIndex}
+                            onSetCurrentRow={onSetCurrentRow}
+                            onChange={onTableChange}
+                        />
+                    </div>
+                }
+                secondNode={<YakitEditor readOnly={true} valueBytes={selectRow?.raw} isBytes={true} />}
+            ></YakitResizeBox>
+            {/* <YakitSelect
+                mode='multiple'
+                style={{width: 200}}
+                value={!types ? [] : types.split(",")}
+                allowClear={true}
+                options={DefaultType}
+                onChange={(newValue: string[]) => setTypes(newValue.length === 0 ? "" : newValue.join(","))}
+                maxTagCount='responsive'
+            /> */}
         </div>
     )
 }

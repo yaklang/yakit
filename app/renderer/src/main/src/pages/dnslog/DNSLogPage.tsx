@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {AutoCard} from "../../components/AutoCard"
-import {Alert, Button, Select, Form, Space, Table, Tag, Spin, Divider} from "antd"
+import {Alert, Button, Select, Form, Space, Table, Tag, Spin, Divider, Row, Col} from "antd"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {failed, warn, info, yakitFailed} from "../../utils/notification"
 import {CopyableField, SwitchItem} from "../../utils/inputUtil"
@@ -20,6 +20,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {ReloadOutlined} from "@ant-design/icons"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import { DnslogMenuToPage } from "../layout/publicMenu/MenuDNSLog"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 
 export interface DNSLogPageProp {
 }
@@ -498,15 +499,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         )}
                     </div>
                     {token !== "" && (
-                        <Alert
-                            style={{marginTop: 12}}
-                            type={"success"}
-                            message={
-                                <div>
-                                    当前激活域名为 <CopyableField noCopy={false} text={tokenDomain}/>
-                                </div>
-                            }
-                        />
+                        <Row style={{marginTop: 5}} align="bottom">
+                            <Col style={{fontSize: 12}}>当前激活域名为：</Col>
+                            <Col>
+                                <YakitTag enableCopy={true} color='blue' copyText={tokenDomain}></YakitTag>
+                            </Col>
+                        </Row>
                     )}
                 </div>
             }
