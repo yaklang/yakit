@@ -1,0 +1,82 @@
+.split-view {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-color: #ffffff;
+}
+
+.sash-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    user-select: none;
+    .split-view-sash {
+        position: absolute;
+        z-index: 35;
+        user-select: none;
+        background: transparent;
+        transition: background-color 1s ease-out;
+    }
+
+    &.hover {
+        .split-view-sash {
+            &:hover {
+                background-color: #f28b44;
+            }
+            &.vertical {
+                cursor: row-resize;
+                width: 100%;
+                height: 3px;
+                left: 0;
+            }
+            &.horizontal {
+                cursor: col-resize;
+                width: 3px;
+                height: 100%;
+                top: 0;
+            }
+            &.active {
+                background-color: #f28b44;
+            }
+        }
+    }
+}
+
+.split-view-element {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    user-select: none;
+    overflow: hidden;
+
+    .split-view-container {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        position: relative;
+    }
+
+    .element-view {
+        position: absolute;
+        background-color: #cccccc;
+        border: 1px solid #000000;
+    }
+
+    &.vertical {
+        .element-view {
+            width: 100%;
+        }
+        &.active {
+            cursor: row-resize;
+        }
+    }
+
+    &.horizontal {
+        .element-view {
+            height: 100%;
+        }
+        &.active {
+            cursor: col-resize;
+        }
+    }
+}
