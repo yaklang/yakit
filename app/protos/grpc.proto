@@ -749,6 +749,9 @@ message HybridScanResponse {
 
   // 任务配置
   string ScanConfig = 12;
+
+  // 任务状态
+  string Status = 13;
 }
 
 message HybridScanUpdateActiveTaskTable {
