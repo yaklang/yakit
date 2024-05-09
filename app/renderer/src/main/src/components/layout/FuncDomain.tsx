@@ -1544,7 +1544,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
             .then((data: string) => {
-                if (yaklangVersion !== data) setYaklangLastVersion(data)
+                if (yaklangVersion !== data) setYaklangLastVersion(data.startsWith('v') ? data.slice(1) : data)
             })
             .catch((err) => {
                 setYaklangLastVersion("")
@@ -1569,7 +1569,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 try {
                     const data: UpdateContentProp = JSON.parse(res)
                     if (data.content === communityYaklangContent.content) return
-                    setCommunityYaklangContent({...data})
+                    setCommunityYaklangContent({...data, version: data.version.startsWith('v') ? data.version.slice(1) : data.version})
                 } catch (error) {}
             })
             .catch((err) => {})
