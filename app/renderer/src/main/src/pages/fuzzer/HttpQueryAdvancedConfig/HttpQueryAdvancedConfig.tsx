@@ -16,24 +16,19 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {useInViewport, useMemoizedFn} from "ahooks"
-import {Form, Tooltip, Space, Divider, Descriptions} from "antd"
+import {Form, Tooltip, Space, Divider} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
-    ColorSelect,
     ExtractorItem,
     MatcherAndExtractionDrawer,
     MatcherItem,
-    defMatcherAndExtractionCode,
     extractorTypeList,
-    filterModeOptions,
-    matcherTypeList,
-    matchersConditionOptions
+    matcherTypeList
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
@@ -47,7 +42,6 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {CopyableField} from "@/utils/inputUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
@@ -55,27 +49,13 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
+import {ExtractorsPanel, MatchersPanel, VariablePanel} from "./FuzzerConfigPanels"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
-
-const variableModeOptions = [
-    {
-        value: "nuclei-dsl",
-        label: "nuclei"
-    },
-    {
-        value: "fuzztag",
-        label: "fuzztag"
-    },
-    {
-        value: "raw",
-        label: "raw"
-    }
-]
 
 const fuzzTagModeOptions = [
     {
@@ -163,7 +143,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }, [inViewport])
 
     useEffect(() => {
-        ipcRenderer.on("fetch-open-matcher-and-extraction", openDrawer)
+        emiter.on("openMatcherAndExtraction", openDrawer)
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
             try {
                 // setTimeout(() => {
@@ -175,15 +155,20 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }
         })
         return () => {
-            ipcRenderer.removeListener("fetch-open-matcher-and-extraction", openDrawer)
+            emiter.off("openMatcherAndExtraction", openDrawer)
         }
     }, [])
 
-    const openDrawer = useMemoizedFn((e, res: {httpResponseCode: string}) => {
-        if (inViewportCurrent && !visibleDrawer) {
-            setVisibleDrawer(true)
+    const openDrawer = useMemoizedFn((val) => {
+        try {
+            const res = JSON.parse(val)
+            if (inViewportCurrent && !visibleDrawer) {
+                setVisibleDrawer(true)
+            }
+            setHttpResponse(res.httpResponseCode)
+        } catch (error) {
+            yakitNotify("error", "openMatcherAndExtraction 解析数据失败")
         }
-        setHttpResponse(res.httpResponseCode)
     })
 
     useEffect(() => {
@@ -254,8 +239,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             ...restValue
         })
     })
+    /**添加的额外操作，例如没有展开的时候点击添加需要展开该项 */
+    const onAddExtra = useMemoizedFn((type: string) => {
+        if (activeKey?.findIndex((ele) => ele === type) === -1) {
+            onSwitchCollapse([...activeKey, type])
+        }
+    })
 
     const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
+        const keyMap = {
+            matchers: "匹配器",
+            extractors: "数据提取器"
+        }
+        if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
+            onSwitchCollapse([...activeKey, keyMap[type]])
+        }
         if (outsideShowResponseMatcherAndExtraction) {
             if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction(type, "ID:0")
         } else {
@@ -278,36 +276,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     }, [])
 
-    const onRemoveMatcher = useMemoizedFn((i) => {
-        const v = form.getFieldsValue()
-        onSetValue({
-            ...v,
-            matchers: matchersList.filter((m, n) => n !== i)
-        })
-    })
-    const onEditMatcher = useMemoizedFn((index) => {
+    /**修改匹配器和提取器 */
+    const onEdit = useMemoizedFn((index, type: MatchingAndExtraction) => {
         if (outsideShowResponseMatcherAndExtraction) {
             if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("matchers", `ID:${index}`)
         } else {
             setVisibleDrawer(true)
             setDefActiveKey(`ID:${index}`)
-            setType("matchers")
-        }
-    })
-    const onRemoveExtractors = useMemoizedFn((i) => {
-        const v = form.getFieldsValue()
-        onSetValue({
-            ...v,
-            extractors: extractorList.filter((m, n) => n !== i)
-        })
-    })
-    const onEditExtractors = useMemoizedFn((index) => {
-        if (outsideShowResponseMatcherAndExtraction) {
-            if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("extractors", `ID:${index}`)
-        } else {
-            setVisibleDrawer(true)
-            setDefActiveKey(`ID:${index}`)
-            setType("extractors")
+            setType(type)
         }
     })
     const retryActive: string[] = useMemo(() => {
@@ -366,7 +342,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
 
-    const variableRef = useRef<any>()
     const methodGetRef = useRef<any>()
     const methodPostRef = useRef<any>()
     const headersRef = useRef<any>()
@@ -434,42 +409,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }
         }
     )
-    /** @description 变量预览 */
-    const onRenderVariables = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
-        e.stopPropagation()
-        ipcRenderer
-            .invoke("RenderVariables", {
-                Params: form.getFieldValue("params") || [],
-                HTTPResponse: StringToUint8Array(defaultHttpResponse || defMatcherAndExtractionCode)
-            })
-            .then((rsp: {Results: {Key: string; Value: string}[]}) => {
-                showYakitModal({
-                    title: "渲染后变量内容",
-                    footer: <></>,
-                    content: (
-                        <div className={styles["render-variables-modal-content"]}>
-                            <Descriptions size={"small"} column={1} bordered={true}>
-                                {rsp.Results.filter((i) => {
-                                    return !(i.Key === "" && i.Value === "")
-                                }).map((data, index) => {
-                                    return (
-                                        <Descriptions.Item
-                                            label={<CopyableField text={data.Key} maxWidth={100} />}
-                                            key={`${data.Key}-${data.Value}`}
-                                        >
-                                            <CopyableField text={data.Value} maxWidth={300} />
-                                        </Descriptions.Item>
-                                    )
-                                })}
-                            </Descriptions>
-                        </div>
-                    )
-                })
-            })
-            .catch((err) => {
-                yakitNotify("error", "预览失败:" + err)
-            })
-    })
+
     const renderContent = useMemoizedFn(() => {
         switch (showFormContentType) {
             case "config":
@@ -914,194 +854,25 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             onChange={(key) => onSwitchCollapse(key)}
                             destroyInactivePanel={true}
                         >
-                            <YakitPanel
-                                header={
-                                    <div className={styles["matchers-panel"]}>
-                                        匹配器
-                                        <div className={styles["matchers-number"]}>{matchersList?.length}</div>
-                                    </div>
-                                }
+                            <MatchersPanel
                                 key='匹配器'
-                                extra={
-                                    <>
-                                        <YakitButton
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                const restValue = {
-                                                    matchers: [],
-                                                    filterMode: "drop",
-                                                    hitColor: "red",
-                                                    matchersCondition: "and"
-                                                }
-                                                onReset(restValue)
-                                            }}
-                                            size='small'
-                                        >
-                                            重置
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                            type='text'
-                                            size='small'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (activeKey?.findIndex((ele) => ele === "匹配器") === -1) {
-                                                    onSwitchCollapse([...activeKey, "匹配器"])
-                                                }
-                                                onAddMatchingAndExtractionCard("matchers")
-                                            }}
-                                            className={styles["btn-padding-right-0"]}
-                                        >
-                                            添加/调试
-                                            <HollowLightningBoltIcon />
-                                        </YakitButton>
-                                    </>
-                                }
-                                className={styles["panel-wrapper"]}
-                            >
-                                <div className={styles["matchers-heard"]}>
-                                    <div className={styles["matchers-heard-left"]}>
-                                        <Form.Item name='filterMode' noStyle>
-                                            <YakitRadioButtons
-                                                buttonStyle='solid'
-                                                options={filterModeOptions}
-                                                size='small'
-                                            />
-                                        </Form.Item>
-                                        {filterMode === "onlyMatch" && (
-                                            <Form.Item name='hitColor' noStyle>
-                                                <ColorSelect size='small' />
-                                            </Form.Item>
-                                        )}
-                                    </div>
-                                    <Form.Item name='matchersCondition' noStyle>
-                                        <YakitRadioButtons
-                                            buttonStyle='solid'
-                                            options={matchersConditionOptions}
-                                            size='small'
-                                        />
-                                    </Form.Item>
-                                </div>
-                                <MatchersList
-                                    matcherValue={{filterMode, matchersList, matchersCondition, hitColor}}
-                                    onAdd={() => onAddMatchingAndExtractionCard("matchers")}
-                                    onRemove={onRemoveMatcher}
-                                    onEdit={onEditMatcher}
-                                />
-                            </YakitPanel>
-                            <YakitPanel
-                                header={
-                                    <div className={styles["matchers-panel"]}>
-                                        数据提取器
-                                        <div className={styles["matchers-number"]}>{extractorList?.length}</div>
-                                    </div>
-                                }
+                                onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
+                                onEdit={onEdit}
+                                onSetValue={onSetValue}
+                            />
+                            <ExtractorsPanel
                                 key='数据提取器'
-                                extra={
-                                    <>
-                                        <YakitButton
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                const restValue = {
-                                                    extractors: []
-                                                }
-                                                onReset(restValue)
-                                            }}
-                                            size='small'
-                                        >
-                                            重置
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                            type='text'
-                                            size='small'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (activeKey?.findIndex((ele) => ele === "数据提取器") === -1) {
-                                                    onSwitchCollapse([...activeKey, "数据提取器"])
-                                                }
-                                                onAddMatchingAndExtractionCard("extractors")
-                                            }}
-                                            className={styles["btn-padding-right-0"]}
-                                        >
-                                            添加/调试
-                                            <HollowLightningBoltIcon />
-                                        </YakitButton>
-                                    </>
-                                }
-                            >
-                                <ExtractorsList
-                                    extractorValue={{extractorList}}
-                                    onAdd={() => onAddMatchingAndExtractionCard("extractors")}
-                                    onRemove={onRemoveExtractors}
-                                    onEdit={onEditExtractors}
-                                />
-                            </YakitPanel>
-                            <YakitPanel
-                                header='设置变量'
+                                onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
+                                onEdit={onEdit}
+                                onSetValue={onSetValue}
+                            />
+                            <VariablePanel
                                 key='设置变量'
-                                extra={
-                                    <>
-                                        <YakitButton
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) =>
-                                                handleVariableReset(
-                                                    e,
-                                                    "params",
-                                                    {Key: "", Value: "", Type: "raw"},
-                                                    variableRef
-                                                )
-                                            }
-                                            size='small'
-                                        >
-                                            重置
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton type='text' onClick={onRenderVariables} size='small'>
-                                            预览
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                            type='text'
-                                            onClick={(e) =>
-                                                handleVariableAdd(
-                                                    e,
-                                                    "params",
-                                                    "设置变量",
-                                                    {Key: "", Value: "", Type: "raw"},
-                                                    variableRef
-                                                )
-                                            }
-                                            className={styles["btn-padding-right-0"]}
-                                            size='small'
-                                        >
-                                            添加
-                                            <PlusIcon />
-                                        </YakitButton>
-                                    </>
-                                }
-                            >
-                                <VariableList
-                                    ref={variableRef}
-                                    field='params'
-                                    onDel={(i) => handleVariableDel(i, "params")}
-                                    extra={(i, info) => (
-                                        <Form.Item name={[info.name, "Type"]} noStyle wrapperCol={{span: 24}}>
-                                            <YakitRadioButtons
-                                                style={{marginLeft: 4}}
-                                                buttonStyle='solid'
-                                                options={variableModeOptions}
-                                                size={"small"}
-                                            />
-                                        </Form.Item>
-                                    )}
-                                ></VariableList>
-                            </YakitPanel>
+                                defaultHttpResponse={defaultHttpResponse}
+                                onAdd={onAddExtra}
+                                pageId={id}
+                                onSetValue={onSetValue}
+                            />
                             <YakitPanel
                                 header='GET 参数'
                                 key='GET 参数'
@@ -1455,34 +1226,42 @@ interface MatchersListProps {
     onEdit: (index: number) => void
 }
 /**匹配器 */
-const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
+export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matcherValue, onAdd, onRemove, onEdit} = props
     const {matchersList} = matcherValue
     return (
         <>
-            <Form.Item name='matchers' noStyle>
-                {matchersList.map((matcherItem, index) => (
-                    <div className={styles["matchersList-item"]} key={`ID:${index}`}>
-                        <div className={styles["matchersList-item-heard"]}>
-                            <span className={styles["item-id"]}>ID&nbsp;{index}</span>
-                            <span>[{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]</span>
-                            <span className={styles["item-number"]}>{matcherItem.Group?.length}</span>
-                        </div>
-                        <MatchersAndExtractorsListItemOperate
-                            onRemove={() => onRemove(index)}
-                            onEdit={() => onEdit(index)}
-                            popoverContent={
-                                <MatcherItem
-                                    matcherItem={matcherItem}
-                                    onEdit={() => {}}
-                                    notEditable={true}
-                                    httpResponse=''
-                                />
-                            }
-                        />
-                    </div>
-                ))}
-            </Form.Item>
+            <Form.List name='matchers'>
+                {() => (
+                    <>
+                        {matchersList.map((matcherItem, index) => (
+                            <Form.Item noStyle key={`ID:${index}`}>
+                                <div className={styles["matchersList-item"]} key={`ID:${index}`}>
+                                    <div className={styles["matchersList-item-heard"]}>
+                                        <span className={styles["item-id"]}>ID&nbsp;{index}</span>
+                                        <span>
+                                            [{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]
+                                        </span>
+                                        <span className={styles["item-number"]}>{matcherItem.Group?.length}</span>
+                                    </div>
+                                    <MatchersAndExtractorsListItemOperate
+                                        onRemove={() => onRemove(index)}
+                                        onEdit={() => onEdit(index)}
+                                        popoverContent={
+                                            <MatcherItem
+                                                matcherItem={matcherItem}
+                                                onEdit={() => {}}
+                                                notEditable={true}
+                                                httpResponse=''
+                                            />
+                                        }
+                                    />
+                                </div>
+                            </Form.Item>
+                        ))}
+                    </>
+                )}
+            </Form.List>
             {matchersList?.length === 0 && (
                 <>
                     <YakitButton
@@ -1507,34 +1286,44 @@ interface ExtractorsListProps {
     onEdit: (index: number) => void
 }
 /**数据提取器 */
-const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
+export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
     const {extractorValue, onAdd, onRemove, onEdit} = props
     const {extractorList} = extractorValue
     return (
         <>
-            <Form.Item name='extractors' noStyle>
-                {extractorList.map((extractorItem, index) => (
-                    <div className={styles["matchersList-item"]} key={`${extractorItem.Name}-${index}`}>
-                        <div className={styles["matchersList-item-heard"]}>
-                            <span className={styles["item-id"]}>{extractorItem.Name || `data_${index}`}</span>
-                            <span>[{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]</span>
-                            <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>
-                        </div>
-                        <MatchersAndExtractorsListItemOperate
-                            onRemove={() => onRemove(index)}
-                            onEdit={() => onEdit(index)}
-                            popoverContent={
-                                <ExtractorItem
-                                    extractorItem={extractorItem}
-                                    onEdit={() => {}}
-                                    notEditable={true}
-                                    httpResponse=''
-                                />
-                            }
-                        />
-                    </div>
-                ))}
-            </Form.Item>
+            <Form.List name='extractors'>
+                {() => (
+                    <>
+                        {extractorList.map((extractorItem, index) => (
+                            <Form.Item noStyle key={`${extractorItem.Name}-${index}`}>
+                                <div className={styles["matchersList-item"]}>
+                                    <div className={styles["matchersList-item-heard"]}>
+                                        <span className={styles["item-id"]}>
+                                            {extractorItem.Name || `data_${index}`}
+                                        </span>
+                                        <span>
+                                            [{extractorTypeList.find((e) => e.value === extractorItem.Type)?.label}]
+                                        </span>
+                                        <span className={styles["item-number"]}>{extractorItem.Groups?.length}</span>
+                                    </div>
+                                    <MatchersAndExtractorsListItemOperate
+                                        onRemove={() => onRemove(index)}
+                                        onEdit={() => onEdit(index)}
+                                        popoverContent={
+                                            <ExtractorItem
+                                                extractorItem={extractorItem}
+                                                onEdit={() => {}}
+                                                notEditable={true}
+                                                httpResponse=''
+                                            />
+                                        }
+                                    />
+                                </div>
+                            </Form.Item>
+                        ))}
+                    </>
+                )}
+            </Form.List>
             {extractorList?.length === 0 && (
                 <>
                     <YakitButton

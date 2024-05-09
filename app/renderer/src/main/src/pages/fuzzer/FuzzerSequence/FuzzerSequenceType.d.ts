@@ -1,7 +1,11 @@
 import {WebFuzzerPageInfoProps} from "../../../store/pageInfo"
 import {FuzzerResponse, FuzzerRequestProps} from "../HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {MatcherAndExtractionRefProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    MatcherAndExtractionRefProps,
+    MatcherValueProps,
+    ExtractorValueProps
+} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 /**
  * @description 序列props
@@ -50,11 +54,13 @@ export interface ExtraSettingProps {
  * @property {boolean} isShowLine 是否显示线
  * @property {boolean} disabled
  * @property {SequenceProps} pageNodeList 原始的页面节点list，用来做下拉选中选择
+ * @property {boolean} isShowSetting 是否显示高级配置
  * @function onUpdateItemPage 更新序列item
  * @function onUpdateItem 更新序列item
  * @function onApplyOtherNodes 应用到其他节点事件
  * @function onRemove 删除
  * @function onSelect 选中
+ * @function onShowSetting 显示页面的高级配置部分参数
  */
 export interface SequenceItemProps {
     item: SequenceProps
@@ -65,11 +71,15 @@ export interface SequenceItemProps {
     isShowLine: boolean
     disabled?: boolean
     pageNodeList: SequenceProps[]
+    /**是否显示高级配置 */
+    isShowSetting: boolean
     onUpdateItemPage: (s: SequenceProps) => void
     onUpdateItem: (s: SequenceProps) => void
     onApplyOtherNodes: (e: ExtraSettingProps) => void
     onRemove: (s: SequenceProps) => void
     onSelect: (s: SequenceProps) => void
+    /**显示页面的高级配置部分参数 */
+    onShowSetting: (s: SequenceProps) => void
 }
 /**
  * @description 返回参数
@@ -109,6 +119,12 @@ export interface FuzzerSequenceResponse {
  * @property {string} hotPatchCodeWithParamGetter 热加载相关,具体不清楚,现在好像暂时没有用这个
  * @function setHotPatchCode
  * @function setHotPatchCodeWithParamGetter
+ * @function onDebug
+ * @property {MatcherValueProps} matcherValue
+ * @property {ExtractorValueProps} extractorValue
+ * @property {boolean} showMatcherAndExtraction
+ * @function setShowMatcherAndExtraction
+ * @function onSaveMatcherAndExtractionDrawer
  */
 export interface SequenceResponseProps {
     ref?: React.ForwardedRef<SequenceResponseRefProps>
@@ -121,10 +137,18 @@ export interface SequenceResponseProps {
     setHotPatchCode: (s: string) => void
     setHotPatchCodeWithParamGetter: (s: string) => void
     onShowAll: () => void
+    onDebug: (s: string) => void
+    matcherValue: MatcherValueProps
+    extractorValue: ExtractorValueProps
+    showMatcherAndExtraction?: boolean
+    setShowMatcherAndExtraction?: (b: boolean) => void
+    onSaveMatcherAndExtractionDrawer: (m: MatcherValueProps, e: ExtractorValueProps) => void
+    activeType: MatchingAndExtraction
+    activeKey: string
 }
 
-export interface SequenceResponseRefProps{
-    validate:() => Promise<boolean>
+export interface SequenceResponseRefProps {
+    validate: () => Promise<boolean>
 }
 /**
  * @description 返回响应头部
@@ -143,7 +167,7 @@ export interface SequenceResponseHeardProps {
     currentSequenceItemPageName: string
     advancedConfigValue?: AdvancedConfigValueProps
     responseInfo?: ResponseProps
-    onShowAll: () => void,
+    onShowAll: () => void
     getHttpParams: () => FuzzerRequestProps[]
 }
 

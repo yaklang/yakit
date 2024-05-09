@@ -1,0 +1,22 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+    opacity: 1;
+}
+%display-column {
+    display: flex;
+    flex-direction: column;
+}
+.form-body {
+    @extend %display-column;
+    flex: 1;
+    padding: 12px;
+    overflow: auto;
+    .to-end {
+        text-align: center;
+        color: var(--yakit-disable-text-color);
+        font-size: 11px;
+        padding-top: 12px;
+        padding-bottom: 24px;
+    }
+}

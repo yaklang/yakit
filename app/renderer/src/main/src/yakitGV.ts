@@ -82,9 +82,11 @@ export enum RemoteGV {
     /**@name MITM 用户数据是否保存 */
     MITMUserDataSave = "mitm_user_data_save",
     /**@name WebFuzzer高级配置内容的显/隐 */
-    WebFuzzerAdvancedConfigShow='web_fuzzer_advanced_config_show',
+    WebFuzzerAdvancedConfigShow = "web_fuzzer_advanced_config_show",
     /**@name MITM热加载代码保存 */
-    MITMHotPatchCodeSave="mitm_hot_patch_code_save"
+    MITMHotPatchCodeSave = "mitm_hot_patch_code_save",
+    /**@name fuzzer序列页面中,页面配置内容的显/隐 */
+    FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
 }
 
 /** 项目逻辑全局变量 */

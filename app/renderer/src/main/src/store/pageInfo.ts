@@ -85,7 +85,8 @@ export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
     pageId: "",
     advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
     advancedConfigShow: null,
-    request: defaultPostTemplate
+    request: defaultPostTemplate,
+    variableActiveKeys: undefined
 }
 
 export interface WebFuzzerPageInfoProps {
@@ -93,6 +94,8 @@ export interface WebFuzzerPageInfoProps {
     advancedConfigValue: AdvancedConfigValueProps
     request: string
     advancedConfigShow?: AdvancedConfigShowProps | null
+    //高级配置中变量的二级Panel 展开项
+    variableActiveKeys?: string[]
 }
 
 export const defaultPocPageInfo: PocPageInfoProps = {
