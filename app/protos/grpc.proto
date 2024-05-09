@@ -784,8 +784,7 @@ message HybridScanRequest {
   bool Control = 9;
   // new: 新任务
   // resume: 恢复任务
-  // pause: 暂停任务
-  // stop: 停止任务
+  // pause: 暂停任务 Control:false
   // status: 查询任务状态
   string HybridScanMode = 8;
   string ResumeTaskId = 1;
