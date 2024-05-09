@@ -351,10 +351,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         const bytes = encoder.encode(currentPacketStr)
         const mb = bytes.length / 1024 / 1024
         if (mb > 0.5) {
-            console.log(1);
             setCurrentBeautifyPacket(currentPacket)
         } else {
-            console.log(2);
             prettifyPacketCode(currentPacketStr)
                 .then((res) => {
                     setCurrentBeautifyPacket(res as Uint8Array)
