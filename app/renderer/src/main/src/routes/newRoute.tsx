@@ -1,6 +1,7 @@
 import React, {ReactNode, Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
+import {ShellReceiver} from "../pages/reverseShellReceiver/shellReceiver";
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory"
@@ -318,7 +319,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
-    YakitRoute.ShellReceiver,
     YakitRoute.DB_HTTPHistory,
     YakitRoute.DB_Report,
     YakitRoute.DB_Risk,
@@ -377,7 +377,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.PoC,
     YakitRoute.Mod_ScanPort,
     YakitRoute.Mod_Brute,
-    YakitRoute.SimpleDetect
+    YakitRoute.SimpleDetect,
+    YakitRoute.ShellReceiver
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -501,7 +502,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <NewHome />
+            return <ShellReceiver/>
+            // <NewHome />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
