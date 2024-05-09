@@ -293,6 +293,9 @@
         height: var(--menu-content-height);
         max-width: 100%;
         flex: 1;
+        path {
+            stroke-width: 1.5px;
+        }
     }
 
     .yakit-menu-item-title {
