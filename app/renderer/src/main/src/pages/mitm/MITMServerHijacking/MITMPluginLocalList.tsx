@@ -37,6 +37,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {PluginGV} from "@/pages/plugins/builtInData"
 import {YakitRoute} from "@/routes/newRoute"
 import {API} from "@/services/swagger/resposeType"
+import { useCampare } from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -477,6 +478,8 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     const [inViewport] = useInViewport(pluginGroupRef)
     const refreshSelectGroupRef = useRef<boolean>(false)
 
+    const compareExcludeType = useCampare(excludeType)
+
     useDebounceEffect(
         () => {
             if (inViewport) {
@@ -508,7 +511,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                 refreshSelectGroupRef.current = false
             }
         },
-        [inViewport, excludeType],
+        [inViewport, compareExcludeType],
         {wait: 500}
     )
 
