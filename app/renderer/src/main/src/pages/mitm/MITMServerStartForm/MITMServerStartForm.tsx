@@ -59,8 +59,6 @@ export interface ClientCertificate {
 const defHost = "127.0.0.1"
 const defPort = "8083"
 export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo((props) => {
-    const [hostHistoryList, setHostHistoryList] = useState<string[]>([])
-
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
@@ -72,6 +70,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const ruleButtonRef = useRef<any>()
     const advancedFormRef = useRef<any>()
     const downstreamProxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
+    const hostRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
 
@@ -97,24 +98,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         })
         getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then((e) => {
             form.setFieldsValue({enableGMTLS: !!e})
-        })
-
-        // 缓存数据结构迁移(后续删除)
-        Promise.allSettled([
-            getRemoteValue(MITMConsts.MITMDefaultServer),
-            getRemoteValue(MITMConsts.MITMDefaultHostHistoryList)
-        ]).then((cacheRes) => {
-            const defaultValue =
-                cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? cacheRes[0].value : defHost) : defHost
-            const options =
-                cacheRes[1].status === "fulfilled"
-                    ? !!cacheRes[1].value
-                        ? JSON.parse(cacheRes[1].value)
-                        : [defHost]
-                    : [defHost]
-            form.setFieldsValue({host: defaultValue})
-            setHostHistoryList(options)
-            setRemoteValue(CacheDropDownGV.MITMDefaultHostHistoryList, JSON.stringify({defaultValue, options}))
         })
     }, [props.status])
     useUpdateEffect(() => {
@@ -198,21 +181,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 filterWebsocket: params.filterWebsocket
             }
         )
-        const index = hostHistoryList.findIndex((ele) => ele === params.host)
-        let newHostHistoryList = [...hostHistoryList]
-        if (index === -1) {
-            newHostHistoryList = [params.host, ...hostHistoryList].filter((_, index) => index < 10)
-            setRemoteValue(MITMConsts.MITMDefaultHostHistoryList, JSON.stringify(newHostHistoryList))
-        }
-        // 缓存数据结构迁移(后续删除)
-        setRemoteValue(
-            CacheDropDownGV.MITMDefaultHostHistoryList,
-            JSON.stringify({defaultValue: params.host, options: newHostHistoryList})
-        )
+        hostRef.current.onSetRemoteValues(params.host)
         if (downstreamProxyRef.current) {
             downstreamProxyRef.current.onSetRemoteValues(params.downstreamProxy || "")
         }
-        setRemoteValue(MITMConsts.MITMDefaultServer, params.host)
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.enableGMTLS ? "1" : ""}`)
@@ -252,8 +224,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     name='host'
                 >
                     <YakitAutoComplete
-                        options={hostHistoryList.map((item) => ({value: item, label: item}))}
+                        ref={hostRef}
+                        cacheHistoryDataKey={CacheDropDownGV.MITMDefaultHostHistoryList}
                         placeholder='请输入'
+                        initValue={defHost}
                     />
                 </Item>
                 <Item label={"劫持代理监听端口"} name='port' rules={[{required: true, message: "该项为必填"}]}>

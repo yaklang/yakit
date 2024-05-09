@@ -96,8 +96,6 @@ export interface HttpQueryAdvancedConfigProps {
     visible: boolean
     onInsertYakFuzzer: () => void
     onValuesChange: (v: AdvancedConfigValueProps) => void
-    /**刷新设置代理的list */
-    refreshProxy: boolean
     /**匹配器和提取器里面的响应 */
     defaultHttpResponse: string
     /**@name 与onShowShowResponseMatcherAndExtraction配合使用 */
@@ -109,6 +107,7 @@ export interface HttpQueryAdvancedConfigProps {
     matchSubmitFun: () => void
     /**根据type 显示高级配置中得内容 */
     showFormContentType: WebFuzzerType
+    proxyListRef: React.Ref
 }
 
 export interface KVPair {

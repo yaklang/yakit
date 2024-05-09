@@ -1,9 +1,9 @@
 import {AutoComplete} from "antd"
-import React, {useEffect, useImperativeHandle, useMemo, useState} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {YakitAutoCompleteCacheDataHistoryProps, YakitAutoCompleteProps} from "./YakitAutoCompleteType"
 import styles from "./YakitAutoComplete.module.scss"
 import classNames from "classnames"
-import {useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 import {OutlineXIcon} from "@/assets/icon/outline"
 
@@ -30,6 +30,8 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         initValue = "",
         ...restProps
     } = props
+    const autoCompleteRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(autoCompleteRef)
     const [mouseEnterItem, setMouseEnterItem] = useState<string>("")
     const [show, setShow] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
@@ -38,8 +40,8 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         defaultValue: ""
     })
     useEffect(() => {
-        onGetRemoteValues(true)
-    }, [])
+        inViewport && onGetRemoteValues(true)
+    }, [initValue, inViewport])
     useImperativeHandle(
         ref,
         () => ({
@@ -72,7 +74,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                 let value = cacheData.defaultValue ? cacheData.defaultValue : ""
                 let newOption = cacheData.options || props.options || []
                 // 当缓存不存在的时候，若有初始默认值
-                if (value === "" && !newOption.length && initValue) {
+                if (cacheData.firstUse && initValue) {
                     value = initValue
                     newOption = [{value: initValue, label: initValue}]
                     // 主要是删缓存需要
@@ -143,6 +145,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
 
     return (
         <div
+            ref={autoCompleteRef}
             className={classNames(styles["yakit-auto-complete-wrapper"], {
                 [styles["yakit-auto-complete-wrapper-large"]]: size === "large",
                 [styles["yakit-auto-complete-wrapper-small"]]: size === "small",

@@ -10,12 +10,13 @@ import {useStore} from "@/store"
 import yakitImg from "@/assets/yakit.jpg"
 import {API} from "@/services/swagger/resposeType"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComplete, defYakitAutoCompleteRef} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {InformationCircleIcon} from "@/assets/newIcon"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {YakitRoute} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -43,9 +44,13 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const {onClose, onSuccee, enterpriseLogin = false, skipShow = false} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-    const [httpHistoryList, setHttpHistoryList] = useState<string[]>([])
-    const [httpProxyList, setHttpProxyList] = useState<string[]>([])
-    const defaultHttpUrl = useRef<string>("")
+    const httpHistoryRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
+    const [defaultHttpUrl, setDefaultHttpUrl] = useState<string>("")
+    const httpProxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
     const [formValue, setFormValue, getFormValue] = useGetState<OnlineProfileProps>({
         BaseUrl: "",
         Proxy: "",
@@ -54,7 +59,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     })
     useEffect(() => {
         getHttpSetting()
-        getProxyList()
     }, [])
     // 全局监听登录状态
     const {userInfo, setStoreUserInfo} = useStore()
@@ -168,19 +172,13 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         }
     }, [])
     const addHttpHistoryList = useMemoizedFn((url) => {
-        const index = httpHistoryList.findIndex((u) => u === url)
-        if (index === -1) {
-            httpHistoryList.push(url)
-            setRemoteValue("httpHistoryList", JSON.stringify(httpHistoryList))
-        }
-        // 缓存数据结构迁移(后续删除)
-        setRemoteValue(CacheDropDownGV.ConfigBaseUrl, JSON.stringify({defaultValue: url, options: httpHistoryList}))
+        httpHistoryRef.current.onSetRemoteValues(url)
     })
     const getHttpSetting = useMemoizedFn(() => {
         getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
             if (!setting) return
             const value = JSON.parse(setting)
-            defaultHttpUrl.current = value.BaseUrl
+            setDefaultHttpUrl(value.BaseUrl)
             if (value?.pwd && value.pwd.length > 0) {
                 // 解密
                 ipcRenderer
@@ -199,46 +197,11 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 })
                 setFormValue({...value})
             }
-            getHistoryList()
-        })
-    })
-    const getHistoryList = useMemoizedFn(() => {
-        // 缓存数据结构迁移(后续删除)
-        Promise.allSettled([getRemoteValue("httpHistoryList")]).then((cacheRes) => {
-            const defaultValue = defaultHttpUrl.current || ""
-            const options =
-                cacheRes[0].status === "fulfilled"
-                    ? !!cacheRes[0].value
-                        ? JSON.parse(cacheRes[0].value)
-                        : [defaultHttpUrl.current]
-                    : [defaultHttpUrl.current]
-            setHttpHistoryList(options)
-            setRemoteValue(CacheDropDownGV.ConfigBaseUrl, JSON.stringify({defaultValue, options}))
-        })
-    })
-    /**@description 获取代理list历史 */
-    const getProxyList = useMemoizedFn(() => {
-        // 缓存数据结构迁移(后续删除)
-        Promise.allSettled([getRemoteValue("httpProxyList")]).then((cacheRes) => {
-            const defaultValue = ""
-            const options =
-                cacheRes[0].status === "fulfilled" ? (!!cacheRes[0].value ? JSON.parse(cacheRes[0].value) : []) : []
-            setHttpProxyList(options)
-            setRemoteValue(CacheDropDownGV.ConfigProxy, JSON.stringify({defaultValue, options}))
         })
     })
     /**@description 增加代理list历史 */
     const addProxyList = useMemoizedFn((url) => {
-        const index = httpProxyList.findIndex((u) => u === url)
-        if (index === -1) {
-            httpProxyList.push(url)
-            setRemoteValue("httpProxyList", JSON.stringify(httpProxyList.filter((_, index) => index < 10)))
-        }
-        // 缓存数据结构迁移(后续删除)
-        setRemoteValue(
-            CacheDropDownGV.ConfigProxy,
-            JSON.stringify({defaultValue: "", options: httpProxyList.filter((_, index) => index < 10)})
-        )
+        httpProxyRef.current.onSetRemoteValues(url)
     })
     // 判断输入内容是否通过
     const judgePass = () => [
@@ -259,10 +222,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         {
             validator: (_, value) => {
                 let re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
-                if(/\s/.test(value)){
+                if (/\s/.test(value)) {
                     return Promise.reject("私有域地址存在空格")
-                }
-                else if (re.test(value)) {
+                } else if (re.test(value)) {
                     return Promise.resolve()
                 } else {
                     return Promise.reject("请输入符合要求的私有域地址")
@@ -287,7 +249,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}
                 >
                     <YakitAutoComplete
-                        options={httpHistoryList.map((item) => ({value: item, label: item}))}
+                        ref={httpHistoryRef}
+                        cacheHistoryDataKey={CacheDropDownGV.ConfigBaseUrl}
+                        initValue={defaultHttpUrl}
                         placeholder='请输入你的私有域地址'
                         defaultOpen={!enterpriseLogin}
                     />
@@ -308,7 +272,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         }
                     >
                         <YakitAutoComplete
-                            options={httpProxyList.map((item) => ({value: item, label: item}))}
+                            ref={httpProxyRef}
+                            cacheHistoryDataKey={CacheDropDownGV.ConfigProxy}
                             placeholder='设置代理'
                         />
                     </Form.Item>

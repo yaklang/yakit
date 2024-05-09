@@ -9,6 +9,7 @@ export interface YakitOptionTypeProps {
 export interface CacheDataHistoryProps {
     options: YakitOptionTypeProps[]
     defaultValue: string
+    firstUse?: boolean
 }
 
 /**
@@ -28,14 +29,25 @@ export const onGetRemoteValuesBase: (cacheHistoryDataKey: string) => Promise<Cac
                         defaultValue: ""
                     }
                     if (!data) {
-                        resolve(cacheData)
+                        resolve({...cacheData, firstUse: true})
                         return
                     }
                     const newData = JSON.parse(data)
 
                     if (Object.prototype.toString.call(newData) === "[object Object]") {
                         cacheData = newData.options
-                            ? newData
+                            ? {
+                                  options: newData.options.map((i) => {
+                                      if (typeof i === "string") {
+                                          return {value: i, label: i}
+                                      } else {
+                                          return i
+                                      }
+                                  }),
+                                  defaultValue: Array.isArray(newData.defaultValue)
+                                      ? newData.defaultValue.join(",")
+                                      : newData.defaultValue
+                              }
                             : {
                                   options: [],
                                   defaultValue: ""
@@ -72,7 +84,13 @@ export interface SetRemoteValuesBaseProps {
  */
 export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promise<CacheDataHistoryProps> = (params) => {
     return new Promise((resolve, reject) => {
-        const {cacheHistoryDataKey, newValue, cacheHistoryListLength = 10, isCacheDefaultValue = true, delCacheValue} = params
+        const {
+            cacheHistoryDataKey,
+            newValue,
+            cacheHistoryListLength = 10,
+            isCacheDefaultValue = true,
+            delCacheValue
+        } = params
         onGetRemoteValuesBase(cacheHistoryDataKey).then((oldCacheHistoryData) => {
             let cacheHistory: CacheDataHistoryProps = {
                 options: [],
@@ -83,13 +101,19 @@ export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promis
                 defaultValue: isCacheDefaultValue ? cacheHistory.defaultValue : ""
             }
 
+            oldCacheHistoryData.options.forEach((i, index, arr) => {
+                if (typeof i === "string") {
+                    arr[index] = {value: i, label: i}
+                }
+            })
+
             if (delCacheValue === undefined) {
                 const index = oldCacheHistoryData.options.findIndex((l) => l.value === newValue)
                 if (index === -1) {
                     const newHistoryList = newValue
                         ? [{value: newValue, label: newValue}, ...oldCacheHistoryData.options].filter(
-                            (_, index) => index < cacheHistoryListLength
-                        )
+                              (_, index) => index < cacheHistoryListLength
+                          )
                         : oldCacheHistoryData.options
                     cacheHistory = {
                         options: newHistoryList,
@@ -107,7 +131,7 @@ export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promis
                 }
             } else {
                 // 删除缓存
-                const newHistoryList = oldCacheHistoryData.options.filter(item => item.value !== delCacheValue)
+                const newHistoryList = oldCacheHistoryData.options.filter((item) => item.value !== delCacheValue)
                 cacheData = {
                     options: newHistoryList,
                     defaultValue: isCacheDefaultValue ? oldCacheHistoryData.defaultValue : ""
