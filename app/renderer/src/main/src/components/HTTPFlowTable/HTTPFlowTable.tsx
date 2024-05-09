@@ -553,8 +553,8 @@ export const getClassNameData = (resData: HTTPFlow[]) => {
         let className = ""
         if (item.Tags && item.Tags.indexOf("YAKIT_COLOR") > -1) {
             const colors = item.Tags.split("|")
-            className =
-                (colors.length > 0 && TableRowColor(colors?.pop()?.split("_")?.pop()?.toUpperCase() || "")) || ""
+            const color = colors.find((i) => i.indexOf("YAKIT_COLOR") > -1)
+            className = (color && TableRowColor(color.split("_")?.pop()?.toUpperCase() || "")) || ""
         }
         const newItem = {
             ...item,
@@ -2775,8 +2775,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
             WithPayload: toWebFuzzer,
-            RuntimeIDs: runTimeId && runTimeId.indexOf(',') !== -1 ? runTimeId.split(",") : undefined,
-            RuntimeId: runTimeId && runTimeId.indexOf(',') === -1 ? runTimeId : undefined
+            RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
+            RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
         }
         setParams(newParams)
         setIsReset(!isReset)
