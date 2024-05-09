@@ -52,6 +52,7 @@ import {DataCompareModal} from "@/pages/compare/DataCompare"
 import emiter from "./eventBus/eventBus"
 import {v4 as uuidv4} from "uuid"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
+import { HighLightText } from "@/components/HTTPFlowDetail"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1100,6 +1101,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     onAddOverlayWidget?: (editor: IMonacoEditor, isShow?: boolean) => any
     extraEditorProps?: YakitEditorProps | any
 
+    highLightText?: HighLightText[]
+
     /** 扩展属性 */
     originValue: Uint8Array
     defaultStringValue?: string
@@ -1183,8 +1186,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         dataCompare,
         editorOperationRecord,
         typeOptionVal,
-        onTypeOptionVal
+        onTypeOptionVal,
+        highLightText = []
     } = props
+    
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1801,6 +1806,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             }
                             webFuzzerCallBack={props.webFuzzerCallBack}
                             editorId={editorId}
+                            highLightText={type === undefined ? highLightText : []}
                             {...props.extraEditorProps}
                         />
                     )}

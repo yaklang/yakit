@@ -539,6 +539,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
+export interface HighLightText {
+    startOffset: number
+    highlightLength: number
+    hoverVal: string
+    IsMatchRequest?: boolean
+}
+
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const {id, selectedFlow, refresh, defaultFold = true} = props
     const [flow, setFlow] = useState<HTTPFlow>()
@@ -552,6 +559,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(defaultFold)
     const lastIdRef = useRef<number>()
+    const [highLightText, setHighLightText] = useState<HighLightText[]>([])
 
     useEffect(() => {
         update()
@@ -648,6 +656,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .then((rsp: {Total: number}) => {
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
+                } else {
+                    setHighLightText([])
                 }
             })
             .catch((e) => {
@@ -699,6 +709,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             flowResponse={flowResponse}
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
+                            highLightText={highLightText}
                             {...props}
                         />
                     )}
@@ -803,6 +814,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     </div>
                                 </div>
                             }
+                            onSetHighLightText={setHighLightText}
                         />
                     </Col>
                 )}
@@ -853,6 +865,7 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flowRequestLoad?: boolean
     flowResponseLoad?: boolean
     pageType?: HTTPHistorySourcePageType
+    highLightText?: HighLightText[]
 }
 
 interface HTTPFlowBareProps {
@@ -869,8 +882,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         search,
         id,
         Tags,
-        flowRequest,
-        flowResponse,
+        highLightText,
         flowRequestLoad,
         flowResponseLoad,
         historyId,
@@ -1230,6 +1242,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
                             }
                         }}
+                        highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => i.IsMatchRequest)}
                     />
                 )
             }}
@@ -1393,6 +1406,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         onEditor={(Editor) => {
                             setResEditor(Editor)
                         }}
+                        highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)}
                     />
                 )
             }}
