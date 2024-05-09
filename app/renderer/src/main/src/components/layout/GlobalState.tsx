@@ -327,9 +327,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             }, 20000)
             updatePluginTotal()
             emiter.on("onRefreshQueryYakScript", updatePluginTotal)
-            return () => {
-                emiter.off("onRefreshQueryYakScript", updatePluginTotal)
-            }
         } else {
             // init
             setPcap({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
@@ -352,6 +349,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         }
 
         return () => {
+            if (isEngineLink) emiter.off("onRefreshQueryYakScript", updatePluginTotal)
             if (timer) clearInterval(timer)
             timer = null
         }
