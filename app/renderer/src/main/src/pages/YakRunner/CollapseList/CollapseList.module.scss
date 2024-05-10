@@ -1,0 +1,69 @@
+/* ---------- CollapseList ---------- */
+.collapse-list {
+    width: 100%;
+    height: 100%;
+    overflow: hidden auto;
+}
+
+.collapse-list-container {
+    :global {
+        .ant-collapse-item > .ant-collapse-header {
+            padding: 3px 12px 3px 8px;
+            align-items: center;
+        }
+        .ant-collapse-item > .ant-collapse-header .ant-collapse-expand-icon {
+            line-height: 16px;
+            height: 16px;
+        }
+        .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
+            margin-right: 8px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: #85899e;
+            }
+        }
+        .ant-collapse-item > .ant-collapse-header .collapse-expand-arrow {
+            svg {
+                transform: rotate(90deg);
+            }
+        }
+
+        .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+            padding: 0;
+        }
+    }
+
+    padding-top: 12px;
+    .list-item {
+        &-render {
+            padding: 4px 12px 12px 32px;
+            position: relative;
+            .render-tail {
+                width: 1px;
+                height: calc(100% + 6px);
+                background-color: #eaecf3;
+                position: absolute;
+                top: -3px;
+                left: 16px;
+            }
+        }
+    }
+}
+
+/* ---------- HelpInfoList ---------- */
+.help-info-list {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    .title-render {
+        color: #31343f;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+    .render {
+        width: 100%;
+    }
+}
