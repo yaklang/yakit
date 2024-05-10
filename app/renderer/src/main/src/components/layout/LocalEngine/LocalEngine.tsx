@@ -128,7 +128,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         .invoke("fetch-latest-yaklang-version")
                         .then((data: string) => {
                             if (preventUpdateHint.current) return
-                            setLatestYaklang(data || "")
+                            setLatestYaklang(data.startsWith('v') ? data.slice(1) : data)
                         })
                         .catch((err) => {})
                 }

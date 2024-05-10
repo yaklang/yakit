@@ -59,9 +59,14 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         version: "",
         content: ""
     })
+
+    const removePrefixV = (version: string) => {
+        return version.startsWith('v') ? version.slice(1) : version
+    }
+
     const yakitContent: string[] = useMemo(() => {
         if (!yakitUpdateContent.content) return []
-        if (yakitUpdateContent.version !== latestYakit) return []
+        if (removePrefixV(yakitUpdateContent.version) !== removePrefixV(latestYakit)) return []
         if (yakitUpdateContent.content) {
             return yakitUpdateContent.content.split("\n")
         }
@@ -69,7 +74,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     }, [yakitUpdateContent])
     const yaklangContent: string[] = useMemo(() => {
         if (!yaklangUpdateContent.content) return []
-        if (yaklangUpdateContent.version !== latestYaklang) return []
+        if (removePrefixV(yaklangUpdateContent.version) !== removePrefixV(latestYaklang)) return []
         if (yaklangUpdateContent.content) {
             return yaklangUpdateContent.content.split("\n")
         }
@@ -90,7 +95,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 if (!res) return
                 try {
                     const data: UpdateContentProp = JSON.parse(res)
-                    if (data.version !== latestYakit) return
+                    if (removePrefixV(data.version) !== removePrefixV(latestYakit)) return
                     setYakitUpdateContent({...data})
                 } catch (error) {}
             })
@@ -110,7 +115,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 if (!res) return
                 try {
                     const data: UpdateContentProp = JSON.parse(res)
-                    if (data.version !== latestYaklang) return
+                    if (removePrefixV(data.version) !== removePrefixV(latestYaklang)) return
                     setYaklangUpdateContent({...data})
                 } catch (error) {}
             })
@@ -144,13 +149,13 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     const isShowYakit = useMemo(() => {
         if (!isShow) return false
         if (!currentYakit || !latestYakit) return false
-        if (`v${currentYakit}` !== latestYakit) return true
+        if (removePrefixV(currentYakit) !== removePrefixV(latestYakit)) return true
         return false
     }, [currentYakit, latestYakit, isShow])
     const isShowYaklang = useMemo(() => {
         if (!isShow) return false
         if (!currentYaklang || !latestYaklang) return false
-        if (currentYaklang !== latestYaklang) return true
+        if (removePrefixV(currentYaklang) !== removePrefixV(latestYaklang)) return true
         return false
     }, [currentYaklang, latestYaklang, isShow])
 

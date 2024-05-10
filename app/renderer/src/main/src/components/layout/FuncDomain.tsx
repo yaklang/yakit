@@ -1115,6 +1115,7 @@ interface UIOpUpdateProps {
     role?: string | null
     updateContent?: string
     onUpdateEdit?: (type: "yakit" | "yaklang", isEnterprise?: boolean) => any
+    removePrefixV: (version: string) => string
 }
 
 /** @name Yakit版本 */
@@ -1128,10 +1129,11 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
         isEnterprise,
         role,
         updateContent = "",
-        onUpdateEdit
+        onUpdateEdit,
+        removePrefixV
     } = props
 
-    const isUpdate = isSimple ? false : lastVersion !== "" && lastVersion !== version
+    const isUpdate = isSimple ? false : lastVersion !== "" && removePrefixV(lastVersion) !== removePrefixV(version)
 
     const content: string[] = useMemo(() => {
         if (updateContent) {
@@ -1224,11 +1226,12 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         onDownload,
         role,
         updateContent = "",
-        onUpdateEdit
+        onUpdateEdit,
+        removePrefixV
     } = props
 
-    const isUpdate = lastVersion !== "" && lastVersion !== version && localVersion !== lastVersion
-    const isKillEngine = localVersion && localVersion !== version && localVersion === lastVersion
+    const isUpdate = lastVersion !== "" && removePrefixV(lastVersion) !== removePrefixV(version) && removePrefixV(localVersion) !== removePrefixV(lastVersion)
+    const isKillEngine = localVersion && removePrefixV(localVersion) !== removePrefixV(version) && removePrefixV(localVersion) === removePrefixV(lastVersion)
 
     const content: string[] = useMemo(() => {
         if (updateContent) {
@@ -1438,22 +1441,32 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         version: "",
         content: ""
     })
+
+    const removePrefixV = (version: string) => {
+        return version.startsWith('v') ? version.slice(1) : version
+    }
     const companyYakit: string = useMemo(() => {
         if (!yakitLastVersion) return ""
-        if (yakitLastVersion !== companyYakitContent.version) return ""
-        if (yakitLastVersion === companyYakitContent.version) return companyYakitContent.content
+        const lastVersion = removePrefixV(yakitLastVersion)
+        const contentVersion = removePrefixV(companyYakitContent.version)
+        if (lastVersion !== contentVersion) return ""
+        if (lastVersion === contentVersion) return companyYakitContent.content
         return ""
     }, [yakitLastVersion, companyYakitContent])
     const communityYakit: string = useMemo(() => {
         if (!yakitLastVersion) return ""
-        if (yakitLastVersion !== communityYakitContent.version) return ""
-        if (yakitLastVersion === communityYakitContent.version) return communityYakitContent.content
+        const lastVersion = removePrefixV(yakitLastVersion)
+        const contentVersion = removePrefixV(communityYakitContent.version)
+        if (lastVersion !== contentVersion) return ""
+        if (lastVersion === contentVersion) return communityYakitContent.content
         return ""
     }, [yakitLastVersion, communityYakitContent])
     const communityYaklang: string = useMemo(() => {
         if (!yaklangLastVersion) return ""
-        if (yaklangLastVersion !== communityYaklangContent.version) return ""
-        if (yaklangLastVersion === communityYaklangContent.version) return communityYaklangContent.content
+        const lastVersion = removePrefixV(yaklangLastVersion)
+        const contentVersion = removePrefixV(communityYaklangContent.version)
+        if (lastVersion !== contentVersion) return ""
+        if (lastVersion === contentVersion) return communityYaklangContent.content
         return ""
     }, [yaklangLastVersion, communityYaklangContent])
 
@@ -1544,7 +1557,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
             .then((data: string) => {
-                if (yaklangVersion !== data) setYaklangLastVersion(data)
+                if (yaklangVersion !== data) setYaklangLastVersion(data.startsWith('v') ? data.slice(1) : data)
             })
             .catch((err) => {
                 setYaklangLastVersion("")
@@ -1741,6 +1754,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         role={userInfo.role}
                                         updateContent={isCommunityEdition() ? companyYakit : communityYakit}
                                         onUpdateEdit={UpdateContentEdit}
+                                        removePrefixV={removePrefixV}
                                     />
                                 )}
                                 {!isEnpriTraceAgent() && (
@@ -1753,6 +1767,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         role={userInfo.role}
                                         updateContent={isEnterpriseEdition() ? companyYakit : communityYakit}
                                         onUpdateEdit={UpdateContentEdit}
+                                        removePrefixV={removePrefixV}
                                     />
                                 )}
                                 <UIOpUpdateYaklang
@@ -1765,6 +1780,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     role={userInfo.role}
                                     updateContent={communityYaklang}
                                     onUpdateEdit={UpdateContentEdit}
+                                    removePrefixV={removePrefixV}
                                 />
                             </div>
                             <div className={styles["history-version"]}>
@@ -1811,9 +1827,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     const isUpdate = useMemo(() => {
         return isEnpriTraceAgent()
-            ? yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion
-            : (yakitLastVersion !== "" && yakitLastVersion !== yakitVersion) ||
-                  (yaklangLastVersion !== "" && yaklangLastVersion !== yaklangVersion)
+            ? yaklangLastVersion !== "" && removePrefixV(yaklangLastVersion) !== removePrefixV(yaklangVersion)
+            : (yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
+                  (yaklangLastVersion !== "" && removePrefixV(yaklangLastVersion) !== removePrefixV(yaklangVersion))
     }, [yakitVersion, yakitLastVersion, yaklangLastVersion, yaklangVersion])
 
     return (
