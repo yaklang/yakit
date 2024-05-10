@@ -792,7 +792,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     firstNode={
                         <div className={styles["fuzzer-page-table-wrap"]}>
                             {moreLimtAlertMsg && data.length >= fuzzerTableMaxData && (
-                                <div>
+                                <div style={{padding: '0 2px'}}>
                                     <ReactResizeDetector
                                         onResize={(w, h) => {
                                             if (!w || !h) {
