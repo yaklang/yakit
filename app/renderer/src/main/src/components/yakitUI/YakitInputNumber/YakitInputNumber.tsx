@@ -32,7 +32,8 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
                 {
                     [styles["yakit-input-number-wrapper-max-large"]]: size === "maxLarge",
                     [styles["yakit-input-number-wrapper-large"]]: size === "large",
-                    [styles["yakit-input-number-wrapper-small"]]: size === "small"
+                    [styles["yakit-input-number-wrapper-small"]]: size === "small",
+                    [styles["yakit-input-number-wrapper-disabled"]]: !!props.disabled,
                 },
                 wrapperClassName
             )}

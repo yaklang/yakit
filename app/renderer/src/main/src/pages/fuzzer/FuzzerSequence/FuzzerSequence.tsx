@@ -2020,6 +2020,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                                 响应数量超过{fuzzerTableMaxData}
                                                                 ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
                                                                 <YakitButton
+                                                                    type="text"
                                                                     size='small'
                                                                     onClick={() => {
                                                                         onShowAll()
