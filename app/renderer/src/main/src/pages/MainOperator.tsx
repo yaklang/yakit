@@ -408,9 +408,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     /** yak-chat 相关逻辑 */
     const [chatShow, setChatShow] = useState<boolean>(false)
-    useEffect(() => {
-        if (!userInfo.isLogin) setChatShow(false)
-    }, [userInfo])
+
     const onChatCS = useMemoizedFn(() => {
         setChatShow(true)
     })

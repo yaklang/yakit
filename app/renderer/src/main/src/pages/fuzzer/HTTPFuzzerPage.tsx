@@ -1240,17 +1240,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     
     // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
     const onFuzzerModal = useMemoizedFn((value) => {
-        const val: {text?: string; scriptName: string; pageId: string} = JSON.parse(value)
+        const val: {text?: string; scriptName: string; pageId: string,isAiPlugin:boolean} = JSON.parse(value)
         apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
         if (props.id === val.pageId) {
             const configType = obj.AppConfigs.map((item)=>item.Type).filter((item)=>["openai","chatglm","moonshot"].includes(item))
             // 如若已配置 则打开执行框
-            if(configType.length>0){
+            if(configType.length>0 && val.isAiPlugin){
                 openAIByChatCS({text: val.text, scriptName: val.scriptName})
-                // setYakitWindowVisible(true)
-                // setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
             }
-            else{
+            else if(val.isAiPlugin){
                 let m = showYakitModal({
                     title: "添加第三方应用",
                     width: 600,
@@ -1287,6 +1285,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                     )
                 })
+            }
+            else{
+                setYakitWindowVisible(true)
+                setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
             }
         }
         })
