@@ -2075,20 +2075,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         isEnd={loading}
                                                         pageId={props.id}
                                                         moreLimtAlertMsg={
-                                                            <>
+                                                            <div style={{fontSize: 12}}>
                                                                 响应数量超过{fuzzerTableMaxData}，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
                                                                 <YakitButton
                                                                     type="text"
-                                                                    size="small"
                                                                     onClick={() => {
                                                                         setShowAllDataRes(true)
                                                                     }}
-                                                                    style={{margin: '0 5px'}}
+                                                                    style={{padding: 0}}
                                                                 >
                                                                     查看全部
                                                                 </YakitButton>
                                                                 查看所有数据
-                                                            </>
+                                                            </div>
                                                         }
                                                         tableKeyUpDownEnabled={!showAllDataRes}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
