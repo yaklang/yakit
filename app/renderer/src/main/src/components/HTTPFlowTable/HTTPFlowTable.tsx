@@ -1009,7 +1009,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         // 查询数据
         updateQueryParams(query)
-
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1085,6 +1084,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             })
             .catch((e: any) => {
+                if (idRef.current) {
+                    clearInterval(idRef.current)
+                }
                 yakitNotify("error", `query HTTP Flow failed: ${e}`)
             })
             .finally(() =>
@@ -1111,6 +1113,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const resData = rsp?.Data || []
             if (resData.length) {
                 setTotal(rsp.Total)
+            }
+        }).catch(() => {
+            if (extraTimerRef.current) {
+                clearInterval(extraTimerRef.current)
             }
         })
     })
@@ -1338,15 +1344,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
 
     // 设置是否自动刷新
+    const idRef = useRef<any>()
     useEffect(() => {
-        let id
+        return () => {
+            clearInterval(idRef.current)
+        }
+    }, [])
+    useEffect(() => {
         if (inViewport) {
             scrollUpdate()
             if (isLoop) {
-                id = setInterval(scrollUpdate, 1000)
+                if (idRef.current) {
+                    clearInterval(idRef.current)
+                }
+                idRef.current = setInterval(scrollUpdate, 1000)
             }
         }
-        return () => clearInterval(id)
+        return () => clearInterval(idRef.current)
     }, [inViewport, isLoop, scrollUpdate])
 
     // 保留数组中非重复数据
