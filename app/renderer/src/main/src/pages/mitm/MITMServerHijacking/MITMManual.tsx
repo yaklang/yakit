@@ -1,14 +1,12 @@
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {HTTPPacketEditor, NewHTTPPacketEditor} from "@/utils/editors"
+import {NewHTTPPacketEditor} from "@/utils/editors"
 import {Divider} from "antd"
-import React, {useEffect, useImperativeHandle, useRef, useState, useMemo} from "react"
-import {allowHijackedResponseByRequest, MITMStatus} from "./MITMHijackedContent"
+import React, {useEffect, useState, useMemo} from "react"
+import {MITMStatus} from "./MITMHijackedContent"
 import styles from "./MITMServerHijacking.module.scss"
-import * as monaco from "monaco-editor"
 import classNames from "classnames"
-import {useResponsive} from "ahooks"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -31,6 +29,8 @@ interface MITMManualHeardExtraProps {
     width: number
     calloutColor: string
     onSetCalloutColor: (calloutColor: string) => void
+    beautifyOpen: boolean
+    onSetBeautifyOpen: (beautifyOpen: boolean) => void
 }
 export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.memo((props) => {
     const {
@@ -45,7 +45,9 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
         onSubmitData,
         width,
         calloutColor,
-        onSetCalloutColor
+        onSetCalloutColor,
+        beautifyOpen,
+        onSetBeautifyOpen
     } = props
     return (
         <div className={styles["autoForward-manual"]}>
@@ -84,6 +86,13 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                             </YakitSelect.Option>
                         ))}
                     </YakitSelect>
+                </div>
+                <div className={styles["manual-select"]}>
+                    <span className={styles["manual-select-label"]}>美化:</span>
+                    <YakitSwitch
+                        checked={beautifyOpen}
+                        onChange={onSetBeautifyOpen}
+                    />
                 </div>
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>劫持响应:</span>
@@ -215,6 +224,7 @@ interface MITMManualEditorProps {
     onSetHijackResponseType: (s: string) => void
     currentIsForResponse: boolean
     requestPacket: Uint8Array
+    beautifyOpen: boolean
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
     const {
@@ -231,7 +241,8 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         status,
         onSetHijackResponseType,
         currentIsForResponse,
-        requestPacket
+        requestPacket,
+        beautifyOpen
     } = props
     // 操作系统类型
     const [system, setSystem] = useState<string>()
@@ -364,7 +375,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             onChange={setModifiedPacket}
             noPacketModifier={true}
             readOnly={status === "hijacking"}
-            refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}`}
+            refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}${Uint8ArrayToString(currentPacket)}${beautifyOpen}`}
             contextMenu={mitmManualRightMenu}
             editorOperationRecord='MITM_Manual_EDITOR_RECORF'
             isWebSocket={currentIsWebsocket && status !== "hijacking"}

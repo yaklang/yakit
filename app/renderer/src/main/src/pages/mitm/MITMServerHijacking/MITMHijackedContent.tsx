@@ -24,7 +24,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
-import { Uint8ArrayToString } from "@/utils/str"
+import {Uint8ArrayToString} from "@/utils/str"
+import {prettifyPacketCode} from "@/utils/prettifyPacket"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,7 +37,7 @@ interface MITMHijackedContentProps {
     setIsFullScreen: (f: boolean) => void
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
-      }
+}
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
     const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards} = props
@@ -81,6 +82,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
     const [alertVisible, setAlertVisible] = useState<boolean>(false)
+
+    const [beautifyOpen, setBeautifyOpen] = useState<boolean>(false)
+    const [currentBeautifyPacket, setCurrentBeautifyPacket] = useState<Uint8Array>(new Buffer([]))
 
     const getMITMFilter = useMemoizedFn(() => {
         ipcRenderer
@@ -333,6 +337,35 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         },
         [autoForward]
     )
+
+    /**
+     * 美化
+     */
+    useEffect(() => {
+        const currentPacketStr = Uint8ArrayToString(currentPacket)
+        if (currentPacketStr === "") {
+            setCurrentBeautifyPacket(currentPacket)
+            return
+        }
+        const encoder = new TextEncoder()
+        const bytes = encoder.encode(currentPacketStr)
+        const mb = bytes.length / 1024 / 1024
+        if (mb > 0.5) {
+            setCurrentBeautifyPacket(currentPacket)
+        } else {
+            prettifyPacketCode(currentPacketStr)
+                .then((res) => {
+                    setCurrentBeautifyPacket(res as Uint8Array)
+                })
+                .catch(() => {
+                    setCurrentBeautifyPacket(currentPacket)
+                })
+        }
+    }, [Uint8ArrayToString(currentPacket)])
+    const onSetBeautifyOpen = (flag: boolean) => {
+        setBeautifyOpen(flag)
+    }
+
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (autoForward) {
             case "manual":
@@ -350,6 +383,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         width={width}
                         calloutColor={calloutColor}
                         onSetCalloutColor={setCalloutColor}
+                        beautifyOpen={beautifyOpen}
+                        onSetBeautifyOpen={onSetBeautifyOpen}
                     />
                 )
             case "log":
@@ -379,7 +414,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             <MITMManualEditor
                                 isHttp={isHttp}
                                 currentIsWebsocket={currentIsWebsocket}
-                                currentPacket={currentPacket}
+                                currentPacket={beautifyOpen ? currentBeautifyPacket : currentPacket}
+                                beautifyOpen={beautifyOpen}
                                 setModifiedPacket={setModifiedPacket}
                                 forResponse={forResponse}
                                 currentPacketId={currentPacketId}
@@ -456,14 +492,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         }}
                     />
                 </div>
-                <div className={styles["mitm-hijacked-heard-right"]}>
-                    {onRenderHeardExtra()}
-                </div>
+                <div className={styles["mitm-hijacked-heard-right"]}>{onRenderHeardExtra()}</div>
             </div>
-            <div
-                className={styles["mitm-alert-msg"]}
-                style={{display: alertVisible ? "block" : "none"}}
-            >
+            <div className={styles["mitm-alert-msg"]} style={{display: alertVisible ? "block" : "none"}}>
                 {alertMsg}
                 <YakitButton
                     style={{float: "right"}}
