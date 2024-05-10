@@ -21,7 +21,7 @@ import classNames from "classnames"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
-import {BanIcon, CogIcon, PencilAltIcon, RemoveIcon, TrashIcon} from "@/assets/newIcon"
+import {BanIcon, CogIcon, DragSortIcon, PencilAltIcon, RemoveIcon, TrashIcon} from "@/assets/newIcon"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps} from "../TableVirtualResize/TableVirtualResizeType"
@@ -614,6 +614,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                                 }
                                                                             )
                                                                         })
+                                                                        setTimeout(()=>submit(),100)
                                                                         m.destroy()
                                                                     }}
                                                                     onCancel={() => m.destroy()}
@@ -663,6 +664,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                     existedResult.push(e)
                                                                 }
                                                                 setParams({...params, AppConfigs: existedResult})
+                                                                setTimeout(()=>submit(),100)
                                                                 m.destroy()
                                                             }}
                                                             onCancel={() => m.destroy()}
@@ -677,20 +679,26 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Form.Item>
                                 <Form.Item label={"AI使用优先级"}>
                                     <YakitButton type={"outline1"} onClick={()=>{
+                                        let AiApiPriority:string[] = params.AiApiPriority
                                         let m = showYakitModal({
                                             title: "配置AI使用优先级",
                                             width: 460,
-                                            footer: null,
+                                            // footer: null,
                                             closable: true,
                                             maskClosable: false,
                                             content: (
                                                 <div style={{margin: 24}}>
-                                                    <AISortContent onClose={()=>m.destroy()} AiApiPriority={params.AiApiPriority} onSubmit={(AiApiPriority)=>{
-                                                        setParams({...params, AiApiPriority})
-                                                        m.destroy()
+                                                    <AISortContent AiApiPriority={params.AiApiPriority} onUpdate={(newAiApiPriority)=>{
+                                                        AiApiPriority = newAiApiPriority
                                                     }}/>
                                                 </div>
-                                            )
+                                            ),
+                                            onCancel:()=>{m.destroy()},
+                                            onOk:()=>{
+                                                setParams({...params, AiApiPriority})
+                                                setTimeout(()=>submit(),100)
+                                                m.destroy()
+                                            }
                                         })
                                     }}>配置</YakitButton>
                                 </Form.Item>
@@ -1285,8 +1293,7 @@ interface SortDataProps {
     value: string
 }
 interface AISortContentProps {
-    onClose:()=>void
-    onSubmit:(v:string[])=>void
+    onUpdate:(v:string[])=>void
     AiApiPriority: string[]
 }
 
@@ -1318,7 +1325,7 @@ const defaultAiApiPriority:SortDataProps[] = [{label: "OpenAI", value: "openai"}
 {label: "Moonshot", value: "moonshot"}]
 
 export const AISortContent: React.FC<AISortContentProps> = (props) => {
-    const {onClose,onSubmit,AiApiPriority} = props
+    const {onUpdate,AiApiPriority} = props
     const [sortData, setSortData] = useState<SortDataProps[]>([]);
 
     useEffect(()=>{
@@ -1340,17 +1347,13 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
             const [removed] = newItems.splice(source.index, 1)
             newItems.splice(destination.index, 0, removed)
             setSortData([...newItems])  
+            onUpdate(newItems.map((item)=>item.value))
         }
     })
 
     return(<div className={styles['ai-sort-content']}>
-        <div className={styles['content']}>
-        <div className={styles['count-list']}>
-            <div className={styles['count']}>1</div>
-            <div className={styles['count']}>2</div>
-            <div className={styles['count']}>3</div>
-        </div>
-        <div className={styles['sort-box']}>
+        <div>优先级为从上到下</div>
+        <div className={styles['menu-list']}>
             <DragDropContext
             onDragEnd={onDragEnd}
         >
@@ -1385,9 +1388,28 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
                                     ...getItemStyle(snapshot.isDragging, provided.draggableProps.style)
                                 }}
                             >
-                                <div className={styles['sort-item-box']}>
-                                <div className={classNames(styles["sort-item"]) } key={item.value}>{item.label}</div>
+                                <div
+                                    className={classNames(styles["menu-list-item"], {
+                                        [styles["menu-list-item-drag"]]: snapshot.isDragging
+                                    })}
+                                >
+                                    <div
+                                        className={styles["menu-list-item-info"]}
+                                    >
+                                        <DragSortIcon
+                                            className={styles["drag-sort-icon"]}
+                                        />
+                                        <div className={styles["title"]}>
+                                            {item.label}
+                                        </div>
+                                    </div>
                                 </div>
+                                
+                                
+                                
+                                {/* <div className={styles['sort-item-box']}>
+                                <div className={classNames(styles["sort-item"]) } key={item.value}>{item.label}</div>
+                                </div> */}
                             </div>
                         )}
                     </Draggable>
@@ -1398,12 +1420,6 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
         )}
     </Droppable>
     </DragDropContext>
-        </div>
-        
-    </div>
-        <div className={styles['footer']}>
-            <YakitButton type='outline2' size="max" onClick={onClose}>取消</YakitButton>
-            <YakitButton type="primary" size="max" onClick={()=>{onSubmit(sortData.map((item)=>item.value))}}>确定</YakitButton>
         </div>
     </div>)
 }

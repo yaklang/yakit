@@ -7,6 +7,7 @@ import {
     useMemoizedFn,
     useScroll,
     useSize,
+    useThrottleEffect,
     useUpdateEffect,
     useVirtualList
 } from "ahooks"
@@ -101,6 +102,7 @@ import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {
     HybridScanRequest,
     PluginBatchExecutorTaskProps,
+    apiCancelDebugPlugin,
     apiCancelHybridScan,
     apiHybridScan,
     convertHybridScanParams
@@ -124,6 +126,7 @@ import {CheckOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import emiter from "@/utils/eventBus/eventBus"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 const {ipcRenderer} = window.require("electron")
 
 /** 将 new Date 转换为日期 */
@@ -154,7 +157,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     /** 获取缓存中的对话内容 */
     useEffect(() => {
-        if (!userInfo.isLogin) return
+        if (!userInfo.isLogin) {
+            setChatcsType("PluginAI")
+            return
+        }
         getRemoteValue(RemoteGV.ChatCSStorage).then((value: string) => {
             if (!value) return
             try {
@@ -2876,7 +2882,7 @@ interface PluginAiItem {
 interface PluginAIComponentProps {
     visible: boolean
     params?: {text?: string; scriptName: string}
-    setParams?: (v?:{text?: string; scriptName: string}) => void
+    setParams: (v?:{text?: string; scriptName: string}) => void
     pluginAIList: PluginAiItem[]
     setPluginAIList:(v:any) => void
 }
@@ -2886,24 +2892,29 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingToken, setLoadingToken] = useState<string>("")
     const [resTime, setResTime] = useState<string>("")
-    
+    const tokenRef = useRef<string>(randomString(40))
+
     const pluginAIListRef = useRef<HTMLDivElement>(null)    
 
     // 添加项
     const AddAIList = useMemoizedFn((obj:PluginAiItem)=>{
         setPluginAIList((lastList)=>[...lastList,obj])
+        scrollToPluginAIBottom()
     })
 
     // 更新最后一项
-    const setAIList = useMemoizedFn((obj:PluginAiItem,token:string)=>{
+    const setAIList = useMemoizedFn((content:string,token:string)=>{
         try {
             const newPluginAIList:PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
             setPluginAIList(newPluginAIList.map((item)=>{
                 if(item.token === token){
-                    return obj
+                    item.info.content = content
+                    item.time = formatDate(+new Date())
+                    return item
                 }
                 return item
             }))
+            scrollToPluginAIBottom()
         } catch (error) {}
     })
 
@@ -2922,6 +2933,56 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
         if (visible) scrollToPluginAIBottom()
     }, [visible])
 
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenRef.current,
+        onEnd: () => {
+            onEndReply()
+        },
+        setRuntimeId: (rId) => {
+            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+        }
+    })
+
+    useThrottleEffect(
+        () => {
+            let str = "";
+            (streamInfo.logState || []).reverse().forEach((item)=>{
+                try {
+                    str += JSON.parse(item.data)?.data||""
+                } catch (error) {}
+            })
+            if(loadingToken.length>0 && str.length>0){
+               setAIList(str,loadingToken)
+            }
+        },
+        [streamInfo.logState,loadingToken],
+        {wait: 400}
+    )
+
+    // 执行
+    const onStartExecute = useMemoizedFn((data: {text?: string; scriptName: string})=>{
+        const {text,scriptName} = data
+        const executeParams = {
+            Input: text||"",
+            PluginName: scriptName,
+            PluginType: "codec",
+            Code:"",
+
+        }
+        debugPluginStreamEvent.reset()
+
+        ipcRenderer
+                .invoke("DebugPlugin", executeParams, tokenRef.current)
+                .then(() => {
+                    debugPluginStreamEvent.start()
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "本地插件执行出错:" + e)
+                })
+    })
+
     useEffect(()=>{
         if(params){
             const {text,scriptName} = params
@@ -2933,22 +2994,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             let obj:PluginAiItem = {info:{content:""},isMe:false,time: formatDate(+new Date()),token}
             AddAIList(obj)
             scrollToPluginAIBottom()
-            ipcRenderer
-            .invoke("Codec", {Text: text, ScriptName: scriptName})
-            .then((result: {Result: string}) => {
-                obj.info = {content:result.Result}
-                setAIList(obj,token)
-                scrollToPluginAIBottom()
-            })
-            .catch((e) => {
-                yakitNotify("error", `Codec ${e}`)
-            })
-            .finally(() => {
-                setParams&&setParams(undefined)
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            })
+
+            onStartExecute(params)
         }
     },[params])
 
@@ -2957,7 +3004,21 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     })
 
     /** 停止回答(断开请求连接) */
-    const onStop = useMemoizedFn(() => {})
+    const onStop = useMemoizedFn(() => {
+        apiCancelDebugPlugin(tokenRef.current).then(() => {
+            onEndReply()
+        })
+    })
+
+    // 回复完成
+    const onEndReply = useMemoizedFn(()=>{
+        debugPluginStreamEvent.stop()
+        setParams(undefined)
+        setLoading(false)
+        scrollToPluginAIBottom()
+        setLoadingToken("")
+        setResTime("")
+    })
     return (
         <>{
             visible&&<div className={styles["plugin-ai-list"]}>
@@ -3030,14 +3091,14 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
             <div className={styles["opt-header"]}>
                 <div className={styles["header-left"]}>
                     <YakChatLogIcon />
-                    {showLoading ? resTime : time}
+                    {time}
+                    {/* {showLoading ? resTime : time} */}
                 </div>
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
                     {showLoading ? (
-                        <></>
-                        // <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
-                        //     停止
-                        // </YakitButton>
+                        <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
+                            停止
+                        </YakitButton>
                     ) : (
                         <>
                             <div className={styles["right-btn"]}>
