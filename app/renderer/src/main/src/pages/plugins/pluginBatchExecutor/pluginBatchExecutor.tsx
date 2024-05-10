@@ -9,7 +9,7 @@ import {
     PluginInfoProps,
     PluginBatchExecutorTaskProps,
     apiHybridScan,
-    apiQueryHybridScan,
+    apiHybridScanByMode,
     apiCancelHybridScan,
     convertHybridScanParams,
     hybridScanParamsConvertToInputValue
@@ -51,6 +51,7 @@ import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginL
 import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/NewPortScan"
 import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/YakPoC"
 import {Uint8ArrayToString} from "@/utils/str"
+import {yakitNotify} from "@/utils/notification"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 const PluginBatchRaskListDrawer = React.lazy(() => import("./PluginBatchRaskListDrawer"))
@@ -105,7 +106,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
     /**停止 */
-    const [stopLoading, setStopLoading] = useState<boolean>(false)
+    const [pauseLoading, setPauseLoading] = useState<boolean>(false)
 
     const [refreshList, setRefreshList] = useState<boolean>(false)
     const [selectNum, setSelectNum] = useState<number>(0)
@@ -154,14 +155,16 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         } catch (error) {}
     })
     const fetchListInPageFirstAfter = useMemoizedFn(() => {
-        onQueryHybridScanByRuntimeId(pageInfo.runtimeId)
+        onActionHybridScanByRuntimeId(pageInfo.runtimeId)
     })
     /** 通过runtimeId查询该条记录详情 */
-    const onQueryHybridScanByRuntimeId = useMemoizedFn((runtimeId: string) => {
+    const onActionHybridScanByRuntimeId = useMemoizedFn((runtimeId: string) => {
         if (!runtimeId) return
-        pluginBatchExecuteContentRef.current?.onQueryHybridScanByRuntimeId(runtimeId, "status").then(() => {
-            setIsExpand(false)
-        })
+        pluginBatchExecuteContentRef.current
+            ?.onActionHybridScanByRuntimeId(runtimeId, pageInfo.hybridScanMode)
+            .then(() => {
+                setIsExpand(false)
+            })
     })
 
     const onRefLocalPluginList = useMemoizedFn(() => {
@@ -179,8 +182,15 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         e.stopPropagation()
         setIsExpand(!isExpand)
     })
-    const onStopExecute = useMemoizedFn(() => {
+    const onStopExecute = useMemoizedFn((e) => {
         pluginBatchExecuteContentRef.current?.onStopExecute()
+    })
+    const onPause = useMemoizedFn((e) => {
+        pluginBatchExecuteContentRef.current?.onPause()
+    })
+
+    const onContinue = useMemoizedFn((e) => {
+        pluginBatchExecuteContentRef.current?.onContinue()
     })
     /**在顶部的执行按钮 */
     const onExecuteInTop = useMemoizedFn((e) => {
@@ -195,6 +205,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     }, [selectList, search])
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
+        if (executeStatus === "paused") return true
         return false
     }, [executeStatus])
     const isShowPluginLog = useCreation(() => {
@@ -234,7 +245,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         <PluginExecuteLog
                             hidden={false}
                             pluginExecuteLog={pluginExecuteLog}
-                            isExecuting={isExecuting}
+                            isExecuting={executeStatus === "process"}
                         />
                     </div>
                 )}
@@ -265,7 +276,14 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             {isExecuting
                                 ? !isExpand && (
                                       <>
-                                          <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
+                                          {!pauseLoading && executeStatus === "paused" ? (
+                                              <YakitButton onClick={onContinue}>继续</YakitButton>
+                                          ) : (
+                                              <YakitButton onClick={onPause} loading={pauseLoading}>
+                                                  暂停
+                                              </YakitButton>
+                                          )}
+                                          <YakitButton danger onClick={onStopExecute} disabled={pauseLoading}>
                                               停止
                                           </YakitButton>
                                           <div className={styles["divider-style"]}></div>
@@ -298,8 +316,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             defaultActiveKey={pageInfo.defaultActiveKey}
                             onInitInputValueAfter={onInitInputValueAfter}
                             setProgressList={setProgressList}
-                            stopLoading={stopLoading}
-                            setStopLoading={setStopLoading}
+                            pauseLoading={pauseLoading}
+                            setPauseLoading={setPauseLoading}
                             pluginInfo={pluginInfo}
                             executeStatus={executeStatus}
                             setExecuteStatus={setExecuteStatus}
@@ -341,8 +359,8 @@ interface PluginBatchExecuteContentProps {
     setProgressList: (s: StreamResult.Progress[]) => void
 
     /**停止 */
-    stopLoading: boolean
-    setStopLoading: (value: boolean) => void
+    pauseLoading: boolean
+    setPauseLoading: (value: boolean) => void
 
     /**是否展开收起表单内容 */
     isExpand: boolean
@@ -364,10 +382,12 @@ interface PluginBatchExecuteContentProps {
     initRuntimeId?: string
 }
 export interface PluginBatchExecuteContentRefProps {
-    onQueryHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null>
+    onActionHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null>
     onStopExecute: () => void
     onStartExecute: () => void
     onInitInputValue: (v: string) => void
+    onPause: () => void
+    onContinue: () => void
 }
 export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
@@ -396,8 +416,10 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         useImperativeHandle(
             ref,
             () => ({
-                onQueryHybridScanByRuntimeId,
+                onActionHybridScanByRuntimeId,
                 onStopExecute,
+                onPause,
+                onContinue,
                 onStartExecute: () => {
                     form.validateFields()
                         .then(onStartExecute)
@@ -417,10 +439,10 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         /**初始的原始请求数据包，不受额外参数中的 RawHTTPRequest 影响 */
         const [initRawHTTPRequest, setInitRawHTTPRequest] = useState<string>("")
 
-        const [stopLoading, setStopLoading] = useControllableValue<boolean>(props, {
+        const [pauseLoading, setPauseLoading] = useControllableValue<boolean>(props, {
             defaultValue: false,
-            valuePropName: "stopLoading",
-            trigger: "setStopLoading"
+            valuePropName: "pauseLoading",
+            trigger: "setPauseLoading"
         })
         /**是否展开/收起 */
         const [isExpand, setIsExpand] = useControllableValue<boolean>(props, {
@@ -437,6 +459,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const [runtimeId, setRuntimeId] = useState<string>(initRuntimeId || "")
 
         const tokenRef = useRef<string>(randomString(40))
+        const isRetryRef = useRef<boolean>(false) //是否为重试
 
         const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
             taskName: "hybrid-scan",
@@ -445,14 +468,40 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             onEnd: () => {
                 hybridScanStreamEvent.stop()
                 setTimeout(() => {
-                    setExecuteStatus("finished")
-                    setStopLoading(false)
+                    setPauseLoading(false)
                 }, 200)
+            },
+            onError: (error) => {
+                hybridScanStreamEvent.stop()
+                setExecuteStatus("error")
+                yakitNotify("error", `[Mod] hybrid-scan error: ${error}`)
             },
             setRuntimeId: (rId) => {
                 setRuntimeId(rId)
                 if (runtimeId !== rId) {
                     onUpdatePluginBatchExecutorPageInfo(rId)
+                }
+            },
+            setTaskStatus: (val) => {
+                switch (val) {
+                    case "default":
+                        setExecuteStatus("default")
+                        break
+                    case "done":
+                        hybridScanStreamEvent.stop()
+                        setExecuteStatus("finished")
+                        break
+                    case "error":
+                        setExecuteStatus("error")
+                        break
+                    case "executing":
+                        setExecuteStatus("process")
+                        break
+                    case "paused":
+                        setExecuteStatus("paused")
+                        break
+                    default:
+                        break
                 }
             },
             onGetInputValue: (v) => onInitInputValue(v)
@@ -477,12 +526,25 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             unCacheData.current = usePageInfo.subscribe(
                 (state) => state.pages.get(YakitRoute.BatchExecutorPage)?.pageList.find((ele) => ele.pageId === pageId),
                 (selectedState, previousSelectedState) => {
-                    const pluginBatchExecutorPageInfo = selectedState?.pageParamsInfo.pluginBatchExecutorPageInfo
-                    if (pluginBatchExecutorPageInfo) {
-                        onQueryHybridScanByRuntimeId(
-                            pluginBatchExecutorPageInfo.runtimeId,
-                            pluginBatchExecutorPageInfo.hybridScanMode
-                        )
+                    const newPluginBatchExecutorPageInfo = selectedState?.pageParamsInfo.pluginBatchExecutorPageInfo
+                    const previousPluginBatchExecutorPageInfo =
+                        previousSelectedState?.pageParamsInfo.pluginBatchExecutorPageInfo
+                    if (newPluginBatchExecutorPageInfo && previousPluginBatchExecutorPageInfo) {
+                        const {hybridScanMode: previousHybridScanMode} = previousPluginBatchExecutorPageInfo
+                        const {runtimeId: newRuntimeId, hybridScanMode: newHybridScanMode} =
+                            newPluginBatchExecutorPageInfo
+                        // 重试：先查询，后新建任务，runtimeId 会更新，hybridScanMode不会改变，所以当前后两次hybridScanMode一样时，不执行任何操作
+                        // 查看/暂停/继续，runtimeId不会更新，hybridScanMode会更新
+                        if (previousHybridScanMode === newHybridScanMode && newHybridScanMode === "new") return
+                        switch (newHybridScanMode) {
+                            case "new":
+                                // 重试走的新建的逻辑
+                                onRetry()
+                                break
+                            default:
+                                onUpdateStatueByMode(newRuntimeId, newHybridScanMode)
+                                break
+                        }
                     }
                 }
             )
@@ -492,8 +554,31 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                     unCacheData.current()
                     unCacheData.current = null
                 }
+                onStopExecute()
             }
         }, [])
+
+        // 1.如果该页面初始打开就是重试的任务,先查询，用查询回来的参数去新建任务(onInitInputValue)
+        // 2.如果该页面是打开的状态下去重试任务，直接用现有的参数去新建任务
+        const onRetry = useMemoizedFn(() => {
+            const v = form.getFieldsValue()
+            onStartExecute(v)
+        })
+        /**
+         * @description 如果该页面已经打开，发送操作信号
+         */
+        const onUpdateStatueByMode: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null> =
+            useMemoizedFn((runtimeId, hybridScanMode) => {
+                return new Promise((resolve, reject) => {
+                    if (!runtimeId) reject("未设置正常得 runtimeId")
+                    apiHybridScanByMode(runtimeId, hybridScanMode, tokenRef.current)
+                        .then(() => {
+                            hybridScanStreamEvent.start()
+                            resolve(null)
+                        })
+                        .catch(reject)
+                })
+            })
         /**更新该页面最新的runtimeId */
         const onUpdatePluginBatchExecutorPageInfo = useMemoizedFn((runtimeId: string) => {
             if (!pageId) return
@@ -537,19 +622,38 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             })
         })
 
-        /** 通过runtimeId查询该条记录详情 */
-        const onQueryHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null> =
+        /**
+         * @description 初次打开的操作函数
+         * 通过runtimeId操作该条记录
+         * */
+        const onActionHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null> =
             useMemoizedFn((runtimeId, hybridScanMode) => {
                 return new Promise((resolve, reject) => {
                     if (!runtimeId) reject("未设置正常得 runtimeId")
                     hybridScanStreamEvent.reset()
-                    apiQueryHybridScan(runtimeId, hybridScanMode, tokenRef.current)
-                        .then(() => {
-                            setExecuteStatus("process")
-                            hybridScanStreamEvent.start()
+                    const action = (mode) => {
+                        apiHybridScanByMode(runtimeId, mode, tokenRef.current)
+                            .then(() => {
+                                hybridScanStreamEvent.start()
+                                resolve(null)
+                            })
+                            .catch(reject)
+                    }
+                    switch (hybridScanMode) {
+                        case "status":
+                        case "pause":
+                        case "resume":
+                            action(hybridScanMode)
+                            break
+                        case "new":
+                            // 先查询回来输入模块的值，用该值去新建任务，新建任务的逻辑在设置完输入模块后(onInitInputValue)
+                            isRetryRef.current = true
+                            action("status")
+                            break
+                        default:
                             resolve(null)
-                        })
-                        .catch(reject)
+                            break
+                    }
                 })
             })
         /**设置输入模块的初始值 */
@@ -576,18 +680,22 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 Concurrent: params.Concurrent,
                 TotalTimeoutSecond: params.TotalTimeoutSecond
             }
-            form.setFieldsValue({
+            const formValue = {
                 Input: params.Input,
                 IsHttps: params.HTTPRequestTemplate.IsHttps,
                 RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest,
                 ...requestType
-            })
+            }
+            form.setFieldsValue({...formValue})
             setExtraParamsValue(extraForm)
+            // 重试
+            if (isRetryRef.current) {
+                isRetryRef.current = false
+                onStartExecute(formValue)
+            }
             if (onInitInputValueAfter) onInitInputValueAfter(value)
         })
-
-        /**开始执行 */
-        const onStartExecute = useMemoizedFn(async (value) => {
+        const getHybridScanParams: (value) => HybridScanControlAfterRequest = useMemoizedFn((value) => {
             // 任务配置参数
             const taskParams: PluginBatchExecutorTaskProps = {
                 Concurrent: extraParamsValue.Concurrent,
@@ -609,10 +717,13 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         : Buffer.from("", "utf8")
                 }
             }
-            const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo)
+            return convertHybridScanParams(params, pluginInfo)
+        })
+        /**开始执行 */
+        const onStartExecute = useMemoizedFn(async (value) => {
+            const hybridScanParams = getHybridScanParams(value)
             hybridScanStreamEvent.reset()
             apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
-                setExecuteStatus("process")
                 setIsExpand(false)
                 if (setHidden) setHidden(true)
                 hybridScanStreamEvent.start()
@@ -628,11 +739,26 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         })
         /**取消执行 */
         const onStopExecute = useMemoizedFn(() => {
-            setStopLoading(true)
-            apiCancelHybridScan(tokenRef.current)
+            apiCancelHybridScan(tokenRef.current).then(() => {
+                setExecuteStatus("finished")
+            })
+        })
+        /**暂停 */
+        const onPause = useMemoizedFn(() => {
+            setPauseLoading(true)
+            apiHybridScanByMode(runtimeId, "pause", tokenRef.current).then(() => {
+                hybridScanStreamEvent.stop()
+            })
+        })
+        /**继续 */
+        const onContinue = useMemoizedFn(() => {
+            apiHybridScanByMode(runtimeId, "resume", tokenRef.current).then(() => {
+                hybridScanStreamEvent.start()
+            })
         })
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true
+            if (executeStatus === "paused") return true
             return false
         }, [executeStatus])
         const isShowResult = useCreation(() => {
@@ -665,18 +791,32 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (
-                                    <YakitButton danger onClick={onStopExecute} size='large' loading={stopLoading}>
-                                        停止
-                                    </YakitButton>
+                                    <>
+                                        {!pauseLoading && executeStatus === "paused" ? (
+                                            <YakitButton size='large' onClick={onContinue}>
+                                                继续
+                                            </YakitButton>
+                                        ) : (
+                                            <YakitButton size='large' onClick={onPause} loading={pauseLoading}>
+                                                暂停
+                                            </YakitButton>
+                                        )}
+
+                                        <YakitButton
+                                            danger
+                                            onClick={onStopExecute}
+                                            size='large'
+                                            disabled={pauseLoading}
+                                        >
+                                            停止
+                                        </YakitButton>
+                                    </>
                                 ) : (
-                                    <YakitButton
-                                        className={styles["plugin-execute-form-operate-start"]}
-                                        htmlType='submit'
-                                        size='large'
-                                        disabled={selectNum === 0}
-                                    >
-                                        开始执行
-                                    </YakitButton>
+                                    <>
+                                        <YakitButton htmlType='submit' size='large' disabled={selectNum === 0}>
+                                            开始执行
+                                        </YakitButton>
+                                    </>
                                 )}
                                 <YakitButton
                                     type='text'

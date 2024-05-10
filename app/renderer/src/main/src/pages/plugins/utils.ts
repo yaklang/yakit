@@ -1406,27 +1406,6 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
     })
 }
 /**
- * @description 停止 HybridScan
- */
-export const apiStopHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
-    return new Promise((resolve, reject) => {
-        const params: HybridScanControlRequest = {
-            Control: false,
-            HybridScanMode: "stop",
-            ResumeTaskId: runtimeId
-        }
-        ipcRenderer
-            .invoke(`HybridScan`, params, token)
-            .then(() => {
-                resolve(null)
-            })
-            .catch((e: any) => {
-                yakitNotify("error", "停止插件批量执行出错:" + e)
-                reject(e)
-            })
-    })
-}
-/**
  * @description 取消 HybridScan
  */
 export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => {
@@ -1446,7 +1425,7 @@ export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => 
 /**
  * @description HybridScan 批量执行查询/恢复/暂停操作
  */
-export const apiQueryHybridScan: (
+export const apiHybridScanByMode: (
     runtimeId: string,
     hybridScanMode: HybridScanModeType,
     token: string
@@ -1454,14 +1433,14 @@ export const apiQueryHybridScan: (
     return new Promise((resolve, reject) => {
         if (hybridScanMode === "new") return
         const params: HybridScanControlRequest = {
-            Control: true,
+            Control: hybridScanMode !== "pause",
             HybridScanMode: hybridScanMode,
             ResumeTaskId: runtimeId
         }
         ipcRenderer
             .invoke("HybridScan", params, token)
             .then(() => {
-                info(`查询成功,任务ID: ${token}`)
+                info(`任务ID: ${token}`)
                 resolve(null)
             })
             .catch((error) => {
@@ -1509,7 +1488,10 @@ export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = 
 }
 
 /**本地获取插件组数据 */
-export const apiFetchQueryYakScriptGroupLocal: (All?: boolean, ExcludeType?: string[]) => Promise<GroupCount[]> = (All = true, ExcludeType = ['yak', 'codec']) => {
+export const apiFetchQueryYakScriptGroupLocal: (All?: boolean, ExcludeType?: string[]) => Promise<GroupCount[]> = (
+    All = true,
+    ExcludeType = ["yak", "codec"]
+) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("QueryYakScriptGroup", {All, ExcludeType})

@@ -284,15 +284,27 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                             {getAction(record)}
 
                             <Divider type='vertical' style={{margin: 0}} />
-                            <YakitButton
-                                type='text'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onDetails(record.TaskId, "status")
-                                }}
-                            >
-                                查看
-                            </YakitButton>
+                            {record.Status === "error" ? (
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDetails(record.TaskId, "new")
+                                    }}
+                                >
+                                    重试
+                                </YakitButton>
+                            ) : (
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDetails(record.TaskId, "status")
+                                    }}
+                                >
+                                    查看
+                                </YakitButton>
+                            )}
                         </>
                     )
                 }

@@ -1,14 +1,13 @@
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {ExecResult, QueryYakScriptRequest} from "@/pages/invoker/schema"
 
-export type HybridScanModeType = "new" | "resume" | "pause" | "stop" | "status"
+export type HybridScanModeType = "new" | "resume" | "pause" | "status"
 export interface HybridScanControlRequest extends HybridScanControlAfterRequest {
     // 控制帧字段
     Control: boolean
     // new: 新任务
     // resume: 恢复任务
     // pause: 暂停任务
-    // stop: 停止任务
     // status: 查询任务状态
     HybridScanMode: HybridScanModeType
     ResumeTaskId: string
@@ -73,7 +72,7 @@ export interface HybridScanTask {
     CreatedAt: number
     UpdatedAt: number
     TaskId: string
-    Status: "executing" | "paused" | "done" // 如果 Status 有固定的几个值，可以使用联合类型
+    Status: "executing" | "paused" | "done" | "error" // 如果 Status 有固定的几个值，可以使用联合类型
     TotalTargets: number
     TotalPlugins: number
     TotalTasks: number

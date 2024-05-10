@@ -34,9 +34,7 @@
     }
     .plugin-execute-form-operate {
         @extend %display-flex-center;
-        .plugin-execute-form-operate-start {
-            margin-right: 8px;
-        }
+        gap: 8px;
     }
 }
 .plugin-batch-execute-form-wrapper-hidden {
@@ -91,6 +89,7 @@
         max-width: 300px;
         border-right: 1px solid var(--yakit-border-color);
         padding: 12px;
+        gap: 8px;
         .log-heard {
             color: var(--yakit-header-color);
             font-size: 12px;
