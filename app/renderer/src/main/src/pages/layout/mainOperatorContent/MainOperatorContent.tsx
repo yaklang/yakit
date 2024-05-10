@@ -126,23 +126,10 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         key: "addToGroup",
         children: [
             {
-                label: (
-                    <div className={styles["right-menu-item"]}>
-                        <OutlinePlusIcon />
-                        新建组
-                    </div>
-                ),
+                label: "新建组",
+                itemIcon: <OutlinePlusIcon />,
                 key: "newGroup"
             }
-            // {
-            //     label: (
-            //         <div className={styles["right-menu-item"]}>
-            //             <div className={classNames(styles["item-color-block"], `color-bg-blue`)} />
-            //             <span>正式项目配置</span>
-            //         </div>
-            //     ),
-            //     key: "55"
-            // }
         ]
     },
     // 组内的tab才有下面这个菜单
