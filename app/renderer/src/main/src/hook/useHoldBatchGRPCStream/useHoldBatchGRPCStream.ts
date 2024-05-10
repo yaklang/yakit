@@ -7,7 +7,8 @@ import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "../useHoldG
 import {
     BatchHoldGRPCStreamInfo,
     HoldBatchGRPCStreamParams,
-    PluginBatchExecutorResult
+    PluginBatchExecutorResult,
+    TaskStatus
 } from "./useHoldBatchGRPCStreamType"
 import {HybridScanActiveTask} from "@/models/HybridScan"
 
@@ -24,6 +25,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         onError,
         dataFilter,
         setRuntimeId,
+        setTaskStatus,
         onGetInputValue
     } = params
 
@@ -40,8 +42,9 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     // 启动数据流处理定时器
     const timeRef = useRef<any>(null)
 
-    // runtime-id
+    // task-status
     const runTimeId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
+    const taskStatus = useRef<{cache: TaskStatus; sent: TaskStatus}>({cache: "default", sent: "default"})
     /** 输入模块值 */
     const inputValueRef = useRef<{cache: string; sent: string}>({
         cache: "",
@@ -89,8 +92,11 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     useEffect(() => {
         const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
-            if (res.ScanConfig) {
+            if (!!res.ScanConfig) {
                 inputValueRef.current.cache = res.ScanConfig
+            }
+            if (!!res.Status) {
+                taskStatus.current.cache = res.Status
             }
             const data = res.ExecResult
             const {TotalTasks, FinishedTasks} = res
@@ -200,6 +206,11 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         if (runTimeId.current.sent !== runTimeId.current.cache && setRuntimeId) {
             setRuntimeId(runTimeId.current.cache)
             runTimeId.current.sent = runTimeId.current.cache
+        }
+        //task-status
+        if (taskStatus.current.sent !== taskStatus.current.cache && setTaskStatus) {
+            setTaskStatus(taskStatus.current.cache)
+            taskStatus.current.sent = taskStatus.current.cache
         }
         // 输入模块值
         if (inputValueRef.current.sent !== inputValueRef.current.cache && onGetInputValue) {
