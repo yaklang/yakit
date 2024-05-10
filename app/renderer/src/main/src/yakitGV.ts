@@ -87,6 +87,8 @@ export enum RemoteGV {
     MITMHotPatchCodeSave = "mitm_hot_patch_code_save",
     /**@name fuzzer序列页面中,页面配置内容的显/隐 */
     FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
+    /**@name WebFuzzer最大响应数量限制 */
+    FuzzerResMaxNumLimit="fuzzer_res_max_limit"
 }
 
 /** 项目逻辑全局变量 */

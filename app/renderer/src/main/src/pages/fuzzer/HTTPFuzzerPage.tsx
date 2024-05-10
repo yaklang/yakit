@@ -507,6 +507,7 @@ export interface FuzzerCacheDataProps {
     dnsServers: string[]
     etcHosts: KVPair[]
     advancedConfigShow: AdvancedConfigShowProps | null
+    resNumlimit: number
 }
 /**获取fuzzer高级配置中得 proxy dnsServers etcHosts */
 export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
@@ -516,11 +517,13 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
             const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
             const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
             const advancedConfigShow = await getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow)
+            const resNumlimit = await getRemoteValue(RemoteGV.FuzzerResMaxNumLimit)
             const value: FuzzerCacheDataProps = {
                 proxy: !!proxy ? proxy.split(",") : [],
                 dnsServers: !!dnsServers ? JSON.parse(dnsServers) : [],
                 etcHosts: !!etcHosts ? JSON.parse(etcHosts) : [],
-                advancedConfigShow: !!advancedConfigShow ? JSON.parse(advancedConfigShow) : null
+                advancedConfigShow: !!advancedConfigShow ? JSON.parse(advancedConfigShow) : null,
+                resNumlimit: !!resNumlimit ? JSON.parse(resNumlimit) : DefFuzzerTableMaxData
             }
             resolve(value)
         } catch (error) {
@@ -528,6 +531,9 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
         }
     })
 }
+
+// WebFuzzer表格默认显示数量
+export const DefFuzzerTableMaxData = 20000
 
 export const emptyFuzzer: FuzzerResponse = {
     BodyLength: 0,
@@ -576,6 +582,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     isGmTLS: false,
     noFixContentLength: false,
     noSystemProxy: false,
+    resNumlimit: DefFuzzerTableMaxData,
     actualHost: "",
     timeout: 30.0,
     // 批量目标
@@ -650,8 +657,6 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     extractors: []
 }
 
-// WebFuzzer表格最多显示多少数据
-export const FuzzerTableMaxData = 20000
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
     config: true,
     rule: true
@@ -734,6 +739,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const proxyListRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
+    const [fuzzerTableMaxData, setFuzzerTableMaxData] = useState<number>(DefFuzzerTableMaxData)
+    const fuzzerTableMaxDataRef = useRef<number>(fuzzerTableMaxData)
+
+    useEffect(() => {
+        fuzzerTableMaxDataRef.current = fuzzerTableMaxData
+    }, [fuzzerTableMaxData])
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -916,6 +927,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setSuccessCount(0)
         setFailedCount(0)
         setRuntimeId("")
+        setFuzzerTableMaxData(DefFuzzerTableMaxData)
     })
 
     // 从历史记录中恢复
@@ -948,6 +960,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setHistoryTask(undefined)
         setLoading(true)
         setDroppedCount(0)
+        setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, tokenRef.current).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
@@ -1015,7 +1028,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-
+        setRemoteValue(RemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
+        setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
         if (retryRef.current) {
             retryRef.current = false
             const retryTaskID = failedFuzzer.length > 0 ? failedFuzzer[0].TaskId : undefined
@@ -1136,7 +1150,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 successCount++
                 successBuffer.push(r)
                 // 超过最大显示 展示最新数据
-                if (successBuffer.length > FuzzerTableMaxData) {
+                if (successBuffer.length > fuzzerTableMaxDataRef.current) {
                     successBuffer.shift()
                 }
             } else {
@@ -1380,9 +1394,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
                     loadHistory(data.Data[0].BasicInfo.Id)
-                    resetResponse()
-                    setHistoryTask(undefined)
-                    setDroppedCount(0)
                 }
             })
             .catch((err) => {
@@ -1636,36 +1647,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         setQuery(undefined)
                     }}
                 />
-                {successFuzzer.length >= FuzzerTableMaxData && (
-                    <>
-                        {+(secondNodeSize?.width || 0) <= 750 ? (
-                            <Tooltip title='查看全部'>
-                                <YakitButton
-                                    style={{marginLeft: 8}}
-                                    type='outline2'
-                                    size='small'
-                                    icon={<OutlineEyeIcon />}
-                                    onClick={() => {
-                                        setShowAllDataRes(true)
-                                    }}
-                                    disabled={loading}
-                                />
-                            </Tooltip>
-                        ) : (
-                            <YakitButton
-                                type='primary'
-                                size='small'
-                                style={{marginLeft: 8}}
-                                onClick={() => {
-                                    setShowAllDataRes(true)
-                                }}
-                                disabled={loading}
-                            >
-                                查看全部
-                            </YakitButton>
-                        )}
-                    </>
-                )}
             </>
         )
     }
@@ -1797,6 +1778,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         matchSubmitFun={matchSubmitFun}
                         showFormContentType={advancedConfigShowType}
                         proxyListRef={proxyListRef}
+                        isbuttonIsSendReqStatus={isbuttonIsSendReqStatus}
                     />
                 </React.Suspense>
                 <div className={styles["http-fuzzer-page"]}>
@@ -2092,8 +2074,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         pageId={props.id}
-                                                        moreLimtAlertMsg='响应数量超过2w，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击”查看全部“查看所有数据'
+                                                        moreLimtAlertMsg={
+                                                            <div style={{fontSize: 12}}>
+                                                                响应数量超过{fuzzerTableMaxData}，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
+                                                                <YakitButton
+                                                                    type="text"
+                                                                    onClick={() => {
+                                                                        setShowAllDataRes(true)
+                                                                    }}
+                                                                    style={{padding: 0}}
+                                                                >
+                                                                    查看全部
+                                                                </YakitButton>
+                                                                查看所有数据
+                                                            </div>
+                                                        }
                                                         tableKeyUpDownEnabled={!showAllDataRes}
+                                                        fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}
                                                 {!showSuccess && (

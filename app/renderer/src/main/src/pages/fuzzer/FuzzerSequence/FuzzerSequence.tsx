@@ -54,10 +54,10 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {YakitRoute} from "@/routes/newRoute"
 import {
+    DefFuzzerTableMaxData,
     FuzzerExtraShow,
     FuzzerRequestProps,
     FuzzerResponse,
-    FuzzerTableMaxData,
     ResponseViewer,
     SecondNodeExtra,
     SecondNodeTitle,
@@ -297,6 +297,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
     const countRef = useRef<Map<string, number>>(new Map())
     const runtimeIdBufferRef = useRef<Map<string, string[]>>(new Map())
+    const fuzzerTableMaxDataRef = useRef<Map<string, number>>(new Map())
 
     useEffect(() => {
         if (currentSequenceItem) {
@@ -401,10 +402,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             } as FuzzerResponse
             if (Response.Ok) {
                 let successList = successBufferRef.current.get(FuzzerIndex)
+                let fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
                 if (successList) {
                     successList.push(r)
                     // 超过最大显示 展示最新数据
-                    if (successList.length > FuzzerTableMaxData) {
+                    if (successList.length > fuzzerTableMaxData) {
                         successList.shift()
                     }
                     successBufferRef.current.set(FuzzerIndex, successList)
@@ -490,6 +492,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
             const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
             const runtimeIdBuffer = runtimeIdBufferRef.current.get(fuzzerIndex) || []
+            const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(fuzzerIndex) || DefFuzzerTableMaxData
             if (failedBuffer.length + successBuffer.length === 0) {
                 return
             }
@@ -518,7 +521,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     failedCount: currentFailedCount,
                     successFuzzer: successBuffer,
                     failedFuzzer: failedBuffer,
-                    runtimeIdFuzzer: runtimeIdBuffer
+                    runtimeIdFuzzer: runtimeIdBuffer,
+                    fuzzerTableMaxData: fuzzerTableMaxData
                 })
                 return
             }
@@ -531,7 +535,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 failedCount: currentFailedCount,
                 successFuzzer: [...successBuffer],
                 failedFuzzer: [...failedBuffer],
-                runtimeIdFuzzer: [...runtimeIdBuffer]
+                runtimeIdFuzzer: [...runtimeIdBuffer],
+                fuzzerTableMaxData: fuzzerTableMaxData
             }
             setResponse(fuzzerIndex, newResponse)
         },
@@ -709,6 +714,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const requestItem = pageChildrenList.find((ele) => ele.pageId === item.pageId)
             const webFuzzerPageInfo = requestItem?.pageParamsInfo.webFuzzerPageInfo
             if (webFuzzerPageInfo) {
+                // 用于表格显示最大数量
+                fuzzerTableMaxDataRef.current.set(item.id, webFuzzerPageInfo.advancedConfigValue.resNumlimit)
                 const httpParamsItem: FuzzerRequestProps = {
                     ...advancedConfigValueToFuzzerRequests(webFuzzerPageInfo.advancedConfigValue),
                     RequestRaw: Buffer.from(webFuzzerPageInfo.request, "utf8"), // StringToUint8Array(request, "utf8"),
@@ -747,6 +754,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         setLoading(true)
         onClearRef()
+        fuzzerTableMaxDataRef.current.clear()
         resetResponse()
         resetDroppedCount()
         setCurrentSelectResponse(undefined)
@@ -880,7 +888,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         for (let index = 0; index < length; index++) {
             const element = myArray1[index][1]
             if (element) {
-                if (element.successCount >= FuzzerTableMaxData) {
+                if (element.successCount >= (fuzzerTableMaxDataRef.current.get(element.id) || DefFuzzerTableMaxData)) {
                     flag = true
                     return flag
                 }
@@ -1672,14 +1680,16 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             successFuzzer,
             failedFuzzer,
             successCount,
-            failedCount
+            failedCount,
+            fuzzerTableMaxData
         } = responseInfo || {
             id: "0",
             onlyOneResponse: {...emptyFuzzer},
             successFuzzer: [],
             failedFuzzer: [],
             successCount: 0,
-            failedCount: 0
+            failedCount: 0,
+            fuzzerTableMaxData: DefFuzzerTableMaxData
         }
         const {request, advancedConfigValue, pageId} = requestInfo || {
             request: "",
@@ -1867,36 +1877,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         setQuery({})
                     }}
                 />
-                {successFuzzer.length >= FuzzerTableMaxData && (
-                    <>
-                        {+(secondNodeSize?.width || 0) <= 750 ? (
-                            <Tooltip title='查看全部'>
-                                <YakitButton
-                                    style={{marginLeft: 8}}
-                                    type='outline2'
-                                    size='small'
-                                    icon={<OutlineEyeIcon />}
-                                    onClick={() => {
-                                        onShowAll()
-                                    }}
-                                    disabled={loading}
-                                />
-                            </Tooltip>
-                        ) : (
-                            <YakitButton
-                                type='primary'
-                                size='small'
-                                style={{marginLeft: 8}}
-                                onClick={() => {
-                                    onShowAll()
-                                }}
-                                disabled={loading}
-                            >
-                                查看全部
-                            </YakitButton>
-                        )}
-                    </>
-                )}
             </>
         )
 
@@ -2035,7 +2015,23 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         onDebug={onDebug}
-                                                        moreLimtAlertMsg='响应数量超过2w，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击”查看全部“查看所有数据'
+                                                        moreLimtAlertMsg={
+                                                            <div style={{fontSize: 12}}>
+                                                                响应数量超过{fuzzerTableMaxData}
+                                                                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
+                                                                <YakitButton
+                                                                    type="text"
+                                                                    onClick={() => {
+                                                                        onShowAll()
+                                                                    }}
+                                                                    style={{padding: 0}}
+                                                                >
+                                                                    查看全部
+                                                                </YakitButton>
+                                                                查看所有数据
+                                                            </div>
+                                                        }
+                                                        fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}
                                                 {!showSuccess && (

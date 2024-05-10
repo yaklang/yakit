@@ -98,6 +98,7 @@ export interface ResponseProps {
     successFuzzer: FuzzerResponse[]
     failedFuzzer: FuzzerResponse[]
     runtimeIdFuzzer: string[]
+    fuzzerTableMaxData: number
 }
 /**
  * @description HTTPFuzzerSequence接口返回类型
