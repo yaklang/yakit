@@ -50,6 +50,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
     const [form] = Form.useForm()
     // 获取默认值
     useEffect(() => {
+        if(!visible) return
         // 筛选模式
         setFilterModeDef(filterMode)
         // HostName
