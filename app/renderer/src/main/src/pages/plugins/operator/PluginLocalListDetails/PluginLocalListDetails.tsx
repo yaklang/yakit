@@ -30,7 +30,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
             showFilter,
             fixFilterList,
             defaultFilters,
-            pluginGroupExcludeType = ['yak', 'codec']
+            pluginGroupExcludeType = ["yak", "codec"]
         } = props
 
         const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
@@ -84,7 +84,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
         }, [inViewport])
 
         useUpdateEffect(() => {
-            fetchList(true)
+            fetchList({reset: true})
         }, [refreshList])
 
         useEffect(() => {
@@ -113,14 +113,16 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                     const values = JSON.parse(setting)
                     privateDomainRef.current = values.BaseUrl
                     setTimeout(() => {
-                        fetchList(true)
+                        fetchList({reset: true})
                     }, 200)
                 }
             })
         })
 
         const fetchList = useDebounceFn(
-            useMemoizedFn(async (reset?: boolean) => {
+            useMemoizedFn(async (props: {reset?: boolean; isSearch?: boolean}) => {
+                // isSearch 里面的搜索，仅仅刷新列表
+                const {reset, isSearch = false} = props || {}
                 if (reset) {
                     isLoadingRef.current = true
                 }
@@ -155,7 +157,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                     if (+res.Pagination.Page === 1) {
                         setAllCheck(false)
                         setSelectList([])
-                        if (fetchListInPageFirstAfter) fetchListInPageFirstAfter()
+                        if (!isSearch && fetchListInPageFirstAfter) fetchListInPageFirstAfter()
                     }
                 } catch (error) {}
                 setTimeout(() => {
@@ -171,7 +173,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
             setAllCheck(false)
             setSelectList([])
             setTimeout(() => {
-                fetchList(true)
+                fetchList({reset: true, isSearch: true})
             }, 100)
         })
         /**全选 */
@@ -181,12 +183,12 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
         })
         // 滚动更多加载
         const loadMoreData = useMemoizedFn(() => {
-            fetchList()
+            fetchList({reset: false, isSearch: false})
         })
         const onSearch = useMemoizedFn((val) => {
             setSearch(val)
             setTimeout(() => {
-                fetchList(true)
+                fetchList({reset: true, isSearch: true})
             }, 200)
         })
         /** 单项勾选|取消勾选 */
