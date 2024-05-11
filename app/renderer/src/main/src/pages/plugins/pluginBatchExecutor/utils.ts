@@ -9,6 +9,8 @@ interface HybridScanTaskFilter {
     Target?: string
     FromId?: number
     UntilId?: number
+    /**前端 Status 目前是单选，这个字段前端使用 */
+    StatusType?: string
 }
 export interface QueryHybridScanTaskRequest {
     Pagination: Paging

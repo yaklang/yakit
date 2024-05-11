@@ -6,7 +6,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {HybridScanTask} from "@/models/HybridScan"
+import {HybridScanModeType, HybridScanTask} from "@/models/HybridScan"
 import {
     DeleteHybridScanTaskRequest,
     QueryHybridScanTaskRequest,
@@ -99,11 +99,9 @@ interface PluginBatchRaskListProps {
 }
 const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
     forwardRef((props, ref) => {
-        const {getBatchExecutorByRuntimeId, queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
+        const {getBatchExecutorByRuntimeId} = usePageInfo(
             (s) => ({
-                getBatchExecutorByRuntimeId: s.getBatchExecutorByRuntimeId,
-                queryPagesDataById: s.queryPagesDataById,
-                updatePagesDataCacheById: s.updatePagesDataCacheById
+                getBatchExecutorByRuntimeId: s.getBatchExecutorByRuntimeId
             }),
             shallow
         )
@@ -235,6 +233,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                         filtersSelectAll: {
                             isAll: true
                         },
+                        filterKey: "StatusType",
                         filters: [
                             {
                                 label: "已完成",
@@ -350,7 +349,8 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                     },
                     Filter: {
                         ...oldParams.Filter,
-                        ...filter
+                        ...filter,
+                        Status: !!filter.StatusType ? [filter.StatusType] : []
                     }
                 }))
                 setTimeout(() => {
@@ -362,13 +362,14 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
         const onRefresh = useMemoizedFn(() => {
             update(1)
         })
-        const onDetails = useMemoizedFn((runtimeId: string, hybridScanMode: string) => {
+        const onDetails = useMemoizedFn((runtimeId: string, hybridScanMode: HybridScanModeType) => {
             const current: PageNodeItemProps | undefined = getBatchExecutorByRuntimeId(runtimeId)
-            if (!!current) {
+            // 重试new 都是新建页面
+            if (!!current && hybridScanMode !== "new") {
                 emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
                 // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
                 if (hybridScanMode !== "status") {
-                    onUpdatePluginBatchExecutorPageInfo(current.pageId, {runtimeId, hybridScanMode})
+                    emiter.emit("switchTaskStatus", JSON.stringify({runtimeId, hybridScanMode}))
                 }
             } else {
                 emiter.emit(
@@ -383,23 +384,6 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                 )
             }
             setVisible(false)
-        })
-        /**更新该页面最新的runtimeId */
-        const onUpdatePluginBatchExecutorPageInfo = useMemoizedFn((pageId, params) => {
-            if (!pageId) return
-            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.BatchExecutorPage, pageId)
-            if (!currentItem) return
-            const newCurrentItem: PageNodeItemProps = {
-                ...currentItem,
-                pageParamsInfo: {
-                    pluginBatchExecutorPageInfo: {
-                        ...defaultPluginBatchExecutorPageInfo,
-                        ...currentItem.pageParamsInfo.pluginBatchExecutorPageInfo,
-                        ...params
-                    }
-                }
-            }
-            updatePagesDataCacheById(YakitRoute.BatchExecutorPage, {...newCurrentItem})
         })
         const onRemoveSingle = useMemoizedFn((taskId: string) => {
             const removeParams: DeleteHybridScanTaskRequest = {

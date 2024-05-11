@@ -1296,7 +1296,7 @@ export const convertHybridScanParams = (
 }
 export interface PluginBatchExecutorInputValueProps {
     params: HybridScanRequest
-    pluginInfo: {selectPluginName: string[]; search: PluginSearchParams}
+    pluginInfo: PluginInfoProps
 }
 /**
  * @name HybridScan返回的输入参数参数转换为前端所需结构(后端数据转前端参数)
@@ -1313,7 +1313,8 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         },
         pluginInfo: {
             selectPluginName: [],
-            search: {...cloneDeep(defaultSearch)}
+            search: {...cloneDeep(defaultSearch)},
+            filters: {...cloneDeep(defaultFilter)}
         }
     }
     try {
@@ -1345,6 +1346,9 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
                 search.type = "userName"
             }
             data.pluginInfo.search = {...search}
+            data.pluginInfo.filters = {
+                plugin_group: (plugin.Filter?.Group?.Group || []).map((item) => ({value: item, label: item, count: 0}))
+            }
         }
         // 处理输入的参数，包括额外参数
         data.params.Input = targets.Input

@@ -273,6 +273,12 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             timeRef.current = null
             timeRef.current = setInterval(() => handleResults(), waitTime)
         }
+        return () => {
+            if (timeRef.current) {
+                clearInterval(timeRef.current)
+                timeRef.current = null
+            }
+        }
     }, [waitTime])
 
     /** @name 开始处理数据流 */
@@ -307,6 +313,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         })
 
         runTimeId.current = {cache: "", sent: ""}
+        inputValueRef.current = {cache: "", sent: ""}
+        taskStatus.current = {cache: "default", sent: "default"}
         progressKVPair.current = new Map<string, number>()
         cardKVPair.current = new Map<string, HoldGRPCStreamProps.CacheCard>()
         tabTable.current = new Map<string, HoldGRPCStreamProps.CacheTable>()
