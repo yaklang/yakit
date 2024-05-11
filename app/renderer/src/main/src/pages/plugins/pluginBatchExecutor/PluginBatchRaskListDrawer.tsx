@@ -367,10 +367,15 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             // 重试new 都是新建页面
             if (!!current && hybridScanMode !== "new") {
                 emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
-                // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
-                if (hybridScanMode !== "status") {
-                    emiter.emit("switchTaskStatus", JSON.stringify({runtimeId, hybridScanMode}))
-                }
+                setTimeout(() => {
+                    // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
+                    if (hybridScanMode !== "status") {
+                        emiter.emit(
+                            "switchTaskStatus",
+                            JSON.stringify({runtimeId, hybridScanMode, pageId: current.pageId})
+                        )
+                    }
+                }, 200)
             } else {
                 emiter.emit(
                     "openPage",

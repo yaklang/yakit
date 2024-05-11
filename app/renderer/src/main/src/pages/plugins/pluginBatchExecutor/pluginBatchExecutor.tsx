@@ -564,7 +564,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         const onSwitchTaskStatus = useMemoizedFn((res) => {
             try {
                 const value = JSON.parse(res)
-                const {runtimeId, hybridScanMode} = value
+                const {runtimeId, hybridScanMode, pageId: pId} = value
+                if (pageId !== pId) return
                 if (!runtimeId) {
                     yakitNotify("error", "未设置正常得 runtimeId")
                     return
@@ -580,8 +581,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                         }
                         if (hybridScanMode === "resume") {
                             setContinueLoading(true)
+                            hybridScanStreamEvent.start()
                         }
-                        hybridScanStreamEvent.start()
                     })
                     .catch((error) => {
                         yakitNotify("error", `apiHybridScanByMode失败${error}`)
