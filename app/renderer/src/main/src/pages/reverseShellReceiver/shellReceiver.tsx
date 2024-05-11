@@ -24,15 +24,15 @@ export interface ShellReceiverLeftListProps {
 export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (props) => {
     const {fold, setFold, type, setType} = props
     const [systemType, setSystemType] = useState<"Linux" | "Windows" | "Mac">("Windows")
-    const [originalList,setOriginalList] = useState<any[]>(["1","2","3"])
-    const containerRef = useRef(null);
-    const wrapperRef = useRef(null);
+    const [originalList, setOriginalList] = useState<any[]>(["1", "2", "3"])
+    const containerRef = useRef(null)
+    const wrapperRef = useRef(null)
     const [list] = useVirtualList(originalList, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 44,
-        overscan: 10,
-      });
+        overscan: 10
+    })
     return (
         <div className={styles["shell-receiver-left-list"]}>
             <div className={styles["header"]}>
@@ -94,18 +94,13 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                 </div>
             </div>
             <div ref={containerRef} className={styles["list-box"]}>
-            <div ref={wrapperRef}>
-          {list.map((ele) => (
-            <div
-                className={styles['item-box']}
-                key={ele.index}
-            >
-                <div className={styles['text']}>
-                   Row: {ele.data} 
+                <div ref={wrapperRef}>
+                    {list.map((ele) => (
+                        <div className={styles["item-box"]} key={ele.index}>
+                            <div className={styles["text"]}>Row: {ele.data}</div>
+                        </div>
+                    ))}
                 </div>
-            </div>
-          ))}
-        </div>
             </div>
         </div>
     )

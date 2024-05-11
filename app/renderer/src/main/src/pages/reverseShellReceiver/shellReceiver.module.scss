@@ -60,10 +60,17 @@
                 border-radius: 4px;
                 background: #f8f8f8;
                 margin-bottom: 4px;
+                cursor: pointer;
                 .text {
                     font-size: 12px;
                     font-weight: 600;
                     line-height: 16px;
+                }
+                &:hover {
+                    background-color: var(--yakit-primary-5);
+                    .text {
+                        color: #ffffff;
+                    }
                 }
             }
         }
