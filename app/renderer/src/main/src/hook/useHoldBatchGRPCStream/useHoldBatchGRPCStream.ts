@@ -42,8 +42,9 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     // 启动数据流处理定时器
     const timeRef = useRef<any>(null)
 
-    // task-status
+    // runtime-id
     const runTimeId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
+    // task-status
     const taskStatus = useRef<{cache: TaskStatus; sent: TaskStatus}>({cache: "default", sent: "default"})
     /** 输入模块值 */
     const inputValueRef = useRef<{cache: string; sent: string}>({

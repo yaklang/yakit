@@ -26,7 +26,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         cacheHistoryDataKey,
         cacheHistoryListLength = 10,
         isCacheDefaultValue = true,
-        ref: forwardRef,
+        ref: autoRef = null,
         initValue = "",
         ...restProps
     } = props
