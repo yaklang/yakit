@@ -1892,7 +1892,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             }
         }
         const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo)
-        apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
+        apiHybridScan({...hybridScanParams,HybridScanTaskSource:'pluginBatch'}, tokenRef.current).then(() => {
             setPluginRun(true)
             setPluginNameList(selectPluginName)
             setShowType("loading")

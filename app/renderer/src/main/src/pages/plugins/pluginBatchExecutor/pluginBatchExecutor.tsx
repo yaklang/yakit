@@ -33,7 +33,7 @@ import {
     PluginExecuteExtraFormValue,
     RequestType
 } from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
+import {HybridScanControlAfterRequest, HybridScanModeType, HybridScanTaskSourceType} from "@/models/HybridScan"
 import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
@@ -342,13 +342,18 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             dataScanParams={dataScanParams}
                             pageId={props.id}
                             initRuntimeId={pageInfo.runtimeId}
+                            hybridScanTaskSource='pluginBatch'
                         />
                     </div>
                 </div>
             </div>
             <React.Suspense fallback={<>loading...</>}>
                 {visibleRaskList && (
-                    <PluginBatchRaskListDrawer visible={visibleRaskList} setVisible={setVisibleRaskList} />
+                    <PluginBatchRaskListDrawer
+                        visible={visibleRaskList}
+                        setVisible={setVisibleRaskList}
+                        hybridScanTaskSource='pluginBatch'
+                    />
                 )}
             </React.Suspense>
         </PluginLocalListDetails>
@@ -400,6 +405,8 @@ interface PluginBatchExecuteContentProps {
     pageId?: string
     /**运行时id */
     initRuntimeId?: string
+
+    hybridScanTaskSource: HybridScanTaskSourceType
 }
 export interface PluginBatchExecuteContentRefProps {
     onActionHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null>
@@ -422,7 +429,8 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             setHidden,
             dataScanParams,
             pageId,
-            initRuntimeId
+            initRuntimeId,
+            hybridScanTaskSource
         } = props
         const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
             (s) => ({
@@ -737,7 +745,10 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         })
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value) => {
-            const hybridScanParams = getHybridScanParams(value)
+            const hybridScanParams: HybridScanControlAfterRequest = {
+                ...getHybridScanParams(value),
+                HybridScanTaskSource: hybridScanTaskSource
+            }
             hybridScanStreamEvent.reset()
             apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
                 setIsExpand(false)

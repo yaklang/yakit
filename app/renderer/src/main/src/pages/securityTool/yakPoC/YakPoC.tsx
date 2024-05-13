@@ -952,6 +952,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         setPluginExecuteLog={setPluginExecuteLog}
                         setHidden={setHidden}
                         dataScanParams={dataScanParams}
+                        hybridScanTaskSource='yakPoc'
                     />
                 </div>
             </div>

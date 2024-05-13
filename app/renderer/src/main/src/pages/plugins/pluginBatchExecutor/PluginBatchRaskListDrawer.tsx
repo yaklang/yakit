@@ -6,7 +6,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {HybridScanModeType, HybridScanTask} from "@/models/HybridScan"
+import {HybridScanModeType, HybridScanTask, HybridScanTaskSourceType} from "@/models/HybridScan"
 import {
     DeleteHybridScanTaskRequest,
     QueryHybridScanTaskRequest,
@@ -27,9 +27,10 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 interface PluginBatchRaskListDrawerProps {
     visible: boolean
     setVisible: (b: boolean) => void
+    hybridScanTaskSource: HybridScanTaskSourceType
 }
 const PluginBatchRaskListDrawer: React.FC<PluginBatchRaskListDrawerProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {visible, setVisible, hybridScanTaskSource} = props
 
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
@@ -81,6 +82,7 @@ const PluginBatchRaskListDrawer: React.FC<PluginBatchRaskListDrawerProps> = Reac
                 ref={pluginBatchRaskListRef}
                 selectedRowKeys={selectedRowKeys}
                 setSelectedRowKeys={setSelectedRowKeys}
+                hybridScanTaskSource={hybridScanTaskSource}
             />
         </YakitDrawer>
     )
@@ -96,6 +98,7 @@ interface PluginBatchRaskListProps {
     setVisible: (b: boolean) => void
     selectedRowKeys: string[]
     setSelectedRowKeys: (s: string[]) => void
+    hybridScanTaskSource?: HybridScanTaskSourceType
 }
 const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
     forwardRef((props, ref) => {
@@ -105,11 +108,13 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             }),
             shallow
         )
-        const {visible, setVisible} = props
+        const {visible, setVisible, hybridScanTaskSource} = props
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [params, setParams] = useState<QueryHybridScanTaskRequest>({
             Pagination: genDefaultPagination(20, 1),
-            Filter: {}
+            Filter: {
+                HybridScanTaskSource: !!hybridScanTaskSource ? [hybridScanTaskSource] : []
+            }
         })
         const [loading, setLoading] = useState<boolean>(false)
         const [isAllSelect, setIsAllSelect] = useState<boolean>(false)

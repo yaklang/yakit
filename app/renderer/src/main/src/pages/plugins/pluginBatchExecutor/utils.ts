@@ -1,4 +1,4 @@
-import {HybridScanTask} from "@/models/HybridScan"
+import {HybridScanTask, HybridScanTaskSourceType} from "@/models/HybridScan"
 import {yakitNotify} from "@/utils/notification"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 const {ipcRenderer} = window.require("electron")
@@ -9,6 +9,7 @@ interface HybridScanTaskFilter {
     Target?: string
     FromId?: number
     UntilId?: number
+    HybridScanTaskSource?: HybridScanTaskSourceType[]
     /**前端 Status 目前是单选，这个字段前端使用 */
     StatusType?: string
 }

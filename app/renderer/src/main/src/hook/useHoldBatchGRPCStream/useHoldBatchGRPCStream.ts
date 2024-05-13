@@ -93,8 +93,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     useEffect(() => {
         const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
-            if (!!res.ScanConfig) {
-                inputValueRef.current.cache = res.ScanConfig
+            if (!!res.HybridScanConfig) {
+                inputValueRef.current.cache = JSON.stringify(res.HybridScanConfig)
             }
             if (!!res.Status) {
                 taskStatus.current.cache = res.Status

@@ -2,6 +2,7 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {ExecResult, QueryYakScriptRequest} from "@/pages/invoker/schema"
 
 export type HybridScanModeType = "new" | "resume" | "pause" | "status"
+export type HybridScanTaskSourceType = "pluginBatch" | "yakPoc"
 export interface HybridScanControlRequest extends HybridScanControlAfterRequest {
     // 控制帧字段
     Control: boolean
@@ -22,6 +23,7 @@ export interface HybridScanControlAfterRequest {
     SingleTimeoutSecond?: number
     Plugin?: HybridScanPluginConfig
     Targets?: HybridScanInputTarget
+    HybridScanTaskSource?: HybridScanTaskSourceType
 }
 
 export interface HybridScanInputTarget {
@@ -54,7 +56,9 @@ export interface HybridScanResponse extends HybridScanStatisticResponse {
     ExecResult: ExecResult
 
     UpdateActiveTask?: HybridScanActiveTask
+    /**@deprecated 后端已废弃 */
     ScanConfig?: string
+    HybridScanConfig?: HybridScanControlRequest
 }
 
 export interface HybridScanActiveTask {

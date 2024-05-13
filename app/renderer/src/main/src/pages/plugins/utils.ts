@@ -1318,6 +1318,7 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         }
     }
     try {
+        // 只需要 HybridScanControlAfterRequest 部分参数
         const resParams: HybridScanControlAfterRequest = JSON.parse(value)
         let targets = resParams.Targets
         let plugin = resParams.Plugin
@@ -1356,11 +1357,7 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         data.params.Concurrent = resParams.Concurrent || 30
         data.params.TotalTimeoutSecond = resParams.TotalTimeoutSecond || 7200
         data.params.HTTPRequestTemplate = {
-            ...cloneDeep(defPluginBatchExecuteExtraFormValue),
-            ...targets.HTTPRequestTemplate,
-            RawHTTPRequest: isEmpty(targets.HTTPRequestTemplate.RawHTTPRequest)
-                ? new Uint8Array()
-                : Buffer.from(targets.HTTPRequestTemplate.RawHTTPRequest as any as string, "base64")
+            ...cloneDeep(defPluginBatchExecuteExtraFormValue)
         }
     } catch (error) {
         yakitNotify("error", "解析任务输入参数数据和插件勾选数据失败:" + error)
@@ -1394,7 +1391,10 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
                     {
                         Control: true,
                         HybridScanMode: "new",
-                        ResumeTaskId: ""
+                        ResumeTaskId: "",
+                        HybridScanTaskSource: !!params.HybridScanTaskSource
+                            ? params.HybridScanTaskSource
+                            : "pluginBatch"
                     } as HybridScanControlRequest,
                     token
                 )
