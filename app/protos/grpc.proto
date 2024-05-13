@@ -725,6 +725,7 @@ message HybridScanTaskFilter {
   string Target = 3;
   int64 FromId = 4;
   int64  UntilId = 5;
+  repeated string HybridScanTaskSource = 6;
 }
 
 message HybridScanResponse {
@@ -747,11 +748,14 @@ message HybridScanResponse {
   // 这字段表示的是，正在执行的任务可以展示出来
   HybridScanUpdateActiveTaskTable UpdateActiveTask = 11;
 
-  // 任务配置
-  string ScanConfig = 12;
+  // 任务配置  废弃 使用 HybridScanConfig
+  string ScanConfig = 12; // json序列化会有base64
 
   // 任务状态
   string Status = 13;
+
+  // task config
+  HybridScanRequest HybridScanConfig = 14;
 }
 
 message HybridScanUpdateActiveTaskTable {
@@ -799,6 +803,9 @@ message HybridScanRequest {
   // 新任务
   HybridScanPluginConfig Plugin = 6;
   HybridScanInputTarget Targets = 7;
+
+  // hybridScanTaskSource
+  string HybridScanTaskSource = 11;
 }
 
 message DuplexConnectionRequest {
