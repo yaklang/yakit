@@ -1302,7 +1302,9 @@ export interface PluginBatchExecutorInputValueProps {
  * @name HybridScan返回的输入参数参数转换为前端所需结构(后端数据转前端参数)
  * @description HybridScan
  */
-export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchExecutorInputValueProps => {
+export const hybridScanParamsConvertToInputValue = (
+    value: HybridScanControlAfterRequest
+): PluginBatchExecutorInputValueProps => {
     const data: PluginBatchExecutorInputValueProps = {
         params: {
             Input: "",
@@ -1319,7 +1321,7 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
     }
     try {
         // 只需要 HybridScanControlAfterRequest 部分参数
-        const resParams: HybridScanControlAfterRequest = JSON.parse(value)
+        const resParams: HybridScanControlAfterRequest = {...value}
         let targets = resParams.Targets
         let plugin = resParams.Plugin
         // 确保 plugin targets 一定会有初始值
@@ -1357,7 +1359,8 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         data.params.Concurrent = resParams.Concurrent || 30
         data.params.TotalTimeoutSecond = resParams.TotalTimeoutSecond || 7200
         data.params.HTTPRequestTemplate = {
-            ...cloneDeep(defPluginBatchExecuteExtraFormValue)
+            ...cloneDeep(defPluginBatchExecuteExtraFormValue),
+            ...targets.HTTPRequestTemplate
         }
     } catch (error) {
         yakitNotify("error", "解析任务输入参数数据和插件勾选数据失败:" + error)

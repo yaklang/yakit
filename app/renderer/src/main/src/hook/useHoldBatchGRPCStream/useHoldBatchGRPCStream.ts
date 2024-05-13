@@ -10,7 +10,9 @@ import {
     PluginBatchExecutorResult,
     TaskStatus
 } from "./useHoldBatchGRPCStreamType"
-import {HybridScanActiveTask} from "@/models/HybridScan"
+import {HybridScanActiveTask, HybridScanControlAfterRequest} from "@/models/HybridScan"
+import omit from "lodash/omit"
+import isEqual from "lodash/isEqual"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -47,9 +49,12 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     // task-status
     const taskStatus = useRef<{cache: TaskStatus; sent: TaskStatus}>({cache: "default", sent: "default"})
     /** 输入模块值 */
-    const inputValueRef = useRef<{cache: string; sent: string}>({
-        cache: "",
-        sent: ""
+    const inputValueRef = useRef<{
+        cache: HybridScanControlAfterRequest | null
+        sent: HybridScanControlAfterRequest | null
+    }>({
+        cache: null,
+        sent: null
     })
     // progress
     let progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
@@ -94,7 +99,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
             if (!!res.HybridScanConfig) {
-                inputValueRef.current.cache = JSON.stringify(res.HybridScanConfig)
+                inputValueRef.current.cache = omit(res.HybridScanConfig, ["Control", "HybridScanMode", "ResumeTaskId"])
             }
             if (!!res.Status) {
                 taskStatus.current.cache = res.Status
@@ -214,7 +219,11 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             taskStatus.current.sent = taskStatus.current.cache
         }
         // 输入模块值
-        if (inputValueRef.current.sent !== inputValueRef.current.cache && onGetInputValue) {
+        if (
+            inputValueRef.current.cache &&
+            !isEqual(inputValueRef.current.sent, inputValueRef.current.cache) &&
+            onGetInputValue
+        ) {
             onGetInputValue(inputValueRef.current.cache)
             inputValueRef.current.sent = inputValueRef.current.cache
         }
@@ -314,7 +323,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         })
 
         runTimeId.current = {cache: "", sent: ""}
-        inputValueRef.current = {cache: "", sent: ""}
+        inputValueRef.current = {cache: null, sent: null}
         taskStatus.current = {cache: "default", sent: "default"}
         progressKVPair.current = new Map<string, number>()
         cardKVPair.current = new Map<string, HoldGRPCStreamProps.CacheCard>()

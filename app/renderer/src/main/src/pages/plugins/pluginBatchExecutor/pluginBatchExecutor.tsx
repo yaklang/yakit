@@ -140,7 +140,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     }, [inViewport])
 
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
-    const onInitInputValueAfter = useMemoizedFn((value: string) => {
+    const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
         try {
             const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
             const {pluginInfo} = inputValue
@@ -375,7 +375,7 @@ interface PluginBatchExecuteContentProps {
     /**插件执行输出结果默认选择得tabKey */
     defaultActiveKey?: string
     /** 设置输入模块的初始值后得回调事件，例如：插件批量执行页面(设置完初始值后，刷新左侧得插件列表页面) */
-    onInitInputValueAfter?: (value: string) => void
+    onInitInputValueAfter?: (value: HybridScanControlAfterRequest) => void
     /**进度条新鲜 */
     setProgressList: (s: StreamResult.Progress[]) => void
 
@@ -412,7 +412,7 @@ export interface PluginBatchExecuteContentRefProps {
     onActionHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null>
     onStopExecute: () => void
     onStartExecute: () => void
-    onInitInputValue: (v: string) => void
+    onInitInputValue: (v: HybridScanControlAfterRequest) => void
     onPause: () => void
     onContinue: () => void
 }
@@ -503,7 +503,6 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             onEnd: () => {
                 hybridScanStreamEvent.stop()
                 setTimeout(() => {
-                    setExecuteStatus("finished")
                     setPauseLoading(false)
                     setContinueLoading(false)
                 }, 200)
@@ -679,7 +678,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 })
             })
         /**设置输入模块的初始值 */
-        const onInitInputValue = useMemoizedFn((value) => {
+        const onInitInputValue = useMemoizedFn((value: HybridScanControlAfterRequest) => {
             const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
             const {params} = inputValue
             const isRawHTTPRequest = !!params.HTTPRequestTemplate.IsRawHTTPRequest
