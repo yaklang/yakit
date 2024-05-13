@@ -1205,7 +1205,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelectedRowKeys([])
             setSelectedRows([])
             setScrollToIndex(0)
-            setCurrentIndex(undefined)
             getDataByGrpc(query, "update")
         } else {
             setIsLoop(true)
