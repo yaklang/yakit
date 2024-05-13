@@ -629,7 +629,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             const colorIsPushArr: boolean[] = []
                             for (let index = 0; index < cLength.length; index++) {
                                 const element = query.Color[index]
-                                if (record.HitColor.toUpperCase() === element) {
+                                if (record.MatchedByMatcher && record.HitColor.toUpperCase() === element) {
                                     colorIsPushArr.push(true)
                                 } else {
                                     colorIsPushArr.push(false)
