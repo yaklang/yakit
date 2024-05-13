@@ -759,6 +759,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             editor.onDidChangeModelContent(() => {
                 current = model.deltaDecorations(current, generateDecorations())
             })
+            current = model.deltaDecorations(current, generateDecorations())
         }
         return () => {
             try {
