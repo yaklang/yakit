@@ -770,7 +770,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         if (deltaDecorationsRef.current) {
             deltaDecorationsRef.current()
         }
-    }, [highLightText])
+    }, [JSON.stringify(highLightText)])
 
     /** 右键菜单-重渲染换行符功能是否显示的开关文字内容 */
     useEffect(() => {
