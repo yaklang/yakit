@@ -60,7 +60,7 @@ interface PluginBatchExecutorProps {
     id: string
 }
 
-const isEmpty = (uint8Array: Uint8Array) => {
+export const isEmpty = (uint8Array: Uint8Array) => {
     return !(uint8Array && Object.keys(uint8Array).length > 0)
 }
 export interface PluginBatchExecuteExtraFormValue extends PluginExecuteExtraFormValue, PluginBatchExecutorTaskProps {}
@@ -495,17 +495,19 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             onEnd: () => {
                 hybridScanStreamEvent.stop()
                 setTimeout(() => {
+                    setExecuteStatus("finished")
                     setPauseLoading(false)
                     setContinueLoading(false)
                 }, 200)
             },
             onError: (error) => {
                 hybridScanStreamEvent.stop()
-                yakitNotify("error", `[Mod] hybrid-scan error: ${error}`)
                 setTimeout(() => {
+                    setExecuteStatus("error")
                     setPauseLoading(false)
                     setContinueLoading(false)
                 }, 200)
+                yakitNotify("error", `[Mod] hybrid-scan error: ${error}`)
             },
             setRuntimeId: (rId) => {
                 setRuntimeId(rId)
@@ -692,14 +694,16 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                 Concurrent: params.Concurrent,
                 TotalTimeoutSecond: params.TotalTimeoutSecond
             }
+            const initRawHTTPRequestString = Uint8ArrayToString(params.HTTPRequestTemplate.RawHTTPRequest)
             const formValue = {
                 Input: params.Input,
                 IsHttps: params.HTTPRequestTemplate.IsHttps,
-                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest,
+                RawHTTPRequest: initRawHTTPRequestString,
                 ...requestType
             }
             form.setFieldsValue({...formValue})
             setExtraParamsValue(extraForm)
+            setInitRawHTTPRequest(initRawHTTPRequestString)
             // 重试
             if (isRetryRef.current) {
                 isRetryRef.current = false

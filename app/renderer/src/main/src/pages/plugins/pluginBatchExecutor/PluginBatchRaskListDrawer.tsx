@@ -20,7 +20,7 @@ import {Divider, Tooltip} from "antd"
 import {YakitRoute} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon} from "@/assets/icon/solid"
-import {PageNodeItemProps, defaultPluginBatchExecutorPageInfo, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 

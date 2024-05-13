@@ -29,7 +29,7 @@ import {
     HybridScanModeType,
     HybridScanPluginConfig
 } from "@/models/HybridScan"
-import {defPluginBatchExecuteExtraFormValue} from "./pluginBatchExecutor/pluginBatchExecutor"
+import {defPluginBatchExecuteExtraFormValue, isEmpty} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultFilter, defaultSearch} from "./baseTemplate"
 import {PluginGroupList} from "./local/PluginsLocalType"
@@ -1357,7 +1357,10 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         data.params.TotalTimeoutSecond = resParams.TotalTimeoutSecond || 7200
         data.params.HTTPRequestTemplate = {
             ...cloneDeep(defPluginBatchExecuteExtraFormValue),
-            ...targets.HTTPRequestTemplate
+            ...targets.HTTPRequestTemplate,
+            RawHTTPRequest: isEmpty(targets.HTTPRequestTemplate.RawHTTPRequest)
+                ? new Uint8Array()
+                : Buffer.from(targets.HTTPRequestTemplate.RawHTTPRequest as any as string, "base64")
         }
     } catch (error) {
         yakitNotify("error", "解析任务输入参数数据和插件勾选数据失败:" + error)
@@ -1397,6 +1400,7 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
                 )
                 .then(() => {
                     info(`启动成功,任务ID: ${token}`)
+                    console.log("executeParams", executeParams)
                     // send target / plugin
                     ipcRenderer.invoke("HybridScan", executeParams, token).then(() => {
                         info("发送扫描目标与插件成功")
