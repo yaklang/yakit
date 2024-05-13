@@ -91,6 +91,7 @@ export interface HTTPFuzzerPageTableQuery {
     afterBodyLength?: number
     beforeBodyLength?: number
     StatusCode?: string[]
+    Color?: string[]
     // bodyLengthUnit: "B" | "k" | "M"
 }
 
@@ -604,6 +605,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 if (
                     query?.keyWord ||
                     (query?.StatusCode && query?.StatusCode?.length > 0) ||
+                    (query?.Color && query?.Color?.length > 0) ||
                     query?.afterBodyLength ||
                     query?.beforeBodyLength ||
                     isHaveData
@@ -619,7 +621,22 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         let bodyLengthMinIsPush = true
                         let bodyLengthMaxIsPush = true
                         let isHaveDataIsPush = true
+                        let colorIsPush = true
                         // 搜索满足条件 交集
+                        // 颜色搜索
+                        if (query?.Color && query?.Color?.length > 0) {
+                            const cLength = query.Color
+                            const colorIsPushArr: boolean[] = []
+                            for (let index = 0; index < cLength.length; index++) {
+                                const element = query.Color[index]
+                                if (record.HitColor.toUpperCase() === element) {
+                                    colorIsPushArr.push(true)
+                                } else {
+                                    colorIsPushArr.push(false)
+                                }
+                            }
+                            colorIsPush = colorIsPushArr.includes(true)
+                        }
                         // 关键字搜索
                         if (query?.keyWord) {
                             const responseString = Uint8ArrayToString(record.ResponseRaw)
@@ -660,6 +677,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         }
                         // 搜索同时为true时，push新数组
                         if (
+                            colorIsPush &&
                             keyWordIsPush &&
                             statusCodeIsPush &&
                             bodyLengthMinIsPush &&

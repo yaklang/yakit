@@ -123,8 +123,9 @@ import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import cloneDeep from "lodash/cloneDeep"
 
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import { defYakitAutoCompleteRef } from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import { YakitAutoCompleteRefProps } from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 
 const {ipcRenderer} = window.require("electron")
@@ -2076,9 +2077,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         pageId={props.id}
                                                         moreLimtAlertMsg={
                                                             <div style={{fontSize: 12}}>
-                                                                响应数量超过{fuzzerTableMaxData}，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
+                                                                响应数量超过{fuzzerTableMaxData}
+                                                                ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
                                                                 <YakitButton
-                                                                    type="text"
+                                                                    type='text'
                                                                     onClick={() => {
                                                                         setShowAllDataRes(true)
                                                                     }}
@@ -2288,6 +2290,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         resumeAndPause
     } = props
 
+    const [color, setColor] = useState<string[]>()
     const [keyWord, setKeyWord] = useState<string>()
     const [statusCode, setStatusCode] = useState<string[]>()
     const [bodyLength, setBodyLength] = useState<HTTPFuzzerPageTableQuery>({
@@ -2302,6 +2305,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     useEffect(() => {
         setStatusCode(query?.StatusCode)
         setKeyWord(query?.keyWord)
+        setColor(query?.Color)
         setBodyLength({
             afterBodyLength: query?.afterBodyLength,
             beforeBodyLength: query?.beforeBodyLength
@@ -2513,6 +2517,17 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     content={
                         <div className={styles["second-node-search-content"]}>
                             <div className={styles["second-node-search-item"]}>
+                                <span>标注颜色</span>
+                                <YakitSelect
+                                    size='small'
+                                    mode="tags"
+                                    options={availableColors.map(i => ({ value: i.color, label: i.render }))}
+                                    allowClear
+                                    value={color}
+                                    onChange={setColor}
+                                ></YakitSelect>
+                            </div>
+                            <div className={styles["second-node-search-item"]}>
                                 <span>状态码</span>
                                 <YakitSelect
                                     value={statusCode}
@@ -2561,7 +2576,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             setQuery({
                                 ...l,
                                 keyWord: keyWord,
-                                StatusCode: statusCode
+                                StatusCode: statusCode,
+                                Color: color
                             })
                         }
                     }}
@@ -2574,7 +2590,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             !!(
                                 (query?.StatusCode?.length || 0) > 0 ||
                                 query?.afterBodyLength ||
-                                query?.beforeBodyLength
+                                query?.beforeBodyLength ||
+                                (query?.Color?.length || 0) > 0
                             )
                         }
                     />
