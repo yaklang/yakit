@@ -54,7 +54,7 @@ export interface PluginsLocalDetailProps {
     /**删除的loading */
     removeLoading: boolean
     /**传线上的UUID,传入本地详情进行使用 */
-    onJumpToLocalPluginDetailByUUID: () => void
+    onJumpToLocalPluginDetailByUUID: (uuid) => void
     /**上传的loading */
     uploadLoading: boolean
     /**私有域地址 */

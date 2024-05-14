@@ -26,6 +26,7 @@ export interface PluginExecuteDetailHeardProps {
     setExecuteStatus: (b: ExpandAndRetractExcessiveState) => void
     /**插件UI联动相关参数*/
     linkPluginConfig?: HybridScanPluginConfig
+    onDownPlugin: () => void
 }
 
 export interface YakExtraParamProps {
@@ -81,7 +82,7 @@ export interface PluginFixFormParamsProps {
     form: FormInstance<any>
     disabled: boolean
     /**原始请求中的数据包数据 */
-    rawHTTPRequest?:string
+    rawHTTPRequest?: string
 }
 
 export type RequestType = "original" | "input" | "httpFlowId"

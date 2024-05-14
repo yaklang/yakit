@@ -118,11 +118,15 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     }, [info])
 
     useEffect(() => {
-        emiter.on("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+        emiter.on("onRefLocalDetailSelectPlugin", onRefreshPluginDetailByUUID)
         return () => {
-            emiter.off("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+            emiter.off("onRefLocalDetailSelectPlugin", onRefreshPluginDetailByUUID)
         }
     }, [])
+
+    const onRefreshPluginDetailByUUID = useMemoizedFn((uuid) => {
+        onJumpToLocalPluginDetailByUUID(uuid)
+    })
 
     // 返回
     const onPluginBack = useMemoizedFn(() => {
@@ -532,7 +536,6 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
         if (plugin.OnlineBaseUrl !== privateDomain) return false
         return true
     }, [plugin, privateDomain])
-
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
             <PluginTabs
