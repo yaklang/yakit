@@ -135,11 +135,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 {
                     title: "更新时间",
                     dataKey: "CreatedAt",
-                    render: (v) => (v ? formatTimestamp(v) : "-"),
-                    sorterProps: {
-                        sorterKey: "updated_at",
-                        sorter: true
-                    }
+                    render: (v) => (v ? formatTimestamp(v) : "-")
                 },
                 {
                     title: "操作",
@@ -152,7 +148,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                                 type='text'
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    onDetails(record.Uid, "resume")
+                                    onDetails(record.Uid)
                                 }}
                             >
                                 继续
@@ -173,10 +169,9 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 }
             ]
         }, [visible, isRefresh])
-        const onDetails = useMemoizedFn((runtimeId: string, hybridScanMode) => {
+        const onDetails = useMemoizedFn((runtimeId: string) => {
             // const current: PageNodeItemProps | undefined = getBatchExecutorByRuntimeId(runtimeId)
-            // // 重试new 都是新建页面
-            // if (!!current && hybridScanMode !== "new") {
+            // if (!!current) {
             //     emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
             //     setTimeout(() => {
             //         // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
