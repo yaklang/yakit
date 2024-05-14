@@ -47,6 +47,7 @@ import {defaultSearch} from "../plugins/builtInData"
 import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
+const SimpleDetectTaskListDrawer = React.lazy(() => import("./SimpleDetectTaskListDrawer"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -100,6 +101,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
 
     const [runtimeId, setRuntimeId] = useState<string>("")
+
+    const [taskListVisible, setTaskListVisible] = useState<boolean>(false)
 
     const scanDeep = Form.useWatch("scanDeep", form)
 
@@ -406,13 +409,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                 </YakitPopconfirm>
                             </>
                         ) : null}
-                        {/* TODO - 任务列表 */}
                         <YakitButton
                             type='text'
                             onClick={(e) => {
                                 e.stopPropagation()
+                                setTaskListVisible(true)
                             }}
-                            disabled={true}
                         >
                             任务列表
                         </YakitButton>
@@ -501,6 +503,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                     visible={extraParamsVisible}
                     onSave={onSaveExtraParams}
                 />
+                <SimpleDetectTaskListDrawer visible={taskListVisible} setVisible={setTaskListVisible} />
             </React.Suspense>
             {visibleOnline && (
                 <YakitGetOnlinePlugin
