@@ -7,6 +7,7 @@ import {
     OutlineLogoutIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
+    OutlineShareIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -43,7 +44,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginCommentUpload} from "../baseComment"
 import {useStore} from "@/store"
 import Login from "@/pages/Login"
-import { NetWorkApi } from "@/services/fetch"
+import {NetWorkApi} from "@/services/fetch"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -208,9 +209,18 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             case "remove-plugin":
                 onRemove()
                 break
+            case "share-plugin":
+                onShare()
+                break
             default:
                 break
         }
+    })
+    const onShare = useMemoizedFn(() => {
+        if (!plugin) return
+        ipcRenderer.invoke("copy-clipboard", plugin.UUID).then(() => {
+            yakitNotify("success", "分享ID复制成功")
+        })
     })
     /**添加到菜单栏 */
     const onAddToMenu = useMemoizedFn(() => {
@@ -324,6 +334,11 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     key: "remove-menu",
                                     itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
                                     label: "移出菜单栏"
+                                },
+                                {
+                                    key: "share-plugin",
+                                    label: "分享",
+                                    itemIcon: <OutlineShareIcon className={styles["plugin-local-extra-node-icon"]} />
                                 },
                                 {type: "divider"},
                                 {
@@ -589,7 +604,12 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 bodyStyle={{padding: 0}}
                 destroyOnClose={true}
             >
-                <PluginCommentUploadLocal isLogin={userInfo.isLogin} setLoginShow={setLoginShow} setVisibleModal={setVisibleModal} plugin={plugin}/>
+                <PluginCommentUploadLocal
+                    isLogin={userInfo.isLogin}
+                    setLoginShow={setLoginShow}
+                    setVisibleModal={setVisibleModal}
+                    plugin={plugin}
+                />
             </YakitModal>
         </div>
     )
@@ -599,11 +619,11 @@ interface PluginCommentUploadLocalProps {
     plugin: YakScript
     isLogin: boolean
     setLoginShow: (v: boolean) => void
-    setVisibleModal: (v: boolean)=>void
+    setVisibleModal: (v: boolean) => void
 }
 
 const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.memo((props) => {
-    const {plugin,isLogin, setLoginShow,setVisibleModal} = props
+    const {plugin, isLogin, setLoginShow, setVisibleModal} = props
     const [commentText, setCommentText] = useState<string>("")
     const [files, setFiles] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -640,7 +660,7 @@ const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.
             return
         }
         const params = {
-            plugin_id: parseInt(plugin.OnlineId+""),
+            plugin_id: parseInt(plugin.OnlineId + ""),
             message_img: files,
             parent_id: 0,
             root_id: 0,
@@ -673,27 +693,31 @@ const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.
     })
 
     return (
-        <div className={styles['plugin-comment-upload-local']}>
-            <div className={styles['header']}>
-                <div className={styles['title']}>问题反馈</div>
-                <div className={styles['opt']} onClick={()=>{
-                    setVisibleModal(false)
-                }}><OutlineXIcon/></div>
+        <div className={styles["plugin-comment-upload-local"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>问题反馈</div>
+                <div
+                    className={styles["opt"]}
+                    onClick={() => {
+                        setVisibleModal(false)
+                    }}
+                >
+                    <OutlineXIcon />
+                </div>
             </div>
-           <div className={styles['main-content']}>
-        <PluginCommentUpload
-            isAlwaysShow={true}
-            loading={loading}
-            value={commentText}
-            setValue={onSetValue}
-            files={files}
-            setFiles={setFiles}
-            onSubmit={onSubmit}
-            submitTxt="提交反馈"
-        />
-        </div> 
+            <div className={styles["main-content"]}>
+                <PluginCommentUpload
+                    isAlwaysShow={true}
+                    loading={loading}
+                    value={commentText}
+                    setValue={onSetValue}
+                    files={files}
+                    setFiles={setFiles}
+                    onSubmit={onSubmit}
+                    submitTxt='提交反馈'
+                />
+            </div>
         </div>
-        
     )
 })
 
