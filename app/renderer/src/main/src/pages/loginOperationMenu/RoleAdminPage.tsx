@@ -62,16 +62,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             }
         })
     ]
-    const NoTreePluginType = [
-        ...PluginTypeKeyArr.map((key) => {
-            return {
-                id: key,
-                value: key,
-                title: PluginType[key],
-                isLeaf: true
-            }
-        })
-    ]
+
     const [selectedAll, setSelectedAll] = useState<boolean>(false)
      // 受控模式控制浮层
      const [open, setOpen] = useState(false)
@@ -87,20 +78,13 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 }
             })
                 .then((res: API.NewRoleRequest) => {
-                    let {
-                        checkPlugin, 
-                        // deletePlugin, 
-                         name, plugin, pluginType = ""} = res
+                    let {name, plugin, pluginType = ""} = res
                     const pluginArr = (plugin || []).map((item) => ({label: item.script_name, value: item.id}))
                     const pluginTypeArr: string[] = pluginType.split(",").filter((item) => item.length > 0)
                     const value = {
                         name,
-                        checkPlugin,
-                        // deletePlugin,
                         treeSelect: [...pluginTypeArr, ...pluginArr]
-                        // treeSelect:["port-scan",{value:4389,label:"1021"}]
                     }
-                    if(checkPlugin)setTreeData(NoTreePluginType)
                     if (
                         pluginTypeArr.length === PluginTypeKeyArr.length &&
                         pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
@@ -127,15 +111,12 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     const onFinish = useMemoizedFn((values) => {
         const {name, 
             // deletePlugin, 
-            checkPlugin,
              treeSelect} = values
         setLoading(true)
         let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
         let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
-        let params: API.NewRoleRequest = {
+        let params: any = {
             name,
-            // deletePlugin,
-            checkPlugin,
             pluginType: pluginTypeArr.join(","),
             pluginIds: pluginIdsArr.join(",")
         }
@@ -210,21 +191,6 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         }
     }
 
-    const setTreeSelect = (value:boolean) => {
-        if(value){
-            setTreeData(NoTreePluginType)
-        }
-        else{
-            setTreeData([...TreePluginType])
-        }
-        form.setFieldsValue({
-            treeSelect:[]
-        })
-        setTreeLoadedKeys([])
-        setSelectedAll(false)
-        setOpen(true)
-    }
-
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <>
@@ -259,45 +225,10 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 <Form.Item name='name' label='角色名' rules={[{required: true, message: "该项为必填"}]}>
                     <Input placeholder='请输入角色名' allowClear />
                 </Form.Item>
-                <Row>
-                    <Col span={5}>
-                        <div style={{textAlign: "right", paddingTop: 4}}>操作权限：</div>
-                    </Col>
-                    <Col span={16}>
-                        <div style={{display: "flex"}}>
-                            <div style={{width: "50%"}}>
-                                <Form.Item
-                                    {...itemLayout}
-                                    name='checkPlugin'
-                                    valuePropName='checked'
-                                    label='审核插件'
-                                    initialValue={false}
-                                >
-                                    <Switch onChange={setTreeSelect} checkedChildren='开' unCheckedChildren='关' />
-                                </Form.Item>
-                            </div>
-
-                            {/* <div style={{width: "50%"}}>
-                                <Form.Item
-                                    {...itemLayout}
-                                    name='deletePlugin'
-                                    valuePropName='checked'
-                                    label='插件删除'
-                                    initialValue={false}
-                                >
-                                    <Switch checkedChildren='开' unCheckedChildren='关' />
-                                </Form.Item>
-                            </div> */}
-                        </div>
-                    </Col>
-                </Row>
                 <Form.Item
                     name='treeSelect'
                     label='插件权限'
                     rules={[{required: true, message: "该项为必填"}]}
-                    // initialValue={
-                    //     ["port-scan"]
-                    // }
                 >
                     <TreeSelect
                         showSearch={false}
@@ -319,7 +250,6 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         treeLoadedKeys={treeLoadedKeys}
                         treeExpandedKeys={treeLoadedKeys}
                         onTreeExpand={(expandedKeys)=>{
-                            // console.log("expandedKeys",expandedKeys)
                             setTreeLoadedKeys(expandedKeys)
                         }}
                     />
@@ -433,8 +363,9 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
             title: "操作权限",
             render: (text: string, record) => (
                 <div>
-                    {!record.checkPlugin && "-"}
-                    {record.checkPlugin && <span style={{marginRight: 10}}>审核插件</span>}
+                    {
+                        ["审核员"].includes(record.name)? <span style={{marginRight: 10}}>审核插件</span>:"-"
+                    }
                 </div>
             )
         },
@@ -445,7 +376,8 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
         },
         {
             title: "操作",
-            render: (i) => (
+            render: (i,record) => (
+                ["审核员"].includes(record.name)?<></>:
                 <Space>
                     <Button
                         size='small'
