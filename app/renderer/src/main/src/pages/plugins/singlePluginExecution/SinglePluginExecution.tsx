@@ -1,11 +1,16 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab} from "../local/PluginsLocalDetail"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineRefreshIcon} from "@/assets/icon/outline"
-import {apiGetYakScriptById, convertLocalPluginsRequestParams} from "../utils"
+import {OutlinePencilaltIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {
+    apiGetYakScriptById,
+    apiGetYakScriptByOnlineID,
+    convertLocalPluginsRequestParams,
+    onToEditPlugin
+} from "../utils"
 
 import {defaultFilter, defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
@@ -15,7 +20,8 @@ import {yakitNotify} from "@/utils/notification"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
 import {Tooltip} from "antd"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
-import { pluginTypeToName } from "../builtInData"
+import {pluginTypeToName} from "../builtInData"
+import emiter from "@/utils/eventBus/eventBus"
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
     // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -36,8 +42,7 @@ export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?:
 }
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
-    const {yakScriptId} = props
-
+    const [yakScriptId, setYakScriptId] = useState<number>(props.yakScriptId)
     const [refreshList, setRefreshList] = useState<boolean>(false)
 
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
@@ -49,10 +54,25 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     const [allCheck, setAllCheck] = useState<boolean>(false)
 
     const pluginTypeRef = useRef<string>("")
+    const singlePluginExecutionRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(singlePluginExecutionRef)
 
     useEffect(() => {
         getPluginById()
     }, [yakScriptId])
+    useEffect(() => {
+        if (inViewport) emiter.on("onRefSinglePluginExecution", getYakScriptByOnlineID)
+        return () => {
+            emiter.off("onRefSinglePluginExecution", getYakScriptByOnlineID)
+        }
+    }, [inViewport])
+
+    const getYakScriptByOnlineID = useMemoizedFn((uuid) => {
+        if (!uuid) return
+        apiGetYakScriptByOnlineID({UUID: uuid}).then((info) => {
+            setYakScriptId(info.Id)
+        })
+    })
 
     const onRefresh = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -64,6 +84,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         setPluginLoading(true)
         apiGetYakScriptById(yakScriptId)
             .then((res) => {
+                console.log("getPluginById", res)
                 const {PluginSelectorTypes = ""} = res
                 setPlugin(res)
                 if (res.Type !== "yak") return
@@ -102,11 +123,20 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         if (plugin.Type !== "yak") return true
         return !plugin.EnablePluginSelector
     }, [plugin])
+    const onEdit = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (!plugin) return
+        onToEditPlugin(plugin)
+    })
     const headExtraNode = useCreation(() => {
         return (
             <>
                 <Tooltip title='刷新插件数据'>
                     <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />
+                </Tooltip>
+                <div className='divider-style' />
+                <Tooltip title='编辑'>
+                    <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEdit} />
                 </Tooltip>
             </>
         )
@@ -114,11 +144,12 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     const pluginGroupExcludeType = useMemo(() => {
         const typeArr = filters.plugin_type?.map((i) => i.value) || []
         const allPluginTypes = Object.keys(pluginTypeToName)
-        return allPluginTypes.filter(type => !typeArr.includes(type))
+        return allPluginTypes.filter((type) => !typeArr.includes(type))
     }, [filters])
     if (!plugin) return null
     return (
         <>
+            <div ref={singlePluginExecutionRef} />
             <PluginLocalListDetails
                 hidden={hidden}
                 selectList={selectList}

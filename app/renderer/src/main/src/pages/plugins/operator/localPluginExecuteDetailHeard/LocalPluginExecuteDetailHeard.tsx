@@ -345,7 +345,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                                         {isShowUpdate && (
                                             <>
                                                 <div className='divider-style' />
-                                                <YakitButton type='primary' onClick={onDownPlugin}>
+                                                <YakitButton type='primary' onClick={onDown}>
                                                     更新
                                                 </YakitButton>
                                             </>
