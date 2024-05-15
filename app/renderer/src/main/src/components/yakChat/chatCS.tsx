@@ -2903,11 +2903,11 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     })
 
     // 更新最后一项
-    const setAIList = useMemoizedFn((content:string,token:string)=>{
+    const setAIList = useMemoizedFn((content:string)=>{
         try {
             const newPluginAIList:PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
-            setPluginAIList(newPluginAIList.map((item)=>{
-                if(item.token === token){
+            setPluginAIList(newPluginAIList.map((item,index)=>{
+                if(newPluginAIList.length === index+1){
                     item.info.content = content
                     item.time = formatDate(+new Date())
                     return item
@@ -2953,11 +2953,11 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                     str += JSON.parse(item.data)?.data||""
                 } catch (error) {}
             })
-            if(loadingToken.length>0 && str.length>0){
-               setAIList(str,loadingToken)
+            if(str.length>0){
+               setAIList(str)
             }
         },
-        [streamInfo.logState,loadingToken],
+        [streamInfo.logState],
         {wait: 400}
     )
 
@@ -3019,6 +3019,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
         setLoadingToken("")
         setResTime("")
     })
+    
     return (
         <>{
             visible&&<div className={styles["plugin-ai-list"]}>
@@ -3138,15 +3139,12 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                     </>
                 ) : (
                     <div className={styles["content-style"]}>
-                        {info.content.length === 0 ? (
-                            "请求出现错误，请稍候再试"
-                        ) : (
-                            <>
-                                <React.Fragment>
-                                    <ChatMarkdown content={info.content} />
-                                </React.Fragment>
-                            </>
-                        )}
+                        {
+                            info.content&&info.content.length !== 0?
+                            <React.Fragment>
+                                <ChatMarkdown content={info.content} />
+                            </React.Fragment>:"请求出现错误，请稍候再试"
+                        }
                     </div>
                 )}
                 
