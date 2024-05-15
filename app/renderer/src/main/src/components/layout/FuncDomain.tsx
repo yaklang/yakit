@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip, Avatar, Form} from "antd"
+import {Badge, Modal, Tooltip, Avatar, Form, Typography} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
@@ -11,7 +11,7 @@ import {
     YaklangSvgIcon
 } from "./icons"
 import {YakitEllipsis} from "../basics/YakitEllipsis"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {showModal} from "@/utils/showModal"
 import {failed, info, success, yakitFailed, warn, yakitNotify} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
@@ -70,6 +70,12 @@ import {serverPushStatus} from "@/utils/duplex/duplex"
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
+import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {yakProcess} from "./PerformanceDisplay"
+import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1204,7 +1210,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : (
                         content.map((item, index) => {
                             return (
-                                <div key={item} className={classNames({[styles["paragraph-spacing"]]: index !== 0})}>
+                                <div key={index} className={classNames({[styles["paragraph-spacing"]]: index !== 0})}>
                                     {item}
                                 </div>
                             )
@@ -1230,8 +1236,14 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         removePrefixV
     } = props
 
-    const isUpdate = lastVersion !== "" && removePrefixV(lastVersion) !== removePrefixV(version) && removePrefixV(localVersion) !== removePrefixV(lastVersion)
-    const isKillEngine = localVersion && removePrefixV(localVersion) !== removePrefixV(version) && removePrefixV(localVersion) === removePrefixV(lastVersion)
+    const isUpdate =
+        lastVersion !== "" &&
+        removePrefixV(lastVersion) !== removePrefixV(version) &&
+        removePrefixV(localVersion) !== removePrefixV(lastVersion)
+    const isKillEngine =
+        localVersion &&
+        removePrefixV(localVersion) !== removePrefixV(version) &&
+        removePrefixV(localVersion) === removePrefixV(lastVersion)
 
     const content: string[] = useMemo(() => {
         if (updateContent) {
@@ -1265,6 +1277,14 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         <>{isUpdate && "远程连接无法更新"}</>
                     ) : (
                         <>
+                            <YakitPopover
+                                overlayClassName={styles["more-versions-popover"]}
+                                placement='bottomLeft'
+                                trigger='click'
+                                content={<MoreYaklangVersion></MoreYaklangVersion>}
+                            >
+                                <div className={styles["more-version-btn"]}>更多版本</div>
+                            </YakitPopover>
                             {isUpdate && (
                                 <div className={styles["update-btn"]} onClick={() => onDownload("yaklang")}>
                                     <UpdateSvgIcon style={{marginRight: 4}} />
@@ -1304,7 +1324,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : (
                         content.map((item, index) => {
                             return (
-                                <div key={item} className={classNames({[styles["paragraph-spacing"]]: index !== 0})}>
+                                <div key={index} className={classNames({[styles["paragraph-spacing"]]: index !== 0})}>
                                     {item}
                                 </div>
                             )
@@ -1313,6 +1333,127 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 </div>
                 {/* <div className={styles["current-version"]}>当前版本：Yaklang 1.1.3-sp3-5</div> */}
             </div>
+        </div>
+    )
+})
+
+interface MoreYaklangVersionProps {}
+/** @name 更多Yaklang版本 */
+const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
+    const ref = useRef(null)
+    const [inViewport] = useInViewport(ref)
+    const [loading, setLoading] = useState<boolean>(false)
+    const [versionList, setVersionList] = useState<string[]>([])
+    const [searchVersionVal, setSearchVersionVal] = useState<string>("")
+    const [searchVersionList, setSearchVersionList] = useState<string[]>([])
+    const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
+    const [downloadYaklangVersion, setDownloadYaklangVersion] = useState<string>("")
+
+    useEffect(() => {
+        if (inViewport) {
+            setLoading(true)
+            ipcRenderer
+                .invoke("fetch-yaklang-version-list")
+                .then((data: string) => {
+                    const arr = data.split("\n").filter((v) => v)
+                    let devPrefix: string[] = []
+                    let noPrefix: string[] = []
+                    arr.forEach((item) => {
+                        if (item.startsWith("dev")) {
+                            devPrefix.push(item)
+                        } else {
+                            noPrefix.push(item)
+                        }
+                    })
+                    setVersionList(noPrefix.concat(devPrefix))
+                })
+                .catch(() => {
+                    setVersionList([])
+                })
+                .finally(() => {
+                    setLoading(false)
+                })
+        }
+    }, [inViewport])
+
+    const onSearchVersion = (version: string) => {
+        setSearchVersionVal(version)
+        const arr = versionList.filter((v) => v.includes(version))
+        setSearchVersionList(arr)
+    }
+
+    const renderVersionList = useMemo(() => {
+        return searchVersionVal ? searchVersionList : versionList
+    }, [searchVersionVal, searchVersionList, versionList])
+
+    useEffect(() => {
+        if (!yaklangKillPss) {
+            setDownloadYaklangVersion("")
+        }
+    }, [yaklangKillPss])
+
+    const versionListItemClick = (version: string) => {
+        setYaklangKillPss(true)
+        setDownloadYaklangVersion(version)
+    }
+
+    const killedEngineToUpdate = useMemoizedFn(() => {
+        setYaklangKillPss(false)
+        if (downloadYaklangVersion) {
+            emiter.emit("downYaklangSpecifyVersion", downloadYaklangVersion)
+        }
+    })
+
+    return (
+        <div ref={ref} className={styles["more-versions-popover-content"]}>
+            <div className={styles["search-version-header"]}>
+                <YakitInput
+                    value={searchVersionVal}
+                    size='middle'
+                    prefix={<OutlineSearchIcon className='search-icon' />}
+                    allowClear={true}
+                    onChange={(e) => onSearchVersion(e.target.value.trim())}
+                />
+            </div>
+            <YakitSpin spinning={loading}>
+                <div className={styles["version-list-wrap"]}>
+                    {renderVersionList.length ? (
+                        <>
+                            {renderVersionList.map((v) => (
+                                <div
+                                    className={styles["version-list-item"]}
+                                    key={v}
+                                    onClick={() => versionListItemClick(v)}
+                                >
+                                    <Typography.Text
+                                        style={{maxWidth: 200}}
+                                        ellipsis={{
+                                            tooltip: true
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                color: v === downloadYaklangVersion ? "var(--yakit-primary-5)" : undefined
+                                            }}
+                                        >
+                                            {v}
+                                        </span>
+                                    </Typography.Text>
+                                </div>
+                            ))}
+                        </>
+                    ) : (
+                        <YakitEmpty></YakitEmpty>
+                    )}
+                </div>
+            </YakitSpin>
+            <AllKillEngineConfirm
+                visible={yaklangKillPss}
+                setVisible={setYaklangKillPss}
+                title='替换引擎，需关闭所有本地进程'
+                content='确认下载并安装此版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。'
+                onSuccess={killedEngineToUpdate}
+            ></AllKillEngineConfirm>
         </div>
     )
 })
@@ -1443,7 +1584,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     })
 
     const removePrefixV = (version: string) => {
-        return version.startsWith('v') ? version.slice(1) : version
+        return version.startsWith("v") ? version.slice(1) : version
     }
     const companyYakit: string = useMemo(() => {
         if (!yakitLastVersion) return ""
@@ -1557,7 +1698,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
             .then((data: string) => {
-                if (yaklangVersion !== data) setYaklangLastVersion(data.startsWith('v') ? data.slice(1) : data)
+                if (yaklangVersion !== data) setYaklangLastVersion(data.startsWith("v") ? data.slice(1) : data)
             })
             .catch((err) => {
                 setYaklangLastVersion("")

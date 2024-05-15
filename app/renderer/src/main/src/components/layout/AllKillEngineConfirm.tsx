@@ -11,13 +11,21 @@ import styles from "./AllKillEngineConfirm.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 export interface AllKillEngineConfirmProps {
+    title?: string
+    content?: string
     visible: boolean
     setVisible: (flag: boolean) => any
     onSuccess: () => any
 }
 /** 更新引擎-确认二次弹窗和kill操作 */
 export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.memo((props) => {
-    const {visible, setVisible, onSuccess} = props
+    const {
+        title = "更新引擎，需关闭所有本地进程",
+        content = "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。",
+        visible,
+        setVisible,
+        onSuccess
+    } = props
 
     const [loading, setLoading, getLoading] = useGetState<boolean>(false)
 
@@ -132,8 +140,8 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         <YakitHint
             visible={visible}
             heardIcon={loading ? <OutlineLoadingIcon className={styles["icon-rotate-animation"]} /> : undefined}
-            title={loading ? "进程关闭中，请稍等 ..." : "更新引擎，需关闭所有本地进程"}
-            content='关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。'
+            title={loading ? "进程关闭中，请稍等 ..." : title}
+            content={content}
             okButtonText='立即关闭'
             okButtonProps={{loading: loading}}
             onOk={onOK}

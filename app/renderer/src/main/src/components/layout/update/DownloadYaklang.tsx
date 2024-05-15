@@ -18,6 +18,7 @@ import styles from "./DownloadYaklang.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 interface DownloadYaklangProps {
+    yaklangSpecifyVersion: string
     system: YakitSystem
     visible: boolean
     onCancel: () => any
@@ -25,7 +26,7 @@ interface DownloadYaklangProps {
 
 /** @name Yaklang引擎更新下载弹窗 */
 export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
-    const {system, visible, onCancel} = props
+    const {yaklangSpecifyVersion, system, visible, onCancel} = props
 
     /** 常见问题弹窗是否展示 */
     const [qsShow, setQSShow] = useState<boolean>(false)
@@ -37,8 +38,8 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
     const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
     const draggleRef = useRef<HTMLDivElement>(null)
 
-    /** 远端最新yaklang引擎版本 */
-    const latestVersion = useRef<string>("")
+    /** 远端yaklang引擎版本 */
+    const yakLangVersion = useRef<string>("")
     /** 下载进度条数据 */
     const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
 
@@ -56,7 +57,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
             .then((data: string) => {
-                latestVersion.current = data.startsWith("v") ? data.slice(1) : data
+                yakLangVersion.current = data.startsWith("v") ? data.slice(1) : data
             })
             .catch((e: any) => {
                 if (isBreakRef.current) return
@@ -67,45 +68,54 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
             .finally(() => {
                 if (isBreakRef.current) return
                 if (isTry) return
-
-                ipcRenderer
-                    .invoke("download-latest-yak", latestVersion.current)
-                    .then(() => {
-                        if (isBreakRef.current) return
-
-                        success("下载完毕")
-                        if (!getDownloadProgress()?.size) return
-                        setDownloadProgress({
-                            time: {
-                                elapsed: downloadProgress?.time.elapsed || 0,
-                                remaining: 0
-                            },
-                            speed: 0,
-                            percent: 100,
-                            // @ts-ignore
-                            size: getDownloadProgress().size
-                        })
-                        // 清空主进程yaklang版本缓存
-                        ipcRenderer.invoke("clear-local-yaklang-version-cache")
-                        onUpdate()
-                    })
-                    .catch((e: any) => {
-                        if (isBreakRef.current) return
-                        failed(`引擎下载失败: ${e}`)
-                        setDownloadProgress(undefined)
-                        setIsFailed(true)
-                    })
+                downloadYak()
             })
     })
 
+    const downloadYak = () => {
+        ipcRenderer
+            .invoke("download-latest-yak", yakLangVersion.current)
+            .then(() => {
+                if (isBreakRef.current) return
+
+                success("下载完毕")
+                if (!getDownloadProgress()?.size) return
+                setDownloadProgress({
+                    time: {
+                        elapsed: downloadProgress?.time.elapsed || 0,
+                        remaining: 0
+                    },
+                    speed: 0,
+                    percent: 100,
+                    // @ts-ignore
+                    size: getDownloadProgress().size
+                })
+                // 清空主进程yaklang版本缓存
+                ipcRenderer.invoke("clear-local-yaklang-version-cache")
+                onUpdate()
+            })
+            .catch((e: any) => {
+                if (isBreakRef.current) return
+                failed(`引擎下载失败: ${e}`)
+                setDownloadProgress(undefined)
+                setIsFailed(true)
+            })
+    }
+
     /**
-     * 1. 获取最新引擎版本号(版本号内带有'v'字符)，并下载
+     * 1. 获取引擎版本号(版本号内带有'v'字符)，并下载
      * 2. 监听本地下载引擎进度数据
      */
     useEffect(() => {
         if (visible) {
             isBreakRef.current = false
-            fetchVersion()
+
+            if (yaklangSpecifyVersion) {
+                yakLangVersion.current = yaklangSpecifyVersion
+                downloadYak()
+            } else {
+                fetchVersion()
+            }
 
             ipcRenderer.on("download-yak-engine-progress", (e: any, state: DownloadingState) => {
                 if (isBreakRef.current) return
@@ -124,7 +134,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
     const onUpdate = useMemoizedFn(() => {
         if (isBreakRef.current) return
         ipcRenderer
-            .invoke("install-yak-engine", latestVersion.current)
+            .invoke("install-yak-engine", yakLangVersion.current)
             .then(() => {
                 success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
             })
