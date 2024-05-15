@@ -1,0 +1,35 @@
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 75 75">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M39.3 0A36.8 36.8 0 0 0 15 8l4.7 2.6A30.8 30.8 0 0 1 39.3 5V0Z" fill="url(#a)"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M64.4 11.2A35.3 35.3 0 0 0 42.5.3v5c7.1 1.2 13.3 4.5 18.3 9.5l3.6-3.6Z" fill="url(#b)"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M75 35.4a38.5 38.5 0 0 0-8.3-21.8l-3.5 3.5A33.2 33.2 0 0 1 70 35.4h5Z" fill="url(#c)"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M66.7 60.8c5-6.5 8-14.1 8.3-21.8h-5a33.2 33.2 0 0 1-6.8 18.3l3.5 3.5Z" fill="url(#d)"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M42.5 74.1c8-.9 16-4.7 21.9-11l-3.6-3.4c-5 5.3-11.5 8.5-18.3 9.4v5Z" fill="url(#e)"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M15 66.4c7.2 5.6 15.7 8.3 24.3 8v-5c-6.8.3-13.6-1.5-19.5-5.6l-4.7 2.6Z" fill="url(#f)"/>
+  <circle cx="37.5" cy="37.5" r="18" fill="transparent" stroke="#FFF" stroke-width="10"/>
+  <defs>
+    <linearGradient id="a" x1="303" y1="0" x2="303" y2="74.4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E90FF"/>
+      <stop offset="1" stop-color="#FF1E56"/>
+    </linearGradient>
+    <linearGradient id="b" x1="303" y1="0" x2="303" y2="74.4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E90FF"/>
+      <stop offset="1" stop-color="#FF1E56"/>
+    </linearGradient>
+    <linearGradient id="c" x1="303" y1="0" x2="303" y2="74.4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E90FF"/>
+      <stop offset="1" stop-color="#FF1E56"/>
+    </linearGradient>
+    <linearGradient id="d" x1="303" y1="0" x2="303" y2="74.4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E90FF"/>
+      <stop offset="1" stop-color="#FF1E56"/>
+    </linearGradient>
+    <linearGradient id="e" x1="303" y1="0" x2="303" y2="74.4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E90FF"/>
+      <stop offset="1" stop-color="#FF1E56"/>
+    </linearGradient>
+    <linearGradient id="f" x1="303" y1="0" x2="303" y2="74.4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E90FF"/>
+      <stop offset="1" stop-color="#FF1E56"/>
+    </linearGradient>
+  </defs>
+</svg>
