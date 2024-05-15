@@ -38,8 +38,7 @@ export const useStore = create<StoreProps>((set, get) => ({
         companyHeadImg: null,
         role: null,
         user_id: null,
-        token: "",
-        checkPlugin: false
+        token: ""
     },
     setStoreUserInfo: (info) => set({userInfo: info})
 }))

@@ -44,7 +44,7 @@ import {
     convertPluginsRequestParams,
     excludeNoExistfilter
 } from "../utils"
-import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -648,6 +648,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         if (item.groupKey === "plugin_group") {
                             item.groupExtraOptBtn = magGroupState ? (
                                 <>
+                                {(shouldVerifyEnpriTraceLogin()&&userInfo.role === "admin")||!shouldVerifyEnpriTraceLogin()?<>
                                     <YakitButton
                                         type='text'
                                         onClick={() =>
@@ -663,6 +664,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         管理分组
                                     </YakitButton>
                                     <div className={styles["divider-style"]} />
+                                </>:<></>}
                                 </>
                             ) : (
                                 <></>

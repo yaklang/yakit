@@ -56,7 +56,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                 })
                 .catch((err) => {
                     setLoading(false)
-                    failed("密码修改失败：" + err)
+                    failed("密码修改失败：" + err?.message||err||"")
                 })
                 .finally(() => {
                 })

@@ -268,9 +268,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            // if (!userInfo.checkPlugin) {
-            //     cacheMenu = cacheMenu.filter((item) => item.key !== "plugin-aduit")
-            // }
+            // 不为审核员时 移除插件管理
+            if (userInfo.role !== "auditor") {
+                cacheMenu = cacheMenu.filter((item) => item.key !== "plugin-aduit")
+            }
             if (isEnpriTraceAgent()) {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "upload-data")
             }

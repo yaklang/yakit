@@ -23,7 +23,6 @@ module.exports = (win, getClient) => {
             token: info.token,
             companyName: info.name,
             companyHeadImg: info.head_img,
-            checkPlugin: info?.checkPlugin
         }
 
         USER_INFO.isLogin = user.isLogin
@@ -37,7 +36,6 @@ module.exports = (win, getClient) => {
         USER_INFO.role = user.role
         USER_INFO.token = info.token
         USER_INFO.user_id = user.user_id
-        USER_INFO.checkPlugin = user.checkPlugin
         USER_INFO.companyName = user.companyName
         USER_INFO.companyHeadImg = user.companyHeadImg
         win.webContents.send("fetch-signin-token", user)
@@ -218,7 +216,6 @@ module.exports = (win, getClient) => {
             token: info.token,
             companyName: info.name,
             companyHeadImg: info.head_img,
-            checkPlugin: info?.checkPlugin
         }
         USER_INFO.isLogin = user.isLogin
         USER_INFO.platform = user.platform
@@ -231,7 +228,6 @@ module.exports = (win, getClient) => {
         USER_INFO.role = user.role
         USER_INFO.token = info.token
         USER_INFO.user_id = user.user_id
-        USER_INFO.checkPlugin = user.checkPlugin
         USER_INFO.companyName = user.companyName
         USER_INFO.companyHeadImg = user.companyHeadImg
         win.webContents.send("fetch-signin-token", user)
@@ -265,7 +261,6 @@ module.exports = (win, getClient) => {
         USER_INFO.role = null
         USER_INFO.token = null
         USER_INFO.user_id = ""
-        USER_INFO.checkPlugin = false
         USER_INFO.companyName = null
         USER_INFO.companyHeadImg = null
         win.webContents.send("login-out")
@@ -287,7 +282,6 @@ module.exports = (win, getClient) => {
         USER_INFO.role = user.role
         USER_INFO.token = user.token
         USER_INFO.user_id = user.user_id
-        USER_INFO.checkPlugin = user.checkPlugin
         USER_INFO.companyName = user.companyName
         USER_INFO.companyHeadImg = user.companyHeadImg
         event.returnValue = user

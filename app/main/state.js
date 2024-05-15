@@ -16,8 +16,6 @@ const USER_INFO = {
     role: null,
     token: null,
     user_id: 0,
-    /** 是否有插件管理权限 */
-    checkPlugin: false
 }
 const HttpSetting = {
     httpBaseURL: "https://www.yaklang.com"
