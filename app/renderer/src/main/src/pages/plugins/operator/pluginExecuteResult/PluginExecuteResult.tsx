@@ -55,13 +55,15 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             case "risk":
                 return <VulnerabilitiesRisksTable riskState={streamInfo.riskState} />
             case "port":
-                return <PluginExecutePortTable runtimeId={runtimeId} />
+                return !!runtimeId ? <PluginExecutePortTable runtimeId={runtimeId} /> : <></>
             case "http":
-                return (
+                return !!runtimeId ? (
                     <PluginExecuteHttpFlow
                         runtimeId={runtimeId}
                         website={!!streamInfo.tabsInfoState["website"]?.targets}
                     />
+                ) : (
+                    <></>
                 )
             case "log":
                 return <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
