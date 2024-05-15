@@ -778,8 +778,10 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
         /**继续 */
         const onContinue = useMemoizedFn(() => {
             setContinueLoading(true)
+            hybridScanStreamEvent.reset()
+            apiHybridScanByMode(runtimeId, "resume", tokenRef.current).then(() => {
             hybridScanStreamEvent.start()
-            apiHybridScanByMode(runtimeId, "resume", tokenRef.current)
+            })
         })
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true
