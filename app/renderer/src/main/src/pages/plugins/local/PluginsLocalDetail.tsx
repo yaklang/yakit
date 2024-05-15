@@ -568,7 +568,7 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                             pluginName={plugin.ScriptName}
                             help={plugin.Help}
                             tags={plugin.Tags}
-                            extraNode={headExtraNode}
+                            extraNode={<div className={styles["extra"]}>{headExtraNode}</div>}
                             img={plugin.HeadImg || ""}
                             user={plugin.Author}
                             pluginId={plugin.UUID}
