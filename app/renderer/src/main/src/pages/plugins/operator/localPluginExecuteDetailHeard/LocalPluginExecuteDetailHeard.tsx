@@ -119,9 +119,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         if (executeStatus === "process") return true
         return false
     }, [executeStatus])
-
+    /**本地插件和内置插件不做更新相关逻辑 */
     const getOnlinePlugin = useMemoizedFn(() => {
         if (!!plugin.isLocalPlugin) return
+        if (!!plugin.IsCorePlugin) return
         apiFetchOnlinePluginInfo(plugin.UUID, false).then((info) => {
             if (Number(info.updated_at || 0) > Number(plugin.UpdatedAt || 0)) {
                 setIsShowUpdate(true)

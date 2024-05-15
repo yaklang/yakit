@@ -28,7 +28,7 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
@@ -45,6 +45,7 @@ import {PluginCommentUpload} from "../baseComment"
 import {useStore} from "@/store"
 import Login from "@/pages/Login"
 import {NetWorkApi} from "@/services/fetch"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -311,6 +312,43 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         if (plugin?.IsCorePlugin) return false
         return !!plugin?.isLocalPlugin
     }, [plugin?.isLocalPlugin, plugin?.IsCorePlugin])
+    const headExtraNodeMenu = useMemo(() => {
+        const menu: YakitMenuItemType[] = [
+            {
+                key: "share",
+                label: "导出",
+                itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
+            },
+            {
+                key: "add-to-menu",
+                label: "添加到菜单栏",
+                itemIcon: <OutlinePluscircleIcon className={styles["plugin-local-extra-node-icon"]} />
+            },
+            {
+                key: "remove-menu",
+                itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
+                label: "移出菜单栏"
+            }
+        ]
+        // 内置插件不管是否是线上的都没有分享按钮
+        if (!plugin?.isLocalPlugin && !plugin?.IsCorePlugin) {
+            menu.push({
+                key: "share-plugin",
+                label: "分享",
+                itemIcon: <OutlineShareIcon className={styles["plugin-local-extra-node-icon"]} />
+            })
+        }
+        menu.concat([
+            {type: "divider"},
+            {
+                key: "remove-plugin",
+                itemIcon: <OutlineTrashIcon className={styles["plugin-local-extra-node-icon"]} />,
+                label: "删除插件",
+                type: "danger"
+            }
+        ])
+        return menu
+    }, [plugin?.ScriptName, plugin?.isLocalPlugin])
     const headExtraNode = useMemo(() => {
         return (
             <>
@@ -321,37 +359,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         icon={<OutlineDotshorizontalIcon />}
                         menu={{
                             type: "primary",
-                            data: [
-                                {
-                                    key: "share",
-                                    label: "导出",
-                                    itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
-                                },
-                                {
-                                    key: "add-to-menu",
-                                    label: "添加到菜单栏",
-                                    itemIcon: (
-                                        <OutlinePluscircleIcon className={styles["plugin-local-extra-node-icon"]} />
-                                    )
-                                },
-                                {
-                                    key: "remove-menu",
-                                    itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
-                                    label: "移出菜单栏"
-                                },
-                                {
-                                    key: "share-plugin",
-                                    label: "分享",
-                                    itemIcon: <OutlineShareIcon className={styles["plugin-local-extra-node-icon"]} />
-                                },
-                                {type: "divider"},
-                                {
-                                    key: "remove-plugin",
-                                    itemIcon: <OutlineTrashIcon className={styles["plugin-local-extra-node-icon"]} />,
-                                    label: "删除插件",
-                                    type: "danger"
-                                }
-                            ],
+                            data: headExtraNodeMenu,
                             className: styles["func-filter-dropdown-menu"],
                             onClick: onMenuSelect
                         }}
@@ -373,7 +381,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 </div>
             </>
         )
-    }, [removeLoading, isShowUpload])
+    }, [removeLoading, isShowUpload, headExtraNodeMenu])
 
     /**选中组 */
     const selectGroup = useMemo(() => {

@@ -84,7 +84,6 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         setPluginLoading(true)
         apiGetYakScriptById(yakScriptId)
             .then((res) => {
-                console.log("getPluginById", res)
                 const {PluginSelectorTypes = ""} = res
                 setPlugin(res)
                 if (res.Type !== "yak") return
