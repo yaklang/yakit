@@ -129,24 +129,31 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         if (oldShow) setOldShow(false)
     })
     /** --------------- 旧插件参数迁移提示 End --------------- */
+    // 数组去重
+    const filter = arr => arr.filter((item,index) => arr.indexOf(item) === index)
 
     /** 通过ID获取插件旧数据 */
     const fetchPluginInfo = useMemoizedFn((id: number) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: id})
-            .then((res: YakScript) => {
+            .then(async(res: YakScript) => {
                 // console.log("编辑插件-获取插件信息", res)
                 if (res.Type === "yak") fetchOldData(res.ScriptName)
-
+                let newTags = !res.Tags || res.Tags === "null" ? [] : (res.Tags || "").split(",")
                 setInfo(res)
                 setPluginType(res.Type || "yak")
+                const codeInfo = await onCodeToInfo(res.Type || "yak", res.Content)
+                if(codeInfo && codeInfo.Tags.length>0){
+                    // 去重
+                    newTags = filter([...newTags,...codeInfo.Tags])
+                }
                 setInfoParams({
                     ScriptName: res.ScriptName,
                     Help: res.Help || res.ScriptName,
                     RiskDetail: Array.isArray(res.RiskInfo) ? res.RiskInfo : [],
-                    Tags: !res.Tags || res.Tags === "null" ? [] : (res.Tags || "").split(",")
+                    Tags: newTags
                 })
-                setCacheTags(!res.Tags || res.Tags === "null" ? [] : (res.Tags || "").split(","))
+                setCacheTags(newTags)
                 setSettingParams({
                     EnablePluginSelector: res.EnablePluginSelector,
                     PluginSelectorTypes: res.PluginSelectorTypes,
@@ -469,9 +476,16 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             data.PluginSelectorTypes = setting?.PluginSelectorTypes
         }
 
+        const codeInfo = await onCodeToInfo(data.Type, data.Content)
+        let newTags = data.Tags||""
+        if(codeInfo && codeInfo.Tags.length>0){
+            newTags += `,${codeInfo.Tags.join(",")}`
+            // 去重
+            newTags = filter(newTags.split(",")).join(",")
+        }
+        data.Tags = newTags
         // yak类型才解析参数和风险
         if (data.Type === "yak") {
-            const codeInfo = await onCodeToInfo(data.Type, data.Content)
             if (codeInfo) {
                 data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
                 data.Params = codeInfo.CliParameter

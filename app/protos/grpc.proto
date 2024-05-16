@@ -643,9 +643,6 @@ service Yak {
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
-
- // 表达式执行
- rpc EvaluateExpression(EvaluateExpressionRequest) returns (EvaluateExpressionResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;

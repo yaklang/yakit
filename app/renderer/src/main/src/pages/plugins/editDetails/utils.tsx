@@ -484,7 +484,8 @@ export const onCodeToInfo: (type: string, code: string) => Promise<CodeToInfoRes
                 resolve({
                     Information: res.Information || [],
                     CliParameter: res.CliParameter || [],
-                    RiskInfo: res.RiskInfo || []
+                    RiskInfo: res.RiskInfo || [],
+                    Tags: res.Tags || []
                 })
             })
             .catch((e: any) => {
