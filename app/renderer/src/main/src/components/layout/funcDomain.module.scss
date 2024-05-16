@@ -408,6 +408,9 @@
                 font-size: 12px;
                 line-height: 16px;
                 color: var(--yakit-header-color);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .update-simple-title {
                 height: 28px;
@@ -421,6 +424,9 @@
                 font-size: 11px;
                 line-height: 12px;
                 color: var(--yakit-helper-text-color);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
         .header-btn {
@@ -428,7 +434,7 @@
             display: flex;
             justify-content: right;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             font-size: 12px;
             color: var(--yakit-disable-text-color);
 

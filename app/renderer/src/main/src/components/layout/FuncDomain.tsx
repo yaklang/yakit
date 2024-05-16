@@ -1268,19 +1268,9 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     <div className={styles["update-icon"]}>
                         <YaklangSvgIcon />
                     </div>
-                    {/* 等使用更新内容时，下面"当前版本"-div需要被删除 */}
-                    <div>
+                    <div style={{width: isUpdate && !isRemoteMode && role === "superAdmin" ? 150 : 180}}>
                         <div className={styles["update-title"]}>{`Yaklang ${isUpdate ? lastVersion : version}`}</div>
-                        <div>
-                            <Typography.Text
-                                style={{maxWidth: isUpdate && !isRemoteMode && role === "superAdmin" ? 145 : 180}}
-                                ellipsis={{
-                                    tooltip: true
-                                }}
-                            >
-                                <span className={styles["update-time"]}>{`当前版本: ${version}`}</span>
-                            </Typography.Text>
-                        </div>
+                        <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
                         {/* <div className={styles["upda te-time"]}>2022-09-29</div> */}
                     </div>
                 </div>
@@ -1382,7 +1372,6 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             ipcRenderer
                 .invoke("fetch-yaklang-version-list")
                 .then((data: string) => {
-                    setLoading(false)
                     const arr = data.split("\n").filter((v) => v)
                     let devPrefix: string[] = []
                     let noPrefix: string[] = []
@@ -1397,6 +1386,9 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
                 })
                 .catch((err) => {
                     yakitNotify("error", `获取更多版本失败：${err}`)
+                })
+                .finally(() => {
+                    setLoading(false)
                 })
         }
     }, [inViewport])
@@ -1803,6 +1795,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     }, [isEngineLink])
 
     const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
+        setShow(false)
         emiter.emit("activeUpdateYakitOrYaklang", type)
     })
 
