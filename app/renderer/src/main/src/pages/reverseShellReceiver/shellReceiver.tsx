@@ -1,17 +1,22 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Tooltip} from "antd"
+import {Divider, Tag, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useVirtualList} from "ahooks"
+import {useGetState, useMemoizedFn, useVirtualList} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./shellReceiver.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {SideBarCloseIcon} from "@/assets/newIcon"
+import {DocumentDuplicateSvgIcon, RemoveIcon, SideBarCloseIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlineSearchIcon, OutlineStorageIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {SolidDocumentduplicateIcon} from "@/assets/icon/solid"
+import {CVXterm} from "@/components/CVXterm"
+import {TERMINAL_INPUT_KEY} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 const {ipcRenderer} = window.require("electron")
 
 export interface ShellReceiverLeftListProps {
@@ -110,14 +115,108 @@ export interface ShellReceiverMiddleItemProps {}
 
 export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (props) => {
     const {} = props
-    return <div className={styles["shell-receiver-middle-item"]}>ShellReceiverMiddleItem</div>
+
+    const onSave = useMemoizedFn(() => {})
+
+    return (
+        <div className={styles["shell-receiver-middle-item"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>Bash read line</div>
+                <div className={styles["extra"]}>
+                    <Tooltip title={"保存"}>
+                        <div className={styles["extra-icon"]} onClick={onSave}>
+                            <OutlineStorageIcon />
+                        </div>
+                    </Tooltip>
+                    <Divider type={"vertical"} style={{margin: "6px 0px 0px"}} />
+                    <div className={styles["extra-icon"]} onClick={() => {}}>
+                        <RemoveIcon />
+                    </div>
+                </div>
+            </div>
+            <div className={styles["content"]}>
+                <YakitEditor
+                    readOnly={true}
+                    type='plaintext'
+                    value={""}
+                    noWordWrap={true}
+                    noLineNumber={true}
+                    // loading={loading}
+                />
+            </div>
+            <div className={styles["footer"]}>
+                <div className={styles["select-box"]}>
+                    <div className={styles["select-item"]}>
+                        <div className={styles["title"]}>Shell</div>
+                        <YakitSelect
+                            wrapperStyle={{width: 164}}
+                            value={""}
+                            onSelect={(val) => {
+                                // setSystemType(val)
+                            }}
+                            placeholder='请选择...'
+                        >
+                            <YakitSelect value='pwsh'>pwsh</YakitSelect>
+                        </YakitSelect>
+                    </div>
+                    <div className={styles["select-item"]}>
+                        <div className={styles["title"]}>Encoding</div>
+                        <YakitSelect
+                            wrapperStyle={{width: 164}}
+                            value={""}
+                            onSelect={(val) => {
+                                // setSystemType(val)
+                            }}
+                            placeholder='请选择...'
+                        >
+                            <YakitSelect value='None'>None</YakitSelect>
+                        </YakitSelect>
+                    </div>
+                </div>
+                <div className={styles["line"]}></div>
+                <YakitButton icon={<SolidDocumentduplicateIcon />} size='max'>
+                    Copy
+                </YakitButton>
+            </div>
+        </div>
+    )
 }
 
 export interface ShellReceiverRightRunProps {}
 
 export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (props) => {
     const {} = props
-    return <div className={styles["shell-receiver-right-run"]}>ShellReceiverRightRun</div>
+    const [echoBack, setEchoBack, getEchoBack] = useGetState(true)
+    const xtermRef = React.useRef<any>(null)
+    const write = useMemoizedFn((s) => {
+        if (!xtermRef || !xtermRef.current) {
+            return
+        }
+        const str = s.charCodeAt(0) === TERMINAL_INPUT_KEY.ENTER ? String.fromCharCode(10) : s
+        if (getEchoBack()) {
+            xtermRef.current.terminal.write(str)
+        }
+    })
+    return (
+        <div className={styles["shell-receiver-right-run"]}>
+            <div className={styles["header"]}>
+                <div className={styles['title']}>
+                    <div className={styles['text']}>正在监听:</div>
+                    <Tag color="blue">本地端口:192.168.3.115.8085 &lt;== 远程端口:192.168.3.115.28735</Tag>
+                </div>
+            </div>
+            <div className={styles["content"]}>
+                {/* <CVXterm
+                    ref={xtermRef}
+                    options={{
+                        convertEol: true
+                    }}
+                    isWrite={getEchoBack()}
+                    write={write}
+                /> */}
+            </div>
+        </div>
+    )
 }
 
 export interface ShellReceiverProps {}
