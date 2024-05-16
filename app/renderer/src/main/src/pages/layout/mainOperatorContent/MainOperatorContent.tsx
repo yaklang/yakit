@@ -2170,7 +2170,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
         return () => {
             emiter.off("sendSwitchSequenceToMainOperatorContent", onSetType)
-            emiter.on("switchSubMenuItem", onSelectSubMenuById)
+            emiter.off("switchSubMenuItem", onSelectSubMenuById)
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
         }
     }, [currentTabKey])
