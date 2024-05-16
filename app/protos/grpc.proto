@@ -650,6 +650,8 @@ service Yak {
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
 
+ // 表达式执行
+ rpc EvaluateExpression(EvaluateExpressionRequest) returns (EvaluateExpressionResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -1950,6 +1952,14 @@ message YaklangInspectInformationResponse {
   repeated YaklangInformation Information = 1;
   repeated YakScriptParam CliParameter = 2;
   repeated YakRiskInfo RiskInfo = 3;
+  repeated YakUIInfo UIInfo = 4;
+  repeated string Tags = 5;
+}
+
+message YakUIInfo {
+  string Typ = 1;
+  repeated string Effected = 2;
+  string WhenExpression = 3;
 }
 
 message YakRiskInfo {
