@@ -337,7 +337,6 @@ module.exports = {
         const asyncDownloadLatestYak = (version) => {
             return new Promise(async (resolve, reject) => {
                 const dest = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
-                console.log(456, dest);
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
