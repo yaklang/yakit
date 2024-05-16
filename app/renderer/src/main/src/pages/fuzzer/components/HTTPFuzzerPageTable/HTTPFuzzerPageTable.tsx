@@ -39,6 +39,7 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import {RemoteGV} from "@/yakitGV"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import ReactResizeDetector from "react-resize-detector"
+import { useCampare } from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -306,6 +307,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                           })
                                       }}
                                       onSure={() => {
+                                        console.log('---');
                                           setTimeout(() => {
                                               update()
                                           }, 100)
@@ -532,12 +534,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             {wait: 500}
         )
 
+        const compareQuery = useCampare(query)
         useEffect(() => {
             update()
         }, [isRefresh])
         useUpdateEffect(() => {
             update()
-        }, [query, isHaveData])
+        }, [compareQuery, isHaveData])
         useEffect(() => {
             getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
                 .then((data) => {
@@ -834,7 +837,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                         //         icon={<OutlineXIcon />}
                                         //     />
                                         // }
-                                        style={{margin: "5px 0"}}
+                                        style={{margin: "2px 0"}}
                                         // onClose={(e) => {
                                         //     setAlertClose(true)
                                         // }}
