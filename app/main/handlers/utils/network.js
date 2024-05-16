@@ -167,7 +167,6 @@ const getYakitEEDownloadUrl = async (version) => {
 
 const downloadYakEngine = async (version, destination, progressHandler, onFinished, onError) => {
     const downloadUrl = await getYakEngineDownloadUrl(version);
-    console.log(123, downloadUrl);
     requestWithProgress(downloadUrl, destination, {
         httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host),
     }, progressHandler, onFinished, onError)
