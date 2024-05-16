@@ -98,6 +98,7 @@ import sequencemp4 from "@/assets/sequence.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
 import {DebugProps} from "./FuzzerPageSetting"
+import emiter from "@/utils/eventBus/eventBus"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -1296,7 +1297,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         return t.join("  ,  ")
     }, [item?.inheritVariables, item?.inheritCookies])
     const onSelectSubMenuById = useMemoizedFn((pageId: string) => {
-        ipcRenderer.invoke("send-open-subMenu-item", {pageId})
+        emiter.emit("switchSubMenuItem", JSON.stringify({pageId}))
     })
     const isActive = useCreation(() => {
         return isShowSetting && isSelect

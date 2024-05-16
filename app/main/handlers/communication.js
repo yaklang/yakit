@@ -106,9 +106,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("send-add-group", (e, params) => {
         win.webContents.send("fetch-add-group", params)
     })
-
-    //
-    ipcMain.handle("send-open-subMenu-item", (e, params) => {
-        win.webContents.send("fetch-open-subMenu-item", params)
-    })
 }

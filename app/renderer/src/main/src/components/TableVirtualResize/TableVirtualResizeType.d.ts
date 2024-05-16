@@ -183,6 +183,7 @@ export interface FiltersSelectAllProps {
 
 /**
  *  @property {boolean} isAll 是否全选
+ *  @property {boolean} isShowAll 是否显示全选按钮
  *  @property {"checkbox" | "radio"} type //默认 checkbox
  *  @property {string[]} selectedRowKeys 选中的key值，传入的renderKey
  *  @event (c: boolean, selectedRowsKey: string, selectedRows: T) => void onChangeCheckboxSingle 多选的单个选中
@@ -191,6 +192,8 @@ export interface FiltersSelectAllProps {
  */
 export interface RowSelectionProps<T> {
     isAll?: boolean
+    /**是否显示全选按钮 */
+    isShowAll?: boolean
     type?: "checkbox" | "radio" //默认 checkbox
     selectedRowKeys?: string[]
     onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows: T) => void

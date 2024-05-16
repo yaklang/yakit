@@ -55,13 +55,15 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             case "risk":
                 return <VulnerabilitiesRisksTable riskState={streamInfo.riskState} />
             case "port":
-                return <PluginExecutePortTable runtimeId={runtimeId} />
+                return !!runtimeId ? <PluginExecutePortTable runtimeId={runtimeId} /> : <></>
             case "http":
-                return (
+                return !!runtimeId ? (
                     <PluginExecuteHttpFlow
                         runtimeId={runtimeId}
                         website={!!streamInfo.tabsInfoState["website"]?.targets}
                     />
+                ) : (
+                    <></>
                 )
             case "log":
                 return <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
@@ -319,6 +321,7 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
                 title: "发现时间",
                 dataKey: "CreatedAt",
                 // width: 160,
+                enableDrag: false,
                 render: (v) => formatTimestamp(v)
             },
             {
@@ -363,28 +366,30 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
         emiter.emit("menuOpenPage", JSON.stringify(info))
     })
     return (
-        <TableVirtualResize<StreamResult.Risk>
-            renderTitle={
-                <div className={styles["table-renderTitle"]}>
-                    <span>风险与漏洞</span>
-                    <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
-                        查看全部
-                    </YakitButton>
-                </div>
-            }
-            enableDrag={true}
-            titleHeight={44}
-            data={riskState}
-            renderKey={"Hash"}
-            pagination={{
-                page: 1,
-                limit: 50,
-                total: riskState.length,
-                onChange: () => {}
-            }}
-            columns={columns}
-            containerClassName={styles["table-container"]}
-        />
+        <div className={styles["risks-table"]}>
+            <TableVirtualResize<StreamResult.Risk>
+                renderTitle={
+                    <div className={styles["table-renderTitle"]}>
+                        <span>风险与漏洞</span>
+                        <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
+                            查看全部
+                        </YakitButton>
+                    </div>
+                }
+                enableDrag={true}
+                titleHeight={44}
+                data={riskState}
+                renderKey={"Hash"}
+                pagination={{
+                    page: 1,
+                    limit: 50,
+                    total: riskState.length,
+                    onChange: () => {}
+                }}
+                columns={columns}
+                containerClassName={styles["table-container"]}
+            />
+        </div>
     )
 })
 /**插件执行的tab content 结构 */

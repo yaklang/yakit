@@ -568,14 +568,6 @@ $keyColor: map-keys($colors);
     overflow-x: hidden;
 }
 
-.right-menu-item {
-    @extend .flex-align-center;
-    gap: 12px;
-
-    .item-color-block {
-        @include item-color(16px);
-    }
-}
 
 .toolTip-overlay {
     padding-bottom: 4px;

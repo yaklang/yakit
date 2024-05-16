@@ -8,7 +8,7 @@ import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
 import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
-import {HybridScanControlAfterRequest} from "@/models/HybridScan"
+import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
 
 /**
  * @description 页面暂存数据
@@ -67,7 +67,8 @@ export const defaultPluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProp
     defaultActiveKey: "",
     https: false,
     httpFlowIds: [],
-    request: new Uint8Array()
+    request: new Uint8Array(),
+    hybridScanMode: "new"
 }
 export interface PluginBatchExecutorPageInfoProps {
     /**执行批量执行的runtimeId */
@@ -80,6 +81,8 @@ export interface PluginBatchExecutorPageInfoProps {
     httpFlowIds: []
     /**请求包 */
     request: Uint8Array
+    /**执行任务的状态 */
+    hybridScanMode: HybridScanModeType
 }
 export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
     pageId: "",
@@ -175,6 +178,8 @@ interface PageInfoStoreProps {
     setCurrentSelectPageId: (routeKey: string, pageId: string) => void
     /** 获取当前激活的页面id */
     getCurrentSelectPageId: (routeKey: string) => string
+    /** 通过 RuntimeId 获取批量执行页面数据 */
+    getBatchExecutorByRuntimeId: (pageId: string) => PageNodeItemProps | undefined
 }
 export const defPage: PageProps = {
     pageList: [],
@@ -218,6 +223,13 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                     const {pages} = get()
                     const current = pages.get(key) || cloneDeep(defPage)
                     return current.pageList.find((ele) => ele.pageId === pageId)
+                },
+                getBatchExecutorByRuntimeId: (runtimeId) => {
+                    const {pages} = get()
+                    const current = pages.get(YakitRoute.BatchExecutorPage) || cloneDeep(defPage)
+                    return current.pageList.find(
+                        (ele) => ele?.pageParamsInfo?.pluginBatchExecutorPageInfo?.runtimeId === runtimeId
+                    )
                 },
                 addPagesDataCache: (key, value) => {
                     const newVal = get().pages

@@ -7,9 +7,12 @@ import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "../useHoldG
 import {
     BatchHoldGRPCStreamInfo,
     HoldBatchGRPCStreamParams,
-    PluginBatchExecutorResult
+    PluginBatchExecutorResult,
+    TaskStatus
 } from "./useHoldBatchGRPCStreamType"
-import {HybridScanActiveTask} from "@/models/HybridScan"
+import {HybridScanActiveTask, HybridScanControlAfterRequest} from "@/models/HybridScan"
+import omit from "lodash/omit"
+import isEqual from "lodash/isEqual"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -24,6 +27,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         onError,
         dataFilter,
         setRuntimeId,
+        setTaskStatus,
         onGetInputValue
     } = params
 
@@ -42,10 +46,15 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
 
     // runtime-id
     const runTimeId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
+    // task-status
+    const taskStatus = useRef<{cache: TaskStatus; sent: TaskStatus}>({cache: "default", sent: "default"})
     /** 输入模块值 */
-    const inputValueRef = useRef<{cache: string; sent: string}>({
-        cache: "",
-        sent: ""
+    const inputValueRef = useRef<{
+        cache: HybridScanControlAfterRequest | null
+        sent: HybridScanControlAfterRequest | null
+    }>({
+        cache: null,
+        sent: null
     })
     // progress
     let progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
@@ -89,8 +98,11 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     useEffect(() => {
         const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
-            if (res.ScanConfig) {
-                inputValueRef.current.cache = res.ScanConfig
+            if (!!res.HybridScanConfig) {
+                inputValueRef.current.cache = omit(res.HybridScanConfig, ["Control", "HybridScanMode", "ResumeTaskId"])
+            }
+            if (!!res.Status) {
+                taskStatus.current.cache = res.Status
             }
             const data = res.ExecResult
             const {TotalTasks, FinishedTasks} = res
@@ -201,8 +213,17 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             setRuntimeId(runTimeId.current.cache)
             runTimeId.current.sent = runTimeId.current.cache
         }
+        //task-status
+        if (taskStatus.current.sent !== taskStatus.current.cache && setTaskStatus) {
+            setTaskStatus(taskStatus.current.cache)
+            taskStatus.current.sent = taskStatus.current.cache
+        }
         // 输入模块值
-        if (inputValueRef.current.sent !== inputValueRef.current.cache && onGetInputValue) {
+        if (
+            inputValueRef.current.cache &&
+            !isEqual(inputValueRef.current.sent, inputValueRef.current.cache) &&
+            onGetInputValue
+        ) {
             onGetInputValue(inputValueRef.current.cache)
             inputValueRef.current.sent = inputValueRef.current.cache
         }
@@ -262,6 +283,12 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             timeRef.current = null
             timeRef.current = setInterval(() => handleResults(), waitTime)
         }
+        return () => {
+            if (timeRef.current) {
+                clearInterval(timeRef.current)
+                timeRef.current = null
+            }
+        }
     }, [waitTime])
 
     /** @name 开始处理数据流 */
@@ -296,6 +323,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
         })
 
         runTimeId.current = {cache: "", sent: ""}
+        inputValueRef.current = {cache: null, sent: null}
+        taskStatus.current = {cache: "default", sent: "default"}
         progressKVPair.current = new Map<string, number>()
         cardKVPair.current = new Map<string, HoldGRPCStreamProps.CacheCard>()
         tabTable.current = new Map<string, HoldGRPCStreamProps.CacheTable>()

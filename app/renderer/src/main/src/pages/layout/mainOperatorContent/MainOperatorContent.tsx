@@ -126,23 +126,10 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         key: "addToGroup",
         children: [
             {
-                label: (
-                    <div className={styles["right-menu-item"]}>
-                        <OutlinePlusIcon />
-                        新建组
-                    </div>
-                ),
+                label: "新建组",
+                itemIcon: <OutlinePlusIcon />,
                 key: "newGroup"
             }
-            // {
-            //     label: (
-            //         <div className={styles["right-menu-item"]}>
-            //             <div className={classNames(styles["item-color-block"], `color-bg-blue`)} />
-            //             <span>正式项目配置</span>
-            //         </div>
-            //     ),
-            //     key: "55"
-            // }
         ]
     },
     // 组内的tab才有下面这个菜单
@@ -2178,13 +2165,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             emiter.on("sendSwitchSequenceToMainOperatorContent", onSetType)
         }
+        emiter.on("switchSubMenuItem", onSelectSubMenuById)
         ipcRenderer.on("fetch-add-group", onAddGroup)
-        ipcRenderer.on("fetch-open-subMenu-item", onSelectSubMenuById)
 
         return () => {
             emiter.off("sendSwitchSequenceToMainOperatorContent", onSetType)
+            emiter.off("switchSubMenuItem", onSelectSubMenuById)
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
-            ipcRenderer.removeListener("fetch-open-subMenu-item", onSelectSubMenuById)
         }
     }, [currentTabKey])
 
@@ -2281,15 +2268,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
         return newData
     }, [subPage])
-    const onSelectSubMenuById = useMemoizedFn((e, res: {pageId: string}) => {
-        if (!inViewport) return
-        const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
-        if (index === -1) return
-        const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}
-        setSelectSubMenu({...newSubPage})
-        if (currentTabKey === YakitRoute.HTTPFuzzer) {
-            setType("config")
-        }
+    const onSelectSubMenuById = useMemoizedFn((resVal) => {
+        try {
+            const res = JSON.parse(resVal)
+            if (!inViewport) return
+            const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
+            if (index === -1) return
+            const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}
+            setSelectSubMenu({...newSubPage})
+            if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                setType("config")
+            }
+        } catch (error) {}
     })
     return (
         <div

@@ -100,7 +100,6 @@ import {
     PluginBatchExecutorTaskProps,
     apiCancelHybridScan,
     apiHybridScan,
-    apiStopHybridScan,
     convertHybridScanParams
 } from "@/pages/plugins/utils"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
@@ -120,6 +119,7 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 import {CheckOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 /** 将 new Date 转换为日期 */
@@ -1461,13 +1461,16 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                 defaultActiveKey = "Console"
                 break
         }
-
-        addToTab(YakitRoute.BatchExecutorPage, {
-            pluginBatchExecutorPageInfo: {
-                runtimeId,
-                defaultActiveKey
-            }
-        })
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.BatchExecutorPage,
+                params: {
+                    runtimeId,
+                    defaultActiveKey
+                }
+            })
+        )
     })
 
     return (
@@ -1889,7 +1892,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             }
         }
         const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo)
-        apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
+        apiHybridScan({...hybridScanParams,HybridScanTaskSource:'pluginBatch'}, tokenRef.current).then(() => {
             setPluginRun(true)
             setPluginNameList(selectPluginName)
             setShowType("loading")
@@ -1900,7 +1903,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     /**取消执行 */
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
-        apiStopHybridScan(runtimeId || "", tokenRef.current).then(() => {
+        apiCancelHybridScan(tokenRef.current).then(() => {
             setPluginRun(false)
         })
     })

@@ -311,7 +311,7 @@ service Yak {
   rpc YaklangLanguageFind(YaklangLanguageSuggestionRequest) returns (YaklangLanguageFindResponse);
   // 从代码中提取yaklang数据
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
-  // 进行数据迁移使用
+  // 进行数据迁移使用 
   rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
@@ -321,6 +321,7 @@ service Yak {
   rpc SimpleDetect(RecordPortScanRequest) returns (stream ExecResult);
   rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
   rpc SimpleDetectCreatReport(CreatReportRequest) returns (stream ExecResult);
+
 
   rpc GetSimpleDetectUnfinishedTask(Empty) returns (GetSimpleDetectUnfinishedTaskResponse);
   rpc GetSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
@@ -485,13 +486,17 @@ service Yak {
   // Online
   rpc GetOnlineProfile(Empty) returns (OnlineProfile);
   rpc SetOnlineProfile(OnlineProfile) returns (Empty);
+  // 废弃接口
   rpc DownloadOnlinePluginById(DownloadOnlinePluginByIdRequest) returns (Empty);
+  // 废弃接口
   rpc DownloadOnlinePluginByIds(DownloadOnlinePluginByIdsRequest) returns (Empty);
+  // 废弃接口
   rpc DownloadOnlinePluginAll(DownloadOnlinePluginByTokenRequest) returns (stream DownloadOnlinePluginProgress);
   rpc DeletePluginByUserID(DeletePluginByUserIDRequest) returns (Empty);
   rpc DeleteAllLocalPlugins(Empty) returns (Empty);
   rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
   rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
+  // 废弃接口
   rpc DownloadOnlinePluginByScriptNames(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
   // NewOnline 插件下载
   rpc DownloadOnlinePlugins(DownloadOnlinePluginsRequest) returns(stream DownloadOnlinePluginProgress);
@@ -681,6 +686,7 @@ message FetchPortAssetFromSpaceEngineRequest {
 message DeleteHybridScanTaskRequest {
   string TaskId = 1;
   bool DeleteAll = 2;
+  HybridScanTaskFilter Filter = 3;
 }
 
 message HybridScanTask {
@@ -695,6 +701,8 @@ message HybridScanTask {
   int64 TotalTasks = 8;
   int64 FinishedTasks = 9;
   int64 FinishedTargets = 10;
+  string FirstTarget = 11;
+  string Reason = 12;
 }
 
 message QueryHybridScanTaskResponse {
@@ -708,6 +716,16 @@ message QueryHybridScanTaskRequest {
   int64 FromId = 2;
   int64 UntilId = 3;
   string Status = 4;
+  HybridScanTaskFilter Filter = 5;
+}
+
+message HybridScanTaskFilter {
+  repeated string TaskId = 1;
+  repeated string Status = 2;
+  string Target = 3;
+  int64 FromId = 4;
+  int64  UntilId = 5;
+  repeated string HybridScanTaskSource = 6;
 }
 
 message HybridScanResponse {
@@ -730,8 +748,14 @@ message HybridScanResponse {
   // 这字段表示的是，正在执行的任务可以展示出来
   HybridScanUpdateActiveTaskTable UpdateActiveTask = 11;
 
-  // 任务配置
-  string ScanConfig = 12;
+  // 任务配置  废弃 使用 HybridScanConfig
+  string ScanConfig = 12; // json序列化会有base64
+
+  // 任务状态
+  string Status = 13;
+
+  // task config
+  HybridScanRequest HybridScanConfig = 14;
 }
 
 message HybridScanUpdateActiveTaskTable {
@@ -764,8 +788,7 @@ message HybridScanRequest {
   bool Control = 9;
   // new: 新任务
   // resume: 恢复任务
-  // pause: 暂停任务
-  // stop: 停止任务
+  // pause: 暂停任务 Control:false
   // status: 查询任务状态
   string HybridScanMode = 8;
   string ResumeTaskId = 1;
@@ -780,6 +803,9 @@ message HybridScanRequest {
   // 新任务
   HybridScanPluginConfig Plugin = 6;
   HybridScanInputTarget Targets = 7;
+
+  // hybridScanTaskSource
+  string HybridScanTaskSource = 11;
 }
 
 message DuplexConnectionRequest {
@@ -1883,11 +1909,11 @@ message YaklangInspectInformationRequest {
 }
 
 message YaklangLanguageSuggestionRequest {
-    string InspectType = 1;// completion(补全) / hover(提示) / signature(签名)
-    string YakScriptType = 2;
-    string YakScriptCode = 3;
-    Range Range = 4;
-    string ModelID = 5;
+  string InspectType = 1;// completion(补全) / hover(提示) / signature(签名) / definition(找定义) / reference(找引用)
+  string YakScriptType = 2;
+  string YakScriptCode = 3;
+  Range Range = 4;
+  string ModelID = 5;
 }
 
 
@@ -4326,6 +4352,8 @@ message QueryHTTPFlowRequest {
 
   bool WithPayload = 39;
   repeated string RuntimeIDs = 40;
+
+  repeated string IncludeHash = 41;
 }
 
 message HTTPFlowsToOnlineRequest {
@@ -4432,7 +4460,7 @@ message HTTPFlow {
   string TooLargeResponseBodyFile = 45;
   bool DisableRenderStyles = 46;
 
-  // http_flows 与 web_fuzzer_responses 表关联下取到Payload
+  // payloads (web fuzzer)
   repeated string Payloads = 47;
 }
 

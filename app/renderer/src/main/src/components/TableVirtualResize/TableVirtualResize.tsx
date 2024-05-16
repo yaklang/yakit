@@ -409,9 +409,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         getTableRef(containerRef.current)
     }, [containerRef.current])
     useEffect(() => {
-        if (tableRef.current && tableRef.current.getBoundingClientRect()) {
-            tablePosition.current = tableRef.current.getBoundingClientRect()
-        }
+        setTimeout(() => {
+            if (tableRef.current && tableRef.current.getBoundingClientRect()) {
+                tablePosition.current = tableRef.current.getBoundingClientRect()
+            }
+        }, 200)
     }, [tableRef.current, width])
     useClickAway(() => {
         setSelectedRows([])
@@ -912,7 +914,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     ))
 
     useEffect(() => {
-        if (Object.keys(opensPopover).filter((key) => opensPopover[key]).length === 0) {
+        const popoverKeys = Object.keys(opensPopover)
+        if (popoverKeys.length > 0 && popoverKeys.filter((key) => opensPopover[key]).length === 0) {
             if (onChangTable) onChangTable()
         }
     }, [opensPopover])
@@ -965,7 +968,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     <div className={classNames(styles["virtual-table-heard-title"])}>{title}</div>
                                 )}
                                 {title && React.isValidElement(title) && title}
-                                {props.isShowTotal && pagination?.total && (
+                                {props.isShowTotal && pagination?.total>=0 && (
                                     <div className={styles["virtual-table-heard-right"]}>
                                         <div className={styles["virtual-table-heard-right-item"]}>
                                             <span className={styles["virtual-table-heard-right-text"]}>Total</span>
@@ -977,7 +980,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         <div className={styles["virtual-table-heard-right-item"]}>
                                             <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
                                             <span className={styles["virtual-table-heard-right-number"]}>
-                                                {rowSelection?.selectedRowKeys?.length || 0}
+                                                {rowSelection?.isAll
+                                                    ? pagination?.total || 0
+                                                    : rowSelection?.selectedRowKeys?.length || 0}
                                             </span>
                                         </div>
                                     </div>
@@ -1201,7 +1206,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 <div className={styles["virtual-title"]}>
                     {/* 这个不要用 module ，用来拖拽最小宽度*/}
                     <div className='virtual-col-title' style={{width: "100%", display: "flex", alignItems: "center"}}>
-                        {cIndex === 0 && rowSelection && (
+                        {cIndex === 0 && rowSelection && rowSelection?.isShowAll !== false && (
                             <>
                                 {rowSelection.type !== "radio" && (
                                     <YakitProtoCheckbox

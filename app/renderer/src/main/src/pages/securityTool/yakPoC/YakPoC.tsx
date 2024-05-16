@@ -799,8 +799,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
 
     useEffect(() => {
         if (defaultFormValue && Object.keys(defaultFormValue).length > 0) {
-            const value = JSON.stringify(defaultFormValue)
-            pluginBatchExecuteContentRef.current?.onInitInputValue(value)
+            pluginBatchExecuteContentRef.current?.onInitInputValue(defaultFormValue)
         }
     }, [])
 
@@ -944,14 +943,15 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         setIsExpand={setIsExpand}
                         selectNum={selectGroupNum}
                         setProgressList={setProgressList}
-                        stopLoading={stopLoading}
-                        setStopLoading={setStopLoading}
+                        pauseLoading={stopLoading}
+                        setPauseLoading={setStopLoading}
                         pluginInfo={pluginInfo}
                         executeStatus={executeStatus}
                         setExecuteStatus={onSetExecuteStatus}
                         setPluginExecuteLog={setPluginExecuteLog}
                         setHidden={setHidden}
                         dataScanParams={dataScanParams}
+                        hybridScanTaskSource='yakPoc'
                     />
                 </div>
             </div>

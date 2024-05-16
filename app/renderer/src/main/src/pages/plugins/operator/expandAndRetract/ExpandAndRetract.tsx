@@ -4,7 +4,7 @@ import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets
 import classNames from "classnames"
 
 /** 根据状态显示过度动画 */
-export type ExpandAndRetractExcessiveState = "default" | "process" | "finished" | "error"
+export type ExpandAndRetractExcessiveState = "default" | "process" | "finished" | "error" | "paused"
 interface ExpandAndRetractProps {
     onExpand: MouseEventHandler<HTMLDivElement>
     isExpand: boolean
@@ -32,12 +32,12 @@ export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((pro
             <div className={classNames(styles["expand-and-retract-header-icon-body"], animationWrapperClassName)}>
                 {isExpand ? (
                     <>
-                        <OutlineChevrondoubleupIcon className={styles['expand-and-retract-icon']}/>
+                        <OutlineChevrondoubleupIcon className={styles["expand-and-retract-icon"]} />
                         <span className={styles["expand-and-retract-header-icon-text"]}>收起参数</span>
                     </>
                 ) : (
                     <>
-                        <OutlineChevrondoubledownIcon className={styles['expand-and-retract-icon']}/>
+                        <OutlineChevrondoubledownIcon className={styles["expand-and-retract-icon"]} />
                         <span className={styles["expand-and-retract-header-icon-text"]}>展开参数</span>
                     </>
                 )}

@@ -23,8 +23,13 @@ import {pluginTypeToName} from "./builtInData"
 import {YakitRoute} from "@/routes/newRoute"
 import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
-import {HybridScanControlAfterRequest, HybridScanControlRequest, HybridScanPluginConfig} from "@/models/HybridScan"
-import {defPluginBatchExecuteExtraFormValue} from "./pluginBatchExecutor/pluginBatchExecutor"
+import {
+    HybridScanControlAfterRequest,
+    HybridScanControlRequest,
+    HybridScanModeType,
+    HybridScanPluginConfig
+} from "@/models/HybridScan"
+import {defPluginBatchExecuteExtraFormValue, isEmpty} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultFilter, defaultSearch} from "./baseTemplate"
 import {PluginGroupList} from "./local/PluginsLocalType"
@@ -1291,13 +1296,15 @@ export const convertHybridScanParams = (
 }
 export interface PluginBatchExecutorInputValueProps {
     params: HybridScanRequest
-    pluginInfo: {selectPluginName: string[]; search: PluginSearchParams}
+    pluginInfo: PluginInfoProps
 }
 /**
  * @name HybridScan返回的输入参数参数转换为前端所需结构(后端数据转前端参数)
  * @description HybridScan
  */
-export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchExecutorInputValueProps => {
+export const hybridScanParamsConvertToInputValue = (
+    value: HybridScanControlAfterRequest
+): PluginBatchExecutorInputValueProps => {
     const data: PluginBatchExecutorInputValueProps = {
         params: {
             Input: "",
@@ -1308,11 +1315,13 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
         },
         pluginInfo: {
             selectPluginName: [],
-            search: {...cloneDeep(defaultSearch)}
+            search: {...cloneDeep(defaultSearch)},
+            filters: {...cloneDeep(defaultFilter)}
         }
     }
     try {
-        const resParams: HybridScanControlAfterRequest = JSON.parse(value)
+        // 只需要 HybridScanControlAfterRequest 部分参数
+        const resParams: HybridScanControlAfterRequest = {...value}
         let targets = resParams.Targets
         let plugin = resParams.Plugin
         // 确保 plugin targets 一定会有初始值
@@ -1340,6 +1349,9 @@ export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchE
                 search.type = "userName"
             }
             data.pluginInfo.search = {...search}
+            data.pluginInfo.filters = {
+                plugin_group: (plugin.Filter?.Group?.Group || []).map((item) => ({value: item, label: item, count: 0}))
+            }
         }
         // 处理输入的参数，包括额外参数
         data.params.Input = targets.Input
@@ -1382,7 +1394,10 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
                     {
                         Control: true,
                         HybridScanMode: "new",
-                        ResumeTaskId: ""
+                        ResumeTaskId: "",
+                        HybridScanTaskSource: !!params.HybridScanTaskSource
+                            ? params.HybridScanTaskSource
+                            : "pluginBatch"
                     } as HybridScanControlRequest,
                     token
                 )
@@ -1398,27 +1413,6 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
             yakitNotify("error", "插件批量执行出错:" + error)
             reject(error)
         }
-    })
-}
-/**
- * @description 停止 HybridScan
- */
-export const apiStopHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
-    return new Promise((resolve, reject) => {
-        const params: HybridScanControlRequest = {
-            Control: false,
-            HybridScanMode: "stop",
-            ResumeTaskId: runtimeId
-        }
-        ipcRenderer
-            .invoke(`HybridScan`, params, token)
-            .then(() => {
-                resolve(null)
-            })
-            .catch((e: any) => {
-                yakitNotify("error", "停止插件批量执行出错:" + e)
-                reject(e)
-            })
     })
 }
 /**
@@ -1439,19 +1433,24 @@ export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => 
 }
 
 /**
- * @description HybridScan 批量执行查询详情
+ * @description HybridScan 批量执行查询/恢复/暂停操作
  */
-export const apiQueryHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
+export const apiHybridScanByMode: (
+    runtimeId: string,
+    hybridScanMode: HybridScanModeType,
+    token: string
+) => Promise<null> = (runtimeId, hybridScanMode, token) => {
     return new Promise((resolve, reject) => {
+        if (hybridScanMode === "new") return
         const params: HybridScanControlRequest = {
-            Control: true,
-            HybridScanMode: "status",
+            Control: hybridScanMode !== "pause",
+            HybridScanMode: hybridScanMode,
             ResumeTaskId: runtimeId
         }
         ipcRenderer
             .invoke("HybridScan", params, token)
             .then(() => {
-                info(`查询成功,任务ID: ${token}`)
+                info(`任务ID: ${token}`)
                 resolve(null)
             })
             .catch((error) => {
@@ -1499,7 +1498,10 @@ export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = 
 }
 
 /**本地获取插件组数据 */
-export const apiFetchQueryYakScriptGroupLocal: (All?: boolean, ExcludeType?: string[]) => Promise<GroupCount[]> = (All = true, ExcludeType = ['yak', 'codec']) => {
+export const apiFetchQueryYakScriptGroupLocal: (All?: boolean, ExcludeType?: string[]) => Promise<GroupCount[]> = (
+    All = true,
+    ExcludeType = ["yak", "codec"]
+) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("QueryYakScriptGroup", {All, ExcludeType})

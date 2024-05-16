@@ -38,6 +38,11 @@
         border-top: 0;
     }
 
+    .risks-table {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
     .table-container {
         border: 0 !important;
         border-top: 1px solid var(--yakit-border-color) !important;
