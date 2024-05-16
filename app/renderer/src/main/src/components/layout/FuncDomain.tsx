@@ -1257,6 +1257,21 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         return []
     }, [updateContent])
 
+    const showPencilAltIcon = useMemo(() => {
+        return !isRemoteMode && role === "superAdmin"
+    }, [isRemoteMode, role])
+
+    const versionTextMaxWidth = useMemo(() => {
+        // 更多版本 立即更新 管理员编辑
+        if (isUpdate && showPencilAltIcon) return 150
+        // 更多版本 获取失败 管理员编辑
+        if (!lastVersion && showPencilAltIcon) return 175
+        // 更多版本 立即更新
+        if (isUpdate) return 179
+        // 更多版本 其他
+        return 190
+    }, [isUpdate, showPencilAltIcon])
+
     return (
         <div
             className={classNames(styles["version-update-wrapper"], {
@@ -1268,7 +1283,11 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     <div className={styles["update-icon"]}>
                         <YaklangSvgIcon />
                     </div>
-                    <div style={{width: isUpdate && !isRemoteMode && role === "superAdmin" ? 150 : 180}}>
+                    <div
+                        style={{
+                            width: versionTextMaxWidth
+                        }}
+                    >
                         <div className={styles["update-title"]}>{`Yaklang ${isUpdate ? lastVersion : version}`}</div>
                         <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
                         {/* <div className={styles["upda te-time"]}>2022-09-29</div> */}
@@ -1313,7 +1332,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                             {!lastVersion ? "获取失败" : !isUpdate && !isKillEngine && "已是最新"}
                         </>
                     )}
-                    {!isRemoteMode && role === "superAdmin" && (
+                    {showPencilAltIcon && (
                         <div
                             className={styles["edit-func"]}
                             onClick={() => {
