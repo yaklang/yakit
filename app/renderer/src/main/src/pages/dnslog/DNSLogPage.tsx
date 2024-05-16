@@ -71,7 +71,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [records, setRecords, getRecords] = useGetState<DNSLogEvent[]>([])
     const [loading, setLoading] = useState(false)
     const [btnLoading, setBtnLoading] = useState(false)
-    const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
+    const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(false)
     const [autoQuery, setAutoQuery] = useState(false)
     const [isLocal, setIsLocal, getIsLocal] = useGetState(true)
     const [expandRows, setExpandRows] = useState<string[]>([])

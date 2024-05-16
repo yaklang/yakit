@@ -31,6 +31,8 @@ export enum RemoteGV {
     /** @name 是否复用全局DNS-Log配置 */
     GlobalDNSLogBridgeInherit = "yakit-DNSLOG_INHERIT_BRIDGE",
     /** @name 全局DNS-Log地址 */
+    GlobalDNSLogOnlyARecord = "dnslog-onlyARecord",
+    /** @name 全局DNS-Log地址 */
     GlobalDNSLogAddr = "yak-dnslog-addr",
     /** @name 全局DNS-Log密钥 */
     GlobalDNSLogSecret = "yak-dnslog-secret",
