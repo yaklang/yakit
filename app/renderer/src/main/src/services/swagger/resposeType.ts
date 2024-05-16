@@ -5,980 +5,1118 @@
 
 export declare namespace API {
     export interface YakitPluginParam {
-        field: string
-        default_value: string
-        type_verbose: string
-        field_verbose: string
-        help: string
-        required?: boolean
-        group?: string
-        extra_setting?: string
-        method_type?: string
+      field: string;
+      default_value: string;
+      type_verbose: string;
+      field_verbose: string;
+      help: string;
+      required?: boolean;
+      group?: string;
+      extra_setting?: string;
+      method_type?: string;
+    }
+    export interface WebsocketFlowResponse extends Paging {
+      data: WebsocketFlowList[];
+    }
+    export interface WebsocketFlowList
+      extends GormBaseModel,
+        WebsocketFlowDetail {}
+    export interface WebsocketFlowDetail {
+      websocketRequestHash: string;
+      frameIndex: number;
+      fromServer: boolean;
+      messageType: string;
+      data: string;
+      dataSizeVerbose: string;
+      dataLength: number;
+      dataVerbose: string;
+      isJson: boolean;
+      isProtobuf: boolean;
     }
     export interface UserOrdinaryResponse {
-        data: UserList[]
+      data: UserList[];
     }
     export interface UserListResponse extends Paging {
-        data: UserList[]
+      data: UserList[];
     }
     export interface UserList {
-        id: number
-        created_at: number
-        updated_at: number
-        name: string
-        from_platform: string
-        email?: string
-        appid: string
-        head_img: string
-        role: string
+      id: number;
+      created_at: number;
+      updated_at: number;
+      name: string;
+      from_platform: string;
+      email?: string;
+      appid: string;
+      head_img: string;
+      role: string;
     }
     export interface UserInfoByToken {
-        token: string
+      token: string;
     }
     export interface UserData {
-        from_platform: string
-        appid: string
-        head_img: string
-        name: string
-        token: string
-        role: string
-        user_id: number
-        uid?: string
-        /**
-         * 判断是否首次登录
-         */
-        loginTime?: number
-        /**
-         * 企业版用户是否有审核权限
-         */
-        checkPlugin: boolean
+      from_platform: string;
+      appid: string;
+      head_img: string;
+      name: string;
+      token: string;
+      role: string;
+      user_id: number;
+      uid?: string;
+      /**
+       * 判断是否首次登录
+       */
+      loginTime?: number;
+      /**
+       * 企业版用户是否有审核权限
+       */
+      checkPlugin: boolean;
     }
     export interface UrmUserListResponse extends Paging {
-        data: UrmUserList[]
+      data: UrmUserList[];
     }
     export interface UrmUserList {
-        id: number
-        created_at: number
-        user_name: string
-        head_img: string
-        from_platform: string
-        uid: string
-        department_id?: number
-        department_name?: string
-        role_id?: number
-        role_name?: string
-        department_parent_id?: number
-        department_parent_name?: string
+      id: number;
+      created_at: number;
+      user_name: string;
+      head_img: string;
+      from_platform: string;
+      uid: string;
+      department_id?: number;
+      department_name?: string;
+      role_id?: number;
+      role_name?: string;
+      department_parent_id?: number;
+      department_parent_name?: string;
     }
     export interface UrmLoginRequest {
-        user_name: string
-        pwd: string
+      user_name: string;
+      pwd: string;
     }
     export interface UrmEditListResponse {
-        data: UrmUserList
+      data: UrmUserList;
     }
     export interface UpUserInfoRequest {
-        old_pwd?: string
-        pwd?: string
-        confirm_pwd?: string
-        head_img?: string
+      old_pwd?: string;
+      pwd?: string;
+      confirm_pwd?: string;
+      head_img?: string;
     }
     export interface UpPluginsUserRequest {
-        uuid: string[]
-        user_id: number
+      uuid: string[];
+      user_id: number;
     }
     export interface UpPluginsPrivateRequest {
-        uuid: string
-        is_private: boolean
+      uuid: string;
+      is_private: boolean;
     }
     export interface UploadDataResponseDetail {
-        userName: string
-        fileName: string
-        filePath: string
+      userName: string;
+      fileName: string;
+      filePath: string;
     }
     export interface UploadDataResponse extends Paging {
-        data: UploadDataList[]
+      data: UploadDataList[];
     }
-    export interface UploadDataList extends GormBaseModel, UploadDataResponseDetail {}
+    export interface UploadDataList
+      extends GormBaseModel,
+        UploadDataResponseDetail {}
     export interface UpdateUserRole {
-        appid: string[]
-        operation: string
-        role?: string
+      appid: string[];
+      operation: string;
+      role?: string;
     }
     export interface TouristRequest {
-        macCode: string
+      macCode: string;
     }
     export interface TouristIncrResponse {
-        data: TouristIncrDetail[]
+      data: TouristIncrDetail[];
     }
     export interface TouristIncrDetail {
-        /**
-         * 图表纵坐标
-         */
-        count: number
-        /**
-         * 图表横坐标
-         */
-        searchTime: string
+      /**
+       * 图表纵坐标
+       */
+      count: number;
+      /**
+       * 图表横坐标
+       */
+      searchTime: string;
     }
     export interface TouristCityResponse {
-        /**
-         * 总数
-         */
-        total: number
-        /**
-         * 日期
-         */
-        date: number
-        data: TouristCityCount[]
+      /**
+       * 总数
+       */
+      total: number;
+      /**
+       * 日期
+       */
+      date: number;
+      data: TouristCityCount[];
     }
     export interface TouristCityCount {
-        city: string
-        count: number
+      city: string;
+      count: number;
     }
     export interface TouristAndUserResponse {
-        /**
-         * 总游客数
-         */
-        touristTotal: number
-        /**
-         * 总登录用户数
-         */
-        loginTotal: number
-        /**
-         * 日增量
-         */
-        dayNew: number
-        /**
-         * 日增率
-         */
-        dayGain: string
-        /**
-         * up 增 down 减
-         */
-        dayGainUpOrDown?: string
-        /**
-         * 日活
-         */
-        dayActive: number
-        /**
-         * 日活增率
-         */
-        dayActiveGain: string
-        /**
-         * up 增 down 减
-         */
-        dayActiveGainUpOrDown: string
-        /**
-         * 周增量
-         */
-        weekNew: number
-        /**
-         * 周增率
-         */
-        weekGain: string
-        /**
-         * up 增 down 减
-         */
-        weekGainUpOrDown?: string
-        /**
-         * 周活
-         */
-        weekActive: number
-        /**
-         * 周活增率
-         */
-        weekActiveGain: string
-        /**
-         * up 增 down 减
-         */
-        weekActiveGainUpOrDown: string
-        /**
-         * 月增量
-         */
-        monthNew: number
-        /**
-         * 月增率
-         */
-        monthGain: string
-        /**
-         * up 增 down 减
-         */
-        monthGainUpOrDown?: string
-        /**
-         * 月活
-         */
-        monthActive: number
-        /**
-         * 月活增率
-         */
-        monthActiveGain: string
-        /**
-         * up 增 down 减
-         */
-        monthActiveGainUpOrDown: string
-        dayTimes: number
-        /**
-         * 当天时长增率
-         */
-        dayTimesGain: string
-        /**
-         * up 增 down 减
-         */
-        dayTimesGainUpOrDown: string
-        weekTimes: number
-        /**
-         * 本周时长增率
-         */
-        weekTimesGain: string
-        /**
-         * up 增 down 减
-         */
-        weekTimesGainUpOrDown: string
-        monthTimes: number
-        /**
-         * 本月时长增率
-         */
-        monthTimesGain: string
-        /**
-         * up 增 down 减
-         */
-        monthTimesGainUpOrDown: string
+      /**
+       * 总游客数
+       */
+      touristTotal: number;
+      /**
+       * 总登录用户数
+       */
+      loginTotal: number;
+      /**
+       * 日增量
+       */
+      dayNew: number;
+      /**
+       * 日增率
+       */
+      dayGain: string;
+      /**
+       * up 增 down 减
+       */
+      dayGainUpOrDown?: string;
+      /**
+       * 日活
+       */
+      dayActive: number;
+      /**
+       * 日活增率
+       */
+      dayActiveGain: string;
+      /**
+       * up 增 down 减
+       */
+      dayActiveGainUpOrDown: string;
+      /**
+       * 周增量
+       */
+      weekNew: number;
+      /**
+       * 周增率
+       */
+      weekGain: string;
+      /**
+       * up 增 down 减
+       */
+      weekGainUpOrDown?: string;
+      /**
+       * 周活
+       */
+      weekActive: number;
+      /**
+       * 周活增率
+       */
+      weekActiveGain: string;
+      /**
+       * up 增 down 减
+       */
+      weekActiveGainUpOrDown: string;
+      /**
+       * 月增量
+       */
+      monthNew: number;
+      /**
+       * 月增率
+       */
+      monthGain: string;
+      /**
+       * up 增 down 减
+       */
+      monthGainUpOrDown?: string;
+      /**
+       * 月活
+       */
+      monthActive: number;
+      /**
+       * 月活增率
+       */
+      monthActiveGain: string;
+      /**
+       * up 增 down 减
+       */
+      monthActiveGainUpOrDown: string;
+      dayTimes: number;
+      /**
+       * 当天时长增率
+       */
+      dayTimesGain: string;
+      /**
+       * up 增 down 减
+       */
+      dayTimesGainUpOrDown: string;
+      weekTimes: number;
+      /**
+       * 本周时长增率
+       */
+      weekTimesGain: string;
+      /**
+       * up 增 down 减
+       */
+      weekTimesGainUpOrDown: string;
+      monthTimes: number;
+      /**
+       * 本月时长增率
+       */
+      monthTimesGain: string;
+      /**
+       * up 增 down 减
+       */
+      monthTimesGainUpOrDown: string;
     }
     export interface TouristActiveResponse {
-        data: TouristActiveDetail[]
+      data: TouristActiveDetail[];
     }
     export interface TouristActiveDetail {
-        /**
-         * 图表纵坐标
-         */
-        count: number
-        /**
-         * 图表横坐标
-         */
-        searchTime: string
+      /**
+       * 图表纵坐标
+       */
+      count: number;
+      /**
+       * 图表横坐标
+       */
+      searchTime: string;
     }
     export interface ShareResponse {
-        share_id: string
-        extract_code?: string
-        token?: string
+      share_id: string;
+      extract_code?: string;
+      token?: string;
     }
     export interface ShareRequest {
-        expired_time: number
-        module: string
-        share_content: string
-        pwd: boolean
-        share_id?: string
-        limit_num?: number
-        token?: string
+      expired_time: number;
+      module: string;
+      share_content: string;
+      pwd: boolean;
+      share_id?: string;
+      limit_num?: number;
+      token?: string;
     }
     export interface RoleListResponse extends Paging {
-        data: RoleList[]
+      data: RoleList[];
     }
     export interface RoleList {
-        id: number
-        name: string
-        createdAt: number
-        checkPlugin: boolean
+      id: number;
+      name: string;
+      createdAt: number;
+      checkPlugin: boolean;
     }
     export interface RiskUploadResponse extends Paging {
-        data: RiskLists[]
-    }
-    export interface RiskUploadRequest {
-        token: string
-        risk_hash: string
-        ip?: string
-        ip_integer?: number
-        url?: string
-        port?: number
-        host?: string
-        title?: string
-        title_verbose?: string
-        risk_type?: string
-        risk_type_verbose?: string
-        parameter?: string
-        payload?: string
-        details?: string
-        severity?: string
-        from_yak_script?: string
-        waiting_verified?: boolean
-        reverse_token?: string
-        runtime_id?: string
-        quoted_request?: string
-        quoted_response?: string
-        is_potential?: boolean
-        cve?: string
-        description?: string
-        solution?: string
-        risk_created_at?: number
+      data: RiskLists[];
     }
     export interface RiskTypes {
-        risk_type: string
+      risk_type: string;
     }
     export interface RiskTypeResponse {
-        data: RiskTypes[]
+      data: RiskTypes[];
+    }
+    export interface RiskRequest {
+      projectName: string;
+      content: string;
     }
     export interface RiskLists extends GormBaseModel, RiskList {}
     export interface RiskList {
-        hash: string
-        user_name: string
-        rish_hash: string
-        ip: string
-        ip_integer: number
-        url: string
-        port: number
-        host: string
-        title: string
-        title_verbose: string
-        risk_type: string
-        risk_type_verbose: string
-        parameter: string
-        payload: string
-        details: string
-        severity: string
-        from_yak_script: string
-        waiting_verified: boolean
-        reverse_token: string
-        runtime_id: string
-        quoted_request: string
-        quoted_response: string
-        is_potential: boolean
-        cve: string
-        description: string
-        solution: string
-        risk_created_at: number
+      hash: string;
+      user_name: string;
+      rish_hash: string;
+      ip: string;
+      ip_integer: number;
+      url: string;
+      port: number;
+      host: string;
+      title: string;
+      title_verbose: string;
+      risk_type: string;
+      risk_type_verbose: string;
+      parameter: string;
+      payload: string;
+      details: string;
+      severity: string;
+      from_yak_script: string;
+      waiting_verified: boolean;
+      reverse_token: string;
+      runtime_id: string;
+      quoted_request: string;
+      quoted_response: string;
+      is_potential: boolean;
+      cve: string;
+      description: string;
+      solution: string;
+      risk_created_at: number;
+      project_name: string;
     }
     export interface RemoteTunnelResponse {
-        server: string
-        secret: string
-        gen_tls_crt: string
+      server: string;
+      secret: string;
+      gen_tls_crt: string;
     }
     export interface RemoteStatusResponse {
-        status: boolean
-        /**
-         * 控制端人员
-         */
-        user_name: string
+      status: boolean;
+      /**
+       * 控制端人员
+       */
+      user_name: string;
     }
     export interface RemoteResponse extends Paging {
-        data: RemoteLists[]
+      data: RemoteLists[];
     }
     export interface RemoteOperationResponseData {
-        port: number
-        note: string
-        id: string
-        auth: string
-        host: string
+      port: number;
+      note: string;
+      id: string;
+      auth: string;
+      host: string;
     }
     export interface RemoteOperationResponse {
-        data: RemoteOperationResponseData[]
+      data: RemoteOperationResponseData[];
     }
     export interface RemoteOperationRequest {
-        tunnel: string
-        addr: string
-        auth: string
-        note: string
-        /**
-         * true 连接, false 断开连接
-         */
-        status: boolean
+      tunnel: string;
+      addr: string;
+      auth: string;
+      note: string;
+      /**
+       * true 连接, false 断开连接
+       */
+      status: boolean;
     }
     export interface RemoteLists extends GormBaseModel, RemoteList {}
     export interface RemoteList {
-        hash: string
-        addr: string
-        status: boolean
-        user_name: string
-        head_img: string
+      hash: string;
+      addr: string;
+      status: boolean;
+      user_name: string;
+      head_img: string;
     }
     export interface ProjectListResponse extends Paging {
-        data: ProjectList[]
+      data: ProjectList[];
     }
     export interface ProjectListDetail {
-        userName: string
-        fileName: string
-        fileSize: string
-        filePath: string
+      userName: string;
+      fileName: string;
+      fileSize: string;
+      filePath: string;
     }
     export interface ProjectList extends GormBaseModel, ProjectListDetail {}
     export interface Principle {
-        user: string
-        role: string
-        user_id: number
-        head_img: string
-        from_platform: string
-        uid: string
+      user: string;
+      role: string;
+      user_id: number;
+      head_img: string;
+      from_platform: string;
+      uid: string;
     }
     export interface PluginTypeListResponse {
-        data: PluginTypeList[]
+      data: PluginTypeList[];
     }
     export interface PluginTypeList {
-        id: number
-        script_name: string
+      id: number;
+      script_name: string;
     }
     export interface PluginTopSearchResponse {
-        data: PluginTopSearch[]
+      data: PluginTopSearch[];
     }
     export interface PluginTopSearch {
-        member: string
-        score: number
+      member: string;
+      score: number;
     }
-    export interface PluginsWhereListRequest extends PluginsWhere, PluginsWhereList {}
+    export interface PluginsWhereListRequest
+      extends PluginsWhere,
+        PluginsWhereList {}
     export interface PluginsWhereList {
-        token?: string
+      token?: string;
     }
-    export interface PluginsWhereDownloadRequest extends PluginsWhere, PluginsWhereDownload {}
+    export interface PluginsWhereDownloadRequest
+      extends PluginsWhere,
+        PluginsWhereDownload {}
     export interface PluginsWhereDownload {
-        /**
-         * 勾选删除
-         */
-        uuid?: string[]
-        page?: number
-        limit?: number
-        token?: string
+      /**
+       * 勾选删除
+       */
+      uuid?: string[];
+      page?: number;
+      limit?: number;
+      token?: string;
     }
-    export interface PluginsWhereDeleteRequest extends PluginsWhere, PluginsWhereDelete {}
+    export interface PluginsWhereDeleteRequest
+      extends PluginsWhere,
+        PluginsWhereDelete {}
     export interface PluginsWhereDelete {
-        /**
-         * 删除原因
-         */
-        description?: string
-        /**
-         * 勾选删除
-         */
-        uuid?: string[]
+      /**
+       * 删除原因
+       */
+      description?: string;
+      /**
+       * 勾选删除
+       */
+      uuid?: string[];
     }
     export interface PluginsWhere {
-        /** 这个其实是一个boolean类型的数组，
-         * 但是后端没法表达boolean数组，
-         * 所以每次更新时，需要将后端的转换定义名改成《boolean》
-         */
-        is_private?: boolean[]
-        keywords?: string
-        plugin_type?: string[]
-        tags?: string[]
-        user_name?: string
-        user_id?: number
-        /**
-         * 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year
-         */
-        time_search?: string
-        /**
-         * 默认首页, mine 个人, recycle 回收站 check 审核页面, other 其他情况(针对yakit下载所以不区分私密公开)
-         */
-        listType?: string
-        /**
-         * 审核状态,0待审核，1通过审核，2审核不通过
-         */
-        status?: number[]
-        /**
-         * 根据插件名批量搜索
-         */
-        script_name?: string[]
-        pluginGroup?: PluginsWherePluginGroup
-        excludePluginTypes?: string[]
+      is_private?: PluginsWhereIsPrivate[];
+      keywords?: string;
+      plugin_type?: string[];
+      tags?: string[];
+      user_name?: string;
+      user_id?: number;
+      /**
+       * 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year
+       */
+      time_search?: string;
+      /**
+       * 默认首页, mine 个人, recycle 回收站 check 审核页面, other 其他情况(针对yakit下载所以不区分私密公开)
+       */
+      listType?: string;
+      /**
+       * 审核状态,0待审核，1通过审核，2审核不通过
+       */
+      status?: number[];
+      /**
+       * 根据插件名批量搜索
+       */
+      script_name?: string[];
+      pluginGroup?: PluginsWherePluginGroup;
+      excludePluginTypes?: string[];
     }
     export interface PluginsWherePluginGroup {
-        unSetGroup?: boolean
-        group?: string[]
+      unSetGroup?: boolean;
+      group?: string[];
     }
     export interface PluginsWhereIsPrivate {}
     export interface PluginsSearchResponse {
-        data: PluginsSearch[]
+      data: PluginsSearch[];
     }
     export interface PluginsSearchRequest {
-        /**
-         * 默认首页 mine 个人, recycle 回收站 check 审核页面
-         */
-        listType?: string
-        token?: string
+      /**
+       * 默认首页 mine 个人, recycle 回收站 check 审核页面
+       */
+      listType?: string;
+      token?: string;
     }
     export interface PluginsSearchData {
-        value: string
-        count: number
-        label: string
+      value: string;
+      count: number;
+      label: string;
     }
     export interface PluginsSearch {
-        groupKey: string
-        groupName: string
-        sort: number
-        data: PluginsSearchData[]
+      groupKey: string;
+      groupName: string;
+      sort: number;
+      data: PluginsSearchData[];
     }
     export interface PluginsRiskDetail {
-        level: string
-        typeVerbose: string
-        cve: string
-        /**
-         * 漏洞描述
-         */
-        description: string
-        /**
-         * 修复建议
-         */
-        solution: string
+      level: string;
+      typeVerbose: string;
+      cve: string;
+      /**
+       * 漏洞描述
+       */
+      description: string;
+      /**
+       * 修复建议
+       */
+      solution: string;
     }
     export interface PluginsResponse {
-        id: number
-        uuid: string
+      id: number;
+      uuid: string;
     }
     export interface PluginsRequest {
-        type?: string
-        content?: string
-        params?: YakitPluginParam[]
-        help?: string
-        tags?: string[]
-        script_name: string
-        enable_plugin_selector?: boolean
-        plugin_selector_types?: string
-        is_general_module?: boolean
-        download_total?: number
-        is_private?: boolean
-        group?: string
-        riskInfo?: PluginsRiskDetail[]
-        isCorePlugin?: boolean
+      type?: string;
+      content?: string;
+      params?: YakitPluginParam[];
+      help?: string;
+      tags?: string[];
+      script_name: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      download_total?: number;
+      is_private?: boolean;
+      group?: string;
+      riskInfo?: PluginsRiskDetail[];
+      isCorePlugin?: boolean;
     }
     export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
     export interface PluginsRecycle {
-        /**
-         * 勾选删除
-         */
-        uuid?: string[]
-        /**
-         * 必传, true 彻底删除, false还原
-         */
-        dumpType: string
+      /**
+       * 勾选删除
+       */
+      uuid?: string[];
+      /**
+       * 必传, true 彻底删除, false还原
+       */
+      dumpType: string;
     }
     export interface PluginsLogsResponse extends Paging {
-        data: PluginsLogsDetail[]
+      data: PluginsLogsDetail[];
     }
     export interface PluginsLogsDetail extends GormBaseModel {
-        /**
-         * 操作人名称
-         */
-        userName: string
-        /**
-         * 操作人头像
-         */
-        headImg: string
-        /**
-         * 作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
-         */
-        userRole: string
-        /**
-         * 操作人是否是作者 true 是   false否
-         */
-        isAuthors: boolean
-        /**
-         * 审核状态
-         */
-        checkStatus: number
-        /**
-         * 日志类型 submit:新增 delete:删除  update:修改  check:审核 recover:恢复 applyMerge: 合并申请
-         */
-        logType: string
-        /**
-         * 描述
-         */
-        description: string
-        /**
-         * 登陆用户是否是插件作者
-         */
-        loginIsPluginUser: boolean
+      /**
+       * 操作人名称
+       */
+      userName: string;
+      /**
+       * 操作人头像
+       */
+      headImg: string;
+      /**
+       * 作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
+       */
+      userRole: string;
+      /**
+       * 操作人是否是作者 true 是   false否
+       */
+      isAuthors: boolean;
+      /**
+       * 审核状态
+       */
+      checkStatus: number;
+      /**
+       * 日志类型 submit:新增 delete:删除  update:修改  check:审核 recover:恢复 applyMerge: 合并申请
+       */
+      logType: string;
+      /**
+       * 描述
+       */
+      description: string;
+      /**
+       * 登陆用户是否是插件作者
+       */
+      loginIsPluginUser: boolean;
     }
     export interface PluginsListResponse extends Paging {
-        data: PluginsDetail[]
+      data: PluginsDetail[];
     }
     export interface PluginsGroupWhere {
-        uuid?: string[]
+      uuid?: string[];
     }
     export interface PluginsGroupResponse {
-        setGroup: string[]
-        allGroup: string[]
+      setGroup: string[];
+      allGroup: string[];
     }
-    export interface PluginsGroupRequest extends PluginsWhere, PluginsGroupWhere {}
+    export interface PluginsGroupRequest
+      extends PluginsWhere,
+        PluginsGroupWhere {}
     export interface PluginsGroup {
-        uuid: string[]
-        saveGroup: string[]
-        removeGroup: string[]
+      uuid: string[];
+      saveGroup: string[];
+      removeGroup: string[];
     }
     export interface PluginsEditRequest extends PluginsRequest, PluginsEdit {}
     export interface PluginsEdit {
-        /**
-         * 为空时默认走新建 不为空时默认走修改
-         */
-        uuid?: string
-        /**
-         * 修改必传描述(我这没写成必传是因为新增和修改是一个按钮)
-         */
-        logDescription?: string
+      /**
+       * 为空时默认走新建 不为空时默认走修改
+       */
+      uuid?: string;
+      /**
+       * 修改必传描述(我这没写成必传是因为新增和修改是一个按钮)
+       */
+      logDescription?: string;
     }
     export interface PluginsDetail extends GormBaseModel {
-        type: string
-        script_name: string
-        tags: string
-        content: string
-        params?: YakitPluginParam[]
-        authors: string
-        user_id?: number
-        head_img: string
-        /**
-         * 插件发布的时间
-         */
-        published_at: number
-        /**
-         * 下载次数
-         */
-        downloaded_total: number
-        /**
-         * 获得推荐的次数
-         */
-        stars: number
-        /**
-         * 审核状态
-         */
-        status: number
-        official: boolean
-        /**
-         * 当前用户是否已点赞
-         */
-        is_stars: boolean
-        help?: string
-        enable_plugin_selector?: boolean
-        plugin_selector_types?: string
-        is_general_module?: boolean
-        comment_num: number
-        contributors?: string
-        uuid: string
-        is_private: boolean
-        /**
-         * 复制源插件
-         */
-        base_plugin_id?: number
-        /**
-         * 复制源插件名
-         */
-        base_script_name?: string
-        group?: string
-        riskInfo?: PluginsRiskDetail[]
-        /**
-         * 是否为内置插件
-         */
-        isCorePlugin?: boolean
-        /**
-         * 协作者
-         */
-        collaborator?: CollaboratorInfo[]
+      type: string;
+      script_name: string;
+      tags: string;
+      content: string;
+      params?: YakitPluginParam[];
+      authors: string;
+      user_id?: number;
+      head_img: string;
+      /**
+       * 插件发布的时间
+       */
+      published_at: number;
+      /**
+       * 下载次数
+       */
+      downloaded_total: number;
+      /**
+       * 获得推荐的次数
+       */
+      stars: number;
+      /**
+       * 审核状态
+       */
+      status: number;
+      official: boolean;
+      /**
+       * 当前用户是否已点赞
+       */
+      is_stars: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      comment_num: number;
+      contributors?: string;
+      uuid: string;
+      is_private: boolean;
+      /**
+       * 复制源插件
+       */
+      base_plugin_id?: number;
+      /**
+       * 复制源插件名
+       */
+      base_script_name?: string;
+      group?: string;
+      riskInfo?: PluginsRiskDetail[];
+      /**
+       * 是否为内置插件
+       */
+      isCorePlugin?: boolean;
+      /**
+       * 协作者
+       */
+      collaborator?: CollaboratorInfo[];
     }
     export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
-    export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail {}
+    export interface PluginsAuditDetailResponse
+      extends PluginsDetail,
+        PluginsAuditDetail {}
     export interface PluginsAuditDetailRequest {
-        uuid: string
-        /**
-         * 请求页面 默认(check) 审核详情页 log 日志详情页
-         */
-        list_type?: string
-        /**
-         * 日志页跳转到详情页必传
-         */
-        up_log_id?: number
+      uuid: string;
+      /**
+       * 请求页面 默认(check) 审核详情页 log 日志详情页
+       */
+      list_type?: string;
+      /**
+       * 日志页跳转到详情页必传
+       */
+      up_log_id?: number;
     }
     export interface PluginsAuditDetail {
-        /**
-         * 修改人
-         */
-        apply_user_name?: string
-        /**
-         * 修改人
-         */
-        apply_user_id?: number
-        /**
-         * 描述
-         */
-        logDescription?: string
-        apply_user_head_img?: string
-        /**
-         * 处理状态 0 待处理  1合并  2拒绝
-         */
-        merge_status?: number
-        /**
-         * 日志id
-         */
-        up_log_id?: number
-        merge_before_plugins?: PluginsAuditDetailMergeBeforePlugins
+      /**
+       * 修改人
+       */
+      apply_user_name?: string;
+      /**
+       * 修改人
+       */
+      apply_user_id?: number;
+      /**
+       * 描述
+       */
+      logDescription?: string;
+      apply_user_head_img?: string;
+      /**
+       * 处理状态 0 待处理  1合并  2拒绝
+       */
+      merge_status?: number;
+      /**
+       * 日志id
+       */
+      up_log_id?: number;
+      merge_before_plugins?: PluginsAuditDetailMergeBeforePlugins;
     }
     export interface PluginsAuditDetailMergeBeforePlugins {
-        type?: string
-        script_name?: string
-        tags?: string
-        content?: string
-        params?: YakitPluginParam[]
-        /**
-         * 审核状态
-         */
-        status?: number
-        official?: boolean
-        help?: string
-        enable_plugin_selector?: boolean
-        plugin_selector_types?: string
-        is_general_module?: boolean
-        uuid?: string
-        is_private?: boolean
-        stars?: number
-        download_total?: number
-        group?: string
-        riskInfo?: PluginsRiskDetail[]
-        /**
-         * 是否为内置插件
-         */
-        isCorePlugin?: boolean
+      type?: string;
+      script_name?: string;
+      tags?: string;
+      content?: string;
+      params?: YakitPluginParam[];
+      /**
+       * 审核状态
+       */
+      status?: number;
+      official?: boolean;
+      help?: string;
+      enable_plugin_selector?: boolean;
+      plugin_selector_types?: string;
+      is_general_module?: boolean;
+      uuid?: string;
+      is_private?: boolean;
+      stars?: number;
+      download_total?: number;
+      group?: string;
+      riskInfo?: PluginsRiskDetail[];
+      /**
+       * 是否为内置插件
+       */
+      isCorePlugin?: boolean;
     }
     export interface PluginsAudit {
-        pageType?: string
-        /**
-         * 审核 'true' 通过 'false' 不通过
-         */
-        status: string
-        /**
-         * 必传
-         */
-        uuid: string
-        /**
-         * 不通过时必传
-         */
-        logDescription?: string
-        /**
-         * 默认不传为管理审核页面， 'log' 为日志审核页面
-         */
-        listType?: string
-        /**
-         * 有对比的审核页 必传此id
-         */
-        upPluginLogId?: number
+      pageType?: string;
+      /**
+       * 审核 'true' 通过 'false' 不通过
+       */
+      status: string;
+      /**
+       * 必传
+       */
+      uuid: string;
+      /**
+       * 不通过时必传
+       */
+      logDescription?: string;
+      /**
+       * 默认不传为管理审核页面， 'log' 为日志审核页面
+       */
+      listType?: string;
+      /**
+       * 有对比的审核页 必传此id
+       */
+      upPluginLogId?: number;
     }
     export interface PluginIncreResponse {
-        day_incre_num: number
-        yesterday_incre_num: number
-        week_incre_num: number
-        lastWeek_incre_num: number
+      day_incre_num: number;
+      yesterday_incre_num: number;
+      week_incre_num: number;
+      lastWeek_incre_num: number;
     }
     export interface Paging {
-        pagemeta: PageMeta
+      pagemeta: PageMeta;
     }
     export interface PageMeta {
-        /**
-         * 页面索引
-         */
-        page: number
-        /**
-         * 页面数据条数限制
-         */
-        limit: number
-        /**
-         * 总共数据条数
-         */
-        total: number
-        /**
-         * 总页数
-         */
-        total_page: number
+      /**
+       * 页面索引
+       */
+      page: number;
+      /**
+       * 页面数据条数限制
+       */
+      limit: number;
+      /**
+       * 总共数据条数
+       */
+      total: number;
+      /**
+       * 总页数
+       */
+      total_page: number;
     }
     export interface OperationsResponse extends Paging {
-        data: Operation[]
+      data: Operation[];
     }
     export interface Operation extends GormBaseModel, NewOperation {}
     export interface NewUrmResponse {
-        user_name: string
-        password: string
+      user_name: string;
+      password: string;
     }
     export interface NewUrmRequest {
-        user_name: string
-        department: number
-        role_id: number
+      user_name: string;
+      department: number;
+      role_id: number;
     }
     export interface NewRoleRequest {
-        id?: number
-        name: string
-        checkPlugin: boolean
-        pluginType?: string
-        pluginIds?: string
-        plugin?: PluginTypeList[]
+      id?: number;
+      name: string;
+      pluginType?: string;
+      pluginIds?: string;
+      plugin?: PluginTypeList[];
     }
     export interface NewOperation {
-        type: string
-        trigger_user_unique_id: string
-        operation_plugin_id: string
-        extra?: string
+      type: string;
+      trigger_user_unique_id: string;
+      operation_plugin_id: string;
+      extra?: string;
     }
     export interface NewComments {
-        uuid: string
-        by_user_id?: number
-        message_img?: string[]
-        parent_id?: number
-        root_id?: number
-        message?: string
-    }
-    export interface NewComment {
-        plugin_id: number
-        by_user_id?: number
-        message_img?: string[]
-        parent_id?: number
-        root_id?: number
-        message?: string
+      uuid: string;
+      by_user_id?: number;
+      message_img?: string[];
+      parent_id?: number;
+      root_id?: number;
+      message?: string;
     }
     export interface NavigationBarsResponse {
-        data: NavigationBarsListResponse[]
+      data: NavigationBarsListResponse[];
     }
     export interface NavigationBarsListResponse {
-        card: string
-        link?: string
-        otherLink?: string
-        sort?: number
+      card: string;
+      link?: string;
+      otherLink?: string;
+      sort?: number;
+    }
+    export interface MITMRuleExtractedDataResponse extends Paging {
+      data: MITMRuleExtractedDataList[];
+    }
+    export interface MITMRuleExtractedDataList
+      extends GormBaseModel,
+        MITMRuleExtractedDataDetail {}
+    export interface MITMRuleExtractedDataDetail {
+      sourceType: string;
+      traceId: string;
+      regexp: string;
+      ruleName: string;
+      data: string;
     }
     export interface LogsRequest {
-        uuid: string
-        token?: string
+      uuid: string;
+      token?: string;
     }
     export interface IsExtractCodeResponse {
-        is_extract_code: boolean
+      is_extract_code: boolean;
+    }
+    export interface HTTPHeader {
+      header?: string;
+      value?: string;
+    }
+    export interface HTTPFlowWhere {
+      userName?: string;
+      projectName?: string;
+      sourceType?: string;
+      methods?: string;
+      searchURL?: string;
+      statusCode?: string;
+      haveCommonParams?: boolean;
+      haveBody?: boolean;
+      searchContentType?: string;
+      beforeUpdatedAt?: number;
+      afterUpdatedAt?: number;
+      keyword?: string;
+      onlyWebsocket?: boolean;
+      /**
+       * 查询包含在这个 URL 中的搜索结果
+       */
+      includeInUrl?: string[];
+      /**
+       * 不查询当前 URL 中的结果
+       */
+      excludeInUrl?: string[];
+      /**
+       * 仅查看当前 IP 对应的结果或不包含
+       */
+      includeInIP?: string[];
+      excludeInIP?: string[];
+      includeInWhere?: string[];
+      tags?: string[];
+      haveParamsTotal?: string;
+      color?: string[];
+      offsetId?: number;
+      afterBodyLength?: number;
+      beforeBodyLength?: number;
+      isWebsocket?: string;
+      runtimeId?: string;
+      fromPlugin?: string;
+      full?: boolean;
+      includePath?: string[];
+      excludePath?: string[];
+      includeSuffix?: string[];
+      excludeSuffix?: string[];
+      excludeContentType?: string[];
+    }
+    export interface HTTPFlowRequest {
+      projectName: string;
+      content: string;
+    }
+    export interface HTTPFlowListResponse extends Paging {
+      data: HTTPFlowList[];
+    }
+    export interface HTTPFlowList extends GormBaseModel, HTTPFlowDetail {}
+    export interface HTTPFlowDetail {
+      isHTTPS?: boolean;
+      url?: string;
+      requestHeader?: HTTPHeader[];
+      request?: string;
+      responseHeader?: HTTPHeader[];
+      response?: string;
+      sourceType?: string;
+      path?: string;
+      method?: string;
+      bodyLength?: number;
+      bodySizeVerbose?: string;
+      requestLength?: number;
+      requestSizeVerbose?: string;
+      contentType?: string;
+      statusCode?: number;
+      getParamsTotal?: number;
+      postParamsTotal?: number;
+      cookieParamsTotal?: number;
+      httpflowUpdatedAt?: number;
+      httpflowCreatedAt?: number;
+      hash?: string;
+      getParams?: FuzzableParam[];
+      postParams?: FuzzableParam[];
+      cookieParams?: FuzzableParam[];
+      hostPort?: string;
+      ipAddress?: string;
+      htmlTitle?: string;
+      tags?: string;
+      noFixContentLength?: boolean;
+      isWebsocket?: boolean;
+      websocketHash?: string;
+      /**
+       * 标记 UTF8 Invalid
+       */
+      invalidForUTF8Request?: boolean;
+      invalidForUTF8Response?: boolean;
+      rawRequestBodyBase64?: string;
+      rawResponseBodyBase64?: string;
+      /**
+       * 可以安全的传输到 Fuzzer 的 HTTPRequest
+       */
+      safeHTTPRequest?: string;
+      domains?: string[];
+      rootDomains?: string[];
+      jsonObjects?: string[];
+      isTooLargeResponse?: boolean;
+      tooLargeResponseHeaderFile?: string;
+      tooLargeResponseBodyFile?: string;
+      disableRenderStyles?: boolean;
+      projectName?: string;
+      userName?: string;
+    }
+    export interface HTTPFlowDeleteWhere {
+      deleteAll?: boolean;
+      id?: number[];
+      itemHash?: string[];
+      urlPrefix?: string;
+      urlPrefixBatch?: string[];
+    }
+    export interface HTTPFlowDeleteRequest
+      extends HTTPFlowDeleteWhere,
+        HTTPFlowWhere {}
+    export interface HTTPFlowBareResponse {
+      id: number;
+      data: string;
     }
     export interface GroupResponseDetail {
-        value: string
-        total: number
-        default: boolean
+      value: string;
+      total: number;
+      default: boolean;
     }
     export interface GroupResponse {
-        data: GroupResponseDetail[]
+      data: GroupResponseDetail[];
     }
     export interface GroupRequest extends PluginsWhere, PluginsGroup {}
     export interface GormBaseModel {
-        id: number
-        created_at: number
-        updated_at: number
+      id: number;
+      created_at: number;
+      updated_at: number;
     }
     export interface GetRiskWhere {
-        hash?: string[]
-        search?: string
-        net_work?: string
-        ports?: string
-        risk_type?: string
-        token?: string
-        waiting_verified?: boolean
-        severity?: string
-        user_name?: string
+      hash?: string[];
+      search?: string;
+      net_work?: string;
+      ports?: string;
+      risk_type?: string;
+      token?: string;
+      waiting_verified?: boolean;
+      severity?: string;
+      user_name?: string;
     }
     export interface GetRemoteWhere {
-        user_name?: string
-        start_time?: number
-        end_time?: number
-        status?: string
+      user_name?: string;
+      start_time?: number;
+      end_time?: number;
+      status?: string;
+    }
+    export interface FuzzableParam {
+      position?: string;
+      paramName?: string;
+      originValue?: string;
+      autoTemplate?: string;
+      isHTTPS?: boolean;
     }
     export interface ExtractResponse {
-        extract_content: string
-        module: string
+      extract_content: string;
+      module: string;
     }
     export interface EditUrmRequest {
-        uid: string
-        user_name?: string
-        department?: number
-        role_id?: number
+      uid: string;
+      user_name?: string;
+      department?: number;
+      role_id?: number;
     }
     export interface DepartmentListResponse extends Paging {
-        data: DepartmentList[]
+      data: DepartmentList[];
     }
     export interface DepartmentList {
-        id: number
-        name: string
-        userNum: number
-        /**
-         * 是否有二级分组
-         */
-        exist_group?: boolean
+      id: number;
+      name: string;
+      userNum: number;
+      /**
+       * 是否有二级分组
+       */
+      exist_group?: boolean;
     }
     export interface DepartmentGroupList {
-        data: DepartmentList[]
+      data: DepartmentList[];
     }
     export interface DeleteUrm {
-        uid: string[]
+      uid: string[];
     }
     export interface DeleteResource {
-        csrf_token?: string
-        file_name: string[]
-        /**
-         * 删除图片传'img' 视频传 'video'
-         */
-        file_type: string
+      csrf_token?: string;
+      file_name: string[];
+      /**
+       * 删除图片传'img' 视频传 'video'
+       */
+      file_type: string;
     }
     export interface DeletePluginUuid {
-        uuid: string[]
-        dump: boolean
-        keywords?: string
-        is_recycle?: boolean
+      uuid: string[];
+      dump: boolean;
+      keywords?: string;
+      is_recycle?: boolean;
     }
     export interface CopyPluginsRequest extends PluginsRequest, CopyPlugins {}
     export interface CopyPlugins {
-        /**
-         * 复制插件id
-         */
-        base_plugin_id: number
+      /**
+       * 复制插件id
+       */
+      base_plugin_id: number;
     }
     export interface CompanyLicenseConfigResponse extends Paging {
-        data: CompanyLicenseConfigList[]
+      data: CompanyLicenseConfigList[];
     }
     export interface CompanyLicenseConfigList {
-        id: number
-        company: string
-        maxActivationNum: number
-        useActivationNum: number
-        maxUser: number
-        durationDate: number
-        currentTime?: number
+      id: number;
+      company: string;
+      maxActivationNum: number;
+      useActivationNum: number;
+      maxUser: number;
+      durationDate: number;
+      currentTime?: number;
     }
     export interface CommentListResponse extends Paging {
-        data: CommentListData[]
+      data: CommentListData[];
     }
     export interface CommentListData {
-        id: number
-        created_at: number
-        updated_at: number
-        plugin_id: number
-        root_id: number
-        parent_id: number
-        user_id: number
-        user_name: string
-        head_img: string
-        message: string
-        message_img: string
-        like_num: number
-        by_user_id: number
-        by_user_name: string
-        by_head_img: string
-        reply_num: number
-        is_stars?: boolean
+      id: number;
+      created_at: number;
+      updated_at: number;
+      plugin_id: number;
+      root_id: number;
+      parent_id: number;
+      user_id: number;
+      user_name: string;
+      head_img: string;
+      message: string;
+      message_img: string;
+      like_num: number;
+      by_user_id: number;
+      by_user_name: string;
+      by_head_img: string;
+      reply_num: number;
+      is_stars?: boolean;
     }
     export interface CollaboratorInfo {
-        user_id: number
-        head_img: string
-        user_name: string
+      user_id: number;
+      head_img: string;
+      user_name: string;
     }
     export interface ActionSucceeded {
-        /**
-         * 来源于哪个 API
-         */
-        from: string
-        /**
-         * 执行状态
-         */
-        ok: boolean
+      /**
+       * 来源于哪个 API
+       */
+      from: string;
+      /**
+       * 执行状态
+       */
+      ok: boolean;
     }
     export interface ActionFailed {
-        /**
-         * 来源于哪个 API
-         */
-        from: string
-        /**
-         * 执行状态
-         */
-        ok: boolean
-        reason: string
+      /**
+       * 来源于哪个 API
+       */
+      from: string;
+      /**
+       * 执行状态
+       */
+      ok: boolean;
+      reason: string;
     }
-}
+  }
+  
