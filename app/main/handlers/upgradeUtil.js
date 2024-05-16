@@ -336,7 +336,8 @@ module.exports = {
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
             return new Promise(async (resolve, reject) => {
-                const dest = path.join(yaklangEngineDir, `yak-${version}`);
+                const dest = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
+                console.log(456, dest);
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
@@ -428,7 +429,7 @@ module.exports = {
 
         const installYakEngine = (version) => {
             return new Promise((resolve, reject) => {
-                let origin = path.join(yaklangEngineDir, `yak-${version}`);
+                let origin = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
                 origin = origin.replaceAll(`"`, `\"`);
 
                 let dest = getLatestYakLocalEngine(); //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";

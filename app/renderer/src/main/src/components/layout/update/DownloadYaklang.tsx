@@ -228,7 +228,13 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                                     </div>
                                     <div className={styles["download-btn"]}>
                                         {isFailed && (
-                                            <YakitButton size='max' type='outline2' onClick={() => fetchVersion()}>
+                                            <YakitButton
+                                                size='max'
+                                                type='outline2'
+                                                onClick={() =>
+                                                    yaklangSpecifyVersion ? downloadYak() : fetchVersion()
+                                                }
+                                            >
                                                 重试
                                             </YakitButton>
                                         )}

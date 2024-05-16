@@ -1122,6 +1122,7 @@ interface UIOpUpdateProps {
     updateContent?: string
     onUpdateEdit?: (type: "yakit" | "yaklang", isEnterprise?: boolean) => any
     removePrefixV: (version: string) => string
+    onNoticeShow?: (visible: boolean) => void
 }
 
 /** @name Yakit版本 */
@@ -1233,8 +1234,11 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         role,
         updateContent = "",
         onUpdateEdit,
-        removePrefixV
+        removePrefixV,
+        onNoticeShow = () => {}
     } = props
+
+    const [moreVersionPopShow, setMoreVersionPopShow] = useState<boolean>(false)
 
     const isUpdate =
         lastVersion !== "" &&
@@ -1267,7 +1271,16 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     {/* 等使用更新内容时，下面"当前版本"-div需要被删除 */}
                     <div>
                         <div className={styles["update-title"]}>{`Yaklang ${isUpdate ? lastVersion : version}`}</div>
-                        <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
+                        <div>
+                            <Typography.Text
+                                style={{maxWidth: isUpdate && !isRemoteMode && role === "superAdmin" ? 145 : 180}}
+                                ellipsis={{
+                                    tooltip: true
+                                }}
+                            >
+                                <span className={styles["update-time"]}>{`当前版本: ${version}`}</span>
+                            </Typography.Text>
+                        </div>
                         {/* <div className={styles["upda te-time"]}>2022-09-29</div> */}
                     </div>
                 </div>
@@ -1278,10 +1291,21 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : (
                         <>
                             <YakitPopover
+                                visible={moreVersionPopShow}
                                 overlayClassName={styles["more-versions-popover"]}
                                 placement='bottomLeft'
                                 trigger='click'
-                                content={<MoreYaklangVersion></MoreYaklangVersion>}
+                                content={
+                                    <MoreYaklangVersion
+                                        onClosePop={() => {
+                                            setMoreVersionPopShow(false)
+                                            onNoticeShow(false)
+                                        }}
+                                    ></MoreYaklangVersion>
+                                }
+                                onVisibleChange={(visible) => {
+                                    setMoreVersionPopShow(visible)
+                                }}
                             >
                                 <div className={styles["more-version-btn"]}>更多版本</div>
                             </YakitPopover>
@@ -1337,9 +1361,12 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
     )
 })
 
-interface MoreYaklangVersionProps {}
+interface MoreYaklangVersionProps {
+    onClosePop: (visible: boolean) => void
+}
 /** @name 更多Yaklang版本 */
 const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
+    const {onClosePop} = props
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
     const [loading, setLoading] = useState<boolean>(false)
@@ -1355,6 +1382,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             ipcRenderer
                 .invoke("fetch-yaklang-version-list")
                 .then((data: string) => {
+                    setLoading(false)
                     const arr = data.split("\n").filter((v) => v)
                     let devPrefix: string[] = []
                     let noPrefix: string[] = []
@@ -1367,11 +1395,8 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
                     })
                     setVersionList(noPrefix.concat(devPrefix))
                 })
-                .catch(() => {
-                    setVersionList([])
-                })
-                .finally(() => {
-                    setLoading(false)
+                .catch((err) => {
+                    yakitNotify("error", `获取更多版本失败：${err}`)
                 })
         }
     }, [inViewport])
@@ -1393,6 +1418,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
     }, [yaklangKillPss])
 
     const versionListItemClick = (version: string) => {
+        onClosePop(false)
         setYaklangKillPss(true)
         setDownloadYaklangVersion(version)
     }
@@ -1433,7 +1459,8 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
                                     >
                                         <span
                                             style={{
-                                                color: v === downloadYaklangVersion ? "var(--yakit-primary-5)" : undefined
+                                                color:
+                                                    v === downloadYaklangVersion ? "var(--yakit-primary-5)" : undefined
                                             }}
                                         >
                                             {v}
@@ -1922,6 +1949,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     updateContent={communityYaklang}
                                     onUpdateEdit={UpdateContentEdit}
                                     removePrefixV={removePrefixV}
+                                    onNoticeShow={setShow}
                                 />
                             </div>
                             <div className={styles["history-version"]}>
