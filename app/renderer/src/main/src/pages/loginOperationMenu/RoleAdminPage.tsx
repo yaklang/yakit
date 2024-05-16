@@ -115,7 +115,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
         setLoading(true)
         let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
         let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
-        let params: any = {
+        let params: API.NewRoleRequest = {
             name,
             pluginType: pluginTypeArr.join(","),
             pluginIds: pluginIdsArr.join(",")

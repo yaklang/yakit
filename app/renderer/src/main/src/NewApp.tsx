@@ -257,7 +257,7 @@ function NewApp() {
         })
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
-            if(token.length > 0){
+            if(token && token.length > 0){
                 aboutLoginUpload(token)
                 loginHTTPFlowsToOnline(token)
             }
