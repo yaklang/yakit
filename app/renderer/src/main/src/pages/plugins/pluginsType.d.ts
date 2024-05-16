@@ -123,4 +123,5 @@ export interface CodeToInfoResponseProps {
     Information: YaklangInformation[]
     CliParameter: YakParamProps[]
     RiskInfo: YakRiskInfoProps[]
+    Tags: string[]
 }
