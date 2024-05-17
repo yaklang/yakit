@@ -523,7 +523,7 @@ export const apiDownloadPluginOther: (query?: DownloadOnlinePluginsRequest) => P
         apiDownloadPluginBase(newQuery)
             .then(resolve)
             .catch((err) => {
-                yakitNotify("error", "插件导入失败:" + err)
+                yakitNotify("error", "插件导入/下载失败:" + err)
                 reject(err)
             })
     })
@@ -970,23 +970,21 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
 /**
  * @name 获取指定插件的详情(线上)
  */
-export const apiFetchOnlinePluginInfo: (uuid: string) => Promise<API.PluginsDetail> = (uuid) => {
+export const apiFetchOnlinePluginInfo: (uuid: string, isShowError?: boolean) => Promise<API.PluginsDetail> = (
+    uuid,
+    isShowError
+) => {
     return new Promise(async (resolve, reject) => {
-        try {
-            PluginNetWorkApi<{uuid: string; token?: string}, API.PluginsDetail>({
-                method: "post",
-                url: "plugins/detail",
-                data: {uuid: uuid}
+        PluginNetWorkApi<{uuid: string; token?: string}, API.PluginsDetail>({
+            method: "post",
+            url: "plugins/detail",
+            data: {uuid: uuid}
+        })
+            .then(resolve)
+            .catch((err) => {
+                if (isShowError !== false) yakitNotify("error", "获取线上插件详情失败:" + err)
+                reject(err)
             })
-                .then(resolve)
-                .catch((err) => {
-                    yakitNotify("error", "获取线上插件详情失败:" + err)
-                    reject(err)
-                })
-        } catch (error) {
-            yakitNotify("error", "获取线上插件详情失败:" + error)
-            reject(error)
-        }
     })
 }
 

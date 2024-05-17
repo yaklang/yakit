@@ -27,4 +27,6 @@ export type PluginsEventProps = {
     onRefpluginGroupSelectGroup: string
     /** 刷新线上插件组管理列表 */
     onRefpluginGroupList?: string
+    /**刷新单个执行页面中的插件数据 */
+    onRefSinglePluginExecution?: string
 }

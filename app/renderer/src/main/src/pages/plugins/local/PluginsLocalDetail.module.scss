@@ -20,6 +20,11 @@
     .plugin-info-wrapper {
         @extend %plugin-tab-content;
         padding-top: 12px;
+        .extra {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     }
     .plugin-execute-wrapper {
         @extend %plugin-tab-content;
@@ -92,10 +97,10 @@
             font-weight: 600;
             line-height: 20px;
         }
-        .opt{
-            color: #B4BBCA;
+        .opt {
+            color: #b4bbca;
             cursor: pointer;
-            svg{
+            svg {
                 width: 16px;
                 height: 16px;
             }

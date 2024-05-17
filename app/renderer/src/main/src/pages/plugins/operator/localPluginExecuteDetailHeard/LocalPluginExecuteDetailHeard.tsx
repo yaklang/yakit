@@ -14,7 +14,7 @@ import {
 } from "./LocalPluginExecuteDetailHeardType"
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useNetwork} from "ahooks"
 import {Divider, Form, Progress} from "antd"
 import {PluginParamDataEditorProps, YakParamProps} from "../../pluginsType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -30,7 +30,7 @@ import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
-import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
+import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo} from "../../utils"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {GetPluginLanguage} from "../../builtInData"
@@ -69,13 +69,16 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         runtimeId,
         executeStatus,
         setExecuteStatus,
-        linkPluginConfig
+        linkPluginConfig,
+        onDownPlugin
     } = props
 
     const [form] = Form.useForm()
     const requestType = Form.useWatch("requestType", form)
 
-    /**是否展开/收起 */
+    /**是否显示更新按钮 */
+    const [isShowUpdate, setIsShowUpdate] = useState<boolean>(false)
+
     const [isExpand, setIsExpand] = useState<boolean>(true)
     /**额外参数弹出框 */
     const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
@@ -86,6 +89,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
 
     const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
+    const localPluginExecuteDetailHeardRef = useRef<HTMLDivElement>(null)
+
+    const [inViewport = true] = useInViewport(localPluginExecuteDetailHeardRef)
+    const networkState = useNetwork()
 
     /**必填的参数,作为页面上主要显示 */
     const requiredParams: YakParamProps[] = useMemo(() => {
@@ -103,10 +110,25 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             form.resetFields()
         }
     }, [plugin.Params, plugin.ScriptName, plugin.Type])
+    useEffect(() => {
+        if (inViewport && networkState.online) {
+            getOnlinePlugin()
+        }
+    }, [inViewport, networkState.online])
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         return false
     }, [executeStatus])
+    /**本地插件和内置插件不做更新相关逻辑 */
+    const getOnlinePlugin = useMemoizedFn(() => {
+        if (!!plugin.isLocalPlugin) return
+        if (!!plugin.IsCorePlugin) return
+        apiFetchOnlinePluginInfo(plugin.UUID, false).then((info) => {
+            if (Number(info.updated_at || 0) > Number(plugin.UpdatedAt || 0)) {
+                setIsShowUpdate(true)
+            }
+        })
+    })
     /**初始表单初始值 */
     const initFormValue = useMemoizedFn(() => {
         initRequiredFormValue()
@@ -282,6 +304,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         e.stopPropagation()
         setIsExpand(!isExpand)
     })
+    const onDown = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onDownPlugin()
+    })
     return (
         <>
             <ExpandAndRetract
@@ -297,7 +323,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     tagMinWidth={120}
                     tags={plugin.Tags}
                     extraNode={
-                        <div className={styles["plugin-head-executing-wrapper"]}>
+                        <div className={styles["plugin-head-executing-wrapper"]} ref={localPluginExecuteDetailHeardRef}>
                             <div className={styles["plugin-head-executing"]}>
                                 {progressList.length === 1 && (
                                     <PluginExecuteProgress
@@ -317,6 +343,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                                     <>
                                         {!isExpand && <YakitButton onClick={onExecuteInTop}>执行</YakitButton>}
                                         {extraNode}
+                                        {isShowUpdate && (
+                                            <>
+                                                <div className='divider-style' />
+                                                <YakitButton type='primary' onClick={onDown}>
+                                                    更新
+                                                </YakitButton>
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </div>

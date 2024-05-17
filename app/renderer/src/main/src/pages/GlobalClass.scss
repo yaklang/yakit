@@ -11,7 +11,7 @@
 @use "../theme/componentsTheme/slider.scss";
 @use "../theme/componentsTheme/progress.scss";
 
-body{
+body {
     color: var(--yakit-header-color);
 }
 
@@ -55,6 +55,12 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
     border-color: #c1c1c1;
+}
+
+.divider-style {
+    width: 1px;
+    height: 16px;
+    background-color: #eaecf3;
 }
 
 // ========================== color ==========================

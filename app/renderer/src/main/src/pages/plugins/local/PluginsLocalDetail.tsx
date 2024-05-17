@@ -7,6 +7,7 @@ import {
     OutlineLogoutIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
+    OutlineShareIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -27,7 +28,7 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
@@ -43,7 +44,8 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {PluginCommentUpload} from "../baseComment"
 import {useStore} from "@/store"
 import Login from "@/pages/Login"
-import { NetWorkApi } from "@/services/fetch"
+import {NetWorkApi} from "@/services/fetch"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -117,11 +119,15 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     }, [info])
 
     useEffect(() => {
-        emiter.on("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+        emiter.on("onRefLocalDetailSelectPlugin", onRefreshPluginDetailByUUID)
         return () => {
-            emiter.off("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+            emiter.off("onRefLocalDetailSelectPlugin", onRefreshPluginDetailByUUID)
         }
     }, [])
+
+    const onRefreshPluginDetailByUUID = useMemoizedFn((uuid) => {
+        onJumpToLocalPluginDetailByUUID(uuid)
+    })
 
     // 返回
     const onPluginBack = useMemoizedFn(() => {
@@ -208,9 +214,18 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             case "remove-plugin":
                 onRemove()
                 break
+            case "share-plugin":
+                onShare()
+                break
             default:
                 break
         }
+    })
+    const onShare = useMemoizedFn(() => {
+        if (!plugin) return
+        ipcRenderer.invoke("copy-clipboard", plugin.UUID).then(() => {
+            yakitNotify("success", "分享ID复制成功")
+        })
     })
     /**添加到菜单栏 */
     const onAddToMenu = useMemoizedFn(() => {
@@ -297,6 +312,43 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         if (plugin?.IsCorePlugin) return false
         return !!plugin?.isLocalPlugin
     }, [plugin?.isLocalPlugin, plugin?.IsCorePlugin])
+    const headExtraNodeMenu = useMemo(() => {
+        const menu: YakitMenuItemType[] = [
+            {
+                key: "share",
+                label: "导出",
+                itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
+            },
+            {
+                key: "add-to-menu",
+                label: "添加到菜单栏",
+                itemIcon: <OutlinePluscircleIcon className={styles["plugin-local-extra-node-icon"]} />
+            },
+            {
+                key: "remove-menu",
+                itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
+                label: "移出菜单栏"
+            }
+        ]
+        // 内置插件不管是否是线上的都没有分享按钮
+        if (!plugin?.isLocalPlugin && !plugin?.IsCorePlugin) {
+            menu.push({
+                key: "share-plugin",
+                label: "分享",
+                itemIcon: <OutlineShareIcon className={styles["plugin-local-extra-node-icon"]} />
+            })
+        }
+        menu.concat([
+            {type: "divider"},
+            {
+                key: "remove-plugin",
+                itemIcon: <OutlineTrashIcon className={styles["plugin-local-extra-node-icon"]} />,
+                label: "删除插件",
+                type: "danger"
+            }
+        ])
+        return menu
+    }, [plugin?.ScriptName, plugin?.isLocalPlugin])
     const headExtraNode = useMemo(() => {
         return (
             <>
@@ -307,32 +359,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         icon={<OutlineDotshorizontalIcon />}
                         menu={{
                             type: "primary",
-                            data: [
-                                {
-                                    key: "share",
-                                    label: "导出",
-                                    itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
-                                },
-                                {
-                                    key: "add-to-menu",
-                                    label: "添加到菜单栏",
-                                    itemIcon: (
-                                        <OutlinePluscircleIcon className={styles["plugin-local-extra-node-icon"]} />
-                                    )
-                                },
-                                {
-                                    key: "remove-menu",
-                                    itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
-                                    label: "移出菜单栏"
-                                },
-                                {type: "divider"},
-                                {
-                                    key: "remove-plugin",
-                                    itemIcon: <OutlineTrashIcon className={styles["plugin-local-extra-node-icon"]} />,
-                                    label: "删除插件",
-                                    type: "danger"
-                                }
-                            ],
+                            data: headExtraNodeMenu,
                             className: styles["func-filter-dropdown-menu"],
                             onClick: onMenuSelect
                         }}
@@ -354,7 +381,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 </div>
             </>
         )
-    }, [removeLoading, isShowUpload])
+    }, [removeLoading, isShowUpload, headExtraNodeMenu])
 
     /**选中组 */
     const selectGroup = useMemo(() => {
@@ -517,7 +544,6 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
         if (plugin.OnlineBaseUrl !== privateDomain) return false
         return true
     }, [plugin, privateDomain])
-
     return (
         <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
             <PluginTabs
@@ -550,7 +576,7 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                             pluginName={plugin.ScriptName}
                             help={plugin.Help}
                             tags={plugin.Tags}
-                            extraNode={headExtraNode}
+                            extraNode={<div className={styles["extra"]}>{headExtraNode}</div>}
                             img={plugin.HeadImg || ""}
                             user={plugin.Author}
                             pluginId={plugin.UUID}
@@ -589,7 +615,12 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 bodyStyle={{padding: 0}}
                 destroyOnClose={true}
             >
-                <PluginCommentUploadLocal isLogin={userInfo.isLogin} setLoginShow={setLoginShow} setVisibleModal={setVisibleModal} plugin={plugin}/>
+                <PluginCommentUploadLocal
+                    isLogin={userInfo.isLogin}
+                    setLoginShow={setLoginShow}
+                    setVisibleModal={setVisibleModal}
+                    plugin={plugin}
+                />
             </YakitModal>
         </div>
     )
@@ -599,11 +630,11 @@ interface PluginCommentUploadLocalProps {
     plugin: YakScript
     isLogin: boolean
     setLoginShow: (v: boolean) => void
-    setVisibleModal: (v: boolean)=>void
+    setVisibleModal: (v: boolean) => void
 }
 
 const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.memo((props) => {
-    const {plugin,isLogin, setLoginShow,setVisibleModal} = props
+    const {plugin, isLogin, setLoginShow, setVisibleModal} = props
     const [commentText, setCommentText] = useState<string>("")
     const [files, setFiles] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -640,7 +671,7 @@ const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.
             return
         }
         const params = {
-            plugin_id: parseInt(plugin.OnlineId+""),
+            plugin_id: parseInt(plugin.OnlineId + ""),
             message_img: files,
             parent_id: 0,
             root_id: 0,
@@ -673,27 +704,31 @@ const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.
     })
 
     return (
-        <div className={styles['plugin-comment-upload-local']}>
-            <div className={styles['header']}>
-                <div className={styles['title']}>问题反馈</div>
-                <div className={styles['opt']} onClick={()=>{
-                    setVisibleModal(false)
-                }}><OutlineXIcon/></div>
+        <div className={styles["plugin-comment-upload-local"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>问题反馈</div>
+                <div
+                    className={styles["opt"]}
+                    onClick={() => {
+                        setVisibleModal(false)
+                    }}
+                >
+                    <OutlineXIcon />
+                </div>
             </div>
-           <div className={styles['main-content']}>
-        <PluginCommentUpload
-            isAlwaysShow={true}
-            loading={loading}
-            value={commentText}
-            setValue={onSetValue}
-            files={files}
-            setFiles={setFiles}
-            onSubmit={onSubmit}
-            submitTxt="提交反馈"
-        />
-        </div> 
+            <div className={styles["main-content"]}>
+                <PluginCommentUpload
+                    isAlwaysShow={true}
+                    loading={loading}
+                    value={commentText}
+                    setValue={onSetValue}
+                    files={files}
+                    setFiles={setFiles}
+                    onSubmit={onSubmit}
+                    submitTxt='提交反馈'
+                />
+            </div>
         </div>
-        
     )
 })
 

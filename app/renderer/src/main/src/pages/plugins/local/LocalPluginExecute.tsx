@@ -7,13 +7,17 @@ import {LocalPluginExecuteProps} from "./PluginsLocalType"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import styles from "./PluginsLocalDetail.module.scss"
 import {ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/ExpandAndRetract"
-import {useCreation} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {apiDownloadPluginOther} from "../utils"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
     const {plugin, headExtraNode, linkPluginConfig} = props
     /**执行状态 */
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [runtimeId, setRuntimeId] = useState<string>("")
+    const [downLoading, setDownLoading] = useState<boolean>(false)
 
     const tokenRef = useRef<string>(randomString(40))
     useEffect(() => {
@@ -42,9 +46,28 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
     const isShowResult = useMemo(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
-
+    /**更新:下载插件 */
+    const onDownPlugin = useMemoizedFn(() => {
+        if (!plugin.UUID) return
+        setDownLoading(true)
+        apiDownloadPluginOther({
+            UUID: [plugin.UUID]
+        })
+            .then(() => {
+                // 刷新本地插件页面
+                emiter.emit("onRefLocalDetailSelectPlugin", plugin.UUID)
+                // 刷新单个执行页面中的插件数据
+                emiter.emit("onRefSinglePluginExecution", plugin.UUID)
+                yakitNotify("success", "下载完成")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setDownLoading(false)
+                }, 200)
+            )
+    })
     return (
-        <>
+        <YakitSpin spinning={downLoading}>
             <LocalPluginExecuteDetailHeard
                 token={tokenRef.current}
                 plugin={plugin}
@@ -56,6 +79,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 executeStatus={executeStatus}
                 setExecuteStatus={setExecuteStatus}
                 linkPluginConfig={linkPluginConfig}
+                onDownPlugin={onDownPlugin}
             />
             {isShowResult && (
                 <PluginExecuteResult
@@ -66,6 +90,6 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                     pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
                 />
             )}
-        </>
+        </YakitSpin>
     )
 })

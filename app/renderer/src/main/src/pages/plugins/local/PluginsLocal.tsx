@@ -228,10 +228,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         externalIncomingPluginsRef.current = item
     })
     /** 传线上的UUID,传入本地详情进行使用 */
-    const onJumpToLocalPluginDetailByUUID = useMemoizedFn(() => {
-        const pageList = pluginLocalPageData?.pageList || []
-        if (pageList.length === 0) return
-        const uuid = pageList[0].pageParamsInfo?.pluginLocalPageInfo?.uuid || ""
+    const onJumpToLocalPluginDetailByUUID = useMemoizedFn((uid?: string) => {
+        let uuid = uid
+        if (!uuid) {
+            const pageList = pluginLocalPageData?.pageList || []
+            if (pageList.length === 0) return
+            uuid = pageList[0].pageParamsInfo?.pluginLocalPageInfo?.uuid || ""
+        }
         if (!uuid) return
         apiGetYakScriptByOnlineID({UUID: uuid})
             .then((item) => {
@@ -361,7 +364,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             const queryFilters = filtersDetailRef.current ? filtersDetailRef.current : filters
             const querySearch = searchDetailRef.current ? searchDetailRef.current : search
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams({filter:queryFilters, search:querySearch, pageParams:params})
+                ...convertLocalPluginsRequestParams({filter: queryFilters, search: querySearch, pageParams: params})
             }
             if (queryFilters.plugin_group?.length) {
                 query.ExcludeTypes = ["yak", "codec"]
