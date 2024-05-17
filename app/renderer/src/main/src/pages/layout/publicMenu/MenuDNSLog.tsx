@@ -13,8 +13,9 @@ import {YakitRoute} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./MenuDNSLog.module.scss"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {RemoteGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -41,10 +42,21 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     const [lastRecords, setLastRecords] = useState<DNSLogEvent[]>([])
     const [records, setRecords] = useState<DNSLogEvent[]>([])
     const [total, setTotal] = useState<number>(0)
-    const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
+    const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(false)
     const [dnsMode, setDNSMode, getDNSMode] = useGetState<string>("")
     const [useLocal, setUseLocal, getUseLocal] = useGetState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
+
+    useEffect(() => {
+        getRemoteValue(RemoteGV.GlobalDNSLogOnlyARecord).then((setting: string) => {
+            setOnlyARecord(setting === "true")
+        })
+    }, [])
+
+    useEffect(() => {
+        setRemoteValue(RemoteGV.GlobalDNSLogOnlyARecord, onlyARecord + "")
+    }, [onlyARecord])
+
     // 生成传递给页面的配置信息
     const generateData = useMemoizedFn(() => {
         return {
