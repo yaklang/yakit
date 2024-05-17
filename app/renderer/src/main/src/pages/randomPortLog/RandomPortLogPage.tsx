@@ -83,7 +83,7 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
 
     return (
         <YakitCard
-            className={style['tcp-wrapper']}
+            className={style["tcp-wrapper"]}
             headStyle={{padding: "25px 15px"}}
             title={
                 <Space>
@@ -107,7 +107,7 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                 </Space>
             }
         >
-            <Row align="middle">
+            <Row align='middle'>
                 <Col>使用以下随机端口尝试触发记录：</Col>
                 <Col>
                     {externalAddr !== "" && !loading ? (
@@ -182,11 +182,13 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                                                 title: "查看历史记录",
                                                 width: "40%",
                                                 content: (
-                                                    <YakitEditor
-                                                        type={"http"}
-                                                        readOnly={true}
-                                                        value={r?.History ? r.History.join("\n") : "-"}
-                                                    />
+                                                    <div style={{height: 500, marginBottom: 5}}>
+                                                        <YakitEditor
+                                                            type={"http"}
+                                                            readOnly={true}
+                                                            value={r?.History ? r.History.join("\n") : "-"}
+                                                        />
+                                                    </div>
                                                 ),
                                                 onCancel: () => {
                                                     m.destroy()
