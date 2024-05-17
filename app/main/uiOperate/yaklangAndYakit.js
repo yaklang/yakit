@@ -69,4 +69,21 @@ module.exports = (win, getClient) => {
             return ""
         }
     })
+
+    /** 获取Yaklang所有版本 */
+    const asyncFetchYaklangVersionList = () => {
+        return new Promise((resolve, reject) => {
+            let rsp = https.get("https://aliyun-oss.yaklang.com/yak/version-info/active_versions.txt")
+            rsp.on("response", (rsp) => {
+                rsp.on("data", (data) => {
+                    resolve(Buffer.from(data).toString("utf8"))
+                }).on("error", (err) => reject(err))
+            })
+            rsp.on("error", reject)
+        })
+    }
+    /** 获取Yaklang所有版本 */
+    ipcMain.handle("fetch-yaklang-version-list", async (e) => {
+        return await asyncFetchYaklangVersionList()
+    })
 }

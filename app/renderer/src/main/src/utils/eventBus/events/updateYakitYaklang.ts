@@ -5,4 +5,6 @@ export type UpdateYakitYaklangEventProps = {
     downloadedYakitFlag?: string
     /** 启动并创建引擎进程 */
     startAndCreateEngineProcess?: boolean
+    /** 下载指定版本yaklang */
+    downYaklangSpecifyVersion: string
 }

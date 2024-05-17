@@ -568,6 +568,19 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
+    // kill完引擎进程后开始更新指定Yaklang版本引擎
+    const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>("")
+    const downYaklangSpecifyVersion = (version: string) => {
+        setYaklangSpecifyVersion(version)
+        killedEngineToUpdate()
+    }
+    useEffect(() => {
+        emiter.on("downYaklangSpecifyVersion", downYaklangSpecifyVersion)
+        return () => {
+            emiter.off("downYaklangSpecifyVersion", downYaklangSpecifyVersion)
+        }
+    }, [])
+
     const onDownloadedYaklang = useMemoizedFn(() => {
         setYaklangDownload(false)
         setLinkLocalEngine()
@@ -1289,7 +1302,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                         {!engineLink && !isRemoteEngine && yaklangDownload && (
                             // 更新引擎
-                            <DownloadYaklang system={system} visible={yaklangDownload} onCancel={onDownloadedYaklang} />
+                            <DownloadYaklang yaklangSpecifyVersion={yaklangSpecifyVersion} system={system} visible={yaklangDownload} onCancel={onDownloadedYaklang} />
                         )}
 
                         <LocalEngine

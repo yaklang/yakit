@@ -408,6 +408,9 @@
                 font-size: 12px;
                 line-height: 16px;
                 color: var(--yakit-header-color);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .update-simple-title {
                 height: 28px;
@@ -421,17 +424,24 @@
                 font-size: 11px;
                 line-height: 12px;
                 color: var(--yakit-helper-text-color);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
         .header-btn {
-            width: 110px;
             height: 28px;
             display: flex;
             justify-content: right;
             align-items: center;
-            gap: 16px;
+            gap: 10px;
             font-size: 12px;
             color: var(--yakit-disable-text-color);
+
+            .more-version-btn {
+                cursor: pointer;
+                color: var(--yakit-primary-5);
+            }
 
             .edit-func {
                 width: 16px;
@@ -692,9 +702,58 @@
     }
 }
 
-.upload-yakit-ee{
+.upload-yakit-ee {
     padding: 10px 20px;
     .btn-style {
         width: 120px;
+    }
+}
+
+.more-versions-popover {
+    padding-top: 0px;
+    :global {
+        .ant-popover-arrow {
+            display: none;
+        }
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+    }
+}
+
+.more-versions-popover-content {
+    width: 240px;
+    .search-version-header {
+        height: 28px;
+        margin-bottom: 8px;
+        :global {
+            .ant-input {
+                font-size: 14px;
+                height: 26px;
+            }
+
+            .search-icon {
+                color: #85899e;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+        }
+    }
+    .version-list-wrap {
+        max-height: 200px;
+        overflow: auto;
+        .version-list-item {
+            height: 28px;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #31343f;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 }
