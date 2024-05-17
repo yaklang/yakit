@@ -1180,6 +1180,7 @@ export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Prom
                 default:
                     break
             }
+            
             ipcRenderer
                 .invoke("DebugPlugin", executeParams, token)
                 .then(() => {

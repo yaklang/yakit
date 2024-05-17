@@ -7,6 +7,7 @@ import {
     useMemoizedFn,
     useScroll,
     useSize,
+    useThrottleEffect,
     useUpdateEffect,
     useVirtualList
 } from "ahooks"
@@ -55,18 +56,21 @@ import {
     CacheChatCSProps,
     ChatCSAnswerProps,
     ChatCSMultipleInfoProps,
+    ChatCSPluginAnswerProps,
+    ChatCSPluginProps,
     ChatCSSingleInfoProps,
     ChatInfoProps,
     ChatMeInfoProps,
     ChatPluginListProps,
-    LoadObjProps
+    LoadObjProps,
+    PluginListItemProps
 } from "./chatCSType"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {ArrowRightSvgIcon} from "../layout/icons"
+import {ArrowRightSvgIcon, UnLoginSvgIcon} from "../layout/icons"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {chatCS, chatCSPlugin, chatGrade, getPromptList} from "@/services/yakChat"
@@ -98,6 +102,7 @@ import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {
     HybridScanRequest,
     PluginBatchExecutorTaskProps,
+    apiCancelDebugPlugin,
     apiCancelHybridScan,
     apiHybridScan,
     convertHybridScanParams
@@ -119,7 +124,9 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 import {CheckOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import emiter from "@/utils/eventBus/eventBus"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 const {ipcRenderer} = window.require("electron")
 
 /** 将 new Date 转换为日期 */
@@ -150,7 +157,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     /** 获取缓存中的对话内容 */
     useEffect(() => {
-        if (!userInfo.isLogin) return
+        if (!userInfo.isLogin) {
+            setChatcsType("PluginAI")
+            return
+        }
         getRemoteValue(RemoteGV.ChatCSStorage).then((value: string) => {
             if (!value) return
             try {
@@ -211,10 +221,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         if (loading) return
 
         const data = [...history]
-        if (data.length >= 5) {
-            setAddShow(true)
-            return
-        }
+        // if (data.length >= 5) {
+        //     setAddShow(true)
+        //     return
+        // }
 
         const lists: CacheChatCSProps = {
             token: randomString(10),
@@ -267,6 +277,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const [resTime, setResTime, getResTime] = useGetState<string>("")
     const resTimeRef = useRef<any>(null)
+
+    const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">(userInfo.isLogin?"ChatCS":"PluginAI")
+    const [pluginAIParams,setPluginAIParams] = useState<{text?: string; scriptName: string}>()
+    const [pluginAIList, setPluginAIList] = useState<PluginAiItem[]>([])
 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [maxNumber, setMaxNumber] = useState<number>(5)
@@ -327,6 +341,41 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 setMaxNumber(data.maxNumber)
             } catch (error) {}
         })
+    }, [])
+
+    const PluginAIListCache = "PLUGIN_AILIST_CACHE"
+
+    useEffect(()=>{
+        getRemoteValue(PluginAIListCache).then((value: string) => {
+            if (!value) return
+            try {
+                const data: PluginAiItem[] = JSON.parse(value)
+                setPluginAIList(data)
+            } catch (error) {}
+        })
+    },[])
+
+    useUpdateEffect(()=>{
+        setRemoteValue(PluginAIListCache, JSON.stringify(pluginAIList))
+    },[pluginAIList])
+
+    const onFuzzerRunChatcsAI = useMemoizedFn((value)=>{
+        try {
+            const val: {text?: string; scriptName: string} = JSON.parse(value)
+            setVisible(true)
+            setPluginAIParams(val)
+            setChatcsType("PluginAI")
+        } catch (error) {
+            
+        }
+    })
+
+    useEffect(() => {
+        // YakitWindow
+        emiter.on("onRunChatcsAIByFuzzer", onFuzzerRunChatcsAI)
+        return () => {
+            emiter.off("onRunChatcsAIByFuzzer", onFuzzerRunChatcsAI)
+        }
     }, [])
 
     useDebounceEffect(
@@ -443,6 +492,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     objects.push(JSON.parse(itemIn))
                 } catch (error) {}
             })
+        
         let resultAll: string = ""
         objects.map((item, index) => {
             const {id = "", role = "", result = ""} = item
@@ -456,25 +506,58 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         })
 
         return answer
-        // if (!flow) return undefined
-        // const lastIndex = flow.lastIndexOf("data:")
-        // if (lastIndex === -1) return undefined
-        // console.log("flow---",flow);
-
-        // let chunk = flow
-        // chunk = chunk.substring(lastIndex)
-        // if (chunk && chunk.startsWith("data:")) chunk = chunk.slice(5)
-
-        // let answer: ChatCSAnswerProps | undefined = undefined
-        // try {
-        //     answer = JSON.parse(chunk)
-        // } catch (error) {}
-
-        // if (!answer) return analysisFlowData(flow.substring(0, lastIndex))
-        // console.log("answer---",answer);
-
-        // return answer
     })
+
+    /** 解析plugin后端流内的内容数据 */
+    const analysisPluginFlowData: (flow: string) => ChatCSPluginAnswerProps | undefined = useMemoizedFn((flow) => {
+        const objects: ChatCSPluginProps[] = []
+        let answer: ChatCSPluginAnswerProps | undefined = undefined
+        let loadObj: LoadObjProps[] = []
+        // 获取加载中的字符 使用正则表达式匹配
+        const regex = /state:\{([^}]+)\}/g
+        let match
+        while ((match = regex.exec(flow)) !== null) {
+            try {
+                loadObj.push(JSON.parse(`{${match[1]}}`) as LoadObjProps)
+            } catch (error) {}
+        }
+
+        if (loadObj.length > 0) {
+            answer = {id: loadObj[loadObj.length - 1].id, role: "", script: [], loadResult: loadObj,input:""}
+        }
+        flow.split("data:")
+            .filter((item) => item.length !== 0)
+            .forEach((itemIn) => {
+                try {
+                    let newItemIn = itemIn
+                    // plugin返回结构需额外移除掉state
+                    const stateIndex = newItemIn.indexOf('state:');
+                    if(isPlugin && stateIndex !== -1){
+                        newItemIn = newItemIn.substring(0, stateIndex);
+                    }
+                    objects.push(JSON.parse(newItemIn))
+                } catch (error) {}
+            })
+        
+        let resultAll: string[] = []
+        objects.map((item, index) => {
+            const {id = "", role = "", script} = item
+            let input:string = ""
+            try {
+                input = script.arguments.target
+            } catch (error) {}
+            script && resultAll.push(script.name)
+            if (answer && objects.length === index + 1) {
+                answer = {...answer, id, role, script: resultAll,input}
+            }
+            if (!answer && objects.length === index + 1) {
+                answer = {id, role, script: resultAll, input}
+            }
+        })
+
+        return answer
+    })
+
     const setContentPluginList = useMemoizedFn(
         (info: ChatCSSingleInfoProps, contents: ChatCSMultipleInfoProps, group: CacheChatCSProps[]) => {
             /** 插件调试执行由于接口不是流式，只存在一项 */
@@ -506,32 +589,67 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content: "",
                 id: "",
                 load_content: [],
-                end: true
+                end: false
             }
             return await new Promise((resolve, reject) => {
+                
                 chatCSPlugin({
                     ...params,
                     token: userInfo.token,
-                    plugin_scope: maxNumber
+                    plugin_scope: maxNumber,
+                    /** 流式输出逻辑 */
+                    onDownloadProgress: ({event}) => {
+                        if (!event.target) return
+                        const {responseText} = event.target
+
+                        let answer: ChatCSPluginAnswerProps | undefined = analysisPluginFlowData(responseText)
+
+                        if (answer && answer.script.length !== 0) {
+                            let mathYakData = yakData.filter((item) => (answer?.script||[]).includes(item.ScriptName))
+                            const newContent = JSON.stringify({
+                                input: answer.input,
+                                data: mathYakData
+                            })
+                            if (cs.content === newContent) return
+                            if (!cs.id) cs.id = answer.id
+                            cs.content = newContent
+                        }
+
+                        if (answer && answer?.loadResult && answer.loadResult.length !== 0) {
+                            if (JSON.stringify(cs.load_content) === JSON.stringify(answer.loadResult)) return
+                            if (!cs.id) cs.id = answer.id
+                            cs.load_content = answer.loadResult
+                        }
+
+                        // console.log("cs---",cs,answer);
+                        
+                        setContentPluginList(cs, contents, group)
+                    }
                 })
                     .then((res) => {
-                        const {data} = res
-                        const {result, id}: {result: {scripts: string[]; input: string}; id: string} = data
-                        const {scripts = [], input = ""} = result
+                        /** 流式输出逻辑 */
+                        if (cs.content.length === 0) {
+                            cs.is_plugin = false
+                            cs.content = "暂无可用解答"
+                            cs.end = true
+                            setContentPluginList(cs, contents, group)
+                        } else {
+                            cs.end = true
+                            setContentPluginList(cs, contents, group)
+                        }
 
-                        if (!cs.id) cs.id = id
-                        let mathYakData = yakData.filter((item) => scripts.includes(item.ScriptName))
-                        cs.content = JSON.stringify({
-                            input,
-                            data: mathYakData
-                        })
-                        setContentPluginList(cs, contents, group)
-                    })
-                    .finally(() => {
+                        // console.log("结束---",res);
                         resolve(`plugin|success`)
                     })
                     .catch((e) => {
-                        reject(`plugin|error|${e}`)
+                        // console.log("catch---",e);
+                        if (!cs.content) {
+                            cs.is_plugin = false
+                            cs.content = "该类型请求异常，请稍后重试"
+                        }
+                        cs.end = true 
+                        setContentPluginList(cs, contents, group)
+                        resolve(`plugin|error|${e}`)
                     })
             })
         }
@@ -579,7 +697,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
                         let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
 
-                        // console.log("answer---", event.target.responseText, answer)
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
                         if (answer && answer.result.length !== 0) {
                             if (cs.content === answer.result) return
@@ -595,15 +712,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     }
                 })
                     .then((res: any) => {
-                        /** 一次性输出逻辑 */
-                        // const answer: ChatCSAnswerProps | undefined = res?.data
-                        // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
-                        // if (answer) {
-                        //     if (!answer.text) cs.content = "暂无可用解答"
-                        //     else cs.content = answer.text
-                        //     cs.id = answer.id
-                        //     setContentList(cs, contents, group)
-                        // }
 
                         // /** 流式输出逻辑 */
                         if (cs.content.length === 0) {
@@ -619,9 +727,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     .catch((e) => {
                         if (!cs.content) {
                             cs.content = "该类型请求异常，请稍后重试"
-                            cs.end = true
-                            setContentList(cs, contents, group)
                         }
+                        cs.end = true
+                        setContentList(cs, contents, group)
                         resolve(`${params.is_bing && "bing|"}error|${e}`)
                     })
             })
@@ -720,16 +828,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 )
             }
             scrollToBottom()
-            /** 一次性输出逻辑 */
-            // chatHistory.reverse()
-            // const abort = new AbortController()
-            // controller.current.push(abort)
-            // const promise = generatePromise(
-            //     {prompt: params.content, intell_type: params.baseType, history: chatHistory, signal: abort.signal},
-            //     contents,
-            //     group
-            // )
-            // promises.push(promise)
         }
         /** 插件调试与执行 - 新接口 */
         if (params.is_plugin) {
@@ -739,7 +837,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 controller.current = abort
                 await new Promise((resolve, reject) => {
                     ipcRenderer.invoke("QueryYakScriptLocalAll").then(async (item: QueryYakScriptsResponse) => {
-                        let scripts: ScriptsProps[] = item.Data.map((i) => ({
+                        // 因后端要求 - 限制只要mitm和端口扫描插件
+                        let scripts: ScriptsProps[] = item.Data.filter((item)=>(item.Type==="port-scan"||item.Type==="mitm")).map((i) => ({
                             script_name: i.ScriptName,
                             Fields: i.Params
                         }))
@@ -762,27 +861,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             }
             scrollToBottom()
         }
-
-        /** 一次性输出逻辑 */
-        // Promise.allSettled(promises)
-        //     .then((res) => {
-        //         // 清除请求计时器
-        //         if (resTimeRef.current) {
-        //             clearInterval(resTimeRef.current)
-        //             resTimeRef.current = null
-        //         }
-        //         // 记录请求结束的时间,保存数据并更新对话时间
-        //         answers.time = getResTime()
-        //         lists.time = formatDate(+new Date())
-        //         setHistroy([...group])
-        //         setStorage([...group])
-        //         // 重置请求状态变量
-        //         setResTime("")
-        //         setLoadingToken("")
-        //         setLoading(false)
-        //         scrollToCurrent()
-        //     })
-        //     .catch(() => {})
 
         /** 流式输出逻辑 */
         setTimeout(() => {
@@ -811,6 +889,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
         /** 流式输出逻辑 */
         isBreak.current = true
+        // console.log("停止回答",controller.current);
+        
         if (controller.current) {
             controller.current.abort()
         }
@@ -1026,7 +1106,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             <div ref={divRef} className={styles["yak-chat-layout"]}>
                 <div className={styles["layout-header"]}>
                     <div className={styles["header-title"]}>
-                        <YakitChatCSIcon />
+                        {/* <YakitChatCSIcon />
                         ChatCS
                         <Tooltip
                             overlayClassName={classNames(styles["tooltip-wrapper"], styles["info-hint-popover"])}
@@ -1034,16 +1114,37 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             title={"ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力"}
                         >
                             <OutlineInformationcircleIcon className={styles["info-hint"]} />
-                        </Tooltip>
+                        </Tooltip> */}
+                        <YakitRadioButtons
+                            value={chatcsType}
+                            onChange={(e) => {
+                                if (!userInfo.isLogin) {
+                                    yakitNotify("warning", "请登录后使用")
+                                    return
+                                }
+                                setChatcsType(e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: "ChatCS",
+                                    label: "ChatCS"
+                                },
+                                {
+                                    value: "PluginAI",
+                                    label: "AI插件"
+                                }
+                            ]}
+                        />
                     </div>
                     <div className={styles["header-extra"]}>
-                        {history.length !== 0 && (
+                        {chatcsType === "ChatCS" && history.length !== 0 && (
                             <YakitButton disabled={loading} icon={<PlusIcon />} onClick={onAddChat}>
                                 {(+width || 351) < 350 ? undefined : "新会话"}
                             </YakitButton>
                         )}
                         <div className={styles["extra-base-btn"]}>
-                            {history.length !== 0 && (
+                            {chatcsType === "ChatCS" && history.length !== 0 && (
                                 <>
                                     <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"会话历史记录"}>
                                         <div
@@ -1056,6 +1157,19 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                             }}
                                         >
                                             <ClockIcon />
+                                        </div>
+                                    </Tooltip>
+                                    <div className={styles["divider-style"]}></div>
+                                </>
+                            )}
+                            {chatcsType === "PluginAI" && (
+                                <>
+                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"清空AI插件"}>
+                                        <div
+                                            className={classNames(styles["small-btn"], styles["btn-style"])}
+                                            onClick={() => {setPluginAIList([])}}
+                                        >
+                                            <TrashIcon />
                                         </div>
                                     </Tooltip>
                                     <div className={styles["divider-style"]}></div>
@@ -1086,255 +1200,269 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 </div>
 
                 <div className={styles["layout-main"]}>
-                    <div className={styles["layout-body-footer"]}>
-                        <div className={styles["layout-body"]}>
-                            <div className={styles["body-wrapper"]}>
-                                {history.length === 0 || currentChat.length === 0 ? (
-                                    <>
-                                        {/* 欢迎页 */}
-                                        <div className={styles["welcome-header"]}>
-                                            <div className={styles["header-title"]}>
-                                                <div className={classNames(styles["title-style"], "content-ellipsis")}>
-                                                    {`你好,${showName}`}
+                   
+                        <div className={classNames(styles["layout-body-footer"],{
+                        [styles["layout-body-footer-hidden"]]: chatcsType !== "ChatCS",
+                        }) }>
+                            <div className={styles["layout-body"]}>
+                                <div className={styles["body-wrapper"]}>
+                                    {history.length === 0 || currentChat.length === 0 ? (
+                                        <>
+                                            {/* 欢迎页 */}
+                                            <div className={styles["welcome-header"]}>
+                                                <div className={styles["header-title"]}>
+                                                    <div
+                                                        className={classNames(
+                                                            styles["title-style"],
+                                                            "content-ellipsis"
+                                                        )}
+                                                    >
+                                                        {`你好,${showName}`}
+                                                    </div>
+                                                    👋
                                                 </div>
-                                                👋
+                                                <div className={styles["header-subTitle"]}>有什么我能帮助你的吗？</div>
                                             </div>
-                                            <div className={styles["header-subTitle"]}>有什么我能帮助你的吗？</div>
-                                        </div>
-                                        <div className={styles["welcome-preset-list"]}>
-                                            <div className={styles["list-wrapper"]}>
-                                                <div className={styles["info-hint-wrapper"]}>
-                                                    <OutlineInformationcircleIcon />
-                                                    ChatCS模型参数：6.5b，训练Token: 1.5T
-                                                    显卡资源：A40*4，使用文心增强知识推理能力
+                                            <div className={styles["welcome-preset-list"]}>
+                                                <div className={styles["list-wrapper"]}>
+                                                    <div className={styles["info-hint-wrapper"]}>
+                                                        <OutlineInformationcircleIcon />
+                                                        ChatCS模型参数：6.5b，训练Token: 1.5T
+                                                        显卡资源：A40*4，使用文心增强知识推理能力
+                                                    </div>
                                                 </div>
                                             </div>
+                                        </>
+                                    ) : (
+                                        <div ref={contentRef} className={styles["body-content"]}>
+                                            {currentChat.map((item) => {
+                                                const {token, isMe, time, info, renderType} = item
+                                                
+                                                if (isMe) {
+                                                    return (
+                                                        <ChatUserContent
+                                                            key={token}
+                                                            time={time}
+                                                            info={info as ChatMeInfoProps}
+                                                            onDel={() => onDelContent(item)}
+                                                        />
+                                                    )
+                                                } else {
+                                                    return (
+                                                        <ChatCSContent
+                                                            onPluginEnd={onPluginEnd}
+                                                            key={token}
+                                                            token={token}
+                                                            loadingToken={loadingToken}
+                                                            loading={loading}
+                                                            resTime={resTime}
+                                                            time={time}
+                                                            info={info as ChatCSMultipleInfoProps}
+                                                            onStop={onStop}
+                                                            onLike={(isLike) => onLikes(item, isLike)}
+                                                            onDel={() => onDelContent(item)}
+                                                            renderType={renderType}
+                                                        />
+                                                    )
+                                                }
+                                            })}
                                         </div>
-                                    </>
-                                ) : (
-                                    <div ref={contentRef} className={styles["body-content"]}>
-                                        {currentChat.map((item) => {
-                                            const {token, isMe, time, info, renderType} = item
+                                    )}
+                                </div>
 
-                                            if (isMe) {
-                                                return (
-                                                    <ChatUserContent
-                                                        key={token}
-                                                        time={time}
-                                                        info={info as ChatMeInfoProps}
-                                                        onDel={() => onDelContent(item)}
-                                                    />
-                                                )
-                                            } else {
-                                                return (
-                                                    <ChatCSContent
-                                                        onPluginEnd={onPluginEnd}
-                                                        key={token}
-                                                        token={token}
-                                                        loadingToken={loadingToken}
-                                                        loading={loading}
-                                                        resTime={resTime}
-                                                        time={time}
-                                                        info={info as ChatCSMultipleInfoProps}
-                                                        onStop={onStop}
-                                                        onLike={(isLike) => onLikes(item, isLike)}
-                                                        onDel={() => onDelContent(item)}
-                                                        renderType={renderType}
-                                                    />
-                                                )
-                                            }
-                                        })}
+                                {currentChat.length !== 0 && isBottom && (
+                                    <div className={styles["body-to-bottom"]} onClick={scrollToBottom}>
+                                        <ArrowDownIcon />
                                     </div>
                                 )}
                             </div>
 
-                            {currentChat.length !== 0 && isBottom && (
-                                <div className={styles["body-to-bottom"]} onClick={scrollToBottom}>
-                                    <ArrowDownIcon />
+                            {!loading && (
+                                <div className={styles["layout-footer"]}>
+                                    {!isShowPrompt && (
+                                        <div className={styles["footer-prompt"]}>
+                                            <div
+                                                className={styles["footer-book"]}
+                                                onClick={() => {
+                                                    setShowPrompt(true)
+                                                }}
+                                            >
+                                                <YakChatBookIcon />
+                                                <span className={styles["content"]}>Prompt</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className={styles["footer-wrapper"]}>
+                                        <Input.TextArea
+                                            className={styles["text-area-wrapper"]}
+                                            bordered={false}
+                                            placeholder='问我任何问题...(shift + enter 换行)'
+                                            value={question}
+                                            autoSize={true}
+                                            onChange={(e) => setQuestion(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                const keyCode = e.keyCode ? e.keyCode : e.key
+                                                const shiftKey = e.shiftKey
+                                                if (keyCode === 13 && shiftKey) {
+                                                    e.stopPropagation()
+                                                    e.preventDefault()
+                                                    setQuestion(`${question}\n`)
+                                                }
+                                                if (keyCode === 13 && !shiftKey) {
+                                                    e.stopPropagation()
+                                                    e.preventDefault()
+                                                    onBtnSubmit()
+                                                }
+                                            }}
+                                        />
+                                        <div className={styles["input-footer"]}>
+                                            {(+width || 451) < 450 ? (
+                                                <YakitPopover
+                                                    overlayClassName={styles["yakit-popover-type"]}
+                                                    overlayStyle={{paddingBottom: 4}}
+                                                    placement='topRight'
+                                                    trigger={"click"}
+                                                    content={
+                                                        <div className={styles["footer-popover-wrapper"]}>
+                                                            <div className={styles["footer-type-wrapper"]}>
+                                                                <div className={styles["type-title"]}>
+                                                                    回答类型
+                                                                    <Tooltip
+                                                                        overlayClassName={styles["tooltip-wrapper"]}
+                                                                        title={"ChatCS 将根据选择的类型回答你的问题"}
+                                                                    >
+                                                                        <QuestionMarkCircleIcon />
+                                                                    </Tooltip>
+                                                                    :
+                                                                </div>
+                                                                <div
+                                                                    className={classNames(styles["single-btn"], {
+                                                                        [styles["single-active-btn"]]: isBing
+                                                                    })}
+                                                                    onClick={() => setBing(!isBing)}
+                                                                >
+                                                                    搜索引擎增强
+                                                                </div>
+                                                                <div
+                                                                    className={classNames(styles["single-btn"], {
+                                                                        [styles["single-active-btn"]]: isPlugin
+                                                                    })}
+                                                                    onClick={() => setPlugin(!isPlugin)}
+                                                                >
+                                                                    插件调试执行
+                                                                </div>
+                                                            </div>
+                                                            {isPlugin && (
+                                                                <div className={styles["plugin-run-max-number-box"]}>
+                                                                    <div className={styles["title"]}>
+                                                                        最大执行数量：
+                                                                    </div>
+                                                                    <div>
+                                                                        <YakitInputNumber
+                                                                            className={styles["input-left"]}
+                                                                            placeholder='Minimum'
+                                                                            min={1}
+                                                                            value={maxNumber}
+                                                                            onChange={(v) => {
+                                                                                setMaxNumber(v as number)
+                                                                            }}
+                                                                            size='small'
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    }
+                                                >
+                                                    <div className={styles["footer-type-mini"]}>
+                                                        <CogIcon />
+                                                    </div>
+                                                </YakitPopover>
+                                            ) : (
+                                                <div className={styles["footer-type-wrapper"]}>
+                                                    <div className={styles["type-title"]}>
+                                                        回答类型
+                                                        <Tooltip
+                                                            overlayStyle={{paddingBottom: 5}}
+                                                            title={"ChatCS 将根据选择的类型回答你的问题"}
+                                                        >
+                                                            <QuestionMarkCircleIcon />
+                                                        </Tooltip>
+                                                        :
+                                                    </div>
+                                                    <div
+                                                        className={classNames(styles["single-btn"], {
+                                                            [styles["single-active-btn"]]: isBing
+                                                        })}
+                                                        onClick={() => setBing(!isBing)}
+                                                    >
+                                                        搜索引擎增强
+                                                    </div>
+                                                    <div
+                                                        className={classNames(styles["single-btn"], {
+                                                            [styles["single-active-btn"]]: isPlugin
+                                                        })}
+                                                        onClick={() => setPlugin(!isPlugin)}
+                                                    >
+                                                        插件调试执行
+                                                    </div>
+                                                    {isPlugin && (
+                                                        <YakitPopover
+                                                            title={"插件配置"}
+                                                            // placement="topLeft"
+                                                            overlayClassName={styles["chatcs-plugin-option-popover"]}
+                                                            content={
+                                                                <div className={styles["option-box"]}>
+                                                                    <div>最大执行数量：</div>
+                                                                    <div>
+                                                                        <YakitInputNumber
+                                                                            className={styles["input-left"]}
+                                                                            placeholder='Minimum'
+                                                                            min={1}
+                                                                            value={maxNumber}
+                                                                            onChange={(v) => {
+                                                                                setMaxNumber(v as number)
+                                                                            }}
+                                                                            size='small'
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                            onVisibleChange={(v) => {
+                                                                setPopoverVisible(v)
+                                                            }}
+                                                            overlayInnerStyle={{width: 220}}
+                                                            visible={popoverVisible}
+                                                        >
+                                                            <YakitButton
+                                                                icon={<SettingOutlined />}
+                                                                type={"text"}
+                                                                size={"small"}
+                                                            />
+                                                        </YakitPopover>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className={styles["footer-divider"]}></div>
+                                            <div
+                                                className={classNames(styles["footer-submit"], {
+                                                    [styles["footer-active-submit"]]: !!question
+                                                })}
+                                                onClick={onBtnSubmit}
+                                            >
+                                                <PaperPlaneRightIcon />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
+                   
 
-                        {!loading && (
-                            <div className={styles["layout-footer"]}>
-                                {!isShowPrompt && (
-                                    <div className={styles["footer-prompt"]}>
-                                        <div
-                                            className={styles["footer-book"]}
-                                            onClick={() => {
-                                                setShowPrompt(true)
-                                            }}
-                                        >
-                                            <YakChatBookIcon />
-                                            <span className={styles["content"]}>Prompt</span>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className={styles["footer-wrapper"]}>
-                                    <Input.TextArea
-                                        className={styles["text-area-wrapper"]}
-                                        bordered={false}
-                                        placeholder='问我任何问题...(shift + enter 换行)'
-                                        value={question}
-                                        autoSize={true}
-                                        onChange={(e) => setQuestion(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            const keyCode = e.keyCode ? e.keyCode : e.key
-                                            const shiftKey = e.shiftKey
-                                            if (keyCode === 13 && shiftKey) {
-                                                e.stopPropagation()
-                                                e.preventDefault()
-                                                setQuestion(`${question}\n`)
-                                            }
-                                            if (keyCode === 13 && !shiftKey) {
-                                                e.stopPropagation()
-                                                e.preventDefault()
-                                                onBtnSubmit()
-                                            }
-                                        }}
-                                    />
-                                    <div className={styles["input-footer"]}>
-                                        {(+width || 451) < 450 ? (
-                                            <YakitPopover
-                                                overlayClassName={styles["yakit-popover-type"]}
-                                                overlayStyle={{paddingBottom: 4}}
-                                                placement='topRight'
-                                                trigger={"click"}
-                                                content={
-                                                    <div className={styles["footer-popover-wrapper"]}>
-                                                        <div className={styles["footer-type-wrapper"]}>
-                                                            <div className={styles["type-title"]}>
-                                                                回答类型
-                                                                <Tooltip
-                                                                    overlayClassName={styles["tooltip-wrapper"]}
-                                                                    title={"ChatCS 将根据选择的类型回答你的问题"}
-                                                                >
-                                                                    <QuestionMarkCircleIcon />
-                                                                </Tooltip>
-                                                                :
-                                                            </div>
-                                                            <div
-                                                                className={classNames(styles["single-btn"], {
-                                                                    [styles["single-active-btn"]]: isBing
-                                                                })}
-                                                                onClick={() => setBing(!isBing)}
-                                                            >
-                                                                搜索引擎增强
-                                                            </div>
-                                                            <div
-                                                                className={classNames(styles["single-btn"], {
-                                                                    [styles["single-active-btn"]]: isPlugin
-                                                                })}
-                                                                onClick={() => setPlugin(!isPlugin)}
-                                                            >
-                                                                插件调试执行
-                                                            </div>
-                                                        </div>
-                                                        {isPlugin && (
-                                                            <div className={styles["plugin-run-max-number-box"]}>
-                                                                <div className={styles["title"]}>最大执行数量：</div>
-                                                                <div>
-                                                                    <YakitInputNumber
-                                                                        className={styles["input-left"]}
-                                                                        placeholder='Minimum'
-                                                                        min={1}
-                                                                        value={maxNumber}
-                                                                        onChange={(v) => {
-                                                                            setMaxNumber(v as number)
-                                                                        }}
-                                                                        size='small'
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                }
-                                            >
-                                                <div className={styles["footer-type-mini"]}>
-                                                    <CogIcon />
-                                                </div>
-                                            </YakitPopover>
-                                        ) : (
-                                            <div className={styles["footer-type-wrapper"]}>
-                                                <div className={styles["type-title"]}>
-                                                    回答类型
-                                                    <Tooltip
-                                                        overlayStyle={{paddingBottom: 5}}
-                                                        title={"ChatCS 将根据选择的类型回答你的问题"}
-                                                    >
-                                                        <QuestionMarkCircleIcon />
-                                                    </Tooltip>
-                                                    :
-                                                </div>
-                                                <div
-                                                    className={classNames(styles["single-btn"], {
-                                                        [styles["single-active-btn"]]: isBing
-                                                    })}
-                                                    onClick={() => setBing(!isBing)}
-                                                >
-                                                    搜索引擎增强
-                                                </div>
-                                                <div
-                                                    className={classNames(styles["single-btn"], {
-                                                        [styles["single-active-btn"]]: isPlugin
-                                                    })}
-                                                    onClick={() => setPlugin(!isPlugin)}
-                                                >
-                                                    插件调试执行
-                                                </div>
-                                                {isPlugin && (
-                                                    <YakitPopover
-                                                        title={"插件配置"}
-                                                        // placement="topLeft"
-                                                        overlayClassName={styles["chatcs-plugin-option-popover"]}
-                                                        content={
-                                                            <div className={styles["option-box"]}>
-                                                                <div>最大执行数量：</div>
-                                                                <div>
-                                                                    <YakitInputNumber
-                                                                        className={styles["input-left"]}
-                                                                        placeholder='Minimum'
-                                                                        min={1}
-                                                                        value={maxNumber}
-                                                                        onChange={(v) => {
-                                                                            setMaxNumber(v as number)
-                                                                        }}
-                                                                        size='small'
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                        onVisibleChange={(v) => {
-                                                            setPopoverVisible(v)
-                                                        }}
-                                                        overlayInnerStyle={{width: 220}}
-                                                        visible={popoverVisible}
-                                                    >
-                                                        <YakitButton
-                                                            icon={<SettingOutlined />}
-                                                            type={"text"}
-                                                            size={"small"}
-                                                        />
-                                                    </YakitPopover>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <div className={styles["footer-divider"]}></div>
-                                        <div
-                                            className={classNames(styles["footer-submit"], {
-                                                [styles["footer-active-submit"]]: !!question
-                                            })}
-                                            onClick={onBtnSubmit}
-                                        >
-                                            <PaperPlaneRightIcon />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    {isShowPrompt && (
+                    <PluginAIComponent visible={chatcsType === "PluginAI"} params={pluginAIParams} setParams={setPluginAIParams} pluginAIList={pluginAIList} setPluginAIList={setPluginAIList}/>
+                    
+                    {isShowPrompt && chatcsType === "ChatCS" && (
                         <PromptWidget
                             setShowPrompt={setShowPrompt}
                             onSubmitPreset={onSubmitPreset}
@@ -1385,9 +1513,10 @@ interface ChatUserContentProps {
     time: string
     info: ChatMeInfoProps
     onDel: () => any
+    classNameContent?: string
 }
 const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
-    const {time, info, onDel} = props
+    const {time, info, onDel,classNameContent} = props
 
     const {userInfo} = useStore()
     const showImg = useMemo(() => {
@@ -1401,7 +1530,11 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
         <div className={classNames(styles["content-opt-wrapper"], styles["content-opt-me-wrapper"])}>
             <div className={styles["opt-header"]}>
                 <div className={styles["header-left"]}>
-                    <img className={styles["img-style"]} src={showImg} />
+                    {
+                        userInfo.isLogin?<img className={styles["img-style"]} src={showImg} />:
+                        <div className={styles['user-show']}><UnLoginSvgIcon /></div>
+                    }
+                    
                     {time}
                 </div>
                 <div className={styles["header-right"]}>
@@ -1410,7 +1543,7 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
                     </div>
                 </div>
             </div>
-            <div className={styles["opt-content"]}>
+            <div className={classNames(styles["opt-content"],classNameContent || "")}>
                 <div className={styles["user-content-style"]}>{info.content}</div>
             </div>
         </div>
@@ -1625,8 +1758,6 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     })
     // 选中项
     const [checkedList, setCheckedList] = useState<string[]>([])
-    // 是否显示暂无数据
-    const [showNoPlugin, setShowNoPlugin] = useState<boolean>(false)
     // 私有域地址
     const privateDomainRef = useRef<string>("")
 
@@ -1637,23 +1768,23 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                 const values = JSON.parse(setting)
                 privateDomainRef.current = values.BaseUrl
             }
+            if(!data) return
             // 私有域获取完成后再解析数据
             try {
                 const arr: ChatPluginListProps = JSON.parse(data)
-                if (arr.data.length === 0) {
-                    setShowNoPlugin(true)
-                    return
-                }
+                if (arr.data.length === 0) return
                 setDatsSource(arr)
             } catch (error) {
                 yakitNotify("error", `解析失败|${error}`)
+                // console.log("解析失败|",data);
+                
             }
         })
     })
 
     useEffect(() => {
         getPrivateDomainAndRefList()
-    }, [])
+    }, [data])
 
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
@@ -1693,9 +1824,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     })
     return (
         <>
-            {showNoPlugin ? (
-                <div>暂无匹配插件</div>
-            ) : (
+            {datsSource.data.length !== 0 && (
                 <>
                     <div>好的，我为你匹配到 {datsSource.data.length} 个可用插件，是否要开始执行？</div>
                     <div className={styles["plugin-list-content"]}>
@@ -1704,6 +1833,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                                 const check = checkedList.includes(info.ScriptName)
                                 return (
                                     <PluginDetailsListItem<YakScript>
+                                        key={info.Id}
                                         order={i}
                                         plugin={info}
                                         selectUUId={""} //本地用的ScriptName代替uuid
@@ -1869,6 +1999,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     }, [streamInfo.progressState])
     /**开始执行 */
     const onStartExecute = useMemoizedFn((selectPluginName: string[], Input: string) => {
+        onStop()
         // 任务配置参数
         const taskParams: PluginBatchExecutorTaskProps = {
             Concurrent: extraParamsValue.Concurrent,
@@ -2030,55 +2161,10 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                         </div>
                     </div>
                     <div className={styles["opt-content"]}>
-                        {token === loadingToken ? (
-                            info.content.length !== 0 && (
-                                <>
-                                    <div className={styles["content-style"]}>
-                                        {info.content.map((item, index) => {
-                                            return (
-                                                <React.Fragment key={item.id + index}>
-                                                    {item.is_bing && (
-                                                        <div
-                                                            className={styles["content-type-title"]}
-                                                        >{`# ${"搜索引擎增强"}`}</div>
-                                                    )}
-                                                    {item.is_plugin && (
-                                                        <div
-                                                            className={styles["content-type-title"]}
-                                                        >{`# ${"插件调试执行"}`}</div>
-                                                    )}
-                                                    {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
-                                                    {(typeof item.end === "boolean"? item.end :true) ? (
-                                                        <ChatMarkdown content={item.content} />
-                                                    ) : (
-                                                        <div className={styles["load-content-box"]}>
-                                                            {item.load_content.map((itemIn, IndexIn) => (
-                                                                <div
-                                                                    className={styles["load-content-item"]}
-                                                                    key={IndexIn + itemIn.id + "load"}
-                                                                >
-                                                                    {IndexIn + 1 === item.load_content.length ? (
-                                                                        <YakChatLoading />
-                                                                    ) : (
-                                                                        <CheckOutlined
-                                                                            className={styles["load-content-check"]}
-                                                                        />
-                                                                    )}
-                                                                    <div>{itemIn.result}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </React.Fragment>
-                                            )
-                                        })}
-                                    </div>
-                                </>
-                            )
-                        ) : (
+
                             <div className={styles["content-style"]}>
                                 {info.content.length === 0 ? (
-                                    "请求出现错误，请稍候再试"
+                                    token === loadingToken?<></>:"请求出现错误，请稍候再试"
                                 ) : (
                                     <>
                                         <>
@@ -2097,19 +2183,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                         )}
                                                         <>
                                                             {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
-                                                            {(typeof item.end === "boolean"? item.end :true) ? (
-                                                                <>
-                                                                    {renderType === "plugin-list" ? (
-                                                                        <PluginListContent
-                                                                            setPluginRun={setPluginRun}
-                                                                            onStartExecute={onStartExecute}
-                                                                            data={item.content}
-                                                                        />
-                                                                    ) : (
-                                                                        <ChatMarkdown content={item.content} />
-                                                                    )}
-                                                                </>
-                                                            ) : (
+                                                            {!(typeof item.end === "boolean" ? item.end : true) && (
                                                                 <div className={styles["load-content-box"]}>
                                                                     {item.load_content.map((itemIn, IndexIn) => (
                                                                         <div
@@ -2131,6 +2205,17 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                                     ))}
                                                                 </div>
                                                             )}
+                                                            <>
+                                                                {item.is_plugin ? (
+                                                                    <PluginListContent
+                                                                        setPluginRun={setPluginRun}
+                                                                        onStartExecute={onStartExecute}
+                                                                        data={item.content}
+                                                                    />
+                                                                ) : (
+                                                                    <ChatMarkdown content={item.content} />
+                                                                )}
+                                                            </>
                                                         </>
                                                     </React.Fragment>
                                                 )
@@ -2139,7 +2224,6 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                     </>
                                 )}
                             </div>
-                        )}
 
                         {showLoading && (
                             <div className={styles["loading-wrapper"]}>
@@ -2500,6 +2584,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             <div className={styles["prompt-label"]}>
                 {PromptLabelArr.map((item) => (
                     <div
+                        key={item}
                         className={classNames(styles["prompt-label-item"], {
                             [styles["prompt-label-item-no-active"]]: item !== selectLabel,
                             [styles["prompt-label-item-active"]]: item === selectLabel
@@ -2517,8 +2602,9 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                 ))}
             </div>
             <div className={styles["prompt-list"]} ref={promptListRef}>
-                {showPromptList.map((item) => (
+                {showPromptList.map((item,index) => (
                     <div
+                        key={`${index}-${item.title}`}
                         className={styles["prompt-item"]}
                         onClick={() => {
                             if (isOther(item.prompt_type)) {
@@ -2536,8 +2622,8 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                             <>
                                 <div className={styles["sub-title"]}>
                                     只需输入
-                                    {item.templateArr.map((itemIn) => (
-                                        <span className={styles["span-label"]}>{itemIn}</span>
+                                    {item.templateArr.map((itemIn,indexIn) => (
+                                        <span key={`${itemIn}-${indexIn}`} className={styles["span-label"]}>{itemIn}</span>
                                     ))}
                                     将自动为你生成 Prompt
                                 </div>
@@ -2615,7 +2701,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
             <div className={styles["form-box"]}>
                 {selectItem.templateArr.map((item) => {
                     return (
-                        <div className={styles["form-item"]}>
+                        <div key={item} className={styles["form-item"]}>
                             <div className={styles["title"]}>{item}：</div>
                             <div className={styles["input-text-area"]}>
                                 <Input.TextArea
@@ -2781,6 +2867,287 @@ export const YakChatLoading: React.FC<YakChatLoadingProps> = (props) => {
             </div>
             <div>
                 <span></span>
+            </div>
+        </div>
+    )
+}
+
+interface PluginAiItem {
+    token: string
+    isMe: boolean
+    time: string
+    info: any
+}
+
+interface PluginAIComponentProps {
+    visible: boolean
+    params?: {text?: string; scriptName: string}
+    setParams: (v?:{text?: string; scriptName: string}) => void
+    pluginAIList: PluginAiItem[]
+    setPluginAIList:(v:any) => void
+}
+
+export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
+    const {visible,params,setParams,pluginAIList,setPluginAIList} = props
+    const [loading, setLoading] = useState<boolean>(false)
+    const [loadingToken, setLoadingToken] = useState<string>("")
+    const [resTime, setResTime] = useState<string>("")
+    const tokenRef = useRef<string>(randomString(40))
+
+    const pluginAIListRef = useRef<HTMLDivElement>(null)    
+
+    // 添加项
+    const AddAIList = useMemoizedFn((obj:PluginAiItem)=>{
+        setPluginAIList((lastList)=>[...lastList,obj])
+        scrollToPluginAIBottom()
+    })
+
+    // 更新最后一项
+    const setAIList = useMemoizedFn((content:string)=>{
+        try {
+            const newPluginAIList:PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
+            setPluginAIList(newPluginAIList.map((item,index)=>{
+                if(newPluginAIList.length === index+1){
+                    item.info.content = content
+                    item.time = formatDate(+new Date())
+                    return item
+                }
+                return item
+            }))
+            scrollToPluginAIBottom()
+        } catch (error) {}
+    })
+
+    const scroll = useScroll(pluginAIListRef)
+    // 滚轮触底
+    const scrollToPluginAIBottom = useMemoizedFn(() => {
+        if (pluginAIListRef.current) {
+            const scrollHeight = pluginAIListRef.current?.scrollHeight || 0
+            const top = scroll?.top || 0
+            if (scrollHeight - top < 5) return
+            ;(pluginAIListRef.current as HTMLDivElement).scrollTop = (pluginAIListRef.current as HTMLDivElement).scrollHeight
+        }
+    })
+
+    useEffect(() => {
+        if (visible) scrollToPluginAIBottom()
+    }, [visible])
+
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenRef.current,
+        onEnd: () => {
+            onEndReply()
+        },
+        setRuntimeId: (rId) => {
+            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+        }
+    })
+
+    useThrottleEffect(
+        () => {
+            let str = "";
+            (streamInfo.logState || []).reverse().forEach((item)=>{
+                try {
+                    str += JSON.parse(item.data)?.data||""
+                } catch (error) {}
+            })
+            if(str.length>0){
+               setAIList(str)
+            }
+        },
+        [streamInfo.logState],
+        {wait: 400}
+    )
+
+    // 执行
+    const onStartExecute = useMemoizedFn((data: {text?: string; scriptName: string})=>{
+        const {text,scriptName} = data
+        const executeParams = {
+            Input: text||"",
+            PluginName: scriptName,
+            PluginType: "codec",
+            Code:"",
+
+        }
+        debugPluginStreamEvent.reset()
+
+        ipcRenderer
+                .invoke("DebugPlugin", executeParams, tokenRef.current)
+                .then(() => {
+                    debugPluginStreamEvent.start()
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "本地插件执行出错:" + e)
+                })
+    })
+
+    useEffect(()=>{
+        if(params){
+            const {text,scriptName} = params
+            AddAIList({info:{content:text},isMe:true,time: formatDate(+new Date()),token: randomString(10)})
+            scrollToPluginAIBottom()
+            const token = randomString(10)
+            setLoading(true)
+            setLoadingToken(token)
+            let obj:PluginAiItem = {info:{content:""},isMe:false,time: formatDate(+new Date()),token}
+            AddAIList(obj)
+            scrollToPluginAIBottom()
+
+            onStartExecute(params)
+        }
+    },[params])
+
+    const onDelContent = useMemoizedFn((item:PluginAiItem) => {
+        setPluginAIList((newPluginAIList)=>newPluginAIList.filter((itemIn)=>itemIn.token!==item.token))
+    })
+
+    /** 停止回答(断开请求连接) */
+    const onStop = useMemoizedFn(() => {
+        apiCancelDebugPlugin(tokenRef.current).then(() => {
+            onEndReply()
+        })
+    })
+
+    // 回复完成
+    const onEndReply = useMemoizedFn(()=>{
+        debugPluginStreamEvent.stop()
+        setParams(undefined)
+        setLoading(false)
+        scrollToPluginAIBottom()
+        setLoadingToken("")
+        setResTime("")
+    })
+    
+    return (
+        <>{
+            visible&&<div className={styles["plugin-ai-list"]}>
+            {pluginAIList.length>0 ? (
+                <div style={{overflow:"auto",height:"100%"}} ref={pluginAIListRef}>
+                    {pluginAIList.map((item) => {
+                        const {token, isMe, time, info} = item
+                        if (isMe) {
+                            return (
+                                <ChatUserContent key={token} classNameContent={styles["opt-content-auto"]} time={time} info={info} onDel={() => onDelContent(item)} />
+                            )
+                        } else {
+                            return (
+                                <PluginAIContent
+                                    key={token}
+                                    token={token}
+                                    loadingToken={loadingToken}
+                                    loading={loading}
+                                    resTime={resTime}
+                                    time={time}
+                                    info={info}
+                                    onStop={onStop}
+                                    onDel={() => onDelContent(item)}
+                                />
+                            )
+                        }
+                    })}
+                </div>
+            ) : (
+                <div className={styles["welcome-plugin-ai"]}>
+                    <div className={styles["header-title"]}>
+                        <div className={classNames(styles["title-style"])}>可在WebFuzzer中调用AI插件进行体验噢~👋</div>
+                    </div>
+                </div>
+            )}
+        </div>
+        }</>
+       
+    )
+}
+
+interface PluginAIContentProps {
+    /** 唯一标识符 */
+    token: string
+    /** 当前正在查询的那个回答的唯一标识符 */
+    loadingToken: string
+    time: string
+    info: {content:string}
+    loading: boolean
+    /** 查询的动态运行时间 */
+    resTime: string
+    onStop: () => void
+    onDel: () => void
+}
+
+export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
+    const {token, loading, loadingToken, time, info, resTime, onStop, onDel} = props
+
+    const copyContent = useMemo(() => {
+        let content: string = info.content
+        return content
+    }, [resTime, info])
+
+    const showLoading = useMemo(() => {
+        return token === loadingToken && loading
+    }, [token, loadingToken, loading])
+
+    return (
+        <div className={styles["content-opt-wrapper"]}>
+            <div className={styles["opt-header"]}>
+                <div className={styles["header-left"]}>
+                    <YakChatLogIcon />
+                    {time}
+                    {/* {showLoading ? resTime : time} */}
+                </div>
+                <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
+                    {showLoading ? (
+                        <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
+                            停止
+                        </YakitButton>
+                    ) : (
+                        <>
+                            <div className={styles["right-btn"]}>
+                                <CopyComponents
+                                    className={classNames(styles["copy-icon-style"])}
+                                    copyText={copyContent}
+                                    iconColor={"#85899e"}
+                                />
+                            </div>
+                            <div className={styles["right-btn"]} onClick={onDel}>
+                                <TrashIcon />
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+            <div className={styles["opt-content"]}>
+                {token === loadingToken ? (
+                    info.content.length !== 0 ? (
+                        <>
+                            <div className={styles["content-style"]}>
+                                <React.Fragment>
+                                    <ChatMarkdown content={info.content} />
+                                </React.Fragment>
+                            </div>
+                        </>
+                    ):<>
+                    {showLoading && (
+                            <div className={styles["loading-wrapper"]}>
+                                <div
+                                    className={classNames(styles["loading-style"], styles["loading-dot-before"])}
+                                ></div>
+                                <div className={classNames(styles["loading-style"], styles["loading-dot"])}></div>
+                                <div className={classNames(styles["loading-style"], styles["loading-dot-after"])}></div>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className={styles["content-style"]}>
+                        {
+                            info.content&&info.content.length !== 0?
+                            <React.Fragment>
+                                <ChatMarkdown content={info.content} />
+                            </React.Fragment>:"请求出现错误，请稍候再试"
+                        }
+                    </div>
+                )}
+                
             </div>
         </div>
     )

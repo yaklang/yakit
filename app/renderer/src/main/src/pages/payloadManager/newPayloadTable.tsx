@@ -651,13 +651,15 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     return (
         <div className={styles["new-payload-table"]}>
             <Table
-                components={{
+                rowKey={(i:Payload) => i.Id}
+                components={onlyInsert?undefined:{
                     body: {
                         cell: (props) => <EditableCell {...props} />
                     }
                 }}
                 bordered
                 dataSource={response?.Data}
+                // @ts-ignore
                 columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
                 pagination={{
                     showQuickJumper: true,

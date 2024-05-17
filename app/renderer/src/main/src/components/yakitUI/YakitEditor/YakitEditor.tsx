@@ -7,7 +7,8 @@ import {
     useKeyPress,
     useMemoizedFn,
     useThrottleFn,
-    useUpdateEffect
+    useUpdateEffect,
+    useInViewport
 } from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
@@ -78,7 +79,13 @@ interface CodecTypeProps {
     isYakScript?: boolean
 }
 
-const {ipcRenderer} = window.require("electron")
+interface contextMenuProps{
+    key: string
+    value: string
+    isAiPlugin: boolean
+}
+
+const { ipcRenderer } = window.require("electron")
 
 /** @name 字体key值对应字体大小 */
 const keyToFontSize: Record<string, number> = {
@@ -229,7 +236,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
 
     // 自定义右键菜单执行
-    const [contextMenuPlugin, setContextMenuPlugin] = useState<CodecTypeProps[]>([])
+    const [contextMenuPlugin, setContextMenuPlugin] = useState<contextMenuProps[]>([])
     const searchCodecCustomContextMenuPlugin = useMemoizedFn(() => {
         queryYakScriptList(
             "codec",
@@ -239,9 +246,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 }
                 setContextMenuPlugin(
                     i.map((script) => {
+                        const isAiPlugin:boolean = script.Tags.includes("AI工具")
                         return {
-                            key: script.ScriptName
-                        } as CodecTypeProps
+                            key: script.ScriptName,
+                            value: script.ScriptName,
+                            isAiPlugin
+                        } as contextMenuProps
                     })
                 )
             },
@@ -254,10 +264,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             [PluginGV.PluginCodecContextMenuExecuteSwitch]
         )
     })
+
+    const ref = useRef(null);
+    const [inViewport] = useInViewport(ref);
+
     useEffect(() => {
-        searchCodecCustomHTTPMutatePlugin()
-        searchCodecCustomContextMenuPlugin()
-    }, [])
+        if(inViewport){
+            searchCodecCustomHTTPMutatePlugin()
+            searchCodecCustomContextMenuPlugin()
+        }
+    }, [inViewport])
 
     /**
      * 整理右键菜单的对应关系
@@ -276,14 +292,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 }
             )
             // 自定义右键菜单执行
-            ;(extraMenuLists["customcontextmenu"].menu[0] as EditorMenuItemProps).children = contextMenuPlugin.map(
-                (item) => {
-                    return {
-                        key: item.key,
-                        label: item.key
-                    } as EditorMenuItemProps
-                }
-            )
+            ; (extraMenuLists["customcontextmenu"].menu[0] as EditorMenuItemProps).children = contextMenuPlugin.map((item) => {
+                return {
+                    key: item.value,
+                    label: item.key,
+                    isAiPlugin: item.isAiPlugin
+                } as EditorMenuItemProps
+            })
         } catch (e) {
             failed(`get custom plugin failed: ${e}`)
         }
@@ -299,8 +314,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             keyToRun[key] = keys
         }
 
-        keyToOnRunRef.current = {...keyToRun}
-    }, [contextMenu])
+        keyToOnRunRef.current = { ...keyToRun }
+    }, [contextMenu,customHTTPMutatePlugin,contextMenuPlugin])
 
     const {getCurrentSelectPageId} = usePageInfo((s) => ({getCurrentSelectPageId: s.getCurrentSelectPageId}), shallow)
 
@@ -316,13 +331,25 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const menuItemName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
-                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
-                        let pageId: string | undefined
-                        // 获取页面唯一标识符
-                        if (keyPath.includes("customcontextmenu")) {
+                        const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
+                        let pageId:string|undefined
+                        let isAiPlugin: boolean = false
+                        // 自定义右键执行携带额外参数
+                        if(keyPath.includes("customcontextmenu")){
+                            // 获取页面唯一标识符
                             pageId = getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
+                            // 获取是否为ai插件
+                            try {
+                                // @ts-ignore
+                               allMenu[name].menu[0]?.children.map((item)=>{
+                                    if(item.key === menuItemName&&item.isAiPlugin){
+                                        isAiPlugin = true
+                                    }
+                                }) 
+                            } catch (error) {}
                         }
-                        allMenu[name].onRun(editor, menuItemName, pageId)
+                        
+                        allMenu[name].onRun(editor, menuItemName,pageId,isAiPlugin)
                         executeFunc = true
                         onRightContextMenu(menuItemName)
                         break
@@ -1291,6 +1318,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
     return (
         <div
+            ref={ref}
             className={classNames("yakit-editor-code", styles["yakit-editor-wrapper"], {
                 "yakit-editor-wrap-style": !showBreak,
                 [styles["yakit-editor-disabled"]]: disabled

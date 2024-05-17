@@ -87,7 +87,8 @@ export interface YakitEditorProps {
 export interface OtherMenuListProps {
     [key: string]: {
         menu: EditorMenuItemType[]
-        onRun: (editor: YakitIMonacoEditor, key: string, pageId?: string) => any
+        // data可传额外的任何参数 目前仅用作自定义右键执行-检测是否为ai插件
+        onRun: (editor: YakitIMonacoEditor, key: string, pageId?: string, data?: any) => any
         /** Order菜单权重排序 0为第一个 1为第二个... 负数统一放最后 */
         order?: number
     }

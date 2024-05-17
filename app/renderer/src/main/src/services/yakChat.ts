@@ -43,6 +43,7 @@ interface YakChatPluginOptions {
     scripts:ScriptsProps[]
     history: {role: string; content: string}[]
     signal?: GenericAbortSignal
+    onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void
 }
 
 function http({prompt, is_bing, token, history, signal, onDownloadProgress}: YakChatOptions) {
@@ -70,7 +71,15 @@ export const chatCS = ({prompt, is_bing, token, history, signal, onDownloadProgr
     return http({prompt, is_bing, token, history, signal, onDownloadProgress})
 }
 
-function httpPlugin({prompt, is_bing, token,plugin_scope, scripts, history,signal}:YakChatPluginOptions){
+function httpPlugin({prompt, is_bing, token,plugin_scope, scripts, history,signal,onDownloadProgress}:YakChatPluginOptions){
+    // console.log("参数-请求接口chat-plugin",{
+    //         prompt,
+    //         user_token: token,
+    //         plugin_scope,
+    //         scripts,
+    //         history
+    // });
+    
     return service({
         url: "chat-plugin",
         method: "POST",
@@ -81,18 +90,18 @@ function httpPlugin({prompt, is_bing, token,plugin_scope, scripts, history,signa
             prompt,
             user_token: token,
             plugin_scope,
-            is_bing,
+            // is_bing,
             scripts,
             history
         },
         signal: signal,
         // 浏览器专属
-        // onDownloadProgress: onDownloadProgress
+        onDownloadProgress: onDownloadProgress
     })
 }
 
-export const chatCSPlugin = ({prompt, is_bing, token,plugin_scope, scripts, history,signal}:YakChatPluginOptions) => {
-    return httpPlugin({prompt, is_bing, token,plugin_scope,scripts, history,signal})
+export const chatCSPlugin = ({prompt, is_bing, token,plugin_scope, scripts, history,signal,onDownloadProgress}:YakChatPluginOptions) => {
+    return httpPlugin({prompt, is_bing, token,plugin_scope,scripts, history,signal,onDownloadProgress})
 }
 
 export const chatGrade = (params: {uid: string; grade: "good" | "bad"}) => {

@@ -60,6 +60,30 @@ const directionStyle = (editorInfo, isCenter = true) => {
     return obj
 }
 
+// 拖拽左右限制
+const getItemStyle = (isDragging, draggableStyle) => {
+    let transform: string = draggableStyle["transform"] || ""
+    // console.log("transform---",transform,isDragging);
+    if (isDragging) {
+        // 使用正则表达式匹配 translate 函数中的两个参数
+        const match = transform.match(/translate\((-?\d+)px, (-?\d+)px\)/)
+        if (match) {
+            // 提取匹配到的两个值，并将它们转换为数字
+            const [value1, value2] = match.slice(1).map(Number)
+                const modifiedString = transform.replace(
+                    /translate\((-?\d+)px, (-?\d+)px\)/,
+                    `translate(0px, ${value2}px)`
+                )
+                transform = modifiedString
+        }
+    }
+
+    return {
+        ...draggableStyle,
+        transform
+    }
+}
+
 export interface HTTPFuzzerClickEditorMenuProps {
     close: () => void
     editorInfo?: EditorDetailInfoProps
@@ -358,6 +382,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                             <Draggable key={item?.Description} draggableId={`${item.Id}`} index={index}>
                                                 {(provided, snapshot) => {
                                                     const draggablePropsStyle= provided.draggableProps.style as DraggingStyle
+
                                                     return (
                                                         <div
                                                             ref={provided.innerRef}
@@ -365,13 +390,14 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                             {...provided.dragHandleProps}
                                                             style={{
                                                                 ...draggablePropsStyle,
-                                                                top: isDragging
-                                                                    ? draggablePropsStyle?.top -
+                                                                ...getItemStyle(snapshot.isDragging, provided.draggableProps.style),
+                                                                top: isDragging.current && draggablePropsStyle?.top
+                                                                    ? draggablePropsStyle.top -
                                                                       top +
                                                                       scrollTop
                                                                     : "none",
-                                                                left: isDragging
-                                                                    ? draggablePropsStyle?.left - left - 60
+                                                                left: isDragging.current && draggablePropsStyle?.left
+                                                                    ? draggablePropsStyle.left - left - 60
                                                                     : "none"
                                                             }}
                                                         >

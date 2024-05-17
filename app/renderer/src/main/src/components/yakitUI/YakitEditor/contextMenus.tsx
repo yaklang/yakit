@@ -238,7 +238,7 @@ export const extraMenuLists: OtherMenuListProps = {
                 children: [],
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, scriptName: string,pageId) => {
+        onRun: (editor: YakitIMonacoEditor, scriptName: string,pageId,isAiPlugin:boolean) => {
             try {
                 const model = editor.getModel();
                 const selection = editor.getSelection()
@@ -249,7 +249,7 @@ export const extraMenuLists: OtherMenuListProps = {
                         text = selectText
                     }
                 }
-                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,pageId}))
+                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,pageId,isAiPlugin}))
             } catch (e) {
                 failed(`custom context menu execute failed: ${e}`)
             }

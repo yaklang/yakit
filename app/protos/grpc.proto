@@ -649,7 +649,6 @@ service Yak {
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
-
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -1105,6 +1104,7 @@ message GlobalNetworkConfig {
 
   repeated string ExcludePluginScanURIs = 15;
   repeated string IncludePluginScanURIs = 16;
+  repeated string AiApiPriority = 18;
 
   // AI Primary Config 首选 AI 配置项
   // openai / chatglm
@@ -1949,6 +1949,14 @@ message YaklangInspectInformationResponse {
   repeated YaklangInformation Information = 1;
   repeated YakScriptParam CliParameter = 2;
   repeated YakRiskInfo RiskInfo = 3;
+  repeated YakUIInfo UIInfo = 4;
+  repeated string Tags = 5;
+}
+
+message YakUIInfo {
+  string Typ = 1;
+  repeated string Effected = 2;
+  string WhenExpression = 3;
 }
 
 message YakRiskInfo {

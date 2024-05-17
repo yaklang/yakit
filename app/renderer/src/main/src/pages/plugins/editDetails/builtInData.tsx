@@ -25,7 +25,8 @@ export const BuiltInTags: string[] = [
     "目录爆破",
     "加解密工具",
     "威胁情报",
-    "空间引擎"
+    "空间引擎",
+    "AI工具"
 ]
 
 /** @name Risk信息风险等级对应Tag组件颜色 */
