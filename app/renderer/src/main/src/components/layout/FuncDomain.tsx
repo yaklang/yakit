@@ -1270,7 +1270,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         if (isUpdate) return 179
         // 更多版本 其他
         return 190
-    }, [isUpdate, showPencilAltIcon])
+    }, [isUpdate, showPencilAltIcon, lastVersion])
 
     return (
         <div
