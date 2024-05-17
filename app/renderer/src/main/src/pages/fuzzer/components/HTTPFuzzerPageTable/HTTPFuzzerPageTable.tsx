@@ -307,7 +307,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                           })
                                       }}
                                       onSure={() => {
-                                        console.log('---');
                                           setTimeout(() => {
                                               update()
                                           }, 100)
