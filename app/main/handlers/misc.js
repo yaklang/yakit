@@ -1,4 +1,7 @@
 const {ipcMain} = require("electron")
+const {getLocalYaklangEngine} = require("../filePath.js")
+const fs = require("fs")
+const crypto = require("crypto");
 
 module.exports = (win, getClient) => {
     // asyncYsoDump wrapper
@@ -697,5 +700,21 @@ module.exports = (win, getClient) => {
 
     ipcMain.handle("YaklangLanguageFind",async (e, params) => {
         return await asyncYaklangLanguageFind(params)
+    })
+    ipcMain.handle("CalcEngineSha265",async (e, params) => {
+        return new Promise((resolve,reject)=>{
+            let enginePath = getLocalYaklangEngine()
+            if (enginePath == undefined){
+                reject("get engine path failed")
+            }else{
+                if (fs.existsSync(enginePath)) {
+                    const sum = crypto.createHash("sha256")
+                    sum.update(fs.readFileSync(enginePath))
+                    resolve(sum.digest("hex"));
+                }else{
+                    reject("get engine content failed")
+                }
+            }
+        })
     })
 }
