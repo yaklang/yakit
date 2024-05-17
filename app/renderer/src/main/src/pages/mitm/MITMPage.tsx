@@ -697,6 +697,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         <YakitResizeBox
             isVer={false}
             freeze={openTabsFlag}
+            isRecalculateWH={openTabsFlag}
             firstNode={() => (
                 <div
                     className={style["mitm-server-start-pre-first"]}

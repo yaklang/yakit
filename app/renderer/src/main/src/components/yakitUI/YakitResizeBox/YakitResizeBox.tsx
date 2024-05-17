@@ -188,6 +188,8 @@ export interface YakitResizeBoxProps {
     freeze?: boolean
     /** 是否默认展示浅色线条样式 */
     isShowDefaultLineStyle?: boolean
+    /** body改变时是否重新计算宽高 */
+    isRecalculateWH?: boolean
     /** 线条占据空间的方向 */
     lineDirection?: "top" | "bottom" | "left" | "right"
     /** 第一块所占比例 支持 百分比/像素 */
@@ -222,6 +224,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         dragResize = false,
         freeze = true,
         isShowDefaultLineStyle = true,
+        isRecalculateWH = true,
         lineDirection,
         firstRatio = "50%",
         firstMinSize = "100px",
@@ -320,6 +323,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     })
     // 页面大小变化时重新计算 第一/第二 块内容宽高
     const bodyResize = (bodysize?: number) => {
+        if (!isRecalculateWH) return
         if (!bodyRef || !bodyRef.current) return
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
