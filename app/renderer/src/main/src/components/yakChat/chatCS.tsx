@@ -198,7 +198,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const [expand, setExpand] = useState<boolean>(true)
     useEffect(() => {
-        if (Math.abs(window.innerWidth * 0.95 - width) <= 1) {
+        if (Math.abs(Math.floor(window.innerWidth * 0.95) - width) <= 1) {
             setExpand(false)
         }
         if (width <= 481) {
