@@ -524,12 +524,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         // 背景颜色是否标注为红色
         const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
-
+        
+        const compareSorterTable = useCampare(sorterTable)
         useThrottleEffect(
             () => {
                 queryData()
             },
-            [data, isEnd],
+            [data, isEnd, compareSorterTable],
             {wait: 500}
         )
 
