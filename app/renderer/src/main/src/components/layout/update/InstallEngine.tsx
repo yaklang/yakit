@@ -1,11 +1,11 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon, YakitCopySvgIcon, YaklangInstallHintSvgIcon} from "../icons"
 import {Checkbox, Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
-import {DownloadingState, YakitSystem} from "@/yakitGVDefine"
+import {DownloadingState, YakitStatusType, YakitSystem} from "@/yakitGVDefine"
 import {failed, info, success} from "@/utils/notification"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {LocalGV} from "@/yakitGV"
@@ -18,6 +18,7 @@ import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,10 +27,12 @@ export interface InstallEngineProps {
     visible: boolean
     onSuccess: () => any
     onRemoreLink: () => any
+    onlyInstallLatestEngine?: boolean
+    setYakitStatus: (v: YakitStatusType) => any
 }
 
 export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) => {
-    const {system, visible, onSuccess, onRemoreLink} = props
+    const {system, visible, onSuccess, onRemoreLink = () => {}, onlyInstallLatestEngine = false, setYakitStatus} = props
 
     /** ---------- 获取操作系统和架构 & 内置引擎相关 Start ---------- */
     const [platformArch, setPlatformArch] = useState<string>("")
@@ -149,7 +152,12 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         {wait: 500}
     )
 
-    const [install, setInstall] = useState<boolean>(false)
+    const [install, setInstall] = useState<boolean>(onlyInstallLatestEngine)
+    useEffect(() => {
+        if (onlyInstallLatestEngine) {
+            installEngine()
+        }
+    }, [onlyInstallLatestEngine])
 
     /** 远端最新yaklang引擎版本 */
     const latestVersionRef = useRef<string>("")
@@ -166,13 +174,25 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         setTimeout(() => {
             setInstall(false)
             setCancelLoading(false)
+            // 发送到localEngine校验处
+            if (onlyInstallLatestEngine) {
+                emiter.emit("checkEngineDownloadLatestVersionCancel")
+                setYakitStatus("")
+            }
         }, 500)
     })
     /** 取消下载事件 */
     const onInstallClose = useMemoizedFn(() => {
         isBreakDownload.current = false
         if (downloadProgress) setDownloadProgress(undefined)
-        if (install) setInstall(false)
+        if (install) {
+            setInstall(false)
+            // 发送到localEngine校验处
+            if (onlyInstallLatestEngine) {
+                emiter.emit("checkEngineDownloadLatestVersionCancel")
+                setYakitStatus("")
+            }
+        }
     })
 
     /** 获取引擎线上最新版本 */
@@ -248,12 +268,15 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
 
     /** 一键安装事件 */
     const installEngine = useMemoizedFn(() => {
-        setCheckStatus(true)
-        if (!agrCheck) {
-            /** 抖动提示动画 */
-            setIsShake(true)
-            setTimeout(() => setIsShake(false), 1000)
-            return
+        // 只是安装引擎 其余操作不需要
+        if (!onlyInstallLatestEngine) {
+            setCheckStatus(true)
+            if (!agrCheck) {
+                /** 抖动提示动画 */
+                setIsShake(true)
+                setTimeout(() => setIsShake(false), 1000)
+                return
+            }
         }
         isBreakDownload.current = false
 

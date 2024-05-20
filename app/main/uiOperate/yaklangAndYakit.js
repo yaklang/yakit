@@ -94,15 +94,17 @@ module.exports = (win, getClient) => {
             switch (process.platform) {
                 case "darwin":
                     url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_amd64.sha256.txt`
+                    break
                 case "win32":
                     url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_windows_amd64.exe.sha256.txt`
+                    break
                 case "linux":
                     url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_amd64.sha256.txt`
+                    break
             }
             if (url === '') {
                 reject(`Unsupported platform: ${process.platform}`)
             }
-            console.log('校验引擎地址：' + url);
             let rsp = https.get(url)
             rsp.on("response", (rsp) => {
                 rsp.on("data", (data) => {

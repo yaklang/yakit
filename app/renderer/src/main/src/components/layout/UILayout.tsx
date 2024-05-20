@@ -289,6 +289,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }, 1000)
     }, [])
 
+    /** 校验版本有问题 没有内置版本则 安装最新引擎 **/
+    const [onlyInstallLatestEngine, setOnlyInstallLatestEngine] = useState<boolean>(false) // 只走安装步骤
+    const checkEngineDownloadLatestVersion = () => {
+        setOnlyInstallLatestEngine(true)
+        onSetYakitStatus("install")
+    }
+
     /**
      * 1、清空日志信息|将远程连接loading置为false(不管是不是远程连接)|
      * 2、执行连接成功的外界回调事件
@@ -1436,6 +1443,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             <InstallEngine
                                 visible={yakitStatus === "install"}
                                 system={system}
+                                onlyInstallLatestEngine={onlyInstallLatestEngine}
+                                setYakitStatus={onSetYakitStatus}
                                 onSuccess={() => handleStatusCompleted("install")}
                                 onRemoreLink={() => {
                                     setCheckLog([])
@@ -1460,6 +1469,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             setLog={setCheckLog}
                             onLinkEngine={handleLinkLocalEngine}
                             setYakitStatus={onSetYakitStatus}
+                            checkEngineDownloadLatestVersion={checkEngineDownloadLatestVersion}
                         />
                         {!engineLink && isRemoteEngine && yakitStatus !== "control-remote" && (
                             <RemoteEngine

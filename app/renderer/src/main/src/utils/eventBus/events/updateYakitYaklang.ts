@@ -7,4 +7,6 @@ export type UpdateYakitYaklangEventProps = {
     startAndCreateEngineProcess?: boolean
     /** 下载指定版本yaklang */
     downYaklangSpecifyVersion: string
+    /** 校验引擎下载最新引擎失败或取消 */
+    checkEngineDownloadLatestVersionCancel?: string
 }
