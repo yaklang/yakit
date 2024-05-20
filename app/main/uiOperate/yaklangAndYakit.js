@@ -1,9 +1,10 @@
-const {ipcMain, app} = require("electron")
+const { ipcMain, app } = require("electron")
 const path = require("path")
 const fs = require("fs")
 const https = require("https")
-const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath")
-const {fetchLatestYakEngineVersion} = require("../handlers/utils/network")
+const process = require("process");
+const { getLocalYaklangEngine, loadExtraFilePath } = require("../filePath")
+const { fetchLatestYakEngineVersion } = require("../handlers/utils/network")
 
 module.exports = (win, getClient) => {
     /** yaklang引擎是否安装 */
@@ -85,5 +86,34 @@ module.exports = (win, getClient) => {
     /** 获取Yaklang所有版本 */
     ipcMain.handle("fetch-yaklang-version-list", async (e) => {
         return await asyncFetchYaklangVersionList()
+    })
+
+    const asyncFetchCheckYaklangSource = (version) => {
+        return new Promise((resolve, reject) => {
+            let url = ''
+            switch (process.platform) {
+                case "darwin":
+                    url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_amd64.sha256.txt`
+                case "win32":
+                    url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_windows_amd64.exe.sha256.txt`
+                case "linux":
+                    url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_amd64.sha256.txt`
+            }
+            if (url === '') {
+                reject(`Unsupported platform: ${process.platform}`)
+            }
+            console.log('校验引擎地址：' + url);
+            let rsp = https.get(url)
+            rsp.on("response", (rsp) => {
+                rsp.on("data", (data) => {
+                    resolve(Buffer.from(data).toString("utf8"))
+                }).on("error", (err) => reject(err))
+            })
+            rsp.on("error", reject)
+        })
+    }
+    /** 校验Yaklang来源是否正确 */
+    ipcMain.handle("fetch-check-yaklang-source", async (e, version) => {
+        return await asyncFetchCheckYaklangSource(version)
     })
 }

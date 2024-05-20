@@ -94,6 +94,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
                 setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
                 setCurrentYaklang(localYaklang)
+                checkEngineSource(localYaklang)
                 setTimeout(() => {
                     if (isShowedUpdateHint.current) return
                     preventUpdateHint.current = true
@@ -107,6 +108,18 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
             if (callback) callback()
         })
+
+        // 校验引擎是否来源正确
+        const checkEngineSource = async (localYaklang: string) => {
+            setLog([`本地引擎版本${localYaklang}，校验引擎正确性中`])
+            try {
+                const res = await ipcRenderer.invoke("fetch-check-yaklang-source", localYaklang)
+                console.log(123, res);
+                setLog(['引擎来源正确'])
+            } catch (error) {
+                
+            }
+        }
 
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {
             if (!isCommunityEdition()) {
