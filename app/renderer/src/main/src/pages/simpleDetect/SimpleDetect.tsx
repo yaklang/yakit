@@ -44,7 +44,7 @@ import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorCont
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
 import {v4 as uuidv4} from "uuid"
 import {defaultSearch} from "../plugins/builtInData"
-import {defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/constants"
+import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 

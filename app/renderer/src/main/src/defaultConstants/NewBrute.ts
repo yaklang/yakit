@@ -1,4 +1,5 @@
-import {BruteExecuteExtraFormValue} from "./NewBruteType"
+import {BruteExecuteExtraFormValue} from "@/pages/securityTool/newBrute/NewBruteType"
+import {BrutePageInfoProps} from "@/store/pageInfo"
 
 export const defaultBruteExecuteExtraFormValue: BruteExecuteExtraFormValue = {
     Concurrent: 50,
@@ -25,4 +26,8 @@ export const defaultBruteExecuteExtraFormValue: BruteExecuteExtraFormValue = {
     replaceDefaultPasswordDict: true,
     replaceDefaultUsernameDict: true
     // 前端展示使用  ------end
+}
+
+export const defaultBrutePageInfo: BrutePageInfoProps = {
+    targets: ""
 }

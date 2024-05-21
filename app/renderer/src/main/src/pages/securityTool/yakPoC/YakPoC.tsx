@@ -40,7 +40,7 @@ import {FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/a
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {PageNodeItemProps, PocPageInfoProps, defaultPocPageInfo, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {GroupCount, QueryYakScriptRequest, SaveYakScriptGroupRequest, YakScript} from "@/pages/invoker/schema"
@@ -64,6 +64,7 @@ import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/Y
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
+import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))

@@ -49,9 +49,10 @@ import {v4 as uuidv4} from "uuid"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {shallow} from "zustand/shallow"
-import {PageNodeItemProps, ScanPortPageInfoProps, defaultScanPortPageInfo, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, ScanPortPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/routes/newRoute"
-import { pluginTypeFilterList } from "@/defaultConstants/PluginBatchExecutor"
+import {pluginTypeFilterList} from "@/defaultConstants/PluginBatchExecutor"
+import {defaultScanPortPageInfo} from "@/defaultConstants/NewPortScan"
 
 const NewPortScanExtraParamsDrawer = React.lazy(() => import("./NewPortScanExtraParamsDrawer"))
 

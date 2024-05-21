@@ -15,7 +15,7 @@ import {
     NetworkCardSettingsPanel,
     ScanOtherSettingsPanel
 } from "../securityTool/newPortScan/NewPortScanExtraParamsDrawer"
-import {defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/constants"
+import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
 
 const {YakitPanel} = YakitCollapse
 

@@ -29,10 +29,10 @@ import cloneDeep from "lodash/cloneDeep"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
-import {BrutePageInfoProps, PageNodeItemProps, defaultBrutePageInfo, usePageInfo} from "@/store/pageInfo"
+import {BrutePageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
-import {defaultBruteExecuteExtraFormValue} from "./constants"
+import {defaultBruteExecuteExtraFormValue, defaultBrutePageInfo} from "@/defaultConstants/NewBrute"
 
 const BruteExecuteParamsDrawer = React.lazy(() => import("./BruteExecuteParamsDrawer"))
 
