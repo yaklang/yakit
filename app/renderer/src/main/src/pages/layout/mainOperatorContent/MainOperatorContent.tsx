@@ -81,7 +81,6 @@ import {
     PageProps,
     defPage,
     defaultBrutePageInfo,
-    defaultPluginBatchExecutorPageInfo,
     defaultPocPageInfo,
     defaultScanPortPageInfo,
     saveFuzzerCache,
@@ -92,11 +91,11 @@ import {
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
-import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {PluginGroupType} from "@/pages/plugins/group/PluginGroups"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import {defPluginBatchExecuteExtraFormValue, defaultPluginBatchExecutorPageInfo} from "@/defaultConstants/PluginBatchExecutor"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))

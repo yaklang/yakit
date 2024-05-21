@@ -29,11 +29,11 @@ import {
     HybridScanModeType,
     HybridScanPluginConfig
 } from "@/models/HybridScan"
-import {defPluginBatchExecuteExtraFormValue, isEmpty} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultFilter, defaultSearch} from "./baseTemplate"
 import {PluginGroupList} from "./local/PluginsLocalType"
 import {HTTPRequestParameters} from "@/types/http-api"
+import { defPluginBatchExecuteExtraFormValue } from "@/defaultConstants/PluginBatchExecutor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1180,7 +1180,7 @@ export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Prom
                 default:
                     break
             }
-            
+
             ipcRenderer
                 .invoke("DebugPlugin", executeParams, token)
                 .then(() => {

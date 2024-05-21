@@ -19,8 +19,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     PluginBatchExecuteContent,
-    PluginBatchExecuteContentRefProps,
-    batchPluginType
+    PluginBatchExecuteContentRefProps
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {useControllableValue, useCreation, useDebounceFn, useInViewport, useInterval, useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -64,6 +63,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
+import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
