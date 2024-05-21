@@ -37,13 +37,14 @@ import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetai
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
-import {convertStartBruteParams, defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
+import {convertStartBruteParams} from "../securityTool/newBrute/utils"
 import {StartBruteParams} from "../brute/BrutePage"
 import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
 import {v4 as uuidv4} from "uuid"
 import {defaultSearch} from "../plugins/builtInData"
+import {defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/constants"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 

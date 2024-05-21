@@ -41,13 +41,13 @@ import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
-import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/NewPortScan"
 import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/YakPoC"
 import {Uint8ArrayToString} from "@/utils/str"
 import {yakitNotify} from "@/utils/notification"
 import {
     defPluginBatchExecuteExtraFormValue,
-    defaultPluginBatchExecutorPageInfo
+    defaultPluginBatchExecutorPageInfo,
+    pluginTypeFilterList
 } from "@/defaultConstants/PluginBatchExecutor"
 import {defaultFilter, defaultSearch} from "../builtInData"
 

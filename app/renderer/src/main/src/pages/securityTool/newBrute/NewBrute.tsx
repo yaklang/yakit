@@ -8,13 +8,7 @@ import {
     NewBruteProps
 } from "./NewBruteType"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
-import {
-    apiCancelStartBrute,
-    apiGetAvailableBruteTypes,
-    apiStartBrute,
-    convertStartBruteParams,
-    defaultBruteExecuteExtraFormValue
-} from "./utils"
+import {apiCancelStartBrute, apiGetAvailableBruteTypes, apiStartBrute, convertStartBruteParams} from "./utils"
 import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import {DataNode} from "antd/lib/tree"
 import styles from "./NewBrute.module.scss"
@@ -38,6 +32,7 @@ import {StartBruteParams} from "@/pages/brute/BrutePage"
 import {BrutePageInfoProps, PageNodeItemProps, defaultBrutePageInfo, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
+import {defaultBruteExecuteExtraFormValue} from "./constants"
 
 const BruteExecuteParamsDrawer = React.lazy(() => import("./BruteExecuteParamsDrawer"))
 
