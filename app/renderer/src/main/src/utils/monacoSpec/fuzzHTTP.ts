@@ -378,8 +378,14 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/\s/, "delimiter", "@http_protocol"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             ["/(((http)|(https):)?\/\/[^\s]+?)/", "http.url"],
+            [/#/, "http.anchor", "@http_anchor"],
             // [/\/[^\s^?^\/]+/, "http.path"],
             [/\?/, "http.query", "@query"],
+        ],
+        http_anchor: [
+            [/\s/, "delimiter", "@http_protocol"],
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+            [/./, "http.anchor"],
         ],
         http_protocol: [
             [/\n/, "delimiter", "@http_header"],
@@ -417,20 +423,23 @@ monaco.languages.setMonarchTokensProvider("http", {
         query: [
             [/\s/, "delimiter", "@http_protocol"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/[^=&?\[\]\s]+/, "http.query.params", "@http_query_params"],
+            [/#/, "http.anchor", "@http_anchor"],
+            [/[^=&?\[\]\s]/, "http.query.params", "@http_query_params"],
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
         http_query_params: [
             [/\s/, { token: "delimiter", next: "@pop", goBack: 1 }],
+            [/#/, "http.anchor", "@http_anchor"],
             [/&/, 'delimiter', "@pop"],
             [/(\[)(\w+)(\])/, ["http.query.index", "http.query.index.values", "http.query.index"]],
             [/\=/, "http.query.equal", "http_query_params_values"],
         ],
         http_query_params_values: [
             [/\s/, { token: "delimiter", next: "@pop", goBack: 1 }],
+            [/#/, "http.anchor", "@http_anchor"],
             [/&/, { token: 'delimiter', next: "@pop", goBack: 1 }],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/[^=&?\s]+/, "http.query.values"],
+            [/[^=&?\s]/, "http.query.values"],
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
         http_cookie: [
