@@ -37,7 +37,7 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {PluginLocalListDetails} from "@/pages/plugins/operator/PluginLocalListDetails/PluginLocalListDetails"
 import {PluginFilterParams, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
-import {defaultSearch, pluginTypeToName} from "@/pages/plugins/builtInData"
+import {defaultSearch} from "@/pages/plugins/builtInData"
 import {defaultLinkPluginConfig} from "@/pages/plugins/utils"
 import {getLinkPluginConfig} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
 import {RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPortScan, apiSimpleDetect} from "./utils"
@@ -51,17 +51,11 @@ import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {shallow} from "zustand/shallow"
 import {PageNodeItemProps, ScanPortPageInfoProps, defaultScanPortPageInfo, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/routes/newRoute"
+import { pluginTypeFilterList } from "@/defaultConstants/PluginBatchExecutor"
 
 const NewPortScanExtraParamsDrawer = React.lazy(() => import("./NewPortScanExtraParamsDrawer"))
 
 const {ipcRenderer} = window.require("electron")
-
-/**端口扫描/批量执行的默认查询的插件类型 */
-export const pluginTypeFilterList = ["mitm", "port-scan", "nuclei"].map((ele) => ({
-    label: pluginTypeToName[ele]?.name || "-",
-    value: ele,
-    count: 0
-}))
 
 export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
     const {id} = props
