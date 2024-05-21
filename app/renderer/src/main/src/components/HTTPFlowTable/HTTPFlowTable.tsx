@@ -1201,7 +1201,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 updateMITMPageQuery(query, "update")
                 return
             }
-            setIsRefresh(!isRefresh)
             setSelectedRowKeys([])
             setSelectedRows([])
             setScrollToIndex(0)
