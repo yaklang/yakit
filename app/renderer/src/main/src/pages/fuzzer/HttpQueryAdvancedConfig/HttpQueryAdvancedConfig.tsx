@@ -49,13 +49,12 @@ import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
 import {ExtractorsPanel, MatchersPanel, VariablePanel} from "./FuzzerConfigPanels"
-import { DefFuzzerTableMaxData } from "@/defaultConstants/HTTPFuzzerPage"
+import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
-export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
-export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
+const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 const fuzzTagModeOptions = [
     {
