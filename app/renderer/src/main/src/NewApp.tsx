@@ -17,6 +17,7 @@ import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
 import {LocalGVS} from "./enums/localGlobal"
+import {handleFetchSystemInfo} from "./constants/hardware"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -39,6 +40,7 @@ function NewApp() {
     useEffect(() => {
         // 解压命令执行引擎脚本压缩包
         ipcRenderer.invoke("generate-start-engine")
+        handleFetchSystemInfo()
     }, [])
 
     /**

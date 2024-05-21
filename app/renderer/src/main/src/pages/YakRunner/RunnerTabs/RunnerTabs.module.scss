@@ -1,0 +1,289 @@
+/* ---------- RunnerTabs ----------*/
+.runner-tabs {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .tabs-pane {
+        flex: 1;
+        overflow: hidden;
+    }
+}
+
+/* ---------- RunnerTabBar ----------*/
+.runner-tab-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f8f8;
+    position: relative;
+
+    .bar-wrapper {
+        flex: 1;
+        overflow: hidden;
+        .bar-container {
+            width: 100%;
+            display: flex;
+        }
+    }
+
+    &::after {
+        content: "";
+        width: 100%;
+        height: 1px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        background-color: #eaecf3;
+    }
+}
+
+/* ---------- RunnerTabBarItem ----------*/
+.runner-tab-bar-item {
+    position: relative;
+    .item-wrapper {
+        min-width: 24px;
+        height: 32px;
+        padding: 4px 8px 4px 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        position: relative;
+
+        img {
+            width: 16px;
+            height: 16px;
+        }
+        .text-style {
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
+        .del-btn {
+            visibility: hidden;
+            opacity: 0;
+        }
+    }
+}
+
+.runner-tab-bar-item:hover {
+    background-color: #ffffff;
+    .item-wrapper .del-btn {
+        visibility: visible;
+        opacity: 1;
+    }
+}
+
+.runner-tab-bar-item:not(:first-child) {
+    .item-wrapper::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 1px;
+        height: 16px;
+        background-color: #eaecf3;
+    }
+}
+
+.runner-tab-bar-item.selected {
+    background-color: #f0f1f3;
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        border-radius: 2px 2px 0px 0px;
+        background: #f28b44;
+        z-index: 10;
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background-color: #f0f1f3;
+        z-index: 10;
+    }
+
+    .item-wrapper {
+        .del-btn {
+            visibility: visible;
+            opacity: 1;
+        }
+        &::before {
+            display: none;
+        }
+    }
+}
+.runner-tab-bar-item.selected + .runner-tab-bar-item {
+    .item-wrapper::before {
+        display: none;
+    }
+}
+
+.runner-tab-bar-item.dragging {
+    border: 1px solid #f28b44;
+    border-radius: 4px;
+    background-color: rgba(242, 139, 68, 0.06);
+    &.selected {
+        &::before {
+            visibility: hidden;
+            opacity: 0;
+        }
+        &::after {
+            visibility: hidden;
+            opacity: 0;
+        }
+    }
+
+    .item-wrapper .del-btn {
+        visibility: visible;
+        opacity: 1;
+    }
+}
+
+/* ---------- RunnerTabPane ----------*/
+.runner-tab-pane {
+    height: 100%;
+    background-color: #f0f1f3;
+}
+
+/* ---------- YakRunnerWelcomePage ----------*/
+.yak-runner-welcome-page {
+    height: 100%;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    overflow: auto;
+
+    .title {
+        .icon-style {
+            display: flex;
+            justify-content: center;
+            svg {
+                width: 72px;
+                height: 72px;
+            }
+        }
+        .header-style {
+            color: #31343f;
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 40px;
+        }
+    }
+
+    .operate {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        border-radius: 8px;
+        background: #f8f8f8;
+        .title-style {
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+        }
+        .operate-btn-group {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            .btn-style {
+                flex: 1 0 0;
+                padding: 16px 16px 16px 12px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 4px;
+                cursor: pointer;
+                user-select: none;
+                .btn-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: #31343f;
+                    font-size: 14px;
+                    font-weight: 400;
+                    line-height: 20px;
+                    white-space: nowrap;
+                    svg {
+                        width: 32px;
+                        height: 32px;
+                    }
+                }
+
+                .icon-style {
+                    svg {
+                        width: 20px;
+                        height: 20px;
+                        color: #85899e;
+                    }
+                }
+            }
+            .btn-new-file {
+                background: rgba(255, 182, 96, 0.1);
+                &:hover {
+                    background: rgba(255, 182, 96, 0.2);
+                }
+            }
+            .btn-open-file {
+                background: rgba(86, 201, 145, 0.1);
+                &:hover {
+                    background: rgba(86, 201, 145, 0.2);
+                }
+            }
+            .btn-open-folder {
+                background: rgba(53, 216, 238, 0.1);
+                &:hover {
+                    background: rgba(53, 216, 238, 0.2);
+                }
+            }
+        }
+    }
+
+    .recent-open {
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        .title-style {
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+        }
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            .list-opt {
+                padding: 4px 0px;
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                font-size: 14px;
+                font-weight: 400;
+                line-height: 20px;
+                white-space: nowrap;
+                .file-name {
+                    color: #f28b44;
+                    cursor: pointer;
+                }
+                .file-path {
+                    color: #b4bbca;
+                }
+            }
+        }
+    }
+}

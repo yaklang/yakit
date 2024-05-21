@@ -1,7 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import ReactDOM from "react-dom"
 import {
-    useDebounceEffect,
     useDebounceFn,
     useGetState,
     useKeyPress,
@@ -26,7 +24,6 @@ import {
     KeyboardToFuncProps,
     YakitIModelDecoration,
     OperationRecord,
-    OperationRecordRes,
     OtherMenuListProps
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
@@ -1419,12 +1416,27 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
         // 监听光标移动
         editor.onDidChangeCursorPosition((e) => {
+            console.log(1111)
             closeFizzRangeWidget()
             closeFizzSelectWidget()
             // const { position } = e;
             // console.log('当前光标位置：', position);
         })
     }
+
+    useEffect(() => {
+        if (!editor) {
+            return
+        }
+
+        // 监听光标移动
+        editor.onDidChangeCursorPosition((e) => {
+            console.log("e", e)
+            // const { position } = e;
+            // console.log('当前光标位置：', position);
+        })
+    }, [editor])
+
     return (
         <div
             ref={ref}

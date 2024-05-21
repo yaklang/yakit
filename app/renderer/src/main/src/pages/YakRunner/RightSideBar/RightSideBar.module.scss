@@ -1,0 +1,98 @@
+.right-side-bar {
+    height: 100%;
+    display: flex;
+    border-left: 1px solid #eaecf3;
+    border-right: 1px solid #eaecf3;
+
+    &-list {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        background: #f8f8f8;
+        border-left: 1px solid #eaecf3;
+    }
+
+    &-item {
+        padding: 12px 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        cursor: pointer;
+        border-bottom: 1px solid #eaecf3;
+        position: relative;
+        user-select: none;
+
+        .item-text {
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            writing-mode: vertical-rl;
+            text-orientation: sideways-right;
+        }
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #85899e;
+        }
+    }
+    &-item:hover {
+        background-color: rgba(204, 210, 222, 0.5);
+    }
+
+    &-item-active {
+        background-color: #f28b44;
+        .item-text {
+            color: #ffffff;
+        }
+        svg {
+            color: #ffffff;
+        }
+    }
+    &-item-active::before {
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        content: "";
+        top: 0;
+        left: -1px;
+        background-color: #f28b44;
+    }
+    &-item-active::after {
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        content: "";
+        top: 0;
+        right: -1px;
+        background-color: #f28b44;
+    }
+    &-item-active:hover {
+        background-color: #f28b44;
+    }
+
+    &-content {
+        width: 301px;
+        height: 100%;
+
+        .content-wrapper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hidden-content {
+            display: none;
+        }
+    }
+}
+
+.folded {
+    .right-side-bar-list {
+        border-left: 0;
+    }
+
+    .right-side-bar-content {
+        width: 0;
+    }
+}
