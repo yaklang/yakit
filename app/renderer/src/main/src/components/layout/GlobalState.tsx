@@ -249,6 +249,46 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         })
     })
 
+    // 校验引擎是否为官方发布版本
+    const [showCheckEngine, setShowCheckEngine] = useState<boolean>(false)
+    const getCurrentYak = () => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("get-current-yak")
+                .then((res: string) => {
+                    if (res) {
+                        checkEngineSource(res, resolve, reject)
+                    } else {
+                        setShowCheckEngine(false)
+                        reject()
+                    }
+                })
+                .catch(() => {
+                    setShowCheckEngine(false)
+                    reject()
+                })
+        })
+    }
+    const timeout = (ms: number) =>
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Check engine source request timed out")), ms))
+    const checkEngineSource = async (localYaklang: string, resolve, reject) => {
+        try {
+            const [res1, res2] = await Promise.all([
+                Promise.race([ipcRenderer.invoke("fetch-check-yaklang-source", localYaklang), timeout(3000)]),
+                ipcRenderer.invoke("CalcEngineSha265")
+            ])
+            if (res1 === res2) {
+                setShowCheckEngine(false)
+            } else {
+                setShowCheckEngine(true)
+            }
+            resolve()
+        } catch (error) {
+            setShowCheckEngine(false)
+            reject()
+        }
+    }
+
     const [state, setState] = useState<string>("error")
     const [stateNum, setStateNum] = useState<number>(0)
 
@@ -282,6 +322,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             status = "error"
             count = count + 1
         }
+        if (showCheckEngine) {
+            status = "error"
+            count = count + 1
+        }
         setState(status)
         setStateNum(count)
     })
@@ -293,14 +337,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         isRunRef.current = true
         Promise.allSettled(
             serverPushStatus
-                ? [updateSystemProxy(), updateGlobalReverse(), updatePcap(), updateChromePath(), updateMITMCert()]
+                ? [
+                      updateSystemProxy(),
+                      updateGlobalReverse(),
+                      updatePcap(),
+                      updateChromePath(),
+                      updateMITMCert(),
+                      getCurrentYak()
+                  ]
                 : [
                       updateSystemProxy(),
                       updateGlobalReverse(),
                       updatePcap(),
                       updatePluginTotal(),
                       updateChromePath(),
-                      updateMITMCert()
+                      updateMITMCert(),
+                      getCurrentYak()
                   ]
         )
             .then((values) => {
@@ -487,43 +539,21 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     </div>
                 </div>
                 <div className={styles["body-wrapper"]}>
-                    {/* 网卡权限修复 */}
-                    {!pcap.IsPrivileged && (
+                    {/* 引擎是否是官方发布版本 */}
+                    {showCheckEngine && (
                         <div className={styles["body-info"]}>
-                            {system !== "Windows_NT" ? (
-                                <>
-                                    <div className={styles["info-left"]}>
-                                        <ErrorIcon />
-                                        <div className={styles["left-body"]}>
-                                            <div className={styles["title-style"]}>网卡权限未修复</div>
-                                            <div className={styles["subtitle-style"]}>
-                                                可能会影响部分功能的使用，建议尽快修复
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className={styles["info-right"]}>
-                                        <YakitButton
-                                            type='text'
-                                            className={styles["btn-style"]}
-                                            onClick={() => {
-                                                if (pcapHintShow) return
-                                                setShow(false)
-                                                setPcapHintShow(true)
-                                            }}
-                                        >
-                                            去修复
-                                        </YakitButton>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className={styles["info-left"]}>
-                                    <WarningIcon />
-                                    <div className={styles["left-body"]}>
-                                        <div className={styles["title-style"]}>建议使用管理员身份运行软件</div>
-                                        <div className={styles["subtitle-style"]}>普通权限可能会影响部分功能的使用</div>
-                                    </div>
+                            <div className={styles["info-left"]}>
+                                <ErrorIcon />
+                                <div className={styles["left-body"]}>
+                                    <div className={styles["title-style"]}>引擎不是官方发布版本</div>
+                                    <div className={styles["subtitle-style"]}>可能会造成本地使用出现问题</div>
                                 </div>
-                            )}
+                            </div>
+                            <div className={styles["info-right"]}>
+                                <YakitButton type='text' className={styles["btn-style"]} onClick={() => {}}>
+                                    使用官方引擎
+                                </YakitButton>
+                            </div>
                         </div>
                     )}
                     {/* MITM 证书 */}
@@ -589,6 +619,45 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     下载安装
                                 </YakitButton>
                             </div>
+                        </div>
+                    )}
+                    {/* 网卡权限修复 */}
+                    {!pcap.IsPrivileged && (
+                        <div className={styles["body-info"]}>
+                            {system !== "Windows_NT" ? (
+                                <>
+                                    <div className={styles["info-left"]}>
+                                        <ErrorIcon />
+                                        <div className={styles["left-body"]}>
+                                            <div className={styles["title-style"]}>网卡权限未修复</div>
+                                            <div className={styles["subtitle-style"]}>
+                                                可能会影响部分功能的使用，建议尽快修复
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className={styles["info-right"]}>
+                                        <YakitButton
+                                            type='text'
+                                            className={styles["btn-style"]}
+                                            onClick={() => {
+                                                if (pcapHintShow) return
+                                                setShow(false)
+                                                setPcapHintShow(true)
+                                            }}
+                                        >
+                                            去修复
+                                        </YakitButton>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className={styles["info-left"]}>
+                                    <WarningIcon />
+                                    <div className={styles["left-body"]}>
+                                        <div className={styles["title-style"]}>建议使用管理员身份运行软件</div>
+                                        <div className={styles["subtitle-style"]}>普通权限可能会影响部分功能的使用</div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                     {/* 本地插件下载 */}
