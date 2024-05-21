@@ -1685,6 +1685,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     useEffect(() => {
         if (isEngineLink) {
             ipcRenderer.on("fetch-yak-version-callback", async (e: any, data: string) => {
+                console.log('本地引擎版本号：', data);
                 setYaklangVersion(data || "dev")
             })
         }

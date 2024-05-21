@@ -9,4 +9,6 @@ export type UpdateYakitYaklangEventProps = {
     downYaklangSpecifyVersion: string
     /** 校验引擎下载最新引擎失败或取消 */
     checkEngineDownloadLatestVersionCancel?: string
+    /** 系统检测校验引擎是否是官方发布点击去使用 */
+    systemDetectionClickUseOfficialEngine?: string
 }

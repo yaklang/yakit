@@ -651,6 +651,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         } catch (error) {}
     }
 
+    const systemDetectionClickUseOfficialEngine = () => {
+        setYaklangKillPssText({
+            title: "使用官方引擎，需关闭所有本地进程",
+            content: "确认下载并安装官方引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+        })
+        handleActiveDownloadModal("yaklang")
+    }
+    useEffect(() => {
+        emiter.on("systemDetectionClickUseOfficialEngine", systemDetectionClickUseOfficialEngine)
+        return () => {
+            emiter.off("systemDetectionClickUseOfficialEngine", systemDetectionClickUseOfficialEngine)
+        }
+    }, [])
+
     const onDownloadedYaklang = useMemoizedFn(() => {
         setYaklangSpecifyVersion("")
         setYaklangDownload(false)

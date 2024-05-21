@@ -127,6 +127,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             new Promise((_, reject) => setTimeout(() => reject(new Error("Check engine source request timed out")), ms))
         const checkEngineSource = async (localYaklang: string) => {
             try {
+                console.log('校验引擎版本号：', localYaklang);
                 setLog([`本地引擎版本${localYaklang}，校验引擎正确性中`])
                 const [res1, res2] = await Promise.all([
                     Promise.race([ipcRenderer.invoke("fetch-check-yaklang-source", localYaklang), timeout(3000)]),
