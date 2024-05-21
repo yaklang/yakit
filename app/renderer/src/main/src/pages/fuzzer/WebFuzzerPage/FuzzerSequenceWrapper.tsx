@@ -1,12 +1,10 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {} from "react"
 import {FuzzerSequenceWrapperProps, WebFuzzerType} from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
 import classNames from "classnames"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {webFuzzerTabs} from "./WebFuzzerPage"
-
-const {ipcRenderer} = window.require("electron")
 
 /**只包裹序列 */
 const FuzzerSequenceWrapper: React.FC<FuzzerSequenceWrapperProps> = React.memo((props) => {
