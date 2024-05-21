@@ -9,8 +9,7 @@ import {
     ListShowContainer,
     OnlineExtraOperate,
     PluginsList,
-    TypeSelect,
-    funcSearchType
+    TypeSelect
 } from "../funcTemplate"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
@@ -22,13 +21,7 @@ import {
     OutlineSwitchverticalIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {
-    useMemoizedFn,
-    useDebounceFn,
-    useControllableValue,
-    useUpdateEffect,
-    useInViewport,
-    useLatest} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useControllableValue, useUpdateEffect, useInViewport, useLatest} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
@@ -47,7 +40,7 @@ import {
 } from "./PluginsOnlineType"
 import cloneDeep from "lodash/cloneDeep"
 import {API} from "@/services/swagger/resposeType"
-import {PluginsContainer, PluginsLayout, defaultSearch} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginsOnlineDetail} from "./PluginsOnlineDetail"
 import {SolidClouduploadIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
@@ -69,7 +62,7 @@ import {
 import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TypeSelectOpt} from "../funcTemplateType"
-import {DefaultTypeList, PluginGV, pluginTypeToName} from "../builtInData"
+import {DefaultTypeList, PluginGV, defaultSearch, funcSearchType, pluginTypeToName} from "../builtInData"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"

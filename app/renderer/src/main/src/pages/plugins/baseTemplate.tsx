@@ -57,7 +57,6 @@ import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
-const {ipcRenderer} = window.require("electron")
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -263,7 +262,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         }
     }, [prImgs])
     return (
-        <div className={classNames(styles['plugin-detail-header-wrapper'], wrapperClassName)}>
+        <div className={classNames(styles["plugin-detail-header-wrapper"], wrapperClassName)}>
             <div className={styles["header-wrapper"]}>
                 <div className={styles["header-info"]}>
                     <div className={styles["info-title"]}>
@@ -368,7 +367,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                                     title={`复制插件 “${basePluginName}” 为 “${pluginName}”`}
                                     overlayClassName='plugins-tooltip'
                                 >
-                                    <YakitTag style={{marginRight: 0,cursor:'pointer'}}>复制</YakitTag>
+                                    <YakitTag style={{marginRight: 0, cursor: "pointer"}}>复制</YakitTag>
                                 </Tooltip>
                             </div>
                         </>
@@ -778,7 +777,9 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                                         const arr = tags.concat([PluginGV.PluginCodecContextMenuExecuteSwitch])
                                         setTags([...arr])
                                     } else {
-                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecContextMenuExecuteSwitch)
+                                        const arr = tags.filter(
+                                            (item) => item !== PluginGV.PluginCodecContextMenuExecuteSwitch
+                                        )
                                         setTags([...arr])
                                     }
                                 }}
@@ -925,13 +926,13 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
             >
                 <div className={"plugin-details-item-info"}>
                     {enableCheck && (
-                    <YakitCheckbox
-                        checked={check}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                        }}
-                        onChange={onCheck}
-                    />
+                        <YakitCheckbox
+                            checked={check}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
+                            onChange={onCheck}
+                        />
                     )}
                     {authorImgNode}
                     <div
@@ -995,24 +996,3 @@ export const statusTag: {[key: string]: ReactNode} = {
         </div>
     )
 }
-
-/** 搜索过滤条件对应展示名称 */
-export const filterToName: Record<string, string> = {
-    type: "插件状态",
-    tags: "TAG",
-    plugin_type: "插件类型",
-    status: "审核状态",
-    group: "插件分组"
-}
-
-export const defaultFilter: PluginFilterParams = {
-    // plugin_type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
-    // status: ["0"],
-    // plugin_private: ["1"]
-}
-export const defaultSearch: PluginSearchParams = {
-    keyword: "",
-    userName: "",
-    type: "keyword"
-}
-export const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}

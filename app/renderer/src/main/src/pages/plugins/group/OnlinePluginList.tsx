@@ -4,7 +4,6 @@ import {OutlinePluscircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {useMemoizedFn, useDebounceFn, useInViewport, useLatest, useUpdateEffect} from "ahooks"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import cloneDeep from "lodash/cloneDeep"
-import {defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {yakitNotify} from "@/utils/notification"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
@@ -35,11 +34,8 @@ import {RcFile} from "antd/lib/upload"
 import {Spin} from "antd"
 import Dragger from "antd/lib/upload/Dragger"
 import {PropertyIcon} from "@/pages/payloadManager/icon"
+import {defaultFilter, defaultSearch} from "../builtInData"
 const {ipcRenderer} = window.require("electron")
-const defaultFilters = {
-    plugin_type: [],
-    plugin_group: []
-}
 
 interface PluginOnlineGroupsListProps {
     pluginsGroupsInViewport: boolean
@@ -57,7 +53,7 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
             keyword: ""
         })
     )
-    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters)
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
     const userInfo = useStore((s) => s.userInfo)
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -464,7 +460,7 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
                     onCancel={() => setGroupVisible(false)}
                     footer={null}
                 >
-                    <UploadGroupModal onClose={() => setGroupVisible(false)}/>
+                    <UploadGroupModal onClose={() => setGroupVisible(false)} />
                 </YakitModal>
             )}
         </div>

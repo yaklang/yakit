@@ -1,5 +1,4 @@
 import React, {useRef, useState, useEffect, forwardRef, useImperativeHandle} from "react"
-import {defaultFilter, defaultSearch} from "../baseTemplate"
 import {useMemoizedFn, useCreation, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
@@ -46,7 +45,11 @@ import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/NewPortScan
 import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/YakPoC"
 import {Uint8ArrayToString} from "@/utils/str"
 import {yakitNotify} from "@/utils/notification"
-import {defPluginBatchExecuteExtraFormValue, defaultPluginBatchExecutorPageInfo} from "@/defaultConstants/PluginBatchExecutor"
+import {
+    defPluginBatchExecuteExtraFormValue,
+    defaultPluginBatchExecutorPageInfo
+} from "@/defaultConstants/PluginBatchExecutor"
+import {defaultFilter, defaultSearch} from "../builtInData"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 const PluginBatchRaskListDrawer = React.lazy(() => import("./PluginBatchRaskListDrawer"))

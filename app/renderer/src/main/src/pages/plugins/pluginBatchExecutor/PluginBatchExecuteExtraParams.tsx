@@ -7,7 +7,6 @@ import styles from "./PluginBatchExecutor.module.scss"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {defPluginExecuteFormValue} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {PluginBatchExecuteExtraFormValue} from "./pluginBatchExecutor"
 import {FixExtraParamsNode} from "../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import cloneDeep from "lodash/cloneDeep"
@@ -16,6 +15,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {defPluginExecuteTaskValue} from "@/defaultConstants/PluginBatchExecutor"
+import {defPluginExecuteFormValue} from "../operator/localPluginExecuteDetailHeard/constants"
 
 const {YakitPanel} = YakitCollapse
 

@@ -33,7 +33,6 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {GroupCount} from "../invoker/schema"
 import {getLinkPluginConfig} from "../plugins/singlePluginExecution/SinglePluginExecution"
 import {PresetPorts} from "../portscan/schema"
-import {defaultSearch} from "../plugins/baseTemplate"
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
@@ -44,6 +43,7 @@ import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
 import {v4 as uuidv4} from "uuid"
+import {defaultSearch} from "../plugins/builtInData"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 

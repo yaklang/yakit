@@ -13,6 +13,7 @@ import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
 import {MITMPluginTemplate, PortScanPluginTemplate} from "../pluginDebugger/defaultData"
 import {SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon} from "@/assets/icon/solid"
 import {TypeSelectOpt} from "./funcTemplateType"
+import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "./baseTemplateType"
 
 export function GetPluginLanguage(type: string): string {
     return pluginTypeToName[type]?.language || type
@@ -156,4 +157,30 @@ export const publicStatusToInfo: Record<string, {name: string; icon: ReactNode}>
 export const DefaultPublicStatusList: TypeSelectOpt[] = [
     {key: "1", ...publicStatusToInfo["1"]},
     {key: "2", ...publicStatusToInfo["2"]}
+]
+
+/** 搜索过滤条件对应展示名称 */
+export const filterToName: Record<string, string> = {
+    type: "插件状态",
+    tags: "TAG",
+    plugin_type: "插件类型",
+    status: "审核状态",
+    group: "插件分组"
+}
+
+export const defaultFilter: PluginFilterParams = {
+    plugin_type: [],
+    tags: [],
+    plugin_group: []
+}
+export const defaultSearch: PluginSearchParams = {
+    keyword: "",
+    userName: "",
+    type: "keyword"
+}
+export const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}
+
+export const funcSearchType: {value: string; label: string}[] = [
+    {value: "userName", label: "按作者"},
+    {value: "keyword", label: "关键字"}
 ]

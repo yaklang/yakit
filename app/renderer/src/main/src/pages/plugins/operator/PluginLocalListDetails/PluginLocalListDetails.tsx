@@ -1,7 +1,7 @@
 import React, {forwardRef, useEffect, useReducer, useRef, useState} from "react"
 import {PluginLocalListDetailsProps} from "./PluginLocalListDetailsType"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {PluginDetails, PluginDetailsListItem, defaultFilter, defaultSearch} from "../../baseTemplate"
+import {PluginDetails, PluginDetailsListItem} from "../../baseTemplate"
 import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../../baseTemplateType"
@@ -15,6 +15,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {RemoteGV} from "@/yakitGV"
 import styles from "./PluginLocalListDetails.module.scss"
 import {FilterPopoverBtn} from "../../funcTemplate"
+import {defaultFilter, defaultSearch} from "../../builtInData"
 
 /**
  * @description 本地插件列表，左右布局，左边为插件列表右边为传入的node

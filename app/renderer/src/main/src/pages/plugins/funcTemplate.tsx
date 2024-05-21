@@ -87,7 +87,7 @@ import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {API} from "@/services/swagger/resposeType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {pluginTypeToName} from "./builtInData"
+import {funcSearchType, pluginTypeToName} from "./builtInData"
 import UnLogin from "@/assets/unLogin.png"
 import {v4 as uuidv4} from "uuid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -238,10 +238,6 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
     )
 })
 
-export const funcSearchType: {value: string; label: string}[] = [
-    {value: "userName", label: "按作者"},
-    {value: "keyword", label: "关键字"}
-]
 /** @name 带屏幕宽度自适应的搜索内容组件 */
 export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
     const {maxWidth, onSearch: onsearch} = props

@@ -3,7 +3,6 @@ import {
     useCreation,
     useDebounceEffect,
     useGetState,
-    useInViewport,
     useMemoizedFn,
     useScroll,
     useSize,
@@ -17,7 +16,6 @@ import {
     PaperPlaneRightIcon,
     YakChatBookIcon,
     YakChatLogIcon,
-    YakitChatCSIcon,
     OutlineOpenIcon,
     OutlineViewGridIcon,
     OutlineWebFuzzerIcon,
@@ -35,10 +33,8 @@ import {
 } from "./icon"
 import {
     ArrowDownIcon,
-    ArrowNarrowRightIcon,
     ArrowsExpandIcon,
     ArrowsRetractIcon,
-    ClipboardListIcon,
     ClockIcon,
     CogIcon,
     PencilAltIcon,
@@ -51,7 +47,7 @@ import {
     ThumbUpIcon,
     TrashIcon
 } from "@/assets/newIcon"
-import {Divider, Drawer, Input, Progress, Tooltip} from "antd"
+import {Drawer, Input, Progress, Tooltip} from "antd"
 import {
     CacheChatCSProps,
     ChatCSAnswerProps,
@@ -62,15 +58,14 @@ import {
     ChatInfoProps,
     ChatMeInfoProps,
     ChatPluginListProps,
-    LoadObjProps,
-    PluginListItemProps
+    LoadObjProps
 } from "./chatCSType"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {ArrowRightSvgIcon, UnLoginSvgIcon} from "../layout/icons"
+import {UnLoginSvgIcon} from "../layout/icons"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {chatCS, chatCSPlugin, chatGrade, getPromptList} from "@/services/yakChat"
@@ -80,13 +75,7 @@ import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
-import {
-    SolidCheckCircleIcon,
-    SolidPlayIcon,
-    SolidShieldexclamationIcon,
-    SolidThumbupIcon,
-    SolidXcircleIcon
-} from "@/assets/icon/solid"
+import {SolidCheckCircleIcon, SolidPlayIcon, SolidThumbupIcon, SolidXcircleIcon} from "@/assets/icon/solid"
 import moment from "moment"
 import classNames from "classnames"
 import styles from "./chatCS.module.scss"
@@ -111,11 +100,9 @@ import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {cloneDeep} from "bizcharts/lib/utils"
-import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitRoute} from "@/routes/newRoute"
-import {addToTab} from "@/pages/MainTabs"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"

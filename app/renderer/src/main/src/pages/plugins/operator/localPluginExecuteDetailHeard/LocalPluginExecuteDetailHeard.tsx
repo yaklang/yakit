@@ -36,26 +36,9 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {GetPluginLanguage} from "../../builtInData"
 import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam} from "../../editDetails/utils"
 import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
+import {defPluginExecuteFormValue} from "./constants"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
-
-export const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
-    IsHttps: false,
-    IsRawHTTPRequest: false,
-    RawHTTPRequest: Buffer.from("", "utf-8"),
-    Method: "GET",
-    Path: [],
-    GetParams: [],
-    Headers: [],
-    Cookie: [],
-    Body: Buffer.from("", "utf-8"),
-    PostParams: [],
-    MultipartParams: [],
-    MultipartFileParams: [],
-    IsHttpFlowId: false,
-    HTTPFlowId: [],
-    requestType: "original"
-}
 
 /**插件执行头部 */
 export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardProps> = React.memo((props) => {

@@ -1,4 +1,4 @@
-import { defPluginExecuteFormValue } from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard";
+import { defPluginExecuteFormValue } from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants";
 import { PluginBatchExecuteExtraFormValue } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor";
 import { PluginBatchExecutorTaskProps } from "@/pages/plugins/utils";
 import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo";
