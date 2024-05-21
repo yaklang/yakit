@@ -1,21 +1,13 @@
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useCreation, useMap, useSize} from "ahooks"
+import {useMap, useSize} from "ahooks"
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {
-    emptyFuzzer,
-    FuzzerExtraShow,
-    defaultAdvancedConfigValue,
-    SecondNodeTitle,
-    ResponseViewer,
-    SecondNodeExtra,
-    FuzzerResponse
-} from "../HTTPFuzzerPage"
+import {SecondNodeTitle, SecondNodeExtra, FuzzerResponse} from "../HTTPFuzzerPage"
 import {ResponseCardProps} from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
-import {Divider, Result} from "antd"
+import {Divider} from "antd"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {OutlineReplyIcon} from "@/assets/icon/outline"
-import { CurrentHttpFlow } from "@/pages/yakitStore/viewers/base"
+import {emptyFuzzer} from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -124,20 +116,28 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         setQuery={(q) => setQuery({...q})}
                         sendPayloadsType='allSequenceList'
                         size='middle'
-                        setShowExtra={()=>{}}
+                        setShowExtra={() => {}}
                         showResponseInfoSecondEditor={true}
-                        setShowResponseInfoSecondEditor={()=>{}}
+                        setShowResponseInfoSecondEditor={() => {}}
                     />
                     <Divider type='vertical' style={{marginRight: 0}} />
-                    <YakitButton onClick={() => {
-                        setOnlyShowFirstNode(true)
-                        setShowAllResponse()
-                    }} type='text2' icon={<OutlineReplyIcon />}>
+                    <YakitButton
+                        onClick={() => {
+                            setOnlyShowFirstNode(true)
+                            setShowAllResponse()
+                        }}
+                        type='text2'
+                        icon={<OutlineReplyIcon />}
+                    >
                         返回
                     </YakitButton>
                 </div>
             </div>
-            <div ref={secondNodeRef} className={styles["all-sequence-response-table"]} style={{border: '1px solid var(--yakit-border-color)'}}>
+            <div
+                ref={secondNodeRef}
+                className={styles["all-sequence-response-table"]}
+                style={{border: "1px solid var(--yakit-border-color)"}}
+            >
                 {showSuccess && (
                     <HTTPFuzzerPageTable
                         isRefresh={isRefresh}

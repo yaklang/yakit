@@ -38,7 +38,6 @@ import {
     OutlineArrowcirclerightIcon,
     OutlineCodeIcon,
     OutlineCogIcon,
-    OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
     OutlineQuestionmarkcircleIcon,
@@ -54,18 +53,13 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {YakitRoute} from "@/routes/newRoute"
 import {
-    DefFuzzerTableMaxData,
     FuzzerExtraShow,
     FuzzerRequestProps,
     FuzzerResponse,
     ResponseViewer,
     SecondNodeExtra,
     SecondNodeTitle,
-    WEB_FUZZ_HOTPATCH_CODE,
-    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
-    advancedConfigValueToFuzzerRequests,
-    defaultAdvancedConfigValue,
-    emptyFuzzer
+    advancedConfigValueToFuzzerRequests
 } from "../HTTPFuzzerPage"
 import {randomString} from "@/utils/randomUtil"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -86,7 +80,7 @@ import {ArrowsExpandIcon, ArrowsRetractIcon, QuestionMarkCircleIcon} from "@/ass
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {shallow} from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
-import {PageNodeItemProps, WebFuzzerPageInfoProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {monacoEditorWrite} from "../fuzzerTemplates"
@@ -99,6 +93,14 @@ import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {Uint8ArrayToString} from "@/utils/str"
 import {DebugProps} from "./FuzzerPageSetting"
 import emiter from "@/utils/eventBus/eventBus"
+import {
+    DefFuzzerTableMaxData,
+    defaultAdvancedConfigValue,
+    defaultWebFuzzerPageInfo,
+    emptyFuzzer,
+    WEB_FUZZ_HOTPATCH_CODE,
+    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE
+} from "@/defaultConstants/HTTPFuzzerPage"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -2021,7 +2023,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                                 响应数量超过{fuzzerTableMaxData}
                                                                 ，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击
                                                                 <YakitButton
-                                                                    type="text"
+                                                                    type='text'
                                                                     onClick={() => {
                                                                         onShowAll()
                                                                     }}

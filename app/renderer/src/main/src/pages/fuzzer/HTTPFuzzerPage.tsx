@@ -67,7 +67,7 @@ import {monaco} from "react-monaco-editor"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
-import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
+import {HttpQueryAdvancedConfig} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps,
@@ -100,12 +100,10 @@ import {
     OutlineCodeIcon,
     OutlinePlugsIcon,
     OutlineSearchIcon,
-    OutlineFilterIcon,
-    OutlineEyeIcon
-} from "@/assets/icon/outline"
+    OutlineFilterIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
-import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, defaultWebFuzzerPageInfo} from "@/store/pageInfo"
+import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
@@ -118,7 +116,7 @@ import blastingIdmp4 from "@/assets/blasting-id.mp4"
 import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
-import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
+import {RemoteGV} from "@/yakitGV"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import cloneDeep from "lodash/cloneDeep"
 
@@ -126,13 +124,27 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import { apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from "../spaceEngine/utils"
-import { GlobalNetworkConfig } from "@/components/configNetwork/ConfigNetworkPage"
-import { ThirdPartyApplicationConfigForm } from "@/components/configNetwork/ThirdPartyApplicationConfig"
+import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "../spaceEngine/utils"
+import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
+import {
+    DefFuzzerTableMaxData,
+    defaultAdvancedConfigShow,
+    defaultPostTemplate,
+    emptyFuzzer,
+    defaultWebFuzzerPageInfo,
+    WEB_FUZZ_DNS_Hosts_Config,
+    WEB_FUZZ_DNS_Server_Config,
+    WEB_FUZZ_HOTPATCH_CODE,
+    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
+    WEB_FUZZ_PROXY
+} from "@/defaultConstants/HTTPFuzzerPage"
+
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 
 const {ipcRenderer} = window.require("electron")
 
+export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence">, boolean>
 export interface ShareValueProps {
     /**高级配置显示/隐藏 */
     advancedConfigShow: AdvancedConfigShowProps
@@ -229,19 +241,6 @@ export interface FuzzerResponse {
     RuntimeID: string
 }
 
-export const defaultPostTemplate = `POST / HTTP/1.1
-Content-Type: application/json
-Host: www.example.com
-
-{"key": "value"}`
-
-export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
-export const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
-export const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
-
-export const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
-export const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
-
 export interface HistoryHTTPFuzzerTask {
     Request: string
     RequestRaw: Uint8Array
@@ -305,8 +304,6 @@ export interface FuzzerRequestProps {
     /**@name fuzzer Tab的唯一key */
     FuzzerTabIndex?: string
 }
-
-export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, "sequence">, boolean>
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
     ipcRenderer
@@ -513,7 +510,7 @@ export interface FuzzerCacheDataProps {
     advancedConfigShow: AdvancedConfigShowProps | null
     resNumlimit: number
 }
-/**获取fuzzer高级配置中得 proxy dnsServers etcHosts */
+/**获取fuzzer高级配置中得 proxy dnsServers etcHosts resNumlimit*/
 export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
     return new Promise(async (resolve, rejects) => {
         try {
@@ -536,136 +533,12 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
     })
 }
 
-// WebFuzzer表格默认显示数量
-export const DefFuzzerTableMaxData = 20000
-
-export const emptyFuzzer: FuzzerResponse = {
-    BodyLength: 0,
-    BodySimilarity: 0,
-    ContentType: "",
-    Count: 0,
-    DurationMs: 0,
-    HeaderSimilarity: 0,
-    Headers: [],
-    Host: "",
-    IsHTTPS: false,
-    MatchedByFilter: false,
-    Method: "",
-    Ok: false,
-    Payloads: [],
-    Reason: "",
-    RequestRaw: new Uint8Array(),
-    ResponseRaw: new Uint8Array(),
-    StatusCode: 0,
-    Timestamp: 0,
-    UUID: "",
-
-    DNSDurationMs: 0,
-    TotalDurationMs: 0,
-    ExtractedResults: [],
-    MatchedByMatcher: false,
-    HitColor: "",
-
-    IsTooLargeResponse: false,
-    TooLargeResponseHeaderFile: "",
-    TooLargeResponseBodyFile: "",
-    DisableRenderStyles: false,
-    RuntimeID: ""
-}
-
 export interface SelectOptionProps {
     label: string
     value: string
 }
 
-export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
-    // 请求包配置
-    fuzzTagMode: "standard",
-    fuzzTagSyncIndex: false,
-    isHttps: false,
-    isGmTLS: false,
-    noFixContentLength: false,
-    noSystemProxy: false,
-    resNumlimit: DefFuzzerTableMaxData,
-    actualHost: "",
-    timeout: 30.0,
-    // 批量目标
-    batchTarget: new Uint8Array(),
-    // 发包配置
-    concurrent: 20,
-    proxy: [],
-    minDelaySeconds: 0,
-    maxDelaySeconds: 0,
-    repeatTimes: 0,
-    // 重试配置
-    maxRetryTimes: 0,
-    retry: true,
-    noRetry: false,
-    retryConfiguration: {
-        statusCode: "",
-        keyWord: ""
-    },
-    noRetryConfiguration: {
-        statusCode: "",
-        keyWord: ""
-    },
-    retryWaitSeconds: 0,
-    retryMaxWaitSeconds: 0,
-    // 重定向配置
-    redirectCount: 3,
-    noFollowRedirect: true,
-    followJSRedirect: false,
-    redirectConfiguration: {
-        statusCode: "",
-        keyWord: ""
-    },
-    noRedirectConfiguration: {
-        statusCode: "",
-        keyWord: ""
-    },
-    // dns config
-    dnsServers: [],
-    etcHosts: [],
-    // 设置变量
-    params: [{Key: "", Value: "", Type: "raw"}],
-    methodGet: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    methodPost: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    cookie: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    headers: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    // 匹配器
-    filterMode: "onlyMatch",
-    matchers: [],
-    matchersCondition: "and",
-    hitColor: "red",
-    // 提取器
-    extractors: []
-}
-
-export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
-    config: true,
-    rule: true
-}
-
+/*为避免文件相互引用造成数据问题,请将 HTTPFuzzerPage 页面的常用变量放在 app\renderer\src\main\src\defaultConstants\HTTPFuzzerPage.ts */
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -1209,64 +1082,62 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [yakitWindowVisible, setYakitWindowVisible] = useState<boolean>(false)
     const [menuExecutorParams, setMenuExecutorParams] = useState<{text?: string; scriptName: string}>()
-    
-    const openAIByChatCS = useMemoizedFn((obj:{text?: string; scriptName: string})=>{
-        emiter.emit("onRunChatcsAIByFuzzer",JSON.stringify(obj))
+
+    const openAIByChatCS = useMemoizedFn((obj: {text?: string; scriptName: string}) => {
+        emiter.emit("onRunChatcsAIByFuzzer", JSON.stringify(obj))
     })
-    
+
     // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
     const onFuzzerModal = useMemoizedFn((value) => {
-        const val: {text?: string; scriptName: string; pageId: string,isAiPlugin:boolean} = JSON.parse(value)
-        apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
-        if (props.id === val.pageId) {
-            const configType = obj.AppConfigs.map((item)=>item.Type).filter((item)=>["openai","chatglm","moonshot"].includes(item))
-            // 如若已配置 则打开执行框
-            if(configType.length>0 && val.isAiPlugin){
-                openAIByChatCS({text: val.text, scriptName: val.scriptName})
-            }
-            else if(val.isAiPlugin){
-                let m = showYakitModal({
-                    title: "添加第三方应用",
-                    width: 600,
-                    footer: null,
-                    closable: true,
-                    maskClosable: false,
-                    content: (
-                        <div style={{ margin: 24 }}>
-                            <ThirdPartyApplicationConfigForm
-                                onAdd={(e) => {
-                                    let existed = false
-                                    const existedResult = (obj.AppConfigs || []).map(
-                                        (i) => {
+        const val: {text?: string; scriptName: string; pageId: string; isAiPlugin: boolean} = JSON.parse(value)
+        apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
+            if (props.id === val.pageId) {
+                const configType = obj.AppConfigs.map((item) => item.Type).filter((item) =>
+                    ["openai", "chatglm", "moonshot"].includes(item)
+                )
+                // 如若已配置 则打开执行框
+                if (configType.length > 0 && val.isAiPlugin) {
+                    openAIByChatCS({text: val.text, scriptName: val.scriptName})
+                } else if (val.isAiPlugin) {
+                    let m = showYakitModal({
+                        title: "添加第三方应用",
+                        width: 600,
+                        footer: null,
+                        closable: true,
+                        maskClosable: false,
+                        content: (
+                            <div style={{margin: 24}}>
+                                <ThirdPartyApplicationConfigForm
+                                    onAdd={(e) => {
+                                        let existed = false
+                                        const existedResult = (obj.AppConfigs || []).map((i) => {
                                             if (i.Type === e.Type) {
                                                 existed = true
-                                                return { ...i, ...e }
+                                                return {...i, ...e}
                                             }
-                                            return { ...i }
+                                            return {...i}
+                                        })
+                                        if (!existed) {
+                                            existedResult.push(e)
                                         }
-                                    )
-                                    if (!existed) {
-                                        existedResult.push(e)
-                                    }
-                                    const params = {...obj, AppConfigs: existedResult}
-                                    apiSetGlobalNetworkConfig(params).then(() => {
-                                        openAIByChatCS({text: val.text, scriptName: val.scriptName})
-                                        // setYakitWindowVisible(true)
-                                        // setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
-                                        m.destroy()
-                                    })
-                                }}
-                                onCancel={() => m.destroy()}
-                            />
-                        </div>
-                    )
-                })
+                                        const params = {...obj, AppConfigs: existedResult}
+                                        apiSetGlobalNetworkConfig(params).then(() => {
+                                            openAIByChatCS({text: val.text, scriptName: val.scriptName})
+                                            // setYakitWindowVisible(true)
+                                            // setMenuExecutorParams({text:val.text,scriptName:val.scriptName})
+                                            m.destroy()
+                                        })
+                                    }}
+                                    onCancel={() => m.destroy()}
+                                />
+                            </div>
+                        )
+                    })
+                } else {
+                    setYakitWindowVisible(true)
+                    setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
+                }
             }
-            else{
-                setYakitWindowVisible(true)
-                setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
-            }
-        }
         })
     })
 
@@ -2533,8 +2404,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 <span>标注颜色</span>
                                 <YakitSelect
                                     size='small'
-                                    mode="tags"
-                                    options={availableColors.map(i => ({ value: i.color, label: i.render }))}
+                                    mode='tags'
+                                    options={availableColors.map((i) => ({value: i.color, label: i.render}))}
                                     allowClear
                                     value={color}
                                     onChange={setColor}
@@ -3231,7 +3102,12 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             )}
                         </>
                     }
-                    secondNodeStyle={{display: show ? "" : "none", padding: 0, border:"1px solid rgb(240, 240, 240)",borderRadius:"0px 0px 0px 4px"}}
+                    secondNodeStyle={{
+                        display: show ? "" : "none",
+                        padding: 0,
+                        border: "1px solid rgb(240, 240, 240)",
+                        borderRadius: "0px 0px 0px 4px"
+                    }}
                     lineDirection='bottom'
                     secondMinSize={showMatcherAndExtraction ? 300 : 100}
                     {...ResizeBoxProps}

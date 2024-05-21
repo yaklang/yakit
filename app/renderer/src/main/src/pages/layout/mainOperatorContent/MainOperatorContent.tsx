@@ -67,14 +67,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
-import {
-    DefFuzzerTableMaxData,
-    FuzzerCacheDataProps,
-    ShareValueProps,
-    defaultAdvancedConfigValue,
-    defaultPostTemplate,
-    getFuzzerCacheData
-} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
@@ -103,6 +96,7 @@ import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchEx
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {PluginGroupType} from "@/pages/plugins/group/PluginGroups"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))

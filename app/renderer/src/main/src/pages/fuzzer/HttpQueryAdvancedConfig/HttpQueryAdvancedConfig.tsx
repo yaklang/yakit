@@ -20,7 +20,6 @@ import {Form, Tooltip, Space, Divider} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
-import {DefFuzzerTableMaxData, SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
@@ -50,6 +49,7 @@ import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
 import {ExtractorsPanel, MatchersPanel, VariablePanel} from "./FuzzerConfigPanels"
+import { DefFuzzerTableMaxData } from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse

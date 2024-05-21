@@ -1,0 +1,155 @@
+/**
+ * @description 此文件是 HTTPFuzzerPage 页面的通用常用变量
+ * @author luoluo
+ */
+
+import {AdvancedConfigShowProps, FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {WebFuzzerPageInfoProps} from "@/store/pageInfo"
+import cloneDeep from "lodash/cloneDeep"
+
+export const defaultPostTemplate = `POST / HTTP/1.1
+Content-Type: application/json
+Host: www.example.com
+
+{"key": "value"}`
+
+export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
+export const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
+export const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
+
+export const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
+export const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
+
+// WebFuzzer表格默认显示数量
+export const DefFuzzerTableMaxData = 20000
+
+export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
+    config: true,
+    rule: true
+}
+
+export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
+    // 请求包配置
+    fuzzTagMode: "standard",
+    fuzzTagSyncIndex: false,
+    isHttps: false,
+    isGmTLS: false,
+    noFixContentLength: false,
+    noSystemProxy: false,
+    resNumlimit: DefFuzzerTableMaxData,
+    actualHost: "",
+    timeout: 30.0,
+    // 批量目标
+    batchTarget: new Uint8Array(),
+    // 发包配置
+    concurrent: 20,
+    proxy: [],
+    minDelaySeconds: 0,
+    maxDelaySeconds: 0,
+    repeatTimes: 0,
+    // 重试配置
+    maxRetryTimes: 0,
+    retry: true,
+    noRetry: false,
+    retryConfiguration: {
+        statusCode: "",
+        keyWord: ""
+    },
+    noRetryConfiguration: {
+        statusCode: "",
+        keyWord: ""
+    },
+    retryWaitSeconds: 0,
+    retryMaxWaitSeconds: 0,
+    // 重定向配置
+    redirectCount: 3,
+    noFollowRedirect: true,
+    followJSRedirect: false,
+    redirectConfiguration: {
+        statusCode: "",
+        keyWord: ""
+    },
+    noRedirectConfiguration: {
+        statusCode: "",
+        keyWord: ""
+    },
+    // dns config
+    dnsServers: [],
+    etcHosts: [],
+    // 设置变量
+    params: [{Key: "", Value: "", Type: "raw"}],
+    methodGet: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    methodPost: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    cookie: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    headers: [
+        {
+            Key: "",
+            Value: ""
+        }
+    ],
+    // 匹配器
+    filterMode: "onlyMatch",
+    matchers: [],
+    matchersCondition: "and",
+    hitColor: "red",
+    // 提取器
+    extractors: []
+}
+
+export const emptyFuzzer: FuzzerResponse = {
+    BodyLength: 0,
+    BodySimilarity: 0,
+    ContentType: "",
+    Count: 0,
+    DurationMs: 0,
+    HeaderSimilarity: 0,
+    Headers: [],
+    Host: "",
+    IsHTTPS: false,
+    MatchedByFilter: false,
+    Method: "",
+    Ok: false,
+    Payloads: [],
+    Reason: "",
+    RequestRaw: new Uint8Array(),
+    ResponseRaw: new Uint8Array(),
+    StatusCode: 0,
+    Timestamp: 0,
+    UUID: "",
+
+    DNSDurationMs: 0,
+    TotalDurationMs: 0,
+    ExtractedResults: [],
+    MatchedByMatcher: false,
+    HitColor: "",
+
+    IsTooLargeResponse: false,
+    TooLargeResponseHeaderFile: "",
+    TooLargeResponseBodyFile: "",
+    DisableRenderStyles: false,
+    RuntimeID: ""
+}
+
+export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
+    pageId: "",
+    advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
+    advancedConfigShow: null,
+    request: defaultPostTemplate,
+    variableActiveKeys: undefined
+}
