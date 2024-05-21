@@ -1,4 +1,4 @@
-import React, {ReactElement, memo} from "react"
+import React, {ReactElement, memo, useMemo} from "react"
 import {CollapseListProp, HelpInfoListProps} from "./CollapseListType"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {Collapse} from "antd"
@@ -12,13 +12,23 @@ const {Panel} = Collapse
 const content = `chr 将传入的值根据ascii码表转换为对应的字符\n\nExample:\n\`\`\`\nchr(65) // A\nchr("65") // A\n\`\`\``
 
 export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
-    const {onlyKey, list, titleRender, renderItem} = props
+    const {type = "sideBar", onlyKey, list, titleRender, renderItem} = props
+
+    const wrapperClassName = useMemo(() => {
+        if (type === "sideBar") return styles["collapse-list-side-bar"]
+        return styles["collapse-list-output"]
+    }, [type])
+
+    const containerClassName = useMemo(() => {
+        if (type === "sideBar") return styles["collapse-list-container-side-bar"]
+        return styles["collapse-list-container-output"]
+    }, [type])
 
     return (
-        <div className={styles["collapse-list"]}>
+        <div className={wrapperClassName}>
             <Collapse
                 ghost
-                className={styles["collapse-list-container"]}
+                className={classNames(styles["collapse-list-base"], containerClassName)}
                 expandIcon={(panelProps) => {
                     const {isActive} = panelProps
                     return <OutlineChevronrightIcon className={classNames({"collapse-expand-arrow": !!isActive})} />
@@ -28,7 +38,7 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
                     return (
                         <Panel header={titleRender(item)} key={item[onlyKey] || `collapse-list-${index}`}>
                             <div className={styles["list-item-render"]}>
-                                <div className={styles["render-tail"]}></div>
+                                {type === "output" && <div className={styles["render-tail"]}></div>}
                                 {renderItem(item)}
                             </div>
                         </Panel>
@@ -56,7 +66,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
 
     return (
         <div className={styles["help-info-list"]}>
-            <CollapseList onlyKey='key' list={list} titleRender={titleRender} renderItem={renderItem} />
+            <CollapseList type='output' onlyKey='key' list={list} titleRender={titleRender} renderItem={renderItem} />
         </div>
     )
 })

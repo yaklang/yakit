@@ -1,0 +1,118 @@
+/* ---------- FileTree ----------*/
+.file-tree {
+    :global {
+        .ant-tree .ant-tree-treenode {
+            padding-bottom: 0;
+        }
+        .ant-tree-switcher {
+            display: none;
+        }
+        .ant-tree .ant-tree-node-content-wrapper {
+            padding: 0;
+            line-height: normal;
+            min-height: auto;
+            border-radius: 0;
+        }
+        .ant-tree .ant-tree-node-content-wrapper:hover {
+            background-color: transparent;
+        }
+        .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+            background-color: transparent;
+        }
+        .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {
+            flex: 1;
+            overflow: hidden;
+        }
+    }
+
+    :global(.ant-tree-treenode-loading) {
+        .file-tree-node {
+            .node-switcher {
+                display: none;
+            }
+            .node-loading {
+                display: flex;
+            }
+        }
+    }
+}
+
+/* ---------- FileTreeNode ----------*/
+.file-tree-node {
+    padding: 3px 12px 3px 8px;
+    display: flex;
+    align-content: center;
+    gap: 2px;
+    cursor: pointer;
+
+    .node-switcher {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #85899e;
+            transition: transform 0.3s;
+        }
+        &.expanded {
+            svg {
+                transform: rotate(90deg);
+            }
+        }
+    }
+    .node-loading {
+        display: none;
+        width: 16px;
+        height: 16px;
+        justify-content: center;
+        align-items: center;
+        svg {
+            width: 12px;
+            height: 12px;
+            color: #f28b44;
+        }
+    }
+
+    .node-content {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        align-content: center;
+
+        .content-icon {
+            height: 16px;
+            margin-right: 2px;
+            display: flex;
+            align-items: center;
+            img {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        .content-body {
+            flex: 1;
+            overflow: hidden;
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
+    }
+
+    &:hover {
+        background-color: #f8f8f8;
+    }
+
+    &.node-selected {
+        background-color: rgba(242, 139, 68, 0.06);
+    }
+    &.node-foucsed {
+        border: 1px solid #f28b44;
+        border-radius: 4px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+}

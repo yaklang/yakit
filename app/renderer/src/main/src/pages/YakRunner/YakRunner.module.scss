@@ -1,0 +1,24 @@
+.yak-runner {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    &-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &-code {
+        flex: 1;
+        overflow: hidden;
+        .code-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    }
+}
