@@ -164,13 +164,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 installEngine()
             }
         }
-        // TODO 未验证 初始化内置引擎
         const initBuildInEngine = () => {
             setVersionAbnormalLoading(true)
             ipcRenderer
                 .invoke("InitBuildInEngine", {})
                 .then(() => {
                     yakitNotify("info", "解压内置引擎成功")
+                    setVersionAbnormalVisible(false)
                     showYakitModal({
                         closable: false,
                         maskClosable: false,
