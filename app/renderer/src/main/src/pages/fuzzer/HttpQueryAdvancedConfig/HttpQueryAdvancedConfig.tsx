@@ -25,9 +25,7 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     ExtractorItem,
     MatcherAndExtractionDrawer,
-    MatcherItem,
-    extractorTypeList,
-    matcherTypeList
+    MatcherItem
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
@@ -50,6 +48,7 @@ import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
 import {ExtractorsPanel, MatchersPanel, VariablePanel} from "./FuzzerConfigPanels"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
+import {matcherTypeList, extractorTypeList} from "../MatcherAndExtractionCard/constants"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
