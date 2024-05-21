@@ -23,7 +23,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
-import { SolidTerminalIcon } from "@/assets/icon/solid"
+import {SolidTerminalIcon} from "@/assets/icon/solid"
+import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
@@ -70,11 +71,8 @@ const getItemStyle = (isDragging, draggableStyle) => {
         if (match) {
             // 提取匹配到的两个值，并将它们转换为数字
             const [value1, value2] = match.slice(1).map(Number)
-                const modifiedString = transform.replace(
-                    /translate\((-?\d+)px, (-?\d+)px\)/,
-                    `translate(0px, ${value2}px)`
-                )
-                transform = modifiedString
+            const modifiedString = transform.replace(/translate\((-?\d+)px, (-?\d+)px\)/, `translate(0px, ${value2}px)`)
+            transform = modifiedString
         }
     }
 
@@ -100,57 +98,6 @@ export interface LabelDataProps {
     Description?: string
     Label?: string
 }
-
-// 注：此处顺序为倒序（新增DefaultDescription记得带-fixed，此处为标识固定项）
-export const defaultLabel: LabelDataProps[] = [
-    {
-        DefaultDescription: "反向正则（单个）-fixed",
-        Description: "反向正则（单个）",
-        Label: "{{regen:one([0-9a-f]{3})}}"
-    },
-    {
-        DefaultDescription: "反向正则（全部）-fixed",
-        Description: "反向正则（全部）",
-        Label: "{{regen([0-9a-f]{3})}}"
-    },
-    {
-        DefaultDescription: "时间戳（秒）-fixed",
-        Description: "时间戳（秒）",
-        Label: "{{timestamp(seconds)}}"
-    },
-    {
-        DefaultDescription: "验证码-fixed",
-        Description: "验证码",
-        Label: "{{int(0000-9999)}}"
-    },
-    {
-        DefaultDescription: "随机数-fixed",
-        Description: "随机数",
-        Label: "{{randint(0,10)}}"
-    },
-    {
-        DefaultDescription: "随机字符串-fixed",
-        Description: "随机字符串",
-        Label: "{{randstr}}"
-    },
-    {
-        DefaultDescription: "整数范围-fixed",
-        Description: "整数范围",
-        Label: "{{int(1-10)}}"
-    },
-    {
-        DefaultDescription: "插入Payload-fixed",
-        Description: "插入Payload"
-    },
-    {
-        DefaultDescription: "插入临时字典-fixed",
-        Description: "插入临时字典"
-    },
-    {
-        DefaultDescription: "插入文件-fixed",
-        Description: "插入文件"
-    },
-]
 
 export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 
@@ -381,7 +328,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                         {labelData.map((item, index) => (
                                             <Draggable key={item?.Description} draggableId={`${item.Id}`} index={index}>
                                                 {(provided, snapshot) => {
-                                                    const draggablePropsStyle= provided.draggableProps.style as DraggingStyle
+                                                    const draggablePropsStyle = provided.draggableProps
+                                                        .style as DraggingStyle
 
                                                     return (
                                                         <div
@@ -390,15 +338,18 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                             {...provided.dragHandleProps}
                                                             style={{
                                                                 ...draggablePropsStyle,
-                                                                ...getItemStyle(snapshot.isDragging, provided.draggableProps.style),
-                                                                top: isDragging.current && draggablePropsStyle?.top
-                                                                    ? draggablePropsStyle.top -
-                                                                      top +
-                                                                      scrollTop
-                                                                    : "none",
-                                                                left: isDragging.current && draggablePropsStyle?.left
-                                                                    ? draggablePropsStyle.left - left - 60
-                                                                    : "none"
+                                                                ...getItemStyle(
+                                                                    snapshot.isDragging,
+                                                                    provided.draggableProps.style
+                                                                ),
+                                                                top:
+                                                                    isDragging.current && draggablePropsStyle?.top
+                                                                        ? draggablePropsStyle.top - top + scrollTop
+                                                                        : "none",
+                                                                left:
+                                                                    isDragging.current && draggablePropsStyle?.left
+                                                                        ? draggablePropsStyle.left - left - 60
+                                                                        : "none"
                                                             }}
                                                         >
                                                             <div
@@ -410,7 +361,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                 <div
                                                                     className={styles["menu-list-item-info"]}
                                                                     style={{
-                                                                        overflow:"hidden",
+                                                                        overflow: "hidden",
                                                                         maxWidth: menuWidth ? menuWidth - 30 : 260
                                                                     }}
                                                                 >
@@ -477,28 +428,33 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                         </YakitButton>
                                                                     ) : (
                                                                         <>
-                                                                        {!item.DefaultDescription.endsWith("-fixed")&&<>
-                                                                        <IconOutlinePencilAltIcon
-                                                                                className={classNames(
-                                                                                    styles["form-outlined"]
-                                                                                )}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation()
-                                                                                    setSelectLabel(item.Hash)
-                                                                                    setInputValue(item.Description)
-                                                                                }}
-                                                                            />
-                                                                            <TrashIcon
-                                                                                className={classNames(
-                                                                                    styles["trash-icon"]
-                                                                                )}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation()
-                                                                                    delLabel(item.Hash)
-                                                                                }}
-                                                                            />
-                                                                        </>}
-                                                                            
+                                                                            {!item.DefaultDescription.endsWith(
+                                                                                "-fixed"
+                                                                            ) && (
+                                                                                <>
+                                                                                    <IconOutlinePencilAltIcon
+                                                                                        className={classNames(
+                                                                                            styles["form-outlined"]
+                                                                                        )}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation()
+                                                                                            setSelectLabel(item.Hash)
+                                                                                            setInputValue(
+                                                                                                item.Description
+                                                                                            )
+                                                                                        }}
+                                                                                    />
+                                                                                    <TrashIcon
+                                                                                        className={classNames(
+                                                                                            styles["trash-icon"]
+                                                                                        )}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation()
+                                                                                            delLabel(item.Hash)
+                                                                                        }}
+                                                                                    />
+                                                                                </>
+                                                                            )}
                                                                         </>
                                                                     )}
                                                                 </div>

@@ -89,7 +89,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
-import {defaultLabel, FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
+import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {
     OutlineAnnotationIcon,
@@ -100,7 +100,8 @@ import {
     OutlineCodeIcon,
     OutlinePlugsIcon,
     OutlineSearchIcon,
-    OutlineFilterIcon} from "@/assets/icon/outline"
+    OutlineFilterIcon
+} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
@@ -137,7 +138,8 @@ import {
     WEB_FUZZ_DNS_Server_Config,
     WEB_FUZZ_HOTPATCH_CODE,
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
-    WEB_FUZZ_PROXY
+    WEB_FUZZ_PROXY,
+    defaultLabel
 } from "@/defaultConstants/HTTPFuzzerPage"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
