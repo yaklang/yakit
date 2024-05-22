@@ -87,7 +87,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const preventUpdateHint = useRef<boolean>(false)
         /** 是否已弹出更新框 */
         const isShowedUpdateHint = useRef<boolean>(false)
-        /** 是否已弹出校验引擎来源弹窗 */
+        /** 是否已弹出校验引擎来源弹窗 - 主要作用是是否直接连引擎（校验弹窗的出现和这个变量的值不一定是一致的） */
         const isShowedCheckEngineSourceHint = useRef<boolean>(false)
 
         // 2秒判断是否有更新 - 校验弹窗出现，没有则进入连接引擎
@@ -280,7 +280,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         // 初始化后的本地连接-前置项检查
         const initLink = useMemoizedFn(() => {
-            console.log("初始化")
             isShowedUpdateHint.current = false
             preventUpdateHint.current = isCommunityEdition() ? false : true
             isShowedCheckEngineSourceHint.current = false
@@ -288,7 +287,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         })
         // 检查版本后直接连接
         const toLink = useMemoizedFn(() => {
-            console.log("直连")
             isShowedUpdateHint.current = false
             preventUpdateHint.current = !linkCheckUpdate
             isShowedCheckEngineSourceHint.current = false
