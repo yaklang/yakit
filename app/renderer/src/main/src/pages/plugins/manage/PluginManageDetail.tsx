@@ -34,6 +34,7 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {PluginDebug} from "../pluginDebug/PluginDebug"
+import {GetPluginLanguage} from "../builtInData"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -41,6 +42,8 @@ import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/
 import {useStore} from "@/store"
 
 const {TabPane} = PluginTabs
+
+const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
 /** 详情页返回列表页 时的 关联数据 */
 export interface BackInfoProps {
@@ -159,7 +162,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
             setLoading(true)
             apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
-                .then((res) => {
+                .then(async (res) => {
                     if (res) {
                         // console.log("插件管理的单个插件详情", res)
                         setPlugin({...res})
@@ -180,9 +183,18 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             RiskDetail: convertRemoteToLocalRisks(res.riskInfo),
                             Tags: []
                         }
+                        let tags: string[] = []
                         try {
-                            infoData.Tags = (res.tags || "").split(",") || []
+                            tags = (res.tags || "").split(",") || []
                         } catch (error) {}
+                        const codeInfo =
+                            GetPluginLanguage(res.type) === "yak" ? await onCodeToInfo(res.type, res.content) : null
+                        if (codeInfo && codeInfo.Tags.length > 0) {
+                            // 去重
+                            tags = filter([...tags, ...codeInfo.Tags])
+                        }
+                        infoData.Tags = [...tags]
+
                         setInfoParams({...infoData})
                         setCacheTags(infoData?.Tags || [])
                         // 设置配置信息
@@ -375,13 +387,19 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             data.Content = content
 
+            const codeInfo = GetPluginLanguage(data.Type) === "yak" ? await onCodeToInfo(data.Type, data.Content) : null
+            let tags: string = data.Tags || ""
+            if (codeInfo && codeInfo.Tags.length > 0) {
+                tags += `,${codeInfo.Tags.join(",")}`
+                // 去重
+                tags = filter(tags.split(",")).join(",")
+            }
+            data.Tags = tags || undefined
+
             // yak类型-进行源码分析出参数和风险
-            if (data.Type === "yak") {
-                const codeInfo = await onCodeToInfo(data.Type, data.Content)
-                if (codeInfo) {
-                    data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
-                    data.Params = codeInfo.CliParameter
-                }
+            if (data.Type === "yak" && codeInfo) {
+                data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
+                data.Params = codeInfo.CliParameter
             } else {
                 // 非yak类型-排除参数和风险
                 data.RiskDetail = []
@@ -531,7 +549,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         return
                     }
 
-                    const paramsList = await onCodeToInfo(plugin.type, content)
+                    const paramsList =
+                        GetPluginLanguage(plugin.type) === "yak"
+                            ? await onCodeToInfo(plugin.type, content)
+                            : {CliParameter: []}
                     if (!paramsList) {
                         resolve("false")
                         return
