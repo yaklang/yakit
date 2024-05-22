@@ -311,7 +311,7 @@ service Yak {
   rpc YaklangLanguageFind(YaklangLanguageSuggestionRequest) returns (YaklangLanguageFindResponse);
   // 从代码中提取yaklang数据
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
-  // 进行数据迁移使用 
+  // 进行数据迁移使用
   rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
@@ -322,12 +322,19 @@ service Yak {
   rpc SaveCancelSimpleDetect(RecordPortScanRequest) returns (Empty);
   rpc SimpleDetectCreatReport(CreatReportRequest) returns (stream ExecResult);
 
+  // new interface
+  rpc QuerySimpleDetectUnfinishedTask(QueryUnfinishedTaskRequest) returns (QueryUnfinishedTaskResponse);
+  rpc GetSimpleDetectRecordRequestById(GetUnfinishedTaskDetailByIdRequest) returns (RecordPortScanRequest);
+  rpc DeleteSimpleDetectUnfinishedTask(DeleteUnfinishedTaskRequest) returns (Empty);
+  rpc RecoverSimpleDetectTask(RecoverUnfinishedTaskRequest) returns (stream ExecResult);
+  //----
 
+  // Deprecated interface
   rpc GetSimpleDetectUnfinishedTask(Empty) returns (GetSimpleDetectUnfinishedTaskResponse);
   rpc GetSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
   rpc PopSimpleDetectUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (RecordPortScanRequest);
   rpc RecoverSimpleDetectUnfinishedTask(RecoverExecBatchYakScriptUnfinishedTaskRequest) returns (stream ExecResult);
-
+  // ----
 
   // 资产管理
   rpc QueryPorts(QueryPortsRequest) returns (QueryPortsResponse);
@@ -1235,6 +1242,9 @@ message DebugPluginRequest {
 
   // plugin name, if not empty, will use code
   string PluginName = 7;
+
+  // runtime id ,if empty, will create a new runtime
+  string RuntimeId = 8;
 }
 
 message HTTPRequestBuilderResult {
@@ -1941,8 +1951,8 @@ message YaklangLanguageSuggestionResponse {
 }
 
 message YaklangLanguageFindResponse {
-    string URI = 1;
-    repeated Range Ranges = 2;
+  string URI = 1;
+  repeated Range Ranges = 2;
 }
 
 message YaklangInspectInformationResponse {
@@ -1954,9 +1964,9 @@ message YaklangInspectInformationResponse {
 }
 
 message YakUIInfo {
-  string Typ = 1;
-  repeated string Effected = 2;
-  string WhenExpression = 3;
+    string Typ = 1;
+    repeated string Effected = 2;
+    string WhenExpression = 3;
 }
 
 message YakRiskInfo {
@@ -2145,6 +2155,7 @@ message GetSystemProxyResult {
   bool Enable = 2;
 }
 
+// --- Deprecated interface--
 message GetExecBatchYakScriptUnfinishedTaskByUidRequest {
   string Uid = 1;
 }
@@ -2174,8 +2185,47 @@ message GetExecBatchYakScriptUnfinishedTaskResponse {
   repeated ExecBatchYakScriptUnfinishedTask Tasks = 1;
 }
 
-message    GetSimpleDetectUnfinishedTaskResponse {
+message GetSimpleDetectUnfinishedTaskResponse {
   repeated SimpleDetectUnfinishedTask Tasks = 1;
+}
+// -------------------
+
+message UnfinishedTaskFilter {
+  string RuntimeId = 1;
+  repeated string ProgressSource = 2;
+  string TaskName = 3; // support fuzzy search
+  string Target = 4; // support fuzzy search
+}
+
+message QueryUnfinishedTaskRequest { // query unfinished task list ,just brief info
+  Paging Pagination = 1;
+  UnfinishedTaskFilter Filter = 2;
+}
+
+message DeleteUnfinishedTaskRequest {
+  UnfinishedTaskFilter Filter = 1;
+}
+
+message UnfinishedTask {
+  double Percent = 1;
+  int64 CreatedAt = 2;
+  string RuntimeId = 3;
+  string YakScriptOnlineGroup = 4;
+  string TaskName = 5;
+  int64  LastRecordPtr = 6;
+  string Target = 7;
+}
+
+message QueryUnfinishedTaskResponse { // brief information for unfinished task
+  repeated UnfinishedTask Tasks = 1;
+}
+
+message GetUnfinishedTaskDetailByIdRequest { // get unfinished task detail by runtime id, get task start param or last record
+  string RuntimeId = 1;
+}
+
+message RecoverUnfinishedTaskRequest {// recover unfinished simple detect task by runtime id
+  string RuntimeId = 1;
 }
 
 message FixUploadPacketRequest {
@@ -3321,6 +3371,7 @@ message RecordPortScanRequest {
   LastRecord LastRecord = 1;
   StartBruteParams StartBruteParams = 3;
   PortScanRequest PortScanRequest = 2;
+  string RuntimeId = 4;
 }
 
 message CreatReportRequest {
@@ -4277,7 +4328,7 @@ message FuzzerResponse {
   string TooLargeResponseHeaderFile = 50;
   string TooLargeResponseBodyFile = 51;
   bool DisableRenderStyles = 52;
-  
+
   string RuntimeID = 53;
 }
 
