@@ -1294,9 +1294,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             })
         )
-        removeSubscribeClose(currentTabKey)
+        removeSubscribeClose(data.route)
         // 关闭一级页面时,清除缓存
-        clearDataByRoute(currentTabKey)
+        clearDataByRoute(data.route)
         if (data.route === YakitRoute.HTTPFuzzer) {
             clearFuzzerSequence()
         }
