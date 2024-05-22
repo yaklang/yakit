@@ -288,6 +288,18 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             reject()
         }
     }
+    const onUseOfficialEngine = async () => {
+        try {
+            const res = await ipcRenderer.invoke("GetBuildInEngineVersion")
+            if (res !== "") {
+                emiter.emit("useOfficialEngineByDownloadByBuiltIn")
+            } else {
+                emiter.emit("useOfficialEngineByDownload")
+            }
+        } catch (error) {
+            emiter.emit("useOfficialEngineByDownload")
+        }
+    }
 
     const [state, setState] = useState<string>("error")
     const [stateNum, setStateNum] = useState<number>(0)
@@ -550,10 +562,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 </div>
                             </div>
                             <div className={styles["info-right"]}>
-                                <YakitButton type='text' className={styles["btn-style"]} onClick={() => {
-                                    // TODO 需要判断
-                                    emiter.emit("systemDetectionClickUseOfficialEngine")
-                                }}>
+                                <YakitButton
+                                    type='text'
+                                    className={styles["btn-style"]}
+                                    onClick={() => {
+                                        setShow(false)
+                                        onUseOfficialEngine()
+                                    }}
+                                >
                                     使用官方引擎
                                 </YakitButton>
                             </div>
@@ -880,6 +896,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         isAlreadyChromePath,
         showMITMCertWarn,
         stateNum,
+        showCheckEngine,
         Array.from(runNodeList).length
     ])
 

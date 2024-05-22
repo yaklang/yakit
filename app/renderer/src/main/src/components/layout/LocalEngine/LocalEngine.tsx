@@ -127,7 +127,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             new Promise((_, reject) => setTimeout(() => reject(new Error("Check engine source request timed out")), ms))
         const checkEngineSource = async (localYaklang: string) => {
             try {
-                console.log('校验引擎版本号：', localYaklang);
+                console.log("校验引擎版本号：", localYaklang)
                 setLog([`本地引擎版本${localYaklang}，校验引擎正确性中`])
                 const [res1, res2] = await Promise.all([
                     Promise.race([ipcRenderer.invoke("fetch-check-yaklang-source", localYaklang), timeout(3000)]),
@@ -146,6 +146,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 handleFetchYakitAndYaklangLatestVersion()
             }
         }
+        
         const onUseCurrentEngine = () => {
             setLog(["引擎校验已结束"])
             isShowedCheckEngineSourceHint.current = false
@@ -153,6 +154,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             handleFetchYakitAndYaklangLatestVersion()
             timingLinkLocalEnging()
         }
+
         const onUseOfficialEngine = async () => {
             try {
                 const res = await ipcRenderer.invoke("GetBuildInEngineVersion")
@@ -165,6 +167,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 installEngine()
             }
         }
+
         const initBuildInEngine = () => {
             setVersionAbnormalLoading(true)
             ipcRenderer
@@ -202,12 +205,21 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 })
                 .finally(() => setTimeout(() => setVersionAbnormalLoading(false), 300))
         }
+
+        useEffect(() => {
+            emiter.on("execLocalEngineInitBuildInEngine", initBuildInEngine)
+            return () => {
+                emiter.off("execLocalEngineInitBuildInEngine", initBuildInEngine)
+            }
+        }, [])
+
         // 下载最新引擎并安装
         const installEngine = () => {
             setVersionAbnormalVisible(false)
             setLinkCheckUpdate(true)
             checkEngineDownloadLatestVersion()
         }
+
         const checkEngineDownloadLatestVersionCancel = () => {
             isShowedCheckEngineSourceHint.current = true
             setVersionAbnormalVisible(true)
@@ -268,6 +280,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         // 初始化后的本地连接-前置项检查
         const initLink = useMemoizedFn(() => {
+            console.log("初始化")
             isShowedUpdateHint.current = false
             preventUpdateHint.current = isCommunityEdition() ? false : true
             isShowedCheckEngineSourceHint.current = false
@@ -275,6 +288,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         })
         // 检查版本后直接连接
         const toLink = useMemoizedFn(() => {
+            console.log("直连")
             isShowedUpdateHint.current = false
             preventUpdateHint.current = !linkCheckUpdate
             isShowedCheckEngineSourceHint.current = false

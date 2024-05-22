@@ -563,6 +563,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yakitDownload, setYakitDownload] = useState<boolean>(false)
     // 更新yaklang前置-关闭所有引擎进程modal
     const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
+    const [yaklangKillBuildInEngine, setYaklangKillBuildInEngine] = useState<boolean>(false)
     // 更新yaklang-modal
     const [yaklangDownload, setYaklangDownload] = useState<boolean>(false)
     // 更新yaklang-modal文案
@@ -635,6 +636,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             errCallback && errCallback()
         }
     }
+    // kill完引擎进程后解压内置引擎
+    const killedEngineToBuildInEngine = useMemoizedFn(() => {
+        setYaklangKillBuildInEngine(false)
+        setYaklangKillPss(false)
+        onSetEngineLink(false)
+        setKeepalive(false)
+        emiter.emit("execLocalEngineInitBuildInEngine")
+    })
 
     // kill完引擎进程后开始更新指定Yaklang版本引擎
     const downYaklangSpecifyVersion = (res: string) => {
@@ -651,7 +660,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         } catch (error) {}
     }
 
-    const systemDetectionClickUseOfficialEngine = () => {
+    // 使用官方引擎 - 下载最新引擎
+    const useOfficialEngineByDownload = () => {
         setYaklangKillPssText({
             title: "使用官方引擎，需关闭所有本地进程",
             content: "确认下载并安装官方引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
@@ -659,16 +669,34 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         handleActiveDownloadModal("yaklang")
     }
     useEffect(() => {
-        emiter.on("systemDetectionClickUseOfficialEngine", systemDetectionClickUseOfficialEngine)
+        emiter.on("useOfficialEngineByDownload", useOfficialEngineByDownload)
         return () => {
-            emiter.off("systemDetectionClickUseOfficialEngine", systemDetectionClickUseOfficialEngine)
+            emiter.off("useOfficialEngineByDownload", useOfficialEngineByDownload)
         }
     }, [])
 
+    // 使用官方引擎 - 内置引擎
+    const useOfficialEngineByDownloadByBuiltIn = () => {
+        setYaklangKillBuildInEngine(true)
+        setYaklangKillPssText({
+            title: "使用官方引擎，需关闭所有本地进程",
+            content: "确认安装内置引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+        })
+        handleActiveDownloadModal("yaklang")
+    }
+    useEffect(() => {
+        emiter.on("useOfficialEngineByDownloadByBuiltIn", useOfficialEngineByDownloadByBuiltIn)
+        return () => {
+            emiter.off("useOfficialEngineByDownloadByBuiltIn", useOfficialEngineByDownloadByBuiltIn)
+        }
+    }, [])
     const onDownloadedYaklang = useMemoizedFn(() => {
         setYaklangSpecifyVersion("")
         setYaklangDownload(false)
-        setLinkLocalEngine()
+        // 下载完成后，需要延迟一会，否则可能获取的引擎版本号不是最新
+        setTimeout(() => {
+            setLinkLocalEngine()
+        }, 200)
     })
 
     const [killOldEngine, setKillOldEngine] = useState<boolean>(false)
@@ -1534,10 +1562,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     content={yaklangKillPssText.content}
                                     visible={yaklangKillPss}
                                     setVisible={setYaklangKillPss}
-                                    onSuccess={killedEngineToUpdate}
                                     onCancelFun={() => {
                                         setYaklangSpecifyVersion("")
                                     }}
+                                    onSuccess={() =>
+                                        yaklangKillBuildInEngine
+                                            ? killedEngineToBuildInEngine()
+                                            : killedEngineToUpdate()
+                                    }
                                 />
                                 {/* 更新yakit */}
                                 <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
