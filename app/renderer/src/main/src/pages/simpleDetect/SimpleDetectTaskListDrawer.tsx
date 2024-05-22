@@ -3,19 +3,20 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {useControllableValue, useMemoizedFn, useCreation} from "ahooks"
+import {useControllableValue, useMemoizedFn, useCreation, useDebounceFn} from "ahooks"
 import React, {ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {
-    ExecBatchYakScriptUnfinishedTask,
-    GetExecBatchYakScriptUnfinishedTaskByUidRequest,
-    GetExecBatchYakScriptUnfinishedTaskResponse,
-    apiGetExecBatchYakScriptUnfinishedTask,
-    apiPopExecBatchYakScriptUnfinishedTaskByUid
+    UnfinishedTask,
+    DeleteUnfinishedTaskRequest,
+    apiQuerySimpleDetectUnfinishedTask,
+    apiDeleteSimpleDetectUnfinishedTask,
+    QueryUnfinishedTaskRequest
 } from "./utils"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {Divider, Progress} from "antd"
-import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import emiter from "@/utils/eventBus/eventBus"
+import {genDefaultPagination} from "../invoker/schema"
 
 interface SimpleDetectTaskListDrawerProps {
     visible: boolean
@@ -98,7 +99,11 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const [loading, setLoading] = useState<boolean>(false)
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-        const [response, setResponse] = useState<ExecBatchYakScriptUnfinishedTask[]>([])
+        const [response, setResponse] = useState<UnfinishedTask[]>([])
+        const [query, setQuery] = useState<QueryUnfinishedTaskRequest>({
+            Pagination: genDefaultPagination(20),
+            Filter: {}
+        })
 
         const [selectedRowKeys, setSelectedRowKeys] = useControllableValue<string[]>(props, {
             defaultValue: [],
@@ -122,10 +127,21 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
             return [
                 {
-                    title: "扫描目标",
+                    title: "任务名",
                     dataKey: "TaskName",
                     width: 160,
-                    fixed: "left"
+                    fixed: "left",
+                    filterProps: {
+                        filtersType: "input"
+                    }
+                },
+                {
+                    title: "扫描目标",
+                    dataKey: "Target",
+                    render: (v) => v.substring(0, 20),
+                    filterProps: {
+                        filtersType: "input"
+                    }
                 },
                 {
                     title: "进度",
@@ -133,22 +149,26 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     render: (v) => <Progress percent={Math.trunc(v * 100)} status='active' />
                 },
                 {
-                    title: "更新时间",
+                    title: "创建时间",
                     dataKey: "CreatedAt",
-                    render: (v) => (v ? formatTimestamp(v) : "-")
+                    render: (v) => (v ? formatTimestamp(v) : "-"),
+                    sorterProps: {
+                        sorter: true,
+                        sorterKey: "created_at"
+                    }
                 },
                 {
                     title: "操作",
                     dataKey: "action",
                     fixed: "right",
                     width: 120,
-                    render: (_, record: ExecBatchYakScriptUnfinishedTask) => (
+                    render: (_, record: UnfinishedTask) => (
                         <>
                             <YakitButton
                                 type='text'
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    onDetails(record.Uid)
+                                    onDetails(record.RuntimeId)
                                 }}
                             >
                                 继续
@@ -159,7 +179,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                                 danger
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    onRemoveSingle(record.Uid)
+                                    onRemoveSingle(record.RuntimeId)
                                 }}
                             >
                                 删除
@@ -198,9 +218,8 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         })
         const update = useMemoizedFn(() => {
             setLoading(true)
-            apiGetExecBatchYakScriptUnfinishedTask()
+            apiQuerySimpleDetectUnfinishedTask(query)
                 .then((res) => {
-                    console.log("res", res)
                     setResponse(res.Tasks.reverse())
                 })
                 .finally(() => setTimeout(() => setLoading(false), 300))
@@ -208,11 +227,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const onRefresh = useMemoizedFn(() => {
             setIsRefresh(!isRefresh)
         })
-        const onSelectAll = (
-            newSelectedRowKeys: string[],
-            selected: ExecBatchYakScriptUnfinishedTask[],
-            checked: boolean
-        ) => {
+        const onSelectAll = (newSelectedRowKeys: string[], selected: UnfinishedTask[], checked: boolean) => {
             setIsAllSelect(checked)
             setSelectedRowKeys(newSelectedRowKeys)
         }
@@ -224,20 +239,24 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 setIsAllSelect(false)
             }
         })
-        const onRemoveSingle = useMemoizedFn((Uid: string) => {
-            const removeParams: GetExecBatchYakScriptUnfinishedTaskByUidRequest = {
-                Uid
+        const onRemoveSingle = useMemoizedFn((RuntimeId: string) => {
+            const removeParams: DeleteUnfinishedTaskRequest = {
+                Filter: {
+                    RuntimeId
+                }
             }
-            apiPopExecBatchYakScriptUnfinishedTaskByUid(removeParams).then(() => {
-                setResponse(response.filter((ele) => ele.Uid !== Uid) || [])
+            apiDeleteSimpleDetectUnfinishedTask(removeParams).then(() => {
+                setResponse(response.filter((ele) => ele.RuntimeId !== RuntimeId) || [])
             })
         })
         const onBatchRemove = useMemoizedFn(() => {
-            const removeParams: GetExecBatchYakScriptUnfinishedTaskByUidRequest = {
-                Uid: selectedRowKeys.join(",")
+            const removeParams: DeleteUnfinishedTaskRequest = {
+                Filter: {
+                    RuntimeId: selectedRowKeys.join(",")
+                }
             }
             setLoading(true)
-            apiPopExecBatchYakScriptUnfinishedTaskByUid(removeParams)
+            apiDeleteSimpleDetectUnfinishedTask(removeParams)
                 .then(() => {
                     update()
                 })
@@ -247,12 +266,32 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     }, 300)
                 )
         })
+        const onTableChange = useDebounceFn(
+            (page: number, limit: number, sorter: SortProps, filter: any) => {
+                setQuery((oldParams) => ({
+                    Pagination: {
+                        ...oldParams.Pagination,
+                        Order: sorter.order === "asc" ? "asc" : "desc",
+                        OrderBy: sorter.order === "none" ? "updated_at" : sorter.orderBy
+                    },
+                    Filter: {
+                        ...oldParams.Filter,
+                        ...filter
+                    }
+                }))
+                setTimeout(() => {
+                    update()
+                }, 100)
+            },
+            {wait: 500, leading: true}
+        ).run
         return (
-            <TableVirtualResize<ExecBatchYakScriptUnfinishedTask>
+            <TableVirtualResize<UnfinishedTask>
+                query={query}
                 size='middle'
                 extra={<YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />}
                 isRefresh={isRefresh}
-                renderKey='TaskId'
+                renderKey='RuntimeId'
                 data={response || []}
                 loading={loading}
                 enableDrag={true}
@@ -271,6 +310,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     onSelectAll,
                     onChangeCheckboxSingle
                 }}
+                onChange={onTableChange}
             />
         )
     })
