@@ -156,4 +156,60 @@ module.exports = (win, getClient) => {
     ipcMain.handle("fetch-certificate-content", async (e, params) => {
         return await asyncFetchCertificate(params)
     })
+
+    const asyncQuerySimpleDetectUnfinishedTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QuerySimpleDetectUnfinishedTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QuerySimpleDetectUnfinishedTask", async (e, params) => {
+        return await asyncQuerySimpleDetectUnfinishedTask(params)
+    })
+
+    const asyncGetSimpleDetectRecordRequestById = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetSimpleDetectRecordRequestById(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetSimpleDetectRecordRequestById", async (e, params) => {
+        return await asyncGetSimpleDetectRecordRequestById(params)
+    })
+
+    const asyncDeleteSimpleDetectUnfinishedTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSimpleDetectUnfinishedTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteSimpleDetectUnfinishedTask", async (e, params) => {
+        return await asyncDeleteSimpleDetectUnfinishedTask(params)
+    })
+
+    const streamRecoverSimpleDetectTaskMap = new Map()
+    ipcMain.handle(
+        "cancel-RecoverSimpleDetectTask",
+        handlerHelper.cancelHandler(streamRecoverSimpleDetectTaskMap)
+    )
+    ipcMain.handle("RecoverSimpleDetectTask", (e, params, token) => {
+        let stream = getClient().RecoverSimpleDetectTask(params)
+        handlerHelper.registerHandler(win, stream, streamRecoverSimpleDetectTaskMap, token)
+    })
+
 }
