@@ -11,7 +11,7 @@ import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 import {LocalGVS} from "@/enums/localGlobal"
 import {safeFormatDownloadProcessState} from "../utils"
-
+import {API} from "@/services/swagger/resposeType"
 import classNames from "classnames"
 import styles from "./UpdateYakitAndYaklang.module.scss"
 
@@ -81,53 +81,36 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         return []
     }, [yaklangUpdateContent])
 
-    /** 获取 yakit 更新内容 */
-    const fetchYakitLastVersion = useMemoizedFn(() => {
-        if (yakitUpdateContent.version) return
-
-        NetWorkApi<FetchUpdateContentProp, any>({
-            diyHome: "https://www.yaklang.com",
+    const fetchYakitAndYaklangVersionInfo = useMemoizedFn(() => {
+        NetWorkApi<any, API.YakVersionsInfoResponse>({
             method: "get",
-            url: "yak/versions",
-            params: {type: "yakit", source: isEnterpriseEdition() ? "company" : "community"}
+            url: "yak/versions/info"
         })
-            .then((res: any) => {
+            .then((res: API.YakVersionsInfoResponse) => {
                 if (!res) return
+                const data = res.data || []
                 try {
-                    const data: UpdateContentProp = JSON.parse(res)
-                    if (removePrefixV(data.version) !== removePrefixV(latestYakit)) return
-                    setYakitUpdateContent({...data})
-                } catch (error) {}
-            })
-            .catch((err) => {})
-    })
-    /** 获取 yaklang 更新内容 */
-    const fetchYaklangLastVersion = useMemoizedFn(() => {
-        if (yaklangUpdateContent.version) return
-
-        NetWorkApi<FetchUpdateContentProp, any>({
-            diyHome: "https://www.yaklang.com",
-            method: "get",
-            url: "yak/versions",
-            params: {type: "yaklang", source: "community"}
-        })
-            .then((res: any) => {
-                if (!res) return
-                try {
-                    const data: UpdateContentProp = JSON.parse(res)
-                    if (removePrefixV(data.version) !== removePrefixV(latestYaklang)) return
-                    setYaklangUpdateContent({...data})
+                    data.forEach((item) => {
+                        if (item.type === "yakit") {
+                            const content: UpdateContentProp = JSON.parse(item.content)
+                            if (removePrefixV(content.version) === removePrefixV(latestYakit)) {
+                                setYakitUpdateContent({...content})
+                            }
+                        } else if (item.type === "yaklang") {
+                            const content: UpdateContentProp = JSON.parse(item.content)
+                            if (removePrefixV(content.version) === removePrefixV(latestYaklang)) {
+                                setYaklangUpdateContent({...content})
+                            }
+                        }
+                    })
                 } catch (error) {}
             })
             .catch((err) => {})
     })
 
     useEffect(() => {
-        if (latestYakit) fetchYakitLastVersion()
-    }, [latestYakit])
-    useEffect(() => {
-        if (latestYaklang) fetchYaklangLastVersion()
-    }, [latestYaklang])
+        if (latestYakit && latestYaklang) fetchYakitAndYaklangVersionInfo()
+    }, [latestYakit, latestYaklang])
 
     useEffect(() => {
         ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
@@ -224,11 +207,23 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         }, 100)
     })
 
-    const yaklangDownload = useMemoizedFn(() => {
+    const yaklangDownload = useMemoizedFn(async () => {
         isYaklangBreak.current = false
-        setInstallYaklang(true)
         let version = latestYaklang
         if (version.startsWith("v")) version = version.slice(1)
+        try {
+            const res = await ipcRenderer.invoke("yak-engine-version-exists-and-correctness", version)
+            if (res === true) {
+                yaklangUpdate()
+            } else {
+                realDownloadYaklang(version)
+            }
+        } catch (error) {
+            realDownloadYaklang(version)
+        }
+    })
+    const realDownloadYaklang = (version: string) => {
+        setInstallYaklang(true)
         ipcRenderer
             .invoke("download-latest-yak", version)
             .then(() => {
@@ -246,8 +241,6 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                     // @ts-ignore
                     size: getYaklangProgress().size
                 })
-                // 清空主进程yaklang版本缓存
-                ipcRenderer.invoke("clear-local-yaklang-version-cache")
                 yaklangUpdate()
             })
             .catch((e: any) => {
@@ -256,8 +249,12 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                 setInstallYaklang(false)
                 setYaklangProgress(undefined)
             })
-    })
+    }
     const yaklangBreak = useMemoizedFn(() => {
+        let version = latestYaklang
+        if (version.startsWith("v")) version = version.slice(1)
+        ipcRenderer.invoke("cancel-download-yak-engine-version", version)
+    
         setYaklangLoading(true)
         isYaklangBreak.current = true
         setInstallYaklang(false)
@@ -268,6 +265,8 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         }, 300)
     })
     const yaklangUpdate = useMemoizedFn(() => {
+        // 清空主进程yaklang版本缓存
+        ipcRenderer.invoke("clear-local-yaklang-version-cache")
         let version = latestYaklang
         if (version.startsWith("v")) version = version.slice(1)
         ipcRenderer

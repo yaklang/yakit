@@ -4,6 +4,13 @@
  */
 
 export declare namespace API {
+    export interface YakVersionsInfoResponse {
+        data: YakVersionsInfoDetail[]
+    }
+    export interface YakVersionsInfoDetail {
+        type: string
+        content: string
+    }
     export interface YakitPluginParam {
         field: string
         default_value: string

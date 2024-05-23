@@ -75,7 +75,6 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {yakProcess} from "./PerformanceDisplay"
-import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -139,6 +138,8 @@ export interface FuncDomainProp {
     showProjectManage?: boolean
     /** @name 操作系统类型 */
     system: YakitSystem
+    onYakEngineVersionList: (versionList: string[]) => void
+    onYaklangLastVersion: (version: string) => void
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -152,7 +153,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         typeCallback,
         showProjectManage = false,
         system,
-        isJudgeLicense
+        isJudgeLicense,
+        onYakEngineVersionList,
+        onYaklangLastVersion
     } = props
 
     /** 登录用户信息 */
@@ -409,7 +412,14 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
                     {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink} />}
-                    {isCommunityEdition() && <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} />}
+                    {isCommunityEdition() && (
+                        <UIOpNotice
+                            isEngineLink={isEngineLink}
+                            isRemoteMode={isRemoteMode}
+                            onYakEngineVersionList={onYakEngineVersionList}
+                            onYaklangLastVersion={onYaklangLastVersion}
+                        />
+                    )}
                     {!showProjectManage && (
                         <UIOpSetting
                             engineMode={engineMode}
@@ -1114,14 +1124,14 @@ interface UIOpUpdateProps {
     version: string
     lastVersion: string
     localVersion?: string
+    moreYaklangVersionList?: string[]
+    lowerYaklangLastVersion?: boolean
     isUpdateWait?: boolean
     isRemoteMode?: boolean
     onDownload: (type: "yakit" | "yaklang") => any
-    isSimple?: boolean
-    isEnterprise: boolean
     role?: string | null
     updateContent?: string
-    onUpdateEdit?: (type: "yakit" | "yaklang", isEnterprise?: boolean) => any
+    onUpdateEdit?: (type: "yakit" | "yaklang") => any
     removePrefixV: (version: string) => string
     onNoticeShow?: (visible: boolean) => void
 }
@@ -1133,15 +1143,13 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
         lastVersion,
         isUpdateWait,
         onDownload,
-        isSimple = false,
-        isEnterprise,
         role,
         updateContent = "",
         onUpdateEdit,
         removePrefixV
     } = props
 
-    const isUpdate = isSimple ? false : lastVersion !== "" && removePrefixV(lastVersion) !== removePrefixV(version)
+    const isUpdate = lastVersion !== "" && removePrefixV(lastVersion) !== removePrefixV(version)
 
     const content: string[] = useMemo(() => {
         if (updateContent) {
@@ -1164,18 +1172,16 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     </div>
                     {/* 等使用更新内容时，下面"当前版本"-div需要被删除 */}
                     <div>
-                        <div className={isSimple ? styles["update-simple-title"] : styles["update-title"]}>{`${
-                            isEnterprise ? "企业版" : "社区版"
-                        } ${getReleaseEditionName()} ${isUpdate ? lastVersion : version}`}</div>
-                        {!isSimple && <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>}
+                        <div className={styles["update-title"]}>{`社区版 ${getReleaseEditionName()} ${
+                            lastVersion || version
+                        }`}</div>
+                        <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
                         {/* <div className={styles["update-time"]}>2022-10-01</div> */}
                     </div>
                 </div>
 
                 <div className={styles["header-btn"]}>
-                    {isSimple ? (
-                        <></>
-                    ) : isUpdateWait ? (
+                    {isUpdateWait ? (
                         <YakitButton onClick={() => ipcRenderer.invoke("open-yakit-path")}>{`安装 `}</YakitButton>
                     ) : lastVersion === "" ? (
                         "获取失败"
@@ -1187,16 +1193,24 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : (
                         "已是最新"
                     )}
-                    {role === "superAdmin" && (
+                    {/* {role === "superAdmin" && (
                         <div
                             className={styles["edit-func"]}
                             onClick={() => {
-                                if (onUpdateEdit) onUpdateEdit("yakit", isEnterprise)
+                                if (onUpdateEdit) onUpdateEdit("yakit")
                             }}
                         >
                             <PencilAltIcon className={styles["edit-icon"]} />
                         </div>
-                    )}
+                    )} */}
+                    <div
+                            className={styles["edit-func"]}
+                            onClick={() => {
+                                if (onUpdateEdit) onUpdateEdit("yakit")
+                            }}
+                        >
+                            <PencilAltIcon className={styles["edit-icon"]} />
+                        </div>
                 </div>
             </div>
 
@@ -1230,6 +1244,8 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         version,
         lastVersion,
         localVersion = "",
+        moreYaklangVersionList = [],
+        lowerYaklangLastVersion = false,
         isRemoteMode = false,
         onDownload,
         role,
@@ -1241,14 +1257,12 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
     const [moreVersionPopShow, setMoreVersionPopShow] = useState<boolean>(false)
 
-    const isUpdate =
-        lastVersion !== "" &&
-        removePrefixV(lastVersion) !== removePrefixV(version) &&
-        removePrefixV(localVersion) !== removePrefixV(lastVersion)
+    const isUpdate = lowerYaklangLastVersion
     const isKillEngine =
         localVersion &&
         removePrefixV(localVersion) !== removePrefixV(version) &&
-        removePrefixV(localVersion) === removePrefixV(lastVersion)
+        removePrefixV(localVersion) === removePrefixV(lastVersion) &&
+        !lowerYaklangLastVersion
 
     const content: string[] = useMemo(() => {
         if (updateContent) {
@@ -1291,7 +1305,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                             width: versionTextMaxWidth
                         }}
                     >
-                        <div className={styles["update-title"]}>{`Yaklang ${isUpdate ? lastVersion : version}`}</div>
+                        <div className={styles["update-title"]}>{`Yaklang ${lastVersion || version}`}</div>
                         <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
                         {/* <div className={styles["upda te-time"]}>2022-09-29</div> */}
                     </div>
@@ -1309,6 +1323,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                 trigger='click'
                                 content={
                                     <MoreYaklangVersion
+                                        moreYaklangVersionList={moreYaklangVersionList}
                                         onClosePop={() => {
                                             setMoreVersionPopShow(false)
                                             onNoticeShow(false)
@@ -1339,7 +1354,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         <div
                             className={styles["edit-func"]}
                             onClick={() => {
-                                if (onUpdateEdit) onUpdateEdit("yaklang", isEnterpriseEdition())
+                                if (onUpdateEdit) onUpdateEdit("yaklang")
                             }}
                         >
                             <PencilAltIcon className={styles["edit-icon"]} />
@@ -1374,46 +1389,19 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
 })
 
 interface MoreYaklangVersionProps {
+    moreYaklangVersionList: string[]
     onClosePop: (visible: boolean) => void
 }
 /** @name 更多Yaklang版本 */
 const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
-    const {onClosePop} = props
-    const ref = useRef(null)
-    const [inViewport] = useInViewport(ref)
-    const [loading, setLoading] = useState<boolean>(false)
-    const [versionList, setVersionList] = useState<string[]>([])
+    const {moreYaklangVersionList, onClosePop} = props
+    const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
     const [searchVersionVal, setSearchVersionVal] = useState<string>("")
     const [searchVersionList, setSearchVersionList] = useState<string[]>([])
-    const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
-    const [downloadYaklangVersion, setDownloadYaklangVersion] = useState<string>("")
 
     useEffect(() => {
-        if (inViewport) {
-            setLoading(true)
-            ipcRenderer
-                .invoke("fetch-yaklang-version-list")
-                .then((data: string) => {
-                    const arr = data.split("\n").filter((v) => v)
-                    let devPrefix: string[] = []
-                    let noPrefix: string[] = []
-                    arr.forEach((item) => {
-                        if (item.startsWith("dev")) {
-                            devPrefix.push(item)
-                        } else {
-                            noPrefix.push(item)
-                        }
-                    })
-                    setVersionList(noPrefix.concat(devPrefix))
-                })
-                .catch((err) => {
-                    yakitNotify("error", `获取更多版本失败：${err}`)
-                })
-                .finally(() => {
-                    setLoading(false)
-                })
-        }
-    }, [inViewport])
+        setVersionList(moreYaklangVersionList)
+    }, [moreYaklangVersionList])
 
     const onSearchVersion = (version: string) => {
         setSearchVersionVal(version)
@@ -1425,27 +1413,13 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
         return searchVersionVal ? searchVersionList : versionList
     }, [searchVersionVal, searchVersionList, versionList])
 
-    useEffect(() => {
-        if (!yaklangKillPss) {
-            setDownloadYaklangVersion("")
-        }
-    }, [yaklangKillPss])
-
     const versionListItemClick = (version: string) => {
         onClosePop(false)
-        setYaklangKillPss(true)
-        setDownloadYaklangVersion(version)
+        emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version, isUpdate: false}))
     }
 
-    const killedEngineToUpdate = useMemoizedFn(() => {
-        setYaklangKillPss(false)
-        if (downloadYaklangVersion) {
-            emiter.emit("downYaklangSpecifyVersion", downloadYaklangVersion)
-        }
-    })
-
     return (
-        <div ref={ref} className={styles["more-versions-popover-content"]}>
+        <div className={styles["more-versions-popover-content"]}>
             <div className={styles["search-version-header"]}>
                 <YakitInput
                     value={searchVersionVal}
@@ -1455,46 +1429,23 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
                     onChange={(e) => onSearchVersion(e.target.value.trim())}
                 />
             </div>
-            <YakitSpin spinning={loading}>
-                <div className={styles["version-list-wrap"]}>
-                    {renderVersionList.length ? (
-                        <>
-                            {renderVersionList.map((v) => (
-                                <div
-                                    className={styles["version-list-item"]}
-                                    key={v}
-                                    onClick={() => versionListItemClick(v)}
-                                >
-                                    <Typography.Text
-                                        style={{maxWidth: 200}}
-                                        ellipsis={{
-                                            tooltip: true
-                                        }}
-                                    >
-                                        <span
-                                            style={{
-                                                color:
-                                                    v === downloadYaklangVersion ? "var(--yakit-primary-5)" : undefined
-                                            }}
-                                        >
-                                            {v}
-                                        </span>
-                                    </Typography.Text>
-                                </div>
-                            ))}
-                        </>
-                    ) : (
-                        <YakitEmpty></YakitEmpty>
-                    )}
-                </div>
-            </YakitSpin>
-            <AllKillEngineConfirm
-                visible={yaklangKillPss}
-                setVisible={setYaklangKillPss}
-                title='替换引擎，需关闭所有本地进程'
-                content='确认下载并安装此版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。'
-                onSuccess={killedEngineToUpdate}
-            ></AllKillEngineConfirm>
+            <div className={styles["version-list-wrap"]}>
+                {renderVersionList.length ? (
+                    <>
+                        {renderVersionList.map((v) => (
+                            <div
+                                className={styles["version-list-item"]}
+                                key={v}
+                                onClick={() => versionListItemClick(v)}
+                            >
+                                {v}
+                            </div>
+                        ))}
+                    </>
+                ) : (
+                    <YakitEmpty></YakitEmpty>
+                )}
+            </div>
         </div>
     )
 })
@@ -1574,6 +1525,8 @@ const UIOpLetter: React.FC<UIOpLetterProps> = React.memo((props) => {
 interface UIOpNoticeProp {
     isEngineLink: boolean
     isRemoteMode: boolean
+    onYakEngineVersionList: (versionList: string[]) => void
+    onYaklangLastVersion: (version: string) => void
 }
 
 export interface UpdateContentProp {
@@ -1599,7 +1552,7 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
 }
 
 const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
-    const {isEngineLink, isRemoteMode} = props
+    const {isEngineLink, isRemoteMode, onYakEngineVersionList, onYaklangLastVersion} = props
 
     const {userInfo} = useStore()
 
@@ -1613,11 +1566,29 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     /** Yaklang引擎版本号 */
     const [yaklangVersion, setYaklangVersion] = useState<string>("dev")
-    const [yaklangLastVersion, setYaklangLastVersion] = useState<string>("")
+    const [yaklangLastVersion, setYaklangLastVersion] = useState<string>("") // 官方推荐的最新版
     const [yaklangLocalVersion, setYaklangLocalVersion] = useState<string>("")
+    const [moreYaklangVersionList, setMoreYaklangVersionList] = useState<string[]>([]) // 更多引擎版本list
     const yaklangTime = useRef<any>(null)
-
-    const [companyYakitContent, setCompanyYakitContent] = useState<UpdateContentProp>({version: "", content: ""})
+    const moreYaklangTime = useRef<any>(null)
+    // 是否低于主推引擎版本
+    const lowerYaklangLastVersion = useMemo(() => {
+        if (!moreYaklangVersionList.length) return false
+        if (!yaklangLastVersion) return false
+        const index1 = moreYaklangVersionList.indexOf(yaklangLastVersion)
+        const index2 = moreYaklangVersionList.indexOf(yaklangVersion)
+        const index3 = moreYaklangVersionList.indexOf(yaklangLocalVersion)
+        if (index2 === -1 && index3 === -1) return true
+        if (index2 > index1 && index3 > index1) return true
+        return false
+    }, [moreYaklangVersionList, yaklangLastVersion, yaklangVersion, yaklangLocalVersion])
+    useEffect(() => {
+        onYakEngineVersionList(moreYaklangVersionList)
+    }, [moreYaklangVersionList])
+    useEffect(() => {
+        onYaklangLastVersion(yaklangLastVersion)
+    }, [yaklangLastVersion])
+    const versionsInfoTime = useRef<any>(null)
     const [communityYakitContent, setCommunityYakitContent] = useState<UpdateContentProp>({version: "", content: ""})
     const [communityYaklangContent, setCommunityYaklangContent] = useState<UpdateContentProp>({
         version: "",
@@ -1627,14 +1598,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const removePrefixV = (version: string) => {
         return version.startsWith("v") ? version.slice(1) : version
     }
-    const companyYakit: string = useMemo(() => {
-        if (!yakitLastVersion) return ""
-        const lastVersion = removePrefixV(yakitLastVersion)
-        const contentVersion = removePrefixV(companyYakitContent.version)
-        if (lastVersion !== contentVersion) return ""
-        if (lastVersion === contentVersion) return companyYakitContent.content
-        return ""
-    }, [yakitLastVersion, companyYakitContent])
     const communityYakit: string = useMemo(() => {
         if (!yakitLastVersion) return ""
         const lastVersion = removePrefixV(yakitLastVersion)
@@ -1655,86 +1618,44 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     /** 是否启动检测更新 */
     const [isCheck, setIsCheck] = useState<boolean>(true)
 
+    /**获取社区版yakit&yaklang更新内容 */
+    const fetchYakitAndYaklangVersionInfo = useMemoizedFn(() => {
+        NetWorkApi<any, API.YakVersionsInfoResponse>({
+            method: "get",
+            url: "yak/versions/info"
+        })
+            .then((res: API.YakVersionsInfoResponse) => {
+                if (!res) return
+                const data = res.data || []
+                try {
+                    data.forEach((item) => {
+                        if (item.type === "yakit") {
+                            const content: UpdateContentProp = JSON.parse(item.content)
+                            setCommunityYakitContent({...content})
+                        } else if (item.type === "yaklang") {
+                            const content: UpdateContentProp = JSON.parse(item.content)
+                            setCommunityYaklangContent({...content})
+                        }
+                    })
+                } catch (error) {}
+            })
+            .catch((err) => {})
+    })
     /** 获取最新Yakit版本号 */
     const fetchYakitLastVersion = useMemoizedFn(() => {
         /** 社区版埋点 */
-        isCommunityEdition() && visitorsStatisticsFun()
+        visitorsStatisticsFun()
         /** 社区版获取yakit最新版本号 */
-        isCommunityEdition() &&
-            ipcRenderer
-                .invoke("fetch-latest-yakit-version")
-                .then((data: string) => {
-                    if (yakitVersion !== data) setYakitLastVersion(data)
-                })
-                .catch(() => {
-                    setYakitLastVersion("")
-                })
-        /** 获取社区版yakit更新内容 */
-        isCommunityEdition() &&
-            NetWorkApi<FetchUpdateContentProp, any>({
-                diyHome: "https://www.yaklang.com",
-                method: "get",
-                url: "yak/versions",
-                params: {type: "yakit", source: "community"}
+        ipcRenderer
+            .invoke("fetch-latest-yakit-version")
+            .then((data: string) => {
+                if (yakitVersion !== data) setYakitLastVersion(data)
             })
-                .then((res: any) => {
-                    if (!res) return
-                    try {
-                        const data: UpdateContentProp = JSON.parse(res)
-                        if (data.content === communityYakitContent.content) return
-                        setCommunityYakitContent({...data})
-                    } catch (error) {}
-                })
-                .catch((err) => {})
-        /** 企业版获取yakit最新版本号 */
-        isEnpriTrace() &&
-            ipcRenderer.invoke("update-enpritrace-info").then((info: UpdateEnpriTraceInfoProps) => {
-                const {version} = info
-                if (version) {
-                    NetWorkApi<FetchEnpriTraceUpdateContentProp, any>({
-                        method: "get",
-                        url: "yak/install/package",
-                        params: {version}
-                    })
-                        .then((res: {from: string}) => {
-                            if (!res) return
-                            try {
-                                const {from} = res
-                                if (from) {
-                                    const regex = /EnpriTrace-(.*?)-(darwin-arm64|darwin-x64|linux-amd64|windows-amd64)/
-                                    const match = from.match(regex)
-                                    if (match) {
-                                        const result = `v${match[1]}`
-                                        if (yakitVersion !== result) setYakitLastVersion(result)
-                                    }
-                                }
-                            } catch (error) {}
-                        })
-                        .catch((err) => {
-                            setYakitLastVersion("")
-                            // console.log("err", err)
-                        })
-                }
+            .catch(() => {
+                setYakitLastVersion("")
             })
-        /** 获取企业版yakit更新内容 */
-        isEnpriTrace() &&
-            NetWorkApi<FetchUpdateContentProp, any>({
-                diyHome: "https://www.yaklang.com",
-                method: "get",
-                url: "yak/versions",
-                params: {type: "yakit", source: "company"}
-            })
-                .then((res: any) => {
-                    if (!res) return
-                    try {
-                        const data: UpdateContentProp = JSON.parse(res)
-                        if (data.content === companyYakitContent.content) return
-                        setCompanyYakitContent({...data})
-                    } catch (error) {}
-                })
-                .catch((err) => {})
     })
-    /** 获取最新Yaklang版本号和本地版本号 */
+    /** 获取最新官方推荐Yaklang版本号和本地版本号 */
     const fetchYaklangLastVersion = useMemoizedFn(() => {
         ipcRenderer
             .invoke("fetch-latest-yaklang-version")
@@ -1752,22 +1673,27 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 })
                 .catch(() => {})
         }
-        /** 获取社区版yaklang更新内容 */
-        NetWorkApi<FetchUpdateContentProp, any>({
-            diyHome: "https://www.yaklang.com",
-            method: "get",
-            url: "yak/versions",
-            params: {type: "yaklang", source: "community"}
-        })
-            .then((res: any) => {
-                if (!res) return
-                try {
-                    const data: UpdateContentProp = JSON.parse(res)
-                    if (data.content === communityYaklangContent.content) return
-                    setCommunityYaklangContent({...data})
-                } catch (error) {}
+    })
+    /** 获取更多Yaklang引擎版本 */
+    const fetchMoreYaklangLastVersion = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("fetch-yaklang-version-list")
+            .then((data: string) => {
+                const arr = data.split("\n").filter((v) => v)
+                let devPrefix: string[] = []
+                let noPrefix: string[] = []
+                arr.forEach((item) => {
+                    if (item.startsWith("dev")) {
+                        devPrefix.push(item)
+                    } else {
+                        noPrefix.push(item)
+                    }
+                })
+                setMoreYaklangVersionList(noPrefix.concat(devPrefix))
             })
-            .catch((err) => {})
+            .catch((err) => {
+                setMoreYaklangVersionList([])
+            })
     })
 
     /** 接收本地Yaklang引擎版本号信息 */
@@ -1776,10 +1702,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             ipcRenderer.on("fetch-yak-version-callback", async (e: any, data: string) => {
                 setYaklangVersion(data || "dev")
             })
-
-            return () => {
-                ipcRenderer.removeAllListeners("fetch-yak-version-callback")
-            }
         }
     }, [isEngineLink])
 
@@ -1788,6 +1710,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
                 setIsCheck(val)
             })
+            /** 获取社区版yakit&yaklang更新内容 */
+            if (versionsInfoTime.current) clearInterval(versionsInfoTime.current)
+            fetchYakitAndYaklangVersionInfo()
+            versionsInfoTime.current = setInterval(fetchYakitAndYaklangVersionInfo, 60000)
             /** 获取本地Yakit版本号，启动获取最新Yakit版本的定时器 */
             ipcRenderer.invoke("fetch-yakit-version").then((v: string) => setYakitVersion(`v${v}`))
             if (yakitTime.current) clearInterval(yakitTime.current)
@@ -1800,11 +1726,19 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             fetchYaklangLastVersion()
             yaklangTime.current = setInterval(fetchYaklangLastVersion, 60000)
 
+            if (moreYaklangTime.current) clearInterval(moreYaklangTime.current)
+            fetchMoreYaklangLastVersion()
+            moreYaklangTime.current = setInterval(fetchMoreYaklangLastVersion, 60000)
+
             return () => {
+                clearInterval(versionsInfoTime.current)
                 clearInterval(yakitTime.current)
                 clearInterval(yaklangTime.current)
+                clearInterval(moreYaklangTime.current)
             }
         } else {
+            if (versionsInfoTime.current) clearInterval(versionsInfoTime.current)
+            versionsInfoTime.current = null
             /** 清空Yakit引擎相关版本号和定时器 */
             if (yakitTime.current) clearInterval(yakitTime.current)
             yakitTime.current = null
@@ -1813,12 +1747,20 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             if (yaklangTime.current) clearInterval(yaklangTime.current)
             yaklangTime.current = null
             setYaklangLastVersion("")
+            /** 清空更多版本Yaklang引擎相关版本号和定时器 */
+            if (moreYaklangTime.current) clearInterval(moreYaklangTime.current)
+            moreYaklangTime.current = null
+            setMoreYaklangVersionList([])
         }
     }, [isEngineLink])
 
     const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
         setShow(false)
-        emiter.emit("activeUpdateYakitOrYaklang", type)
+        if (type === "yakit") {
+            emiter.emit("activeUpdateYakitOrYaklang", type)
+        } else {
+            emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersion, isUpdate: true}))
+        }
     })
 
     const [isYakitUpdateWait, setIsYakitUpdateWait] = useState<boolean>(false)
@@ -1835,22 +1777,22 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     }, [])
 
     const [editLoading, setEditLoading] = useState<boolean>(false)
-    const [editShow, setEditShow] = useState<{visible: boolean; type: "yakit" | "yaklang"; isEnterprise?: boolean}>({
+    const [editShow, setEditShow] = useState<{visible: boolean; type: "yakit" | "yaklang"}>({
         visible: false,
         type: "yakit"
     })
     const [editInfo, setEditInfo] = useState<string>("")
-    const UpdateContentEdit = useMemoizedFn((type: "yakit" | "yaklang", isEnterprise?: boolean) => {
+    const UpdateContentEdit = useMemoizedFn((type: "yakit" | "yaklang") => {
         if (editShow.visible) return
-        setEditInfo(type === "yakit" ? (isEnterprise ? companyYakit : communityYakit) : communityYaklang)
-        setEditShow({visible: true, type: type, isEnterprise: !!isEnterprise})
+        setEditInfo(type === "yakit" ? communityYakit : communityYaklang)
+        setEditShow({visible: true, type: type})
         setShow(false)
     })
     const onSubmitEdit = useMemoizedFn(() => {
         setEditLoading(true)
         const params: SetUpdateContentProp = {
             type: editShow.type,
-            source: editShow.isEnterprise ? "company" : "community",
+            source: "community",
             updateContent: JSON.stringify({
                 version: editShow.type === "yakit" ? yakitLastVersion : yaklangLastVersion,
                 content: editInfo || ""
@@ -1864,6 +1806,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         })
             .then((res) => {
                 info("修改更新内容成功")
+                fetchYakitAndYaklangVersionInfo()
                 if (editShow.type === "yakit") fetchYakitLastVersion()
                 else fetchYaklangLastVersion()
                 setTimeout(() => setEditShow({visible: false, type: "yakit"}), 100)
@@ -1926,40 +1869,24 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {type === "update" && (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
-                                {userInfo.role === "superAdmin" && !isEnpriTraceAgent() && (
-                                    <UIOpUpdateYakit
-                                        version={yakitVersion}
-                                        lastVersion={yakitLastVersion}
-                                        isUpdateWait={isYakitUpdateWait}
-                                        onDownload={onDownload}
-                                        isSimple={true}
-                                        isEnterprise={isCommunityEdition()}
-                                        role={userInfo.role}
-                                        updateContent={isCommunityEdition() ? companyYakit : communityYakit}
-                                        onUpdateEdit={UpdateContentEdit}
-                                        removePrefixV={removePrefixV}
-                                    />
-                                )}
-                                {!isEnpriTraceAgent() && (
-                                    <UIOpUpdateYakit
-                                        version={yakitVersion}
-                                        lastVersion={yakitLastVersion}
-                                        isUpdateWait={isYakitUpdateWait}
-                                        onDownload={onDownload}
-                                        isEnterprise={isEnterpriseEdition()}
-                                        role={userInfo.role}
-                                        updateContent={isEnterpriseEdition() ? companyYakit : communityYakit}
-                                        onUpdateEdit={UpdateContentEdit}
-                                        removePrefixV={removePrefixV}
-                                    />
-                                )}
+                                <UIOpUpdateYakit
+                                    version={yakitVersion}
+                                    lastVersion={yakitLastVersion}
+                                    isUpdateWait={isYakitUpdateWait}
+                                    onDownload={onDownload}
+                                    role={userInfo.role}
+                                    updateContent={communityYakit}
+                                    onUpdateEdit={UpdateContentEdit}
+                                    removePrefixV={removePrefixV}
+                                />
                                 <UIOpUpdateYaklang
                                     version={yaklangVersion}
                                     lastVersion={yaklangLastVersion}
                                     localVersion={yaklangLocalVersion}
+                                    moreYaklangVersionList={moreYaklangVersionList}
+                                    lowerYaklangLastVersion={lowerYaklangLastVersion}
                                     isRemoteMode={isRemoteMode}
                                     onDownload={onDownload}
-                                    isEnterprise={isEnterpriseEdition()}
                                     role={userInfo.role}
                                     updateContent={communityYaklang}
                                     onUpdateEdit={UpdateContentEdit}
@@ -2000,21 +1927,22 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         yakitVersion,
         yakitLastVersion,
         isYakitUpdateWait,
-        companyYakit,
         communityYakit,
         yaklangVersion,
         yaklangLastVersion,
         yaklangLocalVersion,
+        moreYaklangVersionList,
+        lowerYaklangLastVersion,
         isRemoteMode,
         communityYaklang
     ])
 
     const isUpdate = useMemo(() => {
-        return isEnpriTraceAgent()
-            ? yaklangLastVersion !== "" && removePrefixV(yaklangLastVersion) !== removePrefixV(yaklangVersion)
-            : (yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
-                  (yaklangLastVersion !== "" && removePrefixV(yaklangLastVersion) !== removePrefixV(yaklangVersion))
-    }, [yakitVersion, yakitLastVersion, yaklangLastVersion, yaklangVersion])
+        return (
+            (yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
+            (lowerYaklangLastVersion && !isRemoteMode)
+        )
+    }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, isRemoteMode])
 
     return (
         <YakitPopover

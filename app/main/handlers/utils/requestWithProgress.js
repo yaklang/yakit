@@ -1,6 +1,10 @@
 const axios = require('axios');
 const fs = require('fs');
 const {throttle} = require('throttle-debounce');
+const path = require("path");
+const {
+    yaklangEngineDir,
+} = require("../../filePath")
 
 // 函数用于编码URL中的中文字符
 function encodeChineseCharacters(url) {
@@ -8,7 +12,8 @@ function encodeChineseCharacters(url) {
     return encodeURI(url);
 }
 
-
+let writer = null
+let downloadedLength = 0
 function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undefined, onFinished = undefined, onError = undefined) {
     // 设置axios请求配置
     const config = {
@@ -24,9 +29,9 @@ function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undef
             return
         }
 
-        const writer = fs.createWriteStream(dest);
+        writer = fs.createWriteStream(dest);
         const totalLength = response.headers['content-length'];
-        let downloadedLength = 0;
+        downloadedLength = 0;
         const startedAt = Date.now();
         let getProgressState = () => {
             const state = {
@@ -67,6 +72,7 @@ function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undef
 
         return new Promise((resolve, reject) => {
             writer.on('finish', () => {
+                writer = null
                 onProgress && onProgress(100)
                 resolve();
             });
@@ -83,6 +89,28 @@ function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undef
     });
 }
 
+function cancelRequestWithProgress(version) {
+    return new Promise((resolve, reject) => {
+        if (version === "") reject(new Error('Version number does not exist'));
+        if (writer) {
+            writer.on('close', () => {
+                // 主动点取消销毁流会触发 删掉不完整的引擎版本
+                const dest = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
+                try {
+                    fs.unlinkSync(dest)
+                } catch (e) {
+
+                }
+                reject(new Error('Write operation cancelled'));
+            });
+            writer.destroy(new Error('Write operation cancelled'));
+        } else {
+            resolve()
+        }
+    })
+}
+
 module.exports = {
     requestWithProgress,
+    cancelRequestWithProgress,
 }

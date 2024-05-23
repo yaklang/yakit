@@ -21,6 +21,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const [latestYakit, setLatestYakit] = useState<string>("")
         const [currentYaklang, setCurrentYaklang] = useState<string>("")
         const [latestYaklang, setLatestYaklang] = useState<string>("")
+        const [moreYaklangVersionList, setMoreYaklangVersionList] = useState<string[]>([]) // 更多引擎版本list
 
         /**
          * 只在软件打开时|引擎从无到有时执行该逻辑
@@ -124,11 +125,30 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                             setLatestYakit(data || "")
                         })
                         .catch((err) => {})
+
                     ipcRenderer
                         .invoke("fetch-latest-yaklang-version")
                         .then((data: string) => {
                             if (preventUpdateHint.current) return
-                            setLatestYaklang(data.startsWith('v') ? data.slice(1) : data)
+                            setLatestYaklang(data.startsWith("v") ? data.slice(1) : data)
+                        })
+                        .catch((err) => {})
+
+                    ipcRenderer
+                        .invoke("fetch-yaklang-version-list")
+                        .then((data: string) => {
+                            if (preventUpdateHint.current) return
+                            const arr = data.split("\n").filter((v) => v)
+                            let devPrefix: string[] = []
+                            let noPrefix: string[] = []
+                            arr.forEach((item) => {
+                                if (item.startsWith("dev")) {
+                                    devPrefix.push(item)
+                                } else {
+                                    noPrefix.push(item)
+                                }
+                            })
+                            setMoreYaklangVersionList(noPrefix.concat(devPrefix))
                         })
                         .catch((err) => {})
                 }
@@ -164,6 +184,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             // 一旦启动本地连接了，后续就不用再检查更新情况了
             setLatestYakit("")
             setLatestYaklang("")
+            setMoreYaklangVersionList([])
         })
 
         /** ---------- 软件自启的更新检测弹框 Start ---------- */
@@ -174,13 +195,20 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 isShowedUpdateHint.current = true
                 return true
             }
-            if (!!currentYaklang && !!latestYaklang && currentYaklang !== latestYaklang) {
+
+            const lowerYaklangLastVersion = moreYaklangVersionList.indexOf(currentYaklang) === -1 || moreYaklangVersionList.indexOf(currentYaklang) > moreYaklangVersionList.indexOf(latestYaklang)
+            if (
+                !!currentYaklang &&
+                !!latestYaklang &&
+                moreYaklangVersionList.length &&
+                lowerYaklangLastVersion
+            ) {
                 isShowedUpdateHint.current = true
                 return true
             }
 
             return false
-        }, [currentYakit, latestYakit, currentYaklang, latestYaklang])
+        }, [currentYakit, latestYakit, currentYaklang, moreYaklangVersionList, latestYaklang])
 
         const onCancelUpdateHint = useMemoizedFn(() => {
             preventUpdateHint.current = true

@@ -162,6 +162,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         setCancelLoading(true)
         isBreakDownload.current = true
         setDownloadProgress(undefined)
+        ipcRenderer.invoke("cancel-download-yak-engine-version", latestVersionRef.current)
         setTimeout(() => {
             setInstall(false)
             setCancelLoading(false)
@@ -189,7 +190,20 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             })
     })
 
-    const downloadEngine = useMemoizedFn(() => {
+    const downloadEngine = useMemoizedFn(async () => {
+        try {
+            const res = await ipcRenderer.invoke("yak-engine-version-exists-and-correctness", latestVersionRef.current)
+            if (res === true) {
+                yaklangUpdate()
+            } else {
+                realDownloadYaklang()
+            }
+        } catch (error) {
+            realDownloadYaklang()
+        }
+    })
+    const realDownloadYaklang = () => {
+        setInstall(true)
         ipcRenderer
             .invoke("download-latest-yak", `${latestVersionRef.current}`)
             .then(() => {
@@ -207,27 +221,30 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                     size: getDownloadProgress().size
                 })
                 success("下载完毕")
-                // 清空主进程yaklang版本缓存
-                ipcRenderer.invoke("clear-local-yaklang-version-cache")
-                /** 安装yaklang引擎 */
-                ipcRenderer
-                    .invoke("install-yak-engine", `${latestVersionRef.current}`)
-                    .then(() => {
-                        if (isBreakDownload.current) return
-                        success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
-                        onSuccess()
-                    })
-                    .catch((err: any) => {
-                        failed(`安装失败: ${err}`)
-                        onInstallClose()
-                    })
+                yaklangUpdate()
             })
             .catch((e: any) => {
                 if (isBreakDownload.current) return
                 failed(`引擎下载失败: ${e}`)
                 onInstallClose()
             })
-    })
+    }
+    const yaklangUpdate = () => {
+        // 清空主进程yaklang版本缓存
+        ipcRenderer.invoke("clear-local-yaklang-version-cache")
+        /** 安装yaklang引擎 */
+        ipcRenderer
+            .invoke("install-yak-engine", `${latestVersionRef.current}`)
+            .then(() => {
+                if (isBreakDownload.current) return
+                success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
+                onSuccess()
+            })
+            .catch((err: any) => {
+                failed(`安装失败: ${err}`)
+                onInstallClose()
+            })
+    }
 
     /** 一键安装事件 */
     const installEngine = useMemoizedFn(() => {
@@ -240,7 +257,6 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         }
         isBreakDownload.current = false
 
-        setInstall(true)
         fetchEngineLatestVersion(() => downloadEngine())
     })
 
