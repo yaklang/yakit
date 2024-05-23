@@ -3,7 +3,7 @@ import {Button, Card, Descriptions, Divider, Space, Switch, Tag} from "antd";
 import {LogLevelToCode} from "./HTTPFlowTable/HTTPFlowTable";
 import {CopyableField} from "../utils/inputUtil";
 import {showModal} from "../utils/showModal";
-import {CodeViewer} from "../utils/codeViewer";
+import {YakEditor} from "@/utils/editors";
 
 export interface HTTPFlowRiskViewerProp {
     risk: YakitHTTPFlowRisk
@@ -35,7 +35,7 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
             {
                 highlight !== "" && (fragment || []).length > 0 ?
                     <span style={{color: "#999"}}>详情：<Switch size={"small"} checked={showFragment}
-                                                             onChange={setShowFragment}/></span> : undefined
+                                                               onChange={setShowFragment}/></span> : undefined
             }
         </>}
             bodyStyle={{overflow: "hidden", width: "100%"}}
@@ -62,11 +62,7 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
                 >
                     <Space direction={"vertical"} style={{width: "100%"}}>
                         <CopyableField text={highlight}/>
-                        <CodeViewer
-                            mode={"http"}
-                            value={i} highlightKeywords={highlight.split(",")}
-                            width={"100%"} height={300}
-                        />
+                        <YakEditor readOnly={true} value={i} type={"http"} noWordWrap={true} full={true}/>
                     </Space>
                 </Card>)}
             </Space>
