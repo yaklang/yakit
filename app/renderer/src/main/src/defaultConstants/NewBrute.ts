@@ -1,4 +1,4 @@
-import {BruteExecuteExtraFormValue} from "@/pages/securityTool/newBrute/NewBruteType"
+import {BruteExecuteExtraFormValue, StartBruteParams} from "@/pages/securityTool/newBrute/NewBruteType"
 import {BrutePageInfoProps} from "@/store/pageInfo"
 
 export const defaultBruteExecuteExtraFormValue: BruteExecuteExtraFormValue = {
@@ -30,4 +30,28 @@ export const defaultBruteExecuteExtraFormValue: BruteExecuteExtraFormValue = {
 
 export const defaultBrutePageInfo: BrutePageInfoProps = {
     targets: ""
+}
+
+export const defaultStartBruteParams: StartBruteParams = {
+    Concurrent: 50,
+    DelayMax: 5,
+    DelayMin: 1,
+    OkToStop: true,
+    PasswordFile: "",
+    Passwords: [],
+    PasswordsDict: [],
+    ReplaceDefaultPasswordDict: false,
+    PluginScriptName: "",
+    Prefix: "",
+    TargetFile: "",
+    TargetTaskConcurrent: 1,
+    Targets: "",
+    Type: "",
+    UsernameFile: "",
+    Usernames: [],
+    UsernamesDict: [],
+    ReplaceDefaultUsernameDict: false,
+
+    usernameValue: "",
+    passwordValue: ""
 }
