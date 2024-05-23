@@ -2924,6 +2924,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 }
                                             })}
                                         onClick={({key, keyPath}) => {
+                                            
                                             if (keyPath.includes("数据包扫描")) {
                                                 if (isAllSelect) {
                                                     yakitNotify("warning", "该批量操作不支持全选")
@@ -3004,7 +3005,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     break
                                                 case "sendAndJumpToWS":
                                                     const currentItemJumpToWS = menuData.find(
-                                                        (f) => f.onClickBatch && f.key === "发送到WS Fuzzer"
+                                                        (f) => f.onClickBatch && f.key === "发送到 WS Fuzzer"
                                                     )
                                                     if (!currentItemJumpToWS) return
                                                     onBatch(
@@ -3016,7 +3017,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     break
                                                 case "sendToWS":
                                                     const currentItemToWS = menuData.find(
-                                                        (f) => f.onClickBatch && f.key === "发送到WS Fuzzer"
+                                                        (f) => f.onClickBatch && f.key === "发送到 WS Fuzzer"
                                                     )
                                                     if (!currentItemToWS) return
                                                     onBatch(
