@@ -46,7 +46,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {YakitRoute} from "@/routes/newRoute"
-import {DefaultTypeList, PluginGV, pluginTypeToName} from "../builtInData"
+import {DefaultTypeList, GetPluginLanguage, PluginGV, pluginTypeToName} from "../builtInData"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {getRemoteValue} from "@/utils/kv"
@@ -130,22 +130,25 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     })
     /** --------------- 旧插件参数迁移提示 End --------------- */
     // 数组去重
-    const filter = arr => arr.filter((item,index) => arr.indexOf(item) === index)
+    const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     /** 通过ID获取插件旧数据 */
     const fetchPluginInfo = useMemoizedFn((id: number) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: id})
-            .then(async(res: YakScript) => {
+            .then(async (res: YakScript) => {
                 // console.log("编辑插件-获取插件信息", res)
                 if (res.Type === "yak") fetchOldData(res.ScriptName)
                 let newTags = !res.Tags || res.Tags === "null" ? [] : (res.Tags || "").split(",")
                 setInfo(res)
                 setPluginType(res.Type || "yak")
-                const codeInfo = await onCodeToInfo(res.Type || "yak", res.Content)
-                if(codeInfo && codeInfo.Tags.length>0){
+                const codeInfo =
+                    GetPluginLanguage(res.Type || "yak") === "yak"
+                        ? await onCodeToInfo(res.Type || "yak", res.Content)
+                        : null
+                if (codeInfo && codeInfo.Tags.length > 0) {
                     // 去重
-                    newTags = filter([...newTags,...codeInfo.Tags])
+                    newTags = filter([...newTags, ...codeInfo.Tags])
                 }
                 setInfoParams({
                     ScriptName: res.ScriptName,
@@ -476,20 +479,18 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             data.PluginSelectorTypes = setting?.PluginSelectorTypes
         }
 
-        const codeInfo = await onCodeToInfo(data.Type, data.Content)
-        let newTags = data.Tags||""
-        if(codeInfo && codeInfo.Tags.length>0){
+        const codeInfo = GetPluginLanguage(data.Type) === "yak" ? await onCodeToInfo(data.Type, data.Content) : null
+        let newTags = data.Tags || ""
+        if (codeInfo && codeInfo.Tags.length > 0) {
             newTags += `,${codeInfo.Tags.join(",")}`
             // 去重
             newTags = filter(newTags.split(",")).join(",")
         }
         data.Tags = newTags
         // yak类型才解析参数和风险
-        if (data.Type === "yak") {
-            if (codeInfo) {
-                data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
-                data.Params = codeInfo.CliParameter
-            }
+        if (data.Type === "yak" && codeInfo) {
+            data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
+            data.Params = codeInfo.CliParameter
         }
 
         return toolDelInvalidKV(data)
