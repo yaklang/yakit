@@ -52,6 +52,7 @@ export interface RecordPortScanRequest {
     LastRecord?: LastRecordProps
     StartBruteParams?: StartBruteParams
     PortScanRequest: PortScanExecuteExtraFormValue
+    RuntimeId?: string
 }
 /**
  * @description 端口扫描执行方法  企业版

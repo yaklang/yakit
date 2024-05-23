@@ -45,6 +45,7 @@ import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateR
 import {v4 as uuidv4} from "uuid"
 import {defaultSearch} from "../plugins/builtInData"
 import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
+import {apiSaveCancelSimpleDetect} from "./utils"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 const SimpleDetectTaskListDrawer = React.lazy(() => import("./SimpleDetectTaskListDrawer"))
@@ -192,6 +193,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const onExpand = useMemoizedFn(() => {
         setIsExpand(!isExpand)
     })
+    const portScanRequestParamsRef = useRef<PortScanExecuteExtraFormValue>()
+    const startBruteParamsRef = useRef<StartBruteParams>()
     const onStartExecute = useMemoizedFn((value: SimpleDetectForm) => {
         if (value.scanType === "专项扫描" && (value.pluginGroup?.length || 0) === 0) {
             warn("请选择专项扫描项目")
@@ -264,19 +267,43 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         simpleDetectStreamEvent.reset()
         setExecuteStatus("process")
         setRuntimeId("")
+        portScanRequestParamsRef.current = {...portScanRequestParams}
+        startBruteParamsRef.current = {...newStartBruteParams}
         apiSimpleDetect(params, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpand(false)
             simpleDetectStreamEvent.start()
         })
     })
+    /*停止需要保存任务 */
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (!startBruteParamsRef.current || !portScanRequestParamsRef.current || !runtimeId) return
+        const formValue = form.getFieldsValue()
+        const filePtr = streamInfo.cardState.filter((item) => ["当前文件指针"].includes(item.tag))
+        const filePtrValue: number =
+            Array.isArray(filePtr) && filePtr.length > 0 ? parseInt(filePtr[0]?.info[0]?.Data) : 0
+
+        const pluginGroup = formValue.scanType !== "专项扫描" ? ["基础扫描"] : formValue.pluginGroup || []
+
+        const params: RecordPortScanRequest = {
+            LastRecord: {
+                LastRecordPtr: Number.isNaN(filePtrValue) ? 0 : filePtrValue,
+                Percent: streamInfo.progressState.length > 0 ? streamInfo.progressState[0].progress : 0,
+                YakScriptOnlineGroup: pluginGroup,
+                ExtraInfo: JSON.stringify({cardState: streamInfo.cardState})
+            },
+            StartBruteParams: startBruteParamsRef.current,
+            PortScanRequest: portScanRequestParamsRef.current,
+            RuntimeId: runtimeId
+        }
+        apiSaveCancelSimpleDetect(params)
         apiCancelSimpleDetect(tokenRef.current).then(() => {
             simpleDetectStreamEvent.stop()
             setIsExecuting(false)
         })
     })
+
     /**在顶部的执行按钮 */
     const onExecuteInTop = useMemoizedFn((e) => {
         e.stopPropagation()

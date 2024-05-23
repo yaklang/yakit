@@ -1,8 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
-import {LastRecordProps} from "../securityTool/newPortScan/utils"
-import {PortScanParams} from "../portscan/PortScanPage"
-import {StartBruteParams} from "../brute/BrutePage"
+import {RecordPortScanRequest} from "../securityTool/newPortScan/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -40,6 +38,7 @@ export const apiQuerySimpleDetectUnfinishedTask: (
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `获取未完成任务失败：${e}`)
+                reject(e)
             })
     })
 }
@@ -55,6 +54,7 @@ export const apiDeleteSimpleDetectUnfinishedTask: (params: DeleteUnfinishedTaskR
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `删除未完成任务失败：${e}`)
+                reject(e)
             })
     })
 }
@@ -62,12 +62,7 @@ export const apiDeleteSimpleDetectUnfinishedTask: (params: DeleteUnfinishedTaskR
 export interface GetUnfinishedTaskDetailByIdRequest {
     RuntimeId: string
 }
-export interface RecordPortScanRequest {
-    LastRecord: LastRecordProps
-    PortScanRequest: PortScanParams
-    StartBruteParams: StartBruteParams
-    RuntimeId: string
-}
+
 /** GetSimpleDetectRecordRequestById 简易版安全检测 获取任务详情  */
 export const apiGetSimpleDetectRecordRequestById: (
     params: GetUnfinishedTaskDetailByIdRequest
@@ -78,6 +73,21 @@ export const apiGetSimpleDetectRecordRequestById: (
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `获取任务详情失败：${e}`)
+                reject(e)
+            })
+    })
+}
+
+/** SaveCancelSimpleDetect 简易版安全检测 保存任务  */
+export const apiSaveCancelSimpleDetect: (params: RecordPortScanRequest) => Promise<null> = (params) => {
+    return new Promise((resolve, reject) => {
+        console.log("SaveCancelSimpleDetect", params)
+        ipcRenderer
+            .invoke("SaveCancelSimpleDetect", params)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `保存任务失败：${e}`)
+                reject(e)
             })
     })
 }
