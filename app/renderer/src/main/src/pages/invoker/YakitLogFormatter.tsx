@@ -8,7 +8,6 @@ import {PieGraph} from "../graph/PieGraph";
 import {ExecResultLog} from "./batch/ExecMessageViewer";
 import {LogLevelToCode} from "../../components/HTTPFlowTable/HTTPFlowTable";
 import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer";
-import {CodeViewer} from "../../utils/codeViewer";
 import {YakEditor} from "../../utils/editors";
 import {AutoCard} from "../../components/AutoCard";
 import MDEditor from "@uiw/react-md-editor";
@@ -100,13 +99,23 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                 return <div>Risk</div>
             }
         case "json":
-            return <div style={{display:'flex'}}>
-                <div style={{width:70}}>
+            return <div style={{display: 'flex'}}>
+                <div style={{width: 70}}>
                     {props.timestamp > 0 &&
-                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
+                        <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                 </div>
-                <CodeViewer value={`${props.data}`} height={150} width={'calc(100% - 70px)'} mode={"json"} fullHeight={true}/>
-            </div>
+                <pre style={{
+                    backgroundColor: '#f4f4f4', // 设置背景色
+                    border: '1px solid #ddd', // 设置边框
+                    borderRadius: '5px', // 设置边框圆角
+                    padding: '10px', // 设置内边距
+                    whiteSpace: 'pre-wrap', // 保留换行符
+                    fontFamily: 'Courier New, Courier, monospace', // 设置字体
+                    fontSize: '14px', // 设置字号
+                    lineHeight: '1.5', // 设置行高
+                    overflowX: 'auto' // 水平滚动条
+                }}>{props.data}</pre>
+1            </div>
         case "markdown":
             return <MDEditor.Markdown source={props.data}/>
         case "text":
@@ -118,7 +127,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
         case "success":
             return <Space direction={"vertical"} style={{width: "100%"}}>
                 {props.timestamp > 0 &&
-                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
+                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                 <Card size={"small"} title={<Tag color={"green"}>模块执行结果</Tag>}>
                     {props.data}
                 </Card>
@@ -127,7 +136,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
             let obj: { head: string[], data: string[][] } = JSON.parse(props.data)
             return <Space direction={"vertical"} style={{width: "100%"}}>
                 {props.timestamp > 0 &&
-                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
+                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                 <Card
                     size={"small"} title={<Tag color={"green"}>直接结果(表格)</Tag>}
                     extra={[
@@ -171,7 +180,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
             let graphData: GraphData = JSON.parse(props.data);
             return <Space direction={"vertical"}>
                 {props.timestamp > 0 &&
-                <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
+                    <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>}
                 <Card
                     size={"small"} title={<Tag color={"green"}>直接结果(图)</Tag>}
                     extra={[
