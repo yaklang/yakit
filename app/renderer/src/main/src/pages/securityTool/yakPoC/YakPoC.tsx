@@ -19,8 +19,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     PluginBatchExecuteContent,
-    PluginBatchExecuteContentRefProps,
-    batchPluginType
+    PluginBatchExecuteContentRefProps
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {useControllableValue, useCreation, useDebounceFn, useInViewport, useInterval, useMemoizedFn} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -41,7 +40,7 @@ import {FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/a
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {PageNodeItemProps, PocPageInfoProps, defaultPocPageInfo, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, PocPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {GroupCount, QueryYakScriptRequest, SaveYakScriptGroupRequest, YakScript} from "@/pages/invoker/schema"
@@ -64,6 +63,8 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
+import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
+import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))

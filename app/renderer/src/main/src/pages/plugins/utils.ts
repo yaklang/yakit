@@ -3,7 +3,7 @@ import {YakitPluginListOnlineResponse} from "./online/PluginsOnlineType"
 import {NetWorkApi, requestConfig} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {info, yakitNotify} from "@/utils/notification"
-import {isCommunityEdition, isEnpriTraceAgent} from "@/utils/envfile"
+import {isCommunityEdition} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
 import {
     GetYakScriptGroupResponse,
@@ -19,7 +19,7 @@ import {
 } from "../invoker/schema"
 import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
-import {pluginTypeToName} from "./builtInData"
+import {defaultFilter, defaultSearch, pluginTypeToName} from "./builtInData"
 import {YakitRoute} from "@/routes/newRoute"
 import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
@@ -29,11 +29,10 @@ import {
     HybridScanModeType,
     HybridScanPluginConfig
 } from "@/models/HybridScan"
-import {defPluginBatchExecuteExtraFormValue, isEmpty} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
-import {defaultFilter, defaultSearch} from "./baseTemplate"
 import {PluginGroupList} from "./local/PluginsLocalType"
 import {HTTPRequestParameters} from "@/types/http-api"
+import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1180,7 +1179,7 @@ export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Prom
                 default:
                     break
             }
-            
+
             ipcRenderer
                 .invoke("DebugPlugin", executeParams, token)
                 .then(() => {

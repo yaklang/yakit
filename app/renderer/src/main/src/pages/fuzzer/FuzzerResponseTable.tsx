@@ -1,11 +1,9 @@
 import React, {useState} from "react";
 import {ArtColumn, BaseTable, features, useTablePipeline} from "../../alibaba/ali-react-table-dist";
 import {analyzeFuzzerResponse, FuzzerResponse} from "./HTTPFuzzerPage";
-import {Button, Space, Table, Tag, Tooltip, Typography} from "antd";
 import {formatTimestamp} from "../../utils/timeUtil";
 import * as  antd from "antd";
-import {DurationMsToColor, StatusCodeToColor} from "../../components/HTTPFlowTable/HTTPFlowTable";
-import {divider} from "@uiw/react-md-editor";
+import {StatusCodeToColor} from "../../components/HTTPFlowTable/HTTPFlowTable";
 import {CopyableField} from "../../utils/inputUtil";
 import ReactResizeDetector from "react-resize-detector";
 import {useMemoizedFn} from "ahooks";
@@ -18,83 +16,6 @@ export interface FuzzerResponseTableProp {
     sendToPlugin?: (request: Uint8Array, isHTTPS: boolean, response?: Uint8Array) => any
 }
 
-const {Text} = Typography;
-
-// export const FuzzerResponseTable: React.FC<FuzzerResponseTableProp> = React.memo((props) => {
-//     const {content, setRequest} = props;
-//
-//     return <>
-//         <Table<FuzzerResponse>
-//             size={"small"}
-//             scroll={{y: 500, x: 600}}
-//             rowKey={"uuid"}
-//             bordered={true}
-//             columns={[
-//                 {
-//                     title: "Method",
-//                     width: 78,
-//                     fixed: "left",
-//                     sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.Method.localeCompare(b.Method),
-//                     render: (i: FuzzerResponse) => <div>{i.Method}</div>
-//                 },
-//                 {
-//                     title: "访问状态", width: 80,
-//                     fixed: "left",
-//                     sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.StatusCode - b.StatusCode,
-//                     render: (i: FuzzerResponse) => {
-//                         return <div>{i.Ok ?
-//                             <Tag color={"geekblue"}>{i.StatusCode}</Tag> : <Tooltip title={i.Reason}>
-//                                 <Tag color={"red"}>
-//                                     失败
-//                                 </Tag>
-//                             </Tooltip>}</div>
-//                     }
-//                 },
-//                 {
-//                     title: "Body 长度", width: 85,
-//                     sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.BodyLength - b.BodyLength,
-//                     render: (i: FuzzerResponse) => {
-//                         return <div>{i.Ok ? i.BodyLength : ""}</div>
-//                     }
-//                 },
-//                 {
-//                     title: "延迟(ms)", width: 80,
-//                     sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.DurationMs - b.DurationMs,
-//                     render: (i: FuzzerResponse) => {
-//                         if (!i.Ok) {
-//                             return ""
-//                         }
-//                         return <div>{i.DurationMs &&
-//                         <Tag>{i.DurationMs}ms</Tag>}</div>
-//                     }
-//                 },
-//                 {
-//                     title: "Content-Type / 失败原因", width: 200,
-//                     render: (i: FuzzerResponse) => <Text
-//                         ellipsis={{tooltip: true}}
-//                         style={{width: 200, color: i.Ok ? undefined : "red"}}
-//                     >{i.Ok ? i.ContentType : i.Reason}</Text>
-//                 },
-//                 {
-//                     title: "请求时间", fixed: "right", width: 165,
-//                     sorter: (a: FuzzerResponse, b: FuzzerResponse) => a.Timestamp - b.Timestamp,
-//                     render: (i: FuzzerResponse) => <Tag>{formatTimestamp(i.Timestamp)}</Tag>
-//                 },
-//                 {
-//                     title: "操作", fixed: "right", width: 80,
-//                     render: (i: FuzzerResponse) => <Button
-//                         size={"small"} type={"primary"}
-//                         onClick={() => {
-//                             analyzeFuzzerResponse(i, setRequest)
-//                         }}
-//                     >分析详情</Button>
-//                 },
-//             ]}
-//             dataSource={content.reverse() || []}
-//             pagination={false}
-//         />
-//     </>
-// });
 
 const sortAsNumber = (a: any, b: any) => parseInt(a) > parseInt(b) ? 1 : -1
 

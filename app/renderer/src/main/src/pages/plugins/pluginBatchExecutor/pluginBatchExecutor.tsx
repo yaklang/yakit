@@ -1,5 +1,4 @@
 import React, {useRef, useState, useEffect, forwardRef, useImperativeHandle} from "react"
-import {defaultFilter, defaultSearch} from "../baseTemplate"
 import {useMemoizedFn, useCreation, useUpdateEffect, useInViewport, useControllableValue} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
@@ -26,8 +25,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import classNames from "classnames"
 import {
     PluginExecuteProgress,
-    PluginFixFormParams,
-    defPluginExecuteFormValue
+    PluginFixFormParams
 } from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {
     PluginExecuteExtraFormValue,
@@ -38,20 +36,20 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../operator/expandAndRetract/ExpandAndRetract"
-import {
-    PageNodeItemProps,
-    PluginBatchExecutorPageInfoProps,
-    defaultPluginBatchExecutorPageInfo,
-    usePageInfo
-} from "@/store/pageInfo"
+import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
-import {pluginTypeFilterList} from "@/pages/securityTool/newPortScan/NewPortScan"
 import {PluginExecuteLog} from "@/pages/securityTool/yakPoC/YakPoC"
 import {Uint8ArrayToString} from "@/utils/str"
 import {yakitNotify} from "@/utils/notification"
+import {
+    defPluginBatchExecuteExtraFormValue,
+    defaultPluginBatchExecutorPageInfo,
+    pluginTypeFilterList
+} from "@/defaultConstants/PluginBatchExecutor"
+import {defaultFilter, defaultSearch} from "../builtInData"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 const PluginBatchRaskListDrawer = React.lazy(() => import("./PluginBatchRaskListDrawer"))
@@ -64,16 +62,7 @@ export const isEmpty = (uint8Array: Uint8Array) => {
     return !(uint8Array && Object.keys(uint8Array).length > 0)
 }
 export interface PluginBatchExecuteExtraFormValue extends PluginExecuteExtraFormValue, PluginBatchExecutorTaskProps {}
-export const defPluginExecuteTaskValue: PluginBatchExecutorTaskProps = {
-    Proxy: "",
-    Concurrent: 30,
-    TotalTimeoutSecond: 7200
-}
-export const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormValue = {
-    ...cloneDeep(defPluginExecuteFormValue),
-    ...cloneDeep(defPluginExecuteTaskValue)
-}
-export const batchPluginType = "mitm,port-scan,nuclei"
+
 export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.memo((props) => {
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -780,7 +769,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             setContinueLoading(true)
             hybridScanStreamEvent.reset()
             apiHybridScanByMode(runtimeId, "resume", tokenRef.current).then(() => {
-            hybridScanStreamEvent.start()
+                hybridScanStreamEvent.start()
             })
         })
         const isExecuting = useCreation(() => {

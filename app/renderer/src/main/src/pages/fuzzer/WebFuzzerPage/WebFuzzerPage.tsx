@@ -6,7 +6,7 @@ import classNames from "classnames"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
-import {PageNodeItemProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import emiter from "@/utils/eventBus/eventBus"
 import {getRemoteValue} from "@/utils/kv"
@@ -14,6 +14,7 @@ import {AdvancedConfigShowProps} from "../HTTPFuzzerPage"
 import {RemoteGV} from "@/yakitGV"
 
 import cloneDeep from "lodash/cloneDeep"
+import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")
 
 export const webFuzzerTabs = [

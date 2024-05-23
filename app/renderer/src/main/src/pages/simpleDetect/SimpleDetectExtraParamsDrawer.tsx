@@ -9,12 +9,13 @@ import {BruteExecuteExtraFormValue} from "../securityTool/newBrute/NewBruteType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {BruteSettings} from "../securityTool/newBrute/BruteExecuteParamsDrawer"
-import {defaultBruteExecuteExtraFormValue} from "../securityTool/newBrute/utils"
 import {
     BasicCrawlerSettingsPanel,
     FingerprintSettingsPanel,
     NetworkCardSettingsPanel,
-    ScanOtherSettingsPanel} from "../securityTool/newPortScan/NewPortScanExtraParamsDrawer"
+    ScanOtherSettingsPanel
+} from "../securityTool/newPortScan/NewPortScanExtraParamsDrawer"
+import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
 
 const {YakitPanel} = YakitCollapse
 

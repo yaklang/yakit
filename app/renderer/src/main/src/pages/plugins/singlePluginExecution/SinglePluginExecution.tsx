@@ -11,8 +11,6 @@ import {
     convertLocalPluginsRequestParams,
     onToEditPlugin
 } from "../utils"
-
-import {defaultFilter, defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "lodash/cloneDeep"
 import "../plugins.scss"
@@ -20,7 +18,7 @@ import {yakitNotify} from "@/utils/notification"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
 import {Tooltip} from "antd"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
-import {pluginTypeToName} from "../builtInData"
+import {defaultFilter, defaultSearch, pluginTypeToName} from "../builtInData"
 import emiter from "@/utils/eventBus/eventBus"
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {

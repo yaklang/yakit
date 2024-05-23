@@ -2,13 +2,14 @@ import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/H
 import {YakitRoute} from "@/routes/newRoute"
 import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
-import {AdvancedConfigShowProps, defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {AdvancedConfigShowProps} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
 import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
 import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
 import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
+import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 
 /**
  * @description 页面暂存数据
@@ -42,9 +43,9 @@ interface PageParamsInfoProps {
     webFuzzerPageInfo?: WebFuzzerPageInfoProps
     pluginInfoEditor?: {source: YakitRoute}
     /** YakitRoute.Plugin_Local 本地插件页面缓存数据 */
-    pluginLocalPageInfo?: {uuid: string}
+    pluginLocalPageInfo?: PluginLocalPageInfoProps
     /**YakitRoute.Plugin_Store 插件商店页面 */
-    pluginOnlinePageInfo?: {keyword: string; plugin_type: string}
+    pluginOnlinePageInfo?: PluginOnlinePageInfoProps
     /**批量执行页面 */
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
     /**专项漏洞页面 */
@@ -58,18 +59,10 @@ interface PageParamsInfoProps {
     /**简易版 安全检测页面 */
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
 }
-export const defaultSpaceEnginePageInfo: SpaceEnginePageInfoProps = {}
+
 export interface SpaceEnginePageInfoProps {}
-export const defaultSimpleDetectPageInfo: SimpleDetectPageInfoProps = {}
+
 export interface SimpleDetectPageInfoProps {}
-export const defaultPluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps = {
-    runtimeId: "",
-    defaultActiveKey: "",
-    https: false,
-    httpFlowIds: [],
-    request: new Uint8Array(),
-    hybridScanMode: "new"
-}
 export interface PluginBatchExecutorPageInfoProps {
     /**执行批量执行的runtimeId */
     runtimeId: string
@@ -84,14 +77,13 @@ export interface PluginBatchExecutorPageInfoProps {
     /**执行任务的状态 */
     hybridScanMode: HybridScanModeType
 }
-export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
-    pageId: "",
-    advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
-    advancedConfigShow: null,
-    request: defaultPostTemplate,
-    variableActiveKeys: undefined
+export interface PluginOnlinePageInfoProps {
+    keyword: string
+    plugin_type: string
 }
-
+export interface PluginLocalPageInfoProps {
+    uuid: string
+}
 export interface WebFuzzerPageInfoProps {
     pageId: string
     advancedConfigValue: AdvancedConfigValueProps
@@ -101,14 +93,6 @@ export interface WebFuzzerPageInfoProps {
     variableActiveKeys?: string[]
 }
 
-export const defaultPocPageInfo: PocPageInfoProps = {
-    selectGroup: [],
-    selectGroupListByKeyWord: [],
-    formValue: {},
-    https: false,
-    httpFlowIds: [],
-    request: new Uint8Array()
-}
 export interface PocPageInfoProps {
     /** type 1会打开漏洞检测类型选择  2直接带着数据打开poc页面*/
     type?: number
@@ -124,16 +108,12 @@ export interface PocPageInfoProps {
     /**请求包 */
     request: Uint8Array
 }
-export const defaultBrutePageInfo: BrutePageInfoProps = {
-    targets: ""
-}
+
 export interface BrutePageInfoProps {
     /**输入目标 */
     targets: string
 }
-export const defaultScanPortPageInfo: ScanPortPageInfoProps = {
-    targets: ""
-}
+
 export interface ScanPortPageInfoProps {
     /**输入目标 */
     targets: string

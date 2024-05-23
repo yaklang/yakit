@@ -9,7 +9,7 @@ import {
 import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useUpdateEffect, useThrottleFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {defaultSearch, PluginsLayout, PluginsContainer} from "../baseTemplate"
+import {PluginsLayout, PluginsContainer} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {
     TypeSelect,
@@ -62,7 +62,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginLocalUpload, PluginLocalUploadSingle} from "./PluginLocalUpload"
 import {YakitRoute} from "@/routes/newRoute"
-import {DefaultTypeList, PluginGV} from "../builtInData"
+import {DefaultTypeList, PluginGV, defaultFilter, defaultSearch} from "../builtInData"
 import {RemoteGV} from "@/yakitGV"
 import {randomString} from "@/utils/randomUtil"
 import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "../pluginUploadHooks"
@@ -72,10 +72,18 @@ import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors
 import {SavePluginInfoSignalProps} from "../editDetails/PluginEditDetails"
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
-import {PluginLocalExport, initExportLocalParams} from "./PluginLocalExportProps"
+import {PluginLocalExport} from "./PluginLocalExportProps"
 
 const {ipcRenderer} = window.require("electron")
-const defaultFilters = {plugin_type: [], tags: [], plugin_group: []}
+
+const initExportLocalParams: ExportParamsProps = {
+    OutputDir: "",
+    YakScriptIds: [],
+    Keywords: "",
+    Type: "",
+    UserName: "",
+    Tags: ""
+}
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -85,7 +93,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [isList, setIsList] = useState<boolean>(false)
 
     const [plugin, setPlugin] = useState<YakScript>()
-    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters)
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [initTotal, setInitTotal] = useState<number>(0)
@@ -305,7 +313,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const resetAllQueryRefLocalList = () => {
         filtersDetailRef.current = undefined
         searchDetailRef.current = undefined
-        setFilters(defaultFilters)
+        setFilters(defaultFilter)
         setSearch(cloneDeep(defaultSearch))
         setTimeout(() => {
             getInitTotal()

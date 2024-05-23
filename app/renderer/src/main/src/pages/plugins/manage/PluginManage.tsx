@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useReducer, useRef, useState} from "react"
-import {PluginsContainer, PluginsLayout, defaultPagemeta, defaultSearch, statusTag} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, statusTag} from "../baseTemplate"
 import {
     AuthorImg,
     FuncBtn,
@@ -48,7 +48,7 @@ import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfi
 import {NetWorkApi} from "@/services/fetch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {DefaultStatusList, PluginGV} from "../builtInData"
+import {DefaultStatusList, PluginGV, defaultPagemeta, defaultSearch} from "../builtInData"
 import {useStore} from "@/store"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 

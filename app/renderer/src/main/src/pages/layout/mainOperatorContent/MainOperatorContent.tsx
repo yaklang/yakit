@@ -67,14 +67,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
-import {
-    DefFuzzerTableMaxData,
-    FuzzerCacheDataProps,
-    ShareValueProps,
-    defaultAdvancedConfigValue,
-    defaultPostTemplate,
-    getFuzzerCacheData
-} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
@@ -83,26 +76,23 @@ import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
-import {
-    PageNodeItemProps,
-    PageProps,
-    defPage,
-    defaultBrutePageInfo,
-    defaultPluginBatchExecutorPageInfo,
-    defaultPocPageInfo,
-    defaultScanPortPageInfo,
-    saveFuzzerCache,
-    defaultSimpleDetectPageInfo,
-    defaultSpaceEnginePageInfo,
-    usePageInfo
-} from "@/store/pageInfo"
+import {PageNodeItemProps, PageProps, defPage, saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
-import {defPluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {PluginGroupType} from "@/pages/plugins/group/PluginGroups"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import {
+    defPluginBatchExecuteExtraFormValue,
+    defaultPluginBatchExecutorPageInfo
+} from "@/defaultConstants/PluginBatchExecutor"
+import {defaultBrutePageInfo} from "@/defaultConstants/NewBrute"
+import {defaultScanPortPageInfo} from "@/defaultConstants/NewPortScan"
+import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
+import {defaultSpaceEnginePageInfo} from "@/defaultConstants/SpaceEnginePage"
+import { defaultSimpleDetectPageInfo } from "@/defaultConstants/SimpleDetect"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -1304,9 +1294,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             })
         )
-        removeSubscribeClose(currentTabKey)
+        removeSubscribeClose(data.route)
         // 关闭一级页面时,清除缓存
-        clearDataByRoute(currentTabKey)
+        clearDataByRoute(data.route)
         if (data.route === YakitRoute.HTTPFuzzer) {
             clearFuzzerSequence()
         }

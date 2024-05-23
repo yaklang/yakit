@@ -12,15 +12,6 @@ import {ExportParamsProps, ExportYakScriptLocalResponse} from "./PluginsLocalTyp
 import {useDebounceEffect} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
-export const initExportLocalParams: ExportParamsProps = {
-    OutputDir: "",
-    YakScriptIds: [],
-    Keywords: "",
-    Type: "",
-    UserName: "",
-    Tags: ""
-}
-
 declare type getContainerFunc = () => HTMLElement
 interface PluginLocalExportProps {
     visible: boolean

@@ -20,15 +20,12 @@ import {Form, Tooltip, Space, Divider} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
-import {DefFuzzerTableMaxData, SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     ExtractorItem,
     MatcherAndExtractionDrawer,
-    MatcherItem,
-    extractorTypeList,
-    matcherTypeList
+    MatcherItem
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
@@ -50,12 +47,13 @@ import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
 import {ExtractorsPanel, MatchersPanel, VariablePanel} from "./FuzzerConfigPanels"
+import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
+import {matcherTypeList, extractorTypeList} from "../MatcherAndExtractionCard/constants"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
-export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
-export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
+const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 const fuzzTagModeOptions = [
     {

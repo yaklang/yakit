@@ -1,12 +1,10 @@
 import {ArrowCircleRightSvgIcon, FilterIcon} from "@/assets/newIcon"
 import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {ResizeBox} from "@/components/ResizeBox"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
 import {
@@ -16,30 +14,27 @@ import {
     RenderTypeOptionVal
 } from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
+import {failed, yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
-import moment from "moment"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, DefFuzzerTableMaxData, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
-import {ArrowRightSvgIcon} from "@/components/layout/icons"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {Alert, Divider, Space, Tooltip} from "antd"
+import {Alert, Divider, Tooltip} from "antd"
 import {ExtractionResultsContent} from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {RemoteGV} from "@/yakitGV"
-import {OutlineXIcon} from "@/assets/icon/outline"
 import ReactResizeDetector from "react-resize-detector"
-import { useCampare } from "@/hook/useCompare/useCompare"
+import {useCampare} from "@/hook/useCompare/useCompare"
+import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -524,7 +519,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         // 背景颜色是否标注为红色
         const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
-        
+
         const compareSorterTable = useCampare(sorterTable)
         useThrottleEffect(
             () => {
@@ -813,7 +808,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     firstNode={
                         <div className={styles["fuzzer-page-table-wrap"]}>
                             {moreLimtAlertMsg && data.length >= fuzzerTableMaxData && (
-                                <div style={{padding: '0 2px'}}>
+                                <div style={{padding: "0 2px"}}>
                                     <ReactResizeDetector
                                         onResize={(w, h) => {
                                             if (!w || !h) {

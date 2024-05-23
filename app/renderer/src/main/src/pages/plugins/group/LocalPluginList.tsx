@@ -1,7 +1,6 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useUpdateEffect} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
-import {defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {FuncSearch, ListShowContainer, GridLayoutOpt, ListLayoutOpt, FuncBtn} from "../funcTemplate"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
@@ -28,11 +27,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import styles from "./LocalPluginList.module.scss"
-
-const defaultFilters = {
-    plugin_type: [],
-    plugin_group: []
-}
+import {defaultFilter, defaultSearch} from "../builtInData"
 
 interface PluginLocalGroupsListProps {
     pluginsGroupsInViewport: boolean
@@ -45,7 +40,7 @@ export const LocalPluginList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const showPluginIndex = useRef<number>(0) // 当前展示的插件序列
     const [isList, setIsList] = useState<boolean>(false) // 网格与列表之间切换
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters)
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
     const userInfo = useStore((s) => s.userInfo)
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -147,7 +142,7 @@ export const LocalPluginList: React.FC<PluginLocalGroupsListProps> = React.memo(
             const queryFilters = filters
             const querySearch = search
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams({filter:queryFilters, search:querySearch, pageParams:params}),
+                ...convertLocalPluginsRequestParams({filter: queryFilters, search: querySearch, pageParams: params}),
                 ExcludeTypes: ["yak", "codec"] // 过滤条件 插件组需要过滤Yak、codec
             }
 

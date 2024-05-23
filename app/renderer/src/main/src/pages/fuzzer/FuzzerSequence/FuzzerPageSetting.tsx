@@ -1,6 +1,6 @@
 import {YakitRoute} from "@/routes/newRoute"
-import {PageNodeItemProps, defaultWebFuzzerPageInfo, usePageInfo} from "@/store/pageInfo"
-import {useControllableValue, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import React, {useEffect, useRef, useState} from "react"
 import {shallow} from "zustand/shallow"
 import cloneDeep from "lodash/cloneDeep"
@@ -13,6 +13,7 @@ import {yakitFailed} from "@/utils/notification"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {ExtractorsPanel, MatchersPanel, VariablePanel} from "../HttpQueryAdvancedConfig/FuzzerConfigPanels"
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
 
 export interface DebugProps {
     httpResponse: string

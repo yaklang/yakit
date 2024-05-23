@@ -7,13 +7,7 @@ import {Divider, Form} from "antd"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {
-    ColorSelect,
-    ExtractionResultsContent,
-    defMatcherAndExtractionCode,
-    filterModeOptions,
-    matchersConditionOptions
-} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {ColorSelect, ExtractionResultsContent} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {ExtractorsList, MatchersList} from "./HttpQueryAdvancedConfig"
 import {AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {StringToUint8Array} from "@/utils/str"
@@ -21,6 +15,11 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
+import {
+    filterModeOptions,
+    matchersConditionOptions,
+    defMatcherAndExtractionCode
+} from "../MatcherAndExtractionCard/constants"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")

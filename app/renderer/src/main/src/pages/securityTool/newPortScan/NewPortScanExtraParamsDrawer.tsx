@@ -25,7 +25,6 @@ import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 
-const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 interface NewPortScanExtraParamsDrawerProps {
@@ -66,7 +65,7 @@ const defaultSYNSetting = {
 const defaultNetworkCard = {
     SynScanNetInterface: defPortScanExecuteExtraFormValue.SynScanNetInterface
 }
-export const defaultExtraParamsFormValue = {
+const defaultExtraParamsFormValue = {
     网卡配置: defaultNetworkCard,
     "SYN 配置": defaultSYNSetting,
     指纹扫描配置: defaultFingerprintSetting,

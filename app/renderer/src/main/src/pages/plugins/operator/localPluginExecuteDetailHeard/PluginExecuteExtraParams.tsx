@@ -20,8 +20,6 @@ import {KVPair} from "@/models/kv"
 import {PluginGV} from "../../builtInData"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
-const {ipcRenderer} = window.require("electron")
-
 const {YakitPanel} = YakitCollapse
 
 type ExtraParamsValue = PluginExecuteExtraFormValue | CustomPluginExecuteFormValue

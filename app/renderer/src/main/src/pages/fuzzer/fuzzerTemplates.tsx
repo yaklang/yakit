@@ -1,37 +1,11 @@
-import React, {useEffect, useState} from "react"
 import {IMonacoCodeEditor, IMonacoEditor} from "../../utils/editors"
-import {InputInteger, InputItem} from "../../utils/inputUtil"
 import {RandInt, RandStrWithLen, RandStrWithMax, RandStrWIthRepeat} from "./templates/Rand"
 import {FuzzWithRange, RangeChar} from "./templates/Range"
 import {EncodeTag, SingleTag} from "./templates/SingleTag"
-import {editor, IRange, ISelection} from "monaco-editor"
+import {IRange} from "monaco-editor"
 import "./style.css"
 import {Form} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-
-export const fuzzerTemplates = [
-    {
-        name: "GET 请求",
-        template: `GET / HTTP/1.1
-Host: www.example.com
-
-`
-    },
-    {
-        name: "POST 请求",
-        template: `POST / HTTP/1.1
-Host: www.example.com`
-    },
-    {
-        name: "POST Json 请求",
-        template: `POST / HTTP/1.1
-Content-Type: application/json
-Host: www.example.com
-
-{"key": "value"}`
-    },
-    {name: "无", template: ""}
-]
 
 export interface FuzzOperatorItem {
     name: string

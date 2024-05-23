@@ -6,18 +6,14 @@ import {monacoEditorWrite} from "../fuzzerTemplates"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {callCopyToClipboard} from "@/utils/basic"
 import {execCodec} from "@/utils/encodec"
-import {
-    WEB_FUZZ_HOTPATCH_CODE,
-    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
-    copyAsUrl,
-    showDictsAndSelect
-} from "../HTTPFuzzerPage"
+import {copyAsUrl, showDictsAndSelect} from "../HTTPFuzzerPage"
 import styles from "./WebFuzzerNewEditor.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {yakitNotify} from "@/utils/notification"
+import {WEB_FUZZ_HOTPATCH_CODE, WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE} from "@/defaultConstants/HTTPFuzzerPage"
 
 export interface WebFuzzerNewEditorProps {
     ref?: any
@@ -70,8 +66,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 width: "80%",
                 footer: null,
                 maskClosable: false,
-                closable:false,
-                style:{ top: '10%' },
+                closable: false,
+                style: {top: "10%"},
                 hiddenHeader: true,
                 keyboard: false,
                 content: (
