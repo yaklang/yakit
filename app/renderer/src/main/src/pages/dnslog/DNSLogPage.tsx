@@ -75,7 +75,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [autoQuery, setAutoQuery] = useState(false)
     const [isLocal, setIsLocal, getIsLocal] = useGetState(true)
     const [expandRows, setExpandRows] = useState<string[]>([])
-    const [dnsLogType, setDnsLogType] = useState<"builtIn" | "custom">("builtIn")
+    const [dnsLogType, setDnsLogType, getDnsLogType] = useGetState<"builtIn" | "custom">("builtIn")
     const [selectedMode, setSelectedMode, getSelectedMode] = useGetState<string>() // 在组件状态中保存选中的值
     const DNS_LOG_PAGE_UPDATE_TOKEN_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_CACHE"
     const DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE"
@@ -170,7 +170,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType, token: rsp.Token, domain: rsp.Domain, onlyARecord, DNSMode, UseLocal})
+                sendMenuDnslog({dnsLogType: getDnsLogType(), token: rsp.Token, domain: rsp.Domain, onlyARecord: getOnlyARecord(), DNSMode, UseLocal})
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -244,11 +244,27 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     getRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN_CACHE).then((data) => {
                         if (!data) {
                             setSelectedMode(newArr[0])
+                            sendMenuDnslog({
+                                dnsLogType,
+                                token,
+                                domain,
+                                onlyARecord,
+                                DNSMode: newArr[0],
+                                UseLocal: false
+                            })
                         } else {
                             const obj = JSON.parse(data)
                             const {DNSMode, UseLocal} = obj
                             setSelectedMode(DNSMode)
                             setIsLocal(UseLocal)
+                            sendMenuDnslog({
+                                dnsLogType,
+                                token,
+                                domain,
+                                onlyARecord,
+                                DNSMode: DNSMode,
+                                UseLocal: UseLocal
+                            })
                         }
                     })
                 }
@@ -313,7 +329,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType, token: rsp.Token, domain: rsp.Domain, onlyARecord: onlyARecord})
+                sendMenuDnslog({dnsLogType: getDnsLogType(), token: rsp.Token, domain: rsp.Domain, onlyARecord: getOnlyARecord()})
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -540,8 +556,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             >
                                 <YakitSwitch checked={autoQuery} onChange={(val)=>{
                                     setAutoQuery(val)
-                                    setRemoteValue(DNS_LOG_COMMON_CACHE,JSON.stringify({autoQuery:val}))
-                                    }}/>
+                                        setRemoteValue(DNS_LOG_COMMON_CACHE, JSON.stringify({autoQuery: val}))
+                                    }}
+                                />
                             </Form.Item>
                         </div>
 
@@ -581,7 +598,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     pagination={false}
                     columns={[
                         {title: "域名", dataIndex: "Domain"},
-                        {title: "DNS类型", dataIndex: "DNSType"},
+                        {title: "类型", dataIndex: "DNSType"},
                         {title: "远端IP", dataIndex: "RemoteIP"},
                         {
                             title: "Timestamp",

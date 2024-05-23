@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon, QuitIcon} from "@/assets/newIcon"
+import {ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon, QuitIcon, RefreshIcon} from "@/assets/newIcon"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN, SendMenuDnslogProps} from "@/pages/dnslog/DNSLogPage"
@@ -16,6 +16,7 @@ import styles from "./MenuDNSLog.module.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RemoteGV} from "@/yakitGV"
+import {LoadingOutlined} from "@ant-design/icons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -80,8 +81,18 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         // 接收dnslog页面改变参数后的新参数
         ipcRenderer.on("dnslog-page-change-menu-callback", (e, data: SendMenuDnslogProps) => {
             const {dnsLogType, onlyARecord, token, domain, DNSMode, UseLocal} = data
+            setOnlyARecord(onlyARecord)
             if (dnsLogType === "builtIn") {
-                setOnlyARecord(onlyARecord)
+                if (getToken() === "" && token === "" && getDomain() === "" && domain === "") {
+                    DNSMode && setDNSMode(DNSMode)
+                    UseLocal !== undefined && setUseLocal(UseLocal)
+                    return
+                }
+                if (getToken() && token === "" && getDomain() && domain === "") {
+                    DNSMode && setDNSMode(DNSMode)
+                    UseLocal !== undefined && setUseLocal(UseLocal)
+                    return
+                }
                 if (getToken() !== token || getDomain() !== domain) {
                     setToken(token || "")
                     setDomain(domain || "")
@@ -120,7 +131,13 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 setLastRecords([])
-                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord, dnsMode, useLocal})
+                sendPageDnslog({
+                    token: rsp.Token,
+                    domain: rsp.Domain,
+                    onlyARecord: getOnlyARecord(),
+                    dnsMode: getDNSMode(),
+                    useLocal: getUseLocal()
+                })
             })
             .catch((e) => {
                 yakitNotify("error", `error: ${e}`)
@@ -142,7 +159,13 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 setLastRecords([])
-                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord, dnsMode, useLocal})
+                sendPageDnslog({
+                    token: rsp.Token,
+                    domain: rsp.Domain,
+                    onlyARecord: getOnlyARecord(),
+                    dnsMode: getDNSMode(),
+                    useLocal: getUseLocal()
+                })
             })
             .catch((e) => {
                 yakitNotify("error", `error: ${e}`)
@@ -283,7 +306,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
 
                 <div className={styles["list-body"]}>
                     <div className={styles["body-header"]}>
-                        <div className={classNames(styles["opt-style"], styles["opt-type"])}>DNS类型</div>
+                        <div className={classNames(styles["opt-style"], styles["opt-type"])}>类型</div>
                         <div className={classNames(styles["opt-style"], styles["opt-ip"])}>远端IP</div>
                         <div className={classNames(styles["opt-style"], styles["opt-time"])}>时间</div>
                         <div className={classNames(styles["opt-style"], styles["opt-btn"])}>操作</div>
@@ -361,7 +384,26 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
 
             <div className={styles["dnslog-arrow-right-wrapper"]}>
                 <div className={styles["dnslog-arrow-right-body"]}>
-                    <div className={styles["title-style"]}>访问记录</div>
+                    <div className={styles["title-style"]}>
+                        {!!domain ? (
+                            <>
+                                {loading ? (
+                                    <>
+                                        加载中&nbsp;&nbsp;<LoadingOutlined style={{color: "var(--yakit-primary-5)"}} />
+                                    </>
+                                ) : (
+                                    <>
+                                        <YakitButton
+                                            type='text2'
+                                            onClick={getQueryDNSLogByToken}
+                                        >手动刷新<RefreshIcon /></YakitButton>
+                                    </>
+                                )}
+                            </>
+                        ) : (
+                            "访问记录"
+                        )}
+                    </div>
                     <div className={styles["icon-style"]}>
                         <ArrowNarrowRightIcon />
                     </div>
@@ -369,53 +411,47 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             </div>
 
             <div className={styles["dnslog-list-wrapper"]}>
-                <YakitSpin spinning={loading} wrapperClassName={styles["dnslog-list-spin"]}>
-                    <div className={styles["dnslog-list-body"]}>
-                        {lastRecords.map((item) => {
-                            return (
-                                <div
-                                    key={`${item.RemoteAddr}-${item.Timestamp}`}
-                                    className={styles["list-opt-wrapper"]}
-                                >
-                                    <div className={classNames(styles["opt-style"], styles["opt-type"])}>
-                                        {item.DNSType}
-                                    </div>
-                                    <div className={classNames(styles["opt-style"], styles["opt-ip"])}>
-                                        {item.RemoteIP}
-                                    </div>
-                                    <div className={classNames(styles["opt-style"], styles["opt-time"])}>
-                                        {formatTime(item.Timestamp)}
-                                    </div>
-                                    <div
-                                        className={classNames(styles["opt-style"], styles["opt-btn"])}
-                                        onClick={() => onInfoDetails(item)}
-                                    >
-                                        详情
-                                    </div>
+                <div className={styles["dnslog-list-body"]}>
+                    {lastRecords.map((item, index) => {
+                        return (
+                            <div
+                                key={`${item.RemoteAddr}-${item.Timestamp}-${index}`}
+                                className={styles["list-opt-wrapper"]}
+                            >
+                                <div className={classNames(styles["opt-style"], styles["opt-type"])}>
+                                    {item.DNSType}
                                 </div>
-                            )
-                        })}
-                    </div>
-                    <div
-                        className={classNames(styles["expand-func-wrapper"], {
-                            [styles["active-expand-style"]]: listShow
-                        })}
-                    >
-                        <YakitPopover
-                            overlayClassName={styles["dnslog-list-popover"]}
-                            overlayStyle={{paddingTop: 2}}
-                            placement='bottomRight'
-                            trigger={"click"}
-                            content={listDom}
-                            visible={listShow}
-                            onVisibleChange={(visible) => setListShow(visible)}
-                        >
-                            <div className={styles["body-style"]}>
-                                {listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                                <div className={classNames(styles["opt-style"], styles["opt-ip"])}>{item.RemoteIP}</div>
+                                <div className={classNames(styles["opt-style"], styles["opt-time"])}>
+                                    {formatTime(item.Timestamp)}
+                                </div>
+                                <div
+                                    className={classNames(styles["opt-style"], styles["opt-btn"])}
+                                    onClick={() => onInfoDetails(item)}
+                                >
+                                    详情
+                                </div>
                             </div>
-                        </YakitPopover>
-                    </div>
-                </YakitSpin>
+                        )
+                    })}
+                </div>
+                <div
+                    className={classNames(styles["expand-func-wrapper"], {
+                        [styles["active-expand-style"]]: listShow
+                    })}
+                >
+                    <YakitPopover
+                        overlayClassName={styles["dnslog-list-popover"]}
+                        overlayStyle={{paddingTop: 2}}
+                        placement='bottomRight'
+                        trigger={"click"}
+                        content={listDom}
+                        visible={listShow}
+                        onVisibleChange={(visible) => setListShow(visible)}
+                    >
+                        <div className={styles["body-style"]}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
+                    </YakitPopover>
+                </div>
             </div>
         </div>
     )
