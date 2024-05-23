@@ -1066,7 +1066,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                   }}
                                   replace={(text: string) => {
                                       if (editor) {
-                                          editor.trigger("keyboard", "type", {text})
+                                          editor.trigger("keyboard", "paste", {text})
                                           closeFizzRangeWidget()
                                       }
                                   }}
