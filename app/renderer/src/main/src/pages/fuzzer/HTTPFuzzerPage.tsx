@@ -1054,7 +1054,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
-        proxyListRef.current.onSetRemoteValues(proxyList)
+        if (proxyListRef.current) {
+            proxyListRef.current.onSetRemoteValues(proxyList)
+        }
     })
 
     const [isPause, setIsPause] = useState<boolean>(true) // 暂停或继续请求标识
