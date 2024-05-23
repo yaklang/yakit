@@ -273,6 +273,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                     title: "更新时间",
                     dataKey: "UpdatedAt",
                     render: (v) => (v ? formatTimestamp(v) : "-"),
+                    enableDrag: false,
                     sorterProps: {
                         sorterKey: "updated_at",
                         sorter: true
