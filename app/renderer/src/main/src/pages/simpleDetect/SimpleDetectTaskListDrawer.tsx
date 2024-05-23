@@ -101,7 +101,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
         const [response, setResponse] = useState<UnfinishedTask[]>([])
         const [query, setQuery] = useState<QueryUnfinishedTaskRequest>({
-            Pagination: genDefaultPagination(20),
+            Pagination: {...genDefaultPagination(20), OrderBy: "created_at", Order: "asc"},
             Filter: {}
         })
 
@@ -138,7 +138,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 {
                     title: "扫描目标",
                     dataKey: "Target",
-                    render: (v) => v.substring(0, 20),
+                    render: (v) => (v && v.length > 20 ? `${v.substring(0, 20)}等` : v),
                     filterProps: {
                         filtersType: "input"
                     }
@@ -152,6 +152,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     title: "创建时间",
                     dataKey: "CreatedAt",
                     render: (v) => (v ? formatTimestamp(v) : "-"),
+                    enableDrag: false,
                     sorterProps: {
                         sorter: true,
                         sorterKey: "created_at"
@@ -287,7 +288,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         ).run
         return (
             <TableVirtualResize<UnfinishedTask>
-                query={query}
+                query={query.Filter}
                 size='middle'
                 extra={<YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />}
                 isRefresh={isRefresh}
