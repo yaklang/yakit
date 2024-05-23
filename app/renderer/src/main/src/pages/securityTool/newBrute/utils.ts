@@ -1,8 +1,7 @@
 import {yakitNotify} from "@/utils/notification"
 import {DataNode} from "antd/lib/tree"
-import {BruteExecuteExtraFormValue} from "./NewBruteType"
+import {BruteExecuteExtraFormValue, StartBruteParams} from "./NewBruteType"
 import {PayloadGroupNodeProps} from "@/pages/payloadManager/newPayload"
-import {StartBruteParams} from "@/pages/brute/BrutePage"
 import cloneDeep from "lodash/cloneDeep"
 
 const {ipcRenderer} = window.require("electron")
@@ -101,6 +100,18 @@ export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): Sta
     }
     delete data.UsernamesDict
     delete data.PasswordsDict
+    return data
+}
+
+/**
+ * @name StartBrute 接口参数转换(接口参数转前端数据)
+ * @description StartBrute
+ */
+export const startBruteParamsConvertToFormValue = (params: StartBruteParams): BruteExecuteExtraFormValue => {
+    const data: BruteExecuteExtraFormValue = {
+        Type: "",
+        Targets: ""
+    }
     return data
 }
 

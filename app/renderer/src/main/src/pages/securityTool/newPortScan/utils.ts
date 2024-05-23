@@ -1,6 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {PortScanExecuteExtraFormValue} from "./NewPortScanType"
-import {StartBruteParams} from "@/pages/brute/BrutePage"
+import {StartBruteParams} from "../newBrute/NewBruteType"
 
 const {ipcRenderer} = window.require("electron")
 

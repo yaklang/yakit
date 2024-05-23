@@ -1,8 +1,37 @@
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {StartBruteParams} from "@/pages/brute/BrutePage"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {BrutePageInfoProps} from "@/store/pageInfo"
 import React from "react"
+
+export interface StartBruteParams {
+    Type: string
+    Targets: string
+    TargetFile?: string
+    Usernames?: string[]
+    /**前端使用 记录选择的字典种的数据*/
+    UsernamesDict?: string[]
+    UsernameFile?: string
+    ReplaceDefaultUsernameDict?: boolean
+    Passwords?: string[]
+    /**前端使用 记录选择的字典种的数据 */
+    PasswordsDict?: string[]
+    PasswordFile?: string
+    ReplaceDefaultPasswordDict?: boolean
+
+    Prefix?: string
+
+    Concurrent?: number
+    TargetTaskConcurrent?: number
+
+    OkToStop?: boolean
+    DelayMin?: number
+    DelayMax?: number
+
+    PluginScriptName?: string
+
+    usernameValue?: string
+    passwordValue?: string
+}
 
 export interface NewBruteProps {
     id: string

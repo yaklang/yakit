@@ -8,13 +8,13 @@ import {ContentUploadInput} from "../../components/functionTemplate/ContentUploa
 import {DeleteOutlined, PaperClipOutlined, ReloadOutlined} from "@ant-design/icons"
 
 import "./PortScanPage.css"
-import {StartBruteParams} from "../brute/BrutePage"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {PcapMetadata} from "@/models/Traffic"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {HybridScanPluginConfig} from "@/models/HybridScan"
+import {StartBruteParams} from "../securityTool/newBrute/NewBruteType"
 
 const {ipcRenderer} = window.require("electron")
 export const ScanPortTemplate = "scan-port-template"
@@ -56,7 +56,7 @@ export interface PortScanParams {
     LinkPluginConfig?: HybridScanPluginConfig
     /**爬虫是否启用 JS 解析 */
     BasicCrawlerEnableJSParser?: boolean
-    TaskName?:string
+    TaskName?: string
 }
 
 export const ScanKind: {[key: string]: string} = {
