@@ -40,7 +40,6 @@ import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfi
 import {ExclamationCircleOutlined} from '@ant-design/icons';
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 import {addToTab} from "@/pages/MainTabs";
-import {YakitRoute} from "@/routes/newRoute";
 import {
     DragonFailIcon,
     DragonSuccessIcon,

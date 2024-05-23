@@ -17,7 +17,7 @@ import {queryYakScriptList} from "@/pages/yakitStore/network";
 import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint";
 import { getRemoteValue, setRemoteValue } from "@/utils/kv";
 import emiter from "@/utils/eventBus/eventBus";
-import { YakitRoute } from "@/routes/newRoute";
+import {YakitRoute} from "@/routes/newRouteConstants";
 
 
 export interface WebShellManagerViewerProp {

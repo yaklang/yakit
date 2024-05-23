@@ -31,7 +31,7 @@ import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
 import {BrutePageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {defaultBruteExecuteExtraFormValue, defaultBrutePageInfo} from "@/defaultConstants/NewBrute"
 
 const BruteExecuteParamsDrawer = React.lazy(() => import("./BruteExecuteParamsDrawer"))

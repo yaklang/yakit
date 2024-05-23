@@ -1,5 +1,4 @@
 import React from "react"
-import {ResidentPluginName, YakitRoute} from "@/routes/newRoute"
 import {
     PublicBasicCrawlerIcon,
     PublicBatchPluginIcon,
@@ -34,10 +33,11 @@ import {
 import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
 import {Tooltip} from "antd"
-import {YakitRouteToPageInfo} from "@/routes/newRoute"
+import {YakitRouteToPageInfo, ResidentPluginName} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./MenuMode.module.scss"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 interface MenuModeProps {
     mode: string

@@ -8,7 +8,6 @@ import {
     PublicRouteMenu,
     PublicRouteMenuProps,
     ResidentPluginName,
-    YakitRoute,
     databaseConvertData
 } from "@/routes/newRoute"
 import {ExtraMenu} from "./ExtraMenu"
@@ -16,7 +15,7 @@ import {SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
 import {MenuCodec} from "./MenuCodec"
 import {MenuDNSLog} from "./MenuDNSLog"
 import {MenuMode} from "./MenuMode"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {MenuPlugin} from "./MenuPlugin"
@@ -41,6 +40,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import classNames from "classnames"
 import styles from "./PublicMenu.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 const {ipcRenderer} = window.require("electron")
 

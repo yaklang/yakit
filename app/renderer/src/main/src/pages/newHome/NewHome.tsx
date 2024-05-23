@@ -14,7 +14,7 @@ import CountUp from "react-countup"
 import {isCommunityEdition, isEnterpriseEdition} from "@/utils/envfile"
 import * as echarts from "echarts"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {ResidentPluginName, YakitRoute, YakitRouteToPageInfo} from "@/routes/newRoute"
+import {ResidentPluginName, YakitRouteToPageInfo} from "@/routes/newRoute"
 import {
     PrivateSolidBasicCrawlerIcon,
     PrivateSolidBatchPluginIcon,
@@ -44,6 +44,7 @@ import classNames from "classnames"
 import {apiFetchGroupStatistics} from "../plugins/utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 const {ipcRenderer} = window.require("electron")
 

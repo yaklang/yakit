@@ -9,7 +9,7 @@ import {yakitNotify} from "@/utils/notification"
 import {formatTime} from "@/utils/timeUtil"
 import {useGetState, useMemoizedFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 import classNames from "classnames"
 import styles from "./MenuDNSLog.module.scss"

@@ -1,9 +1,10 @@
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {DatabaseMenuItemProps, PublicRouteMenuProps, YakitRoute} from "@/routes/newRoute"
+import {DatabaseMenuItemProps, PublicRouteMenuProps} from "@/routes/newRoute"
 import {CodeGV} from "@/yakitGV"
 import {RouteToPageProps} from "./PublicMenu"
 import {EnhancedPrivateRouteMenuProps} from "../HeardMenu/HeardMenuType"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 /** public版本前端增强型菜单项属性(用于前端数据对比和渲染逻辑使用) */
 export interface EnhancedPublicRouteMenuProps extends PublicRouteMenuProps {
@@ -91,7 +92,7 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
             })
         localToMenus[item.label] = {...item, menuName: item.label, children: child}
     }
-    
+
     // 数据库有数据时的逻辑处理
     for (let item of database) {
         const newMenu: EnhancedPublicRouteMenuProps = {

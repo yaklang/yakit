@@ -2,13 +2,13 @@ import {
     DatabaseMenuItemProps,
     PrivateAllMenus,
     PrivateRouteMenuProps,
-    YakitRoute,
     getFixedPluginDescribe,
     getFixedPluginHoverIcon,
     getFixedPluginIcon
 } from "@/routes/newRoute"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 export interface HeardMenuProps {
     defaultExpand: boolean

@@ -59,7 +59,6 @@ import {
     PrivateExpertRouteMenu,
     PrivateScanRouteMenu,
     PublicCommonPlugins,
-    YakitRoute,
     databaseConvertData,
     getFixedPluginHoverIcon,
     getFixedPluginIcon
@@ -70,6 +69,7 @@ import {publicConvertDatabase, publicExchangeProps, publicUnionMenus} from "../l
 import {PrivateOutlineDefaultPluginIcon} from "@/routes/privateIcon"
 import {EnhancedCustomRouteMenuProps, filterCodeMenus, menusConvertJsonData} from "./utils"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 const {ipcRenderer} = window.require("electron")
 

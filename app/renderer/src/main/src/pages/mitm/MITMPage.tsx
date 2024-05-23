@@ -40,7 +40,7 @@ import {
     YakitUploadComponent
 } from "@/components/YakitUploadModal/YakitUploadModal"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {v4 as uuidv4} from "uuid"
 import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
 const {ipcRenderer} = window.require("electron")
@@ -541,7 +541,11 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             case "idle":
                 return (
                     <>
-                        <PluginGroup selectGroup={selectGroup} setSelectGroup={setSelectGroup} excludeType={['yak', 'codec', 'nuclei']}/>
+                        <PluginGroup
+                            selectGroup={selectGroup}
+                            setSelectGroup={setSelectGroup}
+                            excludeType={["yak", "codec", "nuclei"]}
+                        />
                         <div style={{paddingRight: 9}}>
                             <PluginSearch
                                 tag={tags}

@@ -102,7 +102,7 @@ import {PluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecu
 import {cloneDeep} from "bizcharts/lib/utils"
 import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"

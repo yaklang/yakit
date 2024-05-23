@@ -1,4 +1,4 @@
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import emiter from "@/utils/eventBus/eventBus"
 
 export const execPacketScan = (params: {

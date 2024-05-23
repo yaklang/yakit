@@ -14,7 +14,6 @@ import {YakitAutoComplete, defYakitAutoCompleteRef} from "../yakitUI/YakitAutoCo
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {InformationCircleIcon} from "@/assets/newIcon"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
-import {YakitRoute} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 const {ipcRenderer} = window.require("electron")

@@ -35,9 +35,9 @@ import {
 } from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginGV} from "@/pages/plugins/builtInData"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {API} from "@/services/swagger/resposeType"
-import { useCampare } from "@/hook/useCompare/useCompare"
+import {useCampare} from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 

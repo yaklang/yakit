@@ -62,7 +62,6 @@ import {showByRightContext} from "../yakitUI/YakitMenu/showByRightContext"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareImportExportData"
-import {YakitRoute} from "@/routes/newRoute"
 import {useSize} from "ahooks"
 import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts} from "./HTTPFlowTableForm"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
@@ -82,6 +81,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {PluginGV} from "@/pages/plugins/builtInData"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 const {ipcRenderer} = window.require("electron")
 

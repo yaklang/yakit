@@ -5,7 +5,7 @@ import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/opera
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {YakitRoute, YakitRouteToPageInfo} from "@/routes/newRoute"
+import {YakitRouteToPageInfo} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {Form} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -38,6 +38,7 @@ import {randomString} from "@/utils/randomUtil"
 import classNames from "classnames"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {ZoomeyeHelp} from "./ZoomeyeHelp"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 interface SpaceEnginePageProps {
     /**页面id */
@@ -216,11 +217,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                     </Form>
                 </div>
                 {isShowResult && (
-                    <PluginExecuteResult
-                        streamInfo={streamInfo}
-                        runtimeId={runtimeId}
-                        loading={isExecuting}
-                    />
+                    <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
                 )}
             </div>
         </div>
@@ -350,11 +347,11 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         const m = showYakitModal({
             title: "ZoomEye 基础语法",
             type: "white",
-            width:'60vw',
+            width: "60vw",
             cancelButtonProps: {style: {display: "none"}},
             onOkText: "我知道了",
             onOk: () => m.destroy(),
-            bodyStyle: {padding: '8px 24px'},
+            bodyStyle: {padding: "8px 24px"},
             content: <ZoomeyeHelp />
         })
     })

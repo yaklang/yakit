@@ -13,7 +13,7 @@ import {debugYakitModal, showYakitModal} from "@/components/yakitUI/YakitModal/Y
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {PluginDebuggerExec} from "@/pages/pluginDebugger/PluginDebuggerExec"
 import {MITMPluginTemplate, NucleiPluginTemplate, PortScanPluginTemplate} from "@/pages/pluginDebugger/defaultData"
 import {getDefaultHTTPRequestBuilderParams, HTTPRequestBuilder} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"

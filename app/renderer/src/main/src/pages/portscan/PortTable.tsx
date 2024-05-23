@@ -9,7 +9,7 @@ import {LineMenunIcon} from "../../assets/icons"
 import {callCopyToClipboard} from "../../utils/basic"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {useMemoizedFn} from "ahooks"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import emiter from "@/utils/eventBus/eventBus"
 export interface PortTableProp {
     data: YakitPort[]

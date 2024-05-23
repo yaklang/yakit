@@ -7,7 +7,7 @@ import {randomString} from "@/utils/randomUtil"
 import {ExecResult} from "../invoker/schema"
 import {CreatReportScript} from "../simpleDetect/CreatReportScript"
 import {InfoState} from "@/hook/useHoldingIPCRStream"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
     CreatReportRequest,

@@ -55,7 +55,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {PluginGroupList} from "../local/PluginsLocalType"
 
 interface PluginManageProps {}

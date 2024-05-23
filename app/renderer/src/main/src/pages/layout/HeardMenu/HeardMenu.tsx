@@ -17,16 +17,13 @@ import {
     ChevronUpIcon,
     CursorClickIcon,
     DotsHorizontalIcon,
-    SaveIcon,
     SortAscendingIcon,
     SortDescendingIcon,
     UserIcon
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Divider, Dropdown, Tabs, Tooltip, Form} from "antd"
-import {MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -34,7 +31,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakCodeEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {failed, yakitNotify} from "@/utils/notification"
@@ -51,7 +48,6 @@ import {
     PrivateExpertRouteMenu,
     PrivateScanRouteMenu,
     PrivateSimpleRouteMenu,
-    YakitRoute,
     databaseConvertData
 } from "@/routes/newRoute"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
@@ -69,6 +65,7 @@ import style from "./HeardMenu.module.scss"
 import {ExtraMenu} from "../publicMenu/ExtraMenu"
 import emiter from "@/utils/eventBus/eventBus"
 import {SolidPayloadIcon} from "@/assets/icon/solid"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 const {ipcRenderer} = window.require("electron")
 

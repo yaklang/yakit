@@ -1,9 +1,10 @@
-import { ComponentParams } from "@/routes/newRoute"
+import {ComponentParams} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 /**
  * @description 页面渲染
  * @property routeKey 路由key
- * @property yakScriptId 
+ * @property yakScriptId
  * @property {ComponentParams} params 页面初始渲染的参数
  */
 export interface PageItemProps {
@@ -19,17 +20,15 @@ export interface RenderSubPageProps {
     selectSubMenuId: string
 }
 
-export interface RenderFuzzerSequenceProps{
+export interface RenderFuzzerSequenceProps {
     route: YakitRoute
-    type:WebFuzzerType
-    setType:(w:WebFuzzerType)=>void
-    // fuzzerSequenceList:FuzzerSequenceReducerProps[]
-    // selectGroupId:string
+    type: WebFuzzerType
+    setType: (w: WebFuzzerType) => void
 }
 
-export interface RenderSubPageItemProps{
+export interface RenderSubPageItemProps {
     route: YakitRoute
     pluginId?: number
     selectSubMenuId: string
-    subItem:MultipleNodeInfo
+    subItem: MultipleNodeInfo
 }

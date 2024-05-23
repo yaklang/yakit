@@ -51,7 +51,7 @@ import classNames from "classnames"
 import {LabelNodeItem, MatcherAndExtractionDrawer} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {
     FuzzerExtraShow,
     FuzzerRequestProps,

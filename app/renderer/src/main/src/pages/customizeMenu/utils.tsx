@@ -4,9 +4,9 @@ import {
     PrivateRouteMenuProps,
     PrivateScanRouteMenu,
     PublicCommonPlugins,
-    PublicRouteMenuProps,
-    YakitRoute
+    PublicRouteMenuProps
 } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
 import {ReactNode} from "react"
 

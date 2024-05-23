@@ -20,7 +20,7 @@ import {useWatch} from "antd/lib/form/Form"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 import { inputHTTPFuzzerHostConfigItem } from "@/pages/fuzzer/HTTPFuzzerHosts"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))

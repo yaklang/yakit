@@ -1,4 +1,4 @@
-import {NoPaddingRoute, RouteToPageItem, YakitRoute} from "@/routes/newRoute"
+import {NoPaddingRoute, RouteToPageItem} from "@/routes/newRoute"
 import React, {useEffect, useMemo, useRef} from "react"
 import {useMap, useMemoizedFn} from "ahooks"
 import styles from "./RenderSubPage.module.scss"
@@ -7,6 +7,7 @@ import FuzzerSequence from "@/pages/fuzzer/FuzzerSequence/FuzzerSequence"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageLoading} from "@ant-design/pro-layout"
 import {usePageInfo} from "@/store/pageInfo"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 const FuzzerSequenceWrapper = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper"))
 
