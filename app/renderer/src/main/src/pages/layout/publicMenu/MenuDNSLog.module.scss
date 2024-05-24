@@ -43,12 +43,12 @@
         }
     }
     .dnslog-arrow-right-wrapper {
-        width: 56px;
+        width: 85px;
         height: 100%;
         display: flex;
         align-items: center;
         .dnslog-arrow-right-body {
-            width: 56px;
+            width: 85px;
             height: 42px;
             display: flex;
             flex-direction: column;
@@ -56,6 +56,8 @@
             padding: 4px;
             gap: 2px;
             .title-style {
+                display: flex;
+                align-items: center;
                 height: 16px;
                 font-size: 12px;
                 line-height: 16px;
@@ -177,15 +179,6 @@
     :global {
         .ant-tag-close-icon {
             justify-content: center;
-        }
-    }
-}
-
-.dnslog-list-spin {
-    :global {
-        .ant-spin-container {
-            display: flex;
-            flex-direction: row;
         }
     }
 }
