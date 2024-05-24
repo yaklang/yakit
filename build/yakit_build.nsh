@@ -16,11 +16,6 @@ Var /Global EXE_NAME
 Var /Global KEEP_FOLDER
 
 
-Function ShouldShowDirectoryPage
-    ${If} $INSTALL_PATH != ""
-        Abort
-    ${EndIf}
-FunctionEnd
 
 Function DirectoryPageShow
     ; 获取目录页面的句柄
@@ -40,7 +35,6 @@ FunctionEnd
 
 
 !insertmacro MUI_PAGE_WELCOME
-!define MUI_PAGE_CUSTOMFUNCTION_PRE ShouldShowDirectoryPage
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW DirectoryPageShow
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -166,16 +160,6 @@ FunctionEnd
 !macroend
 
 !macro customInstall 
-    
-!macroend
-
-Section "Main" SectionMain
-    ; create new directory if not installed 
-    ${If} $IS_INSTALLED != "true"
-        StrCpy $INSTDIR "$INSTDIR\$EXE_NAME"
-        CreateDirectory $INSTDIR
-    ${EndIf}
-
     ; Migrate yakit-projects folder
     ${If} "$PROFILE\yakit-projects" != "$INSTDIR\yakit-projects"
     ${AndIf} ${FileExists} "$PROFILE\yakit-projects"
@@ -196,7 +180,21 @@ Section "Main" SectionMain
     ; 创建 yakit-projects 文件夹
     DetailPrint "创建yakit-projects文件夹..."
     CreateDirectory "$INSTDIR\yakit-projects"
-    DetailPrint "正在安装..."
+    DetailPrint "正在安装..." 
+!macroend
+
+Section "Main" SectionMain
+   ; create new directory if not installed and choose folder is not empty
+    ${If} $IS_INSTALLED != "true" 
+        Push "$INSTDIR" 
+        Call isEmptyDir
+        Pop $0    
+        ${If} $0 == 0
+            StrCpy $INSTDIR "$INSTDIR\$EXE_NAME"
+            CreateDirectory $INSTDIR
+        ${EndIf}
+    ${EndIf}
+
 SectionEnd
 
 Section "Uninstall"
@@ -263,6 +261,30 @@ Function un.DeleteFoldersWithExclusion
  Pop $R1
  Pop $R0
  
+FunctionEnd
+
+Function isEmptyDir
+  # Stack ->                    # Stack: <directory>
+  Exch $0                       # Stack: $0
+  Push $1                       # Stack: $1, $0
+  FindFirst $0 $1 "$0\*.*"
+  strcmp $1 "." 0 _notempty
+    FindNext $0 $1
+    strcmp $1 ".." 0 _notempty
+      ClearErrors
+      FindNext $0 $1
+      IfErrors 0 _notempty
+        FindClose $0
+        Pop $1                  # Stack: $0
+        StrCpy $0 1
+        Exch $0                 # Stack: 1 (true)
+        goto _end
+     _notempty:
+       FindClose $0
+       Pop $1                   # Stack: $0
+       StrCpy $0 0
+       Exch $0                  # Stack: 0 (false)
+  _end:
 FunctionEnd
  
  
