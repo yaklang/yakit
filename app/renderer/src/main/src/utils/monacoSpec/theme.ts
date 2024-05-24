@@ -10,6 +10,10 @@ monaco.editor.defineTheme("kurior", {
             "token": "operator"
         },
         {
+            "foreground": "#a826a4",
+            "token": "basic.type",
+        },
+        {
             "foreground": "#c4652f",
             "token": "globals"
         },

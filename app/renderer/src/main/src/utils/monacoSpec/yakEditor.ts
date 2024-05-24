@@ -117,7 +117,12 @@ export const setUpYaklangMonaco = () => {
             "for", "go", "if", "range", "return", "select", "switch",
             "chan", "func", "fn", "def", "var", "nil", "undefined",
             "map", "class", "include", "type", "bool", "true", "false",
-            "string", "try", "catch", "finally", "in"
+            "string", "try", "catch", "finally", "in", "elif",
+        ],
+        types: [
+            "uint", "uint8", "byte", "uint16", "uint32", "uint64",
+            "int", "int8", "int16", "int32", "int64",
+            "bool", "float", "float64", "double", "string", "omap", "var", "any",
         ],
         operators: [
             '+',
@@ -215,6 +220,7 @@ export const setUpYaklangMonaco = () => {
                     {
                         cases: {
                             '@keywords': { token: 'keyword.$0' },
+                            '@types': { token: 'basic.type' },
                             '@libnames': 'type.identifier',
                             '@globals': 'globals',
                             '@default': 'identifier'
