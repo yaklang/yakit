@@ -739,8 +739,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const size = useSize(ref)
 
     useUpdateEffect(() => {
-        console.log(1, pageType);
-        
         updateData()
     }, [refresh])
 
@@ -843,8 +841,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
                 setParams(newParams)
                 setTimeout(() => {
-                    console.log(2, pageType);
-                    
                     updateData()
                 }, 10)
             }
@@ -897,8 +893,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         data: cacheData?.data || []
                     })
                 } catch (e) {
-                    console.log(3, pageType);
-                    
                     updateData()
                     yakitNotify("error", `加载屏蔽参数失败: ${e}`)
                 }
@@ -931,8 +925,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             sortRef.current = sort
             setTimeout(() => {
-                console.log(4, pageType);
-                
                 updateData()
             }, 10)
         },
@@ -968,8 +960,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 triggerFilterValue.current = true
             } else {
                 setTimeout(() => {
-                    console.log(5, pageType);
-                    
                     updateData()
                 }, 10)
             }
@@ -1027,8 +1017,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const newData: HTTPFlow[] = getClassNameData(resData)
 
                 if (type === "top") {
-                    console.log('----top----', pageType);
-                    
                     if (newData.length <= 0) {
                         // 没有数据
                         serverPushStatus && setIsLoop(false)
@@ -1036,8 +1024,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
 
                     if (["desc", "none"].includes(query.Pagination.Order)) {
-                        console.log(11, pageType);
-                        
                         setData([...newData, ...data])
                         maxIdRef.current = newData[0].Id
                     } else {
@@ -1048,14 +1034,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }
                     }
                 } else if (type === "bottom") {
-                    console.log('----bottom----', pageType);
                     if (newData.length <= 0) {
                         // 没有数据
                         serverPushStatus && setIsLoop(false)
                         return
                     }
                     const arr = [...data, ...newData]
-                    console.log(22, pageType);
                     setData(arr)
                     if (["desc", "none"].includes(query.Pagination.Order)) {
                         minIdRef.current = newData[newData.length - 1].Id
@@ -1064,7 +1048,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         maxIdRef.current = newData[newData.length - 1].Id
                     }
                 } else if (type === "offset") {
-                    console.log('----offset----', pageType);
                     if (resData.length <= 0) {
                         // 没有数据
                         serverPushStatus && setIsLoop(false)
@@ -1076,7 +1059,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         setOffsetData(newOffsetData)
                     }
                 } else {
-                    console.log('----update----', pageType);
                     // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
                     if (resData.length <= 0) {
                         // 没有数据
@@ -1086,7 +1068,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setSelectedRows([])
                     setIsRefresh(!isRefresh)
                     setPagination(rsp.Pagination)
-                    console.log(33, pageType);
                     setData([...newData])
                     if (["desc", "none"].includes(query.Pagination.Order)) {
                         maxIdRef.current = newData.length > 0 ? newData[0].Id : 0
@@ -1145,16 +1126,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const updateTopData = useMemoizedFn(() => {
         // 倒序的时候有储存的偏移量 则直接使用
         if (getOffsetData().length && ["desc", "none"].includes(sortRef.current.order)) {
-            console.log(44, pageType);
-            
             setData([...getOffsetData(), ...data])
             setOffsetData([])
             return
         }
         // 如无偏移 则直接请求数据
         if (maxIdRef.current === 0) {
-            console.log(7, pageType);
-            
             updateData()
             return
         }
@@ -1181,8 +1158,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const updateBottomData = useMemoizedFn(() => {
         // 如无偏移 则直接请求数据
         if (minIdRef.current === 0) {
-            console.log(8, pageType);
-            
             updateData()
             return
         }
@@ -1269,8 +1244,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
         if (!isOneceLoading.current) {
-            console.log(9, pageType);
-            
             updateData()
         }
     }, [params.OnlyWebsocket])
@@ -1279,8 +1252,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const excludeInUrlCom = useCampare(params.ExcludeInUrl)
     useEffect(() => {
         if (!isOneceLoading.current) {
-            console.log(10, pageType);
-            
             updateData()
         }
     }, [excludeIdCom, excludeInUrlCom])
@@ -1313,15 +1284,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         if (triggerFilterValue.current) {
-            console.log(11, pageType);
-            
             updateData()
             triggerFilterValue.current = false
         }
 
         // 滚动条接近触顶
         if (scrollTop < 10) {
-            console.log(11111111111111, pageType);
             updateTopData()
             setOffsetData([])
         }
@@ -1333,8 +1301,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // 滚动条在中间 增量
         else {
             if (data.length === 0) {
-                console.log(12, pageType);
-                
                 updateData()
             } else {
                 // 倒序的时候才需要掉接口拿偏移数据
@@ -1421,8 +1387,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
          */
         const cleanLogTableData = () => {
             setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-            console.log(13, pageType);
-            
             updateData()
         }
         pageType === "MITM" && emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
@@ -1442,8 +1406,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Color: color
         })
         setTimeout(() => {
-            console.log(14, pageType);
-            
             updateData()
         }, 100)
     })
@@ -1499,8 +1461,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             setParams(params)
             setTimeout(() => {
-                console.log(15, pageType);
-                
                 updateData()
             }, 100)
         },
@@ -1671,8 +1631,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     Tags: []
                                 })
                                 setTimeout(() => {
-                                    console.log(16, pageType);
-                                    
                                     updateData()
                                 }, 100)
                             }}
@@ -1732,8 +1690,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     : undefined
                             })
                             setTimeout(() => {
-                                console.log(17, pageType);
-                                
                                 updateData()
                             }, 100)
                         }}
@@ -1973,7 +1929,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                     newData.push(item)
                 }
-                console.log(55, pageType);
                 setData(newData)
                 setSelectedRowKeys([])
                 setSelectedRows([])
@@ -2012,7 +1967,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                     newData.push(item)
                 }
-                console.log(66, pageType);
                 setData(newData)
                 setSelectedRowKeys([])
                 setSelectedRows([])
@@ -2032,8 +1986,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .then(() => {
                 yakitNotify("info", "删除成功")
-                console.log(18, pageType);
-                
                 updateData()
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
@@ -2048,8 +2000,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ["History", "MITM"].includes(sourcePage) &&
             ["History", "MITM"].includes(pageType)
         ) {
-            console.log(19, pageType);
-            
             updateData()
         }
     })
@@ -2078,8 +2028,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 if (pageType === "History") {
                     props.onQueryParams && props.onQueryParams(queryParams, true)
                 }
-                console.log(20, pageType);
-                
                 updateData()
             })
             .catch((e: any) => {
@@ -2120,8 +2068,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
                 }
                 setParams({...newParams})
-                console.log(21, pageType);
-                
                 updateData()
             })
             .catch((e: any) => {
@@ -2855,8 +2801,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             props.onQueryParams && props.onQueryParams(queryParams, true)
         }
         setTimeout(() => {
-            console.log(22, pageType);
-            
             updateData()
         }, 100)
     })
@@ -2900,8 +2844,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }}
                 style={{maxWidth: 200}}
                 onSearch={() => {
-                    console.log(23, pageType);
-                    
                     updateData()
                 }}
                 // 这个事件很关键哈，不要用 onChange
@@ -2931,8 +2873,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }}
                         onSearch={() => {
                             setTimeout(() => {
-                                console.log(24, pageType);
-                                
                                 updateData()
                             }, 50)
                         }}
@@ -3135,8 +3075,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         // 窗口由小变大时 重新拉取数据
                         if (boxHeightRef.current && boxHeightRef.current < height) {
                             boxHeightRef.current = height
-                            console.log(25, pageType);
-                            
                             updateData()
                         } else {
                             boxHeightRef.current = height
@@ -3190,8 +3128,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                         setParams({...params, SourceType: selectTypeList.join(",")})
                                                     }
                                                     setTimeout(() => {
-                                                        console.log(26, pageType);
-                                                        
                                                         updateData()
                                                     }, 10)
                                                 }}
@@ -3260,8 +3196,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     onSelect={(val) => {
                                                         setParams({...params, IsWebsocket: val})
                                                         setTimeout(() => {
-                                                            console.log(27, pageType);
-                                                            
                                                             updateData()
                                                         }, 50)
                                                     }}
