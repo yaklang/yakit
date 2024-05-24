@@ -77,6 +77,7 @@ import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
 import {serverPushStatus} from "@/utils/duplex/duplex"
+import { useCampare } from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1201,7 +1202,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 updateMITMPageQuery(query, "update")
                 return
             }
-            setIsRefresh(!isRefresh)
             setSelectedRowKeys([])
             setSelectedRows([])
             setScrollToIndex(0)
@@ -1248,11 +1248,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [params.OnlyWebsocket])
 
+    const excludeIdCom = useCampare(params.ExcludeId)
+    const excludeInUrlCom = useCampare(params.ExcludeInUrl)
     useEffect(() => {
         if (!isOneceLoading.current) {
             updateData()
         }
-    }, [params.ExcludeId, params.ExcludeInUrl])
+    }, [excludeIdCom, excludeInUrlCom])
 
     // 获取tags等分组
     const getHTTPFlowsFieldGroup = useMemoizedFn((RefreshRequest: boolean) => {
