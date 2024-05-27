@@ -198,21 +198,39 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             case 3:
                 setExtraParamsValue((v) => ({
                     ...v,
-                    portScanParam: {...v.portScanParam, Ports: PresetPorts["fast"], presetPort: ["fast"]}
+                    portScanParam: {
+                        ...v.portScanParam,
+                        Ports: PresetPorts["fast"],
+                        presetPort: ["fast"],
+                        ProbeMax: 1,
+                        Concurrent: 100
+                    }
                 }))
                 break
             // 适中
             case 2:
                 setExtraParamsValue((v) => ({
                     ...v,
-                    portScanParam: {...v.portScanParam, Ports: PresetPorts["middle"], presetPort: ["middle"]}
+                    portScanParam: {
+                        ...v.portScanParam,
+                        Ports: PresetPorts["middle"],
+                        presetPort: ["middle"],
+                        ProbeMax: 3,
+                        Concurrent: 80
+                    }
                 }))
                 break
             // 慢速
             case 1:
                 setExtraParamsValue((v) => ({
                     ...v,
-                    portScanParam: {...v.portScanParam, Ports: PresetPorts["slow"], presetPort: ["slow"]}
+                    portScanParam: {
+                        ...v.portScanParam,
+                        Ports: PresetPorts["slow"],
+                        presetPort: ["slow"],
+                        ProbeMax: 7,
+                        Concurrent: 50
+                    }
                 }))
                 break
         }
@@ -365,30 +383,16 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         switch (value.scanDeep) {
             // 快速
             case 3:
-                // 指纹并发
-                portScanRequestParams.Concurrent = 100
                 // SYN 并发
                 portScanRequestParams.SynConcurrent = 2000
-                portScanRequestParams.ProbeTimeout = 3
-                // 指纹详细程度
-                portScanRequestParams.ProbeMax = 3
-                // portScanRequestParams.Ports = PresetPorts["fast"]
                 break
             // 适中
             case 2:
-                portScanRequestParams.Concurrent = 80
                 portScanRequestParams.SynConcurrent = 1000
-                portScanRequestParams.ProbeTimeout = 5
-                portScanRequestParams.ProbeMax = 5
-                // portScanRequestParams.Ports = PresetPorts["middle"]
                 break
             // 慢速
             case 1:
-                portScanRequestParams.Concurrent = 50
                 portScanRequestParams.SynConcurrent = 1000
-                portScanRequestParams.ProbeTimeout = 7
-                portScanRequestParams.ProbeMax = 7
-                // portScanRequestParams.Ports = PresetPorts["slow"]
                 break
             default:
                 break

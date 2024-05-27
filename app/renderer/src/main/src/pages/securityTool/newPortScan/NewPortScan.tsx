@@ -268,7 +268,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     SaveToDB: true,
     Proxy: [],
     EnableBrute: false,
-    ProbeTimeout: 7,
+    ProbeTimeout: 5,
     ScriptNames: [],
     ProbeMax: 3,
     EnableCClassScan: false,
