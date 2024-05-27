@@ -128,6 +128,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const simpleDetectWrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(simpleDetectWrapperRef)
     const tokenRef = useRef<string>(randomString(40))
+    const recoverTokenRef = useRef<string>(randomString(40))
     const portScanRequestParamsRef = useRef<PortScanExecuteExtraFormValue>()
     const startBruteParamsRef = useRef<StartBruteParams>()
     /**前端保存的最新的任务的值 */
@@ -179,7 +180,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         tabs: defaultTabs,
         taskName: "RecoverSimpleDetectTask",
         apiKey: "RecoverSimpleDetectTask",
-        token: tokenRef.current,
+        token: recoverTokenRef.current,
         onError: () => {
             setExecuteStatus("error")
         },

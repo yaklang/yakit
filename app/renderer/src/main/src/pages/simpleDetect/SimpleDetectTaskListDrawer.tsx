@@ -226,6 +226,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
             apiQuerySimpleDetectUnfinishedTask(query)
                 .then((res) => {
                     setResponse(res.Tasks.reverse())
+                    setSelectedRowKeys([])
                 })
                 .finally(() => setTimeout(() => setLoading(false), 300))
         })
