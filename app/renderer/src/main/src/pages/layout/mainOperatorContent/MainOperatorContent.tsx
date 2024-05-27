@@ -441,9 +441,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
 
                 break
+            case YakitRoute.SimpleDetect:
+                addSimpleDetect(params)
+                break
             default:
                 break
         }
+    })
+    const addSimpleDetect = useMemoizedFn((data) => {
+        openMenuPage(
+            {route: YakitRoute.SimpleDetect},
+            {
+                pageParams: {
+                    simpleDetectPageInfo: {...data}
+                }
+            }
+        )
     })
     const addScanPort = useMemoizedFn((data) => {
         openMenuPage(
