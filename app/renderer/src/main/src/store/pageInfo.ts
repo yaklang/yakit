@@ -1,5 +1,5 @@
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {AdvancedConfigShowProps} from "@/pages/fuzzer/HTTPFuzzerPage"
@@ -62,7 +62,10 @@ interface PageParamsInfoProps {
 
 export interface SpaceEnginePageInfoProps {}
 
-export interface SimpleDetectPageInfoProps {}
+export interface SimpleDetectPageInfoProps {
+    /**执行批量执行的runtimeId */
+    runtimeId: string
+}
 export interface PluginBatchExecutorPageInfoProps {
     /**执行批量执行的runtimeId */
     runtimeId: string
@@ -158,14 +161,18 @@ interface PageInfoStoreProps {
     setCurrentSelectPageId: (routeKey: string, pageId: string) => void
     /** 获取当前激活的页面id */
     getCurrentSelectPageId: (routeKey: string) => string
-    /** 通过 RuntimeId 获取批量执行页面数据 */
-    getBatchExecutorByRuntimeId: (pageId: string) => PageNodeItemProps | undefined
+    /** 通过 RuntimeId 获取页面数据 【批量执行/安全检测(简易版)】 */
+    getPageInfoByRuntimeId: (routeKey: string, pageId: string) => PageNodeItemProps | undefined
 }
 export const defPage: PageProps = {
     pageList: [],
     routeKey: "",
     singleNode: false,
     currentSelectPageId: ""
+}
+const pageInfoToRuntimeIdMap = {
+    [YakitRoute.BatchExecutorPage]: "pluginBatchExecutorPageInfo",
+    [YakitRoute.SimpleDetect]: "simpleDetectPageInfo"
 }
 export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(
@@ -204,11 +211,11 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                     const current = pages.get(key) || cloneDeep(defPage)
                     return current.pageList.find((ele) => ele.pageId === pageId)
                 },
-                getBatchExecutorByRuntimeId: (runtimeId) => {
+                getPageInfoByRuntimeId: (routeKey, runtimeId) => {
                     const {pages} = get()
-                    const current = pages.get(YakitRoute.BatchExecutorPage) || cloneDeep(defPage)
+                    const current = pages.get(routeKey) || cloneDeep(defPage)
                     return current.pageList.find(
-                        (ele) => ele?.pageParamsInfo?.pluginBatchExecutorPageInfo?.runtimeId === runtimeId
+                        (ele) => ele?.pageParamsInfo[pageInfoToRuntimeIdMap[routeKey]]?.runtimeId === runtimeId
                     )
                 },
                 addPagesDataCache: (key, value) => {

@@ -1,5 +1,6 @@
 import {FormInstance} from "antd"
 import {PortScanExecuteExtraFormValue} from "../securityTool/newPortScan/NewPortScanType"
+import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
 
 export interface SimpleDetectProps {
     pageId: string
@@ -16,5 +17,10 @@ export interface SimpleDetectFormContentProps {
     disabled: boolean
     inViewport: boolean
     form: FormInstance<SimpleDetectForm>
-    refreshGroup:boolean
+    refreshGroup: boolean
+}
+
+export interface SimpleDetectValueProps {
+    formValue: SimpleDetectForm | null
+    extraParamsValue: SimpleDetectExtraParam | null
 }

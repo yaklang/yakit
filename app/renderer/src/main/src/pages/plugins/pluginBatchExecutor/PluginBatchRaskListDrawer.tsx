@@ -17,7 +17,7 @@ import {
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {OutlineLoadingIcon, OutlineQuestionmarkcircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {Divider, Tooltip} from "antd"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRouteConstants"
 import emiter from "@/utils/eventBus/eventBus"
 import {SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon} from "@/assets/icon/solid"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
@@ -102,9 +102,9 @@ interface PluginBatchRaskListProps {
 }
 const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
     forwardRef((props, ref) => {
-        const {getBatchExecutorByRuntimeId} = usePageInfo(
+        const {getPageInfoByRuntimeId} = usePageInfo(
             (s) => ({
-                getBatchExecutorByRuntimeId: s.getBatchExecutorByRuntimeId
+                getPageInfoByRuntimeId: s.getPageInfoByRuntimeId
             }),
             shallow
         )
@@ -369,7 +369,7 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             update(1)
         })
         const onDetails = useMemoizedFn((runtimeId: string, hybridScanMode: HybridScanModeType) => {
-            const current: PageNodeItemProps | undefined = getBatchExecutorByRuntimeId(runtimeId)
+            const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(YakitRoute.BatchExecutorPage,runtimeId)
             // 重试new 都是新建页面
             if (!!current && hybridScanMode !== "new") {
                 emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))

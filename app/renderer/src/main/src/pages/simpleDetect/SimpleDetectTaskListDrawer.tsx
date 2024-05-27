@@ -17,6 +17,9 @@ import {Divider, Progress} from "antd"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import emiter from "@/utils/eventBus/eventBus"
 import {genDefaultPagination} from "../invoker/schema"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/routes/newRouteConstants"
 
 interface SimpleDetectTaskListDrawerProps {
     visible: boolean
@@ -94,6 +97,13 @@ interface SimpleDetectTaskListProps {
 }
 const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
     forwardRef((props, ref) => {
+        const {getPageInfoByRuntimeId} = usePageInfo(
+            (s) => ({
+                getPageInfoByRuntimeId: s.getPageInfoByRuntimeId
+            }),
+            shallow
+        )
+
         const {visible, setVisible} = props
 
         const [loading, setLoading] = useState<boolean>(false)
@@ -191,31 +201,25 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
             ]
         }, [visible, isRefresh])
         const onDetails = useMemoizedFn((runtimeId: string) => {
-            // const current: PageNodeItemProps | undefined = getBatchExecutorByRuntimeId(runtimeId)
-            // if (!!current) {
-            //     emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
-            //     setTimeout(() => {
-            //         // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
-            //         if (hybridScanMode !== "status") {
-            //             emiter.emit(
-            //                 "switchTaskStatus",
-            //                 JSON.stringify({runtimeId, hybridScanMode, pageId: current.pageId})
-            //             )
-            //         }
-            //     }, 200)
-            // } else {
-            //     emiter.emit(
-            //         "openPage",
-            //         JSON.stringify({
-            //             route: YakitRoute.BatchExecutorPage,
-            //             params: {
-            //                 runtimeId,
-            //                 hybridScanMode
-            //             }
-            //         })
-            //     )
-            // }
-            // setVisible(false)
+            const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(YakitRoute.SimpleDetect, runtimeId)
+            if (!!current) {
+                emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
+                setTimeout(() => {
+                    // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
+                    emiter.emit("updateTaskStatus", JSON.stringify({runtimeId, pageId: current.pageId}))
+                }, 200)
+            } else {
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.SimpleDetect,
+                        params: {
+                            runtimeId
+                        }
+                    })
+                )
+            }
+            setVisible(false)
         })
         const update = useMemoizedFn(() => {
             setLoading(true)
@@ -243,7 +247,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const onRemoveSingle = useMemoizedFn((RuntimeId: string) => {
             const removeParams: DeleteUnfinishedTaskRequest = {
                 Filter: {
-                    RuntimeId
+                    RuntimeId: [RuntimeId]
                 }
             }
             apiDeleteSimpleDetectUnfinishedTask(removeParams).then(() => {
@@ -253,7 +257,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const onBatchRemove = useMemoizedFn(() => {
             const removeParams: DeleteUnfinishedTaskRequest = {
                 Filter: {
-                    RuntimeId: selectedRowKeys.join(",")
+                    RuntimeId: selectedRowKeys
                 }
             }
             setLoading(true)

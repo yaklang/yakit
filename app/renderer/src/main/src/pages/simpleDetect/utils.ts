@@ -18,7 +18,7 @@ export interface QueryUnfinishedTaskResponse {
 }
 
 export interface UnfinishedTaskFilter {
-    RuntimeId?: string
+    RuntimeId?: string[]
     ProgressSource?: string[]
     TaskName?: string
     Target?: string
@@ -50,7 +50,7 @@ export interface DeleteUnfinishedTaskRequest {
 export const apiDeleteSimpleDetectUnfinishedTask: (params: DeleteUnfinishedTaskRequest) => Promise<null> = (params) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("DeleteSimpleDetectUnfinishedTask", params)
+            .invoke("DeleteSimpleDetectUnfinishedTask", {...params})
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `删除未完成任务失败：${e}`)
