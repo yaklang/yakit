@@ -229,11 +229,12 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             targetPort,
             downstreamProxy,
             enableHttp2,
+            ForceDisableKeepAlive,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
             return ipcRenderer
-                .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2, certs, extra)
+                .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2,ForceDisableKeepAlive, certs, extra)
                 .catch((e: any) => {
                     notification["error"]({message: `启动中间人劫持失败：${e}`})
                 })
@@ -249,6 +250,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             enableInitialPlugin,
             plugins,
             enableHttp2,
+            ForceDisableKeepAlive,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -257,7 +259,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setPort(port)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
-            startMITMServer(host, port, downstreamProxy, enableHttp2, certs, extra)
+            startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive,certs, extra)
             let tip = ""
             if (downstreamProxy) {
                 tip += `下游代理：${downstreamProxy}`
@@ -377,6 +379,7 @@ interface MITMServerProps {
         enableInitialPlugin: boolean,
         defaultPlugins: string[],
         enableHttp2: boolean,
+        ForceDisableKeepAlive: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -425,6 +428,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             downstreamProxy,
             enableInitialPlugin,
             enableHttp2,
+            ForceDisableKeepAlive,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -436,6 +440,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     enableInitialPlugin,
                     enableInitialPlugin ? checkList : [],
                     enableHttp2,
+                    ForceDisableKeepAlive,
                     certs,
                     extra
                 )

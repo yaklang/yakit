@@ -4649,6 +4649,9 @@ message MITMRequest {
   // 过滤 ws
   bool filterWebsocket = 57;
   bool updateFilterWebsocket = 58;
+
+  // force close
+  bool ForceDisableKeepAlive = 59;
 }
 
 message Certificate {
