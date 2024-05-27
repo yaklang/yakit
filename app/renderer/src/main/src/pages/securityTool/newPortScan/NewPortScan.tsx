@@ -280,7 +280,9 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     LinkPluginConfig: cloneDeep(defaultLinkPluginConfig),
     BasicCrawlerEnableJSParser: false,
     /**@description 前端使用,扫描协议 */
-    scanProtocol: "tcp"
+    scanProtocol: "tcp",
+    /**前端使用 */
+    pluginGroup: []
 }
 
 const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(

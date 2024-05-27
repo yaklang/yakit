@@ -3,6 +3,7 @@ import {DataNode} from "antd/lib/tree"
 import {BruteExecuteExtraFormValue, StartBruteParams} from "./NewBruteType"
 import {PayloadGroupNodeProps} from "@/pages/payloadManager/newPayload"
 import cloneDeep from "lodash/cloneDeep"
+import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
 
 const {ipcRenderer} = window.require("electron")
 export interface Tree {
@@ -109,8 +110,12 @@ export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): Sta
  */
 export const startBruteParamsConvertToFormValue = (params: StartBruteParams): BruteExecuteExtraFormValue => {
     const data: BruteExecuteExtraFormValue = {
-        Type: "",
-        Targets: ""
+        ...defaultBruteExecuteExtraFormValue,
+        ...params,
+        replaceDefaultUsernameDict: !!!params.ReplaceDefaultUsernameDict,
+        replaceDefaultPasswordDict: !!!params.ReplaceDefaultPasswordDict,
+        usernames: (params.Usernames?.length || 0) > 0 ? params.Usernames?.join(",") : "",
+        passwords: (params.Passwords?.length || 0) > 0 ? params.Passwords?.join(",") : ""
     }
     return data
 }
