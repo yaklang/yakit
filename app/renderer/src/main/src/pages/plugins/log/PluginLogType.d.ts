@@ -3,8 +3,6 @@ import {ReactNode} from "react"
 
 export interface PluginLogProps {
     uuid: string
-    wrapperClassName?: string
-    wrapperStyle?: React.CSSProperties
     getContainer?: string
 }
 

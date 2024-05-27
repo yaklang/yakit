@@ -13,7 +13,7 @@ import {
     PluginLogPassIcon,
     PluginLogRestoreIcon
 } from "./icon"
-import {useDebounceFn, useInViewport, useLatest, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useInViewport, useLatest, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {apiFetchOnlinePluginInfo, apiFetchPluginDetailCheck, apiFetchPluginLogs} from "../utils"
 import {yakitNotify} from "@/utils/notification"
@@ -92,7 +92,7 @@ const handleToLogInfo = (info: API.PluginsLogsDetail) => {
 }
 
 export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
-    const {uuid, wrapperClassName, wrapperStyle, getContainer} = props
+    const {uuid, getContainer} = props
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(wrapperRef)
@@ -198,10 +198,6 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
         })
     })
 
-    const getInView = useMemoizedFn(() => {
-        return inViewport
-    })
-
     // 控制日志列表展示时的loading状态和重置列表数据
     useEffect(() => {
         if (inViewport) {
@@ -222,23 +218,6 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
             }
         }
     }, [inViewport, uuid])
-    // uuid变化时的信息重新请求获取
-    // useEffect(() => {
-    //     console.log(`uuid`, uuid, new Date().getTime())
-    //     if (uuid) {
-    //         if (!getInView()) return
-
-    //         if (!latestPlugin.current) {
-    //             fetchPluginDetail(uuid)
-    //         } else {
-    //             // 减少切换页面场景下的重复请求
-    //             if (latestPlugin.current.uuid !== uuid) fetchPluginDetail(uuid)
-    //         }
-    //     } else {
-    //         setPlugin(undefined)
-    //         resetResponse()
-    //     }
-    // }, [uuid])
 
     const handleLoadMore = useMemoizedFn(() => {
         if (resLoading) return
@@ -299,11 +278,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
     /** ---------- 合并功能 End ---------- */
 
     return (
-        <div
-            ref={wrapperRef}
-            style={wrapperStyle}
-            className={classNames(styles["plugin-online-log"], wrapperClassName)}
-        >
+        <div ref={wrapperRef} className={styles["plugin-online-log"]}>
             <YakitSpin spinning={pluginLoading}>
                 <div className={styles["plugin-online-log-body"]}>
                     {plugin ? (
@@ -373,6 +348,210 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                     )}
                 </div>
             </YakitSpin>
+        </div>
+    )
+})
+
+export const PluginLogs: React.FC<PluginLogProps> = memo((props) => {
+    const {uuid, getContainer} = props
+
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(wrapperRef)
+
+    const latestUUID = useRef<string>("")
+
+    const timeListRef = useRef<YakitTimeLineListRefProps>(null)
+    const handleClearTimeList = useMemoizedFn(() => {
+        timeListRef.current?.onClear()
+    })
+
+    const pageRef = useRef<number>(1)
+    const [resLoading, setResLoading] = useState<boolean>(false)
+    const [response, setResponse] = useState<API.PluginsLogsResponse>({
+        data: [],
+        pagemeta: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            total_page: 0
+        }
+    })
+    const hasMore = useRef<boolean>(true)
+
+    useDebounceEffect(
+        () => {
+            if (inViewport) {
+                if (!!uuid) {
+                    resetFetchLogs()
+                } else {
+                    resetResponse()
+                }
+            }
+        },
+        [inViewport, uuid],
+        {wait: 300}
+    )
+
+    // 获取插件日志
+    const fetchLogs = useMemoizedFn((page: number) => {
+        if (resLoading) return
+
+        if (page === 1) {
+            /**
+             * 因为不定高虚拟列表自身无法计算传入数据的数量由多变少时的逻辑
+             * 所以需要使用者手动清空虚拟列表的位置状态信息
+             */
+            handleClearTimeList()
+        }
+        setResLoading(true)
+        apiFetchPluginLogs({uuid: uuid, Page: page, Limit: 5})
+            .then((res) => {
+                latestUUID.current = uuid
+                let data: API.PluginsLogsDetail[] = []
+                if (res.pagemeta.page === 1) {
+                    data = data.concat(res.data || [])
+                } else {
+                    data = data.concat(response.data)
+                    data = data.concat(res.data || [])
+                }
+                if (data.length >= res.pagemeta.total) hasMore.current = false
+                setResponse({...res, data: [...data]})
+                pageRef.current += 1
+            })
+            .catch(() => {
+                if (page === 1) resetResponse()
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setResLoading(false)
+                }, 200)
+            })
+    })
+
+    // 初始化请求日志列表数据
+    const resetFetchLogs = useMemoizedFn(() => {
+        hasMore.current = true
+        pageRef.current = 1
+        fetchLogs(pageRef.current)
+    })
+    // 重置日志列表数据
+    const resetResponse = useMemoizedFn(() => {
+        hasMore.current = false
+        setResponse({
+            data: [],
+            pagemeta: {
+                page: 1,
+                limit: 20,
+                total: 0,
+                total_page: 0
+            }
+        })
+    })
+
+    const handleLoadMore = useMemoizedFn(() => {
+        if (resLoading) return
+        if (!latestUUID.current || latestUUID.current !== uuid) return
+
+        fetchLogs(pageRef.current)
+    })
+
+    /** ---------- 认证状态改变时的触发事件 Start ---------- */
+    // 切换私有域后的信息请求
+    const onSwitchHost = useMemoizedFn(() => {
+        if (mergeShow.visible) onCancelMerge()
+        resetFetchLogs()
+    })
+
+    useEffect(() => {
+        emiter.on("onSwitchPrivateDomain", onSwitchHost)
+        return () => {
+            emiter.off("onSwitchPrivateDomain", onSwitchHost)
+        }
+    }, [])
+
+    const {userInfo} = useStore()
+    useUpdateEffect(() => {
+        resetFetchLogs()
+        if (mergeShow.visible) onCancelMerge()
+    }, [userInfo])
+    /** ---------- 认证状态改变时的触发事件 End ---------- */
+    /** ---------- 合并功能 Start ---------- */
+    const [mergeShow, setMergeShow] = useState<{visible: boolean; info?: API.PluginsLogsDetail; index: number}>({
+        visible: false,
+        info: undefined,
+        index: -1
+    })
+    const handleMerge = useMemoizedFn((info: API.PluginsLogsDetail, index: number) => {
+        if (mergeShow.visible) return
+        setMergeShow({visible: true, info: info, index: index})
+    })
+    const handleChangeMerge = useMemoizedFn((isPass: boolean, reason?: string) => {
+        if (mergeShow.index === -1) return
+        const lists = [...response.data]
+        if (lists.length === 0) return
+
+        lists[mergeShow.index].checkStatus = isPass ? 1 : 2
+        if (!isPass) lists[mergeShow.index].description = reason || ""
+        setResponse({...response, data: [...lists]})
+        onCancelMerge()
+    })
+    const onCancelMerge = useMemoizedFn(() => {
+        if (!mergeShow.visible) return
+        setMergeShow({
+            visible: false,
+            info: undefined,
+            index: -1
+        })
+    })
+    /** ---------- 合并功能 End ---------- */
+
+    return (
+        <div ref={wrapperRef} className={styles["plugin-online-logs"]}>
+                <div className={styles["plugin-online-log-list"]}>
+                    <div className={styles["log-header"]}>
+                        <span className={styles["header-title"]}>插件日志</span>
+                        <div className={styles["header-tag"]}>{response.pagemeta.total}</div>
+                    </div>
+                    <div className={styles["log-content"]}>
+                        {response.data.length > 0 ? (
+                            <OnlineJudgment>
+                                <YakitTimeLineList
+                                    ref={timeListRef}
+                                    loading={resLoading}
+                                    data={response.data}
+                                    icon={(info) => {
+                                        return handleToLogInfo(info)?.icon || null
+                                    }}
+                                    renderItem={(info) => {
+                                        return (
+                                            <PluginLogOpt
+                                                uuid={uuid}
+                                                info={info}
+                                                onMerge={(info) => handleMerge(info, 0)}
+                                            />
+                                        )
+                                    }}
+                                    hasMore={hasMore.current}
+                                    loadMore={handleLoadMore}
+                                />
+                            </OnlineJudgment>
+                        ) : (
+                            <YakitEmpty style={{paddingTop: 48}} />
+                        )}
+                    </div>
+
+                    {mergeShow.info && (
+                        <PluginLogDetail
+                            getContainer={document.getElementById(getContainer || "") || undefined}
+                            uuid={uuid}
+                            info={mergeShow.info}
+                            visible={mergeShow.visible}
+                            onClose={onCancelMerge}
+                            onChange={handleChangeMerge}
+                        />
+                    )}
+                </div>
+            
         </div>
     )
 })
