@@ -77,4 +77,8 @@ export interface BruteExecuteExtraFormValue extends StartBruteParams {
     usernames?: string
     /**前端展示使用 */
     passwords?: string
+    /**前端使用 */
+    userSelectType?: string
+    /**前端使用 */
+    passwordSelectType?: string
 }
