@@ -2191,7 +2191,7 @@ message GetSimpleDetectUnfinishedTaskResponse {
 // -------------------
 
 message UnfinishedTaskFilter {
-  string RuntimeId = 1;
+  repeated string RuntimeId = 1;
   repeated string ProgressSource = 2;
   string TaskName = 3; // support fuzzy search
   string Target = 4; // support fuzzy search
