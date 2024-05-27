@@ -959,7 +959,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [loading, isPause])
 
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
-        console.log(123, tokenRef.current);
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
     const dCountRef = useRef<number>(0)
