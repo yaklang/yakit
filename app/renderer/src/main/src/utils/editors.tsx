@@ -7,7 +7,7 @@ import "./monacoSpec/theme"
 import "./monacoSpec/fuzzHTTP"
 import "./monacoSpec/yakEditor"
 import "./monacoSpec/html"
-import {Button, Card, Form, Input, Modal, Popover, Space, Tag, Tooltip, Row, Col, Switch} from "antd"
+import {Card, Col, Form, Input, Modal, Popover, Row, Space, Tag, Tooltip} from "antd"
 import {SelectOne} from "./inputUtil"
 import {EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {showDrawer} from "./showModal"
@@ -30,11 +30,9 @@ import {editor, IPosition, IRange} from "monaco-editor"
 import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
-import ITextModel = editor.ITextModel
-import {YAK_FORMATTER_COMMAND_ID, setEditorContext} from "@/utils/monacoSpec/yakEditor"
+import {setEditorContext, YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import IModelDecoration = editor.IModelDecoration
 import {
     OperationRecordRes,
     OtherMenuListProps,
@@ -52,7 +50,9 @@ import {DataCompareModal} from "@/pages/compare/DataCompare"
 import emiter from "./eventBus/eventBus"
 import {v4 as uuidv4} from "uuid"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
-import { HighLightText } from "@/components/HTTPFlowDetail"
+import {HighLightText} from "@/components/HTTPFlowDetail"
+import ITextModel = editor.ITextModel;
+import IModelDecoration = editor.IModelDecoration;
 
 const {ipcRenderer} = window.require("electron")
 
@@ -88,14 +88,14 @@ export interface EditorProps {
     full?: boolean
 }
 
-export interface YakHTTPPacketViewer {
+export interface YakHTTPPacketViewerProps {
     value: Uint8Array
     isRequest?: boolean
     isResponse?: boolean
     raw?: EditorProps
 }
 
-export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
+export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewerProps> = (props) => {
     return (
         <YakEditor
             {...props.raw}
@@ -220,7 +220,6 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                 const keywordRegExp = /\r?\n/g
                 const decorations: IModelDecoration[] = []
                 let match
-
                 while ((match = keywordRegExp.exec(text)) !== null) {
                     const start = model.getPositionAt(match.index)
                     const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf"
@@ -324,7 +323,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("YaklangCompileAndFormat", {Code: allContent})
-                .then((e: {Errors: YakStaticAnalyzeErrorResult[]; Code: string}) => {
+                .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
                     console.info(e)
                     if (e.Code !== "") {
                         model.setValue(e.Code)
@@ -352,7 +351,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             if (language === "yak") {
                 ipcRenderer
                     .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})
-                    .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                    .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
                             monaco.editor.setModelMarkers(model, "owner", markers)
@@ -729,35 +728,35 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 (!!props.title ? props.title : <span>{isResponse ? "Response" : "Request"}</span>)}
                             {!props.simpleMode
                                 ? !props.noHex && (
-                                      <SelectOne
-                                          label={" "}
-                                          colon={false}
-                                          value={mode}
-                                          setValue={(e) => {
-                                              if (mode === "text" && e === "hex") {
-                                                  console.info("切换到 HEX 模式")
-                                                  setHexValue(StringToUint8Array(strValue, getEncoding()))
-                                              }
+                                <SelectOne
+                                    label={" "}
+                                    colon={false}
+                                    value={mode}
+                                    setValue={(e) => {
+                                        if (mode === "text" && e === "hex") {
+                                            console.info("切换到 HEX 模式")
+                                            setHexValue(StringToUint8Array(strValue, getEncoding()))
+                                        }
 
-                                              if (mode === "hex" && e === "text") {
-                                                  console.info("切换到 TEXT 模式")
-                                                  setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
-                                              }
-                                              setMode(e)
-                                          }}
-                                          data={[
-                                              {text: "TEXT", value: "text"},
-                                              {text: "HEX", value: "hex"}
-                                          ]}
-                                          size={"small"}
-                                          formItemStyle={{marginBottom: 0}}
-                                      />
-                                  )
+                                        if (mode === "hex" && e === "text") {
+                                            console.info("切换到 TEXT 模式")
+                                            setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
+                                        }
+                                        setMode(e)
+                                    }}
+                                    data={[
+                                        {text: "TEXT", value: "text"},
+                                        {text: "HEX", value: "hex"}
+                                    ]}
+                                    size={"small"}
+                                    formItemStyle={{marginBottom: 0}}
+                                />
+                            )
                                 : !props.noModeTag && (
-                                      <Form.Item style={{marginBottom: 0}}>
-                                          <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
-                                      </Form.Item>
-                                  )}
+                                <Form.Item style={{marginBottom: 0}}>
+                                    <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                                </Form.Item>
+                            )}
                             {mode === "text" && !props.hideSearch && !props.simpleMode && (
                                 <Input.Search
                                     size={"small"}
@@ -783,7 +782,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <YakitButton
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled />}
+                                    icon={<ThunderboltFilled/>}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -804,7 +803,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <YakitButton
                                     size={"small"}
                                     type={noWordwrap ? "text" : "primary"}
-                                    icon={<EnterOutlined />}
+                                    icon={<EnterOutlined/>}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
                                     }}
@@ -845,7 +844,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     <YakitButton
                                                         size={"small"}
                                                         type={"text"}
-                                                        icon={<FullscreenOutlined />}
+                                                        icon={<FullscreenOutlined/>}
                                                         onClick={() => {
                                                             showDrawer({
                                                                 title: "全屏",
@@ -890,7 +889,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     overlayInnerStyle={{width: 300}}
                                     visible={popoverVisible}
                                 >
-                                    <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
+                                    <YakitButton icon={<SettingOutlined/>} type={"text"} size={"small"}/>
                                 </Popover>
                             )}
                         </Space>
@@ -926,7 +925,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         contextMenuGroupId: "auto-suggestion",
                                         keybindings: [
                                             (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                                monaco.KeyCode.KeyR
+                                            monaco.KeyCode.KeyR
                                         ],
                                         id: "new-web-fuzzer-tab",
                                         run: (e) => {
@@ -982,7 +981,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 if (props.readOnly && props.originValue) {
                                                     ipcRenderer
                                                         .invoke("GetHTTPPacketBody", {PacketRaw: props.originValue})
-                                                        .then((bytes: {Raw: Uint8Array}) => {
+                                                        .then((bytes: { Raw: Uint8Array }) => {
                                                             saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                         })
                                                         .catch((e) => {
@@ -1001,7 +1000,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 }
                                                 ipcRenderer
                                                     .invoke("GetHTTPPacketBody", {Packet: text})
-                                                    .then((bytes: {Raw: Uint8Array}) => {
+                                                    .then((bytes: { Raw: Uint8Array }) => {
                                                         saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                     })
                                             } catch (e) {
@@ -1189,7 +1188,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         onTypeOptionVal,
         highLightText = []
     } = props
-    
+
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1514,7 +1513,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             setTypeLoading(true)
             let renderValue = await prettifyPacketRender(originValue)
             setRenderHTML(
-                <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />
+                <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}}/>
             )
             setTypeLoading(false)
         }),
@@ -1552,35 +1551,35 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 ))}
                             {!props.simpleMode
                                 ? !props.noHex && (
-                                      <SelectOne
-                                          label={" "}
-                                          colon={false}
-                                          value={mode}
-                                          setValue={(e) => {
-                                              if (mode === "text" && e === "hex") {
-                                                  console.info("切换到 HEX 模式")
-                                                  setHexValue(StringToUint8Array(strValue, getEncoding()))
-                                              }
+                                <SelectOne
+                                    label={" "}
+                                    colon={false}
+                                    value={mode}
+                                    setValue={(e) => {
+                                        if (mode === "text" && e === "hex") {
+                                            console.info("切换到 HEX 模式")
+                                            setHexValue(StringToUint8Array(strValue, getEncoding()))
+                                        }
 
-                                              if (mode === "hex" && e === "text") {
-                                                  console.info("切换到 TEXT 模式")
-                                                  setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
-                                              }
-                                              setMode(e)
-                                          }}
-                                          data={[
-                                              {text: "TEXT", value: "text"},
-                                              {text: "HEX", value: "hex"}
-                                          ]}
-                                          size={"small"}
-                                          formItemStyle={{marginBottom: 0}}
-                                      />
-                                  )
+                                        if (mode === "hex" && e === "text") {
+                                            console.info("切换到 TEXT 模式")
+                                            setStrValue(Uint8ArrayToString(hexValue, getEncoding()))
+                                        }
+                                        setMode(e)
+                                    }}
+                                    data={[
+                                        {text: "TEXT", value: "text"},
+                                        {text: "HEX", value: "hex"}
+                                    ]}
+                                    size={"small"}
+                                    formItemStyle={{marginBottom: 0}}
+                                />
+                            )
                                 : !props.noModeTag && (
-                                      <Form.Item style={{marginBottom: 0}}>
-                                          <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
-                                      </Form.Item>
-                                  )}
+                                <Form.Item style={{marginBottom: 0}}>
+                                    <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                                </Form.Item>
+                            )}
                             {mode === "text" && !props.hideSearch && !props.simpleMode && (
                                 <Input.Search
                                     size={"small"}
@@ -1645,7 +1644,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 <YakitButton
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled />}
+                                    icon={<ThunderboltFilled/>}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -1668,7 +1667,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                         <YakitButton
                                             size={"small"}
                                             type={noWordwrap ? "text" : "primary"}
-                                            icon={<EnterOutlined />}
+                                            icon={<EnterOutlined/>}
                                             onClick={() => {
                                                 setNoWordwrap(!noWordwrap)
                                             }}
@@ -1708,7 +1707,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                             <YakitButton
                                                                 size={"small"}
                                                                 type={"text"}
-                                                                icon={<FullscreenOutlined />}
+                                                                icon={<FullscreenOutlined/>}
                                                                 onClick={() => {
                                                                     showDrawer({
                                                                         title: "全屏",
@@ -1755,7 +1754,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             overlayInnerStyle={{width: 300}}
                                             visible={popoverVisible}
                                         >
-                                            <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
+                                            <YakitButton icon={<SettingOutlined/>} type={"text"} size={"small"}/>
                                         </Popover>
                                     )}
                                 </>
