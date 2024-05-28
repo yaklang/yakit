@@ -2218,6 +2218,8 @@ message UnfinishedTask {
 
 message QueryUnfinishedTaskResponse { // brief information for unfinished task
   repeated UnfinishedTask Tasks = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
 }
 
 message GetUnfinishedTaskDetailByIdRequest { // get unfinished task detail by runtime id, get task start param or last record
