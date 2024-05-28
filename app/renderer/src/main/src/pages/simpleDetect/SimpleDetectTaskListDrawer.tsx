@@ -20,6 +20,7 @@ import {genDefaultPagination} from "../invoker/schema"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRouteConstants"
+import styles from "./SimpleDetectTaskListDrawer.module.scss"
 
 interface SimpleDetectTaskListDrawerProps {
     visible: boolean
@@ -132,7 +133,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
 
         useEffect(() => {
             update()
-        }, [visible, isRefresh])
+        }, [visible])
 
         const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
             return [
@@ -156,7 +157,9 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 {
                     title: "进度",
                     dataKey: "Percent",
-                    render: (v) => <Progress percent={Math.trunc(v * 100)} status='active' />
+                    render: (v) => (
+                        <Progress percent={Math.trunc(v * 100)} status='active' className={styles["table-progress"]} />
+                    )
                 },
                 {
                     title: "创建时间",
@@ -227,11 +230,13 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 .then((res) => {
                     setResponse(res.Tasks.reverse())
                     setSelectedRowKeys([])
+                    setIsAllSelect(false)
+                    setIsRefresh(!isRefresh)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 300))
         })
         const onRefresh = useMemoizedFn(() => {
-            setIsRefresh(!isRefresh)
+            update()
         })
         const onSelectAll = (newSelectedRowKeys: string[], selected: UnfinishedTask[], checked: boolean) => {
             setIsAllSelect(checked)
@@ -256,9 +261,11 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
             })
         })
         const onBatchRemove = useMemoizedFn(() => {
-            const removeParams: DeleteUnfinishedTaskRequest = {
+            const filter = isAllSelect ? {...query.Filter} : {}
+            let removeParams: DeleteUnfinishedTaskRequest = {
                 Filter: {
-                    RuntimeId: selectedRowKeys
+                    ...filter,
+                    RuntimeId: isAllSelect ? [] : selectedRowKeys
                 }
             }
             setLoading(true)
