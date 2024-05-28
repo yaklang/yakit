@@ -341,40 +341,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                     let taskNameTimeTarget: string = formValue?.Targets.split(/,|\r?\n/)[0] || "漏洞扫描任务"
                     const taskName = `${formValue.scanType || "基础扫描"}-${taskNameTimeTarget}`
                     taskNameRef.current = taskName
-                } else {
-                    // 兼容旧版，只能回显部分前端显示的数据
-                    const {PortScanRequest, StartBruteParams = defaultStartBruteParams} = data
-                    const bruteExecuteParam: StartBruteParams = startBruteParamsConvertToFormValue(StartBruteParams)
-                    const portScanParams: PortScanExecuteExtraFormValue = {
-                        ...defPortScanExecuteExtraFormValue,
-                        ...(PortScanRequest || {}),
-                        pluginGroup: PortScanRequest.LinkPluginConfig?.Filter?.Group?.Group || ["基础扫描"]
-                    }
-
-                    const formValue: SimpleDetectForm = {
-                        Targets: PortScanRequest.Targets,
-                        scanType:
-                            portScanParams.pluginGroup?.length === 1 && portScanParams.pluginGroup.includes("基础扫描")
-                                ? "基础扫描"
-                                : "专项扫描",
-                        pluginGroup: portScanParams.pluginGroup || [],
-                        scanDeep: defaultScanDeep,
-                        SkippedHostAliveScan: !!PortScanRequest.SkippedHostAliveScan
-                    }
-                    form.setFieldsValue({
-                        ...formValue
-                    })
-                    const extraParamsValue: SimpleDetectExtraParam = {
-                        portScanParam: cloneDeep(portScanParams),
-                        bruteExecuteParam: cloneDeep(bruteExecuteParam)
-                    }
-                    setExtraParamsValue(extraParamsValue)
-                    simpleDetectValuePropsRef.current.formValue = {...formValue}
-                    simpleDetectValuePropsRef.current.extraParamsValue = {...extraParamsValue}
-
-                    let taskNameTimeTarget: string = formValue?.Targets.split(/,|\r?\n/)[0] || "漏洞扫描任务"
-                    const taskName = `${formValue.scanType}-${taskNameTimeTarget}`
-                    taskNameRef.current = taskName
                 }
 
                 portScanRequestParamsRef.current = {...defPortScanExecuteExtraFormValue, ...PortScanRequest}
