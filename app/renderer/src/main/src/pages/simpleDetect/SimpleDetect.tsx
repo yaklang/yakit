@@ -183,6 +183,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             simpleDetectStreamEvent.stop()
         },
         onEnd: () => {
+            console.log("simpleDetectStreamEvent-end")
             simpleDetectStreamEvent.stop()
             onEnd()
         },
@@ -204,10 +205,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             recoverSimpleDetectStreamEvent.stop()
         },
         onEnd: () => {
+            console.log("recoverStreamInfo-end")
             recoverSimpleDetectStreamEvent.stop()
             onEnd()
         },
         setRuntimeId: (rId) => {
+            console.log("rId", rId)
             setRuntimeId(rId)
         }
     })
@@ -222,7 +225,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 
     useEffect(() => {
         // 继续任务 第一次进入该页面，不进行依赖scanDeep的更新逻辑
-        // 继续任务开始后，再次点击停止的时候会清除页面中的runtimeId并在recoverStreamInfo的onEnd中清除，后续可以进行依赖scanDeep的更新逻辑
+        // 继续任务开始后，再次点击停止的时候会清除页面中的 runtimeId ，后续可以进行依赖scanDeep的更新逻辑
         if (!!recoverRuntimeId) return
         switch (scanDeep) {
             // 快速
@@ -298,7 +301,14 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         emiter.emit("simpleDetectTabEvent", JSON.stringify(simpleTab))
     }, [executeStatus])
 
+    /**删除页面的 runtimeId */
+    const onRemovePageRuntimeId = useMemoizedFn(() => {
+        if (!pageId) return
+        removePagesDataCacheById(YakitRoute.SimpleDetect, pageId)
+    })
+
     const onUpdateTaskStatus = useMemoizedFn((res) => {
+        if (executeStatus === "process") return
         try {
             const value = JSON.parse(res)
             const {runtimeId, pageId: pId} = value
@@ -307,7 +317,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                 yakitNotify("error", "未设置正常得 runtimeId")
                 return
             }
-            onContinueTask(runtimeId)
+            onRecoverSimpleDetectTask(runtimeId)
         } catch (error) {
             yakitNotify("error", `任务操作参数解析失败${error}`)
         }
@@ -324,6 +334,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                 const {simpleDetectValue = null} = value
                 // simpleDetectValue 存在是新版，可以回显所有的前端页面上显示的数据
                 if (!!simpleDetectValue) {
+                    console.log("simpleDetectValue", simpleDetectValue)
                     const formValue: SimpleDetectForm = {
                         Targets: PortScanRequest.Targets,
                         ...simpleDetectValue.formValue
@@ -451,10 +462,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         }
 
         simpleDetectStreamEvent.reset()
-        setExecuteStatus("process")
-        setRuntimeId("")
+        recoverSimpleDetectStreamEvent.reset()
         portScanRequestParamsRef.current = {...portScanRequestParams}
         startBruteParamsRef.current = {...newStartBruteParams}
+        console.log("apiSimpleDetect", params)
         /**继续任务后，再次点击开始执行，开启新任务 */
         apiSimpleDetect(params, tokenRef.current).then(() => {
             setExecuteStatus("process")
@@ -470,10 +481,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         onSaveSimpleDetect()
             .then(() => {
                 if (!!recoverRuntimeId) {
-                    /**继续任务情况下,取消任务后需要清除当前页面中的runtimeId */
-                    apiCancelRecoverSimpleDetectTask(recoverTokenRef.current).then(() => {
-                        onRemovePageRuntimeId()
-                    })
+                    /**继续任务情况下,停止任务后需要清除当前页面中的runtimeId */
+                    apiCancelRecoverSimpleDetectTask(recoverTokenRef.current)
                 } else {
                     apiCancelSimpleDetect(tokenRef.current).then(() => {
                         setRecoverRuntimeId(runtimeId)
@@ -520,11 +529,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             apiSaveCancelSimpleDetect(params).then(resolve).catch(reject)
         })
     })
-    /**删除页面的 runtimeId */
-    const onRemovePageRuntimeId = useMemoizedFn(() => {
-        if (!pageId) return
-        removePagesDataCacheById(YakitRoute.SimpleDetect, pageId)
-    })
+
     const getPluginGroup = useMemoizedFn((scanType, pluginGroup) => {
         return scanType !== "专项扫描" ? ["基础扫描"] : pluginGroup || []
     })
@@ -590,8 +595,9 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
+        if (!!recoverRuntimeId) return true
         return false
-    }, [executeStatus])
+    }, [executeStatus, recoverRuntimeId])
     const isShowResult = useCreation(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])

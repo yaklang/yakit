@@ -285,7 +285,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     Pagination: {
                         ...oldParams.Pagination,
                         Order: sorter.order === "asc" ? "asc" : "desc",
-                        OrderBy: sorter.order === "none" ? "updated_at" : sorter.orderBy
+                        OrderBy: sorter.order === "none" ? "created_at" : sorter.orderBy
                     },
                     Filter: {
                         ...oldParams.Filter,
