@@ -198,7 +198,7 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                 <div className={styles.rawEditor}>
                     <NewHTTPPacketEditor
                         originValue={params.RawHTTPRequest}
-                        onChange={rawEditorChange}
+                        onBufferChange={rawEditorChange}
                         noMinimap={true}
                         noLineNumber={true}
                         showLineBreaksState={true}

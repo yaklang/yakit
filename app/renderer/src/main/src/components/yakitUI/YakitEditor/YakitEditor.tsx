@@ -1,14 +1,12 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import ReactDOM from "react-dom"
 import {
-    useDebounceEffect,
     useDebounceFn,
     useGetState,
+    useInViewport,
     useKeyPress,
     useMemoizedFn,
     useThrottleFn,
-    useUpdateEffect,
-    useInViewport
+    useUpdateEffect
 } from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
@@ -19,15 +17,14 @@ import "@/utils/monacoSpec/yakEditor"
 import "@/utils/monacoSpec/html"
 
 import {
-    YakitIMonacoEditor,
-    YakitEditorProps,
-    YakitITextModel,
-    YakitEditorKeyCode,
     KeyboardToFuncProps,
-    YakitIModelDecoration,
     OperationRecord,
-    OperationRecordRes,
-    OtherMenuListProps
+    OtherMenuListProps,
+    YakitEditorKeyCode,
+    YakitEditorProps,
+    YakitIModelDecoration,
+    YakitIMonacoEditor,
+    YakitITextModel
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -48,7 +45,6 @@ import {failed, yakitInfo} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {v4 as uuidv4} from "uuid"
 import {editor as newEditor} from "monaco-editor"
-import IModelDecoration = newEditor.IModelDecoration
 import {
     CountDirectionProps,
     HTTPFuzzerClickEditorMenu,
@@ -68,7 +64,7 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
-import {HighLightText} from "@/components/HTTPFlowDetail"
+import IModelDecoration = newEditor.IModelDecoration;
 
 interface CodecTypeProps {
     key?: string
@@ -156,6 +152,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const language = useMemo(() => {
         return GetPluginLanguage(type || "http")
     }, [type])
+
+    const [changedLanguage, setChangedLanguage] = useState<string>("")
 
     useMemo(() => {
         if (editor) {
@@ -528,7 +526,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
 
     const sortMenuFun = useMemoizedFn((dataSource, sortData) => {
-        const result = sortData.reduce(
+        return sortData.reduce(
             (acc, item) => {
                 if (item.order >= 0) {
                     acc.splice(item.order, 0, ...item.menu)
@@ -539,7 +537,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             },
             [...dataSource]
         )
-        return result
     })
     /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
     useEffect(() => {
@@ -786,32 +783,34 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             deltaDecorationsRef.current = () => {
                 current = model.deltaDecorations(current, generateDecorations())
             }
-            let closed = false;
-            // editor.onDidChangeModelContent(() => {
-            //     if (closed) {
-            //         return
-            //     }
-            //     const size = model.getValueLength()
-            //     if (size > 1024 * 250) {
-            //         if (!!current) {
-            //             editor.removeDecorations(current)
-            //         }
-            //
-            //         if (size > 1024 * 1024 * 2) {
-            //             closed = true
-            //             // 2M, disable highlight
-            //             // yakitInfo("LARGE!")
-            //             // editor.updateOptions({
-            //             //     // @ts-ignore
-            //             //     suggest: false, // disable suggest
-            //             //     language: false,
-            //             // })
-            //             // editor.layout()
-            //         }
-            //         return
-            //     }
-            //     current = model.deltaDecorations(current, generateDecorations())
-            // })
+            const modelContentChanged = editor.onDidChangeModelContent(() => {
+                const size = model.getValueLength()
+                if (size > 1024 * 50) {
+                    // 50K, disable highlight
+                    if (!!current) {
+                        editor.removeDecorations(current)
+                    }
+
+                    // 2M, disable highlight
+                    if (size > 1024 * 1024 * 2) {
+                        yakitInfo("Yakit 遇到一个超大文件，已经禁用了高亮功能，以避免卡顿。")
+                        setChangedLanguage("plaintext")
+                        modelContentChanged.dispose()
+                        editor.layout()
+                        return
+                        // 2M, disable highlight
+                        // yakitInfo("LARGE!")
+                        // editor.updateOptions({
+                        //     // @ts-ignore
+                        //     suggest: false, // disable suggest
+                        //     language: false,
+                        // })
+                        // editor.layout()
+                    }
+                    return
+                }
+                current = model.deltaDecorations(current, generateDecorations())
+            })
             current = model.deltaDecorations(current, generateDecorations())
         }
         return () => {
@@ -1343,6 +1342,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             // console.log('当前光标位置：', position);
         })
     }
+
+    const onValueChanged = useThrottleFn((value) => {
+        console.info("Updating Values")
+        if (setValue) {
+            setValue(value)
+        }
+    }, {trailing: true, wait: 500});
+
     return (
         <div
             ref={ref}
@@ -1379,8 +1386,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     // height={100}
                     theme={theme || "kurior"}
                     value={isBytes ? new Buffer((valueBytes || []) as Uint8Array).toString() : value}
-                    onChange={setValue}
-                    language={language}
+                    onChange={onValueChanged.run}
+                    language={changedLanguage ? changedLanguage : language}
                     editorDidMount={(editor: YakitIMonacoEditor, monaco: any) => {
                         setEditor(editor)
                         /** 编辑器关光标，设置坐标0的初始位置 */
@@ -1407,6 +1414,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     options={{
                         readOnly: readOnly,
                         scrollBeyondLastLine: false,
+                        largeFileOptimizations: false,
                         fontWeight: "500",
                         fontSize: nowFontsize || 12,
                         showFoldingControls: "always",

@@ -1105,7 +1105,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /** 扩展属性 */
     originValue: Uint8Array
     defaultStringValue?: string
-    onChange?: (i: Buffer) => any
+    onBufferChange?: (i: Buffer) => any
+    onStringChange?: (i: string) => any
     disableFullscreen?: boolean
     defaultHeight?: number
     bordered?: boolean
@@ -1376,11 +1377,21 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }, [props.refreshTrigger])
 
     useEffect(() => {
-        props.onChange && props.onChange(new Buffer(StringToUint8Array(strValue, getEncoding())))
+        if (props.onBufferChange) {
+            props.onBufferChange(new Buffer(StringToUint8Array(strValue, getEncoding())))
+        }
+        if (props.onStringChange) {
+            props.onStringChange(strValue)
+        }
     }, [strValue])
 
     useEffect(() => {
-        props.onChange && props.onChange(new Buffer(hexValue))
+        if (props.onBufferChange) {
+            props.onBufferChange(new Buffer(hexValue))
+        }
+        if (props.onStringChange) {
+            props.onStringChange(Uint8ArrayToString(hexValue, getEncoding()))
+        }
     }, [hexValue])
 
     const empty = !!props.emptyOr && originValue.length == 0

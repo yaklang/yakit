@@ -93,7 +93,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
                             bordered={false}
                             noHeader={true}
                             originValue={StringToUint8Array(codeValue)}
-                            onChange={(e) => setCodeValue(Uint8ArrayToString(e))}
+                            onStringChange={setCodeValue}
                         />
                     </div>
                 }

@@ -172,9 +172,13 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 originValue={StringToUint8Array(request)}
                 contextMenu={editorRightMenu}
                 onEditor={setReqEditor}
-                onChange={(i) => {
-                    setNewRequest(Uint8ArrayToString(i, "utf8"))
-                    setRequest(Uint8ArrayToString(i, "utf8"))
+                // onChange={(i) => {
+                //     setNewRequest(Uint8ArrayToString(i, "utf8"))
+                //     setRequest(Uint8ArrayToString(i, "utf8"))
+                // }}
+                onStringChange={i => {
+                    setNewRequest(i)
+                    setRequest(i)
                 }}
                 editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                 extraEditorProps={{

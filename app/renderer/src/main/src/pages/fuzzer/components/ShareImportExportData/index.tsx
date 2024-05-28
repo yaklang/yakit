@@ -416,7 +416,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
                 key={yamlContent}
                 originValue={StringToUint8Array(yamlContent)}
                 noHeader={true}
-                onChange={editorContChange}
+                onBufferChange={editorContChange}
             ></NewHTTPPacketEditor>
         </div>
     )
