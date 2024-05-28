@@ -228,7 +228,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({
                             setRefreshEditor={setRefreshEditor}
                             handleChangePluginType={handleChangePluginType}
                             scriptName={scriptName}
-                        ></SecondNodeHeader>
+                        />
                         <div style={{height: "calc(100% - 34px)"}}>
                             <div style={{display: tabActiveKey === "code" ? "block" : "none", height: "100%"}}>
                                 <NewHTTPPacketEditor
@@ -236,7 +236,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({
                                     language={pluginType}
                                     noHeader={true}
                                     originValue={StringToUint8Array(code)}
-                                    onChange={(val) => setCode(Uint8ArrayToString(val))}
+                                    onStringChange={setCode}
                                 />
                             </div>
                             <div style={{display: tabActiveKey === "execResult" ? "block" : "none", height: "100%"}}>

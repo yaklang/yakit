@@ -372,7 +372,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             noHeader={true}
             isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("utf8").startsWith("HTTP/")}
             bordered={false}
-            onChange={setModifiedPacket}
+            onBufferChange={setModifiedPacket}
             noPacketModifier={true}
             readOnly={status === "hijacking"}
             refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}${Uint8ArrayToString(currentPacket)}${beautifyOpen}`}
