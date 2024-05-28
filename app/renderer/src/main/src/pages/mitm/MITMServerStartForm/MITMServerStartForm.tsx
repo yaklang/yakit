@@ -37,6 +37,7 @@ export interface MITMServerStartFormProp {
         downstreamProxy: string,
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
+        ForceDisableKeepAlive: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -98,6 +99,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         })
         getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then((e) => {
             form.setFieldsValue({enableGMTLS: !!e})
+        })
+        getRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive).then((e) => {
+            form.setFieldsValue({ForceDisableKeepAlive: !!e})
         })
     }, [props.status])
     useUpdateEffect(() => {
@@ -168,6 +172,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.downstreamProxy,
             params.enableInitialPlugin,
             params.enableHttp2,
+            params.ForceDisableKeepAlive,
             params.certs,
             {
                 enableGMTLS: params.enableGMTLS,
@@ -188,6 +193,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.enableGMTLS ? "1" : ""}`)
+        setRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive, `${params.ForceDisableKeepAlive ? "1" : ""}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
         // 记录时间戳
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
@@ -273,6 +279,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     name='enableGMTLS'
                     initialValue={true}
                     help={"适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"}
+                    valuePropName='checked'
+                >
+                    <YakitSwitch size='large' />
+                </Item>
+                <Item
+                    label={"禁用劫持长连接"}
+                    name='ForceDisableKeepAlive'
+                    initialValue={true}
+                    help={"MITM劫持禁用长连接，每个劫持连接处理一个请求响应后会自动关闭"}
                     valuePropName='checked'
                 >
                     <YakitSwitch size='large' />

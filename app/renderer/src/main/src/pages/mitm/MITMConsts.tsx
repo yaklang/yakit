@@ -6,6 +6,7 @@ export enum MITMConsts {
     MITMDefaultDownstreamProxyHistory = "YAKIT_MITMDefaultDownstreamProxyHistory",
     MITMDefaultEnableHTTP2 = "YAKIT_MITMDefaultEnableHTTP2",
     MITMDefaultEnableGMTLS = "YAKIT_MITMDefaultEnableGMTLS",
+    MITMDefaultForceDisableKeepAlive = "YAKIT_MITMDefaultForceDisableKeepAlive",
     MITMDefaultHostHistoryList = "YAKIT_MITMDefaultHostHistoryList",
     MITMDefaultClientCertificates = "YAKIT_MITMDefaultClientCertificates",
     MITMDefaultPreferGMTLS = "YAKIT_MITMDefaultPreferGMTLS",
