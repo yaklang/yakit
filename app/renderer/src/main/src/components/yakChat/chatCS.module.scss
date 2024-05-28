@@ -1493,6 +1493,46 @@
     }
 }
 
+.plugin-ai-item{
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    .ai-box{
+        height: 60%;
+        display: flex;
+        flex-direction: column;
+        .content-opt-wrapper{
+            flex: 1;
+            overflow: auto;
+        }
+    }
+    .result-box{
+        .plugin-execute-result-wrapper{
+            height: 100%;
+            padding-top: 2px;
+            min-height: auto;
+            .big-btn {
+                padding: 2px;
+                svg {
+                    width: 20px;
+                    height: 20px;
+                    color: rgba(133, 137, 158, 1);
+                    stroke-width: 0.7px;
+                }
+            }
+            .btn-style {
+                display: flex;
+                cursor: pointer;
+            }
+            .btn-style:hover {
+                svg {
+                color: var(--yakit-primary-5);
+                }
+            }
+        }
+    }
+}
+
 .plugin-ai-list {
     width: 100%;
     .welcome-plugin-ai {

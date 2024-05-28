@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Avatar, Space, Timeline} from "antd"
+import {Avatar, Space, Spin, Timeline} from "antd"
 import {PlusOutlined} from "@ant-design/icons"
 import styles from "./HTTPFuzzerEditorMenu.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
@@ -14,7 +14,8 @@ import {
     IconSolidSparklesIcon,
     IconSolidTagIcon,
     IconOutlinePencilAltIcon,
-    TrashIcon
+    TrashIcon,
+    IconSolidAIIcon
 } from "@/assets/newIcon"
 import {DragDropContext, Droppable, Draggable, DraggingStyle} from "@hello-pangea/dnd"
 import {AutoDecodeResult} from "@/utils/encodec"
@@ -23,7 +24,12 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
-import {SolidTerminalIcon} from "@/assets/icon/solid"
+import { SolidTerminalIcon } from "@/assets/icon/solid"
+import { queryYakScriptList } from "../yakitStore/network"
+import { PluginGV } from "../plugins/builtInData"
+import { YakScript } from "../invoker/schema"
+import emiter from "@/utils/eventBus/eventBus"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")
 
@@ -43,16 +49,20 @@ export interface EditorDetailInfoProps {
     lineHeight: number
     scrollTop: number
 }
-
-const directionStyle = (editorInfo, isCenter = true) => {
+// isOtherGroup是否为 编码/解码/AI工具
+// isGroupShow插入标签是否相邻其他元素
+const directionStyle = (editorInfo, isOtherGroup = false , isGroupShow = false) => {
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
-        if (direction.x === "middle" && isCenter) {
-            obj.transform = "translate(-38%, 0px)"
+        if (direction.x === "middle" && isOtherGroup) {
+            obj.transform = "translate(-104px, 0px)"
         }
-        if (direction.x === "right") {
+        if (direction.x === "right" && !isGroupShow) {
             obj.right = 0
+        }
+        if (direction.x === "right" && isGroupShow && isOtherGroup) {
+            obj.right = "-240px"
         }
         if (direction.y === "bottom") {
             obj.bottom = "32px"
@@ -88,6 +98,8 @@ export interface HTTPFuzzerClickEditorMenuProps {
     insert: (v: QueryFuzzerLabelResponseProps) => void
     addLabel: () => void
     className?: string
+    // 是否为组合展示
+    isGroupShow?: boolean
     // 是否开启关闭倒计时
     fizzSelectTimeoutId?: any
     closeTimeout?: boolean
@@ -102,7 +114,7 @@ export interface LabelDataProps {
 export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
-    const {close, editorInfo, insert, addLabel, fizzSelectTimeoutId, closeTimeout = true} = props
+    const {close, editorInfo, insert, addLabel, isGroupShow,fizzSelectTimeoutId, closeTimeout = true} = props
 
     const {direction, top = 0, left = 0, bottom = 0, right = 0, scrollTop = 0} = editorInfo || {}
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
@@ -134,11 +146,11 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     }
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 0.8秒后显示
+    // 0.5秒后显示
     useEffect(() => {
         setTimeout(() => {
             setBoxHidden(false)
-        }, 800)
+        }, 500)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
@@ -254,6 +266,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     className={styles["show-box"]}
                     onMouseEnter={() => {
                         isMainEnter.current = true
+                    }}
+                    onClick={()=>{
                         setEnterSimple(true)
                     }}
                 >
@@ -287,7 +301,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                         isComposition.current = false
                     }}
                     style={{
-                        ...directionStyle(editorInfo, false),
+                        ...directionStyle(editorInfo,false,isGroupShow),
                         maxHeight: menuHeight ? menuHeight : 350,
                         width: menuWidth ? menuWidth : 360
                     }}
@@ -474,6 +488,64 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                 </div>
             )}
         </div>
+    )
+}
+
+export interface AIPluginComponentProps{
+    toOpenAiChat?: (v: string) => void
+}
+
+export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
+    const {toOpenAiChat} = props
+    const [loading,setLoading] = useState<boolean>(false)
+    const [dataSource,setDataSource] = useState<{key:string;value:string}[]>([])
+    useEffect(()=>{
+        getData()
+    },[])
+
+    const getData = useMemoizedFn(()=>{
+        setLoading(true)
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total === 0) {
+                    return
+                }
+                
+                const data = i.filter((script)=>script.Tags.includes("AI工具")).map((script) => {
+                        return {
+                            key: script.ScriptName,
+                            value: script.ScriptName,
+                        }
+                    })
+                    
+                setDataSource(data.length>0?data:[{
+                    key:"aiplugin-Get*plug-in",
+                    value:"获取插件",
+                }]) 
+            },
+            ()=>{setLoading(false)},
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            [PluginGV.PluginCodecContextMenuExecuteSwitch]
+        )
+    })
+
+    return(
+        <YakitSpin size="small" spinning={loading} wrapperClassName={styles['ai-plugin-list-spin']}>
+        <div className={styles['ai-plugin-box']}>
+            {
+                dataSource.map((item)=>(
+                <div className={styles['ai-plugin-item']} key={item.key} onClick={() => toOpenAiChat&&toOpenAiChat(item.key)}>
+                <div className={styles["title"]}>{item.value}</div>
+            </div>
+            ))
+            }
+        </div>
+        </YakitSpin>
     )
 }
 
@@ -698,9 +770,10 @@ export interface HTTPFuzzerRangeEditorMenuProps {
     replace?: (v: string) => void
     hTTPFuzzerClickEditorMenuProps?: HTTPFuzzerClickEditorMenuProps
     fizzRangeTimeoutId?: any
+    toOpenAiChat?: (v: string) => void
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
-    const {close, editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps, fizzRangeTimeoutId} = props
+    const {close, editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps, fizzRangeTimeoutId,toOpenAiChat} = props
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     // 菜单显示宽度
     const [menuWidth, setMenuWidth] = useState<number>()
@@ -716,20 +789,20 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             setMenuHeight(height)
         }
     }, [])
-    const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
+    const [segmentedType, setSegmentedType] = useState<"decode" | "encode" | "aiplugin">()
     // 鼠标是否进入main
     const isMainEnter = useRef<boolean>(false)
     // 鼠标是否进入simple
     const isSimpleEnter = useRef<boolean>(false)
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 0.8秒后显示
+    // 0.5秒后显示
     useEffect(() => {
         fizzRangeTimeoutId.current = undefined
         fizzRangeTimeoutId.current = closeTimeoutFun()
         setTimeout(() => {
             setBoxHidden(false)
-        }, 800)
+        }, 500)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
@@ -757,6 +830,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                 <HTTPFuzzerClickEditorMenu
                     className={styles["range-click-editor-menu"]}
                     closeTimeout={false}
+                    isGroupShow={true}
                     {...hTTPFuzzerClickEditorMenuProps}
                 />
             )}
@@ -769,6 +843,8 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                             className={styles["encode-box"]}
                             onMouseEnter={() => {
                                 isMainEnter.current = true
+                            }}
+                            onClick={()=>{
                                 setSegmentedType("encode")
                             }}
                             onMouseLeave={() => {
@@ -798,12 +874,25 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                             <IconSolidSparklesIcon className={styles[""]} />
                             <div className={styles["content"]}>解码</div>
                         </div>
+                        <div
+                        className={styles["aiplugin-box"]}
+                        onClick={() => {
+                            setSegmentedType("aiplugin")
+                        }}>
+                            <IconSolidAIIcon className={styles["tag"]} />
+                            <div className={styles["content"]}>AI工具</div>
+                            {segmentedType === "aiplugin" ? (
+                                <ChevronUpIcon className={styles["up"]} />
+                            ) : (
+                                <ChevronDownIcon className={styles["down"]} />
+                            )}
+                        </div>
                     </div>
                 </div>
                 {segmentedType && (
                     <div
                         style={{
-                            ...directionStyle(editorInfo),
+                            ...directionStyle(editorInfo,true),
                             maxHeight: menuHeight ? menuHeight : 360,
                             width: menuWidth ? menuWidth : 360
                         }}
@@ -819,11 +908,9 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                         }}
                     >
                         <div className={styles["menu-content"]}>
-                            {segmentedType === "encode" ? (
-                                <EncodeComponent insert={insert} />
-                            ) : (
-                                <DecodeComponent rangeValue={rangeValue} replace={replace} />
-                            )}
+                            {segmentedType === "encode" && <EncodeComponent insert={insert} />}
+                            {segmentedType === "decode" && <DecodeComponent rangeValue={rangeValue} replace={replace} />}
+                            {segmentedType === "aiplugin" && <AIPluginComponent toOpenAiChat={toOpenAiChat}/>}
                         </div>
                     </div>
                 )}
@@ -849,13 +936,13 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
     const [menuHeight, setMenuHeight] = useState<number>()
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 0.8秒后显示
+    // 0.5秒后显示
     useEffect(() => {
         fizzRangeTimeoutId.current = undefined
         fizzRangeTimeoutId.current = closeTimeoutFun()
         setTimeout(() => {
             setBoxHidden(false)
-        }, 800)
+        }, 500)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {

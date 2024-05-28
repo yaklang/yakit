@@ -69,8 +69,9 @@ import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {HighLightText} from "@/components/HTTPFlowDetail"
+import { useStore } from "@/store/editorState"
 
-interface CodecTypeProps {
+export interface CodecTypeProps {
     key?: string
     verbose: string
     subTypes?: CodecTypeProps[]
@@ -79,7 +80,7 @@ interface CodecTypeProps {
     isYakScript?: boolean
 }
 
-interface contextMenuProps{
+export interface contextMenuProps{
     key: string
     value: string
     isAiPlugin: boolean
@@ -207,12 +208,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }, [showLineBreaks])
 
     // 自定义HTTP数据包变形处理
-    const [customHTTPMutatePlugin, setCustomHTTPMutatePlugin] = useState<CodecTypeProps[]>([])
+    const {customHTTPMutatePlugin, contextMenuPlugin,setCustomHTTPMutatePlugin,setContextMenuPlugin} = useStore()
     const searchCodecCustomHTTPMutatePlugin = useMemoizedFn(() => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                if (!total || total == 0) {
+                if (!total || total === 0) {
                     return
                 }
                 setCustomHTTPMutatePlugin(
@@ -235,13 +236,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         )
     })
 
-    // 自定义右键菜单执行
-    const [contextMenuPlugin, setContextMenuPlugin] = useState<contextMenuProps[]>([])
+    // 插件扩展
     const searchCodecCustomContextMenuPlugin = useMemoizedFn(() => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                if (!total || total == 0) {
+                if (!total || total === 0) {
                     return
                 }
                 setContextMenuPlugin(
@@ -269,11 +269,38 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [inViewport] = useInViewport(ref);
 
     useEffect(() => {
-        if(inViewport){
+        if(inViewport && menuType.length>0){
             searchCodecCustomHTTPMutatePlugin()
             searchCodecCustomContextMenuPlugin()
         }
     }, [inViewport])
+
+    const onRefreshPluginCodecMenu = useMemoizedFn(()=>{
+        if(inViewport && menuType.length>0){
+            searchCodecCustomHTTPMutatePlugin()
+            searchCodecCustomContextMenuPlugin()
+        }
+    })
+
+    useEffect(() => {
+        emiter.on("onRefPluginCodecMenu", onRefreshPluginCodecMenu)
+        return () => {
+            emiter.off("onRefPluginCodecMenu", onRefreshPluginCodecMenu)
+        }
+    }, [])
+
+    // 菜单数组去重
+    const menuReduce = useMemoizedFn((array: any[])=>{
+        let newArr:any[] = []
+        let arr:string[] = []
+        array.forEach((item)=>{
+            if(!arr.includes(item.key)){
+                arr.push(item.key)
+                newArr.push(item)
+            }
+        })
+        return newArr
+    })
 
     /**
      * 整理右键菜单的对应关系
@@ -282,23 +309,46 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useEffect(() => {
         // 往菜单组中注入codec插件
         try {
-            // 自定义HTTP数据包变形
-            ;(extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = customHTTPMutatePlugin.map(
+            const httpMenu = extraMenuLists["http"].menu[0] as EditorMenuItemProps
+            const newHttpChildren = menuReduce([...httpMenu?.children||[],...customHTTPMutatePlugin.map(
                 (item) => {
                     return {
                         key: item.key,
-                        label: item.key
+                        label: item.key,
+                        // 自定义HTTP数据包变形标记
+                        isCustom: true
                     } as EditorMenuItemProps
                 }
-            )
-            // 自定义右键菜单执行
-            ; (extraMenuLists["customcontextmenu"].menu[0] as EditorMenuItemProps).children = contextMenuPlugin.map((item) => {
+            )])
+            // 自定义HTTP数据包变形
+            ;(extraMenuLists["http"].menu[0] as EditorMenuItemProps).children = newHttpChildren
+            
+            // 插件扩展
+            const newCustomContextMenu = contextMenuPlugin.map((item) => {
                 return {
                     key: item.value,
                     label: item.key,
                     isAiPlugin: item.isAiPlugin
                 } as EditorMenuItemProps
             })
+            ; (extraMenuLists["customcontextmenu"].menu[0] as EditorMenuItemProps).children = newCustomContextMenu.length>0?newCustomContextMenu:[{
+                key:"Get*plug-in",
+                label:"获取插件",
+                isGetPlugin: true
+            } as EditorMenuItemProps]
+            // AI插件
+            const newAiPlugin = contextMenuPlugin.filter((item)=>item.isAiPlugin).map((item) => {
+                return {
+                    key: `aiplugin-${item.value}`,
+                    label: item.key,
+                    isAiPlugin: item.isAiPlugin
+                } as EditorMenuItemProps
+            })
+            ; (extraMenuLists["aiplugin"].menu[0] as EditorMenuItemProps).children = newAiPlugin.length>0?newAiPlugin:[{
+                key:"aiplugin-Get*plug-in",
+                label:"获取插件",
+                isGetPlugin: true
+            } as EditorMenuItemProps]
         } catch (e) {
             failed(`get custom plugin failed: ${e}`)
         }
@@ -333,9 +383,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
                         const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
                         let pageId:string|undefined
-                        let isAiPlugin: boolean = false
+                        let data: any = undefined
                         // 自定义右键执行携带额外参数
-                        if(keyPath.includes("customcontextmenu")){
+                        if(keyPath.includes("customcontextmenu") || keyPath.includes("aiplugin")){
                             // 获取页面唯一标识符
                             pageId = getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
                             // 获取是否为ai插件
@@ -343,22 +393,37 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 // @ts-ignore
                                allMenu[name].menu[0]?.children.map((item)=>{
                                     if(item.key === menuItemName&&item.isAiPlugin){
-                                        isAiPlugin = true
+                                        data = true
+                                    }
+                                    if(item.key === menuItemName&&item.isGetPlugin){
+                                        data = "isGetPlugin"
                                     }
                                 }) 
                             } catch (error) {}
                         }
+                        if(keyPath.includes("http")){
+                            // 获取是否为自定义HTTP数据包变形标记
+                            try {
+                                // @ts-ignore
+                               allMenu[name].menu[0]?.children.map((item)=>{
+                                    if(item.key === menuItemName&&item.isCustom){
+                                        data = true
+                                    }
+                                }) 
+                            } catch (error) {}
+                        }
+
                         
-                        allMenu[name].onRun(editor, menuItemName,pageId,isAiPlugin)
+                        allMenu[name].onRun(editor, menuItemName,pageId,data)
                         executeFunc = true
                         onRightContextMenu(menuItemName)
                         break
                     }
                 }
             }
-            // 只有一层时 屏蔽 customhttp customcontextmenu 点击
+            // 只有一层时 屏蔽 customcontextmenu 点击
             if (keyPath.length === 1) {
-                if (keyPath.includes("customhttp") || keyPath.includes("customcontextmenu")) return
+                if (keyPath.includes("customcontextmenu") || keyPath.includes("aiplugin")) return
                 const menuName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
@@ -594,10 +659,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
 
             rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
-
+            
             if (!forceRenderMenu) isInitRef.current = true
         })
-    }, [forceRenderMenu, menuType, contextMenu])
+    }, [forceRenderMenu, menuType, contextMenu,contextMenuPlugin,customHTTPMutatePlugin])
 
     /**
      * editor编辑器的额外渲染功能:
@@ -1069,6 +1134,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                           editor.trigger("keyboard", "paste", {text})
                                           closeFizzRangeWidget()
                                       }
+                                  }}
+                                  toOpenAiChat={(scriptName: string)=>{
+                                    if(scriptName === "aiplugin-Get*plug-in"){
+                                        emiter.emit("onOpenFuzzerModal",JSON.stringify({scriptName,isAiPlugin:"isGetPlugin"}))
+                                        closeFizzRangeWidget()
+                                        return
+                                    }
+                                    
+                                    if (editor) {
+                                        const selectedText =
+                                              editor.getModel()?.getValueInRange(editor.getSelection() as any) || ""
+                                        emiter.emit("onOpenFuzzerModal",JSON.stringify({text:selectedText,scriptName,isAiPlugin:true}))
+                                        closeFizzRangeWidget()
+                                    }
                                   }}
                                   rangeValue={
                                       (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""

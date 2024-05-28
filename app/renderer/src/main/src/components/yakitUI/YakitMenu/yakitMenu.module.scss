@@ -167,6 +167,19 @@
         .ant-#{$kind}menu-submenu-title:active {
             background: unset;
         }
+        :global{
+            .ai-plugin-menu-icon-default{
+                margin-right: 4px;
+                svg{
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+            .ai-plugin-menu-icon-hover{
+                display: none;
+                
+            }
+        }
     }
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-active,
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-open.ant-#{$kind}menu-submenu-active,
@@ -183,6 +196,20 @@
         }
         .ant-#{$kind}menu-submenu-title:hover {
             background-color: unset;
+        }
+        :global{
+            .ai-plugin-menu-icon-default{
+                display: none;
+            }
+            .ai-plugin-menu-icon-hover{
+                display: block;
+                margin-right: 4px;
+                margin-left: 0px;
+                svg{
+                    height: 16px;
+                    width: 16px;
+                }
+            }
         }
     }
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-selected {

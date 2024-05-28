@@ -29,4 +29,6 @@ export type PluginsEventProps = {
     onRefpluginGroupList?: string
     /**刷新单个执行页面中的插件数据 */
     onRefSinglePluginExecution?: string
+    /** 刷新Codec相关菜单 */
+    onRefPluginCodecMenu?: string
 }

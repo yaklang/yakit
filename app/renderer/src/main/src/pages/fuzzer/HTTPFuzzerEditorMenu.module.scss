@@ -205,7 +205,7 @@
 }
 .http-fuzzer-range-editor {
     position: relative;
-    width: 152px;
+    width: 240px;
     .http-fuzzer-range-editor-simple {
         flex-shrink: 0;
         background-color: #ffffff;
@@ -227,7 +227,8 @@
                 cursor: pointer;
             }
             .encode-box,
-            .decode-box {
+            .decode-box,
+            .aiplugin-box {
                 padding: 4px 8px;
                 display: flex;
                 flex-direction: row;
@@ -306,6 +307,32 @@
                     background: #f0f1f3;
                 }
             }
+        }
+        .ai-plugin-box{
+            min-height: 20px;
+            .ai-plugin-item{
+                cursor: pointer;
+                display: flex;
+                padding: 6px 8px 6px 8px;
+                align-items: center;
+                height: 16px;
+                font-size: 12px;
+                box-sizing: content-box;
+                .title {
+                    color: #31343f;
+                    font-weight: 500;
+                    line-height: 16px;
+                    flex: 1;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            &:hover {
+                border-radius: 4px;
+                background: #f0f1f3;
+            }
+            }
+            
         }
     }
 }

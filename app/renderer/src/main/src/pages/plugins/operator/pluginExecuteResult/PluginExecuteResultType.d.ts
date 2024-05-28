@@ -8,6 +8,8 @@ export interface PluginExecuteResultProps {
     loading: boolean
     defaultActiveKey?: string
     pluginExecuteResultWrapper?: string
+    PluginTabsRightNode?: React.ReactNode
+    onlyShowTabs?: string[]
 }
 
 export interface VulnerabilitiesRisksTableProps {

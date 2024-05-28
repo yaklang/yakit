@@ -299,7 +299,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
              {params.Type === "codec" && (
                 <>
                     <SwitchItem
-                        label='用于自定义HTTP数据包变形'
+                        label='用于HTTP数据包变形'
                         value={  
                             params.Tags && params.Tags.includes("allow-custom-http-packet-mutate") ? true : false
                         }

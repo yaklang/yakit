@@ -14,6 +14,7 @@ import { YakitSpin } from "../YakitSpin/YakitSpin"
 import { showYakitModal } from "../YakitModal/YakitModalConfirm"
 import { YakitRoute } from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/newIcon"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -200,7 +201,13 @@ export const extraMenuLists: OtherMenuListProps = {
                 children: [...httpSubmenu] as any as EditorMenuItemType[]
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string) => {
+        onRun: (editor: YakitIMonacoEditor, key: string,pageId,isCustom) => {
+            // 自定义HTTP数据包变形标记
+            if(isCustom){
+                customMutateRequest(key, editor.getModel()?.getValue(), editor)
+                return
+            }
+
             const params = httpSubmenu.filter((item) => item.key === key)[0]?.params || ({} as MutateHTTPRequestParams)
 
             try {
@@ -212,34 +219,17 @@ export const extraMenuLists: OtherMenuListProps = {
             }
         }
     },
-    customhttp: {
-        menu: [
-            {
-                key: "customhttp",
-                label: "自定义HTTP数据包变形",
-                //  generate from YakitEditor.tsx
-                children: [],
-            }
-        ],
-        onRun: (editor: YakitIMonacoEditor, key: string) => {
-            try {
-                customMutateRequest(key, editor.getModel()?.getValue(), editor)
-            } catch (e) {
-                failed(`custom mutate request failed: ${e}`)
-            }
-        }
-    },
     customcontextmenu: {
         menu: [
             {
                 key: "customcontextmenu",
-                label: "自定义右键菜单执行",
-                //  generate from YakitEditor.tsx
+                label: "插件扩展",
                 children: [],
-            }
+            },
         ],
-        onRun: (editor: YakitIMonacoEditor, scriptName: string,pageId,isAiPlugin:boolean) => {
+        onRun: (editor: YakitIMonacoEditor, scriptName: string,pageId,isAiPlugin:any) => {
             try {
+                // isAiPlugin为isGetPlugin 需要获取codec插件
                 const model = editor.getModel();
                 const selection = editor.getSelection()
                 let text = model?.getValue()
@@ -249,12 +239,46 @@ export const extraMenuLists: OtherMenuListProps = {
                         text = selectText
                     }
                 }
-                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,pageId,isAiPlugin}))
+                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,isAiPlugin}))
             } catch (e) {
                 failed(`custom context menu execute failed: ${e}`)
             }
         }
     },
+    aiplugin: {
+        menu: [
+            {
+                key: "aiplugin",
+                label: <>
+                    <IconSolidAIIcon className={"ai-plugin-menu-icon-default"}/>
+                    <IconSolidAIWhiteIcon className={"ai-plugin-menu-icon-hover"}/>
+                    AI插件
+                </>,
+                children: [],
+            }
+        ],
+        onRun: (editor: YakitIMonacoEditor, key: string,pageId,isAiPlugin:any) => {
+            try {
+                // isAiPlugin为isGetPlugin 需要获取codec插件
+                let scriptName = key
+                if(scriptName.startsWith("aiplugin-")){
+                    scriptName = scriptName.slice("aiplugin-".length)
+                }
+                const model = editor.getModel();
+                const selection = editor.getSelection()
+                let text = model?.getValue()
+                if (selection) {
+                    let selectText = model?.getValueInRange(selection)||""
+                    if (selectText.length > 0) {
+                        text = selectText
+                    }
+                }
+                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,isAiPlugin}))
+            } catch (e) {
+                failed(`custom context menu execute failed: ${e}`)
+            }
+        }
+    }
 }
 
 

@@ -112,7 +112,14 @@ import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import emiter from "@/utils/eventBus/eventBus"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 const {ipcRenderer} = window.require("electron")
+
+interface CodecParamsProps {
+    text?: string
+    scriptName: string
+    isAiPlugin: boolean
+}
 
 /** 将 new Date 转换为日期 */
 const formatDate = (i: number) => {
@@ -264,8 +271,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const resTimeRef = useRef<any>(null)
 
     const [chatcsType, setChatcsType] = useState<"ChatCS" | "PluginAI">(userInfo.isLogin ? "ChatCS" : "PluginAI")
-    const [pluginAIParams, setPluginAIParams] = useState<{text?: string; scriptName: string}>()
+    const [pluginAIParams, setPluginAIParams] = useState<CodecParamsProps>()
     const [pluginAIList, setPluginAIList] = useState<PluginAiItem[]>([])
+    // 仅展示当前执行项
+    const [showOnly, setShowOnly] = useState<boolean>(false)
+    // 是否为ai展示
+    const [isShowAI, setShowAI] = useState<boolean>(true)
 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [maxNumber, setMaxNumber] = useState<number>(5)
@@ -346,7 +357,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const onFuzzerRunChatcsAI = useMemoizedFn((value) => {
         try {
-            const val: {text?: string; scriptName: string} = JSON.parse(value)
+            const val: CodecParamsProps = JSON.parse(value)
             setVisible(true)
             setPluginAIParams(val)
             setChatcsType("PluginAI")
@@ -1115,7 +1126,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 },
                                 {
                                     value: "PluginAI",
-                                    label: "AI插件"
+                                    label: "插件输出"
                                 }
                             ]}
                         />
@@ -1145,9 +1156,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     <div className={styles["divider-style"]}></div>
                                 </>
                             )}
-                            {chatcsType === "PluginAI" && (
+                            {chatcsType === "PluginAI" && pluginAIList.length > 0 && !showOnly && (
                                 <>
-                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"清空AI插件"}>
+                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"清空插件输出"}>
                                         <div
                                             className={classNames(styles["small-btn"], styles["btn-style"])}
                                             onClick={() => {
@@ -1155,6 +1166,21 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                             }}
                                         >
                                             <TrashIcon />
+                                        </div>
+                                    </Tooltip>
+                                    <div className={styles["divider-style"]}></div>
+                                </>
+                            )}
+                            {chatcsType === "PluginAI" && showOnly && (
+                                <>
+                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"历史"}>
+                                        <div
+                                            className={classNames(styles["big-btn"], styles["btn-style"])}
+                                            onClick={() => {
+                                                setShowOnly(false)
+                                            }}
+                                        >
+                                            <ClockIcon />
                                         </div>
                                     </Tooltip>
                                     <div className={styles["divider-style"]}></div>
@@ -1444,6 +1470,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         setParams={setPluginAIParams}
                         pluginAIList={pluginAIList}
                         setPluginAIList={setPluginAIList}
+                        showOnly={showOnly}
+                        setShowOnly={setShowOnly}
+                        isShowAI={isShowAI}
+                        setShowAI={setShowAI}
                     />
 
                     {isShowPrompt && chatcsType === "ChatCS" && (
@@ -1496,11 +1526,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 interface ChatUserContentProps {
     time: string
     info: ChatMeInfoProps
-    onDel: () => any
+    onDel?: () => any
     classNameContent?: string
+    scriptName?: string
 }
 const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
-    const {time, info, onDel, classNameContent} = props
+    const {time, info, onDel, classNameContent, scriptName} = props
 
     const {userInfo} = useStore()
     const showImg = useMemo(() => {
@@ -1522,13 +1553,17 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
                         </div>
                     )}
 
-                    {time}
+                    <span>{time}</span>
+
+                    {scriptName && <span className={styles[""]}>{scriptName}</span>}
                 </div>
-                <div className={styles["header-right"]}>
-                    <div className={styles["right-btn"]} onClick={onDel}>
-                        <TrashIcon />
+                {onDel && (
+                    <div className={styles["header-right"]}>
+                        <div className={styles["right-btn"]} onClick={onDel}>
+                            <TrashIcon />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
             <div className={classNames(styles["opt-content"], classNameContent || "")}>
                 <div className={styles["user-content-style"]}>{info.content}</div>
@@ -2858,6 +2893,7 @@ export const YakChatLoading: React.FC<YakChatLoadingProps> = (props) => {
 }
 
 interface PluginAiItem {
+    scriptName?: string
     token: string
     isMe: boolean
     time: string
@@ -2866,31 +2902,52 @@ interface PluginAiItem {
 
 interface PluginAIComponentProps {
     visible: boolean
-    params?: {text?: string; scriptName: string}
-    setParams: (v?: {text?: string; scriptName: string}) => void
+    params?: CodecParamsProps
+    setParams: (v?: CodecParamsProps) => void
     pluginAIList: PluginAiItem[]
     setPluginAIList: (v: any) => void
+    isShowAI: boolean
+    setShowAI: (v: boolean) => void
+    showOnly: boolean
+    setShowOnly: (v: boolean) => void
 }
 
 export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
-    const {visible, params, setParams, pluginAIList, setPluginAIList} = props
+    const {visible, params, setParams, pluginAIList, setPluginAIList, showOnly, setShowOnly, isShowAI, setShowAI} =
+        props
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingToken, setLoadingToken] = useState<string>("")
     const [resTime, setResTime] = useState<string>("")
-    const tokenRef = useRef<string>(randomString(40))
+    const [runtimeId, setRuntimeId] = useState<string>("")
 
+    const [pluginAIItem, setPluginAIItem] = useState<PluginAiItem[]>([])
+
+    const tokenRef = useRef<string>(randomString(40))
     const pluginAIListRef = useRef<HTMLDivElement>(null)
 
     // 添加项
     const AddAIList = useMemoizedFn((obj: PluginAiItem) => {
+        setPluginAIItem((lastList) => [...lastList, obj])
         setPluginAIList((lastList) => [...lastList, obj])
         scrollToPluginAIBottom()
     })
 
     // 更新最后一项
-    const setAIList = useMemoizedFn((content: string) => {
+    const setLastAIList = useMemoizedFn((content: string) => {
         try {
             const newPluginAIList: PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
+            // 更新单独展示项
+            setPluginAIItem((lastItem) =>
+                lastItem.map((item, index) => {
+                    if (lastItem.length === index + 1) {
+                        item.info.content = content
+                        item.time = formatDate(+new Date())
+                        return item
+                    }
+                    return item
+                })
+            )
+            // 更新历史展示
             setPluginAIList(
                 newPluginAIList.map((item, index) => {
                     if (newPluginAIList.length === index + 1) {
@@ -2929,13 +2986,20 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
         onEnd: () => {
             onEndReply()
         },
+        onError: (e) => {
+            if (typeof e === "string") {
+                setLastAIList(e)
+            }
+        },
         setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            setRuntimeId(rId)
         }
     })
 
     useThrottleEffect(
         () => {
+            if (!isShowAI) return
             let str = ""
             ;(streamInfo.logState || []).reverse().forEach((item) => {
                 try {
@@ -2943,16 +3007,16 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 } catch (error) {}
             })
             if (str.length > 0) {
-                setAIList(str)
+                setLastAIList(str)
             }
         },
-        [streamInfo.logState],
+        [streamInfo.logState, isShowAI],
         {wait: 400}
     )
 
     // 执行
-    const onStartExecute = useMemoizedFn((data: {text?: string; scriptName: string}) => {
-        const {text, scriptName} = data
+    const onStartExecute = useMemoizedFn((data: CodecParamsProps) => {
+        const {text, scriptName, isAiPlugin} = data
         const executeParams = {
             Input: text || "",
             PluginName: scriptName,
@@ -2973,15 +3037,26 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
     useEffect(() => {
         if (params) {
-            const {text, scriptName} = params
-            AddAIList({info: {content: text}, isMe: true, time: formatDate(+new Date()), token: randomString(10)})
-            scrollToPluginAIBottom()
-            const token = randomString(10)
-            setLoading(true)
-            setLoadingToken(token)
-            let obj: PluginAiItem = {info: {content: ""}, isMe: false, time: formatDate(+new Date()), token}
-            AddAIList(obj)
-            scrollToPluginAIBottom()
+            const {text, scriptName, isAiPlugin} = params
+            setPluginAIItem([])
+            setShowOnly(true)
+            setShowAI(!!isAiPlugin)
+            if (isAiPlugin) {
+                AddAIList({
+                    scriptName,
+                    info: {content: text},
+                    isMe: true,
+                    time: formatDate(+new Date()),
+                    token: randomString(10)
+                })
+                scrollToPluginAIBottom()
+                const token = randomString(10)
+                setLoading(true)
+                setLoadingToken(token)
+                let obj: PluginAiItem = {info: {content: ""}, isMe: false, time: formatDate(+new Date()), token}
+                AddAIList(obj)
+                scrollToPluginAIBottom()
+            }
 
             onStartExecute(params)
         }
@@ -3011,48 +3086,113 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     return (
         <>
             {visible && (
-                <div className={styles["plugin-ai-list"]}>
-                    {pluginAIList.length > 0 ? (
-                        <div style={{overflow: "auto", height: "100%"}} ref={pluginAIListRef}>
-                            {pluginAIList.map((item) => {
-                                const {token, isMe, time, info} = item
-                                if (isMe) {
-                                    return (
-                                        <ChatUserContent
-                                            key={token}
-                                            classNameContent={styles["opt-content-auto"]}
-                                            time={time}
-                                            info={info}
-                                            onDel={() => onDelContent(item)}
-                                        />
-                                    )
-                                } else {
-                                    return (
-                                        <PluginAIContent
-                                            key={token}
-                                            token={token}
-                                            loadingToken={loadingToken}
-                                            loading={loading}
-                                            resTime={resTime}
-                                            time={time}
-                                            info={info}
-                                            onStop={onStop}
-                                            onDel={() => onDelContent(item)}
-                                        />
-                                    )
-                                }
-                            })}
-                        </div>
-                    ) : (
-                        <div className={styles["welcome-plugin-ai"]}>
-                            <div className={styles["header-title"]}>
-                                <div className={classNames(styles["title-style"])}>
-                                    可在WebFuzzer中调用AI插件进行体验噢~👋
+                <>
+                    {showOnly ? (
+                        <div className={styles["plugin-ai-item"]}>
+                            {isShowAI && (
+                                <div className={styles["ai-box"]}>
+                                    {pluginAIItem.map((item) => {
+                                        const {token, isMe, time, info, scriptName} = item
+                                        if (isMe) {
+                                            return (
+                                                <ChatUserContent
+                                                    key={token}
+                                                    classNameContent={styles["opt-content-auto"]}
+                                                    scriptName={scriptName}
+                                                    time={time}
+                                                    info={info}
+                                                />
+                                            )
+                                        } else {
+                                            return (
+                                                <PluginAIContent
+                                                    key={token}
+                                                    token={token}
+                                                    loadingToken={loadingToken}
+                                                    loading={loading}
+                                                    resTime={resTime}
+                                                    time={time}
+                                                    info={info}
+                                                    onStop={onStop}
+                                                />
+                                            )
+                                        }
+                                    })}
                                 </div>
+                            )}
+                            <div className={styles["result-box"]} style={isShowAI ? {height: "40%"} : {height: "100%"}}>
+                                <PluginExecuteResult
+                                    streamInfo={streamInfo}
+                                    runtimeId={runtimeId}
+                                    loading={loading}
+                                    defaultActiveKey={"Codec结果"}
+                                    pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
+                                    onlyShowTabs={["Codec结果", "测试表", "Console"]}
+                                    // PluginTabsRightNode={
+                                    //     !isShowAI ? (
+                                    //         <div
+                                    //             className={classNames(
+                                    //                 styles["big-btn"],
+                                    //                 styles["btn-style"],
+                                    //                 styles["close-icon"]
+                                    //             )}
+                                    //             onClick={() => setShowOnly(false)}
+                                    //         >
+                                    //             <RemoveIcon />
+                                    //         </div>
+                                    //     ) : (
+                                    //         <></>
+                                    //     )
+                                    // }
+                                />
                             </div>
                         </div>
+                    ) : (
+                        <div className={styles["plugin-ai-list"]}>
+                            {pluginAIList.length > 0 ? (
+                                <div style={{overflow: "auto", height: "100%"}} ref={pluginAIListRef}>
+                                    {pluginAIList.map((item) => {
+                                        const {token, isMe, time, info, scriptName} = item
+                                        if (isMe) {
+                                            return (
+                                                <ChatUserContent
+                                                    key={token}
+                                                    classNameContent={styles["opt-content-auto"]}
+                                                    scriptName={scriptName}
+                                                    time={time}
+                                                    info={info}
+                                                    onDel={() => onDelContent(item)}
+                                                />
+                                            )
+                                        } else {
+                                            return (
+                                                <PluginAIContent
+                                                    key={token}
+                                                    token={token}
+                                                    loadingToken={loadingToken}
+                                                    loading={loading}
+                                                    resTime={resTime}
+                                                    time={time}
+                                                    info={info}
+                                                    onStop={onStop}
+                                                    onDel={() => onDelContent(item)}
+                                                />
+                                            )
+                                        }
+                                    })}
+                                </div>
+                            ) : (
+                                <div className={styles["welcome-plugin-ai"]}>
+                                    <div className={styles["header-title"]}>
+                                        <div className={classNames(styles["title-style"])}>
+                                            可在WebFuzzer中调用AI插件进行体验噢~👋
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
-                </div>
+                </>
             )}
         </>
     )
@@ -3069,7 +3209,7 @@ interface PluginAIContentProps {
     /** 查询的动态运行时间 */
     resTime: string
     onStop: () => void
-    onDel: () => void
+    onDel?: () => void
 }
 
 export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
@@ -3099,16 +3239,20 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                         </YakitButton>
                     ) : (
                         <>
-                            <div className={styles["right-btn"]}>
-                                <CopyComponents
-                                    className={classNames(styles["copy-icon-style"])}
-                                    copyText={copyContent}
-                                    iconColor={"#85899e"}
-                                />
-                            </div>
-                            <div className={styles["right-btn"]} onClick={onDel}>
-                                <TrashIcon />
-                            </div>
+                            {info.content.length > 0 && (
+                                <div className={styles["right-btn"]}>
+                                    <CopyComponents
+                                        className={classNames(styles["copy-icon-style"])}
+                                        copyText={copyContent}
+                                        iconColor={"#85899e"}
+                                    />
+                                </div>
+                            )}
+                            {onDel && (
+                                <div className={styles["right-btn"]} onClick={onDel}>
+                                    <TrashIcon />
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
