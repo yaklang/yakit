@@ -115,7 +115,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                     lineHeight: '1.5', // 设置行高
                     overflowX: 'auto' // 水平滚动条
                 }}>{props.data}</pre>
-1            </div>
+            </div>
         case "markdown":
             return <MDEditor.Markdown source={props.data}/>
         case "text":
