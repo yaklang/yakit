@@ -42,13 +42,12 @@ import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetai
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
-import {convertStartBruteParams, startBruteParamsConvertToFormValue} from "../securityTool/newBrute/utils"
+import {convertStartBruteParams} from "../securityTool/newBrute/utils"
 import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
-import {v4 as uuidv4} from "uuid"
 import {defaultSearch} from "../plugins/builtInData"
-import {defaultBruteExecuteExtraFormValue, defaultStartBruteParams} from "@/defaultConstants/NewBrute"
+import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
 import {
     apiCancelRecoverSimpleDetectTask,
     apiGetSimpleDetectRecordRequestById,
@@ -155,14 +154,18 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         ]
     }, [])
     const onEnd = useMemoizedFn(() => {
+        // 在此之前需要先保存任务
         setTimeout(() => {
-            const isStop = streamErrorRef.current === "Cancelled on client" // Cancelled on client 主动停止报错
+            const isStop = streamErrorRef.current && streamErrorRef.current === "Cancelled on client" // Cancelled on client 主动停止报错
             if (!isStop) {
                 setRecoverRuntimeId("")
+            } else {
+                setExecuteStatus("paused")
             }
-            if (executeStatus !== "error" && !isStop) {
+            if (executeStatus === "process") {
                 setExecuteStatus("finished")
             }
+            streamErrorRef.current = ""
         }, 300)
     })
     const onError = useMemoizedFn((error) => {
@@ -171,6 +174,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             setExecuteStatus("error")
         } else {
             setExecuteStatus("default")
+            setStopLoading(false)
+            onSaveSimpleDetect()
         }
     })
     const [simpleDetectStreamInfo, simpleDetectStreamEvent] = useHoldGRPCStream({
@@ -179,8 +184,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         apiKey: "SimpleDetect",
         token: tokenRef.current,
         onError: (error) => {
+            // 报错最后也会触发onEnd
             onError(error)
-            simpleDetectStreamEvent.stop()
         },
         onEnd: () => {
             console.log("simpleDetectStreamEvent-end")
@@ -201,16 +206,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         apiKey: "RecoverSimpleDetectTask",
         token: recoverTokenRef.current,
         onError: (error) => {
+            // 报错最后也会触发onEnd
             onError(error)
-            recoverSimpleDetectStreamEvent.stop()
         },
         onEnd: () => {
-            console.log("recoverStreamInfo-end")
             recoverSimpleDetectStreamEvent.stop()
+            onSaveSimpleDetect()
             onEnd()
         },
         setRuntimeId: (rId) => {
-            console.log("rId", rId)
             setRuntimeId(rId)
         }
     })
@@ -365,10 +369,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 
     /**恢复任务 */
     const onRecoverSimpleDetectTask = useMemoizedFn((runtimeId: string) => {
+        recoverSimpleDetectStreamEvent.reset()
         apiRecoverSimpleDetectTask({RuntimeId: runtimeId}, recoverTokenRef.current).then(() => {
             setExecuteStatus("process")
             setIsExpand(false)
             setIsRecoverTask(true)
+            setRecoverRuntimeId(runtimeId)
             recoverSimpleDetectStreamEvent.start()
         })
     })
@@ -432,7 +438,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
             SkippedHostAliveScan: !!value.SkippedHostAliveScan,
-            TaskName: `${taskName}-${uuidv4()}`
+            TaskName: taskName
         }
         switch (value.scanDeep) {
             // 快速
@@ -478,28 +484,28 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
         setStopLoading(true)
-        onSaveSimpleDetect()
-            .then(() => {
-                if (!!recoverRuntimeId) {
-                    /**继续任务情况下,停止任务后需要清除当前页面中的runtimeId */
-                    apiCancelRecoverSimpleDetectTask(recoverTokenRef.current)
-                } else {
-                    apiCancelSimpleDetect(tokenRef.current).then(() => {
-                        setRecoverRuntimeId(runtimeId)
-                    })
-                }
+        if (!!recoverRuntimeId) {
+            /**继续任务情况下,停止任务后需要清除当前页面中的runtimeId */
+            apiCancelRecoverSimpleDetectTask(recoverTokenRef.current).then(() => {
+                setExecuteStatus("paused")
             })
-            .finally(() =>
-                setTimeout(() => {
-                    setStopLoading(false)
-                }, 200)
-            )
+        } else {
+            apiCancelSimpleDetect(tokenRef.current).then(() => {
+                setRecoverRuntimeId(runtimeId)
+                setExecuteStatus("paused")
+            })
+        }
     })
-    /**保存任务 */
+    /**
+     * 保存任务
+     * 1.关闭页面
+     * 2.继续任务:停止/扫描完成,onError保存任务,onEnd更新最新数据
+     * 3.新任务/继续任务:报错(onError,点击停止也会报错)
+     */
     const onSaveSimpleDetect = useMemoizedFn(() => {
         return new Promise((resolve, reject) => {
-            const rId = !!recoverRuntimeId ? recoverRuntimeId : runtimeId
-            if (!startBruteParamsRef.current || !portScanRequestParamsRef.current || !rId) {
+            const saveTaskId = !!recoverRuntimeId ? recoverRuntimeId : runtimeId
+            if (!startBruteParamsRef.current || !portScanRequestParamsRef.current || !saveTaskId) {
                 reject("参数不全")
                 return
             }
@@ -524,7 +530,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                 },
                 StartBruteParams: startBruteParamsRef.current,
                 PortScanRequest: portScanRequestParamsRef.current,
-                RuntimeId: rId
+                RuntimeId: saveTaskId
             }
             apiSaveCancelSimpleDetect(params).then(resolve).catch(reject)
         })
@@ -595,7 +601,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
-        if (!!recoverRuntimeId) return true
         return false
     }, [executeStatus, recoverRuntimeId])
     const isShowResult = useCreation(() => {
@@ -693,18 +698,18 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                         {isExecuting
                             ? !isExpand && (
                                   <>
-                                      <YakitButton danger loading={stopLoading} onClick={onStopExecute}>
-                                          停止
-                                      </YakitButton>
+                                      {executeStatus === "paused" && !stopLoading ? (
+                                          <YakitButton onClick={onContinue}>继续</YakitButton>
+                                      ) : (
+                                          <YakitButton danger loading={stopLoading} onClick={onStopExecute}>
+                                              停止
+                                          </YakitButton>
+                                      )}
                                   </>
                               )
                             : !isExpand && (
                                   <>
-                                      {!!recoverRuntimeId ? (
-                                          <YakitButton onClick={onContinue}>继续</YakitButton>
-                                      ) : (
-                                          <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
-                                      )}
+                                      <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
                                   </>
                               )}
                     </div>
@@ -735,24 +740,31 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                             <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                                 <div className={styles["simple-detect-form-operate"]}>
                                     {isExecuting ? (
-                                        <YakitButton danger onClick={onStopExecute} size='large' loading={stopLoading}>
-                                            停止
-                                        </YakitButton>
-                                    ) : (
                                         <>
-                                            {!!recoverRuntimeId ? (
+                                            {executeStatus === "paused" && !stopLoading ? (
                                                 <YakitButton size='large' onClick={onContinue}>
                                                     继续
                                                 </YakitButton>
                                             ) : (
                                                 <YakitButton
-                                                    className={styles["simple-detect-form-operate-start"]}
-                                                    htmlType='submit'
+                                                    danger
+                                                    onClick={onStopExecute}
                                                     size='large'
+                                                    loading={stopLoading}
                                                 >
-                                                    开始执行
+                                                    停止
                                                 </YakitButton>
                                             )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <YakitButton
+                                                className={styles["simple-detect-form-operate-start"]}
+                                                htmlType='submit'
+                                                size='large'
+                                            >
+                                                开始执行
+                                            </YakitButton>
                                         </>
                                     )}
                                     <YakitButton
