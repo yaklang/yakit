@@ -1084,75 +1084,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
-    const [yakitWindowVisible, setYakitWindowVisible] = useState<boolean>(false)
-    const [menuExecutorParams, setMenuExecutorParams] = useState<{text?: string; scriptName: string}>()
-    
-    // const openAIByChatCS = useMemoizedFn((obj:{text?: string; scriptName: string})=>{
-    //     emiter.emit("onRunChatcsAIByFuzzer",JSON.stringify(obj))
-    // })
-    
-    // // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
-    // const onFuzzerModal = useMemoizedFn((value) => {
-    //     const val: {text?: string; scriptName: string; pageId: string,isAiPlugin:boolean} = JSON.parse(value)
-    //     apiGetGlobalNetworkConfig().then((obj:GlobalNetworkConfig)=>{
-    //     if (props.id === val.pageId) {
-    //         const configType = obj.AppConfigs.map((item)=>item.Type).filter((item)=>["openai","chatglm","moonshot"].includes(item))
-    //         // 如若已配置 则打开执行框
-    //         if(configType.length>0 && val.isAiPlugin){
-    //             openAIByChatCS({text: val.text, scriptName: val.scriptName})
-    //         }
-    //         else if(val.isAiPlugin){
-    //             let m = showYakitModal({
-    //                 title: "添加第三方应用",
-    //                 width: 600,
-    //                 footer: null,
-    //                 closable: true,
-    //                 maskClosable: false,
-    //                 content: (
-    //                     <div style={{ margin: 24 }}>
-    //                         <ThirdPartyApplicationConfigForm
-    //                             onAdd={(e) => {
-    //                                 let existed = false
-    //                                 const existedResult = (obj.AppConfigs || []).map(
-    //                                     (i) => {
-    //                                         if (i.Type === e.Type) {
-    //                                             existed = true
-    //                                             return { ...i, ...e }
-    //                                         }
-    //                                         return { ...i }
-    //                                     }
-    //                                 )
-    //                                 if (!existed) {
-    //                                     existedResult.push(e)
-    //                                 }
-    //                                 const params = {...obj, AppConfigs: existedResult}
-    //                                 apiSetGlobalNetworkConfig(params).then(() => {
-    //                                     openAIByChatCS({text: val.text, scriptName: val.scriptName})
-    //                                     m.destroy()
-    //                                 })
-    //                             }}
-    //                             onCancel={() => m.destroy()}
-    //                         />
-    //                     </div>
-    //                 )
-    //             })
-    //         }
-    //         else{
-    //             setYakitWindowVisible(true)
-    //             setMenuExecutorParams({text: val.text, scriptName: val.scriptName})
-    //         }
-    //     }
-    //     })
-    // })
-
-    // useEffect(() => {
-    //     // YakitWindow
-    //     emiter.on("onOpenFuzzerModal", onFuzzerModal)
-    //     return () => {
-    //         emiter.off("onOpenFuzzerModal", onFuzzerModal)
-    //     }
-    // }, [])
-
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
         if (inViewport) setAll(extractedMap)
     })
@@ -2010,30 +1941,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         }
                     />
                 </div>
-                {fuzzerRef.current && (
-                    <YakitWindow
-                        getContainer={fuzzerRef.current}
-                        title='执行结果'
-                        visible={yakitWindowVisible}
-                        contentStyle={{padding: 0}}
-                        width={600}
-                        footerStyle={{display: "none"}}
-                        defaultDockSide={["shrink", "left", "right", "bottom"]}
-                        firstDockSide='shrink'
-                        onCancel={() => {
-                            setYakitWindowVisible(false)
-                            setMenuExecutorParams(undefined)
-                        }}
-                        onOk={() => {}}
-                    >
-                        {menuExecutorParams && (
-                            <ContextMenuExecutor
-                                scriptName={menuExecutorParams.scriptName}
-                                text={menuExecutorParams.text}
-                            />
-                        )}
-                    </YakitWindow>
-                )}
             </div>
             <React.Suspense fallback={<>loading...</>}>
                 <ResponseAllDataCard
