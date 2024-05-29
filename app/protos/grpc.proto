@@ -260,6 +260,10 @@ service Yak {
   rpc Codec(CodecRequest) returns (CodecResponse);
   rpc NewCodec(CodecRequestFlow) returns (CodecResponse);
   rpc GetAllCodecMethods(Empty) returns(CodecMethods);
+
+  rpc SaveCodecFlow(CustomizeCodecFlow) returns (Empty);
+  rpc DeleteCodecFlow(DeleteCodecFlowRequest) returns (Empty);
+  rpc GetAllCodecFlow(Empty) returns (GetCodecFlowResponse);
   rpc PacketPrettifyHelper(PacketPrettifyHelperRequest) returns (PacketPrettifyHelperResponse);
 
   // Payload 相关接口
@@ -311,7 +315,7 @@ service Yak {
   rpc YaklangLanguageFind(YaklangLanguageSuggestionRequest) returns (YaklangLanguageFindResponse);
   // 从代码中提取yaklang数据
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
-  // 进行数据迁移使用 
+  // 进行数据迁移使用
   rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
@@ -1941,8 +1945,8 @@ message YaklangLanguageSuggestionResponse {
 }
 
 message YaklangLanguageFindResponse {
-    string URI = 1;
-    repeated Range Ranges = 2;
+  string URI = 1;
+  repeated Range Ranges = 2;
 }
 
 message YaklangInspectInformationResponse {
@@ -1954,9 +1958,9 @@ message YaklangInspectInformationResponse {
 }
 
 message YakUIInfo {
-  string Typ = 1;
-  repeated string Effected = 2;
-  string WhenExpression = 3;
+    string Typ = 1;
+    repeated string Effected = 2;
+    string WhenExpression = 3;
 }
 
 message YakRiskInfo {
@@ -3864,6 +3868,20 @@ message CodecRequestFlow{
   bytes InputBytes = 6;
 }
 
+message CustomizeCodecFlow{
+  string FlowName = 1;
+  repeated CodecWork WorkFlow = 2;
+}
+
+message DeleteCodecFlowRequest {
+  bool DeleteAll = 1;
+  string FlowName = 2;
+}
+
+message GetCodecFlowResponse {
+  repeated CustomizeCodecFlow Flows = 1;
+}
+
 message CodecResponse {
   string Result = 1;
   bytes  RawResult = 2;
@@ -4277,7 +4295,7 @@ message FuzzerResponse {
   string TooLargeResponseHeaderFile = 50;
   string TooLargeResponseBodyFile = 51;
   bool DisableRenderStyles = 52;
-  
+
   string RuntimeID = 53;
 }
 
