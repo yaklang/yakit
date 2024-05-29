@@ -157,10 +157,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         // 在此之前需要先保存任务
         setTimeout(() => {
             const isStop = streamErrorRef.current && streamErrorRef.current === "Cancelled on client" // Cancelled on client 主动停止报错
-            if (!isStop) {
-                setRecoverRuntimeId("")
-            } else {
+            if (isStop) {
                 setExecuteStatus("paused")
+            } else {
+                setRecoverRuntimeId("")
             }
             if (executeStatus === "process") {
                 setExecuteStatus("finished")
@@ -170,7 +170,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     })
     const onError = useMemoizedFn((error) => {
         streamErrorRef.current = error
-        if (streamErrorRef.current === "Cancelled on client") {
+        const isStop = streamErrorRef.current && streamErrorRef.current === "Cancelled on client"
+        if (isStop) {
             setExecuteStatus("default")
             setStopLoading(false)
             onSaveSimpleDetect()
@@ -188,7 +189,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             onError(error)
         },
         onEnd: () => {
-            console.log("simpleDetectStreamEvent-end")
             simpleDetectStreamEvent.stop()
             onEnd()
         },
@@ -338,7 +338,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                 const {simpleDetectValue = null} = value
                 // simpleDetectValue 存在是新版，可以回显所有的前端页面上显示的数据
                 if (!!simpleDetectValue) {
-                    console.log("simpleDetectValue", simpleDetectValue)
                     const formValue: SimpleDetectForm = {
                         Targets: PortScanRequest.Targets,
                         ...simpleDetectValue.formValue
@@ -471,7 +470,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         recoverSimpleDetectStreamEvent.reset()
         portScanRequestParamsRef.current = {...portScanRequestParams}
         startBruteParamsRef.current = {...newStartBruteParams}
-        console.log("apiSimpleDetect", params)
         /**继续任务后，再次点击开始执行，开启新任务 */
         apiSimpleDetect(params, tokenRef.current).then(() => {
             setExecuteStatus("process")

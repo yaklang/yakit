@@ -15,6 +15,8 @@ export interface UnfinishedTask {
 }
 export interface QueryUnfinishedTaskResponse {
     Tasks: UnfinishedTask[]
+    Pagination: Paging
+    Total: number
 }
 
 export interface UnfinishedTaskFilter {

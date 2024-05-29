@@ -114,11 +114,11 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
         const [response, setResponse] = useState<QueryUnfinishedTaskResponse>({
             Tasks: [],
-            Pagination: {...genDefaultPagination(Limit), OrderBy: "created_at", Order: "asc"},
+            Pagination: {...genDefaultPagination(Limit), OrderBy: "created_at", Order: "desc"},
             Total: 0
         })
         const [query, setQuery] = useState<QueryUnfinishedTaskRequest>({
-            Pagination: {...genDefaultPagination(Limit), OrderBy: "created_at", Order: "asc"},
+            Pagination: {...genDefaultPagination(Limit), OrderBy: "created_at", Order: "desc"},
             Filter: {}
         })
 
