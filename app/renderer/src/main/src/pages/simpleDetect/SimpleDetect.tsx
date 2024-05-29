@@ -170,12 +170,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     })
     const onError = useMemoizedFn((error) => {
         streamErrorRef.current = error
-        if (streamErrorRef.current !== "Cancelled on client") {
-            setExecuteStatus("error")
-        } else {
+        if (streamErrorRef.current === "Cancelled on client") {
             setExecuteStatus("default")
             setStopLoading(false)
             onSaveSimpleDetect()
+        } else {
+            setExecuteStatus("error")
         }
     })
     const [simpleDetectStreamInfo, simpleDetectStreamEvent] = useHoldGRPCStream({

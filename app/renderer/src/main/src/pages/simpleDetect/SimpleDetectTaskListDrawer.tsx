@@ -10,7 +10,8 @@ import {
     DeleteUnfinishedTaskRequest,
     apiQuerySimpleDetectUnfinishedTask,
     apiDeleteSimpleDetectUnfinishedTask,
-    QueryUnfinishedTaskRequest
+    QueryUnfinishedTaskRequest,
+    QueryUnfinishedTaskResponse
 } from "./utils"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {Divider, Progress} from "antd"
@@ -96,6 +97,7 @@ interface SimpleDetectTaskListProps {
     selectedRowKeys: string[]
     setSelectedRowKeys: (s: string[]) => void
 }
+const Limit = 20
 const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
     forwardRef((props, ref) => {
         const {getPageInfoByRuntimeId} = usePageInfo(
@@ -110,9 +112,13 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         const [loading, setLoading] = useState<boolean>(false)
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-        const [response, setResponse] = useState<UnfinishedTask[]>([])
+        const [response, setResponse] = useState<QueryUnfinishedTaskResponse>({
+            Tasks: [],
+            Pagination: {...genDefaultPagination(Limit), OrderBy: "created_at", Order: "asc"},
+            Total: 0
+        })
         const [query, setQuery] = useState<QueryUnfinishedTaskRequest>({
-            Pagination: {...genDefaultPagination(20), OrderBy: "created_at", Order: "asc"},
+            Pagination: {...genDefaultPagination(Limit), OrderBy: "created_at", Order: "asc"},
             Filter: {}
         })
 
@@ -132,7 +138,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
         )
 
         useEffect(() => {
-            update()
+            update(1)
         }, [visible])
 
         const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
@@ -159,7 +165,11 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     dataKey: "Percent",
                     render: (v) => (
                         <Progress percent={Math.trunc(v * 100)} status='active' className={styles["table-progress"]} />
-                    )
+                    ),
+                    sorterProps: {
+                        sorter: true,
+                        sorterKey: "current_progress"
+                    }
                 },
                 {
                     title: "创建时间",
@@ -180,16 +190,6 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                         <>
                             <YakitButton
                                 type='text'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onDetails(record.RuntimeId)
-                                }}
-                            >
-                                继续
-                            </YakitButton>
-                            <Divider type='vertical' style={{margin: 0}} />
-                            <YakitButton
-                                type='text'
                                 danger
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -198,6 +198,20 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                             >
                                 删除
                             </YakitButton>
+                            {record.Percent < 1 && (
+                                <>
+                                    <Divider type='vertical' style={{margin: 0}} />
+                                    <YakitButton
+                                        type='text'
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onDetails(record.RuntimeId)
+                                        }}
+                                    >
+                                        继续
+                                    </YakitButton>
+                                </>
+                            )}
                         </>
                     )
                 }
@@ -224,19 +238,38 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
             }
             setVisible(false)
         })
-        const update = useMemoizedFn(() => {
+        const update = useMemoizedFn((page: number, limit?: number) => {
+            const paginationProps = {
+                ...query.Pagination,
+                Page: page || 1,
+                Limit: limit || query.Pagination.Limit
+            }
             setLoading(true)
-            apiQuerySimpleDetectUnfinishedTask(query)
+            const finalParams: QueryUnfinishedTaskRequest = {
+                ...query,
+                Pagination: paginationProps
+            }
+            apiQuerySimpleDetectUnfinishedTask(finalParams)
                 .then((res) => {
-                    setResponse(res.Tasks.reverse())
-                    setSelectedRowKeys([])
-                    setIsAllSelect(false)
-                    setIsRefresh(!isRefresh)
+                    const newPage = +res.Pagination.Page
+                    const d = newPage === 1 ? res.Tasks : (response?.Tasks || []).concat(res.Tasks)
+                    setResponse({
+                        ...res,
+                        Tasks: d
+                    })
+                    if (newPage === 1) {
+                        setIsRefresh(!isRefresh)
+                        setSelectedRowKeys([])
+                        setIsAllSelect(false)
+                    }
+                    if (+res.Total !== selectedRowKeys.length) {
+                        setIsAllSelect(false)
+                    }
                 })
                 .finally(() => setTimeout(() => setLoading(false), 300))
         })
         const onRefresh = useMemoizedFn(() => {
-            update()
+            update(1)
         })
         const onSelectAll = (newSelectedRowKeys: string[], selected: UnfinishedTask[], checked: boolean) => {
             setIsAllSelect(checked)
@@ -257,7 +290,10 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 }
             }
             apiDeleteSimpleDetectUnfinishedTask(removeParams).then(() => {
-                setResponse(response.filter((ele) => ele.RuntimeId !== RuntimeId) || [])
+                setResponse((old) => ({
+                    ...old,
+                    Tasks: old?.Tasks?.filter((ele) => ele.RuntimeId !== RuntimeId) || []
+                }))
             })
         })
         const onBatchRemove = useMemoizedFn(() => {
@@ -271,7 +307,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
             setLoading(true)
             apiDeleteSimpleDetectUnfinishedTask(removeParams)
                 .then(() => {
-                    update()
+                    update(1)
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -293,7 +329,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                     }
                 }))
                 setTimeout(() => {
-                    update()
+                    update(1)
                 }, 100)
             },
             {wait: 500, leading: true}
@@ -305,15 +341,15 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
                 extra={<YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh} />}
                 isRefresh={isRefresh}
                 renderKey='RuntimeId'
-                data={response || []}
+                data={response.Tasks || []}
                 loading={loading}
                 enableDrag={true}
                 columns={columns}
                 pagination={{
-                    page: 1,
-                    limit: 20,
-                    total: Number(response.length || 0),
-                    onChange: () => {}
+                    page: response?.Pagination.Page || 0,
+                    limit: response?.Pagination.Limit || Limit,
+                    total: response?.Total && response?.Total > 0 ? Number(response.Total) : 0,
+                    onChange: update
                 }}
                 isShowTotal={true}
                 rowSelection={{
