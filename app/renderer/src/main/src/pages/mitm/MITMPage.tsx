@@ -40,7 +40,7 @@ import {
     YakitUploadComponent
 } from "@/components/YakitUploadModal/YakitUploadModal"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {v4 as uuidv4} from "uuid"
 import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
 const {ipcRenderer} = window.require("electron")

@@ -37,7 +37,7 @@ import {YakitRouteToPageInfo, ResidentPluginName} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./MenuMode.module.scss"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 interface MenuModeProps {
     mode: string

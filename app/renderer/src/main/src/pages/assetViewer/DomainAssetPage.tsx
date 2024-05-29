@@ -12,7 +12,7 @@ import {onRemoveToolFC} from "../../utils/deleteTool"
 
 import styles from "./DomainAssetPage.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export interface Domain {
     ID?: number

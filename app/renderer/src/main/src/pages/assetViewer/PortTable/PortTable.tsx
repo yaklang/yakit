@@ -24,7 +24,7 @@ import {onRemoveToolFC} from "@/utils/deleteTool"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import cloneDeep from "lodash/cloneDeep"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 const defLimit = 20

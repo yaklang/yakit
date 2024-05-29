@@ -20,7 +20,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {genDefaultPagination} from "../invoker/schema"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import styles from "./SimpleDetectTaskListDrawer.module.scss"
 
 interface SimpleDetectTaskListDrawerProps {

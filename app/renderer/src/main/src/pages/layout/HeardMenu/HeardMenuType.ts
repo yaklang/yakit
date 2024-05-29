@@ -8,7 +8,7 @@ import {
 } from "@/routes/newRoute"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export interface HeardMenuProps {
     defaultExpand: boolean

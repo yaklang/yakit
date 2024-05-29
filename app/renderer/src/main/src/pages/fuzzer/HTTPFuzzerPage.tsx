@@ -88,7 +88,7 @@ import {HTTPHeader} from "../mitm/MITMContentReplacerHeaderOperator"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {

@@ -35,7 +35,7 @@ import {
 } from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginGV} from "@/pages/plugins/builtInData"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {API} from "@/services/swagger/resposeType"
 import {useCampare} from "@/hook/useCompare/useCompare"
 

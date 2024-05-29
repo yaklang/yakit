@@ -18,7 +18,7 @@ import {SetVariableItem} from "../fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvanc
 import classNames from "classnames"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 
 const {YakitPanel} = YakitCollapse

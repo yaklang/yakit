@@ -11,7 +11,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
 import {DatabaseFirstMenuProps} from "@/routes/newRoute"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 

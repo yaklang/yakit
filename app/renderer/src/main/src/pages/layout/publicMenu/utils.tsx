@@ -4,7 +4,7 @@ import {CodeGV} from "@/yakitGV"
 import {RouteToPageProps} from "./PublicMenu"
 import {EnhancedPrivateRouteMenuProps} from "../HeardMenu/HeardMenuType"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 /** public版本前端增强型菜单项属性(用于前端数据对比和渲染逻辑使用) */
 export interface EnhancedPublicRouteMenuProps extends PublicRouteMenuProps {

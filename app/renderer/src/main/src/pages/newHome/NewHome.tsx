@@ -44,7 +44,7 @@ import classNames from "classnames"
 import {apiFetchGroupStatistics} from "../plugins/utils"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineRefreshIcon} from "@/assets/icon/outline"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 

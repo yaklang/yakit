@@ -64,7 +64,7 @@ import {PluginRecycleList} from "./PluginRecycleList"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {DefaultPublicStatusList, PluginGV, defaultSearch} from "../builtInData"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 import classNames from "classnames"

@@ -1,5 +1,5 @@
 import {ComponentParams} from "@/routes/newRoute"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 /**
  * @description 页面渲染

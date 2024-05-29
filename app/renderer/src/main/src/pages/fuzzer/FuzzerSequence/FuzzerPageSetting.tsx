@@ -1,4 +1,4 @@
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import React, {useEffect, useRef, useState} from "react"

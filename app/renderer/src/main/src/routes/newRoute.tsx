@@ -134,7 +134,7 @@ import {
     EnterpriseDeprecatedSecondMenu
 } from "./deprecatedMenu"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
-import {YakitRoute} from "./newRouteConstants"
+import {YakitRoute} from "../enums/yakitRoute"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))

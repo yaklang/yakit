@@ -17,7 +17,7 @@ import {
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {OutlineLoadingIcon, OutlineQuestionmarkcircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {Divider, Tooltip} from "antd"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon} from "@/assets/icon/solid"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"

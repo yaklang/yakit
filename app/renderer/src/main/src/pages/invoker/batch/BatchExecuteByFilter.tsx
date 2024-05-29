@@ -24,7 +24,7 @@ import {YakitLogFormatter} from "../YakitLogFormatter";
 import "./BatchExecuteByFilter.css"
 import {Risk} from "../../risks/schema";
 import {RisksViewer} from "@/pages/risks/RisksViewer";
-import {YakitRoute} from "@/routes/newRouteConstants";
+import {YakitRoute} from "@/enums/yakitRoute";
 
 const {ipcRenderer} = window.require("electron");
 

@@ -38,7 +38,7 @@ import {randomString} from "@/utils/randomUtil"
 import classNames from "classnames"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {ZoomeyeHelp} from "./ZoomeyeHelp"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 interface SpaceEnginePageProps {
     /**页面id */

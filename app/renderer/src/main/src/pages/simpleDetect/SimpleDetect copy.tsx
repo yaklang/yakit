@@ -52,11 +52,11 @@ import {SimpleCloseInfo, setSimpleInfo, delSimpleInfo} from "@/pages/globalVaria
 import {PresetPorts} from "@/pages/portscan/schema"
 import {v4 as uuidv4} from "uuid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitRoute} from "@/routes/newRoute"
-import {StartBruteParams} from "@/pages/brute/BrutePage"
 import emiter from "@/utils/eventBus/eventBus"
 import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal} from "../plugins/utils"
 import {LastRecordProps} from "../securityTool/newPortScan/utils"
+import { YakitRoute } from "@/enums/yakitRoute"
+import { StartBruteParams } from "../securityTool/newBrute/NewBruteType"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group

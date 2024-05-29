@@ -6,7 +6,7 @@ import {
     PublicCommonPlugins,
     PublicRouteMenuProps
 } from "@/routes/newRoute"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
 import {ReactNode} from "react"
 

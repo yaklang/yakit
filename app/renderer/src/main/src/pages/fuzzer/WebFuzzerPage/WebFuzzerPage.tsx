@@ -4,7 +4,7 @@ import styles from "./WebFuzzerPage.module.scss"
 import {OutlineAdjustmentsIcon, OutlineClipboardlistIcon, OutlineCollectionIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 import "video-react/dist/video-react.css" // import css
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"

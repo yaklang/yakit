@@ -65,7 +65,7 @@ import style from "./HeardMenu.module.scss"
 import {ExtraMenu} from "../publicMenu/ExtraMenu"
 import emiter from "@/utils/eventBus/eventBus"
 import {SolidPayloadIcon} from "@/assets/icon/solid"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 

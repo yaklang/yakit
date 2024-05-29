@@ -7,7 +7,7 @@ import FuzzerSequence from "@/pages/fuzzer/FuzzerSequence/FuzzerSequence"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageLoading} from "@ant-design/pro-layout"
 import {usePageInfo} from "@/store/pageInfo"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const FuzzerSequenceWrapper = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper"))
 

@@ -14,7 +14,7 @@ import {ExportExcel} from "../../../components/DataExport/DataExport"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import "./WebsiteTreeStyle.css"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export interface WebsiteTreeViewerProp {
     pageMode?: boolean

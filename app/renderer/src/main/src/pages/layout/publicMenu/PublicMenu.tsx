@@ -40,7 +40,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import classNames from "classnames"
 import styles from "./PublicMenu.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 

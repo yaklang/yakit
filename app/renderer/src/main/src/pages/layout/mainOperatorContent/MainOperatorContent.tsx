@@ -92,7 +92,7 @@ import {defaultScanPortPageInfo} from "@/defaultConstants/NewPortScan"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {defaultSpaceEnginePageInfo} from "@/defaultConstants/SpaceEnginePage"
 import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetectConstants"
-import {YakitRoute} from "@/routes/newRouteConstants"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
