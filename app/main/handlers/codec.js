@@ -116,4 +116,52 @@ module.exports = (win, getClient) => {
     ipcMain.handle("importCodecByPath", async (e, params) => {
         return await asyncimportCodecByPath(params)
     })
+
+    const asyncSaveCodecFlow = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveCodecFlow(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // codec历史存储
+    ipcMain.handle("SaveCodecFlow", async (e, params) => {
+        return await asyncSaveCodecFlow(params)
+    })
+
+    const asyncDeleteCodecFlow = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteCodecFlow(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除codec历史
+    ipcMain.handle("DeleteCodecFlow", async (e, params) => {
+        return await asyncDeleteCodecFlow(params)
+    })
+
+    const asyncGetAllCodecFlow = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllCodecFlow(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取codec历史
+    ipcMain.handle("GetAllCodecFlow", async (e, params) => {
+        return await asyncGetAllCodecFlow(params)
+    })
 }

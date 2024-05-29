@@ -3871,6 +3871,7 @@ message CodecRequestFlow{
 message CustomizeCodecFlow{
   string FlowName = 1;
   repeated CodecWork WorkFlow = 2;
+  string WorkFlowUI = 3;
 }
 
 message DeleteCodecFlowRequest {
