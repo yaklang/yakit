@@ -669,7 +669,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "add-data-compare") addDataCompare(data)
             if (type === "**screen-recorder") openMenuPage({route: YakitRoute.ScreenRecorderPage})
             if (type === "**chaos-maker") openMenuPage({route: YakitRoute.DB_ChaosMaker})
-            if (type === "**debug-plugin") addPluginDebugger(data)
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
@@ -913,20 +912,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     })
-    /** 插件调试 */
-    const addPluginDebugger = useMemoizedFn((res: any) => {
-        const {generateYamlTemplate = false, YamlContent = "", scriptName = ""} = res || {}
-        openMenuPage(
-            {route: YakitRoute.Beta_DebugPlugin},
-            {
-                pageParams: {
-                    generateYamlTemplate,
-                    YamlContent,
-                    scriptName
-                }
-            }
-        )
-    })
+  
     /**
      * @name 远程通信打开一个页面(新逻辑)
      */

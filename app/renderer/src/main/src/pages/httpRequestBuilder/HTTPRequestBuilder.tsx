@@ -12,7 +12,6 @@ import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {yakitFailed} from "@/utils/notification"
 import styles from "./HTTPRequestBuilder.module.scss"
-import {PluginTypes} from "../pluginDebugger/PluginDebuggerPage"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {SetVariableItem} from "../fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
 import classNames from "classnames"
@@ -23,6 +22,7 @@ import emiter from "@/utils/eventBus/eventBus"
 
 const {YakitPanel} = YakitCollapse
 
+export type PluginTypes = "port-scan" | "mitm" | "nuclei"
 export interface HTTPRequestBuilderProp {
     pluginType: PluginTypes
     value: HTTPRequestBuilderParams

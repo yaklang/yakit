@@ -1,6 +1,5 @@
 import { editor, IRange, languages, Position } from "monaco-editor";
 import { CancellationToken } from "typescript";
-import { removeRepeatedParams } from "@/pages/invoker/YakScriptParamsSetter";
 import { YakExecutorParam } from "@/pages/invoker/YakExecutorParams";
 import { monaco } from "react-monaco-editor";
 import { log } from "console";

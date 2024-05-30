@@ -56,7 +56,7 @@ import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 import {ExclamationCircleOutlined, LoadingOutlined} from "@ant-design/icons"
 import {DynamicControl, SelectControlType, ControlMyself, ControlOther} from "../../pages/dynamicControl/DynamicControl"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
-import {MacKeyborad, WinKeyborad} from "../yakitUI/YakitEditor/editorUtils"
+import {WinKeyborad} from "../yakitUI/YakitEditor/editorUtils"
 import {ScrecorderModal} from "@/pages/screenRecorder/ScrecorderModal"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -981,9 +981,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             // case "matcher-extractor":
             //     addToTab("**matcher-extractor")
             //     return
-            case "debug-plugin":
-                addToTab("**debug-plugin")
-                return
             case "debug-monaco-editor":
                 addToTab("**debug-monaco-editor")
                 return
