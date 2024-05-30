@@ -404,9 +404,9 @@ export const setUpYaklangMonaco = () => {
 }
 
 monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
-    provideCompletionItems: (editor, position, context, token) => {
+    provideCompletionItems: (model, position, context, token) => {
         return new Promise(async (resolve, reject) => {
-            await newYaklangCompletionHandlerProvider(editor, position, context, token as any).then((data) => {
+            await newYaklangCompletionHandlerProvider(model, position, context, token as any).then((data) => {
                 if (data.suggestions.length > 0) {
                     let items = data.suggestions;
                     for (const item of items) {
@@ -414,6 +414,28 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
                             item.command = { title: 'triggerParameterHints', id: 'editor.action.triggerParameterHints' };
                         }
                     }
+                    if (position.column < model.getLineMaxColumn(position.lineNumber)) {
+                        // get next character
+                        let nextValue = model.getValueInRange({
+                            startLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endLineNumber: position.lineNumber,
+                            endColumn: position.column + 1,
+                        })
+                        
+                        // if next character is "(", remove the "(" and after content in the insertText
+                        if (nextValue === "(") {
+                            items = items.map(item => {
+                                let index = item.insertText.indexOf("(");
+                                if (index !== -1) {
+                                    item.insertText = item.insertText.slice(0, index);
+                                }
+                                return item;
+                            }
+                            )
+                        }
+                    }
+
                     resolve({
                         suggestions: items,
                         incomplete: data.incomplete,
