@@ -23,6 +23,7 @@ export interface PluginExecutorProp {
 
 const { ipcRenderer } = window.require("electron")
 
+/**@deprecated */
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
     // const { script, settingShow, settingNode } = props
     const {script} = props

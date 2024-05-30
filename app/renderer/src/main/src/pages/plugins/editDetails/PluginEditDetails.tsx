@@ -853,12 +853,11 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     // 数据重置
     const onReset = useMemoizedFn(() => {
         oldParamsRef.current = ""
-
-        setPluginType("yak")
+        setPluginType(initPageInfo().pluginType || "yak")
         setInfoParams({ScriptName: ""})
         setCacheTags([])
         setSettingParams({Content: ""})
-        setCode(pluginTypeToName["yak"]?.content || "")
+        setCode(initPageInfo().code || pluginTypeToName["yak"]?.content || "")
 
         setPreviewParams([])
         setDebugPlugin(undefined)

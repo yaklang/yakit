@@ -1025,13 +1025,35 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             // 单开页面
             if (SingletonPageRoute.includes(route)) {
                 const key = routeConvertKey(route, pluginName)
+                const tabName = routeKeyToLabel.get(key) || menuName
+                const time = new Date().getTime().toString()
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
+                    const currentPage = filterPage[0]
+                    const singleUpdateNode: MultipleNodeInfo = {
+                        id: currentPage.routeKey,
+                        verbose: currentPage.verbose,
+                        time,
+                        pageParams: {
+                            ...nodeParams?.pageParams,
+                            id: currentPage.routeKey,
+                            groupId: "0"
+                        },
+                        groupId: "0",
+                        sortFieId: 1
+                    }
+                    //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
+                    switch (route) {
+                        case YakitRoute.AddYakitScript:
+                            onSetAddYakitScriptData(singleUpdateNode, 1)
+                            break
+                        default:
+                            break
+                    }
                     openFlag && setCurrentTabKey(key)
                     return
                 }
-                const tabName = routeKeyToLabel.get(key) || menuName
-                const time = new Date().getTime().toString()
+
                 // 单页面的id与routeKey一样
                 const singleNode: MultipleNodeInfo = {
                     id: key,
@@ -1043,7 +1065,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         groupId: "0"
                     },
                     groupId: "0",
-                    sortFieId: filterPage.length || 1
+                    sortFieId: 1
                 }
                 //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
                 switch (route) {
