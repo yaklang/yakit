@@ -113,6 +113,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
 const {ipcRenderer} = window.require("electron")
 
 interface CodecParamsProps {
@@ -1097,7 +1098,19 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 setWidth(elementRef.clientWidth)
             }}
         >
-            <div ref={divRef} className={styles["yak-chat-layout"]}>
+            <div
+                ref={divRef}
+                className={styles["yak-chat-layout"]}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                    const keyCode = e.keyCode ? e.keyCode : e.key
+                    if (keyCode === 27) {
+                        e.stopPropagation()
+                        e.preventDefault()
+                        setVisible(false)
+                    }
+                }}
+            >
                 <div className={styles["layout-header"]}>
                     <div className={styles["header-title"]}>
                         {/* <YakitChatCSIcon />
@@ -1555,7 +1568,7 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
 
                     <span>{time}</span>
 
-                    {scriptName && <span className={styles[""]}>{scriptName}</span>}
+                    {scriptName && <YakitTag color='info'>{scriptName}</YakitTag>}
                 </div>
                 {onDel && (
                     <div className={styles["header-right"]}>
@@ -2994,7 +3007,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
         setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             setRuntimeId(rId)
-        }
+        },
+        isShowError: false
     })
 
     useThrottleEffect(
@@ -3089,63 +3103,60 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 <>
                     {showOnly ? (
                         <div className={styles["plugin-ai-item"]}>
-                            {isShowAI && (
-                                <div className={styles["ai-box"]}>
-                                    {pluginAIItem.map((item) => {
-                                        const {token, isMe, time, info, scriptName} = item
-                                        if (isMe) {
-                                            return (
-                                                <ChatUserContent
-                                                    key={token}
-                                                    classNameContent={styles["opt-content-auto"]}
-                                                    scriptName={scriptName}
-                                                    time={time}
-                                                    info={info}
-                                                />
-                                            )
-                                        } else {
-                                            return (
-                                                <PluginAIContent
-                                                    key={token}
-                                                    token={token}
-                                                    loadingToken={loadingToken}
-                                                    loading={loading}
-                                                    resTime={resTime}
-                                                    time={time}
-                                                    info={info}
-                                                    onStop={onStop}
-                                                />
-                                            )
-                                        }
-                                    })}
-                                </div>
-                            )}
-                            <div className={styles["result-box"]} style={isShowAI ? {height: "40%"} : {height: "100%"}}>
-                                <PluginExecuteResult
-                                    streamInfo={streamInfo}
-                                    runtimeId={runtimeId}
-                                    loading={loading}
-                                    defaultActiveKey={"Codec结果"}
-                                    pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
-                                    onlyShowTabs={["Codec结果", "测试表", "Console"]}
-                                    // PluginTabsRightNode={
-                                    //     !isShowAI ? (
-                                    //         <div
-                                    //             className={classNames(
-                                    //                 styles["big-btn"],
-                                    //                 styles["btn-style"],
-                                    //                 styles["close-icon"]
-                                    //             )}
-                                    //             onClick={() => setShowOnly(false)}
-                                    //         >
-                                    //             <RemoveIcon />
-                                    //         </div>
-                                    //     ) : (
-                                    //         <></>
-                                    //     )
-                                    // }
-                                />
-                            </div>
+                            <YakitResizeBox
+                                isVer={true}
+                                lineDirection='bottom'
+                                freeze={isShowAI}
+                                firstMinSize={isShowAI?134:0}
+                                firstNodeStyle={{padding: 0}}
+                                secondNodeStyle={{padding: 0}}
+                                secondMinSize={50}
+                                secondRatio={!isShowAI ? "100%" : undefined}
+                                firstNode={
+                                    <div className={styles["ai-box"]}>
+                                        {pluginAIItem.map((item) => {
+                                            const {token, isMe, time, info, scriptName} = item
+                                            if (isMe) {
+                                                return (
+                                                    <ChatUserContent
+                                                        key={token}
+                                                        classNameContent={styles["opt-content-me"]}
+                                                        scriptName={scriptName}
+                                                        time={time}
+                                                        info={info}
+                                                    />
+                                                )
+                                            } else {
+                                                return (
+                                                    <PluginAIContent
+                                                        className={styles["content-opt-other-wrapper"]}
+                                                        key={token}
+                                                        token={token}
+                                                        loadingToken={loadingToken}
+                                                        loading={loading}
+                                                        resTime={resTime}
+                                                        time={time}
+                                                        info={info}
+                                                        onStop={onStop}
+                                                    />
+                                                )
+                                            }
+                                        })}
+                                    </div>
+                                }
+                                secondNode={
+                                    <div className={styles["result-box"]} style={{height: "100%"}}>
+                                        <PluginExecuteResult
+                                            streamInfo={streamInfo}
+                                            runtimeId={runtimeId}
+                                            loading={loading}
+                                            defaultActiveKey={"Codec结果"}
+                                            pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
+                                            onlyShowTabs={["Codec结果", "测试表", "Console"]}
+                                        />
+                                    </div>
+                                }
+                            />
                         </div>
                     ) : (
                         <div className={styles["plugin-ai-list"]}>
@@ -3185,7 +3196,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                 <div className={styles["welcome-plugin-ai"]}>
                                     <div className={styles["header-title"]}>
                                         <div className={classNames(styles["title-style"])}>
-                                            可在WebFuzzer中调用AI插件进行体验噢~👋
+                                            可在数据包或History右键调用插件进行体验噢~👋
                                         </div>
                                     </div>
                                 </div>
@@ -3210,10 +3221,11 @@ interface PluginAIContentProps {
     resTime: string
     onStop: () => void
     onDel?: () => void
+    className?: string
 }
 
 export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
-    const {token, loading, loadingToken, time, info, resTime, onStop, onDel} = props
+    const {token, loading, loadingToken, time, info, resTime, onStop, onDel, className} = props
 
     const copyContent = useMemo(() => {
         let content: string = info.content
@@ -3225,7 +3237,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
     }, [token, loadingToken, loading])
 
     return (
-        <div className={styles["content-opt-wrapper"]}>
+        <div className={classNames(styles["content-opt-wrapper"], className)}>
             <div className={styles["opt-header"]}>
                 <div className={styles["header-left"]}>
                     <YakChatLogIcon />

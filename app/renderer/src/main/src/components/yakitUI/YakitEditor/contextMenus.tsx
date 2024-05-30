@@ -227,9 +227,13 @@ export const extraMenuLists: OtherMenuListProps = {
                 children: [],
             },
         ],
-        onRun: (editor: YakitIMonacoEditor, scriptName: string,pageId,isAiPlugin:any) => {
+        onRun: (editor: YakitIMonacoEditor, key: string,pageId,isAiPlugin:any) => {
             try {
-                // isAiPlugin为isGetPlugin 需要获取codec插件
+                let scriptName = key
+                if(scriptName.startsWith("plugin-")){
+                    scriptName = scriptName.slice("plugin-".length)
+                }
+
                 const model = editor.getModel();
                 const selection = editor.getSelection()
                 let text = model?.getValue()
@@ -259,11 +263,11 @@ export const extraMenuLists: OtherMenuListProps = {
         ],
         onRun: (editor: YakitIMonacoEditor, key: string,pageId,isAiPlugin:any) => {
             try {
-                // isAiPlugin为isGetPlugin 需要获取codec插件
                 let scriptName = key
                 if(scriptName.startsWith("aiplugin-")){
                     scriptName = scriptName.slice("aiplugin-".length)
                 }
+
                 const model = editor.getModel();
                 const selection = editor.getSelection()
                 let text = model?.getValue()

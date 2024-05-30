@@ -56,6 +56,7 @@ import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import Item from "antd/lib/list/Item"
 
 
 /** @name 插件列表大框架组件 */
@@ -223,6 +224,26 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         </div>
     )
 })
+
+/** @name 固定插件Tags转译 */
+export const onPluginTagsToName = (key:string):string => {
+        switch (key) {
+            case PluginGV.PluginYakDNSLogSwitch:
+                return "用于自定义 DNSLOG 平台"
+            case PluginGV.PluginCodecHttpSwitch:
+                return "用于HTTP数据包变形"
+            case PluginGV.PluginCodecContextMenuExecuteSwitch:
+                return "用于数据包右键"
+            case PluginGV.PluginCodecSingleHistorySwitch:
+                return "用于history右键(单选)"
+            case PluginGV.PluginCodecMultipleHistorySwitch:
+                return "用于history右键(多选)"
+            default:
+                return key
+        }
+}
+
+
 /** @name 插件详情-头部信息 */
 export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props) => {
     const {
@@ -248,6 +269,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         let arr: string[] = []
         try {
             arr = tags ? tags.split(",") : []
+            arr = arr.map((item)=>onPluginTagsToName(item))
         } catch (error) {}
         return arr
     }, [tags])
@@ -403,18 +425,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
         })
 
         const replaceTagName = useMemoizedFn((key:string)=>{
-            switch (key) {
-                case PluginGV.PluginCodecHttpSwitch:
-                    return {key,label:"用于HTTP数据包变形"}
-                case PluginGV.PluginCodecContextMenuExecuteSwitch:
-                    return {key,label:"用于数据包右键"}
-                case PluginGV.PluginCodecSingleHistorySwitch:
-                    return {key,label:"用于history右键(单选)"}
-                case PluginGV.PluginCodecMultipleHistorySwitch:
-                    return {key,label:"用于history右键(多选)"}
-                default:
-                    return key
-            }
+            return {key,label:onPluginTagsToName(key)}
         })
 
         useEffect(() => {

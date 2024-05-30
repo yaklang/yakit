@@ -53,6 +53,8 @@ export interface HoldGRPCStreamParams {
     dataFilter?: (obj: StreamResult.Message, content: StreamResult.Log) => boolean
     /** @name 设置run-time-id值 */
     setRuntimeId?: (runtimeId: string) => any
+    /** @name 是否提示error信息 */
+    isShowError?: boolean
 }
 
 export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
@@ -65,7 +67,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         onEnd,
         onError,
         dataFilter,
-        setRuntimeId
+        setRuntimeId,
+        isShowError = true
     } = params
 
     const [streamInfo, setStreamInfo] = useState<HoldGRPCStreamInfo>({
@@ -301,7 +304,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-error
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(`[Mod] ${taskName} error: ${error}`)
+            isShowError && failed(`[Mod] ${taskName} error: ${error}`)
             if (onError) {
                 onError(error)
             }
