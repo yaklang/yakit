@@ -516,6 +516,7 @@ service Yak {
   rpc DownloadOnlinePlugins(DownloadOnlinePluginsRequest) returns(stream DownloadOnlinePluginProgress);
   rpc DownloadOnlinePluginBatch(DownloadOnlinePluginsRequest) returns (Empty);
   rpc DownloadOnlinePluginByPluginName(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+  rpc DownloadOnlinePluginByUUID(DownloadOnlinePluginByUUIDRequest) returns (YakScript);
 
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
@@ -2130,6 +2131,11 @@ message DownloadOnlinePluginByScriptName {
   string ScriptName = 1;
   int64 Id = 2;
   string HeadImg = 3;
+}
+
+message DownloadOnlinePluginByUUIDRequest {
+  string UUID = 1;
+  string Token = 2;
 }
 
 message OnlineProfile {
