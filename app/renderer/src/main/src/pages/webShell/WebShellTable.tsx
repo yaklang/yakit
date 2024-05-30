@@ -49,8 +49,9 @@ import {
 } from "@/pages/webShell/icon";
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer';
 import { WebShellDetailOpt } from './WebShellDetailOpt';
-import {menuBodyHeight} from "@/pages/globalVariable"
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext';
+import {usePageInfo} from '@/store/pageInfo';
+import {shallow} from 'zustand/shallow';
 
 export interface WebShellManagerProp {
     available: boolean
@@ -120,6 +121,12 @@ interface WebShellTableListProps {
 
 const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) => {
     // const {available, selected, setSelected, advancedQuery, setAdvancedQuery, WebShell, setWebShell} = props
+    const {menuBodyHeight} = usePageInfo(
+        (s) => ({
+            menuBodyHeight: s.menuBodyHeight
+        }),
+        shallow
+    )
     const {available, selected, setSelected, advancedQuery, setAdvancedQuery} = props
     const [params, setParams] = useState<QueryWebShellRequest>({
         Tag: "",

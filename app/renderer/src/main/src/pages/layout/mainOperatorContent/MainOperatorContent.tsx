@@ -73,7 +73,6 @@ import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
-import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
 import {PageNodeItemProps, PageProps, defPage, saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
@@ -1839,6 +1838,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage} = props
+    const {updateMenuBodyHeight} = usePageInfo(
+        (s) => ({
+            updateMenuBodyHeight: s.updateMenuBodyHeight
+        }),
+        shallow
+    )
     /** ---------- 拖拽排序 start ---------- */
     const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
         if (!result.destination) {
@@ -1868,12 +1873,17 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
         } catch (error) {}
     })
     /** ---------- 拖拽排序 end ---------- */
+    const onUpdateMenuBodyHeight = useMemoizedFn((height) => {
+        updateMenuBodyHeight({
+            firstTabMenuBodyHeight: height
+        })
+    })
     return (
         <div className={styles["tab-menu"]}>
             <ReactResizeDetector
                 onResize={(_, height) => {
                     if (!height) return
-                    menuBodyHeight.firstTabMenuBodyHeight = height
+                    onUpdateMenuBodyHeight(height)
                 }}
                 handleWidth={true}
                 handleHeight={true}

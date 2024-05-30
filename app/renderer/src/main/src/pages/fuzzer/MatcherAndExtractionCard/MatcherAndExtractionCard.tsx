@@ -51,7 +51,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {menuBodyHeight} from "@/pages/globalVariable"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {
     defMatcherAndExtractionCode,
@@ -62,6 +61,8 @@ import {
     matcherTypeList,
     extractorTypeList
 } from "./constants"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1106,6 +1107,12 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
 export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProps> = React.memo((props) => {
     const {visibleDrawer, defActiveType, httpResponse, defActiveKey, matcherValue, extractorValue, onClose, onSave} =
         props
+    const {menuBodyHeight} = usePageInfo(
+        (s) => ({
+            menuBodyHeight: s.menuBodyHeight
+        }),
+        shallow
+    )
     const heightDrawer = useMemo(() => {
         return menuBodyHeight.firstTabMenuBodyHeight - 40
     }, [menuBodyHeight.firstTabMenuBodyHeight])
