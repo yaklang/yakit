@@ -1193,7 +1193,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     ) : (
                         "已是最新"
                     )}
-                    {/* {role === "superAdmin" && (
+                    {role === "superAdmin" && (
                         <div
                             className={styles["edit-func"]}
                             onClick={() => {
@@ -1202,15 +1202,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         >
                             <PencilAltIcon className={styles["edit-icon"]} />
                         </div>
-                    )} */}
-                    <div
-                            className={styles["edit-func"]}
-                            onClick={() => {
-                                if (onUpdateEdit) onUpdateEdit("yakit")
-                            }}
-                        >
-                            <PencilAltIcon className={styles["edit-icon"]} />
-                        </div>
+                    )}
                 </div>
             </div>
 
