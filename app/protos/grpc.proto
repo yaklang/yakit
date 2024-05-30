@@ -3884,8 +3884,10 @@ message GetCodecFlowResponse {
 }
 
 message CodecResponse {
-  string Result = 1;
-  bytes  RawResult = 2;
+  string Result = 1; // show result
+  bytes  RawResult = 2; // raw result, need hex editor
+  string ResultVerbose = 3;
+  bool IsFalseAppearance = 4; // 是否是失真
 }
 
 message CodecMethods {
