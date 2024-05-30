@@ -58,8 +58,16 @@ interface PageParamsInfoProps {
     spaceEnginePageInfo?: SpaceEnginePageInfoProps
     /**简易版 安全检测页面 */
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
+    /**新建插件页面 */
+    addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
 }
 
+export interface AddYakitScriptPageInfoProps {
+    /**插件类型 */
+    pluginType: string
+    /**插件源码 */
+    code: string
+}
 export interface SpaceEnginePageInfoProps {}
 
 export interface SimpleDetectPageInfoProps {

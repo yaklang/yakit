@@ -115,6 +115,7 @@ import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
 import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {
+    AddYakitScriptPageInfoProps,
     BrutePageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
@@ -388,6 +389,8 @@ export interface ComponentParams {
     spaceEnginePageInfo?: SpaceEnginePageInfoProps
     /**简易版 安全检测页面 */
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
+    /**新建插件页面 */
+    addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {

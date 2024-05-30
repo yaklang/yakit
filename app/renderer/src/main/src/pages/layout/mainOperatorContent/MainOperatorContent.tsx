@@ -74,7 +74,14 @@ import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSeq
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {RemoteGV} from "@/yakitGV"
-import {PageNodeItemProps, PageProps, defPage, saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
+import {
+    AddYakitScriptPageInfoProps,
+    PageNodeItemProps,
+    PageProps,
+    defPage,
+    saveFuzzerCache,
+    usePageInfo
+} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
@@ -92,6 +99,7 @@ import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {defaultSpaceEnginePageInfo} from "@/defaultConstants/SpaceEnginePage"
 import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetectConstants"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -490,7 +498,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      * @name 新建插件
      * @param source 触发打开页面的父页面路由
      */
-    const addYakScript = useMemoizedFn((data: {source: YakitRoute}) => {
+    const addYakScript = useMemoizedFn((data: {source: YakitRoute} & AddYakitScriptPageInfoProps) => {
         const {source} = data || {}
         const isExist = pageCache.filter((item) => item.route === YakitRoute.AddYakitScript).length
         if (isExist) {
@@ -500,8 +508,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         } else {
             cuPluginEditorStorage(source, false)
         }
-
-        openMenuPage({route: YakitRoute.AddYakitScript})
+        openMenuPage(
+            {route: YakitRoute.AddYakitScript},
+            {
+                pageParams: {
+                    addYakitScriptPageInfo: {
+                        ...defaultAddYakitScriptPageInfo,
+                        ...data
+                    }
+                }
+            }
+        )
     })
     /**
      * @name 编辑插件
@@ -1014,6 +1031,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     return
                 }
                 const tabName = routeKeyToLabel.get(key) || menuName
+                const time = new Date().getTime().toString()
+                // 单页面的id与routeKey一样
+                const singleNode: MultipleNodeInfo = {
+                    id: key,
+                    verbose: tabName,
+                    time,
+                    pageParams: {
+                        ...nodeParams?.pageParams,
+                        id: key,
+                        groupId: "0"
+                    },
+                    groupId: "0",
+                    sortFieId: filterPage.length || 1
+                }
+                //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
+                switch (route) {
+                    case YakitRoute.AddYakitScript:
+                        onSetAddYakitScriptData(singleNode, 1)
+                        break
+                    default:
+                        break
+                }
+
                 setPageCache([
                     ...pageCache,
                     {
@@ -1146,6 +1186,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     )
+    /**单页面直接set */
+    const onSetAddYakitScriptData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.AddYakitScript,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                addYakitScriptPageInfo: node.pageParams?.addYakitScriptPageInfo
+                    ? {
+                          ...defaultAddYakitScriptPageInfo,
+                          ...node.pageParams.addYakitScriptPageInfo
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.AddYakitScript
+        }
+        setPagesData(YakitRoute.AddYakitScript, pageNodeInfo)
+    })
     const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,
