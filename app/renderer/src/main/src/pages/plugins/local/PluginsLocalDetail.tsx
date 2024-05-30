@@ -639,11 +639,11 @@ const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.
     const [files, setFiles] = useState<string[]>([])
     const [loading, setLoading] = useState<boolean>(false)
 
-    const addComment = useMemoizedFn((data: API.NewComment) => {
+    const addComment = useMemoizedFn((data: API.NewComments) => {
         setLoading(true)
-        NetWorkApi<API.NewComment, API.ActionSucceeded>({
+        NetWorkApi<API.NewComments, API.ActionSucceeded>({
             method: "post",
-            url: "comment",
+            url: "comments",
             data
         })
             .then((res) => {
@@ -671,7 +671,7 @@ const PluginCommentUploadLocal: React.FC<PluginCommentUploadLocalProps> = React.
             return
         }
         const params = {
-            plugin_id: parseInt(plugin.OnlineId + ""),
+            uuid: plugin.UUID,
             message_img: files,
             parent_id: 0,
             root_id: 0,

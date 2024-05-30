@@ -185,7 +185,6 @@ function NewApp() {
                             role: res.role,
                             user_id: res.user_id,
                             token: resToken,
-                            checkPlugin: res?.checkPlugin || false
                         }
                         ipcRenderer.sendSync("sync-update-user", user)
                         setStoreUserInfo(user)
@@ -258,7 +257,7 @@ function NewApp() {
         })
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
-            if(token.length > 0){
+            if(token && token.length > 0){
                 aboutLoginUpload(token)
                 loginHTTPFlowsToOnline(token)
             }

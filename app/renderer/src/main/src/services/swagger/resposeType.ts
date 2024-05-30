@@ -15,6 +15,22 @@ export declare namespace API {
         extra_setting?: string
         method_type?: string
     }
+    export interface WebsocketFlowResponse extends Paging {
+        data: WebsocketFlowList[]
+    }
+    export interface WebsocketFlowList extends GormBaseModel, WebsocketFlowDetail {}
+    export interface WebsocketFlowDetail {
+        websocketRequestHash: string
+        frameIndex: number
+        fromServer: boolean
+        messageType: string
+        data: string
+        dataSizeVerbose: string
+        dataLength: number
+        dataVerbose: string
+        isJson: boolean
+        isProtobuf: boolean
+    }
     export interface UserOrdinaryResponse {
         data: UserList[]
     }
@@ -284,39 +300,15 @@ export declare namespace API {
     export interface RiskUploadResponse extends Paging {
         data: RiskLists[]
     }
-    export interface RiskUploadRequest {
-        token: string
-        risk_hash: string
-        ip?: string
-        ip_integer?: number
-        url?: string
-        port?: number
-        host?: string
-        title?: string
-        title_verbose?: string
-        risk_type?: string
-        risk_type_verbose?: string
-        parameter?: string
-        payload?: string
-        details?: string
-        severity?: string
-        from_yak_script?: string
-        waiting_verified?: boolean
-        reverse_token?: string
-        runtime_id?: string
-        quoted_request?: string
-        quoted_response?: string
-        is_potential?: boolean
-        cve?: string
-        description?: string
-        solution?: string
-        risk_created_at?: number
-    }
     export interface RiskTypes {
         risk_type: string
     }
     export interface RiskTypeResponse {
         data: RiskTypes[]
+    }
+    export interface RiskRequest {
+        projectName: string
+        content: string
     }
     export interface RiskLists extends GormBaseModel, RiskList {}
     export interface RiskList {
@@ -347,6 +339,7 @@ export declare namespace API {
         description: string
         solution: string
         risk_created_at: number
+        project_name: string
     }
     export interface RemoteTunnelResponse {
         server: string
@@ -798,7 +791,6 @@ export declare namespace API {
     export interface NewRoleRequest {
         id?: number
         name: string
-        checkPlugin: boolean
         pluginType?: string
         pluginIds?: string
         plugin?: PluginTypeList[]
@@ -817,14 +809,6 @@ export declare namespace API {
         root_id?: number
         message?: string
     }
-    export interface NewComment {
-        plugin_id: number
-        by_user_id?: number
-        message_img?: string[]
-        parent_id?: number
-        root_id?: number
-        message?: string
-    }
     export interface NavigationBarsResponse {
         data: NavigationBarsListResponse[]
     }
@@ -834,12 +818,144 @@ export declare namespace API {
         otherLink?: string
         sort?: number
     }
+    export interface MITMRuleExtractedDataResponse extends Paging {
+        data: MITMRuleExtractedDataList[]
+    }
+    export interface MITMRuleExtractedDataList extends GormBaseModel, MITMRuleExtractedDataDetail {}
+    export interface MITMRuleExtractedDataDetail {
+        sourceType: string
+        traceId: string
+        regexp: string
+        ruleName: string
+        data: string
+    }
     export interface LogsRequest {
         uuid: string
         token?: string
     }
     export interface IsExtractCodeResponse {
         is_extract_code: boolean
+    }
+    export interface HTTPHeader {
+        header?: string
+        value?: string
+    }
+    export interface HTTPFlowWhere {
+        userName?: string
+        projectName?: string
+        sourceType?: string
+        methods?: string
+        searchURL?: string
+        statusCode?: string
+        haveCommonParams?: boolean
+        haveBody?: boolean
+        searchContentType?: string
+        beforeUpdatedAt?: number
+        afterUpdatedAt?: number
+        keyword?: string
+        onlyWebsocket?: boolean
+        /**
+         * 查询包含在这个 URL 中的搜索结果
+         */
+        includeInUrl?: string[]
+        /**
+         * 不查询当前 URL 中的结果
+         */
+        excludeInUrl?: string[]
+        /**
+         * 仅查看当前 IP 对应的结果或不包含
+         */
+        includeInIP?: string[]
+        excludeInIP?: string[]
+        includeInWhere?: string[]
+        tags?: string[]
+        haveParamsTotal?: string
+        color?: string[]
+        offsetId?: number
+        afterBodyLength?: number
+        beforeBodyLength?: number
+        isWebsocket?: string
+        runtimeId?: string
+        fromPlugin?: string
+        full?: boolean
+        includePath?: string[]
+        excludePath?: string[]
+        includeSuffix?: string[]
+        excludeSuffix?: string[]
+        excludeContentType?: string[]
+    }
+    export interface HTTPFlowRequest {
+        projectName: string
+        content: string
+    }
+    export interface HTTPFlowListResponse extends Paging {
+        data: HTTPFlowList[]
+    }
+    export interface HTTPFlowList extends GormBaseModel, HTTPFlowDetail {}
+    export interface HTTPFlowDetail {
+        isHTTPS?: boolean
+        url?: string
+        requestHeader?: HTTPHeader[]
+        request?: string
+        responseHeader?: HTTPHeader[]
+        response?: string
+        sourceType?: string
+        path?: string
+        method?: string
+        bodyLength?: number
+        bodySizeVerbose?: string
+        requestLength?: number
+        requestSizeVerbose?: string
+        contentType?: string
+        statusCode?: number
+        getParamsTotal?: number
+        postParamsTotal?: number
+        cookieParamsTotal?: number
+        httpflowUpdatedAt?: number
+        httpflowCreatedAt?: number
+        hash?: string
+        getParams?: FuzzableParam[]
+        postParams?: FuzzableParam[]
+        cookieParams?: FuzzableParam[]
+        hostPort?: string
+        ipAddress?: string
+        htmlTitle?: string
+        tags?: string
+        noFixContentLength?: boolean
+        isWebsocket?: boolean
+        websocketHash?: string
+        /**
+         * 标记 UTF8 Invalid
+         */
+        invalidForUTF8Request?: boolean
+        invalidForUTF8Response?: boolean
+        rawRequestBodyBase64?: string
+        rawResponseBodyBase64?: string
+        /**
+         * 可以安全的传输到 Fuzzer 的 HTTPRequest
+         */
+        safeHTTPRequest?: string
+        domains?: string[]
+        rootDomains?: string[]
+        jsonObjects?: string[]
+        isTooLargeResponse?: boolean
+        tooLargeResponseHeaderFile?: string
+        tooLargeResponseBodyFile?: string
+        disableRenderStyles?: boolean
+        projectName?: string
+        userName?: string
+    }
+    export interface HTTPFlowDeleteWhere {
+        deleteAll?: boolean
+        id?: number[]
+        itemHash?: string[]
+        urlPrefix?: string
+        urlPrefixBatch?: string[]
+    }
+    export interface HTTPFlowDeleteRequest extends HTTPFlowDeleteWhere, HTTPFlowWhere {}
+    export interface HTTPFlowBareResponse {
+        id: number
+        data: string
     }
     export interface GroupResponseDetail {
         value: string
@@ -871,6 +987,13 @@ export declare namespace API {
         start_time?: number
         end_time?: number
         status?: string
+    }
+    export interface FuzzableParam {
+        position?: string
+        paramName?: string
+        originValue?: string
+        autoTemplate?: string
+        isHTTPS?: boolean
     }
     export interface ExtractResponse {
         extract_content: string

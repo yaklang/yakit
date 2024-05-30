@@ -18,8 +18,6 @@ export interface UserInfoProps {
     role: string | null
     user_id: number | null
     token: string
-    /** 是否有插件管理权限 */
-    checkPlugin?: boolean
 }
 interface StoreProps {
     /**@name 登录用户信息 */
@@ -40,8 +38,7 @@ export const useStore = create<StoreProps>((set, get) => ({
         companyHeadImg: null,
         role: null,
         user_id: null,
-        token: "",
-        checkPlugin: false
+        token: ""
     },
     setStoreUserInfo: (info) => set({userInfo: info})
 }))

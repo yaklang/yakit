@@ -268,7 +268,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            if (!userInfo.checkPlugin) {
+            // 不为审核员时 移除插件管理
+            if (userInfo.role !== "auditor") {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "plugin-aduit")
             }
             if (isEnpriTraceAgent()) {
@@ -286,7 +287,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         } else {
             setUserMenu([{key: "sign-out", title: "退出登录"}])
         }
-    }, [userInfo.role, userInfo.checkPlugin, userInfo.companyHeadImg, dynamicConnect])
+    }, [userInfo.role, userInfo.companyHeadImg, dynamicConnect])
 
     /** 渲染端通信-打开一个指定页面 */
     const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {
