@@ -66,6 +66,7 @@ import {CustomPluginExecuteFormValue} from "../operator/localPluginExecuteDetail
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
 import classNames from "classnames"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 const {Link} = Anchor
 const {YakitPanel} = YakitCollapse
@@ -86,6 +87,23 @@ export interface SavePluginInfoSignalProps {
 export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     const {id: pluginId} = props
 
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.AddYakitScript,
+            YakitRoute.AddYakitScript
+        )
+        if (currentItem && currentItem.pageParamsInfo.addYakitScriptPageInfo) {
+            return currentItem.pageParamsInfo.addYakitScriptPageInfo
+        } else {
+            return {...defaultAddYakitScriptPageInfo}
+        }
+    })
     const [loading, setLoading] = useState<boolean>(false)
     // 编辑时的旧数据
     const [info, setInfo] = useState<YakScript>()
@@ -289,7 +307,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
     // 插件类型信息-相关逻辑
     // 插件类型
-    const [pluginType, setPluginType] = useState<string>("yak")
+    const [pluginType, setPluginType] = useState<string>(initPageInfo().pluginType || "yak")
     const fetchPluginType = useMemoizedFn(() => {
         return pluginType
     })
@@ -345,7 +363,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         Content: ""
     })
     // 插件源码-相关逻辑
-    const [code, setCode] = useState<string>(pluginTypeToName["yak"]?.content || "")
+    const [code, setCode] = useState<string>(initPageInfo().code || pluginTypeToName["yak"]?.content || "")
     // 源码全屏框
     const [codeModal, setCodeModal] = useState<boolean>(false)
     const onOpenCodeModal = useMemoizedFn(() => {
