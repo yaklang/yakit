@@ -6,7 +6,7 @@ export interface PluginDebugDrawerProps {
     /**初始源码 */
     defaultCode: string
     /**父元素 */
-    getContainer?: HTMLElement
+    getContainer?: HTMLElement | null
     visible?: boolean
     setVisible: (b: boolean) => void
 }

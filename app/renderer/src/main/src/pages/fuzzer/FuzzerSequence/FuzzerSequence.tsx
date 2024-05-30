@@ -105,6 +105,7 @@ import {
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
+const PluginDebugDrawer = React.lazy(() => import("../components/PluginDebugDrawer/PluginDebugDrawer"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -196,6 +197,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         string,
         number
     >(new Map())
+
+    const [visiblePluginDrawer, setVisiblePluginDrawer] = useState<boolean>(false)
+    const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
 
     const fuzzTokenRef = useRef<string>(randomString(60))
     const hotPatchCodeRef = useRef<string>("")
@@ -1004,6 +1008,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
         return data
     }, [currentSelectRequest, visibleDrawer, showMatcherAndExtraction, triggerME])
+    const onPluginDebugger = useMemoizedFn((yamlContent) => {
+        setVisiblePluginDrawer(true)
+        setPluginDebugCode(yamlContent)
+    })
     return (
         <>
             <div
@@ -1193,6 +1201,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                     }
                                 }}
                                 getHttpParams={getHttpParams}
+                                onPluginDebugger={onPluginDebugger}
                             />
                             <SequenceResponse
                                 ref={sequenceResponseRef}
@@ -1244,6 +1253,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     responseMap={responseMap}
                     setShowAllResponse={() => setShowAllResponse(false)}
                 ></ResponseCard>
+                <PluginDebugDrawer
+                    getContainer={fuzzerSequenceRef.current}
+                    route={YakitRoute.HTTPFuzzer}
+                    defaultCode={pluginDebugCode}
+                    visible={visiblePluginDrawer}
+                    setVisible={setVisiblePluginDrawer}
+                />
             </React.Suspense>
             <MatcherAndExtractionDrawer
                 visibleDrawer={visibleDrawer}
@@ -1552,7 +1568,8 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         onShowAll,
         currentSequenceItemName,
         currentSequenceItemPageName,
-        getHttpParams
+        getHttpParams,
+        onPluginDebugger
     } = props
     const {
         onlyOneResponse: httpResponse,
@@ -1583,10 +1600,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         try {
             const {Status, YamlContent} = await ipcRenderer.invoke("ExportHTTPFuzzerTaskToYaml", params)
             if (Status.Ok) {
-                ipcRenderer.invoke("send-to-tab", {
-                    type: "**debug-plugin",
-                    data: {generateYamlTemplate: true, YamlContent}
-                })
+                onPluginDebugger(YamlContent)
             } else {
                 throw new Error(Status.Reason)
             }

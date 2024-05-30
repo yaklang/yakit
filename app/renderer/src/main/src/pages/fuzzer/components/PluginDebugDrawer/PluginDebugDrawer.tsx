@@ -60,7 +60,7 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
     }, [visible])
     return (
         <YakitDrawer
-            getContainer={getContainer}
+            getContainer={!!getContainer ? getContainer : false}
             placement='bottom'
             mask={false}
             closable={false}
