@@ -161,6 +161,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
     })
 
     const onClose = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-download-yak-engine-version", yakLangVersion.current)
         isBreakRef.current = true
         setDownloadProgress(undefined)
         setQSShow(false)

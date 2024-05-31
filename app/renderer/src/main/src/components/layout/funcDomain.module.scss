@@ -754,6 +754,9 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            span.active {
+                color: var(--yakit-primary-5);
+            }
         }
     }
 }

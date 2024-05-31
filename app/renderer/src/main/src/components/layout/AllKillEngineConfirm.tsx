@@ -16,6 +16,7 @@ export interface AllKillEngineConfirmProps {
     visible: boolean
     setVisible: (flag: boolean) => any
     onSuccess: () => any
+    onCancelFun: () => any
 }
 /** 更新引擎-确认二次弹窗和kill操作 */
 export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.memo((props) => {
@@ -24,7 +25,8 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         content = "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。",
         visible,
         setVisible,
-        onSuccess
+        onSuccess,
+        onCancelFun
     } = props
 
     const [loading, setLoading, getLoading] = useGetState<boolean>(false)
@@ -124,6 +126,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         setCurrentPort(0)
         setProcess([])
         setVisible(false)
+        onCancelFun()
     })
 
     const {delTemporaryProject} = useTemporaryProjectStore()

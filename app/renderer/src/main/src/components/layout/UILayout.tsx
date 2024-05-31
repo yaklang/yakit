@@ -13,7 +13,7 @@ import {
     YakitSystem,
     YaklangEngineMode
 } from "@/yakitGVDefine"
-import {failed, info, warn, yakitFailed} from "@/utils/notification"
+import {failed, info, warn, yakitFailed, yakitNotify} from "@/utils/notification"
 import {LocalGV, RemoteGV} from "@/yakitGV"
 import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -557,6 +557,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
     // 更新yaklang-modal
     const [yaklangDownload, setYaklangDownload] = useState<boolean>(false)
+    // 更新yaklang-modal文案
+    const [yaklangKillPssText, setYaklangKillPssText] = useState<{title: string; content: string}>({
+        title: "更新引擎，需关闭所有本地进程",
+        content: "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+    })
+    const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>("")
+    const [yaklangLastVersion, setYaklangLastVersion] = useState<string>("") // 官方推荐的最新版
     // 监听UI上的更新yakit或yaklang更新功能
     const handleActiveDownloadModal = useMemoizedFn((type: string) => {
         if (yaklangKillPss || yakitDownload) return
@@ -569,24 +576,76 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         if (!yaklangDownload) {
             onSetEngineLink(false)
             setKeepalive(false)
-            setYaklangDownload(true)
+            if (!yaklangSpecifyVersion) {
+                setYaklangKillPssText({
+                    title: "更新引擎，需关闭所有本地进程",
+                    content: "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+                })
+                setYaklangDownload(true)
+                return
+            }
+            yakEngineVersionExistsAndCorrectness(
+                yaklangSpecifyVersion,
+                () => {
+                    setYaklangSpecifyVersion("")
+                    setLinkLocalEngine()
+                },
+                () => {
+                    setYaklangDownload(true)
+                }
+            )
         }
     })
+    // 判断引擎版本没有问题，则直接安装，否则重新下载
+    const yakEngineVersionExistsAndCorrectness = async (
+        version: string,
+        installFinally: () => void,
+        errCallback: () => void
+    ) => {
+        try {
+            const res = await ipcRenderer.invoke("yak-engine-version-exists-and-correctness", version)
+            if (res === true) {
+                ipcRenderer
+                    .invoke("install-yak-engine", version)
+                    .then(() => {
+                        yakitNotify("success", `安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
+                    })
+                    .catch((err: any) => {
+                        failed(
+                            `安装失败: ${
+                                err.message.indexOf("operation not permitted") > -1 ? "请关闭引擎后重试" : err
+                            }`
+                        )
+                    })
+                    .finally(() => {
+                        installFinally && installFinally()
+                    })
+            } else {
+                errCallback && errCallback()
+            }
+        } catch (error) {
+            errCallback && errCallback()
+        }
+    }
 
     // kill完引擎进程后开始更新指定Yaklang版本引擎
-    const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>("")
-    const downYaklangSpecifyVersion = (version: string) => {
-        setYaklangSpecifyVersion(version)
-        killedEngineToUpdate()
-    }
-    useEffect(() => {
-        emiter.on("downYaklangSpecifyVersion", downYaklangSpecifyVersion)
-        return () => {
-            emiter.off("downYaklangSpecifyVersion", downYaklangSpecifyVersion)
+    const downYaklangSpecifyVersion = (res: string) => {
+        try {
+            const {version, isUpdate = true} = JSON.parse(res) || {}
+            setYaklangSpecifyVersion(version)
+            setYaklangKillPssText({
+                title: !isUpdate ? "替换引擎，需关闭所有本地进程" : "更新引擎，需关闭所有本地进程",
+                content: !isUpdate
+                    ? "确认下载并安装此版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+                    : "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+            })
+            handleActiveDownloadModal("yaklang")
+        } catch (error) {
         }
-    }, [])
+    }
 
     const onDownloadedYaklang = useMemoizedFn(() => {
+        setYaklangSpecifyVersion("")
         setYaklangDownload(false)
         setLinkLocalEngine()
     })
@@ -657,38 +716,39 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     useEffect(() => {
+        emiter.on("downYaklangSpecifyVersion", downYaklangSpecifyVersion)
         emiter.on("activeUpdateYakitOrYaklang", handleActiveDownloadModal)
         ipcRenderer.on("kill-old-engine-process-callback", () => {
             setKillOldEngine(true)
         })
         return () => {
-            emiter.off("onScrollToByClick", handleActiveDownloadModal)
+            emiter.off("downYaklangSpecifyVersion", downYaklangSpecifyVersion)
+            emiter.off("activeUpdateYakitOrYaklang", handleActiveDownloadModal)
             ipcRenderer.removeAllListeners("kill-old-engine-process-callback")
         }
     }, [])
     /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 End ---------- */
 
     /** ---------- 软件绑定引擎版本检测提示 Start ---------- */
+    const [yakEngineVersionList, setYakEngineVersionList] = useState<string[]>([])
     const [builtInVersion, setBuiltInVersion] = useState<string>("")
     const [currentVersion, setCurrentVersion] = useState<string>("")
-    /** 判断版本检测是否已执行过 */
-    const isExecuteRef = useRef<boolean>(false)
 
     const showCheckVersion = useMemo(() => {
-        if (isExecuteRef.current) return false
         if (isDev.current) return false
         if (!builtInVersion) return false
         if (!currentVersion) return false
-
-        // 判断版本号的库 semver,暂时没用，后续可以用
-        if (currentVersion < builtInVersion) return true
+        if (!yakEngineVersionList.length) return false
+        const index1 = yakEngineVersionList.indexOf(currentVersion)
+        const index2 = yakEngineVersionList.indexOf(builtInVersion)
+        if (index1 === -1 || index2 === -1) return false
+        if (index1 > index2) return true
         return false
-    }, [builtInVersion, currentVersion])
+    }, [builtInVersion, currentVersion, yakEngineVersionList])
 
     useEffect(() => {
         // 监听事件-获取当前连接引擎的版本
         ipcRenderer.on("fetch-yak-version-callback", async (e: any, v: string) => {
-            if (isExecuteRef.current) return
             let version = v.replace(/\r?\n/g, "")
             if (version.startsWith("v")) version = version.slice(1)
             setCurrentVersion(version)
@@ -700,24 +760,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     useEffect(() => {
         if (engineLink) {
-            if (isExecuteRef.current) return
             getRemoteValue(EngineRemoteGV.RemoteCheckEngineVersion)
                 .then((v?: string) => {
                     if (!v || v === "false") {
-                        // 获取软件对应的内置版本
-                        ipcRenderer
-                            .invoke("fetch-built-in-engine-version")
-                            .then((v: string) => {
-                                if (isExecuteRef.current) return
-                                let version = v.replace(/\r?\n/g, "")
-                                if (version.startsWith("v")) version = version.slice(1)
-                                setBuiltInVersion(version)
-                            })
-                            .catch(() => {})
+                        if (builtInVersion === "") {
+                            // 获取软件对应的内置版本
+                            ipcRenderer
+                                .invoke("fetch-built-in-engine-version")
+                                .then((v: string) => {
+                                    let version = v.replace(/\r?\n/g, "")
+                                    if (version.startsWith("v")) version = version.slice(1)
+                                    setBuiltInVersion(version)
+                                })
+                                .catch(() => {})
+                        }
                         // 获取当前连接引擎的版本
                         ipcRenderer.invoke("fetch-yak-version")
-                    } else {
-                        isExecuteRef.current = true
                     }
                 })
                 .catch(() => {})
@@ -725,12 +783,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [engineLink])
 
     const onCheckVersionCancel = useMemoizedFn((flag: boolean) => {
-        isExecuteRef.current = true
         if (flag) {
             if (yaklangKillPss) return
-            setYaklangKillPss(true)
+            emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersion, isUpdate: true}))
         }
-        setBuiltInVersion("")
         setCurrentVersion("")
     })
     /** ---------- 软件绑定引擎版本检测提示 End ---------- */
@@ -1272,6 +1328,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 showProjectManage={showProjectManage}
                                                 system={system}
                                                 isJudgeLicense={isJudgeLicense}
+                                                onYakEngineVersionList={setYakEngineVersionList}
+                                                onYaklangLastVersion={setYaklangLastVersion}
                                             />
                                             {!showProjectManage && (
                                                 <>
@@ -1327,6 +1385,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     showProjectManage={showProjectManage}
                                                     system={system}
                                                     isJudgeLicense={isJudgeLicense}
+                                                    onYakEngineVersionList={setYakEngineVersionList}
+                                                    onYaklangLastVersion={setYaklangLastVersion}
                                                 />
                                             </div>
                                         </>
@@ -1442,9 +1502,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         {engineLink && (yaklangKillPss || yakitDownload) && (
                             <div className={styles["ui-layout-body-mask"]}>
                                 <AllKillEngineConfirm
+                                    title={yaklangKillPssText.title}
+                                    content={yaklangKillPssText.content}
                                     visible={yaklangKillPss}
                                     setVisible={setYaklangKillPss}
                                     onSuccess={killedEngineToUpdate}
+                                    onCancelFun={() => {
+                                        setYaklangSpecifyVersion("")
+                                    }}
                                 />
                                 {/* 更新yakit */}
                                 <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
