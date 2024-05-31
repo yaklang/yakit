@@ -81,7 +81,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {PluginGV} from "@/pages/plugins/builtInData"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
-import {YakitRoute} from "@/routes/yakitRoute"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 
