@@ -55,7 +55,6 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         defaultActiveKey,
         pluginExecuteResultWrapper = "",
         PluginTabsRightNode,
-        onlyShowTabs
     } = props
 
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
@@ -98,10 +97,9 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         if (streamInfo.riskState.length === 0) {
             return streamInfo.tabsState
                 .filter((item) => item.tabName !== "漏洞与风险")
-                .filter((item) => !onlyShowTabs || onlyShowTabs?.includes(item.tabName))
         }
-        return streamInfo.tabsState.filter((item) => !onlyShowTabs || onlyShowTabs?.includes(item.tabName))
-    }, [streamInfo.tabsState, streamInfo.riskState, onlyShowTabs])
+        return streamInfo.tabsState
+    }, [streamInfo.tabsState, streamInfo.riskState])
 
     const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
         if (tab.type === "risk") {
@@ -120,7 +118,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     }, [streamInfo.cardState])
     return (
         <div className={classNames(styles["plugin-execute-result"], pluginExecuteResultWrapper)}>
-            {cardState.length > 0 && !onlyShowTabs && (
+            {cardState.length > 0  && (
                 <div className={styles["plugin-execute-result-wrapper"]}>
                     <HorizontalScrollCard title={"Data Card"} data={cardState} />
                 </div>

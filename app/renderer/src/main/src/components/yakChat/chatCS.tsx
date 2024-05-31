@@ -2996,6 +2996,10 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     }, [visible])
 
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        tabs: [
+            {tabName: "日志", type: "log"},
+            {tabName: "Console", type: "console"}
+        ],
         taskName: "debug-plugin",
         apiKey: "DebugPlugin",
         token: tokenRef.current,
@@ -3162,12 +3166,14 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                 secondNode={
                                     <div className={styles["result-box"]} style={{height: "100%"}}>
                                         <PluginExecuteResult
-                                            streamInfo={streamInfo}
+                                            streamInfo={{
+                                                ...streamInfo,
+                                                cardState: []
+                                            }}
                                             runtimeId={runtimeId}
                                             loading={loading}
                                             defaultActiveKey={"Codec结果"}
                                             pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
-                                            onlyShowTabs={["Codec结果", "测试表", "Console"]}
                                         />
                                     </div>
                                 }
