@@ -55,31 +55,64 @@ import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {pluginTypeToName} from "../plugins/builtInData"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import HexEditor from "react-hex-editor"
+import {HexEditorHandle} from "react-hex-editor/dist/types"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 const SaveCodecMethods = "SaveCodecMethods"
 
+interface CodecResponseProps {
+    Result: string
+    RawResult: Uint8Array
+    ResultVerbose: string
+    IsFalseAppearance: boolean
+}
+
 interface NewCodecRightEditorBoxProps {
     isExpand: boolean
     setExpand: (v: boolean) => void
     inputEditor: string
-    outputEditorByte?: Uint8Array
+    outputResponse?: CodecResponseProps
     setInputEditor: (v: string) => void
-    outputEditor: string
     runLoading: boolean
 }
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
-    const {isExpand, setExpand, outputEditorByte, inputEditor, setInputEditor, outputEditor, runLoading} = props
+    const {isExpand, setExpand, outputResponse, inputEditor, setInputEditor, runLoading} = props
     const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
     const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
     const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
     const [outputMenuOpen, setOutputMenuOpen] = useState<boolean>(false)
     const [outputShowType, setOutputShowType] = useState<"editor" | "hex">("editor")
+    // hex
+    const [showData, setShowData] = useState<Uint8Array>(new Buffer([]))
+    const [nonce, setNonce] = useState<number>(0)
+
     const editorBoxRef = useRef<HTMLDivElement>(null)
     const uploadRef = useRef<HTMLDivElement>(null)
+    const HexEditorRef = useRef<HexEditorHandle>(null)
     const size = useSize(editorBoxRef)
+
+    const handleSetValue = React.useCallback(
+        (offset, value) => {
+            console.log("offset, value", offset, value)
+
+            showData[offset] = value
+            setShowData(showData)
+            setNonce((v) => v + 1)
+        },
+        [showData]
+    )
+
+    useUpdateEffect(() => {
+        if (outputResponse?.RawResult) {
+            console.log("outputResponse", outputResponse)
+
+            setShowData(outputResponse?.RawResult)
+        }
+    }, [outputResponse?.RawResult])
+
     const Expand = () => (
         <div
             className={styles["expand-box"]}
@@ -120,8 +153,8 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
     }, [inputEditor])
 
     const outPutObj = useMemo(() => {
-        return judgeStringSize(outputEditor)
-    }, [outputEditor])
+        return judgeStringSize(outputResponse?.Result || "")
+    }, [outputResponse?.Result])
 
     // 导入
     const onImport = useMemoizedFn((path: string) => {
@@ -143,7 +176,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     // 保存
     const onSave = useMemoizedFn(() => {
-        if (!outputEditorByte) {
+        if (!outputResponse?.RawResult) {
             warn("暂无保存内容")
             return
         }
@@ -158,7 +191,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                     const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
                     ipcRenderer
                         .invoke("SaveCodecOutputToTxt", {
-                            data: Buffer.from(outputEditorByte),
+                            data: Buffer.from(outputResponse.RawResult),
                             outputDir: absolutePath,
                             fileName: `Output-${new Date().getTime()}.txt`
                         })
@@ -178,12 +211,12 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     // 替换
     const onReplace = useMemoizedFn(() => {
-        setInputEditor(outputEditor)
+        setInputEditor(outputResponse?.Result || "")
     })
 
     // 复制
     const onCopy = useMemoizedFn(() => {
-        ipcRenderer.invoke("set-copy-clipboard", outputEditor)
+        ipcRenderer.invoke("set-copy-clipboard", outputResponse?.Result || "")
         success("复制成功")
     })
 
@@ -409,92 +442,117 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                             </YakitTag>
                                         </Tooltip>
                                     )}
-                                    <YakitTag style={{marginLeft: 8}} color='danger'>
-                                        数据失真
-                                    </YakitTag>
+                                    {outputResponse?.IsFalseAppearance && (
+                                        <YakitTag style={{marginLeft: 8}} color='danger'>
+                                            数据失真
+                                        </YakitTag>
+                                    )}
                                 </div>
                                 <div className={styles["extra"]}>
-                                    {size && size.width > 300 ? (
+                                    {outputShowType === "editor" && (
                                         <>
-                                            <Tooltip title={"保存"}>
-                                                <div className={styles["extra-icon"]} onClick={onSave}>
-                                                    <OutlineStorageIcon />
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title={"将Output替换至Input"}>
-                                                <div className={styles["extra-icon"]} onClick={onReplace}>
-                                                    <OutlineArrowBigUpIcon />
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title={"复制"}>
-                                                <div className={styles["extra-icon"]} onClick={onCopy}>
-                                                    <OutlineDocumentduplicateIcon />
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title={"不自动换行"}>
-                                                <YakitButton
-                                                    size={"small"}
-                                                    type={noOutputWordwrap ? "text" : "primary"}
-                                                    icon={<EnterOutlined />}
-                                                    onClick={() => {
-                                                        setNoOutputWordwrap(!noOutputWordwrap)
+                                            {size && size.width > 300 ? (
+                                                <>
+                                                    <Tooltip title={"保存"}>
+                                                        <div className={styles["extra-icon"]} onClick={onSave}>
+                                                            <OutlineStorageIcon />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title={"将Output替换至Input"}>
+                                                        <div className={styles["extra-icon"]} onClick={onReplace}>
+                                                            <OutlineArrowBigUpIcon />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title={"复制"}>
+                                                        <div className={styles["extra-icon"]} onClick={onCopy}>
+                                                            <OutlineDocumentduplicateIcon />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title={"不自动换行"}>
+                                                        <YakitButton
+                                                            size={"small"}
+                                                            type={noOutputWordwrap ? "text" : "primary"}
+                                                            icon={<EnterOutlined />}
+                                                            onClick={() => {
+                                                                setNoOutputWordwrap(!noOutputWordwrap)
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                </>
+                                            ) : (
+                                                <YakitDropdownMenu
+                                                    menu={{
+                                                        data: outputMenuData as YakitMenuItemProps[],
+                                                        onClick: ({key}) => {
+                                                            setOutputMenuOpen(false)
+                                                            switch (key) {
+                                                                case "save":
+                                                                    onSave()
+                                                                    break
+                                                                case "replace":
+                                                                    onReplace()
+                                                                    break
+                                                                case "copy":
+                                                                    onCopy()
+                                                                    break
+                                                                case "wordwrap":
+                                                                    setNoOutputWordwrap(!noOutputWordwrap)
+                                                                    break
+                                                                default:
+                                                                    break
+                                                            }
+                                                        }
                                                     }}
-                                                />
-                                            </Tooltip>
+                                                    dropdown={{
+                                                        overlayClassName: styles["codec-output-menu"],
+                                                        trigger: ["click"],
+                                                        placement: "bottomRight",
+                                                        onVisibleChange: (v) => {
+                                                            setOutputMenuOpen(v)
+                                                        },
+                                                        visible: outputMenuOpen
+                                                    }}
+                                                >
+                                                    <div className={styles["extra-icon"]}>
+                                                        <OutlineDotshorizontalIcon />
+                                                    </div>
+                                                </YakitDropdownMenu>
+                                            )}
                                         </>
-                                    ) : (
-                                        <YakitDropdownMenu
-                                            menu={{
-                                                data: outputMenuData as YakitMenuItemProps[],
-                                                onClick: ({key}) => {
-                                                    setOutputMenuOpen(false)
-                                                    switch (key) {
-                                                        case "save":
-                                                            onSave()
-                                                            break
-                                                        case "replace":
-                                                            onReplace()
-                                                            break
-                                                        case "copy":
-                                                            onCopy()
-                                                            break
-                                                        case "wordwrap":
-                                                            setNoOutputWordwrap(!noOutputWordwrap)
-                                                            break
-                                                        default:
-                                                            break
-                                                    }
-                                                }
-                                            }}
-                                            dropdown={{
-                                                overlayClassName: styles["codec-output-menu"],
-                                                trigger: ["click"],
-                                                placement: "bottomRight",
-                                                onVisibleChange: (v) => {
-                                                    setOutputMenuOpen(v)
-                                                },
-                                                visible: outputMenuOpen
-                                            }}
-                                        >
-                                            <div className={styles["extra-icon"]}>
-                                                <OutlineDotshorizontalIcon />
-                                            </div>
-                                        </YakitDropdownMenu>
                                     )}
-
                                     <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                     {Expand()}
                                 </div>
                             </div>
-                            <div className={styles["editor"]}>
-                                <YakitEditor
-                                    readOnly={true}
-                                    type='plaintext'
-                                    value={outPutObj.value}
-                                    noWordWrap={noOutputWordwrap}
-                                    // loading={loading}
-                                />
-                            </div>
+                            <>
+                                {outputShowType === "editor" ? (
+                                    <div className={styles["editor"]}>
+                                        <YakitEditor
+                                            readOnly={true}
+                                            type='plaintext'
+                                            value={outPutObj.value}
+                                            noWordWrap={noOutputWordwrap}
+                                            // loading={loading}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className={styles["hex-editor"]}>
+                                        <HexEditor
+                                            readOnly={true}
+                                            ref={HexEditorRef}
+                                            asciiWidth={18}
+                                            data={showData}
+                                            nonce={nonce}
+                                            setValue={handleSetValue}
+                                            overscanCount={0x03}
+                                            showAscii={true}
+                                            showColumnLabels={true}
+                                            showRowLabels={true}
+                                            highlightColumn={true}
+                                        />
+                                    </div>
+                                )}
+                            </>
                         </YakitSpin>
                     </div>
                 }
@@ -898,8 +956,7 @@ interface NewCodecMiddleRunListProps {
     rightItems: RightItemsProps[]
     setRightItems: (v: RightItemsProps[]) => void
     inputEditor: string
-    setOutputEditor: (v: string) => void
-    setOutputEditorByte: (v: Uint8Array) => void
+    setOutputResponse: (v: CodecResponseProps) => void
     isClickToRunList: React.MutableRefObject<boolean>
     setRunLoading: (v: boolean) => void
 }
@@ -932,8 +989,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         rightItems,
         setRightItems,
         inputEditor,
-        setOutputEditor,
-        setOutputEditorByte,
+        setOutputResponse,
         isClickToRunList,
         setRunLoading
     } = props
@@ -1111,10 +1167,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
 
         ipcRenderer
             .invoke("NewCodec", newCodecParams)
-            .then((data: {Result: string; RawResult: Uint8Array}) => {
+            .then((data: CodecResponseProps) => {
                 // 执行完成后 更改Output值
-                setOutputEditorByte(data.RawResult)
-                setOutputEditor(data.Result)
+                setOutputResponse(data)
             })
             .catch((e) => {
                 failed(`newCodec failed ${e}`)
@@ -1902,8 +1957,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     const cacheCodecRef = useRef<CodecMethod[]>([])
     // Input/Output编辑器内容
     const [inputEditor, setInputEditor] = useState<string>("")
-    const [outputEditor, setOutputEditor] = useState<string>("")
-    const [outputEditorByte, setOutputEditorByte] = useState<Uint8Array>()
+    const [outputResponse, setOutputResponse] = useState<CodecResponseProps>()
     // 是否正在执行
     const [runLoading, setRunLoading] = useState<boolean>(false)
     // 是否为点击添加至执行列表
@@ -2206,8 +2260,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         rightItems={rightItems}
                         setRightItems={setRightItems}
                         inputEditor={inputEditor}
-                        setOutputEditor={setOutputEditor}
-                        setOutputEditorByte={setOutputEditorByte}
+                        setOutputResponse={setOutputResponse}
                         isClickToRunList={isClickToRunList}
                         setRunLoading={setRunLoading}
                     />
@@ -2218,8 +2271,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                 setExpand={setExpand}
                 inputEditor={inputEditor}
                 setInputEditor={setInputEditor}
-                outputEditor={outputEditor}
-                outputEditorByte={outputEditorByte}
+                outputResponse={outputResponse}
                 runLoading={runLoading}
             />
         </div>
