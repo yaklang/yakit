@@ -609,12 +609,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     }, [streamInfo])
     const disabledReport = useCreation(() => {
         switch (executeStatus) {
-            case "finished":
-                return false
-            case "error":
-                return false
-            default:
+            case 'process':
                 return true
+            default:
+                return false
         }
     }, [executeStatus])
     return (
