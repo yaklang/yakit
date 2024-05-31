@@ -494,7 +494,10 @@ module.exports = {
 
                 let dest = getLatestYakLocalEngine(); //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
                 dest = dest.replaceAll(`"`, `\"`)
+                // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
+                let flag = false
                 function tryUnlink(retriesLeft) {
+                    if (flag) return
                     try {
                         fs.unlinkSync(dest)
                     } catch (err) {
@@ -510,6 +513,7 @@ module.exports = {
                 }
                 tryUnlink(2);
                 childProcess.exec(isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`, err => {
+                    flag = true
                     if (err) {
                         reject(err)
                         return
