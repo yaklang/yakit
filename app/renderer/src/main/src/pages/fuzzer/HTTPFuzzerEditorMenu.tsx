@@ -15,7 +15,6 @@ import {
     IconSolidTagIcon,
     IconOutlinePencilAltIcon,
     TrashIcon,
-    IconSolidAIIcon
 } from "@/assets/newIcon"
 import {DragDropContext, Droppable, Draggable, DraggingStyle} from "@hello-pangea/dnd"
 import {AutoDecodeResult} from "@/utils/encodec"
@@ -28,7 +27,7 @@ import { SolidTerminalIcon } from "@/assets/icon/solid"
 import { queryYakScriptList } from "../yakitStore/network"
 import { PluginGV } from "../plugins/builtInData"
 import { YakScript } from "../invoker/schema"
-import emiter from "@/utils/eventBus/eventBus"
+import { IconSolidAIIcon } from "@/assets/icon/colors"
 import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")

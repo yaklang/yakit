@@ -70,7 +70,8 @@ import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {HighLightText} from "@/components/HTTPFlowDetail"
 import {useStore} from "@/store/editorState"
-import {CloudDownloadIcon, IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/newIcon"
+import {CloudDownloadIcon} from "@/assets/newIcon"
+import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
 
 export interface CodecTypeProps {
     key?: string

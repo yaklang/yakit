@@ -56,7 +56,6 @@ import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import Item from "antd/lib/list/Item"
 
 
 /** @name 插件列表大框架组件 */

@@ -107,7 +107,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     })
     return (
         <div className={classNames(styles["plugin-execute-result"], pluginExecuteResultWrapper)}>
-            {streamInfo.cardState.length > 0 && (
+            {streamInfo.cardState.length > 0 && !onlyShowTabs && (
                 <div className={styles["plugin-execute-result-wrapper"]}>
                     <HorizontalScrollCard title={"Data Card"} data={streamInfo.cardState} />
                 </div>

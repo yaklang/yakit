@@ -2938,6 +2938,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     const tokenRef = useRef<string>(randomString(40))
     const pluginAIListRef = useRef<HTMLDivElement>(null)
 
+    const contentAIRef = useRef<HTMLDivElement>(null)
+
     // 添加项
     const AddAIList = useMemoizedFn((obj: PluginAiItem) => {
         setPluginAIItem((lastList) => [...lastList, obj])
@@ -2972,6 +2974,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 })
             )
             scrollToPluginAIBottom()
+            scrollToAIBottom()
         } catch (error) {}
     })
 
@@ -3008,7 +3011,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             setRuntimeId(rId)
         },
-        isShowError: false
+        isShowError: false,
+        isLimitLogs: false
     })
 
     useThrottleEffect(
@@ -3097,6 +3101,16 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
         setResTime("")
     })
 
+    // ai内容置底
+    const scrollToAIBottom = useMemoizedFn(() => {
+        if (contentAIRef.current) {
+            const scrollHeight = contentAIRef.current?.scrollHeight || 0
+            const top = scroll?.top || 0
+            if (scrollHeight - top < 5) return
+            ;(contentAIRef.current as HTMLDivElement).scrollTop = (contentAIRef.current as HTMLDivElement).scrollHeight
+        }
+    })
+
     return (
         <>
             {visible && (
@@ -3107,7 +3121,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                 isVer={true}
                                 lineDirection='bottom'
                                 freeze={isShowAI}
-                                firstMinSize={isShowAI?134:0}
+                                firstMinSize={isShowAI ? 134 : 0}
                                 firstNodeStyle={{padding: 0}}
                                 secondNodeStyle={{padding: 0}}
                                 secondMinSize={50}
@@ -3138,6 +3152,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                                         time={time}
                                                         info={info}
                                                         onStop={onStop}
+                                                        contentAIRef={contentAIRef}
                                                     />
                                                 )
                                             }
@@ -3222,15 +3237,12 @@ interface PluginAIContentProps {
     onStop: () => void
     onDel?: () => void
     className?: string
+    // 是否绑定滚轮（实现滑动到底部效果）
+    contentAIRef?: React.RefObject<HTMLDivElement>
 }
 
 export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
-    const {token, loading, loadingToken, time, info, resTime, onStop, onDel, className} = props
-
-    const copyContent = useMemo(() => {
-        let content: string = info.content
-        return content
-    }, [resTime, info])
+    const {token, loading, loadingToken, time, info, resTime, onStop, onDel, className, contentAIRef} = props
 
     const showLoading = useMemo(() => {
         return token === loadingToken && loading
@@ -3255,7 +3267,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                                 <div className={styles["right-btn"]}>
                                     <CopyComponents
                                         className={classNames(styles["copy-icon-style"])}
-                                        copyText={copyContent}
+                                        copyText={info.content}
                                         iconColor={"#85899e"}
                                     />
                                 </div>
@@ -3269,7 +3281,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                     )}
                 </div>
             </div>
-            <div className={styles["opt-content"]}>
+            <div className={styles["opt-content"]} ref={contentAIRef}>
                 {token === loadingToken ? (
                     info.content.length !== 0 ? (
                         <>

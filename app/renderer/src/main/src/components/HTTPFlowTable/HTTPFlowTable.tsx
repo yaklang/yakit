@@ -39,8 +39,6 @@ import {
     ArrowCircleRightSvgIcon,
     ChromeFrameSvgIcon,
     CheckIcon,
-    IconSolidAIIcon,
-    IconSolidAIWhiteIcon,
     CloudDownloadIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
@@ -83,6 +81,7 @@ import {serverPushStatus} from "@/utils/duplex/duplex"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {PluginGV} from "@/pages/plugins/builtInData"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
+import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
