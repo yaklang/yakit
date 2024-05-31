@@ -44,10 +44,12 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        ipcRenderer.on("fetch-yak-version-callback", async (e: any, data) => {
-            setCurrentYaklang(data)
-        })
-        ipcRenderer.invoke("fetch-yak-version")
+        ipcRenderer
+            .invoke("get-current-yak")
+            .then((data: string) => {
+                setCurrentYaklang(data)
+            })
+            .catch(() => {})
     }, [engineLink])
 
     const [show, setShow] = useState<boolean>(false)
