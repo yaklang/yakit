@@ -138,7 +138,6 @@ export interface FuncDomainProp {
     /** @name 操作系统类型 */
     system: YakitSystem
     onYakEngineVersionList: (versionList: string[]) => void
-    onYaklangLastVersion: (version: string) => void
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -153,8 +152,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         showProjectManage = false,
         system,
         isJudgeLicense,
-        onYakEngineVersionList,
-        onYaklangLastVersion
+        onYakEngineVersionList
     } = props
 
     /** 登录用户信息 */
@@ -416,7 +414,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             isEngineLink={isEngineLink}
                             isRemoteMode={isRemoteMode}
                             onYakEngineVersionList={onYakEngineVersionList}
-                            onYaklangLastVersion={onYaklangLastVersion}
                         />
                     )}
                     {!showProjectManage && (
@@ -1399,7 +1396,17 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
 
     const versionListItemClick = (version: string) => {
         onClosePop(false)
-        emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version, isUpdate: false}))
+        emiter.emit(
+            "downYaklangSpecifyVersion",
+            JSON.stringify({
+                version,
+                killPssText: {
+                    title: "替换引擎，需关闭所有本地进程",
+                    content:
+                        "确认下载并安装此版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+                }
+            })
+        )
     }
 
     return (
@@ -1510,7 +1517,6 @@ interface UIOpNoticeProp {
     isEngineLink: boolean
     isRemoteMode: boolean
     onYakEngineVersionList: (versionList: string[]) => void
-    onYaklangLastVersion: (version: string) => void
 }
 
 export interface UpdateContentProp {
@@ -1536,7 +1542,7 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
 }
 
 const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
-    const {isEngineLink, isRemoteMode, onYakEngineVersionList, onYaklangLastVersion} = props
+    const {isEngineLink, isRemoteMode, onYakEngineVersionList} = props
 
     const {userInfo} = useStore()
 
@@ -1569,9 +1575,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     useEffect(() => {
         onYakEngineVersionList(moreYaklangVersionList)
     }, [moreYaklangVersionList])
-    useEffect(() => {
-        onYaklangLastVersion(yaklangLastVersion)
-    }, [yaklangLastVersion])
     const versionsInfoTime = useRef<any>(null)
     const [communityYakitContent, setCommunityYakitContent] = useState<UpdateContentProp>({version: "", content: ""})
     const [communityYaklangContent, setCommunityYaklangContent] = useState<UpdateContentProp>({
@@ -1684,7 +1687,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     useEffect(() => {
         if (isEngineLink) {
             ipcRenderer.on("fetch-yak-version-callback", async (e: any, data: string) => {
-                console.log('本地引擎版本号：', data);
                 setYaklangVersion(data || "dev")
             })
         }
@@ -1744,7 +1746,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         if (type === "yakit") {
             emiter.emit("activeUpdateYakitOrYaklang", type)
         } else {
-            emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersion, isUpdate: true}))
+            emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersion}))
         }
     })
 

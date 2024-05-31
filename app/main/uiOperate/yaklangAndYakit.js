@@ -108,7 +108,11 @@ module.exports = (win, getClient) => {
             let rsp = https.get(url)
             rsp.on("response", (rsp) => {
                 rsp.on("data", (data) => {
-                    resolve(Buffer.from(data).toString("utf8"))
+                    if (rsp.statusCode == 200) {
+                        resolve(Buffer.from(data).toString("utf8"))
+                    } else {
+                        reject('校验值不存在')
+                    }
                 }).on("error", (err) => reject(err))
             })
             rsp.on("error", reject)

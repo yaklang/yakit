@@ -165,6 +165,15 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     /** 是否中断下载记录 */
     const [cancelLoading, setCancelLoading] = useState<boolean>(false)
     const isBreakDownload = useRef<boolean>(false)
+
+    const checkEngineDownloadLatestVersionCancel = () => {
+        // 发送到localEngine校验处
+        if (onlyInstallLatestEngine) {
+            emiter.emit("checkEngineDownloadLatestVersionCancel")
+            setYakitStatus("")
+        }
+    }
+
     /** 取消事件 */
     const onClose = useMemoizedFn(() => {
         setCancelLoading(true)
@@ -174,25 +183,14 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
         setTimeout(() => {
             setInstall(false)
             setCancelLoading(false)
-            // 发送到localEngine校验处
-            if (onlyInstallLatestEngine) {
-                emiter.emit("checkEngineDownloadLatestVersionCancel")
-                setYakitStatus("")
-            }
+            checkEngineDownloadLatestVersionCancel()
         }, 500)
     })
     /** 取消下载事件 */
     const onInstallClose = useMemoizedFn(() => {
         isBreakDownload.current = false
         if (downloadProgress) setDownloadProgress(undefined)
-        if (install) {
-            setInstall(false)
-            // 发送到localEngine校验处
-            if (onlyInstallLatestEngine) {
-                emiter.emit("checkEngineDownloadLatestVersionCancel")
-                setYakitStatus("")
-            }
-        }
+        if (install) setInstall(false)
     })
 
     /** 获取引擎线上最新版本 */
@@ -207,6 +205,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             .catch((e: any) => {
                 failed(`获取线上引擎最新版本失败 ${e}`)
                 onInstallClose()
+                checkEngineDownloadLatestVersionCancel()
             })
     })
 
@@ -247,6 +246,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                 if (isBreakDownload.current) return
                 failed(`引擎下载失败: ${e}`)
                 onInstallClose()
+                checkEngineDownloadLatestVersionCancel()
             })
     }
     const yaklangUpdate = () => {
@@ -263,6 +263,9 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             .catch((err: any) => {
                 failed(`安装失败: ${err}`)
                 onInstallClose()
+                if (err.message === "operation not permitted") {
+                    checkEngineDownloadLatestVersionCancel()
+                }
             })
     }
 

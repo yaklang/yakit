@@ -18,7 +18,7 @@ import styles from "./DownloadYaklang.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 interface DownloadYaklangProps {
-    yaklangSpecifyVersion?: string
+    yaklangSpecifyVersion: string
     system: YakitSystem
     visible: boolean
     onCancel: () => any
@@ -26,7 +26,7 @@ interface DownloadYaklangProps {
 
 /** @name Yaklang引擎更新下载弹窗 */
 export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
-    const {yaklangSpecifyVersion = '', system, visible, onCancel} = props
+    const {yaklangSpecifyVersion, system, visible, onCancel} = props
 
     /** 常见问题弹窗是否展示 */
     const [qsShow, setQSShow] = useState<boolean>(false)
