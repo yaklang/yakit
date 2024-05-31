@@ -45,9 +45,9 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
 
     useEffect(() => {
         ipcRenderer
-            .invoke("fetch-yakit-version")
-            .then((res) => {
-                setCurrentYaklang(res)
+            .invoke("get-current-yak")
+            .then((data: string) => {
+                setCurrentYaklang(data)
             })
             .catch(() => {})
     }, [engineLink])
