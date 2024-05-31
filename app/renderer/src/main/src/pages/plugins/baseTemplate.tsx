@@ -223,6 +223,26 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         </div>
     )
 })
+
+/** @name 固定插件Tags转译 */
+export const onPluginTagsToName = (key:string):string => {
+        switch (key) {
+            case PluginGV.PluginYakDNSLogSwitch:
+                return "用于自定义 DNSLOG 平台"
+            case PluginGV.PluginCodecHttpSwitch:
+                return "用于HTTP数据包变形"
+            case PluginGV.PluginCodecContextMenuExecuteSwitch:
+                return "用于数据包右键"
+            case PluginGV.PluginCodecSingleHistorySwitch:
+                return "用于history右键(单选)"
+            case PluginGV.PluginCodecMultipleHistorySwitch:
+                return "用于history右键(多选)"
+            default:
+                return key
+        }
+}
+
+
 /** @name 插件详情-头部信息 */
 export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props) => {
     const {
@@ -248,6 +268,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         let arr: string[] = []
         try {
             arr = tags ? tags.split(",") : []
+            arr = arr.map((item)=>onPluginTagsToName(item))
         } catch (error) {}
         return arr
     }, [tags])
@@ -402,13 +423,39 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             if (riskShow) setRiskShow(false)
         })
 
+        const replaceTagName = useMemoizedFn((key:string)=>{
+            return {key,label:onPluginTagsToName(key)}
+        })
+
         useEffect(() => {
             if (data) {
                 form.resetFields()
+                let newTags:any = data.Tags
+                if(Array.isArray(data.Tags) && data.Tags.length>0){
+                    newTags = []
+                    data.Tags.forEach((item)=>{
+                        newTags.push(replaceTagName(item)) 
+                    })
+                }
+                data.Tags = newTags
                 form.setFieldsValue({...data})
                 setBugInfo(data?.RiskDetail || [])
             }
         }, [data])
+
+        const toTagsKey = useMemoizedFn((Tags)=>{
+            if(Array.isArray(Tags)&&Tags.length>0){
+                return Tags.map((item)=>{
+                    if(typeof item === "string"){
+                        return item
+                    }
+                    else {
+                        return item?.key||""
+                    }
+                })
+            }
+            return Tags
+        })
 
         // 获取当前表单的内容
         const getValues = useMemoizedFn(() => {
@@ -417,23 +464,17 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                 ScriptName: (obj?.ScriptName || "").trim(),
                 Help: (obj?.Help || "").trim() || undefined,
                 RiskDetail: bugInfo || [],
-                Tags: obj?.Tags || undefined
+                Tags: toTagsKey(obj?.Tags) || undefined
             }
             return data
         })
+
         // 验证是否可以进行信息的提交
         const onFinish: () => Promise<PluginBaseParamProps | undefined> = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
                 form.validateFields()
                     .then((value) => {
-                        const obj = form.getFieldsValue()
-                        const data: PluginBaseParamProps = {
-                            ScriptName: (obj?.ScriptName || "").trim(),
-                            Help: (obj?.Help || "").trim() || undefined,
-                            RiskDetail: bugInfo || [],
-                            Tags: obj?.Tags || undefined
-                        }
-                        resolve({...data})
+                        resolve({...getValues()})
                     })
                     .catch((errorInfo) => {
                         resolve(undefined)
@@ -763,7 +804,7 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                                     }
                                 }}
                             />
-                            用于自定义HTTP数据包变形
+                            用于HTTP数据包变形
                         </div>
                     </div>
                 )}
@@ -784,7 +825,45 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                                     }
                                 }}
                             />
-                            用于自定义右键菜单执行
+                            用于数据包右键
+                        </div>
+                    </div>
+                )}
+                {type === "codec" && (
+                    <div className={styles["setting-switch"]}>
+                        <div className={styles["switch-wrapper"]}>
+                            <YakitSwitch
+                                checked={tags.includes(PluginGV.PluginCodecSingleHistorySwitch)}
+                                onChange={(check) => {
+                                    if (check) {
+                                        const arr = tags.concat([PluginGV.PluginCodecSingleHistorySwitch])
+                                        setTags([...arr])
+                                    } else {
+                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecSingleHistorySwitch)
+                                        setTags([...arr])
+                                    }
+                                }}
+                            />
+                            用于history右键(单选)
+                        </div>
+                    </div>
+                )}
+                {type === "codec" && (
+                    <div className={styles["setting-switch"]}>
+                        <div className={styles["switch-wrapper"]}>
+                            <YakitSwitch
+                                checked={tags.includes(PluginGV.PluginCodecMultipleHistorySwitch)}
+                                onChange={(check) => {
+                                    if (check) {
+                                        const arr = tags.concat([PluginGV.PluginCodecMultipleHistorySwitch])
+                                        setTags([...arr])
+                                    } else {
+                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecMultipleHistorySwitch)
+                                        setTags([...arr])
+                                    }
+                                }}
+                            />
+                            用于history右键(多选)
                         </div>
                     </div>
                 )}

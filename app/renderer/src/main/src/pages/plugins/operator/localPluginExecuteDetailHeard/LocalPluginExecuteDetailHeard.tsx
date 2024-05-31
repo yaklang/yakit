@@ -291,6 +291,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         e.stopPropagation()
         onDownPlugin()
     })
+    
     return (
         <>
             <ExpandAndRetract

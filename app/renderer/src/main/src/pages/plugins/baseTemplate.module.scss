@@ -446,7 +446,7 @@
 .plugin-modify-setting-wrapper {
     width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 24px;
 
     .setting-switch {

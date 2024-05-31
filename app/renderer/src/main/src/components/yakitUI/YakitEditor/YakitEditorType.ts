@@ -12,7 +12,7 @@ export type YakitITextModel = monacoEditor.editor.ITextModel
 export type YakitIModelDecoration = monacoEditor.editor.IModelDecoration
 
 /** @name 自带的菜单组可选项 */
-export type YakitEditorExtraRightMenuType = "code" | "decode" | "http" | "customhttp" | "customcontextmenu"
+export type YakitEditorExtraRightMenuType = "code" | "decode" | "http" | "customcontextmenu" | "aiplugin"
 
 export interface YakitEditorProps {
     /** @name 是否每次更新菜单 */

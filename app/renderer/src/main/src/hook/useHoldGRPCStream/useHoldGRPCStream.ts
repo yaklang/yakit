@@ -53,6 +53,10 @@ export interface HoldGRPCStreamParams {
     dataFilter?: (obj: StreamResult.Message, content: StreamResult.Log) => boolean
     /** @name 设置run-time-id值 */
     setRuntimeId?: (runtimeId: string) => any
+    /** @name 是否提示error信息 */
+    isShowError?: boolean
+    /** @name 是否限制缓存多少条logState信息（默认100） */
+    isLimitLogs?: boolean
 }
 
 export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
@@ -65,7 +69,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         onEnd,
         onError,
         dataFilter,
-        setRuntimeId
+        setRuntimeId,
+        isShowError = true,
+        isLimitLogs = true
     } = params
 
     const [streamInfo, setStreamInfo] = useState<HoldGRPCStreamInfo>({
@@ -116,7 +122,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
         messages.current.unshift(log)
         // 只缓存 100 条结果（日志类型 + 数据类型）
-        if (messages.current.length > 100) {
+        if (messages.current.length > 100 && isLimitLogs) {
             messages.current.pop()
         }
     })
@@ -301,7 +307,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-error
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            failed(`[Mod] ${taskName} error: ${error}`)
+            isShowError && failed(`[Mod] ${taskName} error: ${error}`)
             if (onError) {
                 onError(error)
             }

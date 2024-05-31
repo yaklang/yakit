@@ -93,7 +93,7 @@ import {v4 as uuidv4} from "uuid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 import has from "lodash/has"
-
+import { onPluginTagsToName } from "./baseTemplate";
 import classNames from "classnames"
 import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
@@ -1122,7 +1122,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                                                     "yakit-content-single-ellipsis"
                                                 )}
                                             >
-                                                {item}
+                                                {onPluginTagsToName(item)}
                                             </div>
                                         </div>
                                     )

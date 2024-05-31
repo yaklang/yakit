@@ -1863,6 +1863,7 @@ const IconSolidSparkles = () => (
         </defs>
     </svg>
 )
+
 /**
  * @description  Icon/Solid/sparkles
  */

@@ -57,7 +57,12 @@ import {outputToPrintLog} from "./WelcomeConsoleUtil"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
-import { setNowProjectDescription } from "@/pages/globalVariable"
+import {setNowProjectDescription} from "@/pages/globalVariable"
+import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
+import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
+import {ThirdPartyApplicationConfigForm} from "../configNetwork/ThirdPartyApplicationConfig"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -953,6 +958,81 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineLink])
 
+    const openAIByChatCS = useMemoizedFn((obj: {text?: string; scriptName: string; isAiPlugin: boolean}) => {
+        emiter.emit("onRunChatcsAIByFuzzer", JSON.stringify(obj))
+    })
+
+    const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
+
+    // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
+    const onFuzzerModal = useMemoizedFn((value) => {
+        try {
+            const val: {text?: string; scriptName: string; isAiPlugin: any} = JSON.parse(value)
+            if (val.isAiPlugin === "isGetPlugin") {
+                setCoedcPluginShow(true)
+                return
+            }
+            if (val.isAiPlugin) {
+                apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
+                    const configType = obj.AppConfigs.map((item) => item.Type).filter((item) =>
+                        ["openai", "chatglm", "moonshot"].includes(item)
+                    )
+                    // 如若已配置 则打开执行框
+                    if (configType.length > 0) {
+                        openAIByChatCS({text: val.text, scriptName: val.scriptName, isAiPlugin: val.isAiPlugin})
+                    } else {
+                        let m = showYakitModal({
+                            title: "添加第三方应用",
+                            width: 600,
+                            footer: null,
+                            closable: true,
+                            maskClosable: false,
+                            content: (
+                                <div style={{margin: 24}}>
+                                    <ThirdPartyApplicationConfigForm
+                                        onAdd={(e) => {
+                                            let existed = false
+                                            const existedResult = (obj.AppConfigs || []).map((i) => {
+                                                if (i.Type === e.Type) {
+                                                    existed = true
+                                                    return {...i, ...e}
+                                                }
+                                                return {...i}
+                                            })
+                                            if (!existed) {
+                                                existedResult.push(e)
+                                            }
+                                            const params = {...obj, AppConfigs: existedResult}
+                                            apiSetGlobalNetworkConfig(params).then(() => {
+                                                openAIByChatCS({
+                                                    text: val.text,
+                                                    scriptName: val.scriptName,
+                                                    isAiPlugin: val.isAiPlugin
+                                                })
+                                                m.destroy()
+                                            })
+                                        }}
+                                        onCancel={() => m.destroy()}
+                                    />
+                                </div>
+                            )
+                        })
+                    }
+                })
+            } else {
+                openAIByChatCS({text: val.text, scriptName: val.scriptName, isAiPlugin: val.isAiPlugin})
+            }
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        // YakitWindow
+        emiter.on("onOpenFuzzerModal", onFuzzerModal)
+        return () => {
+            emiter.off("onOpenFuzzerModal", onFuzzerModal)
+        }
+    }, [])
+
     /** ---------- ChatCS End ---------- */
 
     /** ---------- 软件顶部展示录屏中状态 Start ---------- */
@@ -1302,7 +1382,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                         {!engineLink && !isRemoteEngine && yaklangDownload && (
                             // 更新引擎
-                            <DownloadYaklang yaklangSpecifyVersion={yaklangSpecifyVersion} system={system} visible={yaklangDownload} onCancel={onDownloadedYaklang} />
+                            <DownloadYaklang
+                                yaklangSpecifyVersion={yaklangSpecifyVersion}
+                                system={system}
+                                visible={yaklangDownload}
+                                onCancel={onDownloadedYaklang}
+                            />
                         )}
 
                         <LocalEngine
@@ -1465,6 +1550,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     </div>
                 </div>
             )}
+
+            <YakitGetOnlinePlugin
+                visible={coedcPluginShow}
+                pluginType={["codec"]}
+                setVisible={(v) => {
+                    setCoedcPluginShow(v)
+                }}
+                onFinish={() => {
+                    // 此处通知刷新各类基于codec插件菜单
+                    emiter.emit("onRefPluginCodecMenu")
+                }}
+            />
         </div>
     )
 }
