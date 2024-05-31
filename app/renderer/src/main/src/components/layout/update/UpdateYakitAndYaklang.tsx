@@ -109,7 +109,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     })
 
     useEffect(() => {
-        if (latestYakit && latestYaklang) fetchYakitAndYaklangVersionInfo()
+        if (latestYakit || latestYaklang) fetchYakitAndYaklangVersionInfo()
     }, [latestYakit, latestYaklang])
 
     useEffect(() => {
