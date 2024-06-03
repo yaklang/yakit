@@ -1,6 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {PortScanExecuteExtraFormValue} from "./NewPortScanType"
-import {StartBruteParams} from "@/pages/brute/BrutePage"
+import {StartBruteParams} from "../newBrute/NewBruteType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -52,6 +52,7 @@ export interface RecordPortScanRequest {
     LastRecord?: LastRecordProps
     StartBruteParams?: StartBruteParams
     PortScanRequest: PortScanExecuteExtraFormValue
+    RuntimeId?: string
 }
 /**
  * @description 端口扫描执行方法  企业版

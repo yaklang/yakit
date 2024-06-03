@@ -12,7 +12,6 @@ import { useEffect, useRef, useState } from "react"
 import { AutoSpin } from "@/components/AutoSpin"
 import { YakitSpin } from "../YakitSpin/YakitSpin"
 import { showYakitModal } from "../YakitModal/YakitModalConfirm"
-import { YakitRoute } from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
 

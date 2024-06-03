@@ -50,7 +50,7 @@ import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {shallow} from "zustand/shallow"
 import {PageNodeItemProps, ScanPortPageInfoProps, usePageInfo} from "@/store/pageInfo"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {pluginTypeFilterList} from "@/defaultConstants/PluginBatchExecutor"
 import {defaultScanPortPageInfo} from "@/defaultConstants/NewPortScan"
 
@@ -268,7 +268,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     SaveToDB: true,
     Proxy: [],
     EnableBrute: false,
-    ProbeTimeout: 7,
+    ProbeTimeout: 5,
     ScriptNames: [],
     ProbeMax: 3,
     EnableCClassScan: false,
@@ -280,7 +280,9 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     LinkPluginConfig: cloneDeep(defaultLinkPluginConfig),
     BasicCrawlerEnableJSParser: false,
     /**@description 前端使用,扫描协议 */
-    scanProtocol: "tcp"
+    scanProtocol: "tcp",
+    /**前端使用 */
+    pluginGroup: []
 }
 
 const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(

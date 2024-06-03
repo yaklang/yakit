@@ -3,7 +3,7 @@ import React, {useEffect, useState} from "react"
 import styles from "./BruteExecuteParamsDrawer.module.scss"
 import {BruteExecuteExtraFormValue} from "./NewBruteType"
 import {Form, FormInstance} from "antd"
-import {useMemoizedFn} from "ahooks"
+import {useControllableValue, useMemoizedFn} from "ahooks"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {apiGetAllPayloadGroup, apiPayloadByType} from "./utils"
 import {yakitNotify} from "@/utils/notification"
@@ -61,6 +61,10 @@ interface BruteSettingsProps {
 /**弱口令检测 */
 export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) => {
     const {visible, form} = props
+
+    const [userType, setUserType] = useState<string>()
+    const [password, setPassword] = useState<string>()
+
     const delayMin = Form.useWatch("DelayMin", form)
     const delayMax = Form.useWatch("DelayMax", form)
 
@@ -69,6 +73,9 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
 
     const passwordsDict = Form.useWatch("PasswordsDict", form) || []
     const passwords = Form.useWatch("passwords", form)
+
+    const userSelectType = Form.useWatch("userSelectType", form)
+    const passwordSelectType = Form.useWatch("passwordSelectType", form)
 
     useEffect(() => {
         if (usernamesDict.length === 0 && !usernames) {
@@ -80,8 +87,23 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
             form.setFieldsValue({replaceDefaultPasswordDict: true})
         }
     }, [passwordsDict, passwords])
+
+    useEffect(() => {
+        setUserType(userSelectType)
+    }, [userSelectType])
+    useEffect(() => {
+        setPassword(passwordSelectType)
+    }, [passwordSelectType])
+
+    const onSetUser = useMemoizedFn((v) => {
+        form.setFieldsValue({userSelectType: v})
+    })
+    const onSetPassword = useMemoizedFn((v) => {
+        form.setFieldsValue({passwordSelectType: v})
+    })
     return (
         <>
+            <Form.Item label='选择的用户字典类型,隐藏' name='userSelectType' style={{display: "none"}} />
             <Form.Item
                 label='爆破用户字典'
                 name='UsernamesDict'
@@ -92,7 +114,7 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
                     return value ? value.split(/,|\r?\n/) : []
                 }}
             >
-                <SelectPayload visible={visible} />
+                <SelectPayload visible={visible} selectValue={userType} setSelectValue={onSetUser} />
             </Form.Item>
             <Form.Item label='爆破用户' name='usernames'>
                 <YakitInput.TextArea placeholder='请输入爆破用户，多个爆破用户用“英文逗号”或换行分隔' rows={3} />
@@ -100,6 +122,7 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
             <Form.Item label={" "} colon={false} name='replaceDefaultUsernameDict' valuePropName='checked'>
                 <YakitCheckbox disabled={usernamesDict.length === 0 && !usernames}>同时使用默认用户字典</YakitCheckbox>
             </Form.Item>
+            <Form.Item label='选择的密码字典类型,隐藏' name='passwordSelectType' style={{display: "none"}} />
             <Form.Item
                 label='爆破密码字典'
                 name='PasswordsDict'
@@ -110,7 +133,7 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
                     return value ? value.split(/,|\r?\n/) : []
                 }}
             >
-                <SelectPayload visible={visible} />
+                <SelectPayload visible={visible} selectValue={password} setSelectValue={onSetPassword} />
             </Form.Item>
             <Form.Item label='爆破密码' name='passwords'>
                 <YakitInput.TextArea placeholder='请输入爆破密码，多个爆破密码用“英文逗号”或换行分隔' rows={3} />
@@ -142,11 +165,16 @@ interface SelectPayloadProps extends Omit<YakitSelectProps, "value" | "onChange"
     visible: boolean
     contentValue?: string | string[]
     setContentValue?: (s: string | string[]) => void
+    selectValue?: string
+    setSelectValue?: (s: string) => void
 }
 const SelectPayload: React.FC<SelectPayloadProps> = React.memo((props) => {
-    const {visible, contentValue, setContentValue, ...restProps} = props
+    const {visible, contentValue, setContentValue, selectValue, setSelectValue, ...restProps} = props
 
-    const [valueSelect, setValueSelect] = useState<YakitSelectProps["value"]>()
+    const [valueSelect, setValueSelect] = useControllableValue<YakitSelectProps["value"]>(props, {
+        valuePropName: "selectValue",
+        trigger: "setSelectValue"
+    })
     const [data, setData] = useState<PayloadGroupNodeProps[]>([])
     useEffect(() => {
         if (visible) fetchList()

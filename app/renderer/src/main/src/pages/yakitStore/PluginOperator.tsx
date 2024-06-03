@@ -10,7 +10,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
-import {DatabaseFirstMenuProps, YakitRoute} from "@/routes/newRoute"
+import {DatabaseFirstMenuProps} from "@/routes/newRoute"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 

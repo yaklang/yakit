@@ -1,5 +1,10 @@
 import React, {useEffect, useRef, useState} from "react"
-import {SimpleDetectForm, SimpleDetectFormContentProps, SimpleDetectProps} from "./SimpleDetectType"
+import {
+    SimpleDetectForm,
+    SimpleDetectFormContentProps,
+    SimpleDetectProps,
+    SimpleDetectValueProps
+} from "./SimpleDetectType"
 import {Checkbox, Form, Progress, Slider} from "antd"
 import {ExpandAndRetract, ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
@@ -26,7 +31,7 @@ import {
 import {DownloadOnlinePluginAllResProps} from "../yakitStore/YakitStorePage"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {YakitRoute, YakitRouteToPageInfo} from "@/routes/newRoute"
+import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {SliderMarks} from "antd/lib/slider"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -38,15 +43,23 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {SimpleDetectExtraParam} from "./SimpleDetectExtraParamsDrawer"
 import {convertStartBruteParams} from "../securityTool/newBrute/utils"
-import {StartBruteParams} from "../brute/BrutePage"
 import {OutlineClipboardlistIcon} from "@/assets/icon/outline"
 import {SimpleTabInterface} from "../layout/mainOperatorContent/MainOperatorContent"
 import {CreateReportContentProps, onCreateReportModal} from "../portscan/CreateReport"
-import {v4 as uuidv4} from "uuid"
 import {defaultSearch} from "../plugins/builtInData"
 import {defaultBruteExecuteExtraFormValue} from "@/defaultConstants/NewBrute"
+import {
+    apiCancelRecoverSimpleDetectTask,
+    apiGetSimpleDetectRecordRequestById,
+    apiRecoverSimpleDetectTask,
+    apiSaveCancelSimpleDetect
+} from "./utils"
+import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetectConstants"
+import {YakitRouteToPageInfo} from "@/routes/newRoute"
+import {StartBruteParams} from "../securityTool/newBrute/NewBruteType"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
+const SimpleDetectTaskListDrawer = React.lazy(() => import("./SimpleDetectTaskListDrawer"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -62,25 +75,34 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const {pageId} = props
     // 全局登录状态
     const {userInfo} = useStore()
-    const {queryPagesDataById} = usePageInfo(
+    const {queryPagesDataById, updatePagesDataCacheById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
-            queryPagesDataById: s.queryPagesDataById
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById,
+            removePagesDataCacheById: s.removePagesDataCacheById
         }),
         shallow
     )
-    const initSpaceEnginePageInfo = useMemoizedFn(() => {
+    const initSpaceEnginePageName = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.SimpleDetect, pageId)
         if (currentItem && currentItem.pageName) {
             return currentItem.pageName
         }
         return YakitRouteToPageInfo[YakitRoute.SimpleDetect].label
     })
+    const initSpaceEnginePageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.SimpleDetect, pageId)
+        if (currentItem && currentItem.pageParamsInfo.simpleDetectPageInfo) {
+            return currentItem.pageParamsInfo.simpleDetectPageInfo
+        }
+        return {
+            ...defaultSimpleDetectPageInfo
+        }
+    })
     const [form] = Form.useForm()
-    const [tabName, setTabName] = useState<string>(initSpaceEnginePageInfo())
+    const [tabName, setTabName] = useState<string>(initSpaceEnginePageName())
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
-    /**是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
 
     /**额外参数弹出框 */
@@ -101,12 +123,27 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 
     const [runtimeId, setRuntimeId] = useState<string>("")
 
+    const [taskListVisible, setTaskListVisible] = useState<boolean>(false)
+
+    const [isRecoverTask, setIsRecoverTask] = useState<boolean>(!!initSpaceEnginePageInfo().runtimeId) //是否为继续任务
+    const [recoverRuntimeId, setRecoverRuntimeId] = useState<string>(initSpaceEnginePageInfo().runtimeId) // 继续任务的runtimeId
+    const [stopLoading, setStopLoading] = useState<boolean>(false)
+
     const scanDeep = Form.useWatch("scanDeep", form)
 
     const taskNameRef = useRef<string>("")
     const simpleDetectWrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(simpleDetectWrapperRef)
     const tokenRef = useRef<string>(randomString(40))
+    const recoverTokenRef = useRef<string>(randomString(40))
+    const portScanRequestParamsRef = useRef<PortScanExecuteExtraFormValue>()
+    const startBruteParamsRef = useRef<StartBruteParams>()
+    /**前端保存的最新的任务的值 */
+    const simpleDetectValuePropsRef = useRef<SimpleDetectValueProps>({
+        formValue: null,
+        extraParamsValue: null
+    })
+    const streamErrorRef = useRef<string>() // 任务报错的原因
 
     const defaultTabs = useCreation(() => {
         return [
@@ -116,64 +153,150 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             {tabName: "Console", type: "console"}
         ]
     }, [])
-
     const onEnd = useMemoizedFn(() => {
-        simpleDetectStreamEvent.stop()
+        // 在此之前需要先保存任务
         setTimeout(() => {
-            setIsExecuting(false)
-            if (executeStatus !== "error") {
+            const isStop = streamErrorRef.current && streamErrorRef.current === "Cancelled on client" // Cancelled on client 主动停止报错
+            if (isStop) {
+                setExecuteStatus("paused")
+            } else {
+                setRecoverRuntimeId("")
+            }
+            if (executeStatus === "process") {
                 setExecuteStatus("finished")
             }
+            streamErrorRef.current = ""
         }, 300)
     })
-
-    const [streamInfo, simpleDetectStreamEvent] = useHoldGRPCStream({
+    const onError = useMemoizedFn((error) => {
+        streamErrorRef.current = error
+        const isStop = streamErrorRef.current && streamErrorRef.current === "Cancelled on client"
+        if (isStop) {
+            setExecuteStatus("default")
+            setStopLoading(false)
+            onSaveSimpleDetect()
+        } else {
+            setExecuteStatus("error")
+        }
+    })
+    const [simpleDetectStreamInfo, simpleDetectStreamEvent] = useHoldGRPCStream({
         tabs: defaultTabs,
         taskName: "SimpleDetect",
         apiKey: "SimpleDetect",
         token: tokenRef.current,
-        onError: () => {
-            setExecuteStatus("error")
+        onError: (error) => {
+            // 报错最后也会触发onEnd
+            onError(error)
         },
-        onEnd,
+        onEnd: () => {
+            simpleDetectStreamEvent.stop()
+            onEnd()
+        },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            setRuntimeId(rId)
+            if (runtimeId !== rId) {
+                onUpdatePageInfo(rId)
+            }
+        }
+    })
+
+    const [recoverStreamInfo, recoverSimpleDetectStreamEvent] = useHoldGRPCStream({
+        tabs: defaultTabs,
+        taskName: "RecoverSimpleDetectTask",
+        apiKey: "RecoverSimpleDetectTask",
+        token: recoverTokenRef.current,
+        onError: (error) => {
+            // 报错最后也会触发onEnd
+            onError(error)
+        },
+        onEnd: () => {
+            recoverSimpleDetectStreamEvent.stop()
+            onSaveSimpleDetect()
+            onEnd()
+        },
+        setRuntimeId: (rId) => {
             setRuntimeId(rId)
         }
     })
 
+    const streamInfo = useCreation(() => {
+        if (isRecoverTask) {
+            return recoverStreamInfo
+        } else {
+            return simpleDetectStreamInfo
+        }
+    }, [simpleDetectStreamInfo, recoverStreamInfo, isRecoverTask])
+
     useEffect(() => {
+        // 继续任务 第一次进入该页面，不进行依赖scanDeep的更新逻辑
+        // 继续任务开始后，再次点击停止的时候会清除页面中的 runtimeId ，后续可以进行依赖scanDeep的更新逻辑
+        if (!!recoverRuntimeId) return
         switch (scanDeep) {
             // 快速
             case 3:
                 setExtraParamsValue((v) => ({
                     ...v,
-                    portScanParam: {...v.portScanParam, Ports: PresetPorts["fast"], presetPort: ["fast"]}
+                    portScanParam: {
+                        ...v.portScanParam,
+                        Ports: PresetPorts["fast"],
+                        presetPort: ["fast"],
+                        ProbeMax: 1,
+                        Concurrent: 100
+                    }
                 }))
                 break
             // 适中
             case 2:
                 setExtraParamsValue((v) => ({
                     ...v,
-                    portScanParam: {...v.portScanParam, Ports: PresetPorts["middle"], presetPort: ["middle"]}
+                    portScanParam: {
+                        ...v.portScanParam,
+                        Ports: PresetPorts["middle"],
+                        presetPort: ["middle"],
+                        ProbeMax: 3,
+                        Concurrent: 80
+                    }
                 }))
                 break
             // 慢速
             case 1:
                 setExtraParamsValue((v) => ({
                     ...v,
-                    portScanParam: {...v.portScanParam, Ports: PresetPorts["slow"], presetPort: ["slow"]}
+                    portScanParam: {
+                        ...v.portScanParam,
+                        Ports: PresetPorts["slow"],
+                        presetPort: ["slow"],
+                        ProbeMax: 7,
+                        Concurrent: 50
+                    }
                 }))
                 break
         }
     }, [scanDeep])
 
     useEffect(() => {
-        if (inViewport) emiter.on("secondMenuTabDataChange", onSetTabName)
+        if (!isRecoverTask) return
+        if (recoverRuntimeId) {
+            // 继续任务打开的新页面，需要查询对应的数据和自动继续
+            onContinueTask(recoverRuntimeId)
+        }
+        return () => {
+            onRemovePageRuntimeId()
+            onSaveSimpleDetect()
+        }
+    }, [])
+
+    useEffect(() => {
+        if (inViewport) {
+            emiter.on("secondMenuTabDataChange", onSetTabName)
+            emiter.on("updateTaskStatus", onUpdateTaskStatus)
+        }
         return () => {
             emiter.off("secondMenuTabDataChange", onSetTabName)
+            emiter.off("updateTaskStatus", onUpdateTaskStatus)
         }
     }, [inViewport])
+
     useEffect(() => {
         const simpleTab: SimpleTabInterface = {
             tabId: pageId,
@@ -182,22 +305,120 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         emiter.emit("simpleDetectTabEvent", JSON.stringify(simpleTab))
     }, [executeStatus])
 
+    /**删除页面的 runtimeId */
+    const onRemovePageRuntimeId = useMemoizedFn(() => {
+        if (!pageId) return
+        removePagesDataCacheById(YakitRoute.SimpleDetect, pageId)
+    })
+
+    const onUpdateTaskStatus = useMemoizedFn((res) => {
+        if (executeStatus === "process") return
+        try {
+            const value = JSON.parse(res)
+            const {runtimeId, pageId: pId} = value
+            if (pageId !== pId) return
+            if (!runtimeId) {
+                yakitNotify("error", "未设置正常得 runtimeId")
+                return
+            }
+            onRecoverSimpleDetectTask(runtimeId)
+        } catch (error) {
+            yakitNotify("error", `任务操作参数解析失败${error}`)
+        }
+    })
+    /**继续任务，先查询再恢复 */
+    const onContinueTask = useMemoizedFn((runtimeId: string) => {
+        /**在查询任务详情的时候就认为是任务已经开始了,执行中 */
+        setExecuteStatus("process")
+        apiGetSimpleDetectRecordRequestById({RuntimeId: runtimeId}).then((data) => {
+            const {LastRecord, PortScanRequest, StartBruteParams} = data
+            if (!LastRecord) return
+            try {
+                const value = JSON.parse(LastRecord.ExtraInfo)
+                const {simpleDetectValue = null} = value
+                // simpleDetectValue 存在是新版，可以回显所有的前端页面上显示的数据
+                if (!!simpleDetectValue) {
+                    const formValue: SimpleDetectForm = {
+                        Targets: PortScanRequest.Targets,
+                        ...simpleDetectValue.formValue
+                    }
+                    form.setFieldsValue({
+                        ...formValue
+                    })
+                    setExtraParamsValue({
+                        ...simpleDetectValue.extraParamsValue
+                    })
+
+                    simpleDetectValuePropsRef.current.formValue = {...formValue}
+                    simpleDetectValuePropsRef.current.extraParamsValue = {...simpleDetectValue.extraParamsValue}
+
+                    let taskNameTimeTarget: string = formValue?.Targets.split(/,|\r?\n/)[0] || "漏洞扫描任务"
+                    const taskName = `${formValue.scanType || "基础扫描"}-${taskNameTimeTarget}`
+                    taskNameRef.current = taskName
+                }
+
+                portScanRequestParamsRef.current = {...defPortScanExecuteExtraFormValue, ...PortScanRequest}
+                startBruteParamsRef.current = {...defaultBruteExecuteExtraFormValue, ...StartBruteParams}
+                onRecoverSimpleDetectTask(runtimeId)
+            } catch (error) {
+                yakitNotify("error", `继续任务onContinueTask失败:${error}`)
+            }
+        })
+    })
+
+    /**恢复任务 */
+    const onRecoverSimpleDetectTask = useMemoizedFn((runtimeId: string) => {
+        recoverSimpleDetectStreamEvent.reset()
+        apiRecoverSimpleDetectTask({RuntimeId: runtimeId}, recoverTokenRef.current).then(() => {
+            setExecuteStatus("process")
+            setIsExpand(false)
+            setIsRecoverTask(true)
+            setRecoverRuntimeId(runtimeId)
+            recoverSimpleDetectStreamEvent.start()
+        })
+    })
+    /**更新该页面最新的runtimeId */
+    const onUpdatePageInfo = useMemoizedFn((runtimeId: string) => {
+        if (!pageId) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.SimpleDetect, pageId)
+        if (!currentItem) return
+        const newCurrentItem: PageNodeItemProps = {
+            ...currentItem,
+            pageParamsInfo: {
+                simpleDetectPageInfo: {
+                    ...defaultSimpleDetectPageInfo,
+                    ...currentItem.pageParamsInfo.simpleDetectPageInfo,
+                    runtimeId
+                }
+            }
+        }
+        updatePagesDataCacheById(YakitRoute.SimpleDetect, {...newCurrentItem})
+    })
+
     const onSetTabName = useMemoizedFn(() => {
-        setTabName(initSpaceEnginePageInfo())
+        setTabName(initSpaceEnginePageName())
     })
 
     const onExpand = useMemoizedFn(() => {
         setIsExpand(!isExpand)
     })
+    /**继续 */
+    const onContinue = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onRecoverSimpleDetectTask(recoverRuntimeId)
+    })
+
     const onStartExecute = useMemoizedFn((value: SimpleDetectForm) => {
+        simpleDetectValuePropsRef.current.formValue = {...value}
+        simpleDetectValuePropsRef.current.extraParamsValue = {...extraParamsValue}
         if (value.scanType === "专项扫描" && (value.pluginGroup?.length || 0) === 0) {
             warn("请选择专项扫描项目")
             return
         }
-        let taskNameTimeTarget: string = value?.Targets.split(",")[0].split(/\n/)[0] || "漏洞扫描任务"
+        let taskNameTimeTarget: string = value?.Targets.split(/,|\r?\n/)[0] || "漏洞扫描任务"
         const taskName = `${value.scanType}-${taskNameTimeTarget}`
         taskNameRef.current = taskName
-        const pluginGroup = value.scanType !== "专项扫描" ? ["基础扫描"] : value.pluginGroup || []
+        const pluginGroup = getPluginGroup(value.scanType, value.pluginGroup)
         const linkPluginConfig = getLinkPluginConfig(
             [],
             {
@@ -216,35 +437,21 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
             SkippedHostAliveScan: !!value.SkippedHostAliveScan,
-            TaskName: `${taskName}-${uuidv4()}`
+            TaskName: taskName
         }
         switch (value.scanDeep) {
             // 快速
             case 3:
-                // 指纹并发
-                portScanRequestParams.Concurrent = 100
                 // SYN 并发
                 portScanRequestParams.SynConcurrent = 2000
-                portScanRequestParams.ProbeTimeout = 3
-                // 指纹详细程度
-                portScanRequestParams.ProbeMax = 3
-                // portScanRequestParams.Ports = PresetPorts["fast"]
                 break
             // 适中
             case 2:
-                portScanRequestParams.Concurrent = 80
                 portScanRequestParams.SynConcurrent = 1000
-                portScanRequestParams.ProbeTimeout = 5
-                portScanRequestParams.ProbeMax = 5
-                // portScanRequestParams.Ports = PresetPorts["middle"]
                 break
             // 慢速
             case 1:
-                portScanRequestParams.Concurrent = 50
                 portScanRequestParams.SynConcurrent = 1000
-                portScanRequestParams.ProbeTimeout = 7
-                portScanRequestParams.ProbeMax = 7
-                // portScanRequestParams.Ports = PresetPorts["slow"]
                 break
             default:
                 break
@@ -258,22 +465,79 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             },
             PortScanRequest: {...portScanRequestParams}
         }
+
         simpleDetectStreamEvent.reset()
-        setExecuteStatus("process")
-        setRuntimeId("")
+        recoverSimpleDetectStreamEvent.reset()
+        portScanRequestParamsRef.current = {...portScanRequestParams}
+        startBruteParamsRef.current = {...newStartBruteParams}
+        /**继续任务后，再次点击开始执行，开启新任务 */
         apiSimpleDetect(params, tokenRef.current).then(() => {
-            setIsExecuting(true)
+            setExecuteStatus("process")
             setIsExpand(false)
+            setIsRecoverTask(false)
             simpleDetectStreamEvent.start()
         })
     })
+    /*停止需要保存任务 */
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
-        apiCancelSimpleDetect(tokenRef.current).then(() => {
-            simpleDetectStreamEvent.stop()
-            setIsExecuting(false)
+        setStopLoading(true)
+        if (!!recoverRuntimeId) {
+            /**继续任务情况下,停止任务后需要清除当前页面中的runtimeId */
+            apiCancelRecoverSimpleDetectTask(recoverTokenRef.current).then(() => {
+                setExecuteStatus("paused")
+            })
+        } else {
+            apiCancelSimpleDetect(tokenRef.current).then(() => {
+                setRecoverRuntimeId(runtimeId)
+                setExecuteStatus("paused")
+            })
+        }
+    })
+    /**
+     * 保存任务
+     * 1.关闭页面
+     * 2.继续任务:停止/扫描完成,onError保存任务,onEnd更新最新数据
+     * 3.新任务/继续任务:报错(onError,点击停止也会报错)
+     */
+    const onSaveSimpleDetect = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            const saveTaskId = !!recoverRuntimeId ? recoverRuntimeId : runtimeId
+            if (!startBruteParamsRef.current || !portScanRequestParamsRef.current || !saveTaskId) {
+                reject("参数不全")
+                return
+            }
+            const formValue = form.getFieldsValue()
+            const filePtr = streamInfo.cardState.filter((item) => item.tag === "no display")
+            let filePtrValue: number = 0
+            if (Array.isArray(filePtr) && filePtr.length > 0) {
+                const ptr = filePtr[0]?.info.find((ele) => ele.Id === "当前文件指针")?.Data || "0"
+                filePtrValue = parseInt(ptr)
+            }
+
+            const pluginGroup = getPluginGroup(formValue.scanType, formValue.pluginGroup)
+
+            const params: RecordPortScanRequest = {
+                LastRecord: {
+                    LastRecordPtr: Number.isNaN(filePtrValue) ? 0 : filePtrValue,
+                    Percent: streamInfo.progressState.length > 0 ? streamInfo.progressState[0].progress : 0,
+                    YakScriptOnlineGroup: pluginGroup,
+                    ExtraInfo: JSON.stringify({
+                        simpleDetectValue: simpleDetectValuePropsRef.current
+                    })
+                },
+                StartBruteParams: startBruteParamsRef.current,
+                PortScanRequest: portScanRequestParamsRef.current,
+                RuntimeId: saveTaskId
+            }
+            apiSaveCancelSimpleDetect(params).then(resolve).catch(reject)
         })
     })
+
+    const getPluginGroup = useMemoizedFn((scanType, pluginGroup) => {
+        return scanType !== "专项扫描" ? ["基础扫描"] : pluginGroup || []
+    })
+
     /**在顶部的执行按钮 */
     const onExecuteInTop = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -332,6 +596,11 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         }
         onCreateReportModal(params)
     })
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        if (executeStatus === "paused") return true
+        return false
+    }, [executeStatus, recoverRuntimeId])
     const isShowResult = useCreation(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
@@ -340,12 +609,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     }, [streamInfo])
     const disabledReport = useCreation(() => {
         switch (executeStatus) {
-            case "finished":
-                return false
-            case "error":
-                return false
-            default:
+            case 'process':
                 return true
+            default:
+                return false
         }
     }, [executeStatus])
     return (
@@ -406,13 +673,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                 </YakitPopconfirm>
                             </>
                         ) : null}
-                        {/* TODO - 任务列表 */}
                         <YakitButton
                             type='text'
                             onClick={(e) => {
                                 e.stopPropagation()
+                                setTaskListVisible(true)
                             }}
-                            disabled={true}
                         >
                             任务列表
                         </YakitButton>
@@ -428,9 +694,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                         {isExecuting
                             ? !isExpand && (
                                   <>
-                                      <YakitButton danger onClick={onStopExecute}>
-                                          停止
-                                      </YakitButton>
+                                      {executeStatus === "paused" && !stopLoading ? (
+                                          <YakitButton onClick={onContinue}>继续</YakitButton>
+                                      ) : (
+                                          <YakitButton danger loading={stopLoading} onClick={onStopExecute}>
+                                              停止
+                                          </YakitButton>
+                                      )}
                                   </>
                               )
                             : !isExpand && (
@@ -466,17 +736,32 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                             <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                                 <div className={styles["simple-detect-form-operate"]}>
                                     {isExecuting ? (
-                                        <YakitButton danger onClick={onStopExecute} size='large'>
-                                            停止
-                                        </YakitButton>
+                                        <>
+                                            {executeStatus === "paused" && !stopLoading ? (
+                                                <YakitButton size='large' onClick={onContinue}>
+                                                    继续
+                                                </YakitButton>
+                                            ) : (
+                                                <YakitButton
+                                                    danger
+                                                    onClick={onStopExecute}
+                                                    size='large'
+                                                    loading={stopLoading}
+                                                >
+                                                    停止
+                                                </YakitButton>
+                                            )}
+                                        </>
                                     ) : (
-                                        <YakitButton
-                                            className={styles["simple-detect-form-operate-start"]}
-                                            htmlType='submit'
-                                            size='large'
-                                        >
-                                            开始执行
-                                        </YakitButton>
+                                        <>
+                                            <YakitButton
+                                                className={styles["simple-detect-form-operate-start"]}
+                                                htmlType='submit'
+                                                size='large'
+                                            >
+                                                开始执行
+                                            </YakitButton>
+                                        </>
                                     )}
                                     <YakitButton
                                         type='text'
@@ -501,6 +786,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                     visible={extraParamsVisible}
                     onSave={onSaveExtraParams}
                 />
+                <SimpleDetectTaskListDrawer visible={taskListVisible} setVisible={setTaskListVisible} />
             </React.Suspense>
             {visibleOnline && (
                 <YakitGetOnlinePlugin

@@ -102,7 +102,7 @@ import {PluginBatchExecuteExtraFormValue} from "@/pages/plugins/pluginBatchExecu
 import {cloneDeep} from "bizcharts/lib/utils"
 import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {YakitRoute} from "@/routes/newRoute"
+import {YakitRoute} from "@/enums/yakitRoute"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
@@ -2996,6 +2996,10 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     }, [visible])
 
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        tabs: [
+            {tabName: "日志", type: "log"},
+            {tabName: "Console", type: "console"}
+        ],
         taskName: "debug-plugin",
         apiKey: "DebugPlugin",
         token: tokenRef.current,
@@ -3162,12 +3166,14 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                 secondNode={
                                     <div className={styles["result-box"]} style={{height: "100%"}}>
                                         <PluginExecuteResult
-                                            streamInfo={streamInfo}
+                                            streamInfo={{
+                                                ...streamInfo,
+                                                cardState: []
+                                            }}
                                             runtimeId={runtimeId}
                                             loading={loading}
                                             defaultActiveKey={"Codec结果"}
                                             pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
-                                            onlyShowTabs={["Codec结果", "测试表", "Console"]}
                                         />
                                     </div>
                                 }

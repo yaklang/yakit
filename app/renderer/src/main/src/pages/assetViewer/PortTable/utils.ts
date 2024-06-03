@@ -32,7 +32,7 @@ export const apiQueryPortsBase: (params: QueryPortsRequest) => Promise<QueryGene
             .invoke(`QueryPorts`, params)
             .then(resolve)
             .catch((e: any) => {
-                yakitNotify("error", "取消插件批量执行出错:" + e)
+                yakitNotify("error", "获取端口列表出错:" + e)
                 reject(e)
             })
     })
