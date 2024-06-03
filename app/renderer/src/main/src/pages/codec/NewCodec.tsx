@@ -96,8 +96,6 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     const handleSetValue = React.useCallback(
         (offset, value) => {
-            console.log("offset, value", offset, value)
-
             showData[offset] = value
             setShowData(showData)
             setNonce((v) => v + 1)
@@ -107,8 +105,6 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     useUpdateEffect(() => {
         if (outputResponse?.RawResult) {
-            console.log("outputResponse", outputResponse)
-
             setShowData(outputResponse?.RawResult)
         }
     }, [outputResponse?.RawResult])
@@ -415,7 +411,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             <div className={styles["header"]}>
                                 <div className={styles["title"]}>
                                     <span className={styles["text"]}>Output</span>
-                                    <YakitCheckableTag
+                                    {outputResponse && <YakitCheckableTag
                                         style={{marginLeft: 8, marginRight: 0}}
                                         checked={outputShowType === "hex"}
                                         onChange={(checked) => {
@@ -427,7 +423,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                         }}
                                     >
                                         hex原文
-                                    </YakitCheckableTag>
+                                    </YakitCheckableTag>}
                                     {outPutObj.hidden && (
                                         <Tooltip
                                             title={size && size.width > 450 ? null : "超大输出，请点击保存下载文件查看"}
