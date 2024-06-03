@@ -35,13 +35,12 @@ export interface YakPoCExecuteContentProps {
     setHidden: (b: boolean) => void
     /**选择的插件组列表 */
     selectGroupList: string[]
-    defaultFormValue?: HybridScanControlAfterRequest
     executeStatus: ExpandAndRetractExcessiveState
     setExecuteStatus: (s: ExpandAndRetractExcessiveState) => void
     /**清空所有组 */
     onClearAll: () => void
-    /**数据包扫描跳转到该页面需要使用到的参数 */
-    dataScanParams: DataScanParamsProps
+    pageId: string
+    pageInfo: PocPageInfoProps
 }
 
 export interface PluginGroupGridItemProps {
@@ -60,7 +59,7 @@ export interface PluginExecuteLogProps {
     isExecuting: boolean
     hidden: boolean
     pluginExecuteLog: StreamResult.PluginExecuteLog[]
-    classNameWrapper?:string
+    classNameWrapper?: string
 }
 
 export interface TimeConsumingProps {

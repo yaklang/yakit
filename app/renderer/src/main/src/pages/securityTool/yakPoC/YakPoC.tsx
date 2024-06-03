@@ -66,6 +66,10 @@ import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 
+const PluginBatchRaskListDrawer = React.lazy(
+    () => import("@/pages/plugins/pluginBatchExecutor/PluginBatchRaskListDrawer")
+)
+
 export const onToManageGroup = () => {
     emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
 }
@@ -128,13 +132,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const onClose = useMemoizedFn(() => {
         setHidden(true)
     })
-    const dataScanParams = useCreation(() => {
-        return {
-            https: pageInfo.https,
-            httpFlowIds: pageInfo.httpFlowIds,
-            request: pageInfo.request
-        }
-    }, [pageInfo.https, pageInfo.httpFlowIds, pageInfo.request])
+
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
             <div
@@ -189,11 +187,11 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 hidden={hidden}
                 setHidden={setHidden}
                 selectGroupList={selectGroupListAll}
-                defaultFormValue={pageInfo.formValue}
                 executeStatus={executeStatus}
                 setExecuteStatus={setExecuteStatus}
                 onClearAll={onClearAll}
-                dataScanParams={dataScanParams}
+                pageId={pageId}
+                pageInfo={pageInfo}
             />
         </div>
     )
@@ -770,7 +768,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-    const {selectGroupList, defaultFormValue, onClearAll, dataScanParams} = props
+    const {selectGroupList, onClearAll, pageId, pageInfo} = props
     const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -787,11 +785,16 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
         valuePropName: "executeStatus",
         trigger: "setExecuteStatus"
     })
-    /**停止 */
-    const [stopLoading, setStopLoading] = useState<boolean>(false)
     const [total, setTotal] = useState<number>(0)
     const [showType, setShowType] = useState<"plugin" | "log">("plugin")
     const [pluginExecuteLog, setPluginExecuteLog] = useState<StreamResult.PluginExecuteLog[]>([])
+
+    /**暂停 */
+    const [pauseLoading, setPauseLoading] = useState<boolean>(false)
+    /**继续 */
+    const [continueLoading, setContinueLoading] = useState<boolean>(false)
+    // 任务列表抽屉
+    const [visibleRaskList, setVisibleRaskList] = useState<boolean>(false)
 
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
@@ -799,6 +802,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     }, [executeStatus])
 
     useEffect(() => {
+        const defaultFormValue = pageInfo.formValue
         if (defaultFormValue && Object.keys(defaultFormValue).length > 0) {
             pluginBatchExecuteContentRef.current?.onInitInputValue(defaultFormValue)
         }
@@ -844,6 +848,20 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             setShowType("plugin")
         }
     })
+    const onPause = useMemoizedFn((e) => {
+        pluginBatchExecuteContentRef.current?.onPause()
+    })
+
+    const onContinue = useMemoizedFn((e) => {
+        pluginBatchExecuteContentRef.current?.onContinue()
+    })
+    const dataScanParams = useCreation(() => {
+        return {
+            https: pageInfo.https,
+            httpFlowIds: pageInfo.httpFlowIds,
+            request: pageInfo.request
+        }
+    }, [pageInfo.https, pageInfo.httpFlowIds, pageInfo.request])
     return (
         <>
             {isShowPluginAndLog && (
@@ -910,10 +928,34 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         {progressList.length === 1 && (
                             <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
                         )}
+                        <YakitButton
+                            type='text'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setVisibleRaskList(true)
+                            }}
+                            style={{padding: 0}}
+                        >
+                            任务列表
+                        </YakitButton>
                         {isExecuting
                             ? !isExpand && (
                                   <>
-                                      <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
+                                      {executeStatus === "paused" && !pauseLoading && (
+                                          <YakitButton onClick={onContinue} loading={continueLoading}>
+                                              继续
+                                          </YakitButton>
+                                      )}
+                                      {(executeStatus === "process" || pauseLoading) && (
+                                          <YakitButton onClick={onPause} loading={pauseLoading}>
+                                              暂停
+                                          </YakitButton>
+                                      )}
+                                      <YakitButton
+                                          danger
+                                          onClick={onStopExecute}
+                                          disabled={pauseLoading || continueLoading}
+                                      >
                                           停止
                                       </YakitButton>
                                       <div className={styles["divider-style"]}></div>
@@ -944,18 +986,31 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                         setIsExpand={setIsExpand}
                         selectNum={selectGroupNum}
                         setProgressList={setProgressList}
-                        pauseLoading={stopLoading}
-                        setPauseLoading={setStopLoading}
+                        pauseLoading={pauseLoading}
+                        setPauseLoading={setPauseLoading}
+                        continueLoading={continueLoading}
+                        setContinueLoading={setContinueLoading}
                         pluginInfo={pluginInfo}
                         executeStatus={executeStatus}
                         setExecuteStatus={onSetExecuteStatus}
                         setPluginExecuteLog={setPluginExecuteLog}
                         setHidden={setHidden}
                         dataScanParams={dataScanParams}
+                        pageId={pageId}
+                        initRuntimeId={pageInfo.runtimeId}
                         hybridScanTaskSource='yakPoc'
                     />
                 </div>
             </div>
+            <React.Suspense fallback={<>loading...</>}>
+                {visibleRaskList && (
+                    <PluginBatchRaskListDrawer
+                        visible={visibleRaskList}
+                        setVisible={setVisibleRaskList}
+                        hybridScanTaskSource='yakPoc'
+                    />
+                )}
+            </React.Suspense>
         </>
     )
 })

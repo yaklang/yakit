@@ -6,5 +6,6 @@ export const defaultPocPageInfo: PocPageInfoProps = {
     formValue: {},
     https: false,
     httpFlowIds: [],
-    request: new Uint8Array()
+    request: new Uint8Array(),
+    runtimeId: ""
 }

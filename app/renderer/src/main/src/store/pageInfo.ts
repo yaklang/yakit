@@ -110,8 +110,9 @@ export interface PocPageInfoProps {
     httpFlowIds: []
     /**请求包 */
     request: Uint8Array
+    /**执行批量执行的runtimeId */
+    runtimeId: string
 }
-
 export interface BrutePageInfoProps {
     /**输入目标 */
     targets: string
