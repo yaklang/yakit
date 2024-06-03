@@ -63,6 +63,7 @@ import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
 import {ThirdPartyApplicationConfigForm} from "../configNetwork/ThirdPartyApplicationConfig"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import { CodecParamsProps } from "../yakChat/chatCS"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1014,7 +1015,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineLink])
 
-    const openAIByChatCS = useMemoizedFn((obj: {text?: string; scriptName: string; isAiPlugin: boolean}) => {
+    const openAIByChatCS = useMemoizedFn((obj: CodecParamsProps) => {
         emiter.emit("onRunChatcsAIByFuzzer", JSON.stringify(obj))
     })
 
@@ -1023,7 +1024,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
     const onFuzzerModal = useMemoizedFn((value) => {
         try {
-            const val: {text?: string; scriptName: string; isAiPlugin: any} = JSON.parse(value)
+            const val: {text?: string; scriptName?: string; code?:string; isAiPlugin: any} = JSON.parse(value)
             if (val.isAiPlugin === "isGetPlugin") {
                 setCoedcPluginShow(true)
                 return
@@ -1035,7 +1036,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     )
                     // 如若已配置 则打开执行框
                     if (configType.length > 0) {
-                        openAIByChatCS({text: val.text, scriptName: val.scriptName, isAiPlugin: val.isAiPlugin})
+                        openAIByChatCS({...val})
                     } else {
                         let m = showYakitModal({
                             title: "添加第三方应用",
@@ -1060,11 +1061,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             }
                                             const params = {...obj, AppConfigs: existedResult}
                                             apiSetGlobalNetworkConfig(params).then(() => {
-                                                openAIByChatCS({
-                                                    text: val.text,
-                                                    scriptName: val.scriptName,
-                                                    isAiPlugin: val.isAiPlugin
-                                                })
+                                                openAIByChatCS({...val})
                                                 m.destroy()
                                             })
                                         }}
