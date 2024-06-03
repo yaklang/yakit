@@ -1066,6 +1066,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             })
                                         }}
                                         onCancel={() => m.destroy()}
+                                        showOptions = {["openai","chatglm","moonshot"]}
                                     />
                                 </div>
                             )

@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {Form, Space} from "antd"
 import {InputItem} from "@/utils/inputUtil"
@@ -9,6 +9,7 @@ import {KVPair} from "@/models/kv"
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {DefaultOptionType} from "antd/lib/select"
 import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
+import { warn } from "@/utils/notification"
 
 export interface ThirdPartyApplicationConfigProp {
     data?: ThirdPartyApplicationConfig
@@ -16,6 +17,8 @@ export interface ThirdPartyApplicationConfigProp {
     onCancel: () => void
     /**是否可输入 @default true */
     isCanInput?: boolean
+    // 限制展示的 options
+    showOptions?: string[]
 }
 
 export function getThirdPartyAppExtraParams(type: string) {
@@ -48,7 +51,7 @@ export function setThirdPartyAppExtraParamValue(
 }
 
 export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConfigProp> = (props) => {
-    const {isCanInput = true} = props
+    const {isCanInput = true,showOptions} = props
     const [existed, setExisted] = useState(props.data !== undefined)
     const [params, setParams] = useState<ThirdPartyApplicationConfig>(
         props?.data || {
@@ -73,6 +76,13 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
         {label: "Chatglm", value: "chatglm"},
         {label: "Moonshot", value: "moonshot"},
     ])
+
+    useEffect(()=>{
+        if(showOptions){
+           const newOptions = (options as unknown as any).filter((item)=>showOptions.includes(item.value))
+           setOptions(newOptions)
+        }
+    },[showOptions])
     return (
         <Form
             layout={"horizontal"}
@@ -134,7 +144,14 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
                 <YakitButton type='outline2' loading={false} onClick={() => props.onCancel()}>
                     取消
                 </YakitButton>
-                <YakitButton type={"primary"} loading={false} onClick={() => props.onAdd(params)}>
+                <YakitButton type={"primary"} loading={false} onClick={() => {
+                    console.log("params--",params);
+                    if(params.Type.length===0 || params.APIKey.length === 0){
+                        warn(`请填入必要参数`)
+                        return
+                    }
+                    props.onAdd(params)
+                    }}>
                     确定添加
                 </YakitButton>
             </div>
