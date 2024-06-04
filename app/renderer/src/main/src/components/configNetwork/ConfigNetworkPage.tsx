@@ -678,9 +678,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     </YakitButton>
                                 </Form.Item>
                                 <Form.Item label={"AI使用优先级"}>
-                                    <AISortContent AiApiPriority={params.AiApiPriority} onUpdate={(AiApiPriority)=>{
-                                        setParams({...params, AiApiPriority})
-                                    }}/>
+                                    <div className={styles['ai-sort-box']}>
+                                        <AISortContent AiApiPriority={params.AiApiPriority} onUpdate={(AiApiPriority)=>{
+                                            setParams({...params, AiApiPriority})
+                                        }}/>
+                                    </div>
+                                    
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     其他配置

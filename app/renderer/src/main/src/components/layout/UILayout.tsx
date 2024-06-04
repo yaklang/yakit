@@ -1045,7 +1045,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             closable: true,
                             maskClosable: false,
                             content: (
-                                <div style={{margin: 24}}>
+                                <>
+                                    <div className={styles['ai-describe']}>
+                                        请选择AI类型进行API配置，如配置多个，可在全局配置中配置使用优先级
+                                    </div>
+                                    <div style={{margin:24}}>
                                     <ThirdPartyApplicationConfigForm
                                         onAdd={(e) => {
                                             let existed = false
@@ -1068,7 +1072,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         onCancel={() => m.destroy()}
                                         showOptions = {["openai","chatglm","moonshot"]}
                                     />
-                                </div>
+                                    </div>
+                                </>
                             )
                         })
                     }
