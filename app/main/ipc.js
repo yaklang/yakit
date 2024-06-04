@@ -183,7 +183,7 @@ module.exports = {
         require("./handlers/portScan")(win, getClient)
         require("./handlers/startBrute")(win, getClient)
         require("./handlers/webshell")(win, getClient)
-
+        require("./handlers/nasl")(win, getClient)
         // start chrome manager
         try {
             require("./handlers/chromelauncher")(win, getClient)

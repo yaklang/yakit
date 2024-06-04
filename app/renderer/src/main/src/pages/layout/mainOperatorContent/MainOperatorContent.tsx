@@ -92,7 +92,7 @@ import {defaultBrutePageInfo} from "@/defaultConstants/NewBrute"
 import {defaultScanPortPageInfo} from "@/defaultConstants/NewPortScan"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {defaultSpaceEnginePageInfo} from "@/defaultConstants/SpaceEnginePage"
-import { defaultSimpleDetectPageInfo } from "@/defaultConstants/SimpleDetect"
+import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetect"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -648,7 +648,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**beta-debug-traffic-analize") openMenuPage({route: YakitRoute.Beta_DebugTrafficAnalize})
             if (type === "**webshell-manager") openMenuPage({route: YakitRoute.Beta_WebShellManager})
             if (type === "**webshell-opt") addWebShellOpt(data)
-
+            if (type === "**nasl-scan") openMenuPage({route: YakitRoute.Nasl_Scan})
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {

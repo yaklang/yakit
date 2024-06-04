@@ -834,6 +834,10 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "webshell-manager",
                     label: "网站管理"
+                },
+                {
+                    key: "nasl-scan",
+                    label: "NASL扫描"
                 }
             ]
         },
@@ -1015,6 +1019,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "run-node":
                 setRunNodeModalVisible(true)
+                return
+            case "nasl-scan":
+                addToTab("**nasl-scan")
                 return
             default:
                 return
