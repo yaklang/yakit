@@ -107,7 +107,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                                     {qqq.map((item, index) => {
                                         return (
                                             <Fragment key={item.path}>
-                                                <RunnerTabBarItem index={index} info={item} />
+                                                <RunnerTabBarItem index={index} info={item as any} />
                                             </Fragment>
                                         )
                                     })}
@@ -162,8 +162,8 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     return (
         <div className={styles["runner-tab-pane"]}>
-            {/* <YakRunnerWelcomePage /> */}
-            <YakitEditor type={"yak"} value={"123"} setValue={() => {}} />
+            <YakRunnerWelcomePage />
+            {/* <YakitEditor type={"yak"} value={"123"} setValue={() => {}} /> */}
         </div>
     )
 })
