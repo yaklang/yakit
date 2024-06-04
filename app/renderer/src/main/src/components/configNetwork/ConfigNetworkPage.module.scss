@@ -301,13 +301,13 @@
     cursor: pointer;
 }
 .ai-sort-box{
-    width: 200px;
+    width: 300px;
     
 }
 .ai-sort-content {
         .menu-list {
             border-radius: 4px;
-            border: 1px solid var(--yakit-primary-3);
+            border: 1px solid var(--yakit-border-color);
             overflow: auto;
             flex: 1;
             &-item {

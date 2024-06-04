@@ -1047,7 +1047,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             content: (
                                 <>
                                     <div className={styles['ai-describe']}>
-                                        请选择AI类型进行API配置，如配置多个，可在全局配置中配置使用优先级
+                                        请选择AI类型进行APIKey配置，如配置多个，可在全局配置中配置使用优先级
                                     </div>
                                     <div style={{margin:24}}>
                                     <ThirdPartyApplicationConfigForm
