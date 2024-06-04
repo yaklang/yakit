@@ -1155,12 +1155,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {
-                pluginBatchExecutorPageInfo: node.pageParams?.pluginBatchExecutorPageInfo
-                    ? {
-                          ...defaultPluginBatchExecutorPageInfo,
-                          ...node.pageParams.pluginBatchExecutorPageInfo
-                      }
-                    : undefined
+                pluginBatchExecutorPageInfo:{
+                    ...defaultPluginBatchExecutorPageInfo,
+                    ...(node.pageParams?.pluginBatchExecutorPageInfo||{})
+                }
             },
             sortFieId: order
         }
@@ -1746,9 +1744,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {
-                pocPageInfo: {
+                pocPageInfo:{
                     ...defaultPocPageInfo,
-                    ...node.pageParams?.pocPageInfo
+                    ...(node.pageParams?.pocPageInfo||{})
                 }
             },
             sortFieId: order

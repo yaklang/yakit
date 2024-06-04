@@ -7,5 +7,6 @@ export const defaultPocPageInfo: PocPageInfoProps = {
     https: false,
     httpFlowIds: [],
     request: new Uint8Array(),
-    runtimeId: ""
+    runtimeId: "",
+    hybridScanMode: "new"
 }
