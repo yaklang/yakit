@@ -21,6 +21,7 @@ export interface PluginGroupByKeyWordProps {
     /**选择的插件组列表 按关键词搜索的 */
     selectGroupListByKeyWord?: string[]
     setSelectGroupListByKeyWord?: (s: string[]) => void
+    setResponseToSelect: (s: GroupCount[]) => void
 }
 export interface PluginGroupGridProps {
     inViewport: boolean
@@ -28,6 +29,7 @@ export interface PluginGroupGridProps {
     /**选择的插件组列表 */
     selectGroupList?: string[]
     setSelectGroupList?: (s: string[]) => void
+    setResponseToSelect: (s: GroupCount[]) => void
 }
 
 export interface YakPoCExecuteContentProps {
@@ -41,6 +43,7 @@ export interface YakPoCExecuteContentProps {
     onClearAll: () => void
     pageId: string
     pageInfo: PocPageInfoProps
+    onInitInputValueAfter?: (value: HybridScanControlAfterRequest) => void
 }
 
 export interface PluginGroupGridItemProps {

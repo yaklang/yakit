@@ -23,18 +23,19 @@ import {SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon} from "@/assets/ic
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {yakitNotify} from "@/utils/notification"
 
-interface PluginBatchRaskListDrawerProps {
+interface HybridScanTaskListDrawerProps {
     visible: boolean
     setVisible: (b: boolean) => void
     hybridScanTaskSource: HybridScanTaskSourceType
 }
-const PluginBatchRaskListDrawer: React.FC<PluginBatchRaskListDrawerProps> = React.memo((props) => {
+const HybridScanTaskListDrawer: React.FC<HybridScanTaskListDrawerProps> = React.memo((props) => {
     const {visible, setVisible, hybridScanTaskSource} = props
 
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const pluginBatchRaskListRef = useRef<PluginBatchRaskListForwardedRefProps>({
+    const pluginBatchRaskListRef = useRef<HybridScanTaskListForwardedRefProps>({
         onRemove: () => {}
     })
 
@@ -76,7 +77,7 @@ const PluginBatchRaskListDrawer: React.FC<PluginBatchRaskListDrawerProps> = Reac
             }
             bodyStyle={{overflow: "hidden"}}
         >
-            <PluginBatchRaskList
+            <HybridScanTaskList
                 visible={visible}
                 setVisible={setVisible}
                 ref={pluginBatchRaskListRef}
@@ -87,20 +88,30 @@ const PluginBatchRaskListDrawer: React.FC<PluginBatchRaskListDrawerProps> = Reac
         </YakitDrawer>
     )
 })
-export default PluginBatchRaskListDrawer
+export default HybridScanTaskListDrawer
 
-interface PluginBatchRaskListForwardedRefProps {
+interface HybridScanTaskListForwardedRefProps {
     onRemove: () => void
 }
-interface PluginBatchRaskListProps {
-    ref?: ForwardedRef<PluginBatchRaskListForwardedRefProps>
+interface HybridScanTaskListProps {
+    ref?: ForwardedRef<HybridScanTaskListForwardedRefProps>
     visible: boolean
     setVisible: (b: boolean) => void
     selectedRowKeys: string[]
     setSelectedRowKeys: (s: string[]) => void
     hybridScanTaskSource?: HybridScanTaskSourceType
 }
-const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
+export const getRouteByTaskSource = (source?: string) => {
+    switch (source) {
+        case "yakPoc":
+            return YakitRoute.PoC
+        case "pluginBatch":
+            return YakitRoute.BatchExecutorPage
+        default:
+            return ""
+    }
+}
+const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
     forwardRef((props, ref) => {
         const {getPageInfoByRuntimeId} = usePageInfo(
             (s) => ({
@@ -369,7 +380,12 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
             update(1)
         })
         const onDetails = useMemoizedFn((runtimeId: string, hybridScanMode: HybridScanModeType) => {
-            const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(YakitRoute.BatchExecutorPage,runtimeId)
+            const route = getRouteByTaskSource(hybridScanTaskSource)
+            if (!route) {
+                yakitNotify("error", "任务来源异常")
+                return
+            }
+            const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(route, runtimeId)
             // 重试new 都是新建页面
             if (!!current && hybridScanMode !== "new") {
                 emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId}))
@@ -386,10 +402,11 @@ const PluginBatchRaskList: React.FC<PluginBatchRaskListProps> = React.memo(
                 emiter.emit(
                     "openPage",
                     JSON.stringify({
-                        route: YakitRoute.BatchExecutorPage,
+                        route,
                         params: {
                             runtimeId,
-                            hybridScanMode
+                            hybridScanMode,
+                            type: 2 // route为 YakitRoute.PoC 需要
                         }
                     })
                 )

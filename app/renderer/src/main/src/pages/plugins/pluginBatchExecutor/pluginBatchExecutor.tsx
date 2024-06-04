@@ -4,7 +4,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
-    PluginBatchExecutorInputValueProps,
+    YakPoCExecutorInputValueProps,
     PluginInfoProps,
     PluginBatchExecutorTaskProps,
     apiHybridScan,
@@ -50,9 +50,11 @@ import {
     pluginTypeFilterList
 } from "@/defaultConstants/PluginBatchExecutor"
 import {defaultFilter, defaultSearch} from "../builtInData"
+import {getRouteByTaskSource} from "./HybridScanTaskListDrawer"
+import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
-const PluginBatchRaskListDrawer = React.lazy(() => import("./PluginBatchRaskListDrawer"))
+const HybridScanTaskListDrawer = React.lazy(() => import("./HybridScanTaskListDrawer"))
 
 interface PluginBatchExecutorProps {
     id: string
@@ -110,7 +112,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const userInfo = useStore((s) => s.userInfo)
 
     /** 是否为初次加载 */
-    const pluginBatchExecuteContentRef = useRef<PluginBatchExecuteContentRefProps>(null)
+    const pluginBatchExecuteContentRef = useRef<HybridScanExecuteContentRefProps>(null)
 
     const batchExecuteDomRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(batchExecuteDomRef)
@@ -131,7 +133,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
     const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
         try {
-            const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
+            const inputValue: YakPoCExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
             const {pluginInfo} = inputValue
             // 插件数据
             if (pluginInfo.selectPluginName.length > 0) {
@@ -311,7 +313,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         </div>
                     </ExpandAndRetract>
                     <div className={styles["plugin-batch-executor-body"]}>
-                        <PluginBatchExecuteContent
+                        <HybridScanExecuteContent
                             ref={pluginBatchExecuteContentRef}
                             selectNum={selectNum}
                             isExpand={isExpand}
@@ -338,7 +340,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             </div>
             <React.Suspense fallback={<>loading...</>}>
                 {visibleRaskList && (
-                    <PluginBatchRaskListDrawer
+                    <HybridScanTaskListDrawer
                         visible={visibleRaskList}
                         setVisible={setVisibleRaskList}
                         hybridScanTaskSource='pluginBatch'
@@ -356,8 +358,8 @@ export interface DataScanParamsProps {
     /**请求包 */
     request: Uint8Array
 }
-interface PluginBatchExecuteContentProps {
-    ref?: React.ForwardedRef<PluginBatchExecuteContentRefProps>
+interface HybridScanExecuteContentProps {
+    ref?: React.ForwardedRef<HybridScanExecuteContentRefProps>
     pluginInfo: PluginInfoProps
     /**选择插件得数量 */
     selectNum: number
@@ -397,7 +399,7 @@ interface PluginBatchExecuteContentProps {
 
     hybridScanTaskSource: HybridScanTaskSourceType
 }
-export interface PluginBatchExecuteContentRefProps {
+export interface HybridScanExecuteContentRefProps {
     onActionHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null>
     onStopExecute: () => void
     onStartExecute: () => void
@@ -405,7 +407,7 @@ export interface PluginBatchExecuteContentRefProps {
     onPause: () => void
     onContinue: () => void
 }
-export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps> = React.memo(
+export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {
             selectNum,
@@ -508,7 +510,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             setRuntimeId: (rId) => {
                 setRuntimeId(rId)
                 if (runtimeId !== rId) {
-                    onUpdatePluginBatchExecutorPageInfo(rId)
+                    onUpdateExecutorPageInfo(rId)
                 }
             },
             setTaskStatus: (val) => {
@@ -572,6 +574,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                     yakitNotify("error", "重试(new)不走该操作,请传入正确的hybridScanMode")
                     return
                 }
+                hybridScanStreamEvent.reset()
                 apiHybridScanByMode(runtimeId, hybridScanMode, tokenRef.current)
                     .then(() => {
                         if (hybridScanMode === "pause") {
@@ -590,11 +593,12 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             }
         })
         /**更新该页面最新的runtimeId */
-        const onUpdatePluginBatchExecutorPageInfo = useMemoizedFn((runtimeId: string) => {
+        const onUpdateExecutorPageInfo = useMemoizedFn((runtimeId: string) => {
             if (!pageId) return
-            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.BatchExecutorPage, pageId)
+            const route = getRouteByTaskSource(hybridScanTaskSource)
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(route, pageId)
             if (!currentItem) return
-            const newCurrentItem: PageNodeItemProps = {
+            let newCurrentItem: PageNodeItemProps = {
                 ...currentItem,
                 pageParamsInfo: {
                     pluginBatchExecutorPageInfo: {
@@ -604,7 +608,23 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
                     }
                 }
             }
-            updatePagesDataCacheById(YakitRoute.BatchExecutorPage, {...newCurrentItem})
+            switch (hybridScanTaskSource) {
+                case "yakPoc":
+                    newCurrentItem = {
+                        ...currentItem,
+                        pageParamsInfo: {
+                            pocPageInfo: {
+                                ...defaultPocPageInfo,
+                                ...currentItem.pageParamsInfo.pocPageInfo,
+                                runtimeId
+                            }
+                        }
+                    }
+                    break
+                default:
+                    break
+            }
+            updatePagesDataCacheById(route, {...newCurrentItem})
         })
 
         const onSetScanData = useMemoizedFn(() => {
@@ -668,7 +688,7 @@ export const PluginBatchExecuteContent: React.FC<PluginBatchExecuteContentProps>
             })
         /**设置输入模块的初始值 */
         const onInitInputValue = useMemoizedFn((value: HybridScanControlAfterRequest) => {
-            const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
+            const inputValue: YakPoCExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
             const {params} = inputValue
             const isRawHTTPRequest = !!params.HTTPRequestTemplate.IsRawHTTPRequest
             const isHttpFlowId = !!params.HTTPRequestTemplate.IsHttpFlowId
