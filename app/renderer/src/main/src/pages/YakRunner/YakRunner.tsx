@@ -7,14 +7,27 @@ import {FileNodeProps} from "./FileTree/FileTreeType"
 import {grpcFetchFileTree, updateFileTree} from "./utils"
 import {ViewsInfoProps, YakRunnerProps} from "./YakRunnerType"
 import {getRemoteValue} from "@/utils/kv"
-import {YakRunnerRemoteGV} from "@/enums/remote/yakRunner"
+import {YakRunnerRemoteGV} from "@/enums/yakRunner"
 import {yakitNotify} from "@/utils/notification"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
 import {FolderDefault} from "./FileTree/icon"
 import {RunnerTabs} from "./RunnerTabs/RunnerTabs"
 
+import {
+    DragDropContext,
+    Droppable,
+    Draggable,
+    DragUpdate,
+    ResponderProvided,
+    DragStart,
+    BeforeCapture,
+    DropResult
+} from "@hello-pangea/dnd"
+
 import classNames from "classnames"
 import styles from "./YakRunner.module.scss"
+import {SplitView} from "./SplitView/SplitView"
+import { HelpInfoList } from "./CollapseList/CollapseList"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -114,8 +127,16 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 <div className={styles["yak-runner-body"]}>
                     <LeftSideBar />
                     <div className={styles["yak-runner-code"]}>
-                        <div className={styles["code-container"]}>
-                            <RunnerTabs />
+                        <div style={{display: "flex"}} className={styles["code-container"]}>
+                            {/* <RunnerTabs /> */}
+                            <HelpInfoList list={[{key:1},{key:2},{key:3},{key:4},{key:5},]}/>
+                            {/* <RunnerTabs /> */}
+                            {/* <SplitView
+                                elements={[
+                                    {element: <SplitView isVertical={true} elements={[{element: 1}, {element: 2}]} />},
+                                    {element: 2}
+                                ]}
+                            /> */}
                         </div>
                     </div>
                     <RightSideBar />

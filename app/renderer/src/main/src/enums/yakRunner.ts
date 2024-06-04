@@ -4,3 +4,4 @@ export enum YakRunnerRemoteGV {
     /** @name 已经打开过的文件夹或文件路径(最近5个) */
     RecentOpenPaths = "recent-open-paths"
 }
+
