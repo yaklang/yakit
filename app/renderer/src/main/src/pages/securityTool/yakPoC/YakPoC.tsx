@@ -917,15 +917,17 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     }, [selectGroupList, isExecuting])
 
     const pluginLogDisabled = useCreation(() => {
-        return executeStatus !== "process"
-    }, [executeStatus])
+        return !isExecuting
+    }, [isExecuting])
 
     const onSetExecuteStatus = useMemoizedFn((val) => {
         setExecuteStatus(val)
         switch (val) {
             case "process":
+            case "paused":
                 setShowType("log")
                 break
+            case "error":
             case "finished":
                 setShowType("plugin")
                 break

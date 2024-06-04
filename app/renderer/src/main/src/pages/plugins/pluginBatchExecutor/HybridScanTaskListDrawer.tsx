@@ -406,7 +406,7 @@ const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
                         params: {
                             runtimeId,
                             hybridScanMode,
-                            type: 2 // route为 YakitRoute.PoC 需要
+                            type: 2 //LINK app\renderer\src\main\src\pages\layout\mainOperatorContent\MainOperatorContent.tsx#add-bug-test
                         }
                     })
                 )
