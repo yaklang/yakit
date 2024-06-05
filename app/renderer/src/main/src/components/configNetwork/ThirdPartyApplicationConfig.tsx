@@ -141,11 +141,10 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
                     )
                 })}
             <div style={{display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12}}>
-                <YakitButton type='outline2' loading={false} onClick={() => props.onCancel()}>
+                <YakitButton type='outline2' onClick={() => props.onCancel()}>
                     取消
                 </YakitButton>
-                <YakitButton type={"primary"} loading={false} onClick={() => {
-                    console.log("params--",params);
+                <YakitButton type={"primary"} onClick={() => {
                     if(params.Type.length===0 || params.APIKey.length === 0){
                         warn(`请填入必要参数`)
                         return
