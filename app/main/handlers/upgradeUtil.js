@@ -503,7 +503,7 @@ module.exports = {
                     } catch (err) {
                         if (err.message.indexOf("operation not permitted") > -1) {
                             if (retriesLeft > 0) {
-                                setTimeout(() => tryUnlink(retriesLeft - 1), 1000);
+                                setTimeout(() => tryUnlink(retriesLeft - 1), 500);
                             } else {
                                 reject("operation not permitted")
                             }
