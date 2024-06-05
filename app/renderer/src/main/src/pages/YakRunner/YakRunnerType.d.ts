@@ -1,5 +1,5 @@
 import {FileNodeProps} from "./FileTree/FileTreeType"
-
+import { FileDetailInfo } from "./RunnerTabs/RunnerTabsType";
 export interface YakRunnerProps {
     initCode?: YakRunnerCodeProps
 }
@@ -39,4 +39,14 @@ export declare namespace YakRunnerView {
 export interface ViewsInfoProps {
     direction: "vertical" | "horizontal" | ""
     views: ViewFileProps | ViewsInfoProps[] | null
+}
+
+
+export interface TabFileProps {
+    // 窗口唯一标识符
+    id: string;
+    // 窗口中打开的文件列表          
+    files:FileDetailInfo[]
+    // 布局信息
+    layout:number[]
 }
