@@ -64,7 +64,7 @@ export enum RemoteGV {
     /** @name webFuzzer序列的缓存字段 */
     FuzzerSequenceCache = "fuzzer_sequence_cache",
     /** @name history页面左侧tabs */
-    HistoryLeftTabs = "history_left_tabs",
+    HistoryLeftTabs = "new_history_left_tabs",
     /** @name 临时项目记录是否记住不给提示 */
     TemporaryProjectNoPrompt = "temporary_project_no_prompt",
     /** @name 插件组删除是否记住不给提示 */
