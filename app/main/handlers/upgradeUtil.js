@@ -691,9 +691,6 @@ module.exports = {
                     // access write will fetch delete!
                     fs.accessSync(engineTarget, fs.constants.F_OK | fs.constants.W_OK)
                 }
-                if (fs.existsSync(engineTarget)) {
-                    fs.unlinkSync(engineTarget)
-                }
 
                 if (fs.existsSync(cacheFlagLock)) {
                     fs.unlinkSync(cacheFlagLock)
@@ -702,6 +699,23 @@ module.exports = {
             } catch (e) {
                 throw e
             }
+
+            function tryUnlink(retriesLeft) {
+                try {
+                    if (fs.existsSync(engineTarget)) {
+                        fs.unlinkSync(engineTarget)
+                    }
+                } catch (err) {
+                    if (err.message.indexOf("operation not permitted") > -1) {
+                        if (retriesLeft > 0) {
+                            setTimeout(() => tryUnlink(retriesLeft - 1), 500);
+                        } else {
+                            throw e
+                        }
+                    }
+                }
+            }
+            tryUnlink(2);
             return await asyncInitBuildInEngine({})
         })
 
