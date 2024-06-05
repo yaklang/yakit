@@ -433,6 +433,7 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
     const [loading, setLoading] = useState<boolean>(false)
     const [response, setResponse] = useState<GroupCount[]>([])
     const [isRef, setIsRef] = useState<boolean>(false)
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
     const initialResponseRef = useRef<GroupCount[]>([])
     const pocPluginKeywordsRef = useRef<YakitAutoCompleteRefProps>({
@@ -606,22 +607,50 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
                     </div>
                 </div>
             </div>
-            <RollingLoadList<GroupCount>
-                data={response}
-                loadMoreData={() => {}}
-                renderRow={(rowData: GroupCount, index: number) => {
-                    const checked = selectGroupList.includes(rowData.Value)
-                    return <PluginGroupByKeyWordItem item={rowData} onSelect={onSelect} selected={checked} />
+            {initialResponseRef.current.length === 0 ? (
+                <div className={styles["yak-poc-empty"]}>
+                    <YakitEmpty
+                        title='暂无数据'
+                        description='可一键获取默认关键词与插件,下载后请重启Yakit获取默认关键词'
+                    />
+                    <div className={styles["yak-poc-buttons"]}>
+                        <YakitButton
+                            type='outline1'
+                            icon={<CloudDownloadIcon />}
+                            onClick={() => setVisibleOnline(true)}
+                        >
+                            一键下载
+                        </YakitButton>
+                    </div>
+                </div>
+            ) : (
+                <RollingLoadList<GroupCount>
+                    data={response}
+                    loadMoreData={() => {}}
+                    renderRow={(rowData: GroupCount, index: number) => {
+                        const checked = selectGroupList.includes(rowData.Value)
+                        return <PluginGroupByKeyWordItem item={rowData} onSelect={onSelect} selected={checked} />
+                    }}
+                    page={1}
+                    hasMore={false}
+                    loading={loading}
+                    defItemHeight={70}
+                    isGridLayout
+                    defCol={3}
+                    classNameList={styles["group-list-wrapper"]}
+                    rowKey='Value'
+                    isRef={isRef}
+                />
+            )}
+            <YakitGetOnlinePlugin
+                visible={visibleOnline}
+                setVisible={(v) => {
+                    setVisibleOnline(v)
+                    setTimeout(() => {
+                        init()
+                    }, 200)
                 }}
-                page={1}
-                hasMore={false}
-                loading={loading}
-                defItemHeight={70}
-                isGridLayout
-                defCol={3}
-                classNameList={styles["group-list-wrapper"]}
-                rowKey='Value'
-                isRef={isRef}
+                listType='online'
             />
         </div>
     )
