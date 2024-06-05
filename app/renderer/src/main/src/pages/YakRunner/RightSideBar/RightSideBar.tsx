@@ -46,9 +46,10 @@ export const RightSideBar: React.FC<RightSideBarProps> = (props) => {
             <div className={styles["right-side-bar-list"]}>
                 <div
                     className={classNames(styles["right-side-bar-item"], {
-                        [styles["right-side-bar-item-active"]]: active === "audit-code"
+                        [styles["right-side-bar-item-active"]]: active === "audit-code",
+                        [styles["right-side-bar-item-disable"]]: true
                     })}
-                    onClick={() => onSetActive("audit-code")}
+                    // onClick={() => onSetActive("audit-code")}
                 >
                     <OutlineEngineIcon />
                     <span className={styles["item-text"]}>代码审计</span>

@@ -8,6 +8,8 @@ export interface SplitViewProp {
     minWidth?: number
     /** 纵向时有效 */
     minHeight?: number
+    /** 是否隐藏最后一块（仅对纵向时有效） */
+    isLastHidden?: boolean
 }
 
 export interface SplitViewPositionProp {

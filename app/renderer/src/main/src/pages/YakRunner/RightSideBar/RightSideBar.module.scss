@@ -37,9 +37,9 @@
             color: #85899e;
         }
     }
-    &-item:hover {
-        background-color: rgba(204, 210, 222, 0.5);
-    }
+    // &-item:hover {
+    //     background-color: rgba(204, 210, 222, 0.5);
+    // }
 
     &-item-active {
         background-color: #f28b44;
@@ -50,6 +50,11 @@
             color: #ffffff;
         }
     }
+
+    &-item-disable {
+        cursor: not-allowed;
+    }
+
     &-item-active::before {
         position: absolute;
         width: 1px;

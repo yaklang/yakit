@@ -1,5 +1,6 @@
-import React, {Fragment, memo} from "react"
+import React, {Fragment, memo, useEffect, useState} from "react"
 import {
+    FileDetailInfo,
     RunnerTabBarItemProps,
     RunnerTabBarProps,
     RunnerTabPaneProps,
@@ -25,69 +26,41 @@ import {OutlineImportIcon, OutlinePlusIcon, OutlineXIcon} from "@/assets/icon/ou
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {YakRunnerNewFileIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import { useMemoizedFn } from "ahooks"
+import useStore from "../hooks/useStore"
+import useDispatcher from "../hooks/useDispatcher"
+import { TabFileProps } from "../YakRunnerType"
+import { IMonacoEditor } from "@/utils/editors"
 
 const {ipcRenderer} = window.require("electron")
 
-const qqq = [
-    {
-        name: ".git",
-        path: "/Users/nonight/work/yakitVersion/.git",
-        isFolder: false,
-        icon: "_file",
-        isLeaf: false,
-        code: "123"
-    },
-    {
-        name: ".github",
-        path: "/Users/nonight/work/yakitVersion/.github",
-        isFolder: false,
-        icon: "_file",
-        isLeaf: false,
-        code: "123"
-    },
-    {
-        name: ".gitignore",
-        path: "/Users/nonight/work/yakitVersion/.gitignore",
-        isFolder: false,
-        icon: "_file",
-        isLeaf: true,
-        code: "123"
-    },
-    {
-        name: "ELECTRON_GUIDE.md",
-        path: "/Users/nonight/work/yakitVersion/ELECTRON_GUIDE.md",
-        isFolder: false,
-        icon: "_file",
-        isLeaf: true,
-        code: "123"
-    },
-    {
-        name: "LICENSE.md",
-        path: "/Users/nonight/work/yakitVersion/LICENSE.md",
-        isFolder: false,
-        icon: "_file",
-        isLeaf: true,
-        code: "123"
-    }
-]
+const layoutToString = (v:number[]) => {
+    return JSON.stringify(v)
+}
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
-    const {} = props
-
+    const {layout} = props
+    const {tabsFile} = useStore()
+    const [tabsList,setTabsList] = useState<FileDetailInfo[]>([])
+    useEffect(()=>{
+        const showTabs = tabsFile.filter((item)=>layoutToString(item.layout)===layoutToString(layout))
+        if(showTabs.length>0){
+            setTabsList(showTabs[0].files)
+        }
+    },[tabsFile])
     return (
         <div className={styles["runner-tabs"]}>
-            <RunnerTabBar onlyID='11223' />
+            <RunnerTabBar onlyID={layoutToString(layout)} tabsList={tabsList}/>
 
             <div className={styles["tabs-pane"]}>
-                <RunnerTabPane />
+                <RunnerTabPane layout={layout}/>
             </div>
         </div>
     )
 })
 
 const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
-    const {onlyID, extra} = props
-
+    const {onlyID, tabsList,extra} = props
     return (
         <DragDropContext
             onDragEnd={(result, provided) => {
@@ -104,10 +77,10 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                                     {...provided.droppableProps}
                                     className={classNames(styles["bar-container"])}
                                 >
-                                    {qqq.map((item, index) => {
+                                    {tabsList.map((item, index) => {
                                         return (
                                             <Fragment key={item.path}>
-                                                <RunnerTabBarItem index={index} info={item as any} />
+                                                <RunnerTabBarItem index={index} info={item} layoutStr={onlyID}/>
                                             </Fragment>
                                         )
                                     })}
@@ -124,7 +97,28 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
 })
 
 const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
-    const {index, info} = props
+    const {index, info,layoutStr} = props
+    const {tabsFile} = useStore()
+    const {setTabsFile} = useDispatcher()
+    const setActiveFile = useMemoizedFn(()=>{
+        const newTabsFile: TabFileProps[] = JSON.parse(JSON.stringify(tabsFile))
+        const showTabs = newTabsFile.map((item)=>{
+            if(layoutToString(item.layout)===layoutStr){
+                return {
+                    ...item,
+                    files:item.files.map((item,idx)=>{
+                        return {...item,isActive:idx === index}
+                    })
+                }
+            }
+            return item
+        })
+        setTabsFile&&setTabsFile(showTabs)
+    })
+
+    const closeTabItem = useMemoizedFn((e) => {
+        e.stopPropagation()
+    })
 
     return (
         <Draggable key={info.path} draggableId={info.path} index={index}>
@@ -139,10 +133,10 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                         style={{...provided.draggableProps.style}}
                         className={classNames(styles["runner-tab-bar-item"], {
                             [styles["dragging"]]: isDragging,
-                            [styles["selected"]]: index === 3
+                            [styles["selected"]]: info.isActive
                         })}
                     >
-                        <div className={styles["item-wrapper"]}>
+                        <div className={styles["item-wrapper"]} onClick={setActiveFile}>
                             <img src={KeyToIcon[info.icon].iconPath} />
                             <div className={styles["text-style"]}>{info.name}</div>
                             <YakitButton
@@ -150,6 +144,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                                 type='text2'
                                 size='small'
                                 icon={<OutlineXIcon />}
+                                onClick={closeTabItem}
                             />
                         </div>
                     </div>
@@ -160,10 +155,51 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 })
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
+    const {layout} = props
+    const {tabsFile} = useStore()
+    const [editorInfo,setEditorInfo] = useState<FileDetailInfo>()
+    // 编辑器实例
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    useEffect(()=>{
+        const showTabs = tabsFile.filter((item)=>layoutToString(item.layout)===layoutToString(layout))
+        if(showTabs.length>0){
+            showTabs[0].files.forEach((item)=>{
+                if(item.isActive){
+                    setEditorInfo(item)
+                }
+            })
+        }
+    },[tabsFile])
+
+    useEffect(() => {
+        if (!reqEditor) {
+            return
+        }
+
+        // 监听光标点击位置
+        reqEditor.onDidChangeCursorPosition((e) => {
+            console.log("e", e)
+            const { position } = e;
+            // console.log('当前光标位置：', position);
+        })
+        
+        // 监听光标选中位置
+        reqEditor.onDidChangeCursorSelection((e) => {
+            const selection = e.selection;
+            const {startLineNumber,startColumn,endLineNumber,endColumn} = selection
+            // console.log("onDidChangeCursorSelection", startLineNumber,startColumn,endLineNumber,endColumn)
+        })
+
+    }, [reqEditor])
+
     return (
         <div className={styles["runner-tab-pane"]}>
-            <YakRunnerWelcomePage />
-            {/* <YakitEditor type={"yak"} value={"123"} setValue={() => {}} /> */}
+            {/* <YakRunnerWelcomePage /> */}
+            <YakitEditor 
+                editorDidMount={(editor) => {
+                    setReqEditor(editor)
+                }} 
+            type={editorInfo?.language||"yak"} value={editorInfo?.code||""} setValue={() => {}} />
         </div>
     )
 })

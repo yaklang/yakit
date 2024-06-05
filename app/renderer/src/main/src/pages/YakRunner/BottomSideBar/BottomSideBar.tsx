@@ -16,12 +16,15 @@ import {
 const {ipcRenderer} = window.require("electron")
 
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
+    const {onOpenEditorDetails} = props
     return (
         <div className={styles["bottom-side-bar"]}>
             {/* 语法检查|终端|帮助信息 */}
             <div className={styles["bottom-side-bar-left"]}>
                 <div className={classNames(styles["left-item"], styles["left-check"])}>
-                    <div className={classNames(styles["left-check-info"], styles["left-check-start"])}>
+                    <div className={classNames(styles["left-check-info"], styles["left-check-start"])} onClick={()=>{
+                        onOpenEditorDetails("syntaxCheck")
+                    }}>
                         <OutlineStethoscopeIcon />
                         语法检查
                     </div>
@@ -39,11 +42,15 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                         <OutlineDeprecatedIcon />0
                     </div>
                 </div>
-                <div className={classNames(styles["left-item"], styles["left-terminal-and-help"])}>
+                <div className={classNames(styles["left-item"], styles["left-terminal-and-help"])} onClick={()=>{
+                    onOpenEditorDetails("terminal")
+                }}>
                     <OutlineCodeIcon />
                     终端
                 </div>
-                <div className={classNames(styles["left-item"], styles["left-terminal-and-help"])}>
+                <div className={classNames(styles["left-item"], styles["left-terminal-and-help"])} onClick={()=>{
+                    onOpenEditorDetails("helpInfo")
+                }}>
                     <OutlineAnnotationIcon />
                     帮助信息
                 </div>
