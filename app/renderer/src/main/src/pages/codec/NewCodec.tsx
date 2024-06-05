@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Divider, Tooltip, Upload} from "antd"
-import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect, useSize} from "ahooks"
+import {useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect, useSize} from "ahooks"
 import styles from "./NewCodec.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -44,7 +44,6 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {v4 as uuidv4} from "uuid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI, NewCodecTextAreaUI} from "./NewCodecUIStore"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {openABSFileLocated} from "@/utils/openWebsite"
@@ -54,30 +53,62 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {pluginTypeToName} from "../plugins/builtInData"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import HexEditor from "react-hex-editor"
+import {HexEditorHandle} from "react-hex-editor/dist/types"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 const SaveCodecMethods = "SaveCodecMethods"
 
+interface CodecResponseProps {
+    Result: string
+    RawResult: Uint8Array
+    ResultVerbose: string
+    IsFalseAppearance: boolean
+}
+
 interface NewCodecRightEditorBoxProps {
     isExpand: boolean
     setExpand: (v: boolean) => void
     inputEditor: string
-    outputEditorByte?: Uint8Array
+    outputResponse?: CodecResponseProps
     setInputEditor: (v: string) => void
-    outputEditor: string
     runLoading: boolean
 }
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
-    const {isExpand, setExpand, outputEditorByte, inputEditor, setInputEditor, outputEditor, runLoading} = props
+    const {isExpand, setExpand, outputResponse, inputEditor, setInputEditor, runLoading} = props
     const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
     const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
     const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
     const [outputMenuOpen, setOutputMenuOpen] = useState<boolean>(false)
+    const [outputShowType, setOutputShowType] = useState<"editor" | "hex">("editor")
+    // hex
+    const [showData, setShowData] = useState<Uint8Array>(new Buffer([]))
+    const [nonce, setNonce] = useState<number>(0)
+
     const editorBoxRef = useRef<HTMLDivElement>(null)
     const uploadRef = useRef<HTMLDivElement>(null)
+    const HexEditorRef = useRef<HexEditorHandle>(null)
     const size = useSize(editorBoxRef)
+
+    const handleSetValue = React.useCallback(
+        (offset, value) => {
+            showData[offset] = value
+            setShowData(showData)
+            setNonce((v) => v + 1)
+        },
+        [showData]
+    )
+
+    useUpdateEffect(() => {
+        if (outputResponse?.RawResult) {
+            setShowData(outputResponse?.RawResult)
+        }
+    }, [outputResponse?.RawResult])
+
     const Expand = () => (
         <div
             className={styles["expand-box"]}
@@ -118,8 +149,8 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
     }, [inputEditor])
 
     const outPutObj = useMemo(() => {
-        return judgeStringSize(outputEditor)
-    }, [outputEditor])
+        return judgeStringSize(outputResponse?.Result || "")
+    }, [outputResponse?.Result])
 
     // 导入
     const onImport = useMemoizedFn((path: string) => {
@@ -141,7 +172,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     // 保存
     const onSave = useMemoizedFn(() => {
-        if (!outputEditorByte) {
+        if (!outputResponse?.RawResult) {
             warn("暂无保存内容")
             return
         }
@@ -156,7 +187,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                     const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
                     ipcRenderer
                         .invoke("SaveCodecOutputToTxt", {
-                            data: Buffer.from(outputEditorByte),
+                            data: Buffer.from(outputResponse.RawResult),
                             outputDir: absolutePath,
                             fileName: `Output-${new Date().getTime()}.txt`
                         })
@@ -176,12 +207,12 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     // 替换
     const onReplace = useMemoizedFn(() => {
-        setInputEditor(outputEditor)
+        setInputEditor(outputResponse?.Result || "")
     })
 
     // 复制
     const onCopy = useMemoizedFn(() => {
-        ipcRenderer.invoke("set-copy-clipboard", outputEditor)
+        ipcRenderer.invoke("set-copy-clipboard", outputResponse?.Result || "")
         success("复制成功")
     })
 
@@ -380,6 +411,19 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             <div className={styles["header"]}>
                                 <div className={styles["title"]}>
                                     <span className={styles["text"]}>Output</span>
+                                    {outputResponse && <YakitCheckableTag
+                                        style={{marginLeft: 8, marginRight: 0}}
+                                        checked={outputShowType === "hex"}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setOutputShowType("hex")
+                                            } else {
+                                                setOutputShowType("editor")
+                                            }
+                                        }}
+                                    >
+                                        hex原文
+                                    </YakitCheckableTag>}
                                     {outPutObj.hidden && (
                                         <Tooltip
                                             title={size && size.width > 450 ? null : "超大输出，请点击保存下载文件查看"}
@@ -394,89 +438,117 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                             </YakitTag>
                                         </Tooltip>
                                     )}
+                                    {outputResponse?.IsFalseAppearance && (
+                                        <YakitTag style={{marginLeft: 8}} color='danger'>
+                                            数据失真
+                                        </YakitTag>
+                                    )}
                                 </div>
                                 <div className={styles["extra"]}>
-                                    {size && size.width > 300 ? (
+                                    {outputShowType === "editor" && (
                                         <>
-                                            <Tooltip title={"保存"}>
-                                                <div className={styles["extra-icon"]} onClick={onSave}>
-                                                    <OutlineStorageIcon />
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title={"将Output替换至Input"}>
-                                                <div className={styles["extra-icon"]} onClick={onReplace}>
-                                                    <OutlineArrowBigUpIcon />
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title={"复制"}>
-                                                <div className={styles["extra-icon"]} onClick={onCopy}>
-                                                    <OutlineDocumentduplicateIcon />
-                                                </div>
-                                            </Tooltip>
-                                            <Tooltip title={"不自动换行"}>
-                                                <YakitButton
-                                                    size={"small"}
-                                                    type={noOutputWordwrap ? "text" : "primary"}
-                                                    icon={<EnterOutlined />}
-                                                    onClick={() => {
-                                                        setNoOutputWordwrap(!noOutputWordwrap)
+                                            {size && size.width > 300 ? (
+                                                <>
+                                                    <Tooltip title={"保存"}>
+                                                        <div className={styles["extra-icon"]} onClick={onSave}>
+                                                            <OutlineStorageIcon />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title={"将Output替换至Input"}>
+                                                        <div className={styles["extra-icon"]} onClick={onReplace}>
+                                                            <OutlineArrowBigUpIcon />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title={"复制"}>
+                                                        <div className={styles["extra-icon"]} onClick={onCopy}>
+                                                            <OutlineDocumentduplicateIcon />
+                                                        </div>
+                                                    </Tooltip>
+                                                    <Tooltip title={"不自动换行"}>
+                                                        <YakitButton
+                                                            size={"small"}
+                                                            type={noOutputWordwrap ? "text" : "primary"}
+                                                            icon={<EnterOutlined />}
+                                                            onClick={() => {
+                                                                setNoOutputWordwrap(!noOutputWordwrap)
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                </>
+                                            ) : (
+                                                <YakitDropdownMenu
+                                                    menu={{
+                                                        data: outputMenuData as YakitMenuItemProps[],
+                                                        onClick: ({key}) => {
+                                                            setOutputMenuOpen(false)
+                                                            switch (key) {
+                                                                case "save":
+                                                                    onSave()
+                                                                    break
+                                                                case "replace":
+                                                                    onReplace()
+                                                                    break
+                                                                case "copy":
+                                                                    onCopy()
+                                                                    break
+                                                                case "wordwrap":
+                                                                    setNoOutputWordwrap(!noOutputWordwrap)
+                                                                    break
+                                                                default:
+                                                                    break
+                                                            }
+                                                        }
                                                     }}
-                                                />
-                                            </Tooltip>
+                                                    dropdown={{
+                                                        overlayClassName: styles["codec-output-menu"],
+                                                        trigger: ["click"],
+                                                        placement: "bottomRight",
+                                                        onVisibleChange: (v) => {
+                                                            setOutputMenuOpen(v)
+                                                        },
+                                                        visible: outputMenuOpen
+                                                    }}
+                                                >
+                                                    <div className={styles["extra-icon"]}>
+                                                        <OutlineDotshorizontalIcon />
+                                                    </div>
+                                                </YakitDropdownMenu>
+                                            )}
                                         </>
-                                    ) : (
-                                        <YakitDropdownMenu
-                                            menu={{
-                                                data: outputMenuData as YakitMenuItemProps[],
-                                                onClick: ({key}) => {
-                                                    setOutputMenuOpen(false)
-                                                    switch (key) {
-                                                        case "save":
-                                                            onSave()
-                                                            break
-                                                        case "replace":
-                                                            onReplace()
-                                                            break
-                                                        case "copy":
-                                                            onCopy()
-                                                            break
-                                                        case "wordwrap":
-                                                            setNoOutputWordwrap(!noOutputWordwrap)
-                                                            break
-                                                        default:
-                                                            break
-                                                    }
-                                                }
-                                            }}
-                                            dropdown={{
-                                                overlayClassName: styles["codec-output-menu"],
-                                                trigger: ["click"],
-                                                placement: "bottomRight",
-                                                onVisibleChange: (v) => {
-                                                    setOutputMenuOpen(v)
-                                                },
-                                                visible: outputMenuOpen
-                                            }}
-                                        >
-                                            <div className={styles["extra-icon"]}>
-                                                <OutlineDotshorizontalIcon />
-                                            </div>
-                                        </YakitDropdownMenu>
                                     )}
-
                                     <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                     {Expand()}
                                 </div>
                             </div>
-                            <div className={styles["editor"]}>
-                                <YakitEditor
-                                    readOnly={true}
-                                    type='plaintext'
-                                    value={outPutObj.value}
-                                    noWordWrap={noOutputWordwrap}
-                                    // loading={loading}
-                                />
-                            </div>
+                            <>
+                                {outputShowType === "editor" ? (
+                                    <div className={styles["editor"]}>
+                                        <YakitEditor
+                                            readOnly={true}
+                                            type='plaintext'
+                                            value={outPutObj.value}
+                                            noWordWrap={noOutputWordwrap}
+                                            // loading={loading}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className={styles["hex-editor"]}>
+                                        <HexEditor
+                                            readOnly={true}
+                                            ref={HexEditorRef}
+                                            asciiWidth={18}
+                                            data={showData}
+                                            nonce={nonce}
+                                            setValue={handleSetValue}
+                                            overscanCount={0x03}
+                                            showAscii={true}
+                                            showColumnLabels={true}
+                                            showRowLabels={true}
+                                            highlightColumn={true}
+                                        />
+                                    </div>
+                                )}
+                            </>
                         </YakitSpin>
                     </div>
                 }
@@ -762,37 +834,42 @@ interface CodecRunListHistoryStoreProps {
     setPopoverVisible: (v: boolean) => void
     onSelect: (v: SaveObjProps) => void
 }
-const CodecRunListHistory = "CodecRunListHistory"
+
 export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> = React.memo((props) => {
     const {popoverVisible, setPopoverVisible, onSelect} = props
-    const [mitmSaveData, setMitmSaveData] = useState<SaveObjProps[]>([])
+    const [mitmSaveData, setMitmSaveData] = useState<CustomizeCodecFlowProps[]>([])
     useEffect(() => {
         onMitmSaveFilter()
     }, [popoverVisible])
     const onMitmSaveFilter = useMemoizedFn(() => {
-        getRemoteValue(CodecRunListHistory).then((data) => {
-            if (!data) {
-                setMitmSaveData([])
-                return
-            }
-            try {
-                const cacheData: SaveObjProps[] = JSON.parse(data)
-                setMitmSaveData(cacheData)
-            } catch (error) {}
-        })
+        ipcRenderer
+            .invoke("GetAllCodecFlow")
+            .then((data: {Flows: CustomizeCodecFlowProps[]}) => {
+                setMitmSaveData(data.Flows)
+            })
+            .catch((e) => {
+                failed(`GetAllCodecFlow failed ${e}`)
+            })
     })
 
-    const removeItem = useMemoizedFn((historyName: string) => {
-        setMitmSaveData((mitmSaveData) => mitmSaveData.filter((item) => item.historyName !== historyName))
+    const removeItem = useMemoizedFn((FlowName, DeleteAll = false) => {
+        ipcRenderer
+            .invoke("DeleteCodecFlow", {FlowName, DeleteAll})
+            .then(() => {
+                info("删除成功")
+                onMitmSaveFilter()
+            })
+            .catch((e) => {
+                failed(`DeleteCodecFlow failed ${e}`)
+            })
     })
 
-    useUpdateEffect(() => {
-        setRemoteValue(CodecRunListHistory, JSON.stringify(mitmSaveData))
-    }, [mitmSaveData])
-
-    const onSelectItem = useMemoizedFn((item: SaveObjProps) => {
-        onSelect(item)
-        setPopoverVisible(false)
+    const onSelectItem = useMemoizedFn((item: CustomizeCodecFlowProps) => {
+        const {WorkFlowUI} = item
+        try {
+            onSelect(JSON.parse(WorkFlowUI))
+            setPopoverVisible(false)
+        } catch (error) {}
     })
     return (
         <div className={styles["codec-run-list-history-store"]}>
@@ -803,7 +880,7 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                         type='text'
                         colors='danger'
                         onClick={() => {
-                            setMitmSaveData([])
+                            removeItem("", true)
                         }}
                     >
                         清空
@@ -815,7 +892,7 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                 <div className={styles["list"]}>
                     {mitmSaveData.map((item, index) => (
                         <div
-                            key={item.historyName}
+                            key={item.FlowName}
                             className={classNames(styles["list-item"], {
                                 [styles["list-item-border"]]: index !== mitmSaveData.length - 1,
                                 [styles["list-item-border-top"]]: index === 0
@@ -824,12 +901,12 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                                 onSelectItem(item)
                             }}
                         >
-                            <div className={styles["name"]}>{item.historyName}</div>
+                            <div className={styles["name"]}>{item.FlowName}</div>
                             <div
                                 className={styles["opt"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    removeItem(item.historyName)
+                                    removeItem(item.FlowName)
                                 }}
                             >
                                 <OutlineTrashIcon />
@@ -849,6 +926,25 @@ interface SaveObjProps {
     rightItems: RightItemsProps[]
 }
 
+interface ExecParamItemProps {
+    Key: string
+    Value: any
+}
+
+interface CodecWorkProps {
+    CodecType: string
+    Params: ExecParamItemProps[]
+    // 后面的可选参数为兼容老接口的残留(可不用)
+    Script?: string
+    PluginName?: string
+}
+
+interface CustomizeCodecFlowProps {
+    FlowName: string
+    WorkFlow: CodecWorkProps[]
+    WorkFlowUI: string
+}
+
 interface NewCodecMiddleRunListProps {
     id: string
     fold: boolean
@@ -856,8 +952,7 @@ interface NewCodecMiddleRunListProps {
     rightItems: RightItemsProps[]
     setRightItems: (v: RightItemsProps[]) => void
     inputEditor: string
-    setOutputEditor: (v: string) => void
-    setOutputEditorByte: (v: Uint8Array) => void
+    setOutputResponse: (v: CodecResponseProps) => void
     isClickToRunList: React.MutableRefObject<boolean>
     setRunLoading: (v: boolean) => void
 }
@@ -866,11 +961,6 @@ interface CheckFailProps {
     key: string
     index: number
     message: string
-}
-
-interface CodecWorkProps {
-    CodecType: string
-    Params: {Key: string; Value: any}[]
 }
 
 const getMiddleItemStyle = (isDragging, draggableStyle) => {
@@ -895,14 +985,14 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         rightItems,
         setRightItems,
         inputEditor,
-        setOutputEditor,
-        setOutputEditorByte,
+        setOutputResponse,
         isClickToRunList,
         setRunLoading
     } = props
 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
-    const [_, setFilterName, getFilterName] = useGetState<string>("")
+    const [filterName, setFilterName] = useState<string>()
+    const [cacheModal, setCacheModal] = useState<boolean>(false)
     // 是否自动执行
     const [autoRun, setAutoRun] = useState<boolean>(false)
     useDebounceEffect(
@@ -954,79 +1044,78 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         setRightItems(v.rightItems)
     })
 
+    const onSaveFun = useMemoizedFn(() => {
+        if (typeof filterName !== "string" || filterName.length === 0) {
+            warn("请输入名字")
+            return
+        }
+        const saveObj: SaveObjProps = {
+            historyName: filterName,
+            rightItems
+        }
+
+        let saveCodecParams: CustomizeCodecFlowProps = {
+            FlowName: filterName,
+            // 后端所需内容
+            WorkFlow: [],
+            // 前端用于恢复界面所需内容
+            WorkFlowUI: JSON.stringify(saveObj)
+        }
+        rightItems.forEach((item) => {
+            let obj: CodecWorkProps = {
+                CodecType: item.codecType,
+                Params: []
+            }
+            if (Array.isArray(item.node)) {
+                const node = item.node as RightItemsTypeProps[]
+                node.forEach((itemIn) => {
+                    if (itemIn.type === "inputSelect") {
+                        const {input, select} = itemIn
+                        obj.Params.push({
+                            Key: input.name,
+                            Value: input.value || ""
+                        })
+                        obj.Params.push({
+                            Key: select.name,
+                            Value: select.value || ""
+                        })
+                    } else if (itemIn.type === "checkbox") {
+                        const {name, value = []} = itemIn
+                        obj.Params.push({
+                            Key: name,
+                            Value: value.includes(name)
+                        })
+                    } else {
+                        const {name, value = ""} = itemIn
+                        obj.Params.push({
+                            Key: name,
+                            Value: value
+                        })
+                    }
+                })
+            }
+            saveCodecParams.WorkFlow.push(obj)
+        })
+
+        ipcRenderer
+            .invoke("SaveCodecFlow", saveCodecParams)
+            .then(() => {
+                info("存储成功")
+                setFilterName(undefined)
+                setCacheModal(false)
+            })
+            .catch((e) => {
+                failed(`SaveCodecFlow failed ${e}`)
+            })
+    })
+
     // 保存至历史
     const onSaveCodecRunListHistory = useMemoizedFn(() => {
         if (rightItems.length === 0) {
             warn("请从左侧列表拖入要使用的 Codec 工具")
             return
         }
-        const m = showYakitModal({
-            title: "保存编解码顺序",
-            content: (
-                <div className={styles["codec-save-modal"]}>
-                    <YakitInput.TextArea
-                        placeholder='请为编解码顺序取个名字...'
-                        showCount
-                        maxLength={50}
-                        onChange={(e) => {
-                            setFilterName(e.target.value)
-                        }}
-                    />
-                    <div className={styles["btn-box"]}>
-                        <YakitButton
-                            type='outline2'
-                            onClick={() => {
-                                setFilterName("")
-                                m.destroy()
-                            }}
-                        >
-                            取消
-                        </YakitButton>
-                        <YakitButton
-                            type='primary'
-                            onClick={() => {
-                                if (getFilterName().length === 0) {
-                                    warn("请输入名字")
-                                    return
-                                }
-                                const saveObj: SaveObjProps = {
-                                    historyName: getFilterName(),
-                                    rightItems
-                                }
-                                getRemoteValue(CodecRunListHistory).then((data) => {
-                                    if (!data) {
-                                        setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj]))
-                                        info("存储成功")
-                                        m.destroy()
-                                        return
-                                    }
-                                    try {
-                                        const cacheData: SaveObjProps[] = JSON.parse(data)
-                                        if (
-                                            cacheData.filter((item) => item.historyName === getFilterName()).length > 0
-                                        ) {
-                                            warn("此名字重复")
-                                        } else {
-                                            setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj, ...cacheData]))
-                                            info("存储成功")
-                                            m.destroy()
-                                        }
-                                    } catch (error) {}
-                                })
-                            }}
-                        >
-                            保存
-                        </YakitButton>
-                    </div>
-                </div>
-            ),
-            onCancel: () => {
-                setFilterName("")
-                m.destroy()
-            },
-            footer: null,
-            width: 400
-        })
+        setCacheModal(true)
     })
 
     // 执行函数
@@ -1044,16 +1133,15 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                 const node = item.node as RightItemsTypeProps[]
                 node.forEach((itemIn) => {
                     if (itemIn.type === "inputSelect") {
-                        const {input,select} = itemIn
+                        const {input, select} = itemIn
                         obj.Params.push({
                             Key: input.name,
-                            Value: input.value||""
+                            Value: input.value || ""
                         })
                         obj.Params.push({
                             Key: select.name,
-                            Value: select.value||""
+                            Value: select.value || ""
                         })
-                        
                     } else if (itemIn.type === "checkbox") {
                         const {name, value = []} = itemIn
                         obj.Params.push({
@@ -1072,14 +1160,12 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             newCodecParams.WorkFlow.push(obj)
         })
         setRunLoading(true)
-        // console.log("newCodecParams---",newCodecParams);
-        
+
         ipcRenderer
             .invoke("NewCodec", newCodecParams)
-            .then((data: {Result: string; RawResult: Uint8Array}) => {
+            .then((data: CodecResponseProps) => {
                 // 执行完成后 更改Output值
-                setOutputEditorByte(data.RawResult)
-                setOutputEditor(data.Result)
+                setOutputResponse(data)
             })
             .catch((e) => {
                 failed(`newCodec failed ${e}`)
@@ -1152,8 +1238,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                 message: `${title}-${rightItem.title}:为必填项`
                             })
                         }
-                    } 
-                    else if(itemIn.type === "inputSelect"){
+                    } else if (itemIn.type === "inputSelect") {
                         const rightItem = itemIn as RightItemsInputSelectProps
                         const inputItem = rightItem.input
                         const selectItem = rightItem.select
@@ -1185,8 +1270,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                 message: `${title}-${selectItem.title}:为必填项`
                             })
                         }
-                    }
-                    else if (itemIn.type === "flex") {
+                    } else if (itemIn.type === "flex") {
                         // 此处为布局预留
                     }
                 })
@@ -1331,6 +1415,43 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     立即执行
                 </YakitButton>
             </div>
+            <YakitModal
+                visible={cacheModal}
+                bodyStyle={{padding: 0}}
+                title='保存编解码顺序'
+                width={400}
+                footer={null}
+                onCancel={() => {
+                    setFilterName("")
+                    setCacheModal(false)
+                }}
+            >
+                <div className={styles["codec-save-modal"]}>
+                    <YakitInput.TextArea
+                        value={filterName}
+                        placeholder='请为编解码顺序取个名字...'
+                        showCount
+                        maxLength={50}
+                        onChange={(e) => {
+                            setFilterName(e.target.value)
+                        }}
+                    />
+                    <div className={styles["btn-box"]}>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                setFilterName("")
+                                setCacheModal(false)
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={onSaveFun}>
+                            保存
+                        </YakitButton>
+                    </div>
+                </div>
+            </YakitModal>
         </div>
     )
 }
@@ -1832,8 +1953,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     const cacheCodecRef = useRef<CodecMethod[]>([])
     // Input/Output编辑器内容
     const [inputEditor, setInputEditor] = useState<string>("")
-    const [outputEditor, setOutputEditor] = useState<string>("")
-    const [outputEditorByte, setOutputEditorByte] = useState<Uint8Array>()
+    const [outputResponse, setOutputResponse] = useState<CodecResponseProps>()
     // 是否正在执行
     const [runLoading, setRunLoading] = useState<boolean>(false)
     // 是否为点击添加至执行列表
@@ -2136,8 +2256,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                         rightItems={rightItems}
                         setRightItems={setRightItems}
                         inputEditor={inputEditor}
-                        setOutputEditor={setOutputEditor}
-                        setOutputEditorByte={setOutputEditorByte}
+                        setOutputResponse={setOutputResponse}
                         isClickToRunList={isClickToRunList}
                         setRunLoading={setRunLoading}
                     />
@@ -2148,8 +2267,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
                 setExpand={setExpand}
                 inputEditor={inputEditor}
                 setInputEditor={setInputEditor}
-                outputEditor={outputEditor}
-                outputEditorByte={outputEditorByte}
+                outputResponse={outputResponse}
                 runLoading={runLoading}
             />
         </div>

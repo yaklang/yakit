@@ -260,6 +260,10 @@ service Yak {
   rpc Codec(CodecRequest) returns (CodecResponse);
   rpc NewCodec(CodecRequestFlow) returns (CodecResponse);
   rpc GetAllCodecMethods(Empty) returns(CodecMethods);
+
+  rpc SaveCodecFlow(CustomizeCodecFlow) returns (Empty);
+  rpc DeleteCodecFlow(DeleteCodecFlowRequest) returns (Empty);
+  rpc GetAllCodecFlow(Empty) returns (GetCodecFlowResponse);
   rpc PacketPrettifyHelper(PacketPrettifyHelperRequest) returns (PacketPrettifyHelperResponse);
 
   // Payload 相关接口
@@ -3917,9 +3921,26 @@ message CodecRequestFlow{
   bytes InputBytes = 6;
 }
 
+message CustomizeCodecFlow{
+  string FlowName = 1;
+  repeated CodecWork WorkFlow = 2;
+  string WorkFlowUI = 3;
+}
+
+message DeleteCodecFlowRequest {
+  bool DeleteAll = 1;
+  string FlowName = 2;
+}
+
+message GetCodecFlowResponse {
+  repeated CustomizeCodecFlow Flows = 1;
+}
+
 message CodecResponse {
-  string Result = 1;
-  bytes  RawResult = 2;
+  string Result = 1; // show result
+  bytes  RawResult = 2; // raw result, need hex editor
+  string ResultVerbose = 3;
+  bool IsFalseAppearance = 4; // 是否是失真
 }
 
 message CodecMethods {
