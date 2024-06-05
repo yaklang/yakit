@@ -134,14 +134,14 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             selectGroup: [],
             selectGroupListByKeyWord: []
         }
-        if (keyWordResponseToSelect.length > 0 && !pageInfo.selectGroupListByKeyWord?.length) {
+        if (keyWordResponseToSelect.length > 0) {
             // 设置关键词组默认选中
             const initSelectGroup = keyWordResponseToSelect
                 .filter((item) => initSelectGroupAll.includes(item.Value))
                 .map((ele) => ele.Value)
             groupObj.selectGroupListByKeyWord = initSelectGroup
         }
-        if (responseToSelect.length > 0 && !pageInfo.selectGroup?.length) {
+        if (responseToSelect.length > 0) {
             // 设置组默认选中
             const initSelectGroup = responseToSelect
                 .filter((item) => initSelectGroupAll.includes(item.Value))
