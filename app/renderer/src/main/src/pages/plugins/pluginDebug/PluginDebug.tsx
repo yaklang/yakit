@@ -39,6 +39,7 @@ import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../utils
 
 import classNames from "classnames"
 import styles from "./PluginDebug.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 
 export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
     const {plugin, getContainer, visible, onClose, onMerge} = props
@@ -440,7 +441,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     const onStartExecute = useMemoizedFn(() => {
         if (form) {
             form.validateFields()
-                .then((value: any) => {
+                .then(async(value: any) => {
                     // console.log("插件执行时的表单值", value)
                     // 保存参数-请求路径的选项
                     if (pathRef && pathRef.current) {
@@ -483,6 +484,12 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     debugPluginStreamEvent.reset()
                     setRuntimeId("")
                     setActiveTab("execResult")
+                    if(pluginType === "codec"){
+                        const codecInfo = await onCodeToInfo(pluginType, newCode || "")
+                        if((codecInfo?.Tags||[]).includes("AI工具")){
+                            emiter.emit("onOpenFuzzerModal",JSON.stringify({text:value["Input"]||"",code:"newCode",isAiPlugin:true}))
+                        }
+                    }
                     apiDebugPlugin(requestParams, tokenRef.current).then(() => {
                         setIsExecuting(true)
                         debugPluginStreamEvent.start()

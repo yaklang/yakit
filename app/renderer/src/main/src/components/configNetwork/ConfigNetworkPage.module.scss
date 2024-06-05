@@ -128,7 +128,7 @@
             }
             &:hover {
                 .close {
-                    display: block;
+                    display: block; 
                 }
             }
         }
@@ -300,11 +300,15 @@
     font-size: 12px;
     cursor: pointer;
 }
+.ai-sort-box{
+    width: 300px;
+    
+}
 .ai-sort-content {
         .menu-list {
+            border-radius: 4px;
+            border: 1px solid var(--yakit-border-color);
             overflow: auto;
-            margin-top: 8px;
-            padding: 0px 4px;
             flex: 1;
             &-item {
                 display: flex;

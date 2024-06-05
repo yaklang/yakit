@@ -274,6 +274,10 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             maskClosable: false,
             footer: null,
             content: (
+                <>
+                <div className={styles['ai-describe']}>
+                    请配置空间引擎APIKey后再进行使用
+                </div>
                 <div style={{margin: 24}}>
                     <ThirdPartyApplicationConfigForm
                         data={initData}
@@ -316,6 +320,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                         isCanInput={false}
                     />
                 </div>
+                </>
             )
         })
     })

@@ -116,9 +116,10 @@ import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/
 import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
 const {ipcRenderer} = window.require("electron")
 
-interface CodecParamsProps {
+export interface CodecParamsProps {
     text?: string
-    scriptName: string
+    scriptName?: string
+    code?: string
     isAiPlugin: boolean
 }
 
@@ -3038,12 +3039,12 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
     // 执行
     const onStartExecute = useMemoizedFn((data: CodecParamsProps) => {
-        const {text, scriptName, isAiPlugin} = data
+        const {text, scriptName, isAiPlugin,code} = data
         const executeParams = {
             Input: text || "",
             PluginName: scriptName,
             PluginType: "codec",
-            Code: ""
+            Code: code
         }
         debugPluginStreamEvent.reset()
 

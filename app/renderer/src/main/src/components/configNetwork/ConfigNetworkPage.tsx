@@ -678,29 +678,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     </YakitButton>
                                 </Form.Item>
                                 <Form.Item label={"AI使用优先级"}>
-                                    <YakitButton type={"outline1"} onClick={()=>{
-                                        let AiApiPriority:string[] = params.AiApiPriority
-                                        let m = showYakitModal({
-                                            title: "配置AI使用优先级",
-                                            width: 460,
-                                            // footer: null,
-                                            closable: true,
-                                            maskClosable: false,
-                                            content: (
-                                                <div style={{margin: 24}}>
-                                                    <AISortContent AiApiPriority={params.AiApiPriority} onUpdate={(newAiApiPriority)=>{
-                                                        AiApiPriority = newAiApiPriority
-                                                    }}/>
-                                                </div>
-                                            ),
-                                            onCancel:()=>{m.destroy()},
-                                            onOk:()=>{
-                                                setParams({...params, AiApiPriority})
-                                                setTimeout(()=>submit(),100)
-                                                m.destroy()
-                                            }
-                                        })
-                                    }}>配置</YakitButton>
+                                    <div className={styles['ai-sort-box']}>
+                                        <AISortContent AiApiPriority={params.AiApiPriority} onUpdate={(AiApiPriority)=>{
+                                            setParams({...params, AiApiPriority})
+                                        }}/>
+                                    </div>
+                                    
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     其他配置
@@ -1358,17 +1341,6 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
             onDragEnd={onDragEnd}
         >
         <Droppable droppableId='droppable-payload' direction='vertical' 
-        // renderClone={(provided, snapshot, rubric) => {
-        //     const item: SortDataProps[] = sortData.filter(
-        //                 (item) => item.value === rubric.draggableId
-        //             ) || []
-        //     return <div ref={provided.innerRef}
-        //     {...provided.draggableProps}
-        //     {...provided.dragHandleProps}
-        //     style={{
-        //         ...getItemStyle(snapshot.isDragging, provided.draggableProps.style)
-        //     }}>{item.length>0&&<div className={styles['sort-active-item']} key={item[0].value}>{item[0].label}</div>}</div>
-        // }}
         >
         {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>
