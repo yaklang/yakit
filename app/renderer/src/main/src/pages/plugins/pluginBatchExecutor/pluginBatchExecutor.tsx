@@ -660,7 +660,7 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
             useMemoizedFn((runtimeId, hybridScanMode) => {
                 return new Promise((resolve, reject) => {
                     if (!runtimeId) reject("未设置正常得 runtimeId")
-                    hybridScanStreamEvent.reset()
+
                     const action = (mode) => {
                         apiHybridScanByMode(runtimeId, mode, tokenRef.current)
                             .then(() => {
@@ -672,7 +672,10 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
                     switch (hybridScanMode) {
                         case "status":
                         case "pause":
+                            action(hybridScanMode)
+                            break
                         case "resume":
+                            hybridScanStreamEvent.reset()
                             action(hybridScanMode)
                             break
                         case "new":
