@@ -5,6 +5,10 @@ productName: 'EnpriTrace'
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
+  - from: "bins/scripts/auto-install-cert.zip"
+    to: "bins/scripts/auto-install-cert.zip"
+  - from: "bins/scripts/start-engine.zip"
+    to: "bins/scripts/start-engine.zip"
   - from: "bins/flag.txt"
     to: "bins/flag.txt"
   - from: "bins/engine-version.txt"
