@@ -1032,7 +1032,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             if (val.isAiPlugin) {
                 apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
                     const configType = obj.AppConfigs.map((item) => item.Type).filter((item) =>
-                        ["openai", "chatglm", "moonshot"].includes(item)
+                        ["openai", "chatglm", "moonshot", "comate"].includes(item)
                     )
                     // 如若已配置 则打开执行框
                     if (configType.length > 0) {
@@ -1070,7 +1070,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             })
                                         }}
                                         onCancel={() => m.destroy()}
-                                        showOptions = {["openai","chatglm","moonshot"]}
+                                        showOptions = {["openai","chatglm","moonshot","comate"]}
                                     />
                                     </div>
                                 </>

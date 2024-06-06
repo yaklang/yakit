@@ -35,7 +35,7 @@ import {KVPair} from "@/models/kv"
 import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {LocalGVS} from "@/enums/localGlobal"
 import {RemoteGV} from "@/yakitGV"
-import { DragDropContext, Draggable, DropResult, Droppable } from "@hello-pangea/dnd"
+import {DragDropContext, Draggable, DropResult, Droppable} from "@hello-pangea/dnd"
 
 export interface ConfigNetworkPageProp {}
 
@@ -137,11 +137,11 @@ export const defaultParams: GlobalNetworkConfig = {
     EnableSystemProxyFromEnv: false,
     SkipSaveHTTPFlow: false,
     AppConfigs: [],
-    AiApiPriority:[],
+    AiApiPriority: [],
     AuthInfos: [],
     SynScanNetInterface: "",
     ExcludePluginScanURIs: [],
-    IncludePluginScanURIs: [],
+    IncludePluginScanURIs: []
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -614,7 +614,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                                 }
                                                                             )
                                                                         })
-                                                                        setTimeout(()=>submit(),100)
+                                                                        setTimeout(() => submit(), 100)
                                                                         m.destroy()
                                                                     }}
                                                                     onCancel={() => m.destroy()}
@@ -664,7 +664,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                     existedResult.push(e)
                                                                 }
                                                                 setParams({...params, AppConfigs: existedResult})
-                                                                setTimeout(()=>submit(),100)
+                                                                setTimeout(() => submit(), 100)
                                                                 m.destroy()
                                                             }}
                                                             onCancel={() => m.destroy()}
@@ -678,12 +678,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     </YakitButton>
                                 </Form.Item>
                                 <Form.Item label={"AI使用优先级"}>
-                                    <div className={styles['ai-sort-box']}>
-                                        <AISortContent AiApiPriority={params.AiApiPriority} onUpdate={(AiApiPriority)=>{
-                                            setParams({...params, AiApiPriority})
-                                        }}/>
+                                    <div className={styles["ai-sort-box"]}>
+                                        <AISortContent
+                                            AiApiPriority={params.AiApiPriority}
+                                            onUpdate={(AiApiPriority) => {
+                                                setParams({...params, AiApiPriority})
+                                            }}
+                                        />
                                     </div>
-                                    
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     其他配置
@@ -1276,7 +1278,7 @@ interface SortDataProps {
     value: string
 }
 interface AISortContentProps {
-    onUpdate:(v:string[])=>void
+    onUpdate: (v: string[]) => void
     AiApiPriority: string[]
 }
 
@@ -1289,11 +1291,8 @@ const getItemStyle = (isDragging, draggableStyle) => {
         if (match) {
             // 提取匹配到的两个值，并将它们转换为数字
             const [value1, value2] = match.slice(1).map(Number)
-                const modifiedString = transform.replace(
-                    /translate\((-?\d+)px, (-?\d+)px\)/,
-                    `translate(0px, ${value2}px)`
-                )
-                transform = modifiedString
+            const modifiedString = transform.replace(/translate\((-?\d+)px, (-?\d+)px\)/, `translate(0px, ${value2}px)`)
+            transform = modifiedString
         }
     }
 
@@ -1303,95 +1302,87 @@ const getItemStyle = (isDragging, draggableStyle) => {
     }
 }
 
-const defaultAiApiPriority:SortDataProps[] = [{label: "OpenAI", value: "openai"},
-{label: "Chatglm", value: "chatglm"},
-{label: "Moonshot", value: "moonshot"}]
+const defaultAiApiPriority: SortDataProps[] = [
+    {label: "OpenAI", value: "openai"},
+    {label: "Chatglm", value: "chatglm"},
+    {label: "Moonshot", value: "moonshot"},
+    {label: "Comate", value: "comate"},
+]
 
 export const AISortContent: React.FC<AISortContentProps> = (props) => {
-    const {onUpdate,AiApiPriority} = props
-    const [sortData, setSortData] = useState<SortDataProps[]>([]);
+    const {onUpdate, AiApiPriority} = props
+    const [sortData, setSortData] = useState<SortDataProps[]>([])
 
-    useEffect(()=>{
-        if(AiApiPriority.length>0){
+    useEffect(() => {
+        if (AiApiPriority.length > 0) {
             const sortedData = defaultAiApiPriority.sort((a, b) => {
-                return AiApiPriority.indexOf(a.value) - AiApiPriority.indexOf(b.value);
-            });
+                return AiApiPriority.indexOf(a.value) - AiApiPriority.indexOf(b.value)
+            })
             setSortData(sortedData)
-        }
-        else{
+        } else {
             setSortData(defaultAiApiPriority)
         }
-    },[AiApiPriority])
+    }, [AiApiPriority])
 
     const onDragEnd = useMemoizedFn((result: DropResult) => {
         const {source, destination, draggableId} = result
-        if(destination){
+        if (destination) {
             const newItems: SortDataProps[] = JSON.parse(JSON.stringify(sortData))
             const [removed] = newItems.splice(source.index, 1)
             newItems.splice(destination.index, 0, removed)
-            setSortData([...newItems])  
-            onUpdate(newItems.map((item)=>item.value))
+            setSortData([...newItems])
+            onUpdate(newItems.map((item) => item.value))
         }
     })
 
-    return(<div className={styles['ai-sort-content']}>
-        <div>优先级为从上到下</div>
-        <div className={styles['menu-list']}>
-            <DragDropContext
-            onDragEnd={onDragEnd}
-        >
-        <Droppable droppableId='droppable-payload' direction='vertical' 
-        >
-        {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-            {sortData.map((item, index) => {
-                return (
-                        <Draggable
-                        key={item.value}
-                        draggableId={item.value}
-                        index={index}
-                    >
-                        {(provided, snapshot) => (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                style={{
-                                    ...getItemStyle(snapshot.isDragging, provided.draggableProps.style)
-                                }}
-                            >
-                                <div
-                                    className={classNames(styles["menu-list-item"], {
-                                        [styles["menu-list-item-drag"]]: snapshot.isDragging
-                                    })}
-                                >
-                                    <div
-                                        className={styles["menu-list-item-info"]}
-                                    >
-                                        <DragSortIcon
-                                            className={styles["drag-sort-icon"]}
-                                        />
-                                        <div className={styles["title"]}>
-                                            {item.label}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                
-                                
-                                {/* <div className={styles['sort-item-box']}>
+    return (
+        <div className={styles["ai-sort-content"]}>
+            <div>优先级为从上到下</div>
+            <div className={styles["menu-list"]}>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId='droppable-payload' direction='vertical'>
+                        {(provided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                                {sortData.map((item, index) => {
+                                    return (
+                                        <Draggable key={item.value} draggableId={item.value} index={index}>
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    style={{
+                                                        ...getItemStyle(
+                                                            snapshot.isDragging,
+                                                            provided.draggableProps.style
+                                                        )
+                                                    }}
+                                                >
+                                                    <div
+                                                        className={classNames(styles["menu-list-item"], {
+                                                            [styles["menu-list-item-drag"]]: snapshot.isDragging
+                                                        })}
+                                                    >
+                                                        <div className={styles["menu-list-item-info"]}>
+                                                            <DragSortIcon className={styles["drag-sort-icon"]} />
+                                                            <div className={styles["title"]}>{item.label}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* <div className={styles['sort-item-box']}>
                                 <div className={classNames(styles["sort-item"]) } key={item.value}>{item.label}</div>
                                 </div> */}
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    )
+                                })}
+                                {provided.placeholder}
                             </div>
                         )}
-                    </Draggable>
-                )
-            })}
-            {provided.placeholder}
+                    </Droppable>
+                </DragDropContext>
+            </div>
         </div>
-        )}
-    </Droppable>
-    </DragDropContext>
-        </div>
-    </div>)
+    )
 }

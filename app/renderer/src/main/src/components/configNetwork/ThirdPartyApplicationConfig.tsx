@@ -9,7 +9,7 @@ import {KVPair} from "@/models/kv"
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {DefaultOptionType} from "antd/lib/select"
 import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
-import { warn } from "@/utils/notification"
+import {warn} from "@/utils/notification"
 
 export interface ThirdPartyApplicationConfigProp {
     data?: ThirdPartyApplicationConfig
@@ -28,12 +28,11 @@ export function getThirdPartyAppExtraParams(type: string) {
         case "hunter":
         case "quake":
         case "fofa":
-            return [
-                {label: "请求域名", key: "domain"}
-            ]
+            return [{label: "请求域名", key: "domain"}]
         case "openai":
         case "chatglm":
         case "moonshot":
+        case "comate":
             return [
                 {label: "模型名称", key: "model"},
                 {label: "第三方加速域名", key: "domain"},
@@ -59,7 +58,7 @@ export function setThirdPartyAppExtraParamValue(
 }
 
 export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConfigProp> = (props) => {
-    const {isCanInput = true,showOptions} = props
+    const {isCanInput = true, showOptions} = props
     const [existed, setExisted] = useState(props.data !== undefined)
     const [params, setParams] = useState<ThirdPartyApplicationConfig>(
         props?.data || {
@@ -83,14 +82,15 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
         {label: "OpenAI", value: "openai"},
         {label: "Chatglm", value: "chatglm"},
         {label: "Moonshot", value: "moonshot"},
+        {label: "Comate", value: "comate"},
     ])
 
-    useEffect(()=>{
-        if(showOptions){
-           const newOptions = (options as unknown as any).filter((item)=>showOptions.includes(item.value))
-           setOptions(newOptions)
+    useEffect(() => {
+        if (showOptions) {
+            const newOptions = (options as unknown as any).filter((item) => showOptions.includes(item.value))
+            setOptions(newOptions)
         }
-    },[showOptions])
+    }, [showOptions])
     return (
         <Form
             layout={"horizontal"}
@@ -124,7 +124,7 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
                 value={params.APIKey}
                 setValue={(val) => setParams({...params, APIKey: val})}
                 help={"APIKey / Token"}
-                required={true}
+                required={params.Type === "comate" ? false : true}
             />
             <InputItem
                 label={"用户信息"}
@@ -152,13 +152,16 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
                 <YakitButton type='outline2' onClick={() => props.onCancel()}>
                     取消
                 </YakitButton>
-                <YakitButton type={"primary"} onClick={() => {
-                    if(params.Type.length===0 || params.APIKey.length === 0){
-                        warn(`请填入必要参数`)
-                        return
-                    }
-                    props.onAdd(params)
-                    }}>
+                <YakitButton
+                    type={"primary"}
+                    onClick={() => {
+                        if (params.Type.length === 0 || (params.Type != "comate" && params.APIKey.length === 0)) {
+                            warn(`请填入必要参数`)
+                            return
+                        }
+                        props.onAdd(params)
+                    }}
+                >
                     确定添加
                 </YakitButton>
             </div>
