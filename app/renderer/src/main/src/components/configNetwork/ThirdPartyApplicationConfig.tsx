@@ -23,6 +23,14 @@ export interface ThirdPartyApplicationConfigProp {
 
 export function getThirdPartyAppExtraParams(type: string) {
     switch (type) {
+        case "zoomeye":
+        case "shodan":
+        case "hunter":
+        case "quake":
+        case "fofa":
+            return [
+                {label: "请求域名", key: "domain"}
+            ]
         case "openai":
         case "chatglm":
         case "moonshot":
