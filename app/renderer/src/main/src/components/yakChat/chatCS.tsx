@@ -2989,15 +2989,6 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 return item
             })
         )
-        const newPluginAIList: PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
-        setPluginAIList(
-            newPluginAIList.map((item) => {
-                if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
-                    item.info.extra = extra || {}
-                }
-                return item
-            })
-        )
     })
 
     const scroll = useScroll(pluginAIListRef)
