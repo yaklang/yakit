@@ -61,6 +61,7 @@
         overflow-y: auto;
         margin-top: 16px;
         .plugin-message {
+            word-break: break-all;
             font-size: 14px;
             line-height: 20px;
             color: var(--yakit-body-text-color);
