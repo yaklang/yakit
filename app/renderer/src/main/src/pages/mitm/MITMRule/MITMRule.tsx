@@ -47,6 +47,7 @@ import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag
 import emiter from "@/utils/eventBus/eventBus"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {useMenuHeight} from "@/store/menuHeight"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -126,7 +127,7 @@ export const colorSelectNode = (
 )
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
-    const {menuBodyHeight} = usePageInfo(
+    const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
         }),
@@ -431,7 +432,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
         record[item.value] = checked
         const first = item.value === "EnableForRequest" || item.value === "EnableForResponse"
         const firstChecked = record["EnableForRequest"] || record["EnableForResponse"]
-        const second = item.value === "EnableForHeader" || item.value === "EnableForBody" || item.value === "EnableForURI"
+        const second =
+            item.value === "EnableForHeader" || item.value === "EnableForBody" || item.value === "EnableForURI"
         const secondChecked = record["EnableForHeader"] || record["EnableForBody"] || record["EnableForURI"]
         // 请求和响应其中一个为true,那么 Header和Body必须要选中一个
         // 请求和响应都为false,那么 Header和Body都为 false
@@ -553,7 +555,9 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 })
         } else {
             // 开启劫持
-            const findOpenRepRule = newRules.find(item => (!item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)))
+            const findOpenRepRule = newRules.find(
+                (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
+            )
             if (findOpenRepRule !== undefined) {
                 Modal.confirm({
                     title: "温馨提示",
@@ -575,7 +579,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         </div>
                     ),
                     cancelButtonProps: {size: "small", className: "modal-cancel-button"},
-                    okButtonProps: { size: "small", className: "modal-ok-button" },
+                    okButtonProps: {size: "small", className: "modal-ok-button"},
                     onOk: () => {
                         ipcRenderer
                             .invoke("mitm-content-replacers", {
@@ -589,7 +593,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             .catch((e) => {
                                 failed(`保存失败: ${e}`)
                             })
-                    },
+                    }
                 })
             } else {
                 ipcRenderer

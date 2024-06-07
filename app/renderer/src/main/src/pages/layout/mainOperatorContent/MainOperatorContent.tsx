@@ -100,6 +100,7 @@ import {defaultSpaceEnginePageInfo} from "@/defaultConstants/SpaceEnginePage"
 import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetectConstants"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
+import {useMenuHeight} from "@/store/menuHeight"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -912,7 +913,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     })
-  
+
     /**
      * @name 远程通信打开一个页面(新逻辑)
      */
@@ -1909,7 +1910,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage} = props
-    const {updateMenuBodyHeight} = usePageInfo(
+    const {updateMenuBodyHeight} = useMenuHeight(
         (s) => ({
             updateMenuBodyHeight: s.updateMenuBodyHeight
         }),

@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {PluginDebugDrawerProps} from "./PluginDebugDrawerType"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -14,10 +14,11 @@ import {PluginDebugBody} from "@/pages/plugins/pluginDebug/PluginDebug"
 import {PluginDataProps} from "@/pages/plugins/pluginsType"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useMenuHeight} from "@/store/menuHeight"
 
 const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) => {
     const {route, defaultCode, visible, getContainer, setVisible} = props
-    const {menuBodyHeight} = usePageInfo(
+    const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
         }),
@@ -26,6 +27,10 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
     const [code, setCode] = useState<string>(defaultCode || NucleiPluginTemplate)
 
     const debuggerTypeRef = useRef("nuclei")
+
+    useEffect(() => {
+        if (defaultCode) setCode(defaultCode)
+    }, [defaultCode])
 
     const heightDrawer = useMemo(() => {
         return menuBodyHeight.firstTabMenuBodyHeight - 40
