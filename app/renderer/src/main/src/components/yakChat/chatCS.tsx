@@ -2955,8 +2955,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             // 更新单独展示项
             setPluginAIItem((lastItem) =>
                 lastItem.map((item, index) => {
-                    item.info.extra = extra || {}
                     if (lastItem.length === index + 1) {
+                        item.info.extra = extra || {}
                         item.info.content = content
                         item.time = formatDate(+new Date())
                         return item
@@ -2967,8 +2967,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             // 更新历史展示
             setPluginAIList(
                 newPluginAIList.map((item, index) => {
-                    item.info.extra = extra || {}
                     if (newPluginAIList.length === index + 1) {
+                        item.info.extra = extra || {}
                         item.info.content = content
                         item.time = formatDate(+new Date())
                         return item
@@ -2983,14 +2983,9 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     const updateExtraInfo = useMemoizedFn((extra) => {
         setPluginAIItem((lastItem) =>
             lastItem.map((item) => {
-                item.info.extra = extra || {}
-                return item
-            })
-        )
-        const newPluginAIList: PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
-        setPluginAIList(
-            newPluginAIList.map((item) => {
-                item.info.extra = extra || {}
+                if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
+                    item.info.extra = extra || {}
+                }
                 return item
             })
         )
@@ -3061,7 +3056,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
     // 执行
     const onStartExecute = useMemoizedFn((data: CodecParamsProps) => {
-        const {text, scriptName, isAiPlugin,code} = data
+        const {text, scriptName, isAiPlugin, code} = data
         const executeParams = {
             Input: text || "",
             PluginName: scriptName,
