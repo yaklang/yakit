@@ -4307,7 +4307,6 @@ const OutlineThumbupActive = () => (
         />
     </svg>
 )
-
 /**
  * @description  Icon/Outline/Outlinethumb-up-active
  */
@@ -5158,7 +5157,6 @@ const OutlineStore = () => (
         <path d='M14.25 6.75H9' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
     </svg>
 )
-
 /**
  * @description  Icon/Outline/存储
  */
@@ -5177,10 +5175,160 @@ const OutlineWrench = () => (
         />
     </svg>
 )
-
 /**
  * @description  Icon/Outline/wrench
  */
 export const OutlineWrenchIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineWrench} {...props} />
+}
+
+const OutlineOnlinePlugin = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_30847_28410'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_30847_28410)'>
+            <path
+                d='M15.3333 6L7.99996 0.666668L0.666626 6'
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M2.66663 8.66667V13C2.66663 13.5523 3.11434 14 3.66663 14H12.3333C12.8856 14 13.3333 13.5523 13.3333 13V7.33333'
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M2.66663 10.6667H5.99996V14H3.66663C3.11434 14 2.66663 13.5523 2.66663 13V10.6667Z'
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M6 10.6667H7.33333C8.4379 10.6667 9.33333 11.5621 9.33333 12.6667V14H6V10.6667Z'
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M2.66663 9C2.66663 8.07952 3.41282 7.33333 4.33329 7.33333V7.33333C5.25377 7.33333 5.99996 8.07952 5.99996 9V10.6667H2.66663V9Z'
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+    </svg>
+)
+/**
+ * @description  Icon/Outline/插件仓库
+ */
+export const OutlineOnlinePluginIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineOnlinePlugin} {...props} />
+}
+
+const OutlineOwnPlugin = () => (
+    <svg width='16' height='17' viewBox='0 0 16 17' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M1.69702 6.31818V3.28788C1.69702 2.85275 2.04977 2.5 2.4849 2.5H5.55211C6.10827 2.5 6.63932 2.73159 7.01775 3.13916L7.21217 3.34855H12.3334C12.7685 3.34855 13.1213 3.7013 13.1213 4.13643V4.86364'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M1.69702 6.01522C1.69702 5.46294 2.14474 5.01522 2.69702 5.01522H13.3031C13.8554 5.01522 14.3031 5.46294 14.3031 6.01522V13.1971C14.3031 13.7494 13.8554 14.1971 13.3031 14.1971H2.69702C2.14474 14.1971 1.69702 13.7494 1.69702 13.1971V6.01522Z'
+            stroke='currentColor'
+        />
+        <circle
+            cx='7.99995'
+            cy='8.01515'
+            r='1.57576'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M10.3636 11.9547C10.3636 10.6493 9.30539 9.59104 7.99999 9.59104C6.69459 9.59104 5.63635 10.6493 5.63635 11.9547'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <ellipse
+            cx='7.99995'
+            cy='8.01513'
+            rx='1.57576'
+            ry='1.57576'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/我的插件
+ */
+export const OutlineOwnPluginIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineOwnPlugin} {...props} />
+}
+
+const OutlineLocalPlugin = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect
+            x='1.33337'
+            y='2.66667'
+            width='13.3333'
+            height='9.33333'
+            rx='1'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M7.99996 4.66667V8.66667M7.99996 8.66667L6.66663 7.55556M7.99996 8.66667L9.33329 7.55556'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M6 10H10' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+        <path d='M4.66663 14H11.3333' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+/**
+ * @description  Icon/Outline/本地插件
+ */
+export const OutlineLocalPluginIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineLocalPlugin} {...props} />
+}
+
+const OutlineTrashSecond = () => (
+    <svg width='16' height='17' viewBox='0 0 16 17' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M13.25 4.79631L12.5995 13.7907C12.5434 14.566 11.8903 15.1667 11.1033 15.1667H4.89668C4.10972 15.1667 3.45656 14.566 3.40049 13.7907L2.75 4.79631M13.25 4.79631H10.25M13.25 4.79631H14M2.75 4.79631H2M2.75 4.79631H5.75M10.25 4.79631V2.57408C10.25 2.16498 9.91421 1.83334 9.5 1.83334H6.5C6.08579 1.83334 5.75 2.16498 5.75 2.57408V4.79631M10.25 4.79631H5.75'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M6.53853 10.2592L6.05139 11.0926H7.09995M9.46137 10.2592L9.94851 11.0926H8.89995M7.40522 8.77662L7.99995 7.75925L8.59467 8.77662'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  Icon/Outline/trash-2
+ */
+export const OutlineTrashSecondIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineTrashSecond} {...props} />
 }
