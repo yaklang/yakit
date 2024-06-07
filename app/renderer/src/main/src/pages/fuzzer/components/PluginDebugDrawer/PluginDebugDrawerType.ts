@@ -1,5 +1,4 @@
-import {YakitRoute} from "@/routes/newRoute"
-
+import {YakitRoute} from "@/enums/yakitRoute"
 export interface PluginDebugDrawerProps {
     /**打开该抽屉的路由 */
     route: YakitRoute
