@@ -9,11 +9,11 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidStoreIcon} from "@/assets/icon/solid"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/routes/newRoute"
 import {NucleiPluginTemplate} from "@/pages/pluginDebugger/defaultData"
 import {PluginDebugBody} from "@/pages/plugins/pluginDebug/PluginDebug"
 import {PluginDataProps} from "@/pages/plugins/pluginsType"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) => {
     const {route, defaultCode, visible, getContainer, setVisible} = props
