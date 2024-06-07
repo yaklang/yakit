@@ -63,6 +63,7 @@ import {
 } from "./constants"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {useMenuHeight} from "@/store/menuHeight"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1107,7 +1108,7 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
 export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProps> = React.memo((props) => {
     const {visibleDrawer, defActiveType, httpResponse, defActiveKey, matcherValue, extractorValue, onClose, onSave} =
         props
-    const {menuBodyHeight} = usePageInfo(
+    const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
         }),

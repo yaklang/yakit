@@ -14,10 +14,11 @@ import {PluginDebugBody} from "@/pages/plugins/pluginDebug/PluginDebug"
 import {PluginDataProps} from "@/pages/plugins/pluginsType"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useMenuHeight} from "@/store/menuHeight"
 
 const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) => {
     const {route, defaultCode, visible, getContainer, setVisible} = props
-    const {menuBodyHeight} = usePageInfo(
+    const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
         }),

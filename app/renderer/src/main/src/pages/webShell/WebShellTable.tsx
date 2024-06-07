@@ -50,8 +50,8 @@ import {
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer';
 import { WebShellDetailOpt } from './WebShellDetailOpt';
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext';
-import {usePageInfo} from '@/store/pageInfo';
 import {shallow} from 'zustand/shallow';
+import { useMenuHeight } from '@/store/menuHeight';
 
 export interface WebShellManagerProp {
     available: boolean
@@ -121,7 +121,7 @@ interface WebShellTableListProps {
 
 const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) => {
     // const {available, selected, setSelected, advancedQuery, setAdvancedQuery, WebShell, setWebShell} = props
-    const {menuBodyHeight} = usePageInfo(
+    const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
         }),
