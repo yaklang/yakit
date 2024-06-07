@@ -16,6 +16,7 @@ import {useMemoizedFn} from "ahooks"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {Divider} from "antd"
 import classNames from "classnames"
+import {VulnerabilityLevelPie} from "./VulnerabilityLevelPie/VulnerabilityLevelPie"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState(true)
@@ -24,7 +25,7 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
         <div className={styles["risk-page"]}>
             <RiskQuery advancedQuery={advancedQuery} setAdvancedQuery={setAdvancedQuery} />
             {/* <RiskTable /> */}
-            <div style={{padding: 12}}>5</div>
+            <div style={{padding: 12}}>55</div>
         </div>
     )
 }
@@ -126,6 +127,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
                     重置
                 </YakitButton>
             </div>
+            <VulnerabilityLevelPie />
         </div>
     )
 })

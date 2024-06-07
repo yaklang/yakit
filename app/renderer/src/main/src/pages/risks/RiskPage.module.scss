@@ -16,6 +16,7 @@
         @extend %flex-row;
         justify-content: space-between;
         height: 24px;
+        @content;
         .#{$name}-heard-title {
             color: var(--yakit-header-color);
             font-size: 12px;
@@ -58,6 +59,7 @@
     .risk-query-body {
         @extend %flex-column;
         flex: 1;
+        overflow-y: auto;
     }
 }
 
@@ -66,6 +68,7 @@
     overflow: hidden;
     flex: 1;
     padding: 8px 12px 4px;
+    min-height: 150px;
     @include heard("ip-list");
     .ip-list-content {
         @extend %flex-column;
@@ -104,10 +107,12 @@
 }
 
 .vulnerability-level {
+    min-height: 270px;
     max-height: 270px;
-    flex: 1;
-    padding: 8px 12px;
-    @include heard("vulnerability-level");
+    padding: 8px 0;
+    @include heard("vulnerability-level") {
+        padding: 0 12px;
+    }
 }
 .vulnerability-type {
     min-height: 270px;
