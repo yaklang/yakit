@@ -2955,8 +2955,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             // 更新单独展示项
             setPluginAIItem((lastItem) =>
                 lastItem.map((item, index) => {
-                    item.info.extra = extra || {}
                     if (lastItem.length === index + 1) {
+                        item.info.extra = extra || {}
                         item.info.content = content
                         item.time = formatDate(+new Date())
                         return item
@@ -2967,8 +2967,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             // 更新历史展示
             setPluginAIList(
                 newPluginAIList.map((item, index) => {
-                    item.info.extra = extra || {}
                     if (newPluginAIList.length === index + 1) {
+                        item.info.extra = extra || {}
                         item.info.content = content
                         item.time = formatDate(+new Date())
                         return item
@@ -2983,14 +2983,18 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     const updateExtraInfo = useMemoizedFn((extra) => {
         setPluginAIItem((lastItem) =>
             lastItem.map((item) => {
-                item.info.extra = extra || {}
+                if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
+                    item.info.extra = extra || {}
+                }
                 return item
             })
         )
         const newPluginAIList: PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
         setPluginAIList(
             newPluginAIList.map((item) => {
-                item.info.extra = extra || {}
+                if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
+                    item.info.extra = extra || {}
+                }
                 return item
             })
         )
@@ -3061,7 +3065,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
     // 执行
     const onStartExecute = useMemoizedFn((data: CodecParamsProps) => {
-        const {text, scriptName, isAiPlugin,code} = data
+        const {text, scriptName, isAiPlugin, code} = data
         const executeParams = {
             Input: text || "",
             PluginName: scriptName,
@@ -3259,7 +3263,7 @@ interface PluginAIContentProps {
     /** 当前正在查询的那个回答的唯一标识符 */
     loadingToken: string
     time: string
-    info: {content: string, extra: any}
+    info: {content: string; extra: any}
     loading: boolean
     /** 查询的动态运行时间 */
     resTime: string
@@ -3282,8 +3286,8 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                 <div className={styles["header-left"]}>
                     <YakChatLogIcon />
                     {time}
-                    {info.extra?.['ai-type'] && <YakitTag color='purple'>{info.extra?.['ai-type']}</YakitTag>}
-                    {info.extra?.['ai-model'] && <YakitTag color='blue'>{info.extra?.['ai-model']}</YakitTag>}
+                    {info.extra?.["ai-type"] && <YakitTag color='purple'>{info.extra?.["ai-type"]}</YakitTag>}
+                    {info.extra?.["ai-model"] && <YakitTag color='blue'>{info.extra?.["ai-model"]}</YakitTag>}
                     {/* {showLoading ? resTime : time} */}
                 </div>
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
