@@ -1606,6 +1606,8 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         ipcRenderer
             .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
             .then((rsp: CodeScoreSmokingEvaluateResponseProps) => {
+                console.log("开始评分",type,code,rsp);
+                
                 if (!fetchStartState()) return
                 const newResults = rsp.Results.map((ele) => ({...ele, IdKey: uuidv4()}))
                 setResponse({

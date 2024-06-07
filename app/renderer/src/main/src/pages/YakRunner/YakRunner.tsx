@@ -5,13 +5,13 @@ import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
 import {FileNodeProps} from "./FileTree/FileTreeType"
 import {grpcFetchFileTree, updateFileTree} from "./utils"
-import { TabFileProps, ViewsInfoProps, YakRunnerProps} from "./YakRunnerType"
+import {AreaInfoProps, TabFileProps, ViewsInfoProps, YakRunnerProps} from "./YakRunnerType"
 import {getRemoteValue} from "@/utils/kv"
 import {YakRunnerRemoteGV} from "@/enums/yakRunner"
 import {yakitNotify} from "@/utils/notification"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
 import {FolderDefault} from "./FileTree/icon"
-import {RunnerTabs} from "./RunnerTabs/RunnerTabs"
+import {RunnerTabs, YakRunnerWelcomePage} from "./RunnerTabs/RunnerTabs"
 
 import {
     DragDropContext,
@@ -30,63 +30,100 @@ import {SplitView} from "./SplitView/SplitView"
 import {HelpInfoList} from "./CollapseList/CollapseList"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
-import { convert,get,clear } from "./keyDown/keyDown";
-import { defaultKeyDown } from "./keyDown/keyDownFun";
+import {convert, get, clear} from "./keyDown/keyDown"
+import {defaultKeyDown} from "./keyDown/keyDownFun"
+import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 
 const {ipcRenderer} = window.require("electron")
 
-// 模拟tabs分块及对应文件 (设想方法：区域4等分，减少其结构嵌套层数，分别用1、2、3、4标注其展示所处区域 例如全屏展示则为[1、2、3、4])
-const defaultTabsFile:TabFileProps[] = [
+// 模拟tabs分块及对应文件
+// 设想方法1：区域4等分，减少其结构嵌套层数，分别用1、2、3、4标注其展示所处区域 例如全屏展示则为[1、2、3、4]
+/**  
+ * 设想方法2（数组每一项对应着垂直项,其中elements中代表横着的项）：[
+// 
+ * {
+        elements:[{...},{...}]
+ * },
+ * {
+ * 
+ * }
+ * ]
+*/
+const defaultAreaInfo: AreaInfoProps[] = [
     {
-        id: "testTab",
-        files:[
+        elements: [
             {
-                name: ".git",
-                path: "/Users/nonight/work/yakitVersion/.git",
-                icon: "_file",
-                code: `yakit.AutoInitYakit()
+                id: "test1",
+                files: [
+                    {
+                        name: ".yak",
+                        path: "/Users/nonight/work/yakitVersion/.yak",
+                        icon: "_file",
+                        code: `a() 
 
-                # Input your code!
-                124
-                dfddsf
-                `,
-                language:"yak"
+                        f = () => {
+                        
+                        }
+                        
+                        http.Get("")`,
+                        language: "yak"
+                    },
+                    {
+                        name: ".yaklang",
+                        path: "/Users/nonight/work/yakitVersion/.yaklang",
+                        icon: "_file",
+                        code: "123",
+                        language: "yak",
+                        isActive: true
+                    }
+                ]
             },
             {
-                name: ".github",
-                path: "/Users/nonight/work/yakitVersion/.github",
-                icon: "_file",
-                code: "123",
-                language:"yak",
-                isActive:true
-            },
-            {
-                name: ".gitignore",
-                path: "/Users/nonight/work/yakitVersion/.gitignore",
-                icon: "_file",
-                code: "456",
-                language:"yak"
-            },
-            {
-                name: "ELECTRON_GUIDE.md",
-                path: "/Users/nonight/work/yakitVersion/ELECTRON_GUIDE.md",
-                icon: "_file",
-                code: "789",
-                language:"yak"
-            },
-            {
-                name: "LICENSE.md",
-                path: "/Users/nonight/work/yakitVersion/LICENSE.md",
-                icon: "_file",
-                code: "1010",
-                language:"yak"
+                id: "test2",
+                files: [
+                    {
+                        name: ".gitignore",
+                        path: "/Users/nonight/work/yakitVersion/.gitignore",
+                        icon: "_file",
+                        code: "456",
+                        language: "git",
+                        isActive: true
+                    }
+                ]
             }
-        ],
-        layout:[1,2,3,4],
-
+        ]
+    },
+    {
+        elements: [
+            {
+                id: "test3",
+                files: [
+                    {
+                        name: "ELECTRON_GUIDE.md",
+                        path: "/Users/nonight/work/yakitVersion/ELECTRON_GUIDE.md",
+                        icon: "_file",
+                        code: "789",
+                        language: "md",
+                        isActive: true
+                    }
+                ]
+            }
+            // {
+            //     id: "test4",
+            //     files:[
+            //         {
+            //             name: "LICENSE.md",
+            //             path: "/Users/nonight/work/yakitVersion/LICENSE.md",
+            //             icon: "_file",
+            //             code: "1010",
+            //             language:"yak",
+            //             isActive:true
+            //         }
+            //     ]
+            // }
+        ]
     }
 ]
-
 
 export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const {initCode} = props
@@ -94,7 +131,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     /** ---------- 文件树 Start ---------- */
     const fileCache = useRef<Map<string, FileNodeProps[]>>(new Map())
     const [fileTree, setFileTree] = useState<FileNodeProps[]>([])
-    const [tabsFile,setTabsFile] = useState<TabFileProps[]>(defaultTabsFile)
+    const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>(defaultAreaInfo)
+    const [activeFile, setActiveFile] = useState<FileDetailInfo>()
 
     const currentPath = useRef<FileNodeProps | undefined>()
 
@@ -169,44 +207,45 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const store: YakRunnerContextStore = useMemo(() => {
         return {
             fileTree: fileTree,
-            tabsFile: tabsFile
+            areaInfo: areaInfo,
+            activeFile: activeFile
         }
-    }, [fileTree,tabsFile])
+    }, [fileTree, areaInfo, activeFile])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
             setFileTree: setFileTree,
             handleFileLoadData: handleFileLoadData,
-            setTabsFile: setTabsFile
+            setAreaInfo: setAreaInfo,
+            setActiveFile: setActiveFile
         }
     }, [])
 
     const keyDownRef = useRef<HTMLDivElement>(null)
 
-    useEffect(()=>{
+    useEffect(() => {
         clear()
         defaultKeyDown()
-    },[])
-
+    }, [])
 
     const handleKeyPress = (event) => {
         // 在这里处理全局键盘事件
         // console.log("Key keydown:",event)
-        const {shiftKey,ctrlKey,altKey,metaKey,key} = event
-                let activeKey: string[] = []
-                if (shiftKey) activeKey.push("Shift")
-                if (ctrlKey) activeKey.push("Control")
-                if (altKey) activeKey.push("Alt")
-                if (metaKey) activeKey.push("Meta")
-                activeKey.push(key)
-                const newkey = convert(activeKey)
-                // console.log("newkey---",newkey);
-                let arr = get(newkey)
-                if(!arr) return
-                event.stopPropagation()
-                arr.forEach((item)=>{
-                    item.callback()
-                })
+        const {shiftKey, ctrlKey, altKey, metaKey, key} = event
+        let activeKey: string[] = []
+        if (shiftKey) activeKey.push("Shift")
+        if (ctrlKey) activeKey.push("Control")
+        if (altKey) activeKey.push("Alt")
+        if (metaKey) activeKey.push("Meta")
+        activeKey.push(key)
+        const newkey = convert(activeKey)
+        // console.log("newkey---",newkey);
+        let arr = get(newkey)
+        if (!arr) return
+        event.stopPropagation()
+        arr.forEach((item) => {
+            item.callback()
+        })
     }
     useEffect(() => {
         if (keyDownRef.current) {
@@ -223,36 +262,87 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [isShowEditorDetails, setEditorDetails] = useState<boolean>(false)
     // 当前展示项
     const [showItem, setShowItem] = useState<ShowItemType>("output")
-    // 固定编辑器输出
+    // 最后焦点聚集编辑器输出
     const onFixedEditorDetails = useMemoizedFn((element: React.ReactNode): React.ReactNode => {
         // 后续此处还需要传入焦点代码/路径等信息
-            return (
-                <SplitView
-                    isVertical={true}
-                    isLastHidden={!isShowEditorDetails}
-                    elements={[
-                        {element: element},
-                        {
-                            element: (
-                                <BottomEditorDetails
-                                    showItem={showItem}
-                                    setShowItem={setShowItem}
-                                    onClose={() => {
-                                        setEditorDetails(false)
-                                    }}
-                                />
-                            )
-                        }
-                    ]}
-                />
-            )
+        return (
+            <SplitView
+                isVertical={true}
+                isLastHidden={!isShowEditorDetails}
+                elements={[
+                    {element: element},
+                    {
+                        element: (
+                            <BottomEditorDetails
+                                showItem={showItem}
+                                setShowItem={setShowItem}
+                                onClose={() => {
+                                    setEditorDetails(false)
+                                }}
+                            />
+                        )
+                    }
+                ]}
+            />
+        )
     })
-    // 打开固定编辑器输出
+    // 打开底部编辑器输出
     const onOpenEditorDetails = useMemoizedFn((v: ShowItemType) => {
         setShowItem(v)
         setEditorDetails(true)
     })
 
+    const onDragStart = useMemoizedFn(()=>{
+        // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
+            if (document.activeElement !== null) {
+                // @ts-ignore
+                document.activeElement.blur();
+            }
+    })
+
+    // 布局处理
+    const onChangeArea = useMemoizedFn(() => {
+        if (areaInfo.length === 0) {
+            return <YakRunnerWelcomePage />
+        }
+        return (
+            <DragDropContext
+                onDragEnd={(result, provided) => {
+                    console.log(result, provided)
+                }}
+                onDragStart={onDragStart}
+            >
+                <SplitView
+                    isVertical={true}
+                    isLastHidden={areaInfo.length === 1}
+                    elements={[
+                        {
+                            element: (
+                                <SplitView
+                                    isLastHidden={areaInfo[0].elements.length === 1}
+                                    elements={[
+                                        {element: <RunnerTabs tabsId={"test1"} />},
+                                        {element: <RunnerTabs tabsId={"test2"} />}
+                                    ]}
+                                />
+                            )
+                        },
+                        {
+                            element: (
+                                <SplitView
+                                    isLastHidden={areaInfo[1].elements.length === 1}
+                                    elements={[
+                                        {element: <RunnerTabs tabsId={"test3"} />},
+                                        {element: <RunnerTabs tabsId={"test4"} />}
+                                    ]}
+                                />
+                            )
+                        }
+                    ]}
+                />
+            </DragDropContext>
+        )
+    })
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0}>
@@ -260,15 +350,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     <LeftSideBar />
                     <div className={styles["yak-runner-code"]}>
                         <div className={styles["code-container"]}>
-                            {/* <RunnerTabs /> */}
-                            {/* <HelpInfoList list={[{key:1},{key:2},{key:3},{key:4},{key:5},]}/> */}
                             {/* <SplitView
                                 elements={[
                                     {element: <SplitView isVertical={true} elements={[{element: 1}, {element: 2}]} />},
                                     {element: 2}
                                 ]}
                             /> */}
-                            {onFixedEditorDetails(<RunnerTabs layout={[1,2,3,4]}/>)}
+                            {onFixedEditorDetails(onChangeArea())}
                         </div>
                     </div>
                     <RightSideBar />

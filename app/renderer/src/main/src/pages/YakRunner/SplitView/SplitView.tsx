@@ -107,6 +107,16 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
                 } else {
                     divDom.style.width = `${width}px`
                     divDom.style.left = `${left}px`
+                    divDom.style.position = "absolute"
+                    divDom.style.top = "0px"
+                    // 以下代码为对第二块的隐藏 而不销毁重新创建
+                    if(isLastHidden && i === 0){
+                        divDom.style.width = "100%"
+                    }
+                    divDom.style.display = "block"
+                    if(isLastHidden && positions.current.length=== i+1){
+                        divDom.style.display = "none"
+                    }
                 }
             }
 
