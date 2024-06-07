@@ -2318,7 +2318,6 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                                     >
                                         <div className={styles["opt-header"]}>
                                             <ChatAltIcon />
-                                            3453
                                             <div className={styles["header-info"]}>
                                                 <div className={styles["info-title"]}>{item.name}</div>
                                                 <div className={styles["info-time"]}>{item.time}</div>
