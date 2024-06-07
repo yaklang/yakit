@@ -20,7 +20,6 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import classNames from "classnames"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
 import {BanIcon, CogIcon, DragSortIcon, PencilAltIcon, RemoveIcon, TrashIcon} from "@/assets/newIcon"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
@@ -36,6 +35,7 @@ import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/ut
 import {LocalGVS} from "@/enums/localGlobal"
 import {RemoteGV} from "@/yakitGV"
 import {DragDropContext, Draggable, DropResult, Droppable} from "@hello-pangea/dnd"
+import NewThirdPartyApplicationConfig, {GetThirdPartyAppConfigTemplateResponse} from "./NewThirdPartyApplicationConfig"
 
 export interface ConfigNetworkPageProp {}
 
@@ -588,6 +588,11 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Divider>
                                 <Form.Item label={"第三方应用"}>
                                     {(params.AppConfigs || []).map((i, index) => {
+                                        const extraParamsArr = i.ExtraParams || []
+                                        const extraParams = {}
+                                        extraParamsArr.forEach((item) => {
+                                            extraParams[item.Key] = item.Value
+                                        })
                                         return (
                                             <YakitTag
                                                 key={index}
@@ -600,15 +605,21 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                         footer: null,
                                                         content: (
                                                             <div style={{margin: 24}}>
-                                                                <ThirdPartyApplicationConfigForm
-                                                                    data={i}
-                                                                    onAdd={(e) => {
+                                                                <NewThirdPartyApplicationConfig
+                                                                    formValues={{
+                                                                        Type: i.Type,
+                                                                        APIKey: i.APIKey,
+                                                                        UserIdentifier: i.UserIdentifier,
+                                                                        ...extraParams
+                                                                    }}
+                                                                    disabledType={true}
+                                                                    onAdd={(data) => {
                                                                         setParams({
                                                                             ...params,
                                                                             AppConfigs: (params.AppConfigs || []).map(
                                                                                 (i) => {
-                                                                                    if (i.Type === e.Type) {
-                                                                                        i = e
+                                                                                    if (i.Type === data.Type) {
+                                                                                        i = data
                                                                                     }
                                                                                     return {...i}
                                                                                 }
@@ -631,6 +642,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                             (e) => i.Type !== e.Type
                                                         )
                                                     })
+                                                    setTimeout(() => submit(), 100)
                                                 }}
                                             >
                                                 {i.Type}
@@ -648,20 +660,20 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 maskClosable: false,
                                                 content: (
                                                     <div style={{margin: 24}}>
-                                                        <ThirdPartyApplicationConfigForm
-                                                            onAdd={(e) => {
+                                                        <NewThirdPartyApplicationConfig
+                                                            onAdd={(data) => {
                                                                 let existed = false
                                                                 const existedResult = (params.AppConfigs || []).map(
                                                                     (i) => {
-                                                                        if (i.Type === e.Type) {
+                                                                        if (i.Type === data.Type) {
                                                                             existed = true
-                                                                            return {...i, ...e}
+                                                                            return {...i, ...data}
                                                                         }
                                                                         return {...i}
                                                                     }
                                                                 )
                                                                 if (!existed) {
-                                                                    existedResult.push(e)
+                                                                    existedResult.push(data)
                                                                 }
                                                                 setParams({...params, AppConfigs: existedResult})
                                                                 setTimeout(() => submit(), 100)
@@ -1302,26 +1314,25 @@ const getItemStyle = (isDragging, draggableStyle) => {
     }
 }
 
-const defaultAiApiPriority: SortDataProps[] = [
-    {label: "OpenAI", value: "openai"},
-    {label: "Chatglm", value: "chatglm"},
-    {label: "Moonshot", value: "moonshot"},
-    {label: "Comate", value: "comate"},
-]
-
 export const AISortContent: React.FC<AISortContentProps> = (props) => {
     const {onUpdate, AiApiPriority} = props
     const [sortData, setSortData] = useState<SortDataProps[]>([])
 
     useEffect(() => {
-        if (AiApiPriority.length > 0) {
-            const sortedData = defaultAiApiPriority.sort((a, b) => {
-                return AiApiPriority.indexOf(a.value) - AiApiPriority.indexOf(b.value)
-            })
-            setSortData(sortedData)
-        } else {
-            setSortData(defaultAiApiPriority)
-        }
+        ipcRenderer.invoke("GetThirdPartyAppConfigTemplate").then((res: GetThirdPartyAppConfigTemplateResponse) => {
+            const templates = res.Templates || []
+            let aiOptions = templates
+                .filter((item) => item.Type === "ai")
+                .map((item) => ({label: item.Verbose, value: item.Name}))
+            if (AiApiPriority.length > 0) {
+                const sortedData = aiOptions.sort((a, b) => {
+                    return AiApiPriority.indexOf(a.value) - AiApiPriority.indexOf(b.value)
+                })
+                setSortData(sortedData)
+            } else {
+                setSortData(aiOptions)
+            }
+        })
     }, [AiApiPriority])
 
     const onDragEnd = useMemoizedFn((result: DropResult) => {

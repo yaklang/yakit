@@ -441,6 +441,7 @@ service Yak {
   rpc QueryWebShells(QueryWebShellsRequest) returns (QueryWebShellsResponse);
   rpc Ping(WebShellRequest) returns (WebShellResponse);
   rpc GetBasicInfo(WebShellRequest) returns (WebShellResponse);
+  rpc GenerateWebShell(ShellGenerate) returns(WebShellResponse);
 
   // DNSLog / ICMP / RandomTrigger
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
@@ -660,11 +661,22 @@ service Yak {
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
+
+  // 表达式执行
+  rpc EvaluateExpression(EvaluateExpressionRequest) returns (EvaluateExpressionResponse);
+  rpc EvaluateMultiExpression(EvaluateMultiExpressionRequest) returns (EvaluateMultiExpressionResponse);
+
+  // 第三方应用配置模板
+  rpc GetThirdPartyAppConfigTemplate(Empty) returns (GetThirdPartyAppConfigTemplateResponse);
+
+  // AI相关
+  rpc CheckHahValidAiConfig(Empty) returns (GeneralResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
   string Key = 2;
   string Account = 3;
+  string Domain = 4;
 }
 
 message GetSpaceEngineStatusRequest {
@@ -798,7 +810,8 @@ message HybridScanRequest {
   bool Control = 9;
   // new: 新任务
   // resume: 恢复任务
-  // pause: 暂停任务 Control:false
+  // pause: 暂停任务
+  // stop: 停止任务
   // status: 查询任务状态
   string HybridScanMode = 8;
   string ResumeTaskId = 1;
@@ -1115,11 +1128,12 @@ message GlobalNetworkConfig {
 
   repeated string ExcludePluginScanURIs = 15;
   repeated string IncludePluginScanURIs = 16;
-  repeated string AiApiPriority = 18;
 
   // AI Primary Config 首选 AI 配置项
   // openai / chatglm
   string PrimaryAIType = 17;
+
+  repeated string AiApiPriority = 18;
 }
 
 message AuthInfo {
@@ -2646,7 +2660,9 @@ message ExecuteBatchPacketYakScriptParams {
 enum ShellType {
   Behinder = 0;
   Godzilla = 1;
+  YakShell = 2;
 }
+
 enum ShellScript {
   JSP = 0;
   JSPX = 1;
@@ -2682,10 +2698,33 @@ message WebShell {
   int64 UpdatedAt = 15;
   string PacketCodecName = 16;
   string PayloadCodecName = 17;
+  map<string, string> Posts = 18;
+  ShellOptions ShellOptions = 19;
+  string Os = 20;
+  string ResDecMOde = 21; //解密方式
 }
+
+message ShellGenerate{
+  EncMode EncMode = 1;
+  ShellScript Script = 2;
+  string Pass = 3;
+  bool Confuse = 4;  //是否混淆
+  bool IsSession = 5;
+}
+
+message ShellOptions{
+  int64 RetryCount = 1; //重新时间
+  int64 Timeout = 2; //超时时间
+  int64 BlockSize = 3; //分块大小
+  int64 MaxSize = 4; //上传的最大包（M）
+  int64 UpdateTime = 5; //更新时间，当是session-mode的时候涉及到session过期的问题
+  bool IsSession = 6; //是否是session类型
+}
+
 message WebShellRequest {
   int64 Id = 1;
 }
+
 message WebShellResponse {
   bool State = 1;
   bytes Data = 2;
@@ -2712,6 +2751,12 @@ message UpdateWebShellRequest {
   string ShellType = 7;
   string ShellScript = 8;
   string Tag = 10;
+  ShellOptions ShellOptions = 11;
+  string Os = 12;
+  string ResDataMOde = 13;
+  map<string, string> Headers = 14;
+  map<string, string> Posts = 15;
+
 }
 
 message DeleteWebShellRequest {
@@ -3936,6 +3981,7 @@ message GetCodecFlowResponse {
   repeated CustomizeCodecFlow Flows = 1;
 }
 
+
 message CodecResponse {
   string Result = 1; // show result
   bytes  RawResult = 2; // raw result, need hex editor
@@ -5009,4 +5055,43 @@ message TraceRouteResponse{
   int64 Rtt = 2;
   string Reason = 3;
   int64 Hop = 4;
+}
+
+message EvaluateExpressionRequest {
+    string Expression = 1;
+    repeated KVPair Variables = 2;
+}
+
+message EvaluateExpressionResponse {
+    string Result = 1; // json marshal
+    bool BoolResult = 2;
+}
+
+message EvaluateMultiExpressionRequest {
+    repeated string Expressions = 1;
+    repeated KVPair Variables = 2;
+}
+
+message EvaluateMultiExpressionResponse {
+    repeated EvaluateExpressionResponse Results = 1;
+}
+
+message ThirdPartyAppConfigItemTemplate{
+  bool Required = 2;
+  string Name = 1;
+  string Verbose = 7;
+  string Type = 3;
+  string DefaultValue = 4;
+  string Desc = 5;
+  string Extra = 6;
+}
+
+message GetThirdPartyAppConfigTemplate {
+  string Name = 1;
+  string Verbose = 2;
+  string Type = 4;
+  repeated ThirdPartyAppConfigItemTemplate Items = 3;
+}
+message GetThirdPartyAppConfigTemplateResponse{
+  repeated GetThirdPartyAppConfigTemplate Templates = 2;
 }

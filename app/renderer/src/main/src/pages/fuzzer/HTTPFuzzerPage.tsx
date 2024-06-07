@@ -127,7 +127,6 @@ import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "../spaceEngine/utils"
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
-import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
 import {
     DefFuzzerTableMaxData,
     defaultAdvancedConfigShow,
