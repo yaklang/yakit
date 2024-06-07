@@ -431,7 +431,6 @@ export const saveFuzzerCache = debounce(
                     color: ele.color
                 }
             })
-            console.log("save-cache", cache)
             setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
         } catch (error) {
             yakitNotify("error", "webFuzzer缓存数据失败:" + error)

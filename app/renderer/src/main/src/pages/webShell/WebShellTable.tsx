@@ -51,7 +51,7 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer';
 import { WebShellDetailOpt } from './WebShellDetailOpt';
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext';
 import {shallow} from 'zustand/shallow';
-import { useMenuHeight } from '@/store/menuHeight';
+import {useMenuHeight} from '@/store/menuHeight';
 
 export interface WebShellManagerProp {
     available: boolean
