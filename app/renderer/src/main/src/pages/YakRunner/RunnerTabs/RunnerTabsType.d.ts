@@ -1,14 +1,17 @@
 import {ReactNode} from "react"
 import {YakRunnerView} from "../YakRunnerType"
-
-interface CursorPosition{
-    line: number;              // 当前行号
-    character: number;         // 当前字符位置
+import { CodeScoreSmokingEvaluateResponseProps } from "@/pages/plugins/funcTemplateType"
+import { IMonacoEditorMarker } from "@/utils/editorMarkers"
+export interface CursorPosition{
+    lineNumber: number;         // 当前行号
+    column: number;             // 当前字符位置
 }
 
-interface Selection {
-    start: CursorPosition;     // 选择开始位置
-    end: CursorPosition;       // 选择结束位置
+export interface Selection {
+    startLineNumber: number;     // 开始-行号
+    startColumn: number;        // 开始-字符位置
+    endLineNumber: number;      // 结束-行号
+    endColumn: number;          // 结束-字符位置
 }
 
 export interface FileDetailInfo {
@@ -34,7 +37,7 @@ export interface FileDetailInfo {
     /** 输出（执行时注入） */
     output?: any
     /** 语法检查（代码打开时执行） */
-    syntaxCheck?: any
+    syntaxCheck?: IMonacoEditorMarker[]
     /** 终端 */
     terminal?: any
     /** 帮助信息（代码坐标获取时执行） */
@@ -42,11 +45,11 @@ export interface FileDetailInfo {
 }
 
 export interface RunnerTabsProps {
-    layout:number[]
+    tabsId: string
 }
 
 export interface RunnerTabBarProps {
-    onlyID: string
+    tabsId: string
     tabsList: FileDetailInfo[]
     extra?: ReactNode
 }
@@ -54,11 +57,11 @@ export interface RunnerTabBarProps {
 export interface RunnerTabBarItemProps {
     index: number
     info: FileDetailInfo
-    layoutStr: string
+    tabsId: string
 }
 
 export interface RunnerTabPaneProps {
-    layout: number[]
+    tabsId: string
 }
 
 export interface YakRunnerWelcomePageProps {}

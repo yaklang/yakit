@@ -47,6 +47,9 @@ export interface TabFileProps {
     id: string;
     // 窗口中打开的文件列表          
     files:FileDetailInfo[]
-    // 布局信息
-    layout:number[]
+}
+
+// 编辑器分块信息
+export interface AreaInfoProps {
+    elements: TabFileProps[]
 }

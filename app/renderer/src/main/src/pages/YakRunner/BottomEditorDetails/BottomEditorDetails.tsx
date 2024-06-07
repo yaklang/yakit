@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {} from "antd"
 import {} from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -12,12 +12,14 @@ import {HelpInfoList} from "../CollapseList/CollapseList"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import { SyntaxCheckList } from "./SyntaxCheckList/SyntaxCheckList"
+import useStore from "../hooks/useStore"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {onClose, showItem, setShowItem} = props
+    const {activeFile} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
 
@@ -30,6 +32,14 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [showItem])
 
+    const syntaxCheckData = useMemo(() => {
+        if(activeFile?.syntaxCheck){
+            return activeFile.syntaxCheck
+        }
+        return []
+    }, [activeFile?.syntaxCheck])
+
+    console.log("syntaxCheckData",syntaxCheckData);
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -49,7 +59,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         onClick={() => setShowItem("syntaxCheck")}
                     >
                         <div className={styles["title"]}>语法检查</div>
-                        <div className={styles["count"]}>3</div>
+                        <div className={styles["count"]}>{syntaxCheckData.length}</div>
                     </div>
                     <div
                         className={classNames(styles["item"], {
@@ -77,7 +87,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     <HelpInfoList list={[{key: 1}, {key: 2}, {key: 3}, {key: 4}, {key: 5}]} />
                 )}
                 {
-                    showType.includes("syntaxCheck") && showItem === "syntaxCheck" && <SyntaxCheckList/>
+                    showType.includes("syntaxCheck") && showItem === "syntaxCheck" && <SyntaxCheckList syntaxCheckData={syntaxCheckData}/>
 
                 }
             </div>

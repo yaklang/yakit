@@ -3,6 +3,9 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    .extra-box{
+        padding-right: 12px;
+    }
     .tabs-pane {
         flex: 1;
         overflow: hidden;

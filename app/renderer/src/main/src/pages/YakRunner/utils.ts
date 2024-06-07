@@ -1,6 +1,10 @@
+import { yakitNotify } from "@/utils/notification"
+import { CodeScoreSmokingEvaluateResponseProps } from "../plugins/funcTemplateType"
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
+import { StringToUint8Array } from "@/utils/str"
+import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from "@/utils/editorMarkers"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -58,5 +62,27 @@ export const updateFileTree: (data: FileNodeProps[], key: string, updateData: Fi
             }
         }
         return node
+    })
+}
+
+/**
+ * @name 语法检查
+ */
+export const onSyntaxCheck = (code:string) => {
+    return new Promise(async (resolve, reject) => {
+        // StaticAnalyzeError
+        ipcRenderer
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: "yak"})
+                    .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                        if (e && e.Result.length > 0) {
+                            const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
+                            // monaco.editor.setModelMarkers(model, "owner", markers)
+                            resolve(markers)
+                        } else {
+                            resolve([])
+                        }
+                    }).catch(() => {
+                        resolve([])
+                    })
     })
 }

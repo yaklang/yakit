@@ -1,0 +1,45 @@
+.syntax-check-list {
+    height: 100%;
+    overflow: hidden;
+    .syntax-check-item {
+        display: flex;
+        flex-direction: row;
+        padding: 3px 12px 3px 8px;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        .text {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
+        .area {
+            color: #b4bbca;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
+        .icon-box {
+            display: flex;
+            svg {
+                height: 16px;
+                width: 16px;
+            }
+        }
+        .hint-icon {
+            color: #b4bbca;
+        }
+        .info-icon {
+            color: #4a94f8;
+        }
+        .warn-icon {
+            color: #ffb660;
+        }
+        .error-icon {
+            color: #f6544a;
+        }
+        &:hover {
+            background: #f8f8f8;
+        }
+    }
+}
