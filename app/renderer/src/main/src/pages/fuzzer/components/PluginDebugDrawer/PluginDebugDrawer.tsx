@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {PluginDebugDrawerProps} from "./PluginDebugDrawerType"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -26,6 +26,10 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
     const [code, setCode] = useState<string>(defaultCode || NucleiPluginTemplate)
 
     const debuggerTypeRef = useRef("nuclei")
+
+    useEffect(() => {
+        if (defaultCode) setCode(defaultCode)
+    }, [defaultCode])
 
     const heightDrawer = useMemo(() => {
         return menuBodyHeight.firstTabMenuBodyHeight - 40
