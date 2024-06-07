@@ -2989,8 +2989,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 return item
             })
         )
-        const newPluginAIList: PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
-        setPluginAIList(
+        setPluginAIList((newPluginAIList) =>
             newPluginAIList.map((item) => {
                 if (!item.isMe) {
                     if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
