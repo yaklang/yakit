@@ -2956,7 +2956,6 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             setPluginAIItem((lastItem) =>
                 lastItem.map((item, index) => {
                     if (lastItem.length === index + 1) {
-                        item.info.extra = extra || {}
                         item.info.content = content
                         item.time = formatDate(+new Date())
                         return item
@@ -2968,7 +2967,6 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             setPluginAIList(
                 newPluginAIList.map((item, index) => {
                     if (newPluginAIList.length === index + 1) {
-                        item.info.extra = extra || {}
                         item.info.content = content
                         item.time = formatDate(+new Date())
                         return item
@@ -2983,8 +2981,21 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     const updateExtraInfo = useMemoizedFn((extra) => {
         setPluginAIItem((lastItem) =>
             lastItem.map((item) => {
-                if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
-                    item.info.extra = extra || {}
+                if (!item.isMe) {
+                    if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
+                        item.info.extra = extra || {}
+                    }
+                }
+                return item
+            })
+        )
+        const newPluginAIList: PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
+        setPluginAIList(
+            newPluginAIList.map((item) => {
+                if (!item.isMe) {
+                    if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
+                        item.info.extra = extra || {}
+                    }
                 }
                 return item
             })
