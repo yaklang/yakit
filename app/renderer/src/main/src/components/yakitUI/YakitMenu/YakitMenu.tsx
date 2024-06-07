@@ -20,7 +20,7 @@ export interface YakitMenuItemProps {
     /** tooltip提示，不填默认用label */
     title?: string
     /** 单项菜单类型(只在叶子节点时有效) */
-    type?: "success" | "danger"
+    type?: "success" | "danger" | "info"
 }
 export interface YakitMenuItemDividerProps {
     type: "divider"
@@ -62,6 +62,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     const itemMenuTypeClass = useMemoizedFn((type?: YakitMenuItemProps["type"]) => {
         if (type === "success") return "yakit-menu-item-success"
         if (type === "danger") return "yakit-menu-item-danger"
+        if (type === "info") return "yakit-menu-item-info"
         return ""
     })
 
@@ -168,7 +169,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
 
     let items: ItemType[] = []
     if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
-    
+
     return (
         <div className={classNames(styles["yakit-menu-div-wrapper"], menuTypeClass, menuSizeClass)}>
             <Menu

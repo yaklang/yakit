@@ -26,6 +26,19 @@
     @include generateMenuSelect($type);
 }
 
+// 置灰可点击使用的menu-item
+@mixin generateItemInfo() {
+    --menu-color: #{var(--yakit-disable-text-color)};
+    --menu-icon-color: #{var(--yakit-disable-text-color)};
+    --menu-background: var(--ui-background-color);
+    --menu-active-color: #{var(--yakit-disable-text-color)};
+    --menu-active-icon-color: #{var(--yakit-disable-text-color)};
+    --menu-active-background: var(--ui-hover-background-color);
+    --menu-select-color: #{var(--yakit-disable-text-color)};
+    --menu-select-icon-color: #{var(--yakit-disable-text-color)};
+    --menu-select-background: var(--ui-hover-background-color);
+}
+
 /* ---------- 类型类 ----------*/
 .yakit-menu-primary {
     --menu-color: var(--ui-text-color);
@@ -43,6 +56,10 @@
 
         li:has(.yakit-menu-item-success) {
             @include generateItemPrimary("success");
+        }
+
+        li:has(.yakit-menu-item-info) {
+            @include generateItemInfo();
         }
     }
 }
@@ -62,6 +79,10 @@
 
         li:has(.yakit-menu-item-success) {
             @include generateItemGrey("danger");
+        }
+
+        li:has(.yakit-menu-item-info) {
+            @include generateItemInfo();
         }
     }
 }
