@@ -1292,7 +1292,7 @@ export const convertHybridScanParams = (
     }
     return data
 }
-export interface PluginBatchExecutorInputValueProps {
+export interface YakPoCExecutorInputValueProps {
     params: HybridScanRequest
     pluginInfo: PluginInfoProps
 }
@@ -1302,8 +1302,8 @@ export interface PluginBatchExecutorInputValueProps {
  */
 export const hybridScanParamsConvertToInputValue = (
     value: HybridScanControlAfterRequest
-): PluginBatchExecutorInputValueProps => {
-    const data: PluginBatchExecutorInputValueProps = {
+): YakPoCExecutorInputValueProps => {
+    const data: YakPoCExecutorInputValueProps = {
         params: {
             Input: "",
             HTTPRequestTemplate: {...cloneDeep(defPluginBatchExecuteExtraFormValue)},

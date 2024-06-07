@@ -805,7 +805,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-
+    /*ANCHOR[id=add-bug-test] - type=2:直接打开页面*/
     const addBugTest = useMemoizedFn((type: number, res?: any) => {
         const {URL = ""} = res || {}
         if (type === 1 && URL) {
@@ -1155,12 +1155,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {
-                pluginBatchExecutorPageInfo: node.pageParams?.pluginBatchExecutorPageInfo
-                    ? {
-                          ...defaultPluginBatchExecutorPageInfo,
-                          ...node.pageParams.pluginBatchExecutorPageInfo
-                      }
-                    : undefined
+                pluginBatchExecutorPageInfo: {
+                    ...defaultPluginBatchExecutorPageInfo,
+                    ...(node.pageParams?.pluginBatchExecutorPageInfo || {})
+                }
             },
             sortFieId: order
         }
@@ -1748,7 +1746,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageParamsInfo: {
                 pocPageInfo: {
                     ...defaultPocPageInfo,
-                    ...node.pageParams?.pocPageInfo
+                    ...(node.pageParams?.pocPageInfo || {})
                 }
             },
             sortFieId: order

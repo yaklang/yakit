@@ -110,8 +110,11 @@ export interface PocPageInfoProps {
     httpFlowIds: []
     /**请求包 */
     request: Uint8Array
+    /**执行批量执行的runtimeId */
+    runtimeId: string
+    /**执行任务的状态 */
+    hybridScanMode: HybridScanModeType
 }
-
 export interface BrutePageInfoProps {
     /**输入目标 */
     targets: string
@@ -172,7 +175,8 @@ export const defPage: PageProps = {
 }
 const pageInfoToRuntimeIdMap = {
     [YakitRoute.BatchExecutorPage]: "pluginBatchExecutorPageInfo",
-    [YakitRoute.SimpleDetect]: "simpleDetectPageInfo"
+    [YakitRoute.SimpleDetect]: "simpleDetectPageInfo",
+    [YakitRoute.PoC]: "pocPageInfo"
 }
 export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(

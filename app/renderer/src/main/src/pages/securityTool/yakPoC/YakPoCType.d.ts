@@ -21,6 +21,7 @@ export interface PluginGroupByKeyWordProps {
     /**选择的插件组列表 按关键词搜索的 */
     selectGroupListByKeyWord?: string[]
     setSelectGroupListByKeyWord?: (s: string[]) => void
+    setResponseToSelect: (s: GroupCount[]) => void
 }
 export interface PluginGroupGridProps {
     inViewport: boolean
@@ -28,6 +29,7 @@ export interface PluginGroupGridProps {
     /**选择的插件组列表 */
     selectGroupList?: string[]
     setSelectGroupList?: (s: string[]) => void
+    setResponseToSelect: (s: GroupCount[]) => void
 }
 
 export interface YakPoCExecuteContentProps {
@@ -35,13 +37,13 @@ export interface YakPoCExecuteContentProps {
     setHidden: (b: boolean) => void
     /**选择的插件组列表 */
     selectGroupList: string[]
-    defaultFormValue?: HybridScanControlAfterRequest
     executeStatus: ExpandAndRetractExcessiveState
     setExecuteStatus: (s: ExpandAndRetractExcessiveState) => void
     /**清空所有组 */
     onClearAll: () => void
-    /**数据包扫描跳转到该页面需要使用到的参数 */
-    dataScanParams: DataScanParamsProps
+    pageId: string
+    pageInfo: PocPageInfoProps
+    onInitInputValueAfter?: (value: HybridScanControlAfterRequest) => void
 }
 
 export interface PluginGroupGridItemProps {
@@ -60,7 +62,7 @@ export interface PluginExecuteLogProps {
     isExecuting: boolean
     hidden: boolean
     pluginExecuteLog: StreamResult.PluginExecuteLog[]
-    classNameWrapper?:string
+    classNameWrapper?: string
 }
 
 export interface TimeConsumingProps {
