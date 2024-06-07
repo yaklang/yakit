@@ -73,9 +73,15 @@ import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
-import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
-import {PageNodeItemProps, PageProps, defPage, saveFuzzerCache, usePageInfo} from "@/store/pageInfo"
+import {
+    AddYakitScriptPageInfoProps,
+    PageNodeItemProps,
+    PageProps,
+    defPage,
+    saveFuzzerCache,
+    usePageInfo
+} from "@/store/pageInfo"
 import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
@@ -93,6 +99,7 @@ import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {defaultSpaceEnginePageInfo} from "@/defaultConstants/SpaceEnginePage"
 import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetectConstants"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -491,7 +498,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      * @name 新建插件
      * @param source 触发打开页面的父页面路由
      */
-    const addYakScript = useMemoizedFn((data: {source: YakitRoute}) => {
+    const addYakScript = useMemoizedFn((data: {source: YakitRoute} & AddYakitScriptPageInfoProps) => {
         const {source} = data || {}
         const isExist = pageCache.filter((item) => item.route === YakitRoute.AddYakitScript).length
         if (isExist) {
@@ -501,8 +508,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         } else {
             cuPluginEditorStorage(source, false)
         }
-
-        openMenuPage({route: YakitRoute.AddYakitScript})
+        openMenuPage(
+            {route: YakitRoute.AddYakitScript},
+            {
+                pageParams: {
+                    addYakitScriptPageInfo: {
+                        ...defaultAddYakitScriptPageInfo,
+                        ...data
+                    }
+                }
+            }
+        )
     })
     /**
      * @name 编辑插件
@@ -653,7 +669,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "add-data-compare") addDataCompare(data)
             if (type === "**screen-recorder") openMenuPage({route: YakitRoute.ScreenRecorderPage})
             if (type === "**chaos-maker") openMenuPage({route: YakitRoute.DB_ChaosMaker})
-            if (type === "**debug-plugin") addPluginDebugger(data)
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
@@ -897,20 +912,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     })
-    /** 插件调试 */
-    const addPluginDebugger = useMemoizedFn((res: any) => {
-        const {generateYamlTemplate = false, YamlContent = "", scriptName = ""} = res || {}
-        openMenuPage(
-            {route: YakitRoute.Beta_DebugPlugin},
-            {
-                pageParams: {
-                    generateYamlTemplate,
-                    YamlContent,
-                    scriptName
-                }
-            }
-        )
-    })
+  
     /**
      * @name 远程通信打开一个页面(新逻辑)
      */
@@ -1009,12 +1011,57 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             // 单开页面
             if (SingletonPageRoute.includes(route)) {
                 const key = routeConvertKey(route, pluginName)
+                const tabName = routeKeyToLabel.get(key) || menuName
+                const time = new Date().getTime().toString()
                 // 如果存在，设置为当前页面
                 if (filterPage.length > 0) {
+                    const currentPage = filterPage[0]
+                    const singleUpdateNode: MultipleNodeInfo = {
+                        id: currentPage.routeKey,
+                        verbose: currentPage.verbose,
+                        time,
+                        pageParams: {
+                            ...nodeParams?.pageParams,
+                            id: currentPage.routeKey,
+                            groupId: "0"
+                        },
+                        groupId: "0",
+                        sortFieId: 1
+                    }
+                    //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
+                    switch (route) {
+                        case YakitRoute.AddYakitScript:
+                            onSetAddYakitScriptData(singleUpdateNode, 1)
+                            break
+                        default:
+                            break
+                    }
                     openFlag && setCurrentTabKey(key)
                     return
                 }
-                const tabName = routeKeyToLabel.get(key) || menuName
+
+                // 单页面的id与routeKey一样
+                const singleNode: MultipleNodeInfo = {
+                    id: key,
+                    verbose: tabName,
+                    time,
+                    pageParams: {
+                        ...nodeParams?.pageParams,
+                        id: key,
+                        groupId: "0"
+                    },
+                    groupId: "0",
+                    sortFieId: 1
+                }
+                //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
+                switch (route) {
+                    case YakitRoute.AddYakitScript:
+                        onSetAddYakitScriptData(singleNode, 1)
+                        break
+                    default:
+                        break
+                }
+
                 setPageCache([
                     ...pageCache,
                     {
@@ -1147,6 +1194,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     )
+    /**单页面直接set */
+    const onSetAddYakitScriptData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.AddYakitScript,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                addYakitScriptPageInfo: node.pageParams?.addYakitScriptPageInfo
+                    ? {
+                          ...defaultAddYakitScriptPageInfo,
+                          ...node.pageParams.addYakitScriptPageInfo
+                      }
+                    : undefined
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.AddYakitScript
+        }
+        setPagesData(YakitRoute.AddYakitScript, pageNodeInfo)
+    })
     const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,
@@ -1837,6 +1909,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage} = props
+    const {updateMenuBodyHeight} = usePageInfo(
+        (s) => ({
+            updateMenuBodyHeight: s.updateMenuBodyHeight
+        }),
+        shallow
+    )
     /** ---------- 拖拽排序 start ---------- */
     const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
         if (!result.destination) {
@@ -1866,12 +1944,17 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
         } catch (error) {}
     })
     /** ---------- 拖拽排序 end ---------- */
+    const onUpdateMenuBodyHeight = useMemoizedFn((height) => {
+        updateMenuBodyHeight({
+            firstTabMenuBodyHeight: height
+        })
+    })
     return (
         <div className={styles["tab-menu"]}>
             <ReactResizeDetector
                 onResize={(_, height) => {
                     if (!height) return
-                    menuBodyHeight.firstTabMenuBodyHeight = height
+                    onUpdateMenuBodyHeight(height)
                 }}
                 handleWidth={true}
                 handleHeight={true}

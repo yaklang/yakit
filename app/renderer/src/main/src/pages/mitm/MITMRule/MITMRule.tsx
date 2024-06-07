@@ -44,8 +44,9 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import {menuBodyHeight} from "@/pages/globalVariable"
 import emiter from "@/utils/eventBus/eventBus"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -125,6 +126,12 @@ export const colorSelectNode = (
 )
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
+    const {menuBodyHeight} = usePageInfo(
+        (s) => ({
+            menuBodyHeight: s.menuBodyHeight
+        }),
+        shallow
+    )
     const {visible, setVisible, getContainer, status} = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])

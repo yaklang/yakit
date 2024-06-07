@@ -30,8 +30,9 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover";
 import {failed, info, success, warn} from "@/utils/notification";
-import {menuBodyHeight} from "@/pages/globalVariable";
 import {ShellScript} from "@/pages/webShell/models";
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -158,6 +159,12 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
         visibleDrawer,
         onClose
     } = props
+    const {menuBodyHeight} = usePageInfo(
+        (s) => ({
+            menuBodyHeight: s.menuBodyHeight
+        }),
+        shallow
+    )
     const heightDrawer = useMemo(() => {
         return menuBodyHeight.firstTabMenuBodyHeight - 40
     }, [menuBodyHeight.firstTabMenuBodyHeight])

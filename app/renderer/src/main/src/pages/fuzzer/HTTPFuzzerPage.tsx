@@ -143,6 +143,7 @@ import {
 } from "@/defaultConstants/HTTPFuzzerPage"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
+const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -620,6 +621,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     const [fuzzerTableMaxData, setFuzzerTableMaxData] = useState<number>(DefFuzzerTableMaxData)
     const fuzzerTableMaxDataRef = useRef<number>(fuzzerTableMaxData)
+
+    const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
+    const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
 
     useEffect(() => {
         fuzzerTableMaxDataRef.current = fuzzerTableMaxData
@@ -1547,7 +1551,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setCurrentPage(Number(data.Total) + 1)
             })
     })
-
     // 跳转插件调试页面
     const handleSkipPluginDebuggerPage = async (tempType: "path" | "raw") => {
         const requests = getFuzzerRequestParams()
@@ -1558,10 +1561,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             const {Status, YamlContent} = await ipcRenderer.invoke("ExportHTTPFuzzerTaskToYaml", params)
             if (Status.Ok) {
-                ipcRenderer.invoke("send-to-tab", {
-                    type: "**debug-plugin",
-                    data: {generateYamlTemplate: true, YamlContent}
-                })
+                setVisibleDrawer(true)
+                setPluginDebugCode(YamlContent)
             } else {
                 throw new Error(Status.Reason)
             }
@@ -1941,6 +1942,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         }
                     />
                 </div>
+                <React.Suspense fallback={<>loading...</>}>
+                    <PluginDebugDrawer
+                        getContainer={fuzzerRef.current}
+                        route={YakitRoute.HTTPFuzzer}
+                        defaultCode={pluginDebugCode}
+                        visible={visibleDrawer}
+                        setVisible={setVisibleDrawer}
+                    />
+                </React.Suspense>
             </div>
             <React.Suspense fallback={<>loading...</>}>
                 <ResponseAllDataCard

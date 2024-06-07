@@ -160,6 +160,7 @@ export interface SequenceResponseRefProps {
  * @property {AdvancedConfigValueProps} advancedConfigValue 当前选中序列对应的页面高级配置数据
  * @property {ResponseProps} responseInfo 当前选中序列响应包数据详情
  * @function onShowAll 展示全部
+ * @function onPluginDebugger 打开调试插件
  */
 export interface SequenceResponseHeardProps {
     disabled: boolean
@@ -170,6 +171,7 @@ export interface SequenceResponseHeardProps {
     responseInfo?: ResponseProps
     onShowAll: () => void
     getHttpParams: () => FuzzerRequestProps[]
+    onPluginDebugger: (code:string) => void
 }
 
 /**

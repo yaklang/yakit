@@ -1,0 +1,18 @@
+.plugin-debugger-drawer {
+    &:global(.ant-drawer-bottom.ant-drawer-open.no-mask) {
+        transform: unset;
+    }
+    :global {
+        .ant-drawer-body {
+            padding: 0;
+            overflow: hidden;
+        }
+    }
+
+    .header-extra-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+}

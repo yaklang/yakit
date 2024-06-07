@@ -17,15 +17,6 @@ export const coordinate: coordinateProps = {
     pageX: 0,
     pageY: 0
 }
-
-interface MenuBodyHeightProps{
-    firstTabMenuBodyHeight:number
-}
-
-export const menuBodyHeight: MenuBodyHeightProps = {
-    firstTabMenuBodyHeight:0
-}
-
 interface UserPlatformTypeProps {
     github: {name: string; img: string}
     wechat: {name: string; img: string}

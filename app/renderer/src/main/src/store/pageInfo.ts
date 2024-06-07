@@ -58,8 +58,16 @@ interface PageParamsInfoProps {
     spaceEnginePageInfo?: SpaceEnginePageInfoProps
     /**简易版 安全检测页面 */
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
+    /**新建插件页面 */
+    addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
 }
 
+export interface AddYakitScriptPageInfoProps {
+    /**插件类型 */
+    pluginType: string
+    /**插件源码 */
+    code: string
+}
 export interface SpaceEnginePageInfoProps {}
 
 export interface SimpleDetectPageInfoProps {
@@ -124,10 +132,18 @@ export interface ScanPortPageInfoProps {
     /**输入目标 */
     targets: string
 }
+
+interface MenuBodyHeightProps {
+    firstTabMenuBodyHeight: number
+}
 interface PageInfoStoreProps {
+    menuBodyHeight: MenuBodyHeightProps
     pages: Map<string, PageProps>
 
     selectGroupId: Map<string, string>
+
+    /**更新 menuBodyHeight*/
+    updateMenuBodyHeight: (v: MenuBodyHeightProps) => void
 
     /**设置 pages数据，例如：fuzzer缓存页面；未分组的关闭其他页面只保留当前页面*/
     setPagesData: (key: string, p: PageProps) => void
@@ -182,8 +198,21 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(
         persist(
             (set, get) => ({
+                menuBodyHeight: {
+                    firstTabMenuBodyHeight: 0
+                },
                 pages: new Map(),
                 selectGroupId: new Map(),
+                updateMenuBodyHeight: (value) => {
+                    const newVal = get().menuBodyHeight
+                    set({
+                        ...get(),
+                        menuBodyHeight: {
+                            ...newVal,
+                            ...value
+                        }
+                    })
+                },
                 setPagesData: (key, values) => {
                     const newVal = new Map(get().pages).set(key, values)
                     set({

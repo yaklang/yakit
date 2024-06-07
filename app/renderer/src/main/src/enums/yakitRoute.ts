@@ -62,8 +62,6 @@ export enum YakitRoute {
     ScreenRecorderPage = "screen-recorder-page",
     // 全局功能-试验性功能-BAS实验室
     DB_ChaosMaker = "db-chaosmaker",
-    // 调试插件的功能
-    Beta_DebugPlugin = "beta-debug-plugin",
     // 调试插件编辑器
     Beta_DebugTrafficAnalize = "**beta-debug-traffic-analize",
     // 调试插件编辑器
