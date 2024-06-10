@@ -67,7 +67,7 @@ for domain = range domains {
     fp.WriteLine(data)
 }
 
-yakit.File(fileActually, "Domain Assets", "Domain Assets：Domian,Address,HTTPTitle")`
+yakit.File(fileActually, "Domain Assets", "Domain Assets：Domain,Address,HTTPTitle")`
     export const outputPortByNetwork = `yakit.AutoInitYakit()
 
 # Input your code!
