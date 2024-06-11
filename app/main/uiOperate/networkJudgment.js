@@ -46,7 +46,7 @@ const asyncFetchPrivateDomainUrl = (win, params) => {
                 httpsAgent: new https.Agent({ rejectUnauthorized: false }), // 忽略 HTTPS 错误
             })
             service({
-                url: "navigation/bars",
+                url: "group/search",
                 method: 'get',
                 timeout: 30 * 1000,
             })
