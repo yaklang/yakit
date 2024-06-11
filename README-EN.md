@@ -1,7 +1,7 @@
 
 <p align="center">
   <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a> 
- <h2 align="center"> YAKIT-A Cyber Security ALL-IN-ONE Platform based on Yak languag</h2>
+ <h2 align="center"> YAKIT-A Cyber Security ALL-IN-ONE Platform based on Yak language</h2>
 <p align="center">
 <img src="https://img.shields.io/github/issues-pr/yaklang/yakit">
 <a href="https://github.com/yaklang/yakit/releases"><img src="https://img.shields.io/github/downloads/yaklang/yakit/total">
