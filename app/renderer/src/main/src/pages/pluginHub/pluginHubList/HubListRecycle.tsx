@@ -104,8 +104,8 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
                 }
             } catch (error) {}
             setTimeout(() => {
-                setLoading(false)
                 isInitLoading.current = false
+                setLoading(false)
             }, 300)
         }),
         {wait: 200, leading: true}
@@ -342,7 +342,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     // 批量的删除和还原
     const headerExtra = useMemo(() => {
         return (
-            <div className={styles["hub-list-recycle-header-extra"]}>
+            <div className={styles["hub-list-header-extra"]}>
                 <HubButton
                     width={wrapperWidth}
                     iconWidth={900}
