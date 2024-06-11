@@ -35,6 +35,7 @@
 .risk-query {
     @extend %flex-column;
     min-width: 300px;
+    max-width: 300px;
     border-right: 1px solid var(--yakit-border-color);
     overflow: hidden;
     height: 100%;
@@ -115,8 +116,6 @@
     }
 }
 .vulnerability-type {
-    min-height: 270px;
-    max-height: 520px;
     flex: 1;
     padding: 8px 12px;
     @include heard("vulnerability-type");
@@ -124,4 +123,12 @@
 
 .btn-padding-right-0 {
     padding-right: 0;
+}
+
+.to-end {
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    padding-top: 24px;
+    padding-bottom: 12px;
 }

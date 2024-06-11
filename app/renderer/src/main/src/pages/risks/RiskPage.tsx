@@ -17,6 +17,7 @@ import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {Divider} from "antd"
 import classNames from "classnames"
 import {VulnerabilityLevelPie} from "./VulnerabilityLevelPie/VulnerabilityLevelPie"
+import {VulnerabilityTypePie} from "./VulnerabilityTypePie/VulnerabilityTypePie"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState(true)
@@ -44,6 +45,7 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
                 <VulnerabilityLevel />
                 <Divider style={{margin: "8px 0px"}} />
                 <VulnerabilityType />
+                <div className={styles["to-end"]}>已经到底啦～</div>
             </div>
         </div>
     )
@@ -150,6 +152,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
                     重置
                 </YakitButton>
             </div>
+            <VulnerabilityTypePie />
         </div>
     )
 })
