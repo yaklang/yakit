@@ -2079,7 +2079,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
 
 // 序列动画演示
 interface SequenceAnimationAemonstrationProps {}
-const SequenceAnimationAemonstration: React.FC<SequenceAnimationAemonstrationProps> = React.memo((props) => {
+export const SequenceAnimationAemonstration: React.FC<SequenceAnimationAemonstrationProps> = React.memo((props) => {
     return (
         <div className={styles["sequence-animation-aemonstration"]}>
             <div className={styles["animation-cont-wrap"]}>

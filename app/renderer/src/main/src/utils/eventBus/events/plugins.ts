@@ -1,3 +1,5 @@
+import { PluginSourceType } from "@/pages/pluginHub/type"
+
 export type PluginsEventProps = {
     /** 刷新本地插件列表 */
     onRefLocalPluginList: string
@@ -46,4 +48,6 @@ export type PluginsEventProps = {
 
     /** 插件编辑-本地保存成功后通知详情更新插件信息 */
     editorLocalSaveToDetail: string
+    /** 刷新插件仓库指定tab */
+    refreshPluginHubTabActive: PluginSourceType
 }

@@ -846,7 +846,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 firstNode={
                     <TableVirtualResize<Risk>
                         scrollToIndex={scrollToIndex}
-                        query={query}
+                        query={{...query}}
                         loading={loading}
                         isRefresh={isRefresh}
                         titleHeight={32}

@@ -1,4 +1,4 @@
-import React, {memo, useRef, useState} from "react"
+import React, {memo, useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {HubListRecycle} from "./HubListRecycle"
@@ -10,6 +10,11 @@ import {HubListOnline} from "./HubListOnline"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {defaultPluginHubPageInfo} from "@/defaultConstants/PluginHubPage"
+import emiter from "@/utils/eventBus/eventBus"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -23,12 +28,40 @@ interface PluginHubListProps {
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage} = props
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.Plugin_Hub,
+            YakitRoute.Plugin_Hub
+        )
+        if (currentItem && currentItem.pageParamsInfo.pluginHubPageInfo) {
+            return currentItem.pageParamsInfo.pluginHubPageInfo
+        } else {
+            return {...defaultPluginHubPageInfo}
+        }
+    })
 
     /** ---------- Tabs组件逻辑 Start ---------- */
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
-    const rendered = useRef<Set<string>>(new Set(["online"]))
+    const rendered = useRef<Set<string>>(new Set([initPageInfo().tabActive || "online"]))
 
-    const [active, setActive] = useState<PluginSourceType>("online")
+    const [active, setActive] = useState<PluginSourceType>(initPageInfo().tabActive || "online")
+
+    useEffect(() => {
+        const refreshPluginHubTabActive = (tabActive: PluginSourceType) => {
+            onSetActive(tabActive)
+        }
+        emiter.on("refreshPluginHubTabActive", refreshPluginHubTabActive)
+        return () => {
+            emiter.off("refreshPluginHubTabActive", refreshPluginHubTabActive)
+        }
+    }, [])
+
     const [activeHidden, setActiveHidden] = useState<boolean>(false)
     const onSetActive = useMemoizedFn((type: PluginSourceType) => {
         setHintShow((val) => {

@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react"
 import {Form, Modal, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {
     IMonacoEditor,
@@ -3128,9 +3128,12 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
 })
 
 // 爆破动画演示
-interface BlastingAnimationAemonstrationProps {}
-const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstrationProps> = React.memo((props) => {
-    const [animationType, setAnimationType] = useState<string>("id")
+interface BlastingAnimationAemonstrationProps {
+    animationType?: string
+    videoStyle?: CSSProperties
+}
+export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstrationProps> = React.memo((props) => {
+    const [animationType, setAnimationType] = useState<string>(props.animationType || "id")
 
     const [animationResources, setAnimationResources] = useState<string>(blastingIdmp4)
 
@@ -3146,28 +3149,31 @@ const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstrationPro
 
     return (
         <div className={styles["blasting-animation-aemonstration"]}>
-            <YakitRadioButtons
-                size='large'
-                buttonStyle='solid'
-                value={animationType}
-                options={[
-                    {
-                        value: "id",
-                        label: "爆破 ID"
-                    },
-                    {
-                        value: "pwd",
-                        label: "爆破密码"
-                    },
-                    {
-                        value: "count",
-                        label: "爆破账号"
-                    }
-                ]}
-                onChange={(e) => setAnimationType(e.target.value)}
-            />
+            {!props.animationType && (
+                <YakitRadioButtons
+                    size='large'
+                    buttonStyle='solid'
+                    value={animationType}
+                    options={[
+                        {
+                            value: "id",
+                            label: "爆破 ID"
+                        },
+                        {
+                            value: "pwd",
+                            label: "爆破密码"
+                        },
+                        {
+                            value: "count",
+                            label: "爆破账号"
+                        }
+                    ]}
+                    onChange={(e) => setAnimationType(e.target.value)}
+                />
+            )}
+
             <div className={styles["animation-cont-wrap"]}>
-                <video src={animationResources} autoPlay loop></video>
+                <video src={animationResources} autoPlay loop style={props.videoStyle}></video>
             </div>
         </div>
     )

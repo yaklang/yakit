@@ -5332,3 +5332,42 @@ const OutlineTrashSecond = () => (
 export const OutlineTrashSecondIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineTrashSecond} {...props} />
 }
+
+/**
+ * @description UI Kit/Icon/Outline/端口资产
+ */
+const OutlineModScanPortData = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_30057_207490' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_30057_207490)'>
+            <path
+                d='M13.5 6H14.5C15.6046 6 16.5 6.89543 16.5 8V13C16.5 14.1046 15.6046 15 14.5 15H3.5C2.39543 15 1.5 14.1046 1.5 13V8C1.5 6.89543 2.39543 6 3.5 6H4.5'
+                stroke='#85899E'
+                strokeLinecap='round'
+                stroke-linejoin='round'
+            />
+            <path
+                d='M13.5 6V4.75C13.5 4.19772 13.0523 3.75 12.5 3.75H12M4.5 6V4.75C4.5 4.19772 4.94772 3.75 5.5 3.75H6'
+                stroke='#85899E'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M12 3.75V3.25C12 2.69772 11.5523 2.25 11 2.25H7C6.44772 2.25 6 2.69772 6 3.25V3.75'
+                stroke='#85899E'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M4.5 9V12' stroke='#85899E' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M6.75 9V12' stroke='#85899E' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M9 9V12' stroke='#85899E' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M11.25 9V12' stroke='#85899E' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M13.5 9V12' stroke='#85899E' strokeLinecap='round' strokeLinejoin='round' />
+        </g>
+    </svg>
+)
+export const OutlineModScanPortDataIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={OutlineModScanPortData} {...props} />
+}
