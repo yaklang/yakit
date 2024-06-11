@@ -141,6 +141,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                     Order: query.Pagination.Order,
                     OrderBy: query.Pagination.OrderBy
                 }
+                console.log(123, params);
                 apiQueryPortsBase(params)
                     .then((allRes) => {
                         setAllResponse(allRes)

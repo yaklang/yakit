@@ -41,6 +41,7 @@ import classNames from "classnames"
 import styles from "./PublicMenu.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
+import { usePluginToId } from "@/store/publicMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -79,6 +80,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         [ResidentPluginName.BasicCrawler]: 0,
         [ResidentPluginName.DirectoryScanning]: 0
     })
+    const {setNewPluginToId} = usePluginToId()
 
     const [loading, setLoading] = useState<boolean>(false)
     // 常用插件菜单
@@ -128,6 +130,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 const pluginToIds: Record<string, number> = {}
                 for (let name of pluginTool) pluginToIds[name] = info[name] || 0
                 setPluginToId(pluginToIds)
+                setNewPluginToId(pluginToIds)
             })
             .catch((err) => {})
     })
@@ -325,6 +328,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 const data = {...pluginToId}
                 data[info.pluginName as any] = info.pluginId
                 setPluginToId(data)
+                setNewPluginToId(data)
             } else {
                 const menus = [...pluginMenu]
                 menus.forEach((item) => {

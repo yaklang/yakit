@@ -25,6 +25,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {CacheDropDownGV} from "@/yakitGV"
+import emiter from "@/utils/eventBus/eventBus"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -199,6 +200,21 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
     })
+    const beforeExecStartMITM = (values) => {
+        if (props.status !== "idle") return
+        try {
+            const valObj = JSON.parse(values) || {}
+            form.setFieldsValue({...valObj})
+        } catch (error) {}
+        execStartMITM(form.getFieldsValue())
+    }
+    useEffect(() => {
+        emiter.on("onExecStartMITM", beforeExecStartMITM)
+        return () => {
+            emiter.off("onExecStartMITM", beforeExecStartMITM)
+        }
+    }, [])
+
     const [width, setWidth] = useState<number>(0)
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)

@@ -1735,3 +1735,840 @@ const PublicDefaultPlugin = () => (
 export const PublicDefaultPluginIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PublicDefaultPlugin} {...props} />
 }
+
+const PublicBlasting = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <circle
+            cx='11.5005'
+            cy='13.5981'
+            r='8'
+            transform='rotate(30 11.5005 13.5981)'
+            fill='#F28B44'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+        <path
+            d='M10.2551 8.75586C8.9997 9.0789 7.87005 9.88688 7.1707 11.0982C6.57652 12.1273 6.38978 13.2799 6.56044 14.3691'
+            stroke='#31343F'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path
+            d='M17 4.07171C17.8284 2.63683 19.6632 2.14521 21.0981 2.97363'
+            stroke='#F28B44'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path
+            d='M12.5361 3.80383C13.0884 2.84724 14.3116 2.51949 15.2682 3.07178L18.7323 5.07178C19.6889 5.62406 20.0166 6.84724 19.4643 7.80383L18.9643 8.66985L12.0361 4.66985L12.5361 3.80383Z'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+    </svg>
+)
+export const PublicBlastingIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicBlasting} {...props} />
+}
+
+const PublicSequenceAnimation = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask id='mask0_30057_207351' maskUnits='userSpaceOnUse' x='0' y='0' width='24' height='24'>
+            <rect width='24' height='24' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_30057_207351)'>
+            <mask id='mask1_30057_207351' maskUnits='userSpaceOnUse' x='1' y='14' width='22' height='9'>
+                <path
+                    d='M11.8461 22.9308C11.944 22.9748 12.056 22.9748 12.1539 22.9308L21.9266 18.533C21.975 18.5113 22.0274 18.5 22.0805 18.5H22.625C22.8321 18.5 23 18.3321 23 18.125V14.375C23 14.1679 22.8321 14 22.625 14H22.0722C22.0245 14 21.9772 14.0091 21.9329 14.0268L12.1393 17.9443C12.0499 17.9801 11.9501 17.9801 11.8607 17.9443L2.06705 14.0268C2.02276 14.0091 1.97549 14 1.92778 14H1.375C1.16789 14 1 14.1679 1 14.375V18.125C1 18.3321 1.16789 18.5 1.375 18.5H1.91951C1.97257 18.5 2.02502 18.5113 2.0734 18.533L11.8461 22.9308Z'
+                    fill='white'
+                />
+            </mask>
+            <g mask='url(#mask1_30057_207351)'>
+                <path
+                    d='M11.7437 13.0932C11.9093 13.033 12.0907 13.033 12.2563 13.0932L21.0617 16.2952C21.7199 16.5345 21.7199 17.4655 21.0617 17.7048L12.2563 20.9068C12.0907 20.967 11.9093 20.967 11.7437 20.9068L2.93832 17.7048C2.28006 17.4655 2.28007 16.5345 2.93832 16.2952L11.7437 13.0932Z'
+                    stroke='#31343F'
+                    strokeWidth='1.5'
+                />
+            </g>
+            <mask id='mask2_30057_207351' maskUnits='userSpaceOnUse' x='1' y='9' width='22' height='9'>
+                <path
+                    d='M11.8461 17.9308C11.944 17.9748 12.056 17.9748 12.1539 17.9308L21.9266 13.533C21.975 13.5113 22.0274 13.5 22.0805 13.5H22.625C22.8321 13.5 23 13.3321 23 13.125V9.375C23 9.16789 22.8321 9 22.625 9H22.0722C22.0245 9 21.9772 9.0091 21.9329 9.02682L12.1393 12.9443C12.0499 12.9801 11.9501 12.9801 11.8607 12.9443L2.06705 9.02682C2.02276 9.0091 1.97549 9 1.92778 9H1.375C1.16789 9 1 9.16789 1 9.375V12.7682C1 12.9103 1.08025 13.0401 1.20729 13.1036L2 13.5L11.8461 17.9308Z'
+                    fill='white'
+                />
+            </mask>
+            <g mask='url(#mask2_30057_207351)'>
+                <path
+                    d='M11.7437 8.0932C11.9093 8.033 12.0907 8.033 12.2563 8.0932L21.0617 11.2952C21.7199 11.5345 21.7199 12.4655 21.0617 12.7048L12.2563 15.9068C12.0907 15.967 11.9093 15.967 11.7437 15.9068L2.93832 12.7048C2.28006 12.4655 2.28007 11.5345 2.93832 11.2952L11.7437 8.0932Z'
+                    stroke='#F28B44'
+                    strokeWidth='1.5'
+                />
+            </g>
+            <path
+                d='M11.7437 3.0932C11.9093 3.033 12.0907 3.033 12.2563 3.0932L21.0617 6.29516C21.7199 6.53452 21.7199 7.46548 21.0617 7.70485L12.2563 10.9068C12.0907 10.967 11.9093 10.967 11.7437 10.9068L2.93832 7.70484C2.28006 7.46548 2.28007 6.53452 2.93832 6.29515L11.7437 3.0932Z'
+                fill='#F28B44'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+        </g>
+    </svg>
+)
+export const PublicSequenceAnimationIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicSequenceAnimation} {...props} />
+}
+
+const PublicToolLightbulb = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <mask id='mask0_30120_221116' maskUnits='userSpaceOnUse' x='0' y='0' width='24' height='24'>
+            <rect width='24' height='24' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_30120_221116)'>
+            <path
+                d='M9.40386 17.5556H14.596M11.9999 2V3.11111M22 11.9999H20.8889M3.11111 11.9999H2M8.07157 15.9284C5.90199 13.7588 5.90199 10.2412 8.07157 8.07165C10.2411 5.90208 13.7587 5.90208 15.9283 8.07165C18.0979 10.2412 18.0979 13.7588 15.9283 15.9284L15.3204 16.5363C14.6172 17.2395 14.2222 18.1932 14.2222 19.1877V19.7778C14.2222 21.0051 13.2272 22 11.9999 22C10.7726 22 9.77772 21.0051 9.77772 19.7778V19.1877C9.77772 18.1932 9.38266 17.2395 8.67946 16.5363L8.07157 15.9284Z'
+                stroke='#31343F'
+                strokeWidth='1.66667'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M8.07157 8.07165C5.90199 10.2412 5.90199 13.7588 8.07157 15.9284L8.67946 16.5363C8.8889 16.7279 9.327 17.2 9.40386 17.5556H14.596C14.7777 17.2756 15.1768 16.6799 15.3204 16.5363L15.9283 15.9284C18.0979 13.7588 18.0979 10.2412 15.9283 8.07165C13.7587 5.90208 10.2411 5.90208 8.07157 8.07165Z'
+                fill='#F28B44'
+            />
+            <path
+                d='M11.9999 2V3.11111M22 11.9999H20.8889M3.11111 11.9999H2M8.07157 15.9284C5.90199 13.7588 5.90199 10.2412 8.07157 8.07165C10.2411 5.90208 13.7587 5.90208 15.9283 8.07165C18.0979 10.2412 18.0979 13.7588 15.9283 15.9284L15.3204 16.5363C15.1768 16.6799 14.7777 17.2756 14.596 17.5556H9.40386C9.327 17.2 8.8889 16.7279 8.67946 16.5363L8.07157 15.9284Z'
+                stroke='#31343F'
+                strokeWidth='1.66667'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M9.77783 19.1875V19.7776C9.77783 21.0049 10.7728 21.9998 12.0001 21.9998C13.2274 21.9998 14.2223 21.0049 14.2223 19.7776V19.1875'
+                stroke='#31343F'
+                strokeWidth='1.66667'
+                strokeLinecap='square'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M19.0708 4.92871L18.2852 5.71439M5.71439 5.71439L4.92871 4.92871'
+                stroke='#F28B44'
+                strokeWidth='1.66667'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+    </svg>
+)
+export const PublicPublicToolLightbulbIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolLightbulb} {...props} />
+}
+
+const PublicToolYakScript = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M1.7998 4.5002C1.7998 3.50608 2.60569 2.7002 3.5998 2.7002H14.3998C15.3939 2.7002 16.1998 3.50608 16.1998 4.5002V13.5002C16.1998 14.4943 15.3939 15.3002 14.3998 15.3002H3.5998C2.60569 15.3002 1.7998 14.4943 1.7998 13.5002V4.5002ZM4.76341 5.6638C5.11488 5.31233 5.68473 5.31233 6.0362 5.6638L8.7362 8.3638C9.08767 8.71527 9.08767 9.28512 8.7362 9.63659L6.0362 12.3366C5.68473 12.6881 5.11488 12.6881 4.76341 12.3366C4.41194 11.9851 4.41194 11.4153 4.76341 11.0638L6.82701 9.0002L4.76341 6.93659C4.41194 6.58512 4.41194 6.01527 4.76341 5.6638ZM9.89981 10.8002C9.40275 10.8002 8.9998 11.2031 8.9998 11.7002C8.9998 12.1973 9.40275 12.6002 9.89981 12.6002H12.5998C13.0969 12.6002 13.4998 12.1973 13.4998 11.7002C13.4998 11.2031 13.0969 10.8002 12.5998 10.8002H9.89981Z'
+            fill='white'
+        />
+    </svg>
+)
+export const PublicToolYakScriptIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolYakScript} {...props} />
+}
+
+const PublicToolVulinbox = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_14166' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_14166)'>
+            <circle cx='9' cy='9' r='6.75' stroke='#31343F' strokeWidth='1.5' />
+            <path
+                d='M0.75 9H3.75M9 0.75V3.75M14.25 9H17.25M9 14.25V17.25'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <circle cx='9' cy='9' r='2.25' stroke='#F28B44' strokeWidth='1.5' />
+        </g>
+    </svg>
+)
+export const PublicToolVulinboxIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolVulinbox} {...props} />
+}
+
+const PublicToolPayload = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_21688' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_21688)'>
+            <rect x='3' y='2.25' width='12' height='13.5' rx='2' stroke='#31343F' strokeWidth='1.5' />
+            <path
+                d='M6 2.25V8.0882C6 8.16253 6.07823 8.21088 6.14472 8.17764L7.45528 7.52236C7.48343 7.50828 7.51657 7.50828 7.54472 7.52236L8.85528 8.17764C8.92177 8.21088 9 8.16253 9 8.0882V2.25'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='square'
+            />
+            <path
+                d='M3 14.25C3 13.4216 3.67157 12.75 4.5 12.75H15V13.75C15 14.8546 14.1046 15.75 13 15.75H4.5C3.67157 15.75 3 15.0784 3 14.25V14.25Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <rect x='3' y='2.25' width='12' height='13.5' rx='2' stroke='#31343F' strokeWidth='1.5' />
+        </g>
+    </svg>
+)
+export const PublicToolPayloadIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolPayload} {...props} />
+}
+
+const PublicToolDataCompare = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_18037' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_18037)'>
+            <path
+                d='M2.25 5.75C2.25 4.64543 3.14543 3.75 4.25 3.75H9V14.25H4.25C3.14543 14.25 2.25 13.3546 2.25 12.25V5.75Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M9 3C8.58579 3 8.25 3.33579 8.25 3.75V14.25C8.25 14.6642 8.58579 15 9 15V3ZM10.5 15H13.75C15.2688 15 16.5 13.7688 16.5 12.25V5.75C16.5 4.23122 15.2688 3 13.75 3H10.5V4.5H13.75C14.4404 4.5 15 5.05964 15 5.75V12.25C15 12.9404 14.4404 13.5 13.75 13.5H10.5V15Z'
+                fill='#F28B44'
+            />
+            <path d='M9 1.5V16.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+        </g>
+    </svg>
+)
+export const PublicToolDataCompareIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolDataCompare} {...props} />
+}
+
+const PublicToolPluginHub = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_25826' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_25826)'>
+            <path
+                d='M17.25 6.75L9 0.75L0.75 6.75'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M3 9.75V13.75C3 14.8546 3.89543 15.75 5 15.75H13C14.1046 15.75 15 14.8546 15 13.75V8.25'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M3 12H6.75V15.75H5C3.89543 15.75 3 14.8546 3 13.75V12Z'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M6.75 12H8.5C9.60457 12 10.5 12.8954 10.5 14V15.75H6.75V12Z'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M3 10.125C3 9.08947 3.83947 8.25 4.875 8.25V8.25C5.91053 8.25 6.75 9.08947 6.75 10.125V12H3V10.125Z'
+                stroke='white'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+    </svg>
+)
+export const PublicToolPluginHubIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolPluginHub} {...props} />
+}
+
+const PublicToolCVE = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='18' viewBox='0 0 16 18' fill='none'>
+        <path
+            d='M3.31836 16.6365H12.682C13.7866 16.6365 14.682 15.7411 14.682 14.6365V5.37401C14.682 4.84358 14.4713 4.33487 14.0962 3.9598L12.086 1.94956C11.7109 1.57448 11.2022 1.36377 10.6718 1.36377H3.31836C2.21379 1.36377 1.31836 2.2592 1.31836 3.36377V14.6365C1.31836 15.7411 2.21379 16.6365 3.31836 16.6365Z'
+            stroke='#31343F'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path
+            d='M10.8638 2.11377V3.18195C10.8638 4.28652 11.7592 5.18195 12.8638 5.18195H13.932'
+            stroke='#31343F'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path
+            d='M6.15147 9.0519L4.54767 9.1091C4.54767 9.1091 3.84697 9.3137 3.83927 10.0716C3.83927 10.0716 3.79307 10.9263 4.52787 11.1045H6.71137L6.22957 11.9449H4.40027C4.40027 11.9449 3.11987 11.6688 3.05167 10.1332C3.05167 10.1332 2.93067 8.5932 4.42337 8.2599H6.50127V8.679H6.14817L6.15147 9.0519ZM6.80157 8.2577V8.6306L7.09197 8.6229V8.25L6.80157 8.2577ZM7.41537 8.2577V8.6306L7.70576 8.6229V8.25L7.41537 8.2577Z'
+            fill='#F28B44'
+        />
+        <path d='M6.49707 8.66151V9.03661L6.78747 9.02891V8.65381L6.49707 8.66151Z' fill='#F28B44' />
+        <path
+            d='M6.22314 9.05641L7.09214 9.03661L8.07114 10.8637C8.07114 10.8637 8.10524 10.9253 8.11954 10.8637L9.51654 8.25781H12.9342L12.4854 9.08281H9.98404L8.53424 11.7129L8.29664 12H7.86104C7.86104 12 7.37154 11.4566 6.22314 9.05641Z'
+            fill='#F28B44'
+        />
+        <path
+            d='M12.7593 9.75785L12.4007 10.3914H10.8607V11.1284L12.9342 11.1438L12.503 11.9424L10.0786 11.9996V9.73145L12.7593 9.75785Z'
+            fill='#F28B44'
+        />
+    </svg>
+)
+export const PublicToolCVEIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolCVE} {...props} />
+}
+
+const PublicToolShellReceiver = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_18017' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_18017)'>
+            <path
+                d='M16.5 12V9.75C16.5 5.60786 13.1421 2.25 9 2.25V2.25C4.85786 2.25 1.5 5.60786 1.5 9.75V12'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <path
+                d='M1.5 10.5H2.5C3.60457 10.5 4.5 11.3954 4.5 12.5V13.5C4.5 14.3284 3.82843 15 3 15V15C2.17157 15 1.5 14.3284 1.5 13.5V10.5Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <path
+                d='M13.5 12.5C13.5 11.3954 14.3954 10.5 15.5 10.5H16.5V13.5C16.5 14.3284 15.8284 15 15 15V15C14.1716 15 13.5 14.3284 13.5 13.5V12.5Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <path d='M6.75 12V14.25' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M9 12V14.25' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M11.25 12V14.25' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        </g>
+    </svg>
+)
+export const PublicToolShellReceiverIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolShellReceiver} {...props} />
+}
+
+const PublicToolWebsocketFuzzer = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_19770' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_19770)'>
+            <path
+                d='M15 12.75C15 13.5784 12.3137 14.25 9 14.25C5.68629 14.25 3 13.5784 3 12.75'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <path
+                d='M14.25 15C14.25 14.7782 14.4117 14.7817 14.1469 14.9382C13.9323 15.065 13.5719 15.2053 13.0607 15.3331C12.05 15.5857 10.614 15.75 9 15.75V17.25C10.6997 17.25 12.2637 17.0785 13.4245 16.7883C13.9992 16.6446 14.5175 16.4616 14.9101 16.2295C15.2526 16.0271 15.75 15.636 15.75 15H14.25ZM9 15.75C7.386 15.75 5.94997 15.5857 4.93926 15.3331C4.42814 15.2053 4.06771 15.065 3.85313 14.9382C3.58835 14.7817 3.75 14.7782 3.75 15H2.25C2.25 15.636 2.74744 16.0271 3.08989 16.2295C3.48254 16.4616 4.00079 16.6446 4.57546 16.7883C5.73632 17.0785 7.30029 17.25 9 17.25V15.75ZM14.25 10.5V15H15.75V10.5H14.25ZM3.75 15V10.5H2.25V15H3.75ZM14.25 10.5C14.25 10.2782 14.4117 10.2817 14.1469 10.4382C13.9323 10.565 13.5719 10.7053 13.0607 10.8331C12.05 11.0857 10.614 11.25 9 11.25V12.75C10.6997 12.75 12.2637 12.5785 13.4245 12.2883C13.9992 12.1446 14.5175 11.9616 14.9101 11.7295C15.2526 11.5271 15.75 11.136 15.75 10.5H14.25ZM9 11.25C7.386 11.25 5.94997 11.0857 4.93926 10.8331C4.42814 10.7053 4.06771 10.565 3.85313 10.4382C3.58835 10.2817 3.75 10.2782 3.75 10.5H2.25C2.25 11.136 2.74744 11.5271 3.08989 11.7295C3.48254 11.9616 4.00079 12.1446 4.57546 12.2883C5.73632 12.5785 7.30029 12.75 9 12.75V11.25ZM3.75 10.5C3.75 10.7218 3.58835 10.7183 3.85313 10.5618C4.06771 10.435 4.42814 10.2947 4.93926 10.1669C5.94997 9.91427 7.386 9.75 9 9.75V8.25C7.30029 8.25 5.73632 8.42152 4.57546 8.71173C4.00079 8.8554 3.48254 9.0384 3.08989 9.27048C2.74744 9.47289 2.25 9.86402 2.25 10.5H3.75ZM9 9.75C10.614 9.75 12.05 9.91427 13.0607 10.1669C13.5719 10.2947 13.9323 10.435 14.1469 10.5618C14.4117 10.7183 14.25 10.7218 14.25 10.5H15.75C15.75 9.86402 15.2526 9.47289 14.9101 9.27048C14.5175 9.0384 13.9992 8.8554 13.4245 8.71173C12.2637 8.42152 10.6997 8.25 9 8.25V9.75Z'
+                fill='#31343F'
+            />
+            <path d='M9 4.5V10.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M15.75 6V6C15.75 6.6427 15.2714 7.18482 14.6337 7.26454L13.0019 7.46851C12.0011 7.59362 11.25 8.44442 11.25 9.45306V9.75'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M2.25 6V6C2.25 6.6427 2.72858 7.18482 3.36631 7.26454L4.99807 7.46851C5.99893 7.59362 6.75 8.44442 6.75 9.45306V9.75'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M8.75 1.64434C8.9047 1.55502 9.0953 1.55502 9.25 1.64434L10.049 2.10566C10.2037 2.19498 10.299 2.36004 10.299 2.53868V3.46132C10.299 3.63996 10.2037 3.80502 10.049 3.89434L9.25 4.35566C9.0953 4.44498 8.9047 4.44498 8.75 4.35566L7.95096 3.89434C7.79626 3.80502 7.70096 3.63996 7.70096 3.46132V2.53868C7.70096 2.36004 7.79626 2.19498 7.95096 2.10566L8.75 1.64434Z'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M15.5 3.14434C15.6547 3.05502 15.8453 3.05502 16 3.14434L16.799 3.60566C16.9537 3.69498 17.049 3.86004 17.049 4.03868V4.96132C17.049 5.13996 16.9537 5.30502 16.799 5.39434L16 5.85566C15.8453 5.94498 15.6547 5.94498 15.5 5.85566L14.701 5.39434C14.5463 5.30502 14.451 5.13996 14.451 4.96132V4.03868C14.451 3.86004 14.5463 3.69498 14.701 3.60566L15.5 3.14434Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M2 3.14434C2.1547 3.05502 2.3453 3.05502 2.5 3.14434L3.29904 3.60566C3.45374 3.69498 3.54904 3.86004 3.54904 4.03868V4.96132C3.54904 5.13996 3.45374 5.30502 3.29904 5.39434L2.5 5.85566C2.3453 5.94498 2.1547 5.94498 2 5.85566L1.20096 5.39434C1.04626 5.30502 0.950962 5.13996 0.950962 4.96132V4.03868C0.950962 3.86004 1.04626 3.69498 1.20096 3.60566L2 3.14434Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+    </svg>
+)
+export const PublicToolWebsocketFuzzerIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolWebsocketFuzzer} {...props} />
+}
+
+const PublicToolSubDomainCollection = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_19462' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_19462)'>
+            <path
+                d='M8.25 3.75H12.75C13.5784 3.75 14.25 4.42157 14.25 5.25V5.25'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M4.5 12L7.5 12' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M2.25 8.25L16.5 8.25'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M16.5 13.5V6.75C16.5 5.92157 15.8284 5.25 15 5.25H10.0704C9.40166 5.25 8.7772 4.9158 8.40627 4.3594L7.9453 3.66795C7.6671 3.25065 7.19875 3 6.69722 3H3C2.17157 3 1.5 3.67157 1.5 4.5V13.5C1.5 14.3284 2.17157 15 3 15H15C15.8284 15 16.5 14.3284 16.5 13.5Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+    </svg>
+)
+export const PublicToolSubDomainCollectionIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolSubDomainCollection} {...props} />
+}
+
+const PublicToolBasicCrawler = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_15067' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_15067)'>
+            <path
+                d='M12.75 10.875V9V4.25C12.75 3.14543 11.8546 2.25 10.75 2.25H4.25C3.14543 2.25 2.25 3.14543 2.25 4.25V11.75C2.25 13.9591 4.04086 15.75 6.25 15.75H7.5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M4.5 6L10.5 6' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M4.5 9.75L9 9.75'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+        <path
+            d='M8.25 12.75V12H7.5V12.75H8.25ZM17.25 12.75H18V12H17.25V12.75ZM7.5 12.75C7.5 13.9926 6.49264 15 5.25 15V16.5C7.32107 16.5 9 14.8211 9 12.75H7.5ZM8.25 13.5H17.25V12H8.25V13.5ZM16.5 12.75C16.5 13.9926 15.4926 15 14.25 15V16.5C16.3211 16.5 18 14.8211 18 12.75H16.5ZM14.25 15H5.25V16.5H14.25V15Z'
+            fill='#31343F'
+        />
+    </svg>
+)
+export const PublicToolBasicCrawlerIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolBasicCrawler} {...props} />
+}
+
+const PublicToolSpaceEngine = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_30111_220597' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_30111_220597)'>
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M6.01795 8.25488H3.04064C3.32101 5.98909 4.86357 4.11449 6.94298 3.35641C6.85587 3.55798 6.77569 3.77061 6.70212 3.99132C6.32076 5.1354 6.07554 6.62309 6.01795 8.25488ZM1.50488 8.99988C1.50488 4.86051 4.86051 1.50488 8.99988 1.50488C13.1393 1.50488 16.4949 4.86051 16.4949 8.99988C16.4949 9.16164 16.4898 9.32219 16.4797 9.4814C16.0834 8.89576 15.5529 8.40842 14.9323 8.0636C14.5911 5.88395 13.0774 4.09305 11.0568 3.35641C11.1439 3.55798 11.2241 3.77061 11.2976 3.99132C11.625 4.97352 11.8521 6.20897 11.9462 7.57144C11.4219 7.66597 10.9291 7.85134 10.4848 8.11067C10.4191 6.66974 10.1968 5.40071 9.8841 4.4625C9.69498 3.89513 9.4862 3.48973 9.29055 3.24147C9.19445 3.11952 9.11606 3.05415 9.06357 3.02193C9.03851 3.00654 9.02162 3.00007 9.01281 2.99739C9.00459 2.99489 9.00094 2.99488 8.99988 2.99488C8.99882 2.99488 8.99517 2.99489 8.98696 2.99739C8.97815 3.00007 8.96125 3.00654 8.93619 3.02193C8.88371 3.05415 8.80532 3.11952 8.70921 3.24147C8.51356 3.48973 8.30478 3.89513 8.11566 4.4625C7.79253 5.43189 7.56598 6.75444 7.50894 8.25488H10.254C9.68137 8.63729 9.20136 9.14756 8.8548 9.74488H7.50894C7.56598 11.2453 7.79253 12.5679 8.11566 13.5373C8.30478 14.1046 8.51356 14.51 8.70921 14.7583C8.80532 14.8802 8.88371 14.9456 8.93619 14.9778C8.96125 14.9932 8.97815 14.9997 8.98696 15.0024C8.99517 15.0049 8.99882 15.0049 8.99988 15.0049C9.00094 15.0049 9.00459 15.0049 9.01281 15.0024C9.02162 14.9997 9.03851 14.9932 9.06357 14.9778C9.10677 14.9513 9.16752 14.9023 9.24125 14.8178C9.73026 15.4259 10.3741 15.9042 11.1129 16.1929C10.4428 16.3894 9.73364 16.4949 8.99988 16.4949C4.86051 16.4949 1.50488 13.1393 1.50488 8.99988ZM6.70212 14.0084C6.77569 14.2292 6.85587 14.4418 6.94299 14.6434C4.86357 13.8853 3.32101 12.0107 3.04064 9.74488H6.01795C6.07554 11.3767 6.32076 12.8644 6.70212 14.0084Z'
+                fill='#31343F'
+            />
+            <path d='M15 14.25L16.591 15.841' stroke='#F28B44' strokeWidth='1.49' strokeLinecap='round' />
+            <circle cx='12.75' cy='12' r='3' stroke='#F28B44' strokeWidth='1.49' />
+        </g>
+    </svg>
+)
+export const PublicToolSpaceEngineIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolSpaceEngine} {...props} />
+}
+
+const PublicToolICMPSizeLog = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_25529' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_25529)'>
+            <path
+                d='M5.25 15.75L7.58579 13.4142C8.36683 12.6332 9.63316 12.6332 10.4142 13.4142L12.75 15.75'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+            />
+            <path
+                d='M3 2.25H15V10C15 11.1046 14.1046 12 13 12H5C3.89543 12 3 11.1046 3 10V2.25Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <path d='M1.5 2.25H16.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M6 9.75L6 7.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M9 9.75V6' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+            <path d='M12 9.75L12 4.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        </g>
+    </svg>
+)
+export const PublicToolICMPSizeLogIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolICMPSizeLog} {...props} />
+}
+
+const PublicToolTCPPortLog = () => (
+    <svg width='18' height='18' viewBox='0 0 18 18' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask id='mask0_32515_21713' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32515_21713)'>
+            <path
+                fillRule='evenodd'
+                clipRule='evenodd'
+                d='M10.3751 0.678C9.52422 0.18676 8.47593 0.18676 7.62507 0.678L4.20026 2.65532C4.565 2.87672 4.8808 3.19037 5.10919 3.58595C5.14958 3.6559 5.18637 3.72693 5.21964 3.79883L8.37507 1.97704C8.76183 1.75375 9.23832 1.75375 9.62507 1.97704L13.0226 3.93859C13.2077 3.45392 13.5324 3.03819 13.9475 2.74053L10.3751 0.678ZM16.2453 7.38552C16.0019 7.46006 15.7434 7.50017 15.4756 7.50017C15.2221 7.50017 14.9771 7.46426 14.7453 7.39724V10.8455C14.7453 11.2921 14.507 11.7047 14.1203 11.928L10.9164 13.7778C11.3044 14.1247 11.5715 14.5724 11.7007 15.057L14.8703 13.227C15.7211 12.7358 16.2453 11.8279 16.2453 10.8455V7.38552ZM6.58842 15.2238C6.64288 14.9485 6.74279 14.6772 6.89095 14.4206C7.00369 14.2253 7.13773 14.05 7.28844 13.8959L3.87988 11.928C3.49313 11.7047 3.25488 11.2921 3.25488 10.8455V7.49051C2.74273 7.57321 2.22039 7.50063 1.75488 7.29076V10.8455C1.75488 11.8279 2.27903 12.7358 3.12988 13.227L6.58842 15.2238Z'
+                fill='#31343F'
+            />
+            <path
+                d='M8.5 4.78868C8.8094 4.61004 9.1906 4.61004 9.5 4.78868L11.7476 6.08632C12.057 6.26496 12.2476 6.59508 12.2476 6.95235V9.54765C12.2476 9.90492 12.057 10.235 11.7476 10.4137L9.5 11.7113C9.1906 11.89 8.8094 11.89 8.5 11.7113L6.2524 10.4137C5.943 10.235 5.7524 9.90492 5.7524 9.54765V6.95235C5.7524 6.59508 5.943 6.26496 6.2524 6.08632L8.5 4.78868Z'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinejoin='round'
+            />
+            <path d='M9.21385 15.646L9.1574 8.69869' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+            <ellipse
+                cx='9.16439'
+                cy='15.7331'
+                rx='1.125'
+                ry='1.125'
+                transform='rotate(120 9.16439 15.7331)'
+                fill='white'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+            />
+            <path d='M2.88662 4.98509L9.00056 8.44905' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+            <circle
+                cx='2.83561'
+                cy='4.89828'
+                r='1.125'
+                transform='rotate(-120 2.83561 4.89828)'
+                fill='white'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+            />
+            <path d='M15.3752 4.875L9.29688 8.45046' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+            <ellipse cx='15.4756' cy='4.875' rx='1.125' ry='1.125' fill='white' stroke='#F28B44' strokeWidth='1.5' />
+        </g>
+    </svg>
+)
+export const PublicToolTCPPortLogIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolTCPPortLog} {...props} />
+}
+
+const PublicToolReverseServer = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_20132' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_20132)'>
+            <rect x='3' y='6' width='12' height='3' rx='1.5' stroke='#31343F' strokeWidth='1.5' />
+            <rect x='3' y='3' width='12' height='3' rx='1.5' stroke='#31343F' strokeWidth='1.5' />
+            <path d='M9 10.5V12.75' stroke='#F28B44' strokeWidth='1.5' />
+            <path
+                d='M15 12.75V12.5C15 11.3954 14.1046 10.5 13 10.5H5C3.89543 10.5 3 11.3954 3 12.5V12.75'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+            <circle cx='12.75' cy='4.5' r='0.75' fill='#F28B44' />
+            <circle cx='12.75' cy='7.5' r='0.75' fill='#F28B44' />
+            <circle cx='3.375' cy='13.875' r='1.125' stroke='#31343F' strokeWidth='1.5' />
+            <circle cx='9' cy='13.875' r='1.125' stroke='#F28B44' strokeWidth='1.5' />
+            <circle cx='14.625' cy='13.875' r='1.125' stroke='#31343F' strokeWidth='1.5' />
+        </g>
+    </svg>
+)
+export const PublicToolReverseServerIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolReverseServer} {...props} />
+}
+
+const PublicToolDBHTTPHistory = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_11488' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_11488)'>
+            <path
+                d='M9.75 15H4.25C3.14543 15 2.25 14.1046 2.25 13V5C2.25 3.89543 3.14543 3 4.25 3H13C14.1046 3 15 3.89543 15 5V7.5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M4.5 6L6.75 6' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M9 6L12.75 6' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M4.5 9L6.75 9' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M4.5 12L6.75 12' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M9 9L11.25 9' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M9 12L9.75 12' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <circle
+                cx='14.25'
+                cy='12.75'
+                r='3'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M14.25 11.25V12.75L15.375 13.875'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+    </svg>
+)
+export const PublicToolDBHTTPHistoryIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolDBHTTPHistory} {...props} />
+}
+
+const PublicToolDBReport = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_236' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_236)'>
+            <path
+                d='M12.75 10.875V9V4.25C12.75 3.14543 11.8546 2.25 10.75 2.25H4.25C3.14543 2.25 2.25 3.14543 2.25 4.25V11.75C2.25 13.9591 4.04086 15.75 6.25 15.75H7.5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M4.5 6L10.5 6' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path
+                d='M4.5 9.75L9 9.75'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+        <path
+            d='M8.25 12.75V12H7.5V12.75H8.25ZM17.25 12.75H18V12H17.25V12.75ZM7.5 12.75C7.5 13.9926 6.49264 15 5.25 15V16.5C7.32107 16.5 9 14.8211 9 12.75H7.5ZM8.25 13.5H17.25V12H8.25V13.5ZM16.5 12.75C16.5 13.9926 15.4926 15 14.25 15V16.5C16.3211 16.5 18 14.8211 18 12.75H16.5ZM14.25 15H5.25V16.5H14.25V15Z'
+            fill='#31343F'
+        />
+    </svg>
+)
+export const PublicToolDBReportIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolDBReport} {...props} />
+}
+
+const PublicToolDBRisk = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='16' viewBox='0 0 18 16' fill='none'>
+        <path d='M9 14.75V4.25' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        <path
+            d='M11.25 3.5C11.25 2.25736 10.2426 1.25 9 1.25C7.75736 1.25 6.75 2.25736 6.75 3.5'
+            stroke='#F28B44'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path
+            d='M4.5 7.5C4.5 5.70508 5.95508 4.25 7.75 4.25H10.25C12.0449 4.25 13.5 5.70508 13.5 7.5V10.25C13.5 12.7353 11.4853 14.75 9 14.75C6.51472 14.75 4.5 12.7353 4.5 10.25V7.5Z'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+        <path
+            d='M1.5 8.75001H3.75M14.25 8.75001H16.5M15.75 3.5C15.75 4.66436 14.8655 5.62215 13.7318 5.7382M2.24996 14.75C2.24996 13.5074 3.25732 12.5 4.49997 12.5M2.24996 3.5C2.24996 4.64615 3.10696 5.59214 4.21511 5.73214M15.75 14.75C15.75 13.5074 14.7426 12.5 13.5 12.5'
+            stroke='#31343F'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+    </svg>
+)
+export const PublicToolDBRiskIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolDBRisk} {...props} />
+}
+
+const PublicToolModScanPort = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <mask id='mask0_32510_17268' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32510_17268)'>
+            <path
+                d='M13.5 6H14.5C15.6046 6 16.5 6.89543 16.5 8V13C16.5 14.1046 15.6046 15 14.5 15H3.5C2.39543 15 1.5 14.1046 1.5 13V8C1.5 6.89543 2.39543 6 3.5 6H4.5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M13.5 6V4.75C13.5 4.19772 13.0523 3.75 12.5 3.75H12M4.5 6V4.75C4.5 4.19772 4.94772 3.75 5.5 3.75H6'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M12 3.75V3.25C12 2.69772 11.5523 2.25 11 2.25H7C6.44772 2.25 6 2.69772 6 3.25V3.75'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path d='M4.5 9V12' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M6.75 9V12' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M9 9V12' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M11.25 9V12' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+            <path d='M13.5 9V12' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        </g>
+    </svg>
+)
+export const PublicToolModScanPortIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolModScanPort} {...props} />
+}
+
+const PublicToolDBDomain = () => (
+    <svg width='18' height='18' viewBox='0 0 18 18' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask id='mask0_32515_27830' maskUnits='userSpaceOnUse' x='0' y='0' width='18' height='18'>
+            <rect width='18' height='18' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_32515_27830)'>
+            <mask id='mask1_32515_27830' maskUnits='userSpaceOnUse' x='0' y='10' width='18' height='8'>
+                <path
+                    d='M8.79482 17.1577C8.9253 17.2164 9.0747 17.2164 9.20518 17.1577L16.4021 13.919C16.4666 13.89 16.5366 13.875 16.6073 13.875H16.75C17.0261 13.875 17.25 13.6511 17.25 13.375V11C17.25 10.7239 17.0261 10.5 16.75 10.5H16.5963C16.5327 10.5 16.4697 10.5121 16.4106 10.5358L9.1857 13.4257C9.06649 13.4734 8.93351 13.4734 8.8143 13.4257L1.5894 10.5358C1.53034 10.5121 1.46732 10.5 1.40371 10.5H1.25C0.973858 10.5 0.75 10.7239 0.75 11V13.375C0.75 13.6511 0.973858 13.875 1.25 13.875H1.39268C1.46342 13.875 1.53336 13.89 1.59786 13.919L8.79482 17.1577Z'
+                    fill='white'
+                />
+            </mask>
+            <g mask='url(#mask1_32515_27830)'>
+                <path
+                    d='M8.65826 9.87427C8.87902 9.79399 9.12099 9.79399 9.34174 9.87427L14.6656 11.8102C15.5432 12.1294 15.5432 13.3706 14.6656 13.6898L9.34174 15.6257C9.12098 15.706 8.87901 15.706 8.65826 15.6257L3.33443 13.6898C2.45676 13.3706 2.45676 12.1294 3.33443 11.8102L8.65826 9.87427Z'
+                    stroke='#31343F'
+                    strokeWidth='1.5'
+                />
+            </g>
+            <mask id='mask2_32515_27830' maskUnits='userSpaceOnUse' x='0' y='6' width='18' height='8'>
+                <path
+                    d='M8.79482 13.4077C8.9253 13.4664 9.0747 13.4664 9.20518 13.4077L16.4021 10.169C16.4666 10.14 16.5366 10.125 16.6073 10.125H16.75C17.0261 10.125 17.25 9.90114 17.25 9.625V7.25C17.25 6.97386 17.0261 6.75 16.75 6.75H16.5963C16.5327 6.75 16.4697 6.76214 16.4106 6.78576L9.1857 9.67572C9.06649 9.7234 8.93351 9.7234 8.8143 9.67572L1.5894 6.78576C1.53034 6.76214 1.46732 6.75 1.40371 6.75H1.25C0.973858 6.75 0.75 6.97386 0.75 7.25V9.44098C0.75 9.63037 0.857001 9.8035 1.02639 9.8882L1.5 10.125L8.79482 13.4077Z'
+                    fill='white'
+                />
+            </mask>
+            <g mask='url(#mask2_32515_27830)'>
+                <path
+                    d='M8.65826 6.12427C8.87901 6.04399 9.12099 6.04399 9.34174 6.12427L14.6656 8.06021C15.5432 8.37936 15.5432 9.62064 14.6656 9.93979L9.34174 11.8757C9.12098 11.956 8.87901 11.956 8.65826 11.8757L3.33443 9.93979C2.45676 9.62064 2.45676 8.37936 3.33443 8.06021L8.65826 6.12427Z'
+                    stroke='#F28B44'
+                    strokeWidth='1.5'
+                />
+            </g>
+            <path
+                d='M8.65826 2.37427C8.87902 2.29399 9.12099 2.29399 9.34174 2.37427L14.6656 4.31021C15.5432 4.62936 15.5432 5.87064 14.6656 6.18979L9.34174 8.12573C9.12098 8.20601 8.87901 8.20601 8.65826 8.12573L3.33443 6.18979C2.45676 5.87064 2.45676 4.62936 3.33443 4.31021L8.65826 2.37427Z'
+                stroke='#31343F'
+                strokeWidth='1.5'
+            />
+        </g>
+    </svg>
+)
+export const PublicToolDBDomainIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolDBDomain} {...props} />
+}
+
+const PublicToolScreenRecording = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <path
+            d='M12 7.49984L15.4146 5.79255C15.9133 5.54321 16.5 5.90583 16.5 6.46337V11.5363C16.5 12.0939 15.9133 12.4565 15.4146 12.2071L12 10.4998'
+            stroke='#F28B44'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M1.5 5.25C1.5 4.42157 2.17157 3.75 3 3.75H10.5C11.3284 3.75 12 4.42157 12 5.25V12.75C12 13.5784 11.3284 14.25 10.5 14.25H3C2.17157 14.25 1.5 13.5784 1.5 12.75V5.25Z'
+            stroke='#31343F'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M4.5 6.75H6' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+    </svg>
+)
+export const PublicToolScreenRecordingIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolScreenRecording} {...props} />
+}
+
+const PublicToolScreenshot = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <g clipPath='url(#clip0_32510_17313)'>
+            <path
+                d='M1.5 3.75H3.75M14.25 16.5V14.25'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M3.75 1.5V12.25C3.75 13.3546 4.64543 14.25 5.75 14.25H16.5'
+                stroke='#31343F'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+            <path
+                d='M6.75 3.75H12.25C13.3546 3.75 14.25 4.64543 14.25 5.75V11.25'
+                stroke='#F28B44'
+                strokeWidth='1.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+            />
+        </g>
+        <defs>
+            <clipPath id='clip0_32510_17313'>
+                <rect width='18' height='18' fill='white' />
+            </clipPath>
+        </defs>
+    </svg>
+)
+export const PublicToolScreenshotIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolScreenshot} {...props} />
+}
+
+const PublicToolScreenRecorderPage = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <path
+            d='M2.25 6H5.25M12.75 6H15.75M2.25 9H15.75M2.25 12H5.25M12.75 12H15.75'
+            stroke='#F28B44'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M5.25 3V15M12.75 3V15M3 15H15C15.4142 15 15.75 14.6642 15.75 14.25V3.75C15.75 3.33579 15.4142 3 15 3H3C2.58579 3 2.25 3.33579 2.25 3.75V9V14.25C2.25 14.6642 2.58579 15 3 15Z'
+            stroke='#31343F'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+export const PublicToolScreenRecorderPageIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicToolScreenRecorderPage} {...props} />
+}

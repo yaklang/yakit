@@ -1,4 +1,3 @@
-import {MITMConsts} from "@/pages/mitm/MITMConsts"
 /** 本地文件缓存数据-键值变量 */
 export enum LocalGV {
     /** @name 获取缓存数据里引擎的启动模式("local"|"remote") */
@@ -100,7 +99,9 @@ export enum RemoteGV {
     /**@name 漏洞风险导出字段缓存 */
     RiskExportFields = "risk-export-fields",
     /**@name RiskPage页面中,高级查询内容的显/隐 */
-    RiskQueryShow = "risk-query-show"
+    RiskQueryShow = "risk-query-show",
+    /**@name Home开始扫描 */
+    HomeStartScanning="home_start_scanning",
 }
 
 /** 项目逻辑全局变量 */

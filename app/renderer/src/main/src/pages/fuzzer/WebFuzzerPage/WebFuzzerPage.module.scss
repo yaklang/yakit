@@ -22,6 +22,7 @@
             color: var(--yakit-header-color);
             cursor: pointer;
             background-color: #f0f1f3;
+            border-bottom: 1px solid #fff;
             &:hover {
                 background-color: rgba(204, 210, 222, 0.5);
             }

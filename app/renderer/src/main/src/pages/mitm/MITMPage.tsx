@@ -285,6 +285,17 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setTip(tip)
         }
     )
+    const beforeOnHomeExecStartMITM = (values: string) => {
+        if (status === "idle") {
+            emiter.emit("onExecStartMITM", values)
+        }
+    }
+    useEffect(() => {
+        emiter.on("onHomeExecStartMITM", beforeOnHomeExecStartMITM)
+        return () => {
+            emiter.off("onHomeExecStartMITM", beforeOnHomeExecStartMITM)
+        }
+    }, [])
 
     const [visible, setVisible] = useState<boolean>(false)
     const mitmPageRef = useRef<any>()

@@ -6,4 +6,7 @@ export type MitmEventProps = {
     onSetFilterWhiteListEvent: string
     /** 是否开启替换规则 */
     onOpenRepRuleEvent: string
+    /** 首页启动劫持 */
+    onHomeExecStartMITM: string
+    onExecStartMITM: string
 }

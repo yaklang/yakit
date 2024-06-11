@@ -1,4 +1,4 @@
-import React, {Ref, useEffect, useRef, useState} from "react"
+import React, {Ref, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {Divider, Form, Modal, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
@@ -69,19 +69,37 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
 
+    const beforeOnHomeExecStartMITM = (values) => {
+        stop().then(() => {
+            setTimeout(() => {
+                emiter.emit("onExecStartMITM", values)
+            }, 500)
+        })
+    }
+    useEffect(() => {
+        emiter.on("onHomeExecStartMITM", beforeOnHomeExecStartMITM)
+        return () => {
+            emiter.off("onHomeExecStartMITM", beforeOnHomeExecStartMITM)
+        }
+    }, [])
+
     const stop = useMemoizedFn(() => {
         // setLoading(true)
-        ipcRenderer
-            .invoke("mitm-stop-call")
-            .then(() => {
-                setStatus("idle")
-            })
-            .catch((e: any) => {
-                notification["error"]({message: `停止中间人劫持失败：${e}`})
-            })
-            .finally(() => {
-                // setLoading(false)
-            })
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("mitm-stop-call")
+                .then(() => {
+                    setStatus("idle")
+                    resolve("ok")
+                })
+                .catch((e: any) => {
+                    reject(e)
+                    notification["error"]({message: `停止中间人劫持失败：${e}`})
+                })
+                .finally(() => {
+                    // setLoading(false)
+                })
+        })
     })
 
     useEffect(() => {
