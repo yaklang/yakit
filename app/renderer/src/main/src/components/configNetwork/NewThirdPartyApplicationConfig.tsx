@@ -46,8 +46,8 @@ export interface ThirdPartyApplicationConfigProp {
 
 const defautFormValues = {
     Type: "",
-    APIKey: "",
-    UserIdentifier: "",
+    api_key: "",
+    user_identifier: "",
     ExtraParams: [] as KVPair[]
 }
 
@@ -56,7 +56,7 @@ const defaultFormItems: ThirdPartyAppConfigItemTemplate[] = [
         DefaultValue: "",
         Desc: "APIKey / Token",
         Extra: "",
-        Name: "APIKey",
+        Name: "api_key",
         Required: true,
         Type: "string",
         Verbose: "ApiKey"
@@ -65,7 +65,7 @@ const defaultFormItems: ThirdPartyAppConfigItemTemplate[] = [
         DefaultValue: "",
         Desc: "email / username",
         Extra: "",
-        Name: "UserIdentifier",
+        Name: "user_identifier",
         Required: false,
         Type: "string",
         Verbose: "用户信息"
@@ -213,8 +213,6 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                 .map((key) => ({Key: key, Value: res[key]}))
                             onAdd({
                                 Type: res.Type,
-                                APIKey: res.APIKey || "",
-                                UserIdentifier: res.UserIdentifier || "",
                                 ExtraParams
                             })
                         })

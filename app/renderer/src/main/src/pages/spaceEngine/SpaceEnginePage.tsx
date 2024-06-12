@@ -11,7 +11,6 @@ import {Form} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
-    GetSpaceEngineAccountStatusRequest,
     GetSpaceEngineStatusProps,
     apiCancelFetchPortAssetFromSpaceEngine,
     apiFetchPortAssetFromSpaceEngine,
@@ -259,9 +258,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         const initData: ThirdPartyApplicationConfig = globalNetworkConfig.AppConfigs.find(
             (ele) => ele.Type === type
         ) || {
-            APIKey: "",
             Type: type,
-            UserIdentifier: ""
         }
 
         const extraParamsArr = initData.ExtraParams || []
@@ -283,8 +280,6 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                         <NewThirdPartyApplicationConfig
                             formValues={{
                                 Type: initData.Type,
-                                APIKey: initData.APIKey,
-                                UserIdentifier: initData.UserIdentifier,
                                 ...extraParams
                             }}
                             disabledType={true}
@@ -302,12 +297,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                                 }
                                 const editItem = existedResult.find((ele) => ele.Type === e.Type)
                                 if (editItem) {
-                                    const checkParams: GetSpaceEngineAccountStatusRequest = {
-                                        Type: editItem.Type,
-                                        Key: editItem.APIKey,
-                                        Account: editItem.UserIdentifier
-                                    }
-                                    apiGetSpaceEngineAccountStatus(checkParams).then((value) => {
+                                    apiGetSpaceEngineAccountStatus(editItem).then((value) => {
                                         switch (value.Status) {
                                             case "normal":
                                                 const params = {...globalNetworkConfig, AppConfigs: existedResult}

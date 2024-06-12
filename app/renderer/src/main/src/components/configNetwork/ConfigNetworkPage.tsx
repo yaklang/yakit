@@ -88,12 +88,6 @@ export interface ThirdPartyApplicationConfig {
         | "tencent"
         | "quake"
         | string
-    APIKey: string
-    UserIdentifier: string
-    UserSecret?: string
-    Namespace?: string
-    Domain?: string
-    WebhookURL?: string
     ExtraParams?: KVPair[]
 }
 
@@ -608,8 +602,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                 <NewThirdPartyApplicationConfig
                                                                     formValues={{
                                                                         Type: i.Type,
-                                                                        APIKey: i.APIKey,
-                                                                        UserIdentifier: i.UserIdentifier,
                                                                         ...extraParams
                                                                     }}
                                                                     disabledType={true}

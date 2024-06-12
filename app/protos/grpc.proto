@@ -163,6 +163,8 @@ service Yak {
   rpc IgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc UnIgnoreYakScript(DeleteYakScriptRequest) returns (Empty);
   rpc ExportYakScript(ExportYakScriptRequest) returns (ExportYakScriptResponse);
+  rpc ExportYakScriptStream(ExportYakScriptStreamRequest) returns (stream ExecResult);
+  rpc ImportYakScriptStream(ImportYakScriptStreamRequest) returns (stream ExecResult);
   rpc ExecutePacketYakScript(ExecutePacketYakScriptParams) returns (stream ExecResult);
   rpc ExecuteBatchPacketYakScript(ExecuteBatchPacketYakScriptParams) returns (stream ExecBatchYakScriptResult);
   rpc GetYakScriptTags(Empty) returns (GetYakScriptTagsResponse);
@@ -660,6 +662,7 @@ service Yak {
 
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
+  rpc GetSpaceEngineAccountStatusV2(ThirdPartyApplicationConfig) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
 
   // 表达式执行
@@ -1982,9 +1985,9 @@ message YaklangInspectInformationResponse {
 }
 
 message YakUIInfo {
-    string Typ = 1;
-    repeated string Effected = 2;
-    string WhenExpression = 3;
+  string Typ = 1;
+  repeated string Effected = 2;
+  string WhenExpression = 3;
 }
 
 message YakRiskInfo {
@@ -2215,7 +2218,7 @@ message UnfinishedTaskFilter {
   string Target = 4; // support fuzzy search
 }
 
-message QueryUnfinishedTaskRequest { // query unfinished task list ,just brief info
+message QueryUnfinishedTaskRequest {// query unfinished task list ,just brief info
   Paging Pagination = 1;
   UnfinishedTaskFilter Filter = 2;
 }
@@ -2234,13 +2237,13 @@ message UnfinishedTask {
   string Target = 7;
 }
 
-message QueryUnfinishedTaskResponse { // brief information for unfinished task
+message QueryUnfinishedTaskResponse {// brief information for unfinished task
   repeated UnfinishedTask Tasks = 1;
   Paging Pagination = 2;
   int64 Total = 3;
 }
 
-message GetUnfinishedTaskDetailByIdRequest { // get unfinished task detail by runtime id, get task start param or last record
+message GetUnfinishedTaskDetailByIdRequest {// get unfinished task detail by runtime id, get task start param or last record
   string RuntimeId = 1;
 }
 
@@ -3239,6 +3242,18 @@ message ExportYakScriptRequest {
   string OutputPluginDir = 3;
   repeated int64 YakScriptIds = 4;
   bool All = 5;
+}
+
+message ExportYakScriptStreamRequest {
+  QueryYakScriptRequest Filter = 1;
+  string OutputFilename = 2;
+  string Password = 3;
+}
+
+message ImportYakScriptStreamRequest {
+  bytes Data = 1;
+  string Password = 2;
+  string Filename = 3;
 }
 
 message ExportYakScriptResponse {
@@ -5058,22 +5073,22 @@ message TraceRouteResponse{
 }
 
 message EvaluateExpressionRequest {
-    string Expression = 1;
-    repeated KVPair Variables = 2;
+  string Expression = 1;
+  repeated KVPair Variables = 2;
 }
 
 message EvaluateExpressionResponse {
-    string Result = 1; // json marshal
-    bool BoolResult = 2;
+  string Result = 1; // json marshal
+  bool BoolResult = 2;
 }
 
 message EvaluateMultiExpressionRequest {
-    repeated string Expressions = 1;
-    repeated KVPair Variables = 2;
+  repeated string Expressions = 1;
+  repeated KVPair Variables = 2;
 }
 
 message EvaluateMultiExpressionResponse {
-    repeated EvaluateExpressionResponse Results = 1;
+  repeated EvaluateExpressionResponse Results = 1;
 }
 
 message ThirdPartyAppConfigItemTemplate{

@@ -1,4 +1,4 @@
-import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {GlobalNetworkConfig, ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {SpaceEngineStartParams, SpaceEngineStatus} from "@/models/SpaceEngine"
 import { PcapMetadata } from "@/models/Traffic"
 import {yakitNotify} from "@/utils/notification"
@@ -22,20 +22,15 @@ export const apiGetSpaceEngineStatus: (params: GetSpaceEngineStatusProps) => Pro
             })
     })
 }
-export interface GetSpaceEngineAccountStatusRequest {
-    Type: string
-    Key: string
-    Account: string
-}
 /**
  * @description 校验引擎状态，根据前端传的值
  */
 export const apiGetSpaceEngineAccountStatus: (
-    params: GetSpaceEngineAccountStatusRequest
+    params: ThirdPartyApplicationConfig
 ) => Promise<SpaceEngineStatus> = (params) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("GetSpaceEngineAccountStatus", {...params})
+            .invoke("GetSpaceEngineAccountStatusV2", {...params})
             .then(resolve)
             .catch((e: any) => {
                 yakitNotify("error", "校验引擎失败:" + e)

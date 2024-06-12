@@ -643,6 +643,22 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetSpaceEngineAccountStatus", async (e, params) => {
         return await asyncGetSpaceEngineAccountStatus(params)
     })
+    
+    // asyncGetSpaceEngineAccountStatusV2 wrapper
+    const asyncGetSpaceEngineAccountStatusV2 = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetSpaceEngineAccountStatusV2(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetSpaceEngineAccountStatusV2", async (e, params) => {
+        return await asyncGetSpaceEngineAccountStatusV2(params)
+    })
 
     const streamFetchPortAssetFromSpaceEngineMap = new Map();
     ipcMain.handle("cancel-FetchPortAssetFromSpaceEngine", handlerHelper.cancelHandler(streamFetchPortAssetFromSpaceEngineMap));
