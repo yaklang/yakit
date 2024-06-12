@@ -1,6 +1,6 @@
 import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "react"
-import {useMemoizedFn, useDebounceFn} from "ahooks"
-import {OutlineRefreshIcon, OutlineClouddownloadIcon} from "@/assets/icon/outline"
+import {useMemoizedFn, useDebounceFn, useUpdateEffect} from "ahooks"
+import {OutlineRefreshIcon, OutlineClouddownloadIcon, OutlineClouduploadIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {PluginSearchParams, PluginListPageMeta, PluginFilterParams} from "@/pages/plugins/baseTemplateType"
@@ -10,17 +10,26 @@ import {pluginOnlineReducer, initialOnlineState} from "@/pages/plugins/pluginRed
 import {
     PluginsQueryProps,
     convertPluginsRequestParams,
-    apiFetchRecycleList,
-    apiFetchGroupStatisticsMine,
     DownloadOnlinePluginsRequest,
     convertDownloadOnlinePluginBatchRequestParams,
-    apiDownloadPluginOnline
+    apiDownloadPluginOnline,
+    apiFetchOnlineList,
+    apiFetchGroupStatisticsOnline,
+    excludeNoExistfilter
 } from "@/pages/plugins/utils"
 import {yakitNotify} from "@/utils/notification"
 import {cloneDeep} from "bizcharts/lib/utils"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
-import {HubOuterList, HubGridList, HubGridOpt, HubListFilter, OnlineOptFooterExtra} from "./funcTemplate"
+import {
+    HubOuterList,
+    HubGridList,
+    HubGridOpt,
+    HubListFilter,
+    OnlineOptFooterExtra,
+    HubDetailList,
+    HubDetailListOpt
+} from "./funcTemplate"
 import {useStore} from "@/store"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -29,17 +38,28 @@ import {API} from "@/services/swagger/resposeType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {
+    PluginGroup,
+    TagsAndGroupRender,
+    YakFilterRemoteObj,
+    YakitGetOnlinePlugin
+} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {isCommunityEdition} from "@/utils/envfile"
+import {PluginsUploadAll} from "@/pages/plugins/online/PluginsOnline"
+import {FilterPopoverBtn} from "@/pages/plugins/funcTemplate"
+import {Tooltip} from "antd"
+import useGetSetState from "../hooks/useGetSetState"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
 
-interface HubListOnlineProps extends HubListBaseProps {}
+interface HubListOnlineProps extends HubListBaseProps {
+    rootElementId?: string
+}
 /** @name 插件商店 */
 export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
-    const {hiddenFilter, isDetailList, onPluginDetail} = props
+    const {rootElementId, hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
@@ -62,13 +82,8 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     // 选中插件
     const [selectList, setSelectList] = useState<YakitPluginOnlineDetail[]>([])
     // 搜索条件
-    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [filters, setFilters] = useState<PluginFilterParams>({
-        plugin_type: [],
-        tags: [],
-        status: [],
-        plugin_private: []
-    })
+    const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(cloneDeep({...defaultSearch}))
+    const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>({plugin_type: [], tags: []})
 
     const showIndex = useRef<number>(0)
     const setShowIndex = useMemoizedFn((index: number) => {
@@ -77,16 +92,38 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
-    useEffect(() => {
-        if (isLogin) {
-            fetchFilterGroup()
-            fetchList(true)
-        }
+    const initList = useMemoizedFn(() => {
+        fetchFilterGroup()
+        fetchList(true)
+    })
+
+    // 登录和退出都要刷新列表
+    useUpdateEffect(() => {
+        initList()
     }, [isLogin])
 
-    // 搜搜条件分组数据
+    useEffect(() => {
+        // 切换私有域刷新列表
+        emiter.on("onSwitchPrivateDomain", initList)
+        return () => {
+            emiter.off("onSwitchPrivateDomain", initList)
+        }
+    }, [])
+
+    // 初始化
+    useEffect(() => {
+        initList()
+    }, [])
+
+    // 选中搜索条件可能在搜索数据组中不存在时进行清除
+    useEffect(() => {
+        const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, filterGroup)
+        if (updateFilterFlag) setFilters(realFilter)
+    }, [filters, filterGroup])
+
+    // 搜索条件分组数据
     const fetchFilterGroup = useMemoizedFn(() => {
-        apiFetchGroupStatisticsMine()
+        apiFetchGroupStatisticsOnline()
             .then((res) => {
                 setFilterGroup(res.data)
             })
@@ -109,11 +146,11 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                       limit: response.pagemeta.limit || 20
                   }
 
-            const queryFilter = filters
-            const queryFearch = search
+            const queryFilter = getFilters()
+            const queryFearch = getSearch()
             const query: PluginsQueryProps = convertPluginsRequestParams(queryFilter, queryFearch, params)
             try {
-                const res = await apiFetchRecycleList(query)
+                const res = await apiFetchOnlineList(query)
                 if (!res.data) res.data = []
                 const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
                 hasMore.current = length < +res.pagemeta.total
@@ -124,8 +161,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                     }
                 })
                 if (+res.pagemeta.page === 1) {
-                    setAllChecked(false)
-                    setSelectList([])
+                    onCheck(false)
                 }
             } catch (error) {}
             setTimeout(() => {
@@ -141,7 +177,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
     /** 刷新 */
     const onRefresh = useMemoizedFn(() => {
-        fetchList(true)
+        initList()
     })
 
     /** 单项勾选 */
@@ -165,20 +201,49 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         setSelectList([])
         setAllChecked(value)
     })
+
+    /** 搜索条件 */
+    useUpdateEffect(() => {
+        fetchList(true)
+    }, [filters])
+    /** 搜索内容 */
+    const onSearch = useDebounceFn(
+        useMemoizedFn((val: PluginSearchParams) => {
+            onCheck(false)
+            setSearch(val)
+            fetchList(true)
+        }),
+        {wait: 300, leading: true}
+    ).run
     /** ---------- 列表相关方法 End ---------- */
 
     const listLength = useMemo(() => {
         return Number(response.pagemeta.total) || 0
     }, [response])
-    const isSearch = useMemo(() => {
-        if (search.type === "keyword") return !!search.keyword
-        if (search.type === "userName") return !!search.userName
-        return false
-    }, [search])
-    const selectedNum = useMemo(() => selectList.length, [selectList])
     const disabledBatchBtn = useMemo(() => {
-        return !Number(response.pagemeta.total)
-    }, [response.pagemeta.total])
+        return !listLength
+    }, [listLength])
+    const noFilter = useMemo(() => {
+        let flag = true
+        if (search.type === "keyword") flag = !search.keyword
+        if (search.type === "userName") flag = !search.userName
+
+        const {plugin_type = [], status = [], plugin_private = [], tags = [], plugin_group = []} = filters
+        if (
+            plugin_type.length > 0 ||
+            status.length > 0 ||
+            plugin_private.length > 0 ||
+            tags.length > 0 ||
+            plugin_group.length > 0
+        ) {
+            flag = false
+        }
+        return flag
+    }, [search, filters])
+    const selectedNum = useMemo(() => {
+        if (allChecked) return response.pagemeta.total
+        else return selectList.length
+    }, [allChecked, selectList, response.pagemeta.total])
 
     /** ---------- 下载插件 Start ---------- */
     const [allDownloadHint, setAllDownloadHint] = useState<boolean>(false)
@@ -197,7 +262,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         if (allChecked) {
             request = {
                 ...request,
-                ...convertDownloadOnlinePluginBatchRequestParams(filters, search)
+                ...convertDownloadOnlinePluginBatchRequestParams(getFilters(), getSearch())
             }
         }
         if (!allChecked && selectedNum > 0) {
@@ -220,7 +285,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
 
     const headerExtraDownload = useMemoizedFn(() => {
-        if (allChecked || selectedNum > 0) {
+        if (selectedNum > 0) {
             handleBatchDownload()
         } else {
             handleAllDownload()
@@ -249,6 +314,22 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
     /** ---------- 单个操作(下载|改为公开/私密)的回调 End ---------- */
 
+    /** ---------- 一键上传本地插件 Start ---------- */
+    const [uploadModal, setUploadModal] = useState<boolean>(false)
+    const openUploadAll = useMemoizedFn(() => {
+        if (uploadModal) return
+        if (!isLogin) {
+            yakitNotify("error", "请先登录后才可一键上传")
+            return
+        }
+        if (userinfo.role !== "admin") {
+            yakitNotify("error", "暂无权限使用该操作")
+            return
+        }
+        setUploadModal(true)
+    })
+    /** ---------- 一键上传本地插件 End ---------- */
+
     // 新建插件
     const onNewPlugin = useMemoizedFn(() => {
         emiter.emit(
@@ -257,17 +338,54 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         )
     })
 
+    /** ---------- 详情列表操作 Start ---------- */
     // 进入插件详情
     const onOptClick = useMemoizedFn((info: YakitPluginOnlineDetail, index: number) => {
         if (!info.script_name && !info.uuid) {
             yakitNotify("error", "未获取到插件信息，请刷新列表重试")
             return
         }
-        onPluginDetail({type: "own", name: info.script_name, uuid: info.uuid})
+        onPluginDetail({type: "online", name: info.script_name, uuid: info.uuid})
     })
 
+    // 触发详情列表的单项定位
+    const [scrollTo, setScrollTo] = useState<number>(0)
+    useUpdateEffect(() => {
+        if (isDetailList) {
+            setTimeout(() => {
+                setScrollTo(showIndex.current)
+            }, 100)
+        }
+    }, [isDetailList])
+
+    /** 详情列表转换插件组搜索条件 */
+    const convertGroupParam = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
+        const realFilters: PluginFilterParams = {
+            ...filter,
+            plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
+        }
+        return realFilters
+    }
+
+    /** 详情条件搜索 */
+    const onDetailFilter = useMemoizedFn((value: PluginFilterParams) => {
+        onCheck(false)
+        setFilters(value)
+        fetchList(true)
+    })
+
+    /** 详情列表-选中组展示 */
+    const detailSelectedGroup = useMemo(() => {
+        const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
+            name: item.value,
+            total: item.count
+        }))
+        return group || []
+    }, [filters])
+    /** ---------- 详情列表操作 End ---------- */
+
     // 批量下载
-    const headerExtra = useMemo(() => {
+    const headerExtra = () => {
         return (
             <div className={styles["hub-list-header-extra"]}>
                 <HubButton
@@ -276,7 +394,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                     icon={<OutlineClouddownloadIcon />}
                     type='outline2'
                     size='large'
-                    name={selectedNum > 0 || allChecked ? "下载" : "一键下载"}
+                    name={selectedNum > 0 ? "下载" : "一键下载"}
                     loading={batchDownloadLoading}
                     disabled={disabledBatchBtn}
                     onClick={headerExtraDownload}
@@ -291,18 +409,21 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                 />
             </div>
         )
-    }, [wrapperWidth, selectedNum, disabledBatchBtn])
+    }
     // 单项的点赞|下载
-    const extraFooter = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+    const extraFooter = (info: YakitPluginOnlineDetail) => {
         return <OnlineOptFooterExtra isLogin={isLogin} info={info} callback={optCallback} />
-    })
+    }
 
     return (
-        <div className={styles["plugin-hub-tab-list"]}>
+        <div ref={divRef} className={styles["plugin-hub-tab-list"]}>
             {/* CE版不需要登录，EE和SE版需要登录后才可使用 */}
             <OnlineJudgment isJudgingLogin={!isCommunityEdition()}>
-                <YakitSpin spinning={loading && isInitLoading.current}>
-                    <div className={classNames(styles["outer-list"], {[styles["hidden-view"]]: isDetailList})}>
+                <YakitSpin
+                    wrapperClassName={isDetailList ? styles["hidden-view"] : ""}
+                    spinning={loading && isInitLoading.current}
+                >
+                    <div className={styles["outer-list"]}>
                         <div className={classNames(styles["list-filter"], {[styles["hidden-view"]]: hiddenFilter})}>
                             <HubListFilter
                                 groupList={filterGroup}
@@ -315,15 +436,16 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                             {listLength > 0 ? (
                                 <HubOuterList
                                     title='插件商店'
-                                    headerExtra={headerExtra}
+                                    headerExtra={headerExtra()}
                                     allChecked={allChecked}
                                     setAllChecked={onCheck}
                                     total={response.pagemeta.total}
                                     selected={selectedNum}
                                     search={search}
                                     setSearch={setSearch}
-                                    filters={{}}
-                                    setFilters={() => {}}
+                                    onSearch={onSearch}
+                                    filters={filters as Record<string, API.PluginsSearchData[]>}
+                                    setFilters={setFilters}
                                 >
                                     <HubGridList
                                         data={response.data}
@@ -353,7 +475,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                                     prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                                     time={data.updated_at}
                                                     isCorePlugin={!!data.isCorePlugin}
-                                                    official={!!data.isCorePlugin}
+                                                    official={!!data.official}
                                                     extraFooter={extraFooter}
                                                     onClick={onOptClick}
                                                 />
@@ -361,34 +483,126 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                         }}
                                     />
                                 </HubOuterList>
-                            ) : isSearch ? (
-                                <YakitEmpty
-                                    image={SearchResultEmpty}
-                                    imageStyle={{width: 274, height: 180, marginBottom: 24}}
-                                    title='搜索结果“空”'
-                                    style={{paddingTop: "10%"}}
-                                    className={styles["hub-list-recycle-empty"]}
-                                />
-                            ) : (
-                                <div className={styles["hub-list-recycle-empty"]}>
+                            ) : noFilter ? (
+                                <div className={styles["hub-list-empty"]}>
                                     <YakitEmpty title='暂无数据' />
                                     <div className={styles["refresh-buttons"]}>
+                                        {userinfo.role !== "admin" && (
+                                            <YakitButton
+                                                type='outline1'
+                                                icon={<OutlineClouduploadIcon />}
+                                                onClick={openUploadAll}
+                                            >
+                                                一键上传
+                                            </YakitButton>
+                                        )}
                                         <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefresh}>
                                             刷新
                                         </YakitButton>
                                     </div>
                                 </div>
+                            ) : (
+                                <YakitEmpty
+                                    image={SearchResultEmpty}
+                                    imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
+                                    title='搜索结果“空”'
+                                    className={styles["hub-list-empty"]}
+                                />
                             )}
                         </div>
                     </div>
-
-                    {isDetailList && <div className={styles["inner-list"]}></div>}
                 </YakitSpin>
+
+                {isDetailList && (
+                    <div className={classNames(styles["inner-list"], {[styles["hidden-view"]]: hiddenDetailList})}>
+                        <HubDetailList
+                            search={search}
+                            setSearch={setSearch}
+                            onSearch={onSearch}
+                            filterNode={
+                                <PluginGroup
+                                    isOnline={true}
+                                    selectGroup={detailSelectedGroup}
+                                    setSelectGroup={(group) =>
+                                        onDetailFilter(convertGroupParam({...getFilters()}, {group}))
+                                    }
+                                    isShowGroupMagBtn={false}
+                                />
+                            }
+                            checked={allChecked}
+                            onCheck={onCheck}
+                            total={listLength}
+                            selected={selectedNum}
+                            filterExtra={
+                                <div className={styles["hub-detail-list-extra"]}>
+                                    <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type='online' />
+                                    <div className={styles["divider-style"]}></div>
+                                    <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
+                                        <YakitButton
+                                            type='text2'
+                                            loading={batchDownloadLoading}
+                                            disabled={disabledBatchBtn}
+                                            icon={<OutlineClouddownloadIcon />}
+                                            onClick={headerExtraDownload}
+                                        />
+                                    </Tooltip>
+                                </div>
+                            }
+                            filterBodyBottomNode={
+                                <div style={{marginTop: 8}}>
+                                    <TagsAndGroupRender
+                                        wrapStyle={{marginBottom: 0}}
+                                        selectGroup={detailSelectedGroup}
+                                        setSelectGroup={(group) =>
+                                            onDetailFilter(convertGroupParam({...getFilters()}, {group}))
+                                        }
+                                    />
+                                </div>
+                            }
+                            listProps={{
+                                rowKey: "uuid",
+                                numberRoll: scrollTo,
+                                data: response.data,
+                                loadMoreData: onUpdateList,
+                                classNameRow: styles["hub-detail-list-opt"],
+                                renderRow: (info, i) => {
+                                    const check =
+                                        allChecked || selectList.findIndex((item) => item.uuid === info.uuid) !== -1
+                                    return (
+                                        <HubDetailListOpt<YakitPluginOnlineDetail>
+                                            order={i}
+                                            plugin={info}
+                                            check={check}
+                                            headImg={info.head_img}
+                                            pluginName={info.script_name}
+                                            help={info.help}
+                                            content={info.content}
+                                            optCheck={optCheck}
+                                            official={info.official}
+                                            isCorePlugin={!!info.isCorePlugin}
+                                            pluginType={info.type}
+                                            onPluginClick={onOptClick}
+                                        />
+                                    )
+                                },
+                                page: response.pagemeta.page,
+                                hasMore: hasMore.current,
+                                loading: loading,
+                                defItemHeight: 46,
+                                isRef: loading && isInitLoading.current
+                            }}
+                            spinLoading={loading && isInitLoading.current}
+                        />
+                    </div>
+                )}
             </OnlineJudgment>
 
+            {/* 一键下载 */}
             {allDownloadHint && (
                 <YakitGetOnlinePlugin visible={allDownloadHint} setVisible={() => setAllDownloadHint(false)} />
             )}
+            {/* 一键上传 */}
+            {uploadModal && <PluginsUploadAll visible={uploadModal} setVisible={setUploadModal} />}
         </div>
     )
 })
