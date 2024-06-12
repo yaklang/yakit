@@ -33,15 +33,16 @@ export interface FileDetailInfo {
     position?: CursorPosition
     /** 当前选择区域 */
     selections?:Selection
-    
-    /** 输出（执行时注入） */
-    output?: any
     /** 语法检查（代码打开时执行） */
     syntaxCheck?: IMonacoEditorMarker[]
-    /** 终端 */
-    terminal?: any
     /** 帮助信息（代码坐标获取时执行） */
     helpInfo?: any
+
+    // 由于输出和终端直接显示所有的 因此不再绑定在单个文件上
+    /** 输出（执行时注入） */
+    // output?: any
+    /** 终端 */
+    // terminal?: any
 }
 
 export interface RunnerTabsProps {
@@ -65,3 +66,5 @@ export interface RunnerTabPaneProps {
 }
 
 export interface YakRunnerWelcomePageProps {}
+
+export type SplitDirectionProps = "top"|"bottom"|"left"|"right"

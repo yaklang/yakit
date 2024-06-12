@@ -5382,3 +5382,17 @@ const OutlineDeprecated = () => (
 export const OutlineDeprecatedIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineDeprecated} {...props} />
 }
+
+
+const OutlineSplitScreen = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.19713 2 3.85169V12.148C2 12.8025 2.59695 13.3332 3.33333 13.3332H12.6667C13.403 13.3332 14 12.8025 14 12.148V3.85169C14 3.19713 13.403 2.6665 12.6667 2.6665Z" stroke="#F28B44" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14 8L2 8" stroke="#F28B44" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+)
+/**
+ * @description  Icon/Outline/分屏
+ */
+export const OutlineSplitScreenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineSplitScreen} {...props} />
+}

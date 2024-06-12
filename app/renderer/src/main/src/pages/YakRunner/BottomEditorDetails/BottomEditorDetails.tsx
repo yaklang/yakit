@@ -1,27 +1,37 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./BottomEditorDetails.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
-import {BottomEditorDetailsProps, ShowItemType} from "./BottomEditorDetailsType"
+import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoListProps, ShowItemType} from "./BottomEditorDetailsType"
 import {HelpInfoList} from "../CollapseList/CollapseList"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import { SyntaxCheckList } from "./SyntaxCheckList/SyntaxCheckList"
+import {SyntaxCheckList} from "./SyntaxCheckList/SyntaxCheckList"
 import useStore from "../hooks/useStore"
+import emiter from "@/utils/eventBus/eventBus"
+import {Selection} from "../RunnerTabs/RunnerTabsType"
+import {CVXterm} from "@/components/CVXterm"
+import {ExecResult} from "@/pages/invoker/schema"
+import {writeExecResultXTerm, writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
+import ReactResizeDetector from "react-resize-detector"
+import { defaultXTermOptions } from "@/components/baseConsole/BaseConsole"
+import { XTerm } from "xterm-for-react"
+import { YakitSystem } from "@/yakitGVDefine"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
-    const {onClose, showItem, setShowItem} = props
+    const {setEditorDetails, showItem, setShowItem} = props
     const {activeFile} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
+    
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -33,13 +43,59 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     }, [showItem])
 
     const syntaxCheckData = useMemo(() => {
-        if(activeFile?.syntaxCheck){
+        if (activeFile?.syntaxCheck) {
             return activeFile.syntaxCheck
         }
         return []
     }, [activeFile?.syntaxCheck])
 
-    console.log("syntaxCheckData",syntaxCheckData);
+    // 跳转至编辑器并选中
+    const onJumpToEditor = useMemoizedFn((selections: Selection) => {
+        if (activeFile?.path) {
+            const obj: JumpToEditorProps = {
+                selections,
+                id: activeFile?.path || ""
+            }
+            console.log("跳转至编辑器并选中", obj)
+            emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+        }
+    })
+
+    const onOpenBottomDetailFun = useMemoizedFn((v: string)=>{
+        try {
+            const {type}: {type: ShowItemType} = JSON.parse(v)
+            setEditorDetails(true)
+            setShowItem(type)
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onOpenBottomDetail", onOpenBottomDetailFun)
+        return () => {
+            emiter.off("onOpenBottomDetail", onOpenBottomDetailFun)
+        }
+    }, [])
+
+    // 输出缓存
+    const outputCahceRef = useRef<string>("")
+    // 输出流
+    const xtermRef = useRef<any>(null)
+    useEffect(() => {
+        // xtermClear(xtermRef)
+        ipcRenderer.on("client-yak-data", async (e: any, data: ExecResult) => {
+            if (data.IsMessage) {
+            }
+            if (data?.Raw) {
+                outputCahceRef.current += Buffer.from(data.Raw).toString("utf8")
+                if(xtermRef.current){
+                    writeExecResultXTerm(xtermRef, data, "utf8")
+                }
+            }
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("client-yak-data")
+        }
+    }, [xtermRef])
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -79,18 +135,75 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                 </div>
                 <div className={styles["extra"]}>
-                    <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onClose} />
+                    <YakitButton type='text2' icon={<OutlineXIcon />} onClick={()=>{setEditorDetails(false)}} />
                 </div>
             </div>
             <div className={styles["content"]}>
+                {showType.includes("output") && showItem === "output" && (
+                    <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef}/>
+                )}
                 {showType.includes("helpInfo") && showItem === "helpInfo" && (
                     <HelpInfoList list={[{key: 1}, {key: 2}, {key: 3}, {key: 4}, {key: 5}]} />
                 )}
-                {
-                    showType.includes("syntaxCheck") && showItem === "syntaxCheck" && <SyntaxCheckList syntaxCheckData={syntaxCheckData}/>
-
-                }
+                {showType.includes("syntaxCheck") && showItem === "syntaxCheck" && (
+                    <SyntaxCheckList syntaxCheckData={syntaxCheckData} onJumpToEditor={onJumpToEditor} />
+                )}
             </div>
+        </div>
+    )
+}
+
+export const OutputInfoList: React.FC<OutputInfoListProps> = (props) => {
+    const {outputCahceRef,xtermRef} = props
+
+    useEffect(() => {
+        if (outputCahceRef.current.length > 0) {
+            writeXTerm(xtermRef, outputCahceRef.current)
+        }
+    }, [])
+
+    const systemRef = useRef<YakitSystem>("Darwin")
+    useEffect(() => {
+        ipcRenderer
+            .invoke("fetch-system-name")
+            .then((res) => (systemRef.current = res))
+            .catch(() => {})
+    }, [])
+    
+    const setCopy = useDebounceFn(
+        useMemoizedFn((content: string) => {
+            ipcRenderer.invoke("set-copy-clipboard", content)
+        }),
+        {wait: 10}
+    ).run
+    const onCopy = useMemoizedFn((e: KeyboardEvent) => {
+        const isActiveCOrM = systemRef.current === "Darwin" ? e.metaKey : e.ctrlKey
+        const isCopy = e.code === "KeyC" && isActiveCOrM
+        if (isCopy) {
+            const str = xtermRef.current.terminal.getSelection()
+            setCopy(str || "")
+            return false
+        }
+        return true
+    })
+    return (
+        <div className={styles["output-info-list"]}>
+            <ReactResizeDetector
+                onResize={(width, height) => {
+                    if (!width || !height) return
+
+                    const row = Math.floor(height / 18.5)
+                    const col = Math.floor(width / 10)
+                    if (xtermRef) xtermFit(xtermRef, col, row)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <XTerm ref={xtermRef} 
+            customKeyEventHandler={onCopy} 
+            options={defaultXTermOptions} />
         </div>
     )
 }
