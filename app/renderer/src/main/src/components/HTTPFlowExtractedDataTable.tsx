@@ -51,6 +51,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 HTTPFlowHash: HTTPFlowHash ? HTTPFlowHash : params.HTTPFlowHash
             })
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
+                console.log('获取最新高亮值');
                 setData(r.Data)
                 props.onSetHighLightText(r.Data.map((i) => ({startOffset: i.Index, highlightLength: i.Length, hoverVal: i.RuleName, IsMatchRequest: i.IsMatchRequest })))
                 setPagination(r.Pagination)
