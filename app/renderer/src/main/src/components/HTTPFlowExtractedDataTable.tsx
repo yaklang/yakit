@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from "react"
-import {Button, Pagination, Typography, Table} from "antd"
+import {Button, Pagination, Typography, Table, Tooltip} from "antd"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {useMemoizedFn} from "ahooks"
 import {CopyableField} from "@/utils/inputUtil"
 import styles from "./hTTPFlowDetail.module.scss"
-import { HighLightText } from "./HTTPFlowDetail"
+import {HighLightText} from "./HTTPFlowDetail"
 const {Text} = Typography
 export interface HTTPFlowExtractedDataTableProp {
     title: React.ReactNode
@@ -52,7 +52,14 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             })
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 setData(r.Data)
-                props.onSetHighLightText(r.Data.map((i) => ({startOffset: i.Index, highlightLength: i.Length, hoverVal: i.RuleName, IsMatchRequest: i.IsMatchRequest })))
+                props.onSetHighLightText(
+                    r.Data.map((i) => ({
+                        startOffset: i.Index,
+                        highlightLength: i.Length,
+                        hoverVal: i.RuleName,
+                        IsMatchRequest: i.IsMatchRequest
+                    }))
+                )
                 setPagination(r.Pagination)
                 setTotal(r.Total)
             })
@@ -95,7 +102,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                             <Text
                                 style={{maxWidth: 200}}
                                 ellipsis={{
-                                    tooltip: true
+                                    tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
                                 }}
                             >
                                 {i.Data}
