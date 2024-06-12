@@ -75,54 +75,68 @@ const defaultAreaInfo: AreaInfoProps[] = [
                         code: "123",
                         language: "yak",
                         isActive: true
-                    }
-                ]
-            },
-            {
-                id: "test2",
-                files: [
+                    },
                     {
-                        name: ".gitignore",
-                        path: "/Users/nonight/work/yakitVersion/.gitignore",
+                        name: ".tt",
+                        path: "/Users/nonight/work/yakitVersion/.tt",
                         icon: "_file",
-                        code: "456",
-                        language: "git",
-                        isActive: true
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        elements: [
-            {
-                id: "test3",
-                files: [
+                        code: "tt",
+                        language: "text"
+                    },
                     {
-                        name: "ELECTRON_GUIDE.md",
-                        path: "/Users/nonight/work/yakitVersion/ELECTRON_GUIDE.md",
+                        name: ".ttt",
+                        path: "/Users/nonight/work/yakitVersion/.ttt",
                         icon: "_file",
-                        code: "789",
-                        language: "md",
-                        isActive: true
+                        code: "ttt",
+                        language: "text"
                     }
                 ]
             }
             // {
-            //     id: "test4",
-            //     files:[
+            //     id: "test2",
+            //     files: [
             //         {
-            //             name: "LICENSE.md",
-            //             path: "/Users/nonight/work/yakitVersion/LICENSE.md",
+            //             name: ".gitignore",
+            //             path: "/Users/nonight/work/yakitVersion/.gitignore",
             //             icon: "_file",
-            //             code: "1010",
-            //             language:"yak",
-            //             isActive:true
+            //             code: "456",
+            //             language: "git",
+            //             isActive: true
             //         }
             //     ]
             // }
         ]
     }
+    // {
+    //     elements: [
+    //         {
+    //             id: "test3",
+    //             files: [
+    //                 {
+    //                     name: "ELECTRON_GUIDE.md",
+    //                     path: "/Users/nonight/work/yakitVersion/ELECTRON_GUIDE.md",
+    //                     icon: "_file",
+    //                     code: "789",
+    //                     language: "md",
+    //                     isActive: true
+    //                 }
+    //             ]
+    //         },
+    //         {
+    //             id: "test4",
+    //             files:[
+    //                 {
+    //                     name: "LICENSE.md",
+    //                     path: "/Users/nonight/work/yakitVersion/LICENSE.md",
+    //                     icon: "_file",
+    //                     code: "1010",
+    //                     language:"yak",
+    //                     isActive:true
+    //                 }
+    //             ]
+    //         }
+    //     ]
+    // }
 ]
 
 export const YakRunner: React.FC<YakRunnerProps> = (props) => {
@@ -139,6 +153,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeProps[] | null) => any) => {
         grpcFetchFileTree(path)
             .then((res) => {
+                console.log("文件树", res)
+
                 if (callback) callback(res)
             })
             .catch((error) => {
@@ -276,9 +292,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             <BottomEditorDetails
                                 showItem={showItem}
                                 setShowItem={setShowItem}
-                                onClose={() => {
-                                    setEditorDetails(false)
-                                }}
+                                setEditorDetails={setEditorDetails}
                             />
                         )
                     }
@@ -292,12 +306,29 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         setEditorDetails(true)
     })
 
-    const onDragStart = useMemoizedFn(()=>{
+    const onDragStart = useMemoizedFn(() => {
         // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
-            if (document.activeElement !== null) {
-                // @ts-ignore
-                document.activeElement.blur();
-            }
+        if (document.activeElement !== null) {
+            // @ts-ignore
+            document.activeElement.blur()
+        }
+    })
+
+    // 拖放结束时的回调函数
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided)=>{
+        try {
+            console.log("onDragEnd",result, provided)
+            const {source, destination, draggableId, type, combine} = result
+        } catch (error) {}
+        
+    })
+
+    const getTabsId = useMemoizedFn((row,col)=>{
+        try {
+            return areaInfo[row].elements[col].id
+        } catch (error) {
+            return `${row}*${col}`
+        }
     })
 
     // 布局处理
@@ -307,9 +338,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
         return (
             <DragDropContext
-                onDragEnd={(result, provided) => {
-                    console.log(result, provided)
-                }}
+                onDragEnd={onDragEnd}
                 onDragStart={onDragStart}
             >
                 <SplitView
@@ -319,10 +348,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         {
                             element: (
                                 <SplitView
-                                    isLastHidden={areaInfo[0].elements.length === 1}
+                                    isLastHidden={areaInfo.length > 0 && areaInfo[0].elements.length === 1}
                                     elements={[
-                                        {element: <RunnerTabs tabsId={"test1"} />},
-                                        {element: <RunnerTabs tabsId={"test2"} />}
+                                        {element: <RunnerTabs tabsId={getTabsId(0,0)} />},
+                                        {element: <RunnerTabs tabsId={getTabsId(0,1)} />}
                                     ]}
                                 />
                             )
@@ -330,10 +359,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         {
                             element: (
                                 <SplitView
-                                    isLastHidden={areaInfo[1].elements.length === 1}
+                                    isLastHidden={areaInfo.length > 1 && areaInfo[1].elements.length === 1}
                                     elements={[
-                                        {element: <RunnerTabs tabsId={"test3"} />},
-                                        {element: <RunnerTabs tabsId={"test4"} />}
+                                        {element: <RunnerTabs tabsId={getTabsId(1,0)} />},
+                                        {element: <RunnerTabs tabsId={getTabsId(1,1)} />}
                                     ]}
                                 />
                             )

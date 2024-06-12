@@ -12,12 +12,15 @@
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
+            flex: 1;
+            overflow: hidden;
         }
         .area {
             color: #b4bbca;
             font-size: 12px;
             font-weight: 400;
             line-height: 16px;
+            white-space: nowrap;
         }
         .icon-box {
             display: flex;

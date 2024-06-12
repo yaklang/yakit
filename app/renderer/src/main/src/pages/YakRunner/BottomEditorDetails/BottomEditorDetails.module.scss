@@ -54,5 +54,10 @@
     .content {
         flex: 1;
         overflow: auto;
+        .output-info-list{
+            height: 100%;
+            width: 100%;
+            background: rgb(232, 233, 232);
+        }
     }
 }
