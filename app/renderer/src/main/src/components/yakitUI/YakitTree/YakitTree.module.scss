@@ -20,6 +20,17 @@
         .ant-tree-switcher {
             width: 22px;
         }
+        .ant-tree .ant-tree-treenode-leaf-last .ant-tree-switcher-leaf-line::before {
+            height: 10px !important;
+        }
+        .ant-tree-switcher-leaf-line::before {
+            right: 10px;
+            bottom: -2px;
+        }
+        .ant-tree-switcher-leaf-line::after {
+            width: 8px;
+            height: 10px;
+        }
 
         .ant-tree-switcher-loading-icon {
             color: var(--yakit-primary-5);
