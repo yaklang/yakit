@@ -73,6 +73,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const isInitLoading = useRef<boolean>(false)
     const hasMore = useRef<boolean>(true)
 
+    // 列表无条件下的总数
+    const [listTotal, setListTotal] = useState<number>(0)
+
     const [filterGroup, setFilterGroup] = useState<API.PluginsSearch[]>([])
 
     // 列表数据
@@ -121,6 +124,14 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         if (updateFilterFlag) setFilters(realFilter)
     }, [filters, filterGroup])
 
+    const fetchInitTotal = useMemoizedFn(() => {
+        apiFetchOnlineList({page: 1, limit: 1}, true)
+            .then((res) => {
+                setListTotal(Number(res.pagemeta.total) || 0)
+            })
+            .catch(() => {})
+    })
+
     // 搜索条件分组数据
     const fetchFilterGroup = useMemoizedFn(() => {
         apiFetchGroupStatisticsOnline()
@@ -134,6 +145,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         useMemoizedFn(async (reset?: boolean) => {
             if (loading) return
             if (reset) {
+                fetchInitTotal()
                 isInitLoading.current = true
                 setShowIndex(0)
             }
@@ -220,26 +232,6 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const listLength = useMemo(() => {
         return Number(response.pagemeta.total) || 0
     }, [response])
-    const disabledBatchBtn = useMemo(() => {
-        return !listLength
-    }, [listLength])
-    const noFilter = useMemo(() => {
-        let flag = true
-        if (search.type === "keyword") flag = !search.keyword
-        if (search.type === "userName") flag = !search.userName
-
-        const {plugin_type = [], status = [], plugin_private = [], tags = [], plugin_group = []} = filters
-        if (
-            plugin_type.length > 0 ||
-            status.length > 0 ||
-            plugin_private.length > 0 ||
-            tags.length > 0 ||
-            plugin_group.length > 0
-        ) {
-            flag = false
-        }
-        return flag
-    }, [search, filters])
     const selectedNum = useMemo(() => {
         if (allChecked) return response.pagemeta.total
         else return selectList.length
@@ -396,7 +388,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                     size='large'
                     name={selectedNum > 0 ? "下载" : "一键下载"}
                     loading={batchDownloadLoading}
-                    disabled={disabledBatchBtn}
+                    disabled={listTotal === 0}
                     onClick={headerExtraDownload}
                 />
                 <HubButton
@@ -433,20 +425,20 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                         </div>
 
                         <div className={styles["list-body"]}>
-                            {listLength > 0 ? (
-                                <HubOuterList
-                                    title='插件商店'
-                                    headerExtra={headerExtra()}
-                                    allChecked={allChecked}
-                                    setAllChecked={onCheck}
-                                    total={response.pagemeta.total}
-                                    selected={selectedNum}
-                                    search={search}
-                                    setSearch={setSearch}
-                                    onSearch={onSearch}
-                                    filters={filters as Record<string, API.PluginsSearchData[]>}
-                                    setFilters={setFilters}
-                                >
+                            <HubOuterList
+                                title='插件商店'
+                                headerExtra={headerExtra()}
+                                allChecked={allChecked}
+                                setAllChecked={onCheck}
+                                total={response.pagemeta.total}
+                                selected={selectedNum}
+                                search={search}
+                                setSearch={setSearch}
+                                onSearch={onSearch}
+                                filters={filters as Record<string, API.PluginsSearchData[]>}
+                                setFilters={setFilters}
+                            >
+                                {listLength > 0 ? (
                                     <HubGridList
                                         data={response.data}
                                         keyName='uuid'
@@ -482,33 +474,37 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                             )
                                         }}
                                     />
-                                </HubOuterList>
-                            ) : noFilter ? (
-                                <div className={styles["hub-list-empty"]}>
-                                    <YakitEmpty title='暂无数据' />
-                                    <div className={styles["refresh-buttons"]}>
-                                        {userinfo.role !== "admin" && (
+                                ) : listTotal === 0 ? (
+                                    <div className={styles["hub-list-empty"]}>
+                                        <YakitEmpty title='暂无数据' />
+                                        <div className={styles["refresh-buttons"]}>
+                                            {userinfo.role !== "admin" && (
+                                                <YakitButton
+                                                    type='outline1'
+                                                    icon={<OutlineClouduploadIcon />}
+                                                    onClick={openUploadAll}
+                                                >
+                                                    一键上传
+                                                </YakitButton>
+                                            )}
                                             <YakitButton
                                                 type='outline1'
-                                                icon={<OutlineClouduploadIcon />}
-                                                onClick={openUploadAll}
+                                                icon={<OutlineRefreshIcon />}
+                                                onClick={onRefresh}
                                             >
-                                                一键上传
+                                                刷新
                                             </YakitButton>
-                                        )}
-                                        <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefresh}>
-                                            刷新
-                                        </YakitButton>
+                                        </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <YakitEmpty
-                                    image={SearchResultEmpty}
-                                    imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
-                                    title='搜索结果“空”'
-                                    className={styles["hub-list-empty"]}
-                                />
-                            )}
+                                ) : (
+                                    <YakitEmpty
+                                        image={SearchResultEmpty}
+                                        imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
+                                        title='搜索结果“空”'
+                                        className={styles["hub-list-empty"]}
+                                    />
+                                )}
+                            </HubOuterList>
                         </div>
                     </div>
                 </YakitSpin>
@@ -541,7 +537,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                         <YakitButton
                                             type='text2'
                                             loading={batchDownloadLoading}
-                                            disabled={disabledBatchBtn}
+                                            disabled={listTotal === 0}
                                             icon={<OutlineClouddownloadIcon />}
                                             onClick={headerExtraDownload}
                                         />
