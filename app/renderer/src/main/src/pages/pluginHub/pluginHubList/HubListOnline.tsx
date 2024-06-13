@@ -337,6 +337,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
             yakitNotify("error", "未获取到插件信息，请刷新列表重试")
             return
         }
+        setShowIndex(index)
         onPluginDetail({type: "online", name: info.script_name, uuid: info.uuid})
     })
 
