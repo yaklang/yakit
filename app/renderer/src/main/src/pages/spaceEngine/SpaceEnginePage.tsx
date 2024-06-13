@@ -11,7 +11,6 @@ import {Form} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
-    GetSpaceEngineAccountStatusRequest,
     GetSpaceEngineStatusProps,
     apiCancelFetchPortAssetFromSpaceEngine,
     apiFetchPortAssetFromSpaceEngine,
@@ -27,7 +26,6 @@ import {
     defaultParams
 } from "@/components/configNetwork/ConfigNetworkPage"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
 import {OutputFormComponentsByType} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "../plugins/pluginsType"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
@@ -39,6 +37,7 @@ import classNames from "classnames"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {ZoomeyeHelp} from "./ZoomeyeHelp"
 import {YakitRoute} from "@/enums/yakitRoute"
+import NewThirdPartyApplicationConfig from "@/components/configNetwork/NewThirdPartyApplicationConfig"
 
 interface SpaceEnginePageProps {
     /**页面id */
@@ -259,14 +258,15 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         const initData: ThirdPartyApplicationConfig = globalNetworkConfig.AppConfigs.find(
             (ele) => ele.Type === type
         ) || {
-            APIKey: "",
-            Domain: "",
-            Namespace: "",
             Type: type,
-            UserIdentifier: "",
-            UserSecret: "",
-            WebhookURL: ""
         }
+
+        const extraParamsArr = initData.ExtraParams || []
+        const extraParams = {}
+        extraParamsArr.forEach((item) => {
+            extraParams[item.Key] = item.Value
+        })
+
         let m = showYakitModal({
             title: "添加第三方应用",
             width: 600,
@@ -275,51 +275,47 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             footer: null,
             content: (
                 <>
-                <div className={styles['ai-describe']}>
-                    请配置空间引擎APIKey后再进行使用
-                </div>
-                <div style={{margin: 24}}>
-                    <ThirdPartyApplicationConfigForm
-                        data={initData}
-                        onAdd={(e) => {
-                            let existed = false
-                            const existedResult = (globalNetworkConfig.AppConfigs || []).map((i) => {
-                                if (i.Type === e.Type) {
-                                    existed = true
-                                    return {...i, ...e}
-                                }
-                                return {...i}
-                            })
-                            if (!existed) {
-                                existedResult.push(e)
-                            }
-                            const editItem = existedResult.find((ele) => ele.Type === e.Type)
-                            if (editItem) {
-                                const checkParams: GetSpaceEngineAccountStatusRequest = {
-                                    Type: editItem.Type,
-                                    Key: editItem.APIKey,
-                                    Account: editItem.UserIdentifier
-                                }
-                                apiGetSpaceEngineAccountStatus(checkParams).then((value) => {
-                                    switch (value.Status) {
-                                        case "normal":
-                                            const params = {...globalNetworkConfig, AppConfigs: existedResult}
-                                            apiSetGlobalNetworkConfig(params).then(() => {
-                                                onGetGlobalNetworkConfig()
-                                                m.destroy()
-                                            })
-                                            break
-                                        default:
-                                            yakitNotify("error", "设置引擎失败:" + value.Info || value.Status)
-                                            break
+                    <div className={styles["ai-describe"]}>请配置空间引擎APIKey后再进行使用</div>
+                    <div style={{margin: 24}}>
+                        <NewThirdPartyApplicationConfig
+                            formValues={{
+                                Type: initData.Type,
+                                ...extraParams
+                            }}
+                            disabledType={true}
+                            onAdd={(e) => {
+                                let existed = false
+                                const existedResult = (globalNetworkConfig.AppConfigs || []).map((i) => {
+                                    if (i.Type === e.Type) {
+                                        existed = true
+                                        return {...i, ...e}
                                     }
+                                    return {...i}
                                 })
-                            }
-                        }}
-                        onCancel={() => m.destroy()}
-                        isCanInput={false}
-                    />
-                </div>
+                                if (!existed) {
+                                    existedResult.push(e)
+                                }
+                                const editItem = existedResult.find((ele) => ele.Type === e.Type)
+                                if (editItem) {
+                                    apiGetSpaceEngineAccountStatus(editItem).then((value) => {
+                                        switch (value.Status) {
+                                            case "normal":
+                                                const params = {...globalNetworkConfig, AppConfigs: existedResult}
+                                                apiSetGlobalNetworkConfig(params).then(() => {
+                                                    onGetGlobalNetworkConfig()
+                                                    m.destroy()
+                                                })
+                                                break
+                                            default:
+                                                yakitNotify("error", "设置引擎失败:" + value.Info || value.Status)
+                                                break
+                                        }
+                                    })
+                                }
+                            }}
+                            onCancel={() => m.destroy()}
+                        />
+                    </div>
                 </>
             )
         })

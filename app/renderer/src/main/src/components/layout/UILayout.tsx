@@ -60,10 +60,10 @@ import styles from "./uiLayout.module.scss"
 import {setNowProjectDescription} from "@/pages/globalVariable"
 import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
 import {GlobalNetworkConfig} from "../configNetwork/ConfigNetworkPage"
-import {ThirdPartyApplicationConfigForm} from "../configNetwork/ThirdPartyApplicationConfig"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import { CodecParamsProps } from "../yakChat/chatCS"
+import {CodecParamsProps} from "../yakChat/chatCS"
+import NewThirdPartyApplicationConfig from "../configNetwork/NewThirdPartyApplicationConfig"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -641,8 +641,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     : "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
             })
             handleActiveDownloadModal("yaklang")
-        } catch (error) {
-        }
+        } catch (error) {}
     }
 
     const onDownloadedYaklang = useMemoizedFn(() => {
@@ -1022,62 +1021,64 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
 
     // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框
-    const onFuzzerModal = useMemoizedFn((value) => {
+    const onFuzzerModal = useMemoizedFn(async (value) => {
         try {
-            const val: {text?: string; scriptName?: string; code?:string; isAiPlugin: any} = JSON.parse(value)
+            const val: {text?: string; scriptName?: string; code?: string; isAiPlugin: any} = JSON.parse(value)
             if (val.isAiPlugin === "isGetPlugin") {
                 setCoedcPluginShow(true)
                 return
             }
             if (val.isAiPlugin) {
-                apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
-                    const configType = obj.AppConfigs.map((item) => item.Type).filter((item) =>
-                        ["openai", "chatglm", "moonshot", "comate"].includes(item)
-                    )
-                    // 如若已配置 则打开执行框
-                    if (configType.length > 0) {
-                        openAIByChatCS({...val})
-                    } else {
-                        let m = showYakitModal({
-                            title: "添加第三方应用",
-                            width: 600,
-                            footer: null,
-                            closable: true,
-                            maskClosable: false,
-                            content: (
-                                <>
-                                    <div className={styles['ai-describe']}>
-                                        请选择AI类型进行APIKey配置，如配置多个，可在全局配置中配置使用优先级
-                                    </div>
-                                    <div style={{margin:24}}>
-                                    <ThirdPartyApplicationConfigForm
-                                        onAdd={(e) => {
-                                            let existed = false
-                                            const existedResult = (obj.AppConfigs || []).map((i) => {
-                                                if (i.Type === e.Type) {
-                                                    existed = true
-                                                    return {...i, ...e}
-                                                }
-                                                return {...i}
-                                            })
-                                            if (!existed) {
-                                                existedResult.push(e)
-                                            }
-                                            const params = {...obj, AppConfigs: existedResult}
-                                            apiSetGlobalNetworkConfig(params).then(() => {
-                                                openAIByChatCS({...val})
-                                                m.destroy()
-                                            })
-                                        }}
-                                        onCancel={() => m.destroy()}
-                                        showOptions = {["openai","chatglm","moonshot","comate"]}
-                                    />
-                                    </div>
-                                </>
-                            )
-                        })
-                    }
-                })
+                try {
+                    const res = await ipcRenderer.invoke("CheckHahValidAiConfig")
+                    apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
+                        // 如若已配置 则打开执行框
+                        if (res.Ok) {
+                            openAIByChatCS({...val})
+                        } else {
+                            let m = showYakitModal({
+                                title: "添加第三方应用",
+                                width: 600,
+                                footer: null,
+                                closable: true,
+                                maskClosable: false,
+                                content: (
+                                    <>
+                                        <div className={styles["ai-describe"]}>
+                                            请选择AI类型进行APIKey配置，如配置多个，可在全局配置中配置使用优先级
+                                        </div>
+                                        <div style={{margin: 24}}>
+                                            <NewThirdPartyApplicationConfig
+                                                isOnlyShowAiType={true}
+                                                onAdd={(e) => {
+                                                    let existed = false
+                                                    const existedResult = (obj.AppConfigs || []).map((i) => {
+                                                        if (i.Type === e.Type) {
+                                                            existed = true
+                                                            return {...i, ...e}
+                                                        }
+                                                        return {...i}
+                                                    })
+                                                    if (!existed) {
+                                                        existedResult.push(e)
+                                                    }
+                                                    const params = {...obj, AppConfigs: existedResult}
+                                                    apiSetGlobalNetworkConfig(params).then(() => {
+                                                        openAIByChatCS({...val})
+                                                        m.destroy()
+                                                    })
+                                                }}
+                                                onCancel={() => m.destroy()}
+                                            />
+                                        </div>
+                                    </>
+                                )
+                            })
+                        }
+                    })
+                } catch (error) {
+                    yakitNotify("error", error + "")
+                }
             } else {
                 openAIByChatCS({text: val.text, scriptName: val.scriptName, isAiPlugin: val.isAiPlugin})
             }

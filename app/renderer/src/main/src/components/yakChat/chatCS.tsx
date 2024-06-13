@@ -2951,24 +2951,29 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     // 更新最后一项
     const setLastAIList = useMemoizedFn((content: string, extra?: any) => {
         try {
-            const newPluginAIList: PluginAiItem[] = JSON.parse(JSON.stringify(pluginAIList))
             // 更新单独展示项
             setPluginAIItem((lastItem) =>
                 lastItem.map((item, index) => {
                     if (lastItem.length === index + 1) {
                         item.info.content = content
                         item.time = formatDate(+new Date())
+                        if (!item.isMe) {
+                            item.info.extra = extra || {}
+                        }
                         return item
                     }
                     return item
                 })
             )
             // 更新历史展示
-            setPluginAIList(
+            setPluginAIList((newPluginAIList) =>
                 newPluginAIList.map((item, index) => {
                     if (newPluginAIList.length === index + 1) {
                         item.info.content = content
                         item.time = formatDate(+new Date())
+                        if (!item.isMe) {
+                            item.info.extra = extra || {}
+                        }
                         return item
                     }
                     return item
@@ -2980,9 +2985,9 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     })
     const updateExtraInfo = useMemoizedFn((extra) => {
         setPluginAIItem((lastItem) =>
-            lastItem.map((item) => {
+            lastItem.map((item, index) => {
                 if (!item.isMe) {
-                    if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
+                    if (lastItem.length === index + 1) {
                         item.info.extra = extra || {}
                     }
                 }
@@ -2990,9 +2995,9 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             })
         )
         setPluginAIList((newPluginAIList) =>
-            newPluginAIList.map((item) => {
+            newPluginAIList.map((item, index) => {
                 if (!item.isMe) {
-                    if (!item.info.extra || JSON.stringify(item.info.extra) === "{}") {
+                    if (newPluginAIList.length === index + 1) {
                         item.info.extra = extra || {}
                     }
                 }
@@ -3264,7 +3269,7 @@ interface PluginAIContentProps {
     /** 当前正在查询的那个回答的唯一标识符 */
     loadingToken: string
     time: string
-    info: {content: string, extra: any}
+    info: {content: string; extra: any}
     loading: boolean
     /** 查询的动态运行时间 */
     resTime: string
@@ -3287,8 +3292,8 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                 <div className={styles["header-left"]}>
                     <YakChatLogIcon />
                     {time}
-                    {info.extra?.['ai-type'] && <YakitTag color='purple'>{info.extra?.['ai-type']}</YakitTag>}
-                    {info.extra?.['ai-model'] && <YakitTag color='blue'>{info.extra?.['ai-model']}</YakitTag>}
+                    {info.extra?.["ai-type"] && <YakitTag color='purple'>{info.extra?.["ai-type"]}</YakitTag>}
+                    {info.extra?.["ai-model"] && <YakitTag color='blue'>{info.extra?.["ai-model"]}</YakitTag>}
                     {/* {showLoading ? resTime : time} */}
                 </div>
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
