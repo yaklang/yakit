@@ -18,3 +18,12 @@ export interface QueryRisksRequest {
 }
 
 export type QueryRisksResponse = QueryGeneralResponse<Risk>
+
+export interface YakitRiskDetailsProps{
+    info: Risk
+    isShowTime?: boolean
+    shrink?: boolean
+    quotedRequest?: string
+    quotedResponse?: string
+    onClose?: () => void
+}

@@ -81,6 +81,7 @@ import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExe
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import {PerformanceSamplingLog, usePerformanceSampling} from "@/store/performanceSampling"
+import {YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2119,8 +2120,8 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                     width: "80%",
                     title: "详情",
                     content: (
-                        <div style={{overflow: "auto"}}>
-                            <RiskDetails info={res} />
+                        <div style={{overflow: "auto", border: "1px solid var(--yakit-border-color)"}}>
+                            <YakitRiskDetails info={res} />
                         </div>
                     )
                 })

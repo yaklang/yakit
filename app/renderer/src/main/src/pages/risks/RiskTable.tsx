@@ -961,7 +961,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                 <div>
                                     最近更新时间
                                     <span className='subtitle-font'>
-                                        {info.CreatedAt > 0 ? formatTimestamp(info.CreatedAt) : "-"}
+                                        {!!info.UpdatedAt ? formatTimestamp(info.UpdatedAt) : "-"}
                                     </span>
                                 </div>
                             )}

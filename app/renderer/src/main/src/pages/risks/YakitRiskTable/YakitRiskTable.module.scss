@@ -5,9 +5,36 @@
 %display-column-center {
     display: flex;
     flex-direction: column;
-    justify-content: center;
 }
 
+$tagColor: (
+    "success": (
+        color: var(--yakit-success-5)
+    ),
+    "warning": (
+        color: var(--yakit-warning-5)
+    ),
+    "info": (
+        color: var(--yakit-primary-5)
+    ),
+    "danger": (
+        color: var(--yakit-danger-5)
+    ),
+    "serious": (
+        color: var(--yakit-serious-5)
+    ),
+    "default": (
+        color: var(--yakit-helper-text-color)
+    )
+);
+$keyColor: map-keys($tagColor);
+@for $c from 1 through length($keyColor) {
+    $name: nth($keyColor, $c);
+    $currentColor: map-get($tagColor, $name);
+    .severity-#{$name} {
+        color: map-get($currentColor, "color");
+    }
+}
 .yakit-risk-table {
     @extend %display-column-center;
     height: 100%;
@@ -22,6 +49,88 @@
             width: 16px;
             height: 16px;
         }
+    }
+    .yakit-risk-details {
+        @extend %display-column-center;
+        border: 1px solid var(--yakit-border-color);
+        border-top: 0;
+        border-radius: 0 0 4px 4px;
+        position: relative;
+        height: 100%;
+        .yakit-risk-details-title {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--yakit-border-color);
+
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+            padding: 8px 12px;
+        }
+    }
+}
+.yakit-risk-details-content {
+    overflow-y: auto;
+    :global {
+        .ant-descriptions-bordered .ant-descriptions-view > table {
+            table-layout: fixed;
+        }
+    }
+    .content-heard {
+        padding: 12px;
+        @extend %display-flex-center;
+        border-bottom: 1px solid var(--yakit-border-color);
+        .content-heard-severity {
+            @extend %display-column-center;
+            align-items: center;
+            justify-content: center;
+            .content-heard-severity-name {
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+            }
+        }
+        .content-heard-body {
+            @extend %display-column-center;
+            gap: 4px;
+            overflow: hidden;
+            .content-heard-body-title {
+                color: var(--yakit-header-color);
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 24px;
+            }
+            .content-heard-body-description {
+                @extend %display-flex-center;
+                color: var(--yakit-header-color);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                .url-info {
+                    @extend %display-flex-center;
+                    gap: 4px;
+                    overflow: hidden;
+                    .url {
+                        color: var(--yakit-body-text-color);
+                    }
+                }
+                .content-heard-body-time {
+                    @extend %display-flex-center;
+                    gap: 16px;
+                    flex-shrink: 0;
+                }
+            }
+        }
+    }
+    .no-more {
+        font-size: 12px;
+        color: var(--yakit-helper-text-color);
+        text-align: center;
+        padding: 12px;
+        width: 100%;
     }
 }
 
