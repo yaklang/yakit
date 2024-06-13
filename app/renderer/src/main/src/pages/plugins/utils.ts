@@ -1741,3 +1741,25 @@ export const apiFetchQueryYakScriptGroupOnlineNotLoggedIn: () => Promise<API.Gro
         }
     })
 }
+
+/** 企业版插件商店 一键重置 */
+export const apiFetchResetPlugins: () => Promise<any> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<any, any>({
+                method: "post",
+                url: "reset/plugins"
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "一键重置失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "一键重置失败：" + error)
+            reject(error)
+        }
+    })
+}

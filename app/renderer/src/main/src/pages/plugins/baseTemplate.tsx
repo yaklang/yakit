@@ -91,9 +91,9 @@ export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
 })
 /** @name 插件列表组件(带侧边搜索栏)  */
 export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) => {
-    const {loading, visible, setVisible, selecteds, onSelect, groupList, children, filterClassName} = props
+    const {loading, visible, setVisible, selecteds, onSelect, groupList, children, filterClassName, loadingTip = ""} = props
     return (
-        <YakitSpin spinning={loading}>
+        <YakitSpin spinning={loading} tip={loadingTip}>
             <div className={styles["plugins-container-wrapper"]}>
                 <FilterPanel
                     wrapperClassName={classNames(styles["container-filter-wrapper"], {
