@@ -32,21 +32,6 @@ export interface ImportAndExportStatusInfo {
 export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = memo((props) => {
     const {title, streamData, logListInfo, showDownloadDetail} = props
 
-    const containerRef = useRef<any>(null)
-    const wrapperRef = useRef<any>(null)
-
-    const [list] = useVirtualList(logListInfo, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 24,
-        overscan: 5
-    })
-
-    const height = useMemo(() => {
-        if (list.length < 2) return 24
-        return 200
-    }, [list])
-
     return (
         <div className={styles["yaklang-engine-hint-wrapper"]}>
             <div className={styles["hint-left-wrapper"]}>
@@ -104,22 +89,16 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
                             </>
                         </div>
                     )}
-                    <div
-                        className={styles["log-info"]}
-                        ref={containerRef}
-                        style={{height: height, marginTop: list.length !== 0 ? 10 : 0}}
-                    >
-                        <div ref={wrapperRef}>
-                            {list.map((item) => (
-                                <div
-                                    key={item.data.key}
-                                    className={styles["log-item"]}
-                                    style={{color: item.data.isError ? "#f00" : "#85899e"}}
-                                >
-                                    {item.data.message}
-                                </div>
-                            ))}
-                        </div>
+                    <div className={styles["log-info"]}>
+                        {logListInfo.map((item, index) => (
+                            <div
+                                key={item.key}
+                                className={styles["log-item"]}
+                                style={{color: item.isError ? "#f00" : "#85899e"}}
+                            >
+                                {item.message}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -185,15 +164,15 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                     } = fileRegexInfo
 
                     if (!directory) {
-                        const index = f.name.indexOf('.')
-                        
+                        const index = f.name.indexOf(".")
+
                         if (index === -1) {
                             failed("请误上传文件夹")
                             return false
                         } else {
                             // 校验文件名后缀
-                            const extname = f.name.split('.').pop()
-                            if (fileType.length && !fileType.includes('.' + extname)) {
+                            const extname = f.name.split(".").pop()
+                            if (fileType.length && !fileType.includes("." + extname)) {
                                 failed(`${f.name}${fileTypeErrorMsg}`)
                                 return false
                             }

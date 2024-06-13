@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState, useMemo} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {Form, notification} from "antd"
-import {failed, info, success, yakitFailed} from "../../utils/notification"
+import {failed, info, success, yakitFailed, yakitNotify} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
 import {ExecResult, QueryYakScriptRequest} from "../invoker/schema"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
@@ -33,15 +33,8 @@ import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITM
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {
-    LogListInfo,
-    SaveProgressStream,
-    UploadList,
-    YakitUploadComponent
-} from "@/components/YakitUploadModal/YakitUploadModal"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {v4 as uuidv4} from "uuid"
 import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
 const {ipcRenderer} = window.require("electron")
 
@@ -234,7 +227,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             extra?: ExtraMITMServerProps
         ) => {
             return ipcRenderer
-                .invoke("mitm-start-call", targetHost, targetPort, downstreamProxy, enableHttp2,ForceDisableKeepAlive, certs, extra)
+                .invoke(
+                    "mitm-start-call",
+                    targetHost,
+                    targetPort,
+                    downstreamProxy,
+                    enableHttp2,
+                    ForceDisableKeepAlive,
+                    certs,
+                    extra
+                )
                 .catch((e: any) => {
                     notification["error"]({message: `启动中间人劫持失败：${e}`})
                 })
@@ -259,7 +261,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setPort(port)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
-            startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive,certs, extra)
+            startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certs, extra)
             let tip = ""
             if (downstreamProxy) {
                 tip += `下游代理：${downstreamProxy}`
@@ -762,29 +764,24 @@ export const loadModeInfo = [
         width: 448
     }
 ]
-interface ImportYakScriptResult {
-    Progress: number
-    Message: string
-    MessageType: string
-}
 interface ImportLocalPluginProps {
     visible: boolean
     setVisible: (b: boolean) => void
     loadPluginMode?: LoadPluginMode
     sendPluginLocal?: boolean
 }
+interface ImportYakScriptStreamRequest {
+    Filename: string
+    Password?: string
+}
+
 export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((props) => {
     const {visible, setVisible, loadPluginMode, sendPluginLocal = false} = props
     const [form] = Form.useForm()
     const [loadMode, setLoadMode] = useState<LoadPluginMode>(loadPluginMode || "giturl")
     const [localNucleiPath, setLocalNucleiPath] = useState<string>("") // localNucleiPath
-    const [localImportStep, setLocalImportStep] = useState<1 | 2>(1)
-    const [localUploadList, setLocalUploadList] = useState<UploadList[]>([])
-    const [localStreamData, setLocalStreamData] = useState<SaveProgressStream>()
-    const localStreamDataRef = useRef<SaveProgressStream>()
-    const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
-    const locallogListInfoRef = useRef<LogListInfo[]>([])
-
+    const [localPluginPath, setLocalPluginPath] = useState<string>("") // localPluginPath
+    const localPluginSuccessRef = useRef<boolean>(true)
     const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
     const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>("")
     const [startExecYakCodeParams, setStartExecYakCodeParams] = useState<YakScriptParam>()
@@ -794,38 +791,26 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             if (visible) {
                 form.resetFields()
                 setLocalNucleiPath("")
+                setLocalPluginPath("")
 
                 if (loadMode === "local") {
-                    let timer
-                    timer = setInterval(() => {
-                        setLocalStreamData(localStreamDataRef.current)
-                        setLocallogListInfo([...locallogListInfoRef.current])
-                    }, 200)
-
-                    ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
-                        setLocalImportStep(2)
-                        localStreamDataRef.current = {Progress: data.Progress}
-                        // 展示错误日志
-                        if (data.MessageType === "error" || data.Progress === 1) {
-                            locallogListInfoRef.current.unshift({
-                                message: data.Message,
-                                isError: ["error", "finalError"].includes(data.MessageType),
-                                key: uuidv4()
-                            })
-                        }
-
-                        if (["success", "finished"].includes(data.MessageType) && data.Progress === 1) {
-                            setTimeout(() => {
-                                handleImportLocalPluginFinish()
-                            }, 300)
-                        }
+                    ipcRenderer.on("import-yak-script-error", (e, data) => {
+                        localPluginSuccessRef.current = false
+                        yakitNotify("error", data.message)
                     })
 
+                    ipcRenderer.on("import-yak-script-end", () => {
+                        if (localPluginSuccessRef.current) {
+                            onCancel()
+                            handleImportLocalPluginFinish()
+                        } else {
+                            localPluginSuccessRef.current = true
+                        }
+                    })
                     return () => {
-                        resetLocalImport()
-                        clearInterval(timer)
-                        ipcRenderer.invoke("cancel-importYakScript")
-                        ipcRenderer.removeAllListeners("import-yak-script-data")
+                        ipcRenderer.invoke("cancel-ImportYakScriptStream")
+                        ipcRenderer.removeAllListeners("import-yak-script-error")
+                        ipcRenderer.removeAllListeners("import-yak-script-end")
                     }
                 }
             }
@@ -838,18 +823,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         setLoadMode(loadPluginMode || "giturl")
     }, [loadPluginMode])
 
-    const resetLocalImport = () => {
-        setLocalImportStep(1)
-        setLocalUploadList([])
-        setLocalStreamData(undefined)
-        localStreamDataRef.current = undefined
-        locallogListInfoRef.current = []
-        setLocallogListInfo([])
-    }
-
     // 导入本地插件后执行操作
     const handleImportLocalPluginFinish = () => {
-        resetLocalImport()
         setVisible(false)
         sendMsgToLocalPlugin()
     }
@@ -858,8 +833,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const sendMsgToLocalPlugin = () => {
         if (sendPluginLocal) {
             emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
-            emiter.emit("onImportRefLocalPluginList", "")
         }
+        emiter.emit("onImportRefLocalPluginList", "")
     }
 
     const getRenderByLoadMode = useMemoizedFn((type: string) => {
@@ -904,19 +879,27 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 )
             case "local":
                 return (
-                    <YakitUploadComponent
-                        step={localImportStep}
-                        stepOneSubTitle={<>请选择以插件类型命名的文件夹，支持批量上传</>}
-                        fileRegexInfo={{
-                            fileNameRegex: /^(yak_codec|yak_mitm|yak_module|yak_nuclei|yak_portscan)$/,
-                            fileNameErrorMsg: "不符合文件夹格式要求，请重新上传"
-                        }}
-                        uploadList={localUploadList}
-                        onUploadList={setLocalUploadList}
-                        nextTitle='插件导入中'
-                        streamData={localStreamData}
-                        logListInfo={locallogListInfo}
-                    />
+                    <>
+                        <YakitFormDragger
+                            key='localPluginPath'
+                            formItemProps={{
+                                name: "localPluginPath",
+                                label: "本地插件路径",
+                                labelCol: {span: 5},
+                                wrapperCol: {span: 19}
+                            }}
+                            selectType='file'
+                            fileExtensionIsExist={false}
+                            onChange={(val) => {
+                                setLocalPluginPath(val)
+                                form.setFieldsValue({localPluginPath: val})
+                            }}
+                            value={localPluginPath}
+                        />
+                        <Form.Item labelCol={{span: 5}} wrapperCol={{span: 19}} name='Password' label='密码'>
+                            <YakitInput />
+                        </Form.Item>
+                    </>
                 )
             case "local-nuclei":
                 return (
@@ -953,7 +936,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
     })
 
-    const onOk = useMemoizedFn(async () => {
+    const onOk = useMemoizedFn(() => {
         const formValue = form.getFieldsValue()
 
         if (loadMode === "giturl") {
@@ -974,13 +957,15 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
 
         if (loadMode === "local") {
-            try {
-                await ipcRenderer.invoke("ImportYakScript", {
-                    Dirs: localUploadList.map((item) => item.path)
-                })
-            } catch (error) {
-                yakitFailed(error + "")
+            if (!formValue.localPluginPath) {
+                failed(`请输入本地插件路径`)
+                return
             }
+            const params: ImportYakScriptStreamRequest = {
+                Filename: formValue.localPluginPath,
+                Password: formValue.Password || ""
+            }
+            ipcRenderer.invoke("ImportYakScriptStream", params)
         }
 
         if (loadMode === "local-nuclei") {
@@ -1008,9 +993,6 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     })
 
     const onCancel = useMemoizedFn(() => {
-        if (loadMode === "local") {
-            localStreamData && handleImportLocalPluginFinish()
-        }
         setVisible(false)
     })
 
@@ -1018,14 +1000,6 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         const obj = loadModeInfo.find((item) => item.value === loadPluginMode)
         return obj ? obj[key] : ""
     }
-
-    // 确认按钮disabled
-    const okBtnDisabled = useMemo(() => {
-        if (loadMode === "local") {
-            return !localUploadList.length
-        }
-        return false
-    }, [loadMode, localUploadList])
 
     const execYakCodeReset = useMemoizedFn(() => {
         setVisible(false)
@@ -1054,7 +1028,6 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             wrapClassName={style["import-local-plugin-subTitle"]}
                             buttonStyle='solid'
                             value={loadMode}
-                            disabled={!!localStreamData}
                             onChange={(e) => {
                                 setLoadMode(e.target.value)
                             }}
@@ -1066,13 +1039,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 footerStyle={{justifyContent: "flex-end"}}
                 footer={
                     <>
-                        <YakitButton type={"outline2"} onClick={onCancel}>
-                            {loadMode === "local" && localStreamData?.Progress === 1 ? "完成" : "取消"}
-                        </YakitButton>
-                        <div style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}>
-                            <YakitButton disabled={okBtnDisabled} onClick={onOk}>
-                                导入
-                            </YakitButton>
+                        <div style={{marginLeft: 12, display: "block"}}>
+                            <YakitButton onClick={onOk}>导入</YakitButton>
                         </div>
                     </>
                 }

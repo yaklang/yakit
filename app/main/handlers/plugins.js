@@ -1,7 +1,7 @@
 const {ipcMain} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
 const {USER_INFO} = require("../state")
-
+const fs = require('fs');
 module.exports = (win, getClient) => {
     // get plugins risk list
     const asyncGetRiskList = (params) => {
@@ -69,8 +69,11 @@ module.exports = (win, getClient) => {
 
     // 批量本地插件导入
     let importYakScriptStream
-    ipcMain.handle("ImportYakScript", async (e, params) => {
-        importYakScriptStream = getClient().ImportYakScript(params)
+    ipcMain.handle("ImportYakScriptStream", async (e, params) => {
+        const data = fs.readFileSync(params.Filename, null);
+        const uint8Array = new Uint8Array(data);
+        params.Data = uint8Array
+        importYakScriptStream = getClient().ImportYakScriptStream(params)
 
         importYakScriptStream.on("data", (e) => {
             if (!win) {
@@ -82,7 +85,7 @@ module.exports = (win, getClient) => {
             if (!win) {
                 return
             }
-            win.webContents.send("import-yak-script-error", e)
+            win.webContents.send("import-yak-script-error", { message: e.message })
         })
         importYakScriptStream.on("end", () => {
             importYakScriptStream.cancel()
@@ -93,14 +96,14 @@ module.exports = (win, getClient) => {
             win.webContents.send("import-yak-script-end")
         })
     })
-    ipcMain.handle("cancel-importYakScript", async () => {
+    ipcMain.handle("cancel-ImportYakScriptStream", async () => {
         if (importYakScriptStream) importYakScriptStream.cancel()
     })
 
     // 批量导出本地插件
     let exportYakScriptStream
-    ipcMain.handle("ExportLocalYakScriptStream", async (e, params) => {
-        exportYakScriptStream = getClient().ExportLocalYakScriptStream(params)
+    ipcMain.handle("ExportYakScriptStream", async (e, params) => {
+        exportYakScriptStream = getClient().ExportYakScriptStream(params)
         exportYakScriptStream.on("data", (e) => {
             if (!win) {
                 return
@@ -122,7 +125,7 @@ module.exports = (win, getClient) => {
             win.webContents.send("export-yak-script-end")
         })
     })
-    ipcMain.handle("cancel-exportYakScript", async () => {
+    ipcMain.handle("cancel-ExportYakScriptStream", async () => {
         if (exportYakScriptStream) exportYakScriptStream.cancel()
     })
 
