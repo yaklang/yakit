@@ -86,7 +86,10 @@ export const StartExecBatchYakScriptWithFilter = (target: TargetRequest, filter:
     };
     return ipcRenderer.invoke("ExecBatchYakScript", params, token)
 };
-
+/**
+ * @deprecated 
+ * TODO - 任务列表已做，可以删除了
+ */
 export const BatchExecuteByFilter: React.FC<BatchExecuteByFilterProp> = React.memo((props: BatchExecuteByFilterProp) => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -224,7 +227,10 @@ interface BatchExecutorResultByFilterProp {
 export interface TaskResultLog extends ExecResultLog {
     key: number
 }
-
+/**
+ * @deprecated 
+ * TODO - 任务列表已做，可以删除了
+ */
 export const BatchExecutorResultByFilter: React.FC<BatchExecutorResultByFilterProp> = (props) => {
     const [taskLog, setTaskLog, getTaskLog] = useGetState<TaskResultLog[]>([]);
     const [progressFinished, setProgressFinished] = useState(0);

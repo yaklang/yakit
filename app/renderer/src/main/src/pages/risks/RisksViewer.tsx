@@ -10,7 +10,9 @@ export interface RisksViewerProp {
     risks: Risk[]
     tableContentHeight?: number
 }
-
+/**
+ * @deprecated 
+ */
 export const RisksViewer: React.FC<RisksViewerProp> = React.memo((props) => {
     const {tableContentHeight} = props
     const ref = useRef(null)

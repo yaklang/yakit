@@ -16,7 +16,8 @@ export interface SimplePluginListFromYakScriptNamesProp {
 
 /**
  * @deprecated 暂时不删，批量执行任务列表功能做参考
- * @description ReadOnlyBatchExecutorByRecoverUid再用，等ReadOnlyBatchExecutorByRecoverUid删除后同步删除
+ * @description ReadOnlyBatchExecutorByRecoverUid 再用，等ReadOnlyBatchExecutorByRecoverUid删除后同步删除
+ * TODO - 任务列表已做，可以删除了
  */
 export const SimplePluginListFromYakScriptNames: React.FC<SimplePluginListFromYakScriptNamesProp> = React.memo(
     (props: SimplePluginListFromYakScriptNamesProp) => {
