@@ -30,7 +30,7 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
-import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
+import {HTTPFlowExtractedData, HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
@@ -47,6 +47,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {RemoteGV} from "@/yakitGV"
+import {QueryGeneralResponse} from "@/pages/invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -649,13 +650,24 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     Order: "asc",
                     OrderBy: "created_at",
                     Page: 1,
-                    Limit: 1
+                    Limit: 10
                 },
                 HTTPFlowHash: i.Hash
             })
-            .then((rsp: {Total: number}) => {
+            .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
+                    // 当侧边栏为关闭的时候，需要重新设置一下更新一下高亮
+                    if (isFold) {
+                        setHighLightText(
+                            rsp.Data.map((i) => ({
+                                startOffset: i.Index,
+                                highlightLength: i.Length,
+                                hoverVal: i.RuleName,
+                                IsMatchRequest: i.IsMatchRequest
+                            }))
+                        )
+                    }
                 } else {
                     setHighLightText([])
                 }
@@ -1406,7 +1418,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         onEditor={(Editor) => {
                             setResEditor(Editor)
                         }}
-                        highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)}
+                        highLightText={
+                            flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)
+                        }
                     />
                 )
             }}
