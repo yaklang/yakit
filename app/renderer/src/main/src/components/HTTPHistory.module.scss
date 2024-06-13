@@ -12,6 +12,9 @@
             border-right: 1px solid var(--yakit-border-color);
             background: #f0f1f3;
             &-item {
+                display: flex;
+                align-items: center;
+                gap: 4px;
                 padding: 12px 4px;
                 cursor: pointer;
                 transform: rotate(180deg);
@@ -21,6 +24,10 @@
 
                 text-orientation: sideways-right;
                 writing-mode: vertical-rl;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
                 &:hover {
                     background: rgba(204, 210, 222, 0.5);
                 }

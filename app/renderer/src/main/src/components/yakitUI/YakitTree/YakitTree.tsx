@@ -1,7 +1,7 @@
 import React from "react"
 import {Tree} from "antd"
 import type {DataNode as TreeNode, TreeProps} from "antd/es/tree"
-import {OutlineMinusIcon, OutlinePlusIcon} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import styles from "./YakitTree.module.scss"
 import classNames from "classnames"
@@ -23,13 +23,9 @@ const YakitTree: React.FC<YakitTreeProps> = React.memo((props) => {
                     {...props}
                     showLine={showLine ? {showLeafIcon: false} : false}
                     showIcon={showIcon}
-                    switcherIcon={(p: {expanded: boolean}) => {
-                        return p.expanded ? (
-                            <OutlineMinusIcon className={styles["switcher-icon"]} />
-                        ) : (
-                            <OutlinePlusIcon className={styles["switcher-icon"]} />
-                        )
-                    }}
+                    switcherIcon={(p: {expanded: boolean}) => (
+                        <OutlineChevrondownIcon className={styles["switcher-icon"]} />
+                    )}
                 ></Tree>
             ) : (
                 <YakitEmpty />

@@ -11,11 +11,12 @@ import {
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURL, YakURLResource} from "@/pages/yakURLTree/data"
-import {SolidFolderaddIcon} from "@/assets/icon/solid"
+import {SolidFolderIcon, SolidFolderaddIcon, SolidFolderopenIcon} from "@/assets/icon/solid"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import classNames from "classnames"
 import styles from "./WebTree.module.scss"
 
 type TreeNodeType = "dir" | "file" | "query" | "path"
@@ -89,7 +90,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }
 
     const getTreeData = useMemoizedFn((yakurl: string) => {
-        if(treeLoading)return
+        if (treeLoading) return
 
         // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
@@ -141,9 +142,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 icon: ({expanded}) => {
                     if (item.ResourceType === "dir") {
                         return expanded ? (
-                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                            <SolidFolderopenIcon className='yakitTreeNode-icon yakit-flolder-icon' />
                         ) : (
-                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                            <SolidFolderIcon className='yakitTreeNode-icon yakit-flolder-icon' />
                         )
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -386,6 +387,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         onExpand={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                         selectedKeys={selectedKeys}
                         onSelect={onSelectedKeys}
+                        blockNode={true}
                     ></YakitTree>
                 )}
             </div>

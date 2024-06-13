@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -13,6 +13,7 @@ import classNames from "classnames"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebTree} from "./WebTree/WebTree"
+import {OutlineLog2Icon} from "@/assets/icon/outline"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -32,7 +33,7 @@ type tabKeys = "web-tree"
 
 interface HTTPHistoryTabsItem {
     key: tabKeys
-    label: string
+    label: ReactElement | string
     contShow: boolean
 }
 
@@ -74,7 +75,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [hTTPHistoryTabs, setHTTPHistoryTabs] = useState<Array<HTTPHistoryTabsItem>>([
         {
             key: "web-tree",
-            label: "网站树",
+            label: (
+                <>
+                    <OutlineLog2Icon /> 网站树
+                </>
+            ),
             contShow: false // 初始为false
         }
     ])
@@ -82,27 +87,38 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     useEffect(() => {
         getRemoteValue(RemoteGV.HistoryLeftTabs).then((setting: string) => {
             if (setting) {
-                const tabs = JSON.parse(setting)
-                setHTTPHistoryTabs(tabs)
-                const findItem = tabs.find((item: HTTPHistoryTabsItem) => item.contShow)
-                if (findItem) {
-                    setCurTabKey(findItem.key)
+                try {
+                    const {key, contShow} = JSON.parse(setting)
+                    hTTPHistoryTabs.forEach((i) => {
+                        if (i.key === key) {
+                            i.contShow = contShow
+                        } else {
+                            i.contShow = false
+                        }
+                    })
+                    setHTTPHistoryTabs([...hTTPHistoryTabs])
+                    setCurTabKey(key)
+                } catch (error) {
+                    hTTPHistoryTabs.forEach((i) => {
+                        i.contShow = false
+                    })
+                    setHTTPHistoryTabs([...hTTPHistoryTabs])
+                    setCurTabKey("web-tree")
                 }
             }
         })
     }, [])
-    const handleTabClick = (item: HTTPHistoryTabsItem) => {
-        const copyHTTPHistoryTabs = structuredClone(hTTPHistoryTabs)
-        copyHTTPHistoryTabs.forEach((i) => {
-            if (i.key === item.key) {
-                i.contShow = !item.contShow
+    const handleTabClick = (key: tabKeys, contShow: boolean) => {
+        hTTPHistoryTabs.forEach((i) => {
+            if (i.key === key) {
+                i.contShow = !contShow
             } else {
                 i.contShow = false
             }
         })
-        setRemoteValue(RemoteGV.HistoryLeftTabs, JSON.stringify(copyHTTPHistoryTabs))
-        setHTTPHistoryTabs(copyHTTPHistoryTabs)
-        setCurTabKey(item.key)
+        setRemoteValue(RemoteGV.HistoryLeftTabs, JSON.stringify({key, contShow: !contShow}))
+        setHTTPHistoryTabs([...hTTPHistoryTabs])
+        setCurTabKey(key)
     }
     const tabContItemShow = (key: tabKeys) => {
         return curTabKey === key && hTTPHistoryTabs.find((item) => item.key === curTabKey)?.contShow
@@ -140,7 +156,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const val = JSON.parse(value)
             const host = val.host
             webTreeRef.current.onJumpWebTree(host)
-            handleTabClick({ key: "web-tree", label: "网站树", contShow: false })
+            handleTabClick("web-tree", false)
         }
     })
     useEffect(() => {
@@ -190,7 +206,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             })}
                                             key={item.key}
                                             onClick={() => {
-                                                handleTabClick(item)
+                                                handleTabClick(item.key, item.contShow)
                                             }}
                                         >
                                             {item.label}
