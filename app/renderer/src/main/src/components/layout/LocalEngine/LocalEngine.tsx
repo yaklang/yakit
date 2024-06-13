@@ -107,6 +107,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             try {
                 setLog(["获取引擎版本号..."])
                 let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
+                localYaklang = localYaklang.startsWith("v") ? localYaklang.slice(1) : localYaklang
                 setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
                 setCurrentYaklang(localYaklang)
                 if (checkEngine) {
