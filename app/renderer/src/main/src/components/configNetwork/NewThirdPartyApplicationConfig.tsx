@@ -89,7 +89,6 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
     // 获取类型
     useEffect(() => {
         ipcRenderer.invoke("GetThirdPartyAppConfigTemplate").then((res: GetThirdPartyAppConfigTemplateResponse) => {
-            console.log("获取类型所有数据", res.Templates)
             const templates = res.Templates
             setTemplates(templates)
             let newOptions: DefaultOptionType[] | SelectOptionsProps[] = []
