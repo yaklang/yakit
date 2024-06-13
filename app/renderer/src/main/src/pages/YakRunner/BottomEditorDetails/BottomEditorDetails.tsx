@@ -19,9 +19,9 @@ import {CVXterm} from "@/components/CVXterm"
 import {ExecResult} from "@/pages/invoker/schema"
 import {writeExecResultXTerm, writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
 import ReactResizeDetector from "react-resize-detector"
-import { defaultXTermOptions } from "@/components/baseConsole/BaseConsole"
-import { XTerm } from "xterm-for-react"
-import { YakitSystem } from "@/yakitGVDefine"
+import {defaultXTermOptions} from "@/components/baseConsole/BaseConsole"
+import {XTerm} from "xterm-for-react"
+import {YakitSystem} from "@/yakitGVDefine"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -31,7 +31,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const {activeFile} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
-    
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -61,7 +60,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     })
 
-    const onOpenBottomDetailFun = useMemoizedFn((v: string)=>{
+    const onOpenBottomDetailFun = useMemoizedFn((v: string) => {
         try {
             const {type}: {type: ShowItemType} = JSON.parse(v)
             setEditorDetails(true)
@@ -87,7 +86,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             }
             if (data?.Raw) {
                 outputCahceRef.current += Buffer.from(data.Raw).toString("utf8")
-                if(xtermRef.current){
+                if (xtermRef.current) {
                     writeExecResultXTerm(xtermRef, data, "utf8")
                 }
             }
@@ -135,13 +134,20 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                 </div>
                 <div className={styles["extra"]}>
-                    <YakitButton type='text2' icon={<OutlineXIcon />} onClick={()=>{setEditorDetails(false)}} />
+                    <YakitButton
+                        type='text2'
+                        icon={<OutlineXIcon />}
+                        onClick={() => {
+                            setEditorDetails(false)
+                        }}
+                    />
                 </div>
             </div>
             <div className={styles["content"]}>
                 {showType.includes("output") && showItem === "output" && (
-                    <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef}/>
+                    <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef} />
                 )}
+                {/* 帮助信息只有yak有 */}
                 {showType.includes("helpInfo") && showItem === "helpInfo" && (
                     <HelpInfoList list={[{key: 1}, {key: 2}, {key: 3}, {key: 4}, {key: 5}]} />
                 )}
@@ -154,7 +160,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 }
 
 export const OutputInfoList: React.FC<OutputInfoListProps> = (props) => {
-    const {outputCahceRef,xtermRef} = props
+    const {outputCahceRef, xtermRef} = props
 
     useEffect(() => {
         if (outputCahceRef.current.length > 0) {
@@ -169,7 +175,7 @@ export const OutputInfoList: React.FC<OutputInfoListProps> = (props) => {
             .then((res) => (systemRef.current = res))
             .catch(() => {})
     }, [])
-    
+
     const setCopy = useDebounceFn(
         useMemoizedFn((content: string) => {
             ipcRenderer.invoke("set-copy-clipboard", content)
@@ -201,9 +207,7 @@ export const OutputInfoList: React.FC<OutputInfoListProps> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <XTerm ref={xtermRef} 
-            customKeyEventHandler={onCopy} 
-            options={defaultXTermOptions} />
+            <XTerm ref={xtermRef} customKeyEventHandler={onCopy} options={defaultXTermOptions} />
         </div>
     )
 }
