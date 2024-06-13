@@ -52,15 +52,15 @@ $keyColor: map-keys($tagColor);
     }
     .yakit-risk-details {
         @extend %display-column-center;
-        border: 1px solid var(--yakit-border-color);
-        border-top: 0;
+
         border-radius: 0 0 4px 4px;
         position: relative;
         height: 100%;
         .yakit-risk-details-title {
             @extend %display-flex-center;
             justify-content: space-between;
-            border-bottom: 1px solid var(--yakit-border-color);
+            border-left: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--yakit-border-color);
 
             color: var(--yakit-header-color);
             font-size: 12px;
@@ -72,6 +72,7 @@ $keyColor: map-keys($tagColor);
 }
 .yakit-risk-details-content {
     overflow-y: auto;
+    border: 1px solid var(--yakit-border-color);
     :global {
         .ant-descriptions-bordered .ant-descriptions-view > table {
             table-layout: fixed;

@@ -2120,7 +2120,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                     width: "80%",
                     title: "详情",
                     content: (
-                        <div style={{overflow: "auto", border: "1px solid var(--yakit-border-color)"}}>
+                        <div style={{overflow: "auto"}}>
                             <YakitRiskDetails info={res} />
                         </div>
                     )
