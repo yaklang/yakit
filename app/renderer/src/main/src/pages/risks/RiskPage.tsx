@@ -18,6 +18,7 @@ import {Divider} from "antd"
 import classNames from "classnames"
 import {VulnerabilityLevelPie} from "./VulnerabilityLevelPie/VulnerabilityLevelPie"
 import {VulnerabilityTypePie} from "./VulnerabilityTypePie/VulnerabilityTypePie"
+import {YakitRiskTable} from "./YakitRiskTable/YakitRiskTable"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState(true)
@@ -26,7 +27,7 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
         <div className={styles["risk-page"]}>
             <RiskQuery advancedQuery={advancedQuery} setAdvancedQuery={setAdvancedQuery} />
             {/* <RiskTable /> */}
-            <div style={{padding: 12}}>55</div>
+            <YakitRiskTable />
         </div>
     )
 }
