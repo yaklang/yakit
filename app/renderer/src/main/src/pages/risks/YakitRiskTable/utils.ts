@@ -14,3 +14,19 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
             })
     })
 }
+
+export interface NewRiskReadRequest {
+    AfterId?: string
+    Ids: number[]
+}
+export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("set-risk-info-read", query)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `已读失败: ${e}`)
+                reject(e)
+            })
+    })
+}

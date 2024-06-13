@@ -18,7 +18,7 @@ import {SolidRefreshIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {apiQueryRisks} from "./utils"
+import {apiNewRiskRead, apiQueryRisks} from "./utils"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -354,6 +354,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
     const onSetCurrentRow = useMemoizedFn((val?: Risk) => {
+        if (!val) return
         if (!currentSelectItem) {
             const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
             setScrollToIndex(index)
@@ -362,6 +363,19 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             setCurrentSelectItem(val)
         }
         /**TODO - 点击的row为未读的数据，需要变成已读 */
+        apiNewRiskRead({Ids: [val.Id]}).then(() => {
+            setResponse({
+                ...response,
+                Data: response.Data.map((ele) => {
+                    if (ele.Id === val.Id) {
+                        ele.IsRead = true
+                        /**TODO - 模拟，下面这个样式是未读得 */
+                        // ele.cellClassName = styles["yakit-risk-table-cell-unread"]
+                    }
+                    return ele
+                })
+            })
+        })
     })
     const ResizeBoxProps = useCreation(() => {
         let p = {
@@ -497,7 +511,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                 </div>
                             </div>
                         }
-                        isRightClickBatchOperate={true}
                         renderKey='Id'
                         data={response.Data}
                         rowSelection={{
