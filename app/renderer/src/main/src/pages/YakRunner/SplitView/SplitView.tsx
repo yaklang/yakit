@@ -290,7 +290,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
     return (
         <div ref={wrapperRef} data-split-view-id={wrapperId} className={styles["split-view"]}>
             {/* 位移线 */}
-            <div className={classNames(styles["sash-container"], {[styles["hover"]]: !isOver})}>
+            {!isLastHidden&&<div className={classNames(styles["sash-container"], {[styles["hover"]]: !isOver})}>
                 {elements.map((item, index) => {
                     if (index === elements.length - 1) return null
                     return (
@@ -306,7 +306,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
                         ></div>
                     )
                 })}
-            </div>
+            </div>}
 
             {/* 分屏区域 */}
             <div

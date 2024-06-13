@@ -57,10 +57,11 @@ export const SyntaxCheckList: React.FC<SyntaxCheckListProps> = (props) => {
 
     return (
         <div className={styles["syntax-check-list"]}>
-            {syntaxCheckData.map((item) => {
+            {syntaxCheckData.map((item,index) => {
                 const {severity, message, startLineNumber, startColumn, endLineNumber, endColumn} = item
                 return (
                     <div
+                        key={`${message}-${index}`}
                         className={styles["syntax-check-item"]}
                         onClick={() => {
                             onJumpToEditor({

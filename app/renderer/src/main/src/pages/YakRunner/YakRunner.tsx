@@ -33,7 +33,7 @@ import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
 import {convert, get, clear} from "./keyDown/keyDown"
 import {defaultKeyDown} from "./keyDown/keyDownFun"
 import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
-
+import cloneDeep from "lodash/cloneDeep"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -314,16 +314,93 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
-    // 拖放结束时的回调函数
-    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided)=>{
-        try {
-            console.log("onDragEnd",result, provided)
-            const {source, destination, draggableId, type, combine} = result
-        } catch (error) {}
-        
+    // 根据数组下标进行位置互换
+    const moveArrayElement = useMemoizedFn((arr, fromIndex, toIndex) => {
+        // 检查下标是否有效
+        if (fromIndex < 0 || fromIndex >= arr.length || toIndex < 0 || toIndex >= arr.length) {
+            console.error("Invalid indices")
+            return arr // 返回原始数组
+        }
+        // 从数组中移除元素并插入到目标位置
+        const [element] = arr.splice(fromIndex, 1)
+        arr.splice(toIndex, 0, element)
+        return arr // 返回移动后的数组
     })
 
-    const getTabsId = useMemoizedFn((row,col)=>{
+    // 拖放结束时的回调函数
+    const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
+        try {
+            const {source, destination, draggableId, type, combine} = result
+            if (!destination) {
+                return
+            }
+            const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+            // 同层内拖拽
+            if (source.droppableId === destination.droppableId) {
+                newAreaInfo.forEach((item, index) => {
+                    item.elements.forEach((itemIn, indexIn) => {
+                        if (itemIn.id === source.droppableId) {
+                            moveArrayElement(
+                                newAreaInfo[index].elements[indexIn].files,
+                                source.index,
+                                destination.index
+                            )
+                        }
+                    })
+                })
+            }
+            // 拖拽到另一层
+            else if (source.droppableId !== destination.droppableId) {
+                let element: FileDetailInfo | null = null
+                let indexArr: number[] = []
+                newAreaInfo.forEach((item, index) => {
+                    item.elements.forEach((itemIn, indexIn) => {
+                        // 需要移除项
+                        if (itemIn.id === source.droppableId) {
+                            // 从数组中移除元素并获取拖拽元素
+                            const [ele] = newAreaInfo[index].elements[indexIn].files.splice(source.index, 1)
+                            element = ele
+
+                            let filesLength = newAreaInfo[index].elements[indexIn].files.length
+                            // 校验是否仅有一项 移除后是否为空 为空则删除此大项
+                            if (filesLength === 0) {
+                                if (item.elements.length > 1) {
+                                    newAreaInfo[index].elements = newAreaInfo[index].elements.filter(
+                                        (item) => item.id !== source.droppableId
+                                    )
+                                } else if (item.elements.length <= 1) {
+                                    newAreaInfo.splice(index, 1)
+                                }
+                            }
+                            // 由于移走激活文件 重新赋予激活文件
+                            else if(filesLength!==0 && ele.isActive){
+                                newAreaInfo[index].elements[indexIn].files[source.index - 1 < 0 ? 0 : source.index -1].isActive = true
+                            }
+                        }
+                        // 需要新增项
+                        if (itemIn.id === destination.droppableId) {
+                            indexArr = [index, indexIn]
+                        }
+                    })
+                })
+                // 新增
+                if (element && indexArr.length > 0) {
+                    // 如若拖拽项是已激活文件 则将拖拽后的原本激活文件变为未激活
+                    if ((element as FileDetailInfo)?.isActive) {
+                        newAreaInfo[indexArr[0]].elements[indexArr[1]].files = newAreaInfo[indexArr[0]].elements[
+                            indexArr[1]
+                        ].files.map((item) => ({...item, isActive: false}))
+                    }
+                    // 新增拖拽项
+                    newAreaInfo[indexArr[0]].elements[indexArr[1]].files.splice(destination.index, 0, element)
+                }
+            }
+            console.log("onDragEnd-0_0", newAreaInfo)
+            setAreaInfo(newAreaInfo)
+        } catch (error) {}
+    })
+
+    const getTabsId = useMemoizedFn((row, col) => {
         try {
             return areaInfo[row].elements[col].id
         } catch (error) {
@@ -337,10 +414,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             return <YakRunnerWelcomePage />
         }
         return (
-            <DragDropContext
-                onDragEnd={onDragEnd}
-                onDragStart={onDragStart}
-            >
+            <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
                 <SplitView
                     isVertical={true}
                     isLastHidden={areaInfo.length === 1}
@@ -350,8 +424,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 <SplitView
                                     isLastHidden={areaInfo.length > 0 && areaInfo[0].elements.length === 1}
                                     elements={[
-                                        {element: <RunnerTabs tabsId={getTabsId(0,0)} />},
-                                        {element: <RunnerTabs tabsId={getTabsId(0,1)} />}
+                                        {element: <RunnerTabs tabsId={getTabsId(0, 0)} />},
+                                        {element: <RunnerTabs tabsId={getTabsId(0, 1)} />}
                                     ]}
                                 />
                             )
@@ -361,8 +435,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 <SplitView
                                     isLastHidden={areaInfo.length > 1 && areaInfo[1].elements.length === 1}
                                     elements={[
-                                        {element: <RunnerTabs tabsId={getTabsId(1,0)} />},
-                                        {element: <RunnerTabs tabsId={getTabsId(1,1)} />}
+                                        {element: <RunnerTabs tabsId={getTabsId(1, 0)} />},
+                                        {element: <RunnerTabs tabsId={getTabsId(1, 1)} />}
                                     ]}
                                 />
                             )

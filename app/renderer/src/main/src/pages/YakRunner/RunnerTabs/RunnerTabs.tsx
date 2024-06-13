@@ -48,6 +48,9 @@ import emiter from "@/utils/eventBus/eventBus"
 import {Divider} from "antd"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {v4 as uuidv4} from "uuid"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import { openABSFileLocated } from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -150,8 +153,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         }
     })
 
-    // 拆分
-    const onDirectionToSplit = useMemoizedFn((direction: SplitDirectionProps) => {
+    // 拆分(以右键选择项为准进行拆分)
+    const onContextMenuToSplit = useMemoizedFn((direction: SplitDirectionProps, info: FileDetailInfo) => {
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
         let moveItem: TabFileProps | null = null
         let infoIndex: number = 0
@@ -163,21 +166,24 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                     let newFileDetailInfo: FileDetailInfo[] = []
                     let activeIndex: number = 0
                     itemIn.files.forEach((file, fileIndex) => {
-                        if (!file.isActive) {
-                            newFileDetailInfo.push(file)
-                        }
-                        if (file.isActive) {
+                        if (file.path === info.path) {
                             // 构建新Tabs项
                             moveItem = {
                                 id: uuidv4(),
-                                files: [file]
+                                // 如若分割未激活项 则默认将其激活
+                                files: [{...file, isActive: true}]
                             }
                             activeIndex = fileIndex
                             infoIndex = index
+                        } else {
+                            newFileDetailInfo.push(file)
                         }
                     })
-                    // 重新激活未选中项目（因移走后当前tabs无选中项）
-                    newFileDetailInfo[(activeIndex - 1 )< 0 ? 0 : activeIndex].isActive = true
+
+                    if (info.isActive) {
+                        // 重新激活未选中项目（因移走后当前tabs无选中项）
+                        newFileDetailInfo[activeIndex - 1 < 0 ? 0 : activeIndex - 1].isActive = true
+                    }
 
                     // 赋予新值
                     newAreaInfo[index].elements[indexIn].files = newFileDetailInfo
@@ -202,8 +208,61 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 newAreaInfo[infoIndex].elements.push(moveItem)
             }
         }
-        console.log("拆分", newAreaInfo, moveItem)
-        setAreaInfo&&setAreaInfo(newAreaInfo)
+        setAreaInfo && setAreaInfo(newAreaInfo)
+    })
+
+    // 拆分(以激活项为准进行拆分)
+    const onDirectionToSplit = useMemoizedFn((direction: SplitDirectionProps) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        let moveItem: TabFileProps | null = null
+        let infoIndex: number = 0
+        // 不论什么方向 都需要移除迁移项并重新激活未选中项
+        newAreaInfo.forEach((item, index) => {
+            item.elements.forEach((itemIn, indexIn) => {
+                if (itemIn.id === tabsId) {
+                    // 筛选出迁移项
+                    let newFileDetailInfo: FileDetailInfo[] = []
+                    let activeIndex: number = 0
+                    itemIn.files.forEach((file, fileIndex) => {
+                        if (file.isActive) {
+                            // 构建新Tabs项
+                            moveItem = {
+                                id: uuidv4(),
+                                files: [file]
+                            }
+                            activeIndex = fileIndex
+                            infoIndex = index
+                        } else {
+                            newFileDetailInfo.push(file)
+                        }
+                    })
+                    // 重新激活未选中项目（因移走后当前tabs无选中项）
+                    newFileDetailInfo[activeIndex - 1 < 0 ? 0 : activeIndex - 1].isActive = true
+
+                    // 赋予新值
+                    newAreaInfo[index].elements[indexIn].files = newFileDetailInfo
+                }
+            })
+        })
+        if (moveItem) {
+            if (direction === "top") {
+                newAreaInfo.unshift({
+                    elements: [moveItem]
+                })
+            }
+            if (direction === "bottom") {
+                newAreaInfo.push({
+                    elements: [moveItem]
+                })
+            }
+            if (direction === "left") {
+                newAreaInfo[infoIndex].elements.unshift(moveItem)
+            }
+            if (direction === "right") {
+                newAreaInfo[infoIndex].elements.push(moveItem)
+            }
+        }
+        setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
     // 拆分栏控制
@@ -220,45 +279,210 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 }
             })
             return (
-                <>
-                    <YakitDropdownMenu
-                        menu={{
-                            data: menu,
-                            onClick: ({key}) => {
-                                switch (key) {
-                                    case "top":
-                                    case "right":
-                                    case "bottom":
-                                    case "left":
-                                        onDirectionToSplit(key)
-                                        break
-                                    default:
-                                        break
-                                }
+                <YakitDropdownMenu
+                    menu={{
+                        data: menu,
+                        onClick: ({key}) => {
+                            switch (key) {
+                                case "top":
+                                case "right":
+                                case "bottom":
+                                case "left":
+                                    onDirectionToSplit(key)
+                                    break
+                                default:
+                                    break
                             }
-                        }}
-                        dropdown={{
-                            trigger: ["click"],
-                            placement: "bottomRight"
-                        }}
-                    >
-                        <OutlineSplitScreenIcon className={styles["extra-box-icon"]} />
-                    </YakitDropdownMenu>
-                    <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
-                </>
+                        }
+                    }}
+                    dropdown={{
+                        trigger: ["click"],
+                        placement: "bottomRight"
+                    }}
+                >
+                    <OutlineSplitScreenIcon className={styles["extra-box-icon"]} />
+                </YakitDropdownMenu>
             )
         }
         return <></>
+    })
+
+    // 关闭当前项
+    const onRemoveCurrent = useMemoizedFn((info: FileDetailInfo) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        newAreaInfo.forEach((item, idx) => {
+            item.elements.forEach((itemIn, idxin) => {
+                if (itemIn.id === tabsId) {
+                    itemIn.files.forEach((file, fileIndex) => {
+                        if (file.path === info.path) {
+                            // 如若仅存在一项 则删除此大项并更新布局
+                            if (item.elements.length > 1 && itemIn.files.length === 1) {
+                                newAreaInfo[idx].elements = newAreaInfo[idx].elements.filter(
+                                    (item) => item.id !== tabsId
+                                )
+                            } else if (item.elements.length <= 1 && itemIn.files.length === 1) {
+                                newAreaInfo.splice(idx, 1)
+                            }
+                            // 存在多项则移除删除项
+                            else {
+                                newAreaInfo[idx].elements[idxin].files = newAreaInfo[idx].elements[idxin].files.filter(
+                                    (item) => item.path !== info.path
+                                )
+                                // 重新激活未选中项目（因删除后当前tabs无选中项）
+                                if (info.isActive) {
+                                    newAreaInfo[idx].elements[idxin].files[
+                                        fileIndex - 1 < 0 ? 0 : fileIndex - 1
+                                    ].isActive = true
+                                }
+                            }
+                        }
+                    })
+                }
+            })
+        })
+        setAreaInfo && setAreaInfo(newAreaInfo)
+    })
+
+    // 关闭其他项
+    const onRemoveOther = useMemoizedFn((info: FileDetailInfo) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        newAreaInfo.forEach((item, idx) => {
+            item.elements.forEach((itemIn, idxin) => {
+                if (itemIn.id === tabsId) {
+                    itemIn.files.forEach((file, fileIndex) => {
+                        if (file.path === info.path) {
+                            // 剩余展示项
+                            let onlyItem: FileDetailInfo | null = null
+                            let onlyArr = newAreaInfo[idx].elements[idxin].files
+                                .filter((item) => item.path === info.path)
+                                .map((item) => ({...item, isActive: true}))
+                            if (onlyArr.length > 0) {
+                                onlyItem = onlyArr[0]
+                            }
+                            if (onlyItem) {
+                                newAreaInfo[idx].elements[idxin].files = [onlyItem]
+                            }
+                        }
+                    })
+                }
+            })
+        })
+        setAreaInfo && setAreaInfo(newAreaInfo)
+    })
+
+    // 关闭所有
+    const onRemoveAll = useMemoizedFn((info: FileDetailInfo) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        newAreaInfo.forEach((item, idx) => {
+            item.elements.forEach((itemIn, idxin) => {
+                if (itemIn.id === tabsId) {
+                    // 如若仅存在一项 则删除此大项并更新布局
+                    if (item.elements.length > 1) {
+                        newAreaInfo[idx].elements = newAreaInfo[idx].elements.filter((item) => item.id !== tabsId)
+                    } else if (item.elements.length <= 1) {
+                        newAreaInfo.splice(idx, 1)
+                    }
+                }
+            })
+        })
+        setAreaInfo && setAreaInfo(newAreaInfo)
+    })
+
+    // 在文件夹中显示
+    const onOpenFolder = useMemoizedFn((info: FileDetailInfo) => {
+        // openABSFileLocated("")
+    })
+
+    // 在文件列表显示
+    const onOpenFileList = useMemoizedFn((info: FileDetailInfo) => {})
+
+    const menuData: YakitMenuItemType[] = useMemo(() => {
+        const base: YakitMenuItemType[] = [
+            {
+                label: "关闭",
+                key: "removeCurrent"
+            },
+            {
+                label: "关闭其他",
+                key: "removeOther"
+            },
+            {
+                label: "关闭所有",
+                key: "removeAll"
+            },
+            {type: "divider"},
+            {
+                label: "在文件夹中显示",
+                key: "openFolder"
+            },
+            {
+                label: "在文件列表显示",
+                key: "openFileList"
+            }
+        ]
+        if (splitDirection.length > 0) {
+            let direction = splitDirection.map((item) => {
+                return {
+                    label: onDirectionToName(item),
+                    key: item
+                }
+            })
+            return [...base, {type: "divider"}, ...direction]
+        }
+        return [...base]
+    }, [splitDirection])
+
+    // 右键菜单
+    const handleContextMenu = useMemoizedFn((info: FileDetailInfo) => {
+        console.log("info===", info)
+
+        showByRightContext({
+            width: 180,
+            type: "grey",
+            data: [...menuData],
+            onClick: ({key, keyPath}) => {
+                switch (key) {
+                    case "removeCurrent":
+                        onRemoveCurrent(info)
+                        return
+                    case "removeOther":
+                        onRemoveOther(info)
+                        return
+                    case "removeAll":
+                        onRemoveAll(info)
+                        return
+                    case "openFolder":
+                        onOpenFolder(info)
+                        return
+                    case "openFileList":
+                        onOpenFileList(info)
+                        return
+                    case "top":
+                    case "right":
+                    case "bottom":
+                    case "left":
+                        onContextMenuToSplit(key, info)
+                        return
+                }
+            }
+        })
     })
 
     const extraDom = useMemoizedFn(() => {
         return (
             <div className={styles["extra-box"]}>
                 {onSplitTabBar()}
+                <>
+                    {splitDirection.length > 0 && isShowExtra && (
+                        <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
+                    )}
+                </>
                 {isShowExtra && (
-                    <YakitButton icon={<OutlinePlayIcon />} loading={executing} onClick={onRunYak}>
-                        执行
-                    </YakitButton>
+                    <>
+                        <YakitButton icon={<OutlinePlayIcon />} loading={executing} onClick={onRunYak}>
+                            执行
+                        </YakitButton>
+                    </>
                 )}
             </div>
         )
@@ -266,7 +490,13 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     return (
         <div className={styles["runner-tabs"]}>
-            <RunnerTabBar tabsId={tabsId} tabsList={tabsList} extra={extraDom()} />
+            <RunnerTabBar
+                tabsId={tabsId}
+                tabsList={tabsList}
+                extra={extraDom()}
+                handleContextMenu={handleContextMenu}
+                onRemoveCurrent={onRemoveCurrent}
+            />
 
             <div className={styles["tabs-pane"]}>
                 <RunnerTabPane tabsId={tabsId} />
@@ -276,7 +506,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 })
 
 const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
-    const {tabsId, tabsList, extra} = props
+    const {tabsId, tabsList, extra, handleContextMenu, onRemoveCurrent} = props
     return (
         <div className={classNames(styles["runner-tab-bar"])}>
             <div className={styles["bar-wrapper"]}>
@@ -291,7 +521,13 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                                 {tabsList.map((item, index) => {
                                     return (
                                         <Fragment key={item.path}>
-                                            <RunnerTabBarItem index={index} info={item} tabsId={tabsId} />
+                                            <RunnerTabBarItem
+                                                index={index}
+                                                info={item}
+                                                tabsId={tabsId}
+                                                handleContextMenu={handleContextMenu}
+                                                onRemoveCurrent={onRemoveCurrent}
+                                            />
                                         </Fragment>
                                     )
                                 })}
@@ -307,17 +543,17 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
 })
 
 const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
-    const {index, info, tabsId} = props
-    const {areaInfo} = useStore()
-    const {setAreaInfo} = useDispatcher()
-    const setActiveFile = useMemoizedFn(() => {
+    const {index, info, tabsId, handleContextMenu, onRemoveCurrent} = props
+    const {areaInfo,activeFile} = useStore()
+    const {setAreaInfo,setActiveFile} = useDispatcher()
+    const onActiveFile = useMemoizedFn(() => {
         try {
             // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
             if (document.activeElement !== null) {
                 // @ts-ignore
                 document.activeElement.blur()
             }
-            const newAreaInfo: AreaInfoProps[] = JSON.parse(JSON.stringify(areaInfo))
+            const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
             newAreaInfo.forEach((item, idx) => {
                 item.elements.forEach((itemIn, idxin) => {
                     if (itemIn.id === tabsId) {
@@ -327,12 +563,16 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                     }
                 })
             })
+            if(info.path!==activeFile?.path){
+                setActiveFile&&setActiveFile(info)
+            }
             setAreaInfo && setAreaInfo(newAreaInfo)
         } catch (error) {}
     })
 
     const closeTabItem = useMemoizedFn((e) => {
         e.stopPropagation()
+        onRemoveCurrent(info)
     })
 
     return (
@@ -349,10 +589,15 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                         style={{...provided.draggableProps.style}}
                         className={classNames(styles["runner-tab-bar-item"], {
                             [styles["dragging"]]: isDragging,
-                            [styles["selected"]]: info.isActive
+                            [styles["selected"]]: info.isActive,
+                            [styles["active"]]: activeFile?.path === info.path
                         })}
                     >
-                        <div className={styles["item-wrapper"]} onClick={setActiveFile}>
+                        <div
+                            className={styles["item-wrapper"]}
+                            onClick={onActiveFile}
+                            onContextMenu={() => handleContextMenu(info)}
+                        >
                             <img src={KeyToIcon[info.icon].iconPath} />
                             <div className={styles["text-style"]}>{info.name}</div>
                             <YakitButton

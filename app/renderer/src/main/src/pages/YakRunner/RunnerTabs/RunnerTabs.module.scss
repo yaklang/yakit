@@ -112,17 +112,6 @@
 
 .runner-tab-bar-item.selected {
     background-color: #f0f1f3;
-    &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        border-radius: 2px 2px 0px 0px;
-        background: #f28b44;
-        z-index: 10;
-    }
     &::after {
         content: "";
         position: absolute;
@@ -135,6 +124,12 @@
     }
 
     .item-wrapper {
+        .text-style {
+            color: #f28b44;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
         .del-btn {
             visibility: visible;
             opacity: 1;
@@ -144,6 +139,21 @@
         }
     }
 }
+
+.runner-tab-bar-item.active {
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        border-radius: 2px 2px 0px 0px;
+        background: #f28b44;
+        z-index: 10;
+    }
+}
+
 .runner-tab-bar-item.selected + .runner-tab-bar-item {
     .item-wrapper::before {
         display: none;

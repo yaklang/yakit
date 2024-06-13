@@ -53,12 +53,16 @@ export interface RunnerTabBarProps {
     tabsId: string
     tabsList: FileDetailInfo[]
     extra?: ReactNode
+    handleContextMenu:(info: FileDetailInfo)=>void
+    onRemoveCurrent:(info: FileDetailInfo)=>void
 }
 
 export interface RunnerTabBarItemProps {
     index: number
     info: FileDetailInfo
     tabsId: string
+    handleContextMenu:(info: FileDetailInfo)=>void
+    onRemoveCurrent:(info: FileDetailInfo)=>void
 }
 
 export interface RunnerTabPaneProps {
