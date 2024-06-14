@@ -257,7 +257,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 .invoke("get-current-yak")
                 .then((res: string) => {
                     if (res) {
-                        checkEngineSource(res, resolve, reject)
+                        const v = res.startsWith("v") ? res.slice(1) : res
+                        checkEngineSource(v, resolve, reject)
                     } else {
                         setShowCheckEngine(false)
                         reject()
