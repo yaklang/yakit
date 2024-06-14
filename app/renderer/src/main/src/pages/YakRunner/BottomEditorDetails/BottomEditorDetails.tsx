@@ -114,7 +114,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         onClick={() => setShowItem("syntaxCheck")}
                     >
                         <div className={styles["title"]}>语法检查</div>
-                        <div className={styles["count"]}>{syntaxCheckData.length}</div>
+                        {activeFile && <div className={styles["count"]}>{syntaxCheckData.length}</div>}
                     </div>
                     <div
                         className={classNames(styles["item"], {
@@ -152,7 +152,13 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     <HelpInfoList list={[{key: 1}, {key: 2}, {key: 3}, {key: 4}, {key: 5}]} />
                 )}
                 {showType.includes("syntaxCheck") && showItem === "syntaxCheck" && (
-                    <SyntaxCheckList syntaxCheckData={syntaxCheckData} onJumpToEditor={onJumpToEditor} />
+                    <>
+                        {activeFile ? (
+                            <SyntaxCheckList syntaxCheckData={syntaxCheckData} onJumpToEditor={onJumpToEditor} />
+                        ) : (
+                            <div className={styles["no-syntax-check"]}>请选中具体文件查看语法检查信息</div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

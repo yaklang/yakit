@@ -33,6 +33,8 @@ export interface FileDetailInfo {
     position?: CursorPosition
     /** 当前选择区域 */
     selections?:Selection
+    /** 是否未保存（用于临时文件创建） */
+    isUnSave?: boolean
     /** 语法检查（代码打开时执行） */
     syntaxCheck?: IMonacoEditorMarker[]
     /** 帮助信息（代码坐标获取时执行） */
@@ -44,6 +46,9 @@ export interface FileDetailInfo {
     /** 终端 */
     // terminal?: any
 }
+
+// 将所有属性变为可选
+export type OptionalFileDetailInfo = Partial<FileDetailInfo>;
 
 export interface RunnerTabsProps {
     tabsId: string

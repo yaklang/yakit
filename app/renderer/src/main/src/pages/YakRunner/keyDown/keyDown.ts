@@ -1,16 +1,16 @@
-export const center: Map<string, {onlyid: string; callback: () => any}[]> = new Map()
+export const keyboard: Map<string, {onlyid: string; callback: () => any}[]> = new Map()
 
-export const set = (key: string, info: {onlyid: string; callback: () => any}) => {
-    if (center.has(key)) {
-        const item = center.get(key)
+export const setKeyboard = (key: string, info: {onlyid: string; callback: () => any}) => {
+    if (keyboard.has(key)) {
+        const item = keyboard.get(key)
         item?.push(info)
     } else {
-        center.set(key, [{...info}])
+        keyboard.set(key, [{...info}])
     }
 }
 
-export const get = (key: string) => {
-    return center.get(key)
+export const getKeyboard = (key: string) => {
+    return keyboard.get(key)
 }
 
 export const convert = (activeKey: string[]): string => {
@@ -18,10 +18,10 @@ export const convert = (activeKey: string[]): string => {
     return sortKeys
 }
 
-export const clear = () => {
-    center.clear()
+export const clearKeyboard = () => {
+    keyboard.clear()
 }
 
-export const removeItem = (key: string) => {
-    center.delete(key)
+export const removeKeyboard = (key: string) => {
+    keyboard.delete(key)
 }

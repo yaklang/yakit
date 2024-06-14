@@ -1,4 +1,4 @@
-import React, {memo, useEffect} from "react"
+import React, {memo, useEffect, useMemo} from "react"
 import {useMemoizedFn} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -12,6 +12,10 @@ import {FileTree} from "../FileTree/FileTree"
 
 import classNames from "classnames"
 import styles from "./RunnerFileTree.module.scss"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
+import {getDefaultActiveFile, removeAreaFileInfo, setAreaFileActive, updateAreaFileInfo} from "../utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,18 +31,77 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     useEffect(() => {
         console.log("我是runner-file-tree")
     }, [])
+
+    const menuData: YakitMenuItemType[] = useMemo(() => {
+        return [
+            {
+                key: "createFile",
+                label: "新建文件"
+            },
+            {
+                key: "createFolder",
+                label: "新建文件夹"
+            },
+            {
+                type: "divider"
+            },
+            {
+                key: "openFile",
+                label: "打开文件"
+            },
+            {
+                key: "openFolder",
+                label: "打开文件夹"
+            },
+            {
+                key: "history",
+                label: "最近打开",
+                children: [
+                    {
+                        key: "6",
+                        label: "xxx"
+                    }
+                ]
+            }
+        ]
+    }, [])
+
+    const menuSelect = useMemoizedFn((key) => {
+        switch (key) {
+            case "createFile":
+                break
+            case "createFolder":
+                break
+            case "openFile":
+                break
+            case "openFolder":
+                break
+            default:
+                break
+        }
+    })
+
     return (
         <div className={styles["runner-file-tree"]}>
             <div className={styles["container"]}>
-                <div className={styles["open-file"]}>
-                    <OpenedFile />
-                </div>
+                <OpenedFile />
 
                 <div className={styles["file-tree"]}>
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
                             <div className={styles["title-style"]}>文件列表</div>
-                            <YakitButton type='text2' icon={<OutlinePluscircleIcon />} />
+                            <YakitDropdownMenu
+                                menu={{
+                                    data: menuData,
+                                    onClick: ({key}) => menuSelect(key)
+                                }}
+                                dropdown={{
+                                    trigger: ["click"],
+                                    placement: "bottomLeft"
+                                }}
+                            >
+                                <YakitButton type='text2' icon={<OutlinePluscircleIcon />} />
+                            </YakitDropdownMenu>
                         </div>
 
                         <div className={styles["file-tree-tree"]}>
@@ -55,18 +118,40 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
 export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
     const {} = props
-
+    const {areaInfo, activeFile} = useStore()
+    const {setAreaInfo, setActiveFile} = useDispatcher()
     const titleRender = () => {
         return <div className={styles["opened-file-header"]}>打开的编辑器</div>
     }
 
-    const renderItem = (info: FileNodeProps[]) => {
+    const removeItem = useMemoizedFn((e, data: FileDetailInfo) => {
+        e.stopPropagation()
+        // 如若删除项为当前焦点聚集项
+        if (activeFile?.path === data.path) {
+            setActiveFile && setActiveFile(undefined)
+        }
+        const newAreaInfo = removeAreaFileInfo(areaInfo, data)
+        setAreaInfo && setAreaInfo(newAreaInfo)
+    })
+
+    const openItem = useMemoizedFn(async(data: FileDetailInfo) => {
+        // 注入语法检测 由于点击项必为激活项默认给true
+        const newActiveFile = {...await getDefaultActiveFile(data),isActive:true}
+        // 更改当前tabs active
+        const activeAreaInfo = setAreaFileActive(areaInfo, data)
+        // 将新的语法检测注入areaInfo
+        const newAreaInfo = updateAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
+        setAreaInfo && setAreaInfo(newAreaInfo)
+        setActiveFile && setActiveFile(newActiveFile)
+    })
+
+    const renderItem = (info: FileDetailInfo[]) => {
         return (
             <div className={styles["opened-file-body"]}>
                 {info.map((item) => {
                     return (
-                        <div key={item.path} className={styles["file-item"]}>
-                            <div className={styles["del-btn"]}>
+                        <div key={item.path} className={styles["file-item"]} onClick={() => openItem(item)}>
+                            <div className={styles["del-btn"]} onClick={(e) => removeItem(e, item)}>
                                 <OutlineXIcon />
                             </div>
                             <img src={KeyToIcon[item.icon].iconPath} />
@@ -83,99 +168,42 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         )
     }
 
+    const getOpenFileList = useMemo(() => {
+        let list: FileDetailInfo[] = []
+        areaInfo.forEach((item) => {
+            item.elements.forEach((itemIn) => {
+                list = [...list, ...itemIn.files]
+            })
+        })
+        list.sort((a, b) => {
+            const nameA = a.name.toUpperCase() // 不区分大小写
+            const nameB = b.name.toUpperCase() // 不区分大小写
+
+            if (nameA < nameB) {
+                return -1 // 如果 a 在 b 前面，返回负数
+            }
+            if (nameA > nameB) {
+                return 1 // 如果 a 在 b 后面，返回正数
+            }
+            return 0 // 如果名称相同，返回 0
+        })
+        return list
+    }, [areaInfo])
+
     return (
-        <CollapseList
-            onlyKey='key'
-            list={[
-                [
-                    {
-                        name: ".gitignore",
-                        path: "/Users/nonight/work/yakitVersion/1",
-                        isFolder: false,
-                        icon: "_file",
-                        isLeaf: true
-                    },
-                    {
-                        name: "ELECTRON_GrwherhreherherheerherhrwgwUIDE.md",
-                        path: "/Users/nonight/work/yakitVersion/2",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "LICENSE.md",
-                        path: "/Users/nonight/work/yakitVersion/3",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "README-EN.md",
-                        path: "/Users/nonight/work/yakitVersion/4",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "README.md",
-                        path: "/Users/nonight/work/yakitVersion/5",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "README_LEGACY.md",
-                        path: "/Users/nonight/work/yakitVersion/6",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: ".gitignore",
-                        path: "/Users/nonight/work/yakitVersion/7",
-                        isFolder: false,
-                        icon: "_file",
-                        isLeaf: true
-                    },
-                    {
-                        name: "ELECTRON_GUIDE.md",
-                        path: "/Users/nonight/work/yakitVersion/8",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "LICENSE.md",
-                        path: "/Users/nonight/work/yakitVersion/9",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "README-EN.md",
-                        path: "/Users/nonight/work/yakitVersion/10",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "README.md",
-                        path: "/Users/nonight/work/yakitVersion/11",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    },
-                    {
-                        name: "README_LEGACY.md",
-                        path: "/Users/nonight/work/yakitVersion/12",
-                        isFolder: false,
-                        icon: "_f_markdown",
-                        isLeaf: true
-                    }
-                ]
-            ]}
-            titleRender={titleRender}
-            renderItem={renderItem}
-        />
+        <>
+            {getOpenFileList.length !== 0 ? (
+                <div className={styles["open-file"]}>
+                    <CollapseList
+                        onlyKey='key'
+                        list={[[...getOpenFileList]]}
+                        titleRender={titleRender}
+                        renderItem={renderItem}
+                    />
+                </div>
+            ) : (
+                <></>
+            )}
+        </>
     )
 })
