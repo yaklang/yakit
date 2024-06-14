@@ -69,6 +69,9 @@ $keyColor: map-keys($tagColor);
             padding: 8px 12px;
         }
     }
+    .yakit-risk-table-cell-unread {
+        background-color: #f6544a14;
+    }
 }
 .yakit-risk-details-content {
     overflow-y: auto;
@@ -179,5 +182,25 @@ $keyColor: map-keys($tagColor);
                 font-size: 12px;
             }
         }
+    }
+}
+
+.table-tag {
+    @extend %display-flex-center;
+    justify-content: space-between;
+    gap: 4px;
+    svg {
+        width: 16px;
+        height: 16px;
+        color: var(--yakit-helper-text-color);
+    }
+}
+
+.yakit-risk-select-tag {
+    padding: 24px;
+    .yakit-risk-select-tag-btns {
+        @extend %display-flex-center;
+        justify-content: flex-end;
+        gap: 8px;
     }
 }

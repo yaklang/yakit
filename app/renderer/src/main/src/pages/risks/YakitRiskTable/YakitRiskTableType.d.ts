@@ -27,3 +27,9 @@ export interface YakitRiskDetailsProps{
     quotedResponse?: string
     onClose?: () => void
 }
+
+export interface YakitRiskSelectTagProps{
+    info: Risk
+    onClose?: () => void
+    onSave:(info: Risk)=>void
+}

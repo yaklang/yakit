@@ -1,15 +1,27 @@
 import React, {ReactNode, useEffect, useMemo, useState} from "react"
-import {QueryRisksRequest, QueryRisksResponse, YakitRiskDetailsProps, YakitRiskTableProps} from "./YakitRiskTableType"
+import {
+    QueryRisksRequest,
+    QueryRisksResponse,
+    YakitRiskDetailsProps,
+    YakitRiskSelectTagProps,
+    YakitRiskTableProps
+} from "./YakitRiskTableType"
 import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {Risk} from "../schema"
-import {Descriptions, Divider} from "antd"
+import {Descriptions, Divider, Form} from "antd"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {OutlineExportIcon, OutlineSearchIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondownIcon,
+    OutlineExportIcon,
+    OutlineSearchIcon,
+    OutlineTrashIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
 import {defQueryRisksRequest} from "./constants"
@@ -32,6 +44,8 @@ import {
     IconSolidDefaultRiskIcon
 } from "../icon"
 import {NewHTTPPacketEditor} from "@/utils/editors"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -229,7 +243,22 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     filtersType: "select",
                     filterMultiple: true,
                     filters: tag
-                }
+                },
+                minWidth: 120,
+                render: (text, record, index) => (
+                    <>
+                        <div
+                            className={styles["table-tag"]}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onOpenSelect(record)
+                            }}
+                        >
+                            <span>{text || "-"}</span>
+                            <OutlineChevrondownIcon />
+                        </div>
+                    </>
+                )
             },
             {
                 title: "发现时间",
@@ -261,6 +290,25 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
         ]
     }, [riskTypeVerbose, tag])
+    const onOpenSelect = useMemoizedFn((record: Risk) => {
+        const m = showYakitModal({
+            title: `序号【${record.Id}】`,
+            content: <YakitRiskSelectTag info={record} onClose={() => m.destroy()} onSave={onSaveTags} />,
+            footer: null
+        })
+    })
+    const onSaveTags = useMemoizedFn((info: Risk) => {
+        /*TODO -  等后端接口好了需要验证*/
+        const index = response.Data.findIndex((item) => item.Hash === info.Hash)
+        if (index === -1) return
+        response.Data[index] = {
+            ...info
+        }
+        setResponse({
+            ...response,
+            Data: [...response.Data]
+        })
+    })
     const onRemoveSingle = useMemoizedFn((id) => {})
     const onRemove = useMemoizedFn(() => {})
     const onExportMenuSelect = useMemoizedFn((key: string) => {
@@ -511,7 +559,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                 </div>
                             </div>
                         }
-                        renderKey='Id'
+                        renderKey='Hash'
                         data={response.Data}
                         rowSelection={{
                             isAll: allCheck,
@@ -550,6 +598,65 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
                 {...ResizeBoxProps}
             />
+        </div>
+    )
+})
+
+const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
+    const {info, onClose, onSave} = props
+    const tags = useCreation(() => {
+        return [
+            {
+                label: "误报",
+                value: "误报"
+            },
+            {
+                label: "忽略",
+                value: "忽略"
+            },
+            {
+                label: "已处理",
+                value: "已处理"
+            },
+            {
+                label: "待处理",
+                value: "待处理"
+            }
+        ]
+    }, [info])
+    const onFinish = useMemoizedFn((value) => {
+        onSave({
+            ...info,
+            ...value
+        })
+        if (onClose) onClose()
+    })
+    return (
+        <div className={styles["yakit-risk-select-tag"]}>
+            <Form onFinish={onFinish}>
+                <Form.Item label='Tags' name='Tags'>
+                    <YakitSelect mode='tags' allowClear>
+                        {tags.map((item) => {
+                            return (
+                                <YakitSelect.Option key={item.value} value={item.value}>
+                                    {item.label}
+                                </YakitSelect.Option>
+                            )
+                        })}
+                    </YakitSelect>
+                </Form.Item>
+                <div className={styles["yakit-risk-select-tag-btns"]}>
+                    <YakitButton
+                        type='outline2'
+                        onClick={() => {
+                            if (onClose) onClose()
+                        }}
+                    >
+                        取消
+                    </YakitButton>
+                    <YakitButton htmlType='submit'>确定</YakitButton>
+                </div>
+            </Form>
         </div>
     )
 })
