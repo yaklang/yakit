@@ -30,10 +30,10 @@ import {SplitView} from "./SplitView/SplitView"
 import {HelpInfoList} from "./CollapseList/CollapseList"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
-import {convert, get, clear} from "./keyDown/keyDown"
-import {defaultKeyDown} from "./keyDown/keyDownFun"
+import {convert, getKeyboard, clearKeyboard, setKeyboard} from "./keyDown/keyDown"
 import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import cloneDeep from "lodash/cloneDeep"
+import {v4 as uuidv4} from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -71,7 +71,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".yaklang",
                         path: "/Users/nonight/work/yakitVersion/.yaklang",
-                        icon: "_file",
+                        icon: "_f_markdown",
                         code: "123",
                         language: "yak",
                         isActive: true
@@ -86,7 +86,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".ttt",
                         path: "/Users/nonight/work/yakitVersion/.ttt",
-                        icon: "_file",
+                        icon: "_f_markdown",
                         code: "ttt",
                         language: "text"
                     }
@@ -217,9 +217,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const handleOpenFolder = useMemoizedFn(() => {})
     /** ---------- 选中文件 End ---------- */
 
-    /** ---------- 焦点源码相关信息 Start ---------- */
-    /** ---------- 焦点源码相关信息 End ---------- */
-
     const store: YakRunnerContextStore = useMemo(() => {
         return {
             fileTree: fileTree,
@@ -238,9 +235,41 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
 
     const keyDownRef = useRef<HTMLDivElement>(null)
+    const unTitleCountRef = useRef<number>(1)
+
+    const addFileTab = useMemoizedFn(() => {
+        // 新建临时文件
+        console.log("ctrl_n")
+        const scratchFile: FileDetailInfo = {
+            name: `Untitle-${unTitleCountRef.current}.yak`,
+            code: "# input your yak code\nprintln(`Hello Yak World!`)",
+            icon: "_file",
+            isActive: true,
+            // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
+            path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
+            language: "yak",
+            isUnSave: true
+        }
+        unTitleCountRef.current += 1
+    })
+
+    const ctrl_n = () => {
+        addFileTab()
+    }
+
+    const ctrl_c = () => {
+        // 存储文件
+        console.log("ctrl_c")
+    }
+
+    // 注入默认键盘事件
+    const defaultKeyDown = useMemoizedFn(() => {
+        setKeyboard("Control-n", {onlyid: uuidv4(), callback: ctrl_n})
+        setKeyboard("Control-c", {onlyid: uuidv4(), callback: ctrl_c})
+    })
 
     useEffect(() => {
-        clear()
+        clearKeyboard()
         defaultKeyDown()
     }, [])
 
@@ -255,8 +284,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         if (metaKey) activeKey.push("Meta")
         activeKey.push(key)
         const newkey = convert(activeKey)
-        // console.log("newkey---",newkey);
-        let arr = get(newkey)
+        console.log("newkey---", newkey)
+        let arr = getKeyboard(newkey)
         if (!arr) return
         event.stopPropagation()
         arr.forEach((item) => {
@@ -373,8 +402,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 }
                             }
                             // 由于移走激活文件 重新赋予激活文件
-                            else if(filesLength!==0 && ele.isActive){
-                                newAreaInfo[index].elements[indexIn].files[source.index - 1 < 0 ? 0 : source.index -1].isActive = true
+                            else if (filesLength !== 0 && ele.isActive) {
+                                newAreaInfo[index].elements[indexIn].files[
+                                    source.index - 1 < 0 ? 0 : source.index - 1
+                                ].isActive = true
                             }
                         }
                         // 需要新增项
@@ -390,6 +421,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         newAreaInfo[indexArr[0]].elements[indexArr[1]].files = newAreaInfo[indexArr[0]].elements[
                             indexArr[1]
                         ].files.map((item) => ({...item, isActive: false}))
+                        setActiveFile(element)
                     }
                     // 新增拖拽项
                     newAreaInfo[indexArr[0]].elements[indexArr[1]].files.splice(destination.index, 0, element)

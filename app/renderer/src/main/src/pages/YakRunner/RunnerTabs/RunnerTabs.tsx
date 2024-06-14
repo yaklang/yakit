@@ -40,7 +40,7 @@ import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, TabFileProps} from "../YakRunnerType"
 import {IMonacoEditor} from "@/utils/editors"
-import {onSyntaxCheck} from "../utils"
+import {getDefaultActiveFile, onSyntaxCheck, removeAreaFileInfo, updateAreaFileInfo} from "../utils"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
 import {info} from "@/utils/notification"
@@ -50,7 +50,7 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {v4 as uuidv4} from "uuid"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import { openABSFileLocated } from "@/utils/openWebsite"
+import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -60,7 +60,7 @@ const layoutToString = (v: number[]) => {
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo} = useStore()
+    const {areaInfo,activeFile} = useStore()
     const {setActiveFile, setAreaInfo} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
     const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
@@ -309,37 +309,11 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     // 关闭当前项
     const onRemoveCurrent = useMemoizedFn((info: FileDetailInfo) => {
-        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-        newAreaInfo.forEach((item, idx) => {
-            item.elements.forEach((itemIn, idxin) => {
-                if (itemIn.id === tabsId) {
-                    itemIn.files.forEach((file, fileIndex) => {
-                        if (file.path === info.path) {
-                            // 如若仅存在一项 则删除此大项并更新布局
-                            if (item.elements.length > 1 && itemIn.files.length === 1) {
-                                newAreaInfo[idx].elements = newAreaInfo[idx].elements.filter(
-                                    (item) => item.id !== tabsId
-                                )
-                            } else if (item.elements.length <= 1 && itemIn.files.length === 1) {
-                                newAreaInfo.splice(idx, 1)
-                            }
-                            // 存在多项则移除删除项
-                            else {
-                                newAreaInfo[idx].elements[idxin].files = newAreaInfo[idx].elements[idxin].files.filter(
-                                    (item) => item.path !== info.path
-                                )
-                                // 重新激活未选中项目（因删除后当前tabs无选中项）
-                                if (info.isActive) {
-                                    newAreaInfo[idx].elements[idxin].files[
-                                        fileIndex - 1 < 0 ? 0 : fileIndex - 1
-                                    ].isActive = true
-                                }
-                            }
-                        }
-                    })
-                }
-            })
-        })
+        // 如若删除项为当前焦点聚集项
+        if (activeFile?.path === info.path) {
+            setActiveFile && setActiveFile(undefined)
+        }
+        const newAreaInfo = removeAreaFileInfo(areaInfo,info)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -544,9 +518,9 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
 
 const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
     const {index, info, tabsId, handleContextMenu, onRemoveCurrent} = props
-    const {areaInfo,activeFile} = useStore()
-    const {setAreaInfo,setActiveFile} = useDispatcher()
-    const onActiveFile = useMemoizedFn(() => {
+    const {areaInfo, activeFile} = useStore()
+    const {setAreaInfo, setActiveFile} = useDispatcher()
+    const onActiveFile = useMemoizedFn(async () => {
         try {
             // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
             if (document.activeElement !== null) {
@@ -563,8 +537,9 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                     }
                 })
             })
-            if(info.path!==activeFile?.path){
-                setActiveFile&&setActiveFile(info)
+            if (info.path !== activeFile?.path) {
+                const newActiveFile = await getDefaultActiveFile(info)
+                setActiveFile && setActiveFile(newActiveFile)
             }
             setAreaInfo && setAreaInfo(newAreaInfo)
         } catch (error) {}
@@ -615,21 +590,6 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
     )
 })
 
-// 更新总布局信息
-const onSetAreaInfoItem = (newElements: FileDetailInfo, areaInfo) => {
-    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-    newAreaInfo.forEach((item, index) => {
-        item.elements.forEach((itemIn, indexIn) => {
-            itemIn.files.forEach((file, fileIn) => {
-                if (file.path === newElements.path) {
-                    newAreaInfo[index].elements[indexIn].files[fileIn] = newElements
-                }
-            })
-        })
-    })
-    return newAreaInfo
-}
-
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {tabsId} = props
     const {areaInfo, activeFile} = useStore()
@@ -644,6 +604,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             item.elements.forEach((itemIn) => {
                 if (itemIn.id === tabsId) {
                     itemIn.files.forEach((file) => {
+                        // 仅初次进入 或切换时更新详情
                         if (file.isActive && (!editorInfo || (editorInfo && editorInfo.path !== file.path))) {
                             // 更新编辑器展示项
                             setEditorInfo(file)
@@ -658,17 +619,22 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const positionRef = useRef<CursorPosition>()
     const selectionRef = useRef<Selection>()
 
+    // 更新编辑器文件内容(由于全局未使用到activeFile-code字段，为减少渲染，暂不更新)
+    const updateAreaInputInfo = useMemoizedFn((content: string) => {
+        const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
+        // console.log("更新编辑器文件内容", newAreaInfo)
+        if (editorInfo) {
+            setEditorInfo({...editorInfo, code: content})
+        }
+        setAreaInfo && setAreaInfo(newAreaInfo)
+    })
+
     // 更新当前底部展示信息
     const updateBottomEditorDetails = useMemoizedFn(async () => {
         if (!editorInfo) return
         let newActiveFile = editorInfo
         // 注入语法检查结果
-        if (newActiveFile.language === "yak") {
-            const syntaxCheck = (await onSyntaxCheck(newActiveFile.code)) as IMonacoEditorMarker[]
-            if (syntaxCheck) {
-                newActiveFile = {...newActiveFile, syntaxCheck}
-            }
-        }
+        newActiveFile = await getDefaultActiveFile(newActiveFile)
         // 更新位置信息
         if (positionRef.current) {
             // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
@@ -679,8 +645,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             newActiveFile = {...newActiveFile, selections: selectionRef.current}
         }
         setActiveFile && setActiveFile(newActiveFile)
-        const newAreaInfo = onSetAreaInfoItem(newActiveFile, areaInfo)
-        console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
+        const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
+        // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -749,7 +715,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 更新光标位置
     const updatePosition = useMemoizedFn(() => {
-        console.log("更新光标位置")
+        console.log("更新光标位置", editorInfo)
 
         if (reqEditor && editorInfo) {
             const {position, selections} = editorInfo
@@ -771,13 +737,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     useUpdateEffect(() => {
         if (isFirstRef.current) {
-            console.log("初次加载")
             isFirstRef.current = false
         } else {
-            console.log("二次加载")
             updatePosition()
         }
-    }, [editorInfo])
+    }, [editorInfo?.position])
 
     return (
         <div className={styles["runner-tab-pane"]}>
@@ -787,7 +751,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 }}
                 type={editorInfo?.language || "yak"}
                 value={editorInfo?.code || ""}
-                setValue={() => {}}
+                setValue={(content: string) => {
+                    updateAreaInputInfo(content)
+                }}
             />
         </div>
     )

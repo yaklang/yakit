@@ -1,10 +1,13 @@
-import { yakitNotify } from "@/utils/notification"
-import { CodeScoreSmokingEvaluateResponseProps } from "../plugins/funcTemplateType"
+import {yakitNotify} from "@/utils/notification"
+import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType"
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
-import { StringToUint8Array } from "@/utils/str"
-import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from "@/utils/editorMarkers"
+import {StringToUint8Array} from "@/utils/str"
+import {ConvertYakStaticAnalyzeErrorToMarker, IMonacoEditorMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
+import {AreaInfoProps} from "./YakRunnerType"
+import cloneDeep from "lodash/cloneDeep"
+import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -68,21 +71,114 @@ export const updateFileTree: (data: FileNodeProps[], key: string, updateData: Fi
 /**
  * @name 语法检查
  */
-export const onSyntaxCheck = (code:string) => {
+export const onSyntaxCheck = (code: string) => {
     return new Promise(async (resolve, reject) => {
         // StaticAnalyzeError
         ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: "yak"})
-                    .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
-                        if (e && e.Result.length > 0) {
-                            const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                            // monaco.editor.setModelMarkers(model, "owner", markers)
-                            resolve(markers)
-                        } else {
-                            resolve([])
-                        }
-                    }).catch(() => {
-                        resolve([])
-                    })
+            .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: "yak"})
+            .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                if (e && e.Result.length > 0) {
+                    const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
+                    // monaco.editor.setModelMarkers(model, "owner", markers)
+                    resolve(markers)
+                } else {
+                    resolve([])
+                }
+            })
+            .catch(() => {
+                resolve([])
+            })
     })
+}
+
+/**
+ * @name 更新分栏数据里某个节点的file数据
+ */
+// 根据path更新指定内容
+export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFileDetailInfo, path?: string) => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, index) => {
+        item.elements.forEach((itemIn, indexIn) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (file.path === path) {
+                    newAreaInfo[index].elements[indexIn].files[fileIndex] = {
+                        ...newAreaInfo[index].elements[indexIn].files[fileIndex],
+                        ...data
+                    }
+                }
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
+ * @name 删除分栏数据里某个节点的file数据
+ */
+export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, idx) => {
+        item.elements.forEach((itemIn, idxin) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (file.path === info.path) {
+                    // 如若仅存在一项 则删除此大项并更新布局
+                    if (item.elements.length > 1 && itemIn.files.length === 1) {
+                        newAreaInfo[idx].elements = newAreaInfo[idx].elements.filter(
+                            (item) => !item.files.map((item) => item.path).includes(info.path)
+                        )
+                    } else if (item.elements.length <= 1 && itemIn.files.length === 1) {
+                        newAreaInfo.splice(idx, 1)
+                    }
+                    // 存在多项则移除删除项
+                    else {
+                        newAreaInfo[idx].elements[idxin].files = newAreaInfo[idx].elements[idxin].files.filter(
+                            (item) => item.path !== info.path
+                        )
+                        // 重新激活未选中项目（因删除后当前tabs无选中项）
+                        if (info.isActive) {
+                            newAreaInfo[idx].elements[idxin].files[fileIndex - 1 < 0 ? 0 : fileIndex - 1].isActive =
+                                true
+                        }
+                    }
+                }
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
+ * @name 更改分栏数据里某个节点的isActive活动数据
+ */
+export const setAreaFileActive = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, index) => {
+        item.elements.forEach((itemIn, indexIn) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (file.path === info.path) {
+                    newAreaInfo[index].elements[indexIn].files = newAreaInfo[index].elements[indexIn].files.map(
+                        (item) => ({...item, isActive: false})
+                    )
+                    newAreaInfo[index].elements[indexIn].files[fileIndex].isActive = true
+                }
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
+ * @name 注入语法检查结果
+ */
+
+export const getDefaultActiveFile = async(info: FileDetailInfo) => {
+    let newActiveFile = info
+    // 注入语法检查结果
+    if (newActiveFile.language === "yak") {
+        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code)) as IMonacoEditorMarker[]
+        if (syntaxCheck) {
+            newActiveFile = {...newActiveFile, syntaxCheck}
+        }
+    }
+    return newActiveFile
 }
