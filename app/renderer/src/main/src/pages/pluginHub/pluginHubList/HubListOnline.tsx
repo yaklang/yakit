@@ -1,5 +1,5 @@
 import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "react"
-import {useMemoizedFn, useDebounceFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport} from "ahooks"
 import {OutlineRefreshIcon, OutlineClouddownloadIcon, OutlineClouduploadIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -54,15 +54,14 @@ import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
 
-interface HubListOnlineProps extends HubListBaseProps {
-    rootElementId?: string
-}
+interface HubListOnlineProps extends HubListBaseProps {}
 /** @name 插件商店 */
 export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
-    const {rootElementId, hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
+    const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
+    const [inViewPort = true] = useInViewport(divRef)
 
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -95,27 +94,47 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
-    const initList = useMemoizedFn(() => {
+    // 刷新搜索条件数据和列表数据
+    const onRefreshFilterAndList = useMemoizedFn(() => {
         fetchFilterGroup()
         fetchList(true)
     })
-
-    // 登录和退出都要刷新列表
-    useUpdateEffect(() => {
-        initList()
-    }, [isLogin])
+    // 刷新搜索条件数据和无条件列表总数
+    const onRefreshFilterAndTotal = useMemoizedFn(() => {
+        fetchInitTotal()
+        fetchFilterGroup()
+    })
 
     useEffect(() => {
-        // 切换私有域刷新列表
-        emiter.on("onSwitchPrivateDomain", initList)
-        return () => {
-            emiter.off("onSwitchPrivateDomain", initList)
-        }
+        onRefreshFilterAndList()
     }, [])
 
-    // 初始化
+    useUpdateEffect(() => {
+        onRefreshFilterAndList()
+    }, [isLogin])
+    useUpdateEffect(() => {
+        if (inViewPort) {
+            onRefreshFilterAndTotal()
+        }
+    }, [inViewPort])
+    /** 搜索条件 */
+    useUpdateEffect(() => {
+        fetchList(true)
+    }, [filters])
+
     useEffect(() => {
-        initList()
+        const onRefreshList = () => {
+            setTimeout(() => {
+                fetchList(true)
+            }, 200)
+        }
+
+        emiter.on("onSwitchPrivateDomain", onRefreshFilterAndList)
+        emiter.on("onRefOnlinePluginList", onRefreshList)
+        return () => {
+            emiter.off("onSwitchPrivateDomain", onRefreshFilterAndList)
+            emiter.off("onRefOnlinePluginList", onRefreshList)
+        }
     }, [])
 
     // 选中搜索条件可能在搜索数据组中不存在时进行清除
@@ -189,7 +208,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
     /** 刷新 */
     const onRefresh = useMemoizedFn(() => {
-        initList()
+        onRefreshFilterAndList()
     })
 
     /** 单项勾选 */
@@ -214,10 +233,6 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         setAllChecked(value)
     })
 
-    /** 搜索条件 */
-    useUpdateEffect(() => {
-        fetchList(true)
-    }, [filters])
     /** 搜索内容 */
     const onSearch = useDebounceFn(
         useMemoizedFn((val: PluginSearchParams) => {
@@ -477,7 +492,10 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                     />
                                 ) : listTotal === 0 ? (
                                     <div className={styles["hub-list-empty"]}>
-                                        <YakitEmpty title='暂无数据' />
+                                        <YakitEmpty
+                                            title='暂无数据'
+                                            description={isCommunityEdition() ? "" : "可将本地所有插件一键上传"}
+                                        />
                                         <div className={styles["refresh-buttons"]}>
                                             {userinfo.role !== "admin" && (
                                                 <YakitButton

@@ -31,4 +31,9 @@ export type PluginsEventProps = {
     onRefSinglePluginExecution?: string
     /** 刷新Codec相关菜单 */
     onRefPluginCodecMenu?: string
+
+    /** 我的插件 删除操作通知 回收站刷新列表 */
+    ownDeleteToRecycleList?: string
+    /** 回收站 还原操作通知 我的插件刷新列表 */
+    recycleRestoreToOwnList?: string
 }

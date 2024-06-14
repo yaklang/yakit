@@ -1,5 +1,5 @@
 import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "react"
-import {useMemoizedFn, useDebounceFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport} from "ahooks"
 import {OutlineTrashIcon, OutlineRefreshIcon, OutlineClouddownloadIcon, OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -16,7 +16,8 @@ import {
     convertDownloadOnlinePluginBatchRequestParams,
     apiDownloadPluginMine,
     apiDeletePluginMine,
-    apiFetchMineList
+    apiFetchMineList,
+    excludeNoExistfilter
 } from "@/pages/plugins/utils"
 import {getRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
@@ -59,9 +60,11 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
+    const [inViewPort = true] = useInViewport(divRef)
 
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
+    const fetchIsLogin = useMemoizedFn(() => userinfo.isLogin)
 
     /** ---------- 列表相关变量 Start ---------- */
     const [loading, setLoading] = useState<boolean>(false)
@@ -102,6 +105,39 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             fetchList(true)
         }
     }, [isLogin])
+    useUpdateEffect(() => {
+        if (inViewPort && fetchIsLogin()) {
+            fetchInitTotal()
+            fetchFilterGroup()
+        }
+    }, [inViewPort])
+    /** 搜索条件 */
+    useUpdateEffect(() => {
+        if (!fetchIsLogin()) return
+        fetchList(true)
+    }, [filters])
+
+    useEffect(() => {
+        const onRefreshList = () => {
+            if (!fetchIsLogin()) return
+            setTimeout(() => {
+                fetchList(true)
+            }, 200)
+        }
+
+        emiter.on("onRefUserPluginList", onRefreshList)
+        emiter.on("recycleRestoreToOwnList", onRefreshList)
+        return () => {
+            emiter.off("onRefUserPluginList", onRefreshList)
+            emiter.off("recycleRestoreToOwnList", onRefreshList)
+        }
+    }, [])
+
+    // 选中搜索条件可能在搜索数据组中不存在时进行清除
+    useEffect(() => {
+        const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, filterGroup)
+        if (updateFilterFlag) setFilters(realFilter)
+    }, [filters, filterGroup])
 
     const fetchInitTotal = useMemoizedFn(() => {
         apiFetchMineList({page: 1, limit: 1}, true)
@@ -193,10 +229,6 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         setAllChecked(value)
     })
 
-    /** 搜索条件 */
-    useUpdateEffect(() => {
-        fetchList(true)
-    }, [filters])
     /** 搜索内容 */
     const onSearch = useDebounceFn(
         useMemoizedFn((val: PluginSearchParams) => {
@@ -328,6 +360,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         } catch (error) {}
         onCheck(false)
         fetchFilterGroup()
+        emiter.emit("ownDeleteToRecycleList")
         fetchList(true)
         setTimeout(() => {
             setBatchDelLoading(false)
@@ -365,6 +398,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 }
                 fetchInitTotal()
                 fetchFilterGroup()
+                emiter.emit("ownDeleteToRecycleList")
                 dispatch({
                     type: "remove",
                     payload: {
@@ -567,7 +601,10 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                                     />
                                 ) : (
                                     <div className={styles["hub-list-empty"]}>
-                                        <YakitEmpty title='暂无数据' />
+                                        <YakitEmpty
+                                            title='暂无数据'
+                                            description='可新建插件同步至云端，创建属于自己的插件'
+                                        />
                                         <div className={styles["refresh-buttons"]}>
                                             <YakitButton
                                                 type='outline1'

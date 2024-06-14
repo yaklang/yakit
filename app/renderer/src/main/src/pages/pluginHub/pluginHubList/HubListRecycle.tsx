@@ -1,5 +1,5 @@
 import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "react"
-import {useMemoizedFn, useDebounceFn} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useInViewport, useUpdateEffect} from "ahooks"
 import {OutlineTrashIcon, OutlineDatabasebackupIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -27,6 +27,7 @@ import {useStore} from "@/store"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useGetSetState from "../hooks/useGetSetState"
+import emiter from "@/utils/eventBus/eventBus"
 
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
@@ -38,9 +39,13 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
+    const [inViewPort = true] = useInViewport(divRef)
 
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
+    const fetchIsLogin = useMemoizedFn(() => {
+        return userinfo.isLogin
+    })
 
     /** ---------- 列表相关变量 Start ---------- */
     const [loading, setLoading] = useState<boolean>(false)
@@ -72,6 +77,25 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
             fetchList(true)
         }
     }, [isLogin])
+    useUpdateEffect(() => {
+        if (inViewPort && fetchIsLogin()) {
+            fetchInitTotal()
+        }
+    }, [inViewPort])
+
+    useEffect(() => {
+        const onRefreshList = () => {
+            if (!fetchIsLogin()) return
+            setTimeout(() => {
+                fetchList(true)
+            }, 200)
+        }
+
+        emiter.on("ownDeleteToRecycleList", onRefreshList)
+        return () => {
+            emiter.off("ownDeleteToRecycleList", onRefreshList)
+        }
+    }, [])
 
     const fetchInitTotal = useMemoizedFn(() => {
         apiFetchRecycleList({page: 1, limit: 1}, true)
@@ -248,7 +272,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
         setTimeout(() => {
             setBatchDelLoading(false)
         }, 200)
-        onBatchDelOrRestoreAfter()
+        onBatchDelOrRestoreAfter("del")
     })
 
     // 单个删除的插件信息队列
@@ -276,7 +300,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
         }
         apiRemoveRecyclePlugin(request)
             .then(() => {
-                onSingleDelOrRestoreAfter(info)
+                onSingleDelOrRestoreAfter(info, "del")
             })
             .catch(() => {})
             .finally(() => {
@@ -304,12 +328,12 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
         setTimeout(() => {
             setBatchRestoreLoading(false)
         }, 200)
-        onBatchDelOrRestoreAfter()
+        onBatchDelOrRestoreAfter("restore")
     })
     /** ---------- 插件还原 End ---------- */
 
     // 单个删除和还原后对别的逻辑的影响处理
-    const onSingleDelOrRestoreAfter = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+    const onSingleDelOrRestoreAfter = useMemoizedFn((info: YakitPluginOnlineDetail, type?: string) => {
         dispatch({
             type: "remove",
             payload: {
@@ -321,10 +345,12 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
             optCheck(info, false)
         }
         fetchInitTotal()
+        if (type === "restore") emiter.emit("recycleRestoreToOwnList")
     })
     // 批量删除和还原后对别的逻辑的影响处理
-    const onBatchDelOrRestoreAfter = useMemoizedFn(() => {
+    const onBatchDelOrRestoreAfter = useMemoizedFn((type?: string) => {
         onCheck(false)
+        if (type === "restore") emiter.emit("recycleRestoreToOwnList")
         setLoading(false)
         fetchList(true)
     })
@@ -337,7 +363,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
                 info={info}
                 execDelInfo={singleDel}
                 onDel={onFooterExtraDel}
-                restoreCallback={onSingleDelOrRestoreAfter}
+                restoreCallback={(info) => onSingleDelOrRestoreAfter(info, "restore")}
             />
         )
     }
