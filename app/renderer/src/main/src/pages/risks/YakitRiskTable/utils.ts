@@ -30,3 +30,24 @@ export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (qu
             })
     })
 }
+
+export interface DeleteRiskRequest {
+    Id?: number
+    Hash?: string
+    Filter?: QueryRisksRequest
+    Ids?: number[]
+    DeleteAll?: boolean
+    DeleteRepetition?: boolean
+}
+/** DeleteRisk */
+export const apiDeleteRisk: (query?: DeleteRiskRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        // ipcRenderer
+        //     .invoke("DeleteRisk", query)
+        //     .then(resolve)
+        //     .catch((e) => {
+        //         yakitNotify("error", `删除失败: ${e}`)
+        //         reject(e)
+        //     })
+    })
+}

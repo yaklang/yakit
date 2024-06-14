@@ -30,7 +30,7 @@ import {SolidRefreshIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {apiNewRiskRead, apiQueryRisks} from "./utils"
+import {DeleteRiskRequest, apiDeleteRisk, apiNewRiskRead, apiQueryRisks} from "./utils"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -378,14 +378,14 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 dataKey: "action",
                 width: 60,
                 fixed: "right",
-                render: (text, record, index) => (
+                render: (text, record: Risk, index) => (
                     <>
                         <YakitButton
                             type='text'
                             danger
                             onClick={(e) => {
                                 e.stopPropagation()
-                                onRemoveSingle(record.TaskId)
+                                onRemoveSingle(record.Id)
                             }}
                             icon={<OutlineTrashIcon />}
                         />
@@ -416,8 +416,32 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             Data: [...response.Data]
         })
     })
-    const onRemoveSingle = useMemoizedFn((id) => {})
-    const onRemove = useMemoizedFn(() => {})
+    const onRemoveSingle = useMemoizedFn((id) => {
+        apiDeleteRisk({Id: id}).then(() => {
+            update(1)
+        })
+    })
+    const onRemove = useMemoizedFn(() => {
+        // 带条件删除
+        let removeQuery: DeleteRiskRequest = {}
+        if (selectList.length > 0) {
+            // 勾选删除
+            const ids = selectList.map((item) => item.Id)
+            removeQuery = {
+                Ids: ids
+            }
+        } else {
+            removeQuery = {
+                Filter: {
+                    ...query
+                }
+            }
+        }
+        /*TODO - 带对接接口*/
+        apiDeleteRisk(removeQuery).then(() => {
+            update(1)
+        })
+    })
     const onExportMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
             case "export-csv":
