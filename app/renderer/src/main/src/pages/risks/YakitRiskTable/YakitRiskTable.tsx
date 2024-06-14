@@ -46,6 +46,8 @@ import {
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {ExportSelect} from "@/components/DataExport/DataExport"
+import {RemoteGV} from "@/yakitGV"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -89,12 +91,112 @@ export const SeverityMapTag = [
         tag: "serious"
     }
 ]
+/**漏洞风险导出字段及其属性 */
+const exportFields = [
+    {
+        label: "漏洞标题",
+        value: "TitleVerbose",
+        isDefaultChecked: true
+    },
+    {
+        label: "IP",
+        value: "IP",
+        isDefaultChecked: true
+    },
+    {
+        label: "漏洞等级",
+        value: "Severity",
+        isDefaultChecked: true
+    },
+    {
+        label: "漏洞类型",
+        value: "Type",
+        isDefaultChecked: true
+    },
+    {
+        label: "URL",
+        value: "Url",
+        isDefaultChecked: true
+    },
+    {
+        label: "Tag",
+        value: "Tag",
+        isDefaultChecked: false
+    },
+    {
+        label: "发现时间",
+        value: "CreatedAt",
+        isDefaultChecked: true
+    },
+    {
+        label: "端口",
+        value: "Port",
+        isDefaultChecked: true
+    },
+    {
+        label: "漏洞描述",
+        value: "Description",
+        isDefaultChecked: true
+    },
+    {
+        label: "解决方案",
+        value: "Solution",
+        isDefaultChecked: true
+    },
+    {
+        label: "来源",
+        value: "FromYakScript",
+        isDefaultChecked: false
+    },
+    {
+        label: "反连 Token",
+        value: "ReverseToken",
+        isDefaultChecked: false
+    },
+    {
+        label: "参数",
+        value: "Parameter",
+        isDefaultChecked: false
+    },
+    {
+        label: "Payload",
+        value: "Payload",
+        isDefaultChecked: false
+    }
+]
+const yakitRiskCellStyle = {
+    信息: {
+        font: {
+            color: {rgb: "56c991"}
+        }
+    },
+    低危: {
+        font: {
+            color: {rgb: "ffb660"}
+        }
+    },
+    中危: {
+        font: {
+            color: {rgb: "f28b44"}
+        }
+    },
+    高危: {
+        font: {
+            color: {rgb: "f6544a"}
+        }
+    },
+    严重: {
+        font: {
+            color: {rgb: "bd2a21"}
+        }
+    }
+}
 export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) => {
     const [loading, setLoading] = useState(false)
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [response, setResponse] = useState<QueryRisksResponse>({
         Data: [],
-        Pagination: genDefaultPagination(20),
+        Pagination: {...genDefaultPagination(20), OrderBy: "created_at"},
         Total: 0
     })
     const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -102,7 +204,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const [keywords, setKeywords] = useState<string>("")
     const [type, setType] = useState<"all" | "unread">("all")
     const [allCheck, setAllCheck] = useState<boolean>(false)
-    const [selectList, setSelectList] = useState<string[]>([])
+    const [selectList, setSelectList] = useState<Risk[]>([])
     const [currentSelectItem, setCurrentSelectItem] = useState<Risk>()
     const [query, setQuery] = useControllableValue<QueryRisksRequest>(props, {
         defaultValue: {
@@ -111,6 +213,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         valuePropName: "query",
         trigger: "setQuery"
     })
+
+    const [exportTitle, setExportTitle] = useState<string[]>([])
 
     const [riskTypeVerbose, setRiskTypeVerbose] = useState<FiltersItemProps[]>([
         {
@@ -196,7 +300,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 render: (_, i: Risk) => {
                     const title = SeverityMapTag.filter((item) => item.key.includes(i.Severity || ""))[0]
                     return (
-                        <YakitTag color={title?.tag as YakitTagColor} className={styles["table-tag"]}>
+                        <YakitTag color={title?.tag as YakitTagColor} className={styles["table-severity-tag"]}>
                             {title ? title.name : i.Severity || "-"}
                         </YakitTag>
                     )
@@ -262,10 +366,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             },
             {
                 title: "发现时间",
-                dataKey: "UpdatedAt",
+                dataKey: "CreatedAt",
                 sorterProps: {
                     sorter: true,
-                    sorterKey: "updated_at"
+                    sorterKey: "created_at"
                 },
                 render: (text) => (text ? formatTimestamp(text) : "-")
             },
@@ -294,7 +398,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         const m = showYakitModal({
             title: `序号【${record.Id}】`,
             content: <YakitRiskSelectTag info={record} onClose={() => m.destroy()} onSave={onSaveTags} />,
-            footer: null
+            footer: null,
+            onCancel: () => {
+                m.destroy()
+            }
         })
     })
     const onSaveTags = useMemoizedFn((info: Risk) => {
@@ -314,12 +421,112 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onExportMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
             case "export-csv":
+                onExportCSV()
                 break
             case "export-html":
                 break
             default:
                 break
         }
+    })
+    const onExportCSV = useMemoizedFn(() => {
+        const exportValue = exportFields.map((item) => item.label)
+        const initCheckFields = exportFields.filter((ele) => ele.isDefaultChecked).map((item) => item.label)
+        const m = showYakitModal({
+            title: "选择导出字段",
+            content: (
+                <ExportSelect
+                    exportValue={exportValue}
+                    initCheckValue={initCheckFields}
+                    setExportTitle={setExportTitle}
+                    exportKey={RemoteGV.RiskExportFields}
+                    getData={getExcelData}
+                    onClose={() => m.destroy()}
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+                setSelectList([])
+            },
+            footer: null,
+            width: 650
+        })
+    })
+    const formatJson = (filterVal, jsonData) => {
+        return jsonData.map((v, index) =>
+            filterVal.map((j) => {
+                if (j === "Type") {
+                    const value = v["RiskTypeVerbose"] || v["RiskType"] || ""
+                    return value.replaceAll("NUCLEI-", "")
+                }
+                if (j === "Severity") {
+                    const title = SeverityMapTag.filter((item) => item.key.includes(v["Severity"] || ""))[0]
+                    return title ? title.name : v["Severity"] || "-"
+                }
+                if (j === "CreatedAt") {
+                    return formatTimestamp(v[j])
+                }
+                return v[j]
+            })
+        )
+    }
+    const getExcelData = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            let exportData: any = []
+            const header: string[] = []
+            const filterVal: string[] = []
+            exportTitle.forEach((item) => {
+                const itemData = exportFields.filter((itemIn) => itemIn.label === item)[0]
+                header.push(item)
+                filterVal.push(itemData.value)
+            })
+            const number = filterVal.findIndex((ele) => ele === "Severity")
+            let optsSingleCellSetting = {}
+            if (number !== -1) {
+                optsSingleCellSetting = {
+                    c: number, // 第*列，
+                    colorObj: yakitRiskCellStyle // 字体颜色设置
+                }
+            }
+            const resolveData = {
+                header,
+                optsSingleCellSetting
+            }
+            if (selectList.length > 0) {
+                exportData = formatJson(filterVal, selectList)
+                resolve({
+                    ...resolveData,
+                    exportData,
+                    response: {
+                        Total: selectList.length,
+                        Data: selectList,
+                        Pagination: {
+                            Page: 1,
+                            Limit: selectList.length,
+                            OrderBy: query.Pagination.OrderBy,
+                            Order: query.Pagination.Order
+                        }
+                    }
+                })
+            } else {
+                const exportQuery: QueryRisksRequest = {
+                    ...query,
+                    Pagination: {
+                        ...query.Pagination,
+                        Page: 1,
+                        Limit: total
+                    }
+                }
+                apiQueryRisks(exportQuery).then((res) => {
+                    exportData = formatJson(filterVal, res.Data)
+                    resolve({
+                        ...resolveData,
+                        exportData,
+                        response: res
+                    })
+                })
+            }
+        })
     })
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
@@ -394,11 +601,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             setSelectList([])
         }
     })
-    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows) => {
+    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: Risk) => {
         if (c) {
-            setSelectList((s) => [...s, key])
+            setSelectList((s) => [...s, selectedRows])
         } else {
-            setSelectList((s) => s.filter((ele) => ele !== key))
+            setSelectList((s) => s.filter((ele) => ele.Hash !== selectedRows.Hash))
         }
     })
     const onSetCurrentRow = useMemoizedFn((val?: Risk) => {
@@ -436,6 +643,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         return p
     }, [currentSelectItem])
+    const selectedRowKeys = useCreation(() => {
+        return selectList.map((ele) => ele.Hash) || []
+    }, [selectList])
     return (
         <div className={styles["yakit-risk-table"]}>
             <YakitResizeBox
@@ -564,7 +774,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         rowSelection={{
                             isAll: allCheck,
                             type: "checkbox",
-                            selectedRowKeys: selectList,
+                            selectedRowKeys,
                             onSelectAll,
                             onChangeCheckboxSingle
                         }}

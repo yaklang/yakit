@@ -96,7 +96,9 @@ export enum RemoteGV {
     /**@name WebFuzzer编码缓存 */
     webFuzzerEditorCodeKey="webfuzzer_editor_code_key",
     /**@name WebFuzzer一个编辑器编码缓存 */
-    webFuzzerOneResEditorCodeKey="webfuzzer_one_res_editor_code_key"
+    webFuzzerOneResEditorCodeKey="webfuzzer_one_res_editor_code_key",
+    /**@name 漏洞风险导出字段缓存 */
+    RiskExportFields="risk-export-fields",
 }
 
 /** 项目逻辑全局变量 */

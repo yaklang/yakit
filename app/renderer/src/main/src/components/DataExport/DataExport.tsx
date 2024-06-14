@@ -110,7 +110,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
 
                     const maxSizeInBytes = 90 * 1024 * 1024 // 90MB
                     const chunks: any[] = splitArrayBySize(exportData, maxSizeInBytes)
-
+                    
                     if (totalCellNumber < maxCellNumber && response.Total <= pageSize && chunks.length === 1) {
                         // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
                         export_json_to_excel({
@@ -311,10 +311,12 @@ interface ExportSelectProps {
     /* limit */
     pageSize?: number
     initCheckValue?: string[]
+    /**关闭 */
+    onClose: () => void
 }
 // 导出字段选择
 export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
-    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue} = props
+    const {exportValue, fileName, setExportTitle, exportKey, getData, pageSize, initCheckValue, onClose} = props
     const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
     useEffect(() => {
         getRemoteValue(exportKey).then((setting) => {
@@ -337,7 +339,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
     }
     return (
         <div className={styles["export-select"]}>
-            <Checkbox.Group style={{width: "100%"}} value={checkValue} onChange={onChange}>
+            <Checkbox.Group style={{width: "100%", padding: 24}} value={checkValue} onChange={onChange}>
                 <Row>
                     {exportValue.map((item) => (
                         <Col span={6} className={styles["item"]}>
@@ -347,10 +349,10 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
                 </Row>
             </Checkbox.Group>
             <div className={styles["button-box"]}>
+                <YakitButton type='outline2' onClick={() => onClose()}>
+                    取消
+                </YakitButton>
                 <ExportExcel
-                    btnProps={{
-                        className: "button"
-                    }}
                     newUIType='primary'
                     getData={getData}
                     fileName={fileName}
