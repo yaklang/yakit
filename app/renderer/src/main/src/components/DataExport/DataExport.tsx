@@ -320,7 +320,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
         getRemoteValue(exportKey).then((setting) => {
             if (!setting) {
                 // 第一次进入 默认勾选所有导出字段
-                setExportTitle(exportValue as string[])
+                setExportTitle(initCheckValue || exportValue as string[])
                 setCheckValue(initCheckValue || exportValue)
             } else {
                 const values = JSON.parse(setting)
