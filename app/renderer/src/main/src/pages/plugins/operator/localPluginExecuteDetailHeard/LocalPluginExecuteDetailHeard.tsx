@@ -106,7 +106,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const getOnlinePlugin = useMemoizedFn(() => {
         if (!!plugin.isLocalPlugin) return
         if (!!plugin.IsCorePlugin) return
-        apiFetchOnlinePluginInfo(plugin.UUID, false).then((info) => {
+        apiFetchOnlinePluginInfo({uuid: plugin.UUID}, false).then((info) => {
             if (Number(info.updated_at || 0) > Number(plugin.UpdatedAt || 0)) {
                 setIsShowUpdate(true)
             }

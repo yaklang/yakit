@@ -924,7 +924,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     )
 })
 
-const PluginsUploadAll: React.FC<PluginsUploadAllProps> = React.memo((props) => {
+export const PluginsUploadAll: React.FC<PluginsUploadAllProps> = React.memo((props) => {
     const {visible, setVisible} = props
     const onCancel = useMemoizedFn(() => {
         setVisible(false)

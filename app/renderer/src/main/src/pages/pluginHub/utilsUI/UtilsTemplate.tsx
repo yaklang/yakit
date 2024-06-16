@@ -20,11 +20,13 @@ export const NoPromptHint: React.FC<RecycleOptFooterExtraProps> = memo((props) =
 
     const [checked, setChecked] = useState<boolean>(false)
     const handleCallback = useMemoizedFn((isOK: boolean) => {
+        const check = !!checked
+        setChecked(false)
         if (isOK) {
             if (cacheKey && checked) {
                 setRemoteValue(cacheKey, `${checked}`)
             }
-            onCallback(true, checked)
+            onCallback(true, check)
         } else {
             onCallback(false, false)
         }
