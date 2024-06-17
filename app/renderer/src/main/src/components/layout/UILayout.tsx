@@ -7,6 +7,7 @@ import {TemporaryProjectPop, WinUIOp} from "./WinUIOp"
 import {GlobalState} from "./GlobalState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
 import {
+    EngineOtherOperation,
     EngineWatchDogCallbackType,
     YakitSettingCallbackType,
     YakitStatusType,
@@ -461,7 +462,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineLink])
     // Loading页面切换引擎连接模式
-    const loadingClickCallback = useMemoizedFn((type: YaklangEngineMode | YakitStatusType) => {
+    const loadingClickCallback = useMemoizedFn((type: YaklangEngineMode | YakitStatusType | EngineOtherOperation) => {
         switch (type) {
             case "checkError":
                 // 引擎权限错误-手动重启引擎
@@ -480,6 +481,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setTimeoutLoading(setRestartLoading)
                 handleStartLocalLink(isInitLocalLink.current)
                 isInitLocalLink.current = false
+                return
+            case "changePort":
+                // 手动改变连接端口
+                setTimeoutLoading(setRestartLoading)
+                handleStartLocalLink(isInitLocalLink.current)
+                isInitLocalLink.current = false
+                setKeepalive(false)
                 return
             case "control-remote":
                 // 远程控制连接时的刷新

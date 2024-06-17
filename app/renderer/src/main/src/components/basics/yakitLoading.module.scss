@@ -138,6 +138,19 @@
         }
     }
 }
+
+.change-port-dropdown-menu {
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+    border: 1px solid var(--yakit-border-color);
+    :global {
+        .ant-form-item {
+            margin-bottom: 0;
+        }
+    }
+}
+
 // 加载图标动画
 @-webkit-keyframes building-blocks {
     from {

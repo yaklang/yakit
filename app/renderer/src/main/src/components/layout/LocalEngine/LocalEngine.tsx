@@ -43,33 +43,45 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         setDatabaseErrorVisible(true)
                     } else {
                         setLog([firstHint, "数据库权限无问题"])
-                        handleLinkEnginePort()
+                        handleLinkEnginePort(true)
                     }
                 })
                 .catch((e) => {
                     setLog([firstHint, `检查出错: ${e}`])
-                    handleLinkEnginePort()
+                    handleLinkEnginePort(true)
                 })
         })
 
         /** 获取上次本地连接引擎的端口缓存 */
-        const handleLinkEnginePort = useMemoizedFn(() => {
+        const handleLinkEnginePort = useMemoizedFn((isInit: boolean) => {
             getLocalValue(LocalGVS.YaklangEnginePort)
                 .then((portRaw) => {
                     const port = parseInt(portRaw)
                     if (!port) {
                         getRandomLocalEnginePort((p) => {
-                            onFetchLocalAndLatsVersion()
+                            if (isInit) {
+                                onFetchLocalAndLatsVersion()
+                            } else {
+                                handleFetchYakitAndYaklangLocalVersion(() => {}, false)
+                            }
                             setLocalPort(p)
                         })
                     } else {
-                        onFetchLocalAndLatsVersion()
+                        if (isInit) {
+                            onFetchLocalAndLatsVersion()
+                        } else {
+                            handleFetchYakitAndYaklangLocalVersion(() => {}, false)
+                        }
                         setLocalPort(port)
                     }
                 })
                 .catch(() => {
                     getRandomLocalEnginePort((p) => {
-                        onFetchLocalAndLatsVersion()
+                        if (isInit) {
+                            onFetchLocalAndLatsVersion()
+                        } else {
+                            handleFetchYakitAndYaklangLocalVersion(() => {}, false)
+                        }
                         setLocalPort(p)
                     })
                 })
@@ -98,30 +110,32 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             }, 2000)
         }
 
-        const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async (callback?: () => any, checkEngine?: boolean) => {
-            try {
-                let localYakit = (await ipcRenderer.invoke("fetch-yakit-version")) || ""
-                setCurrentYakit(localYakit)
-            } catch (error) {}
+        const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(
+            async (callback?: () => any, checkEngine?: boolean) => {
+                try {
+                    let localYakit = (await ipcRenderer.invoke("fetch-yakit-version")) || ""
+                    setCurrentYakit(localYakit)
+                } catch (error) {}
 
-            try {
-                setLog(["获取引擎版本号..."])
-                let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
-                localYaklang = localYaklang.startsWith("v") ? localYaklang.slice(1) : localYaklang
-                setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
-                setCurrentYaklang(localYaklang)
-                if (checkEngine) {
-                    await checkEngineSource(localYaklang)
-                } else {
+                try {
+                    setLog(["获取引擎版本号..."])
+                    let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
+                    localYaklang = localYaklang.startsWith("v") ? localYaklang.slice(1) : localYaklang
+                    setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
+                    setCurrentYaklang(localYaklang)
+                    if (checkEngine) {
+                        await checkEngineSource(localYaklang)
+                    } else {
+                        if (callback) callback()
+                    }
+                    timingLinkLocalEnging()
+                } catch (error) {
+                    setLog(["获取引擎版本号...", `错误: ${error}`])
+                    setYakitStatus("checkError")
                     if (callback) callback()
-                } 
-                timingLinkLocalEnging()
-            } catch (error) {
-                setLog(["获取引擎版本号...", `错误: ${error}`])
-                setYakitStatus("checkError")
-                if (callback) callback()
+                }
             }
-        })
+        )
 
         // 校验引擎是否来源正确
         const [versionAbnormalVisible, setVersionAbnormalVisible] = useState<boolean>(false)
@@ -144,6 +158,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     setVersionAbnormalVisible(true)
                 }
             } catch (error) {
+                setLog(["引擎校验已结束"])
                 handleFetchYakitAndYaklangLatestVersion()
             }
         }
@@ -290,7 +305,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             isShowedUpdateHint.current = false
             preventUpdateHint.current = true
             checkEngineSourcePreventLinkLocalEnging.current = false
-            handleFetchYakitAndYaklangLocalVersion(() => {}, false)
+            handleLinkEnginePort(false)
         })
 
         useImperativeHandle(
@@ -320,13 +335,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 return true
             }
 
-            const lowerYaklangLastVersion = moreYaklangVersionList.indexOf(currentYaklang) === -1 || moreYaklangVersionList.indexOf(currentYaklang) > moreYaklangVersionList.indexOf(latestYaklang)
-            if (
-                !!currentYaklang &&
-                !!latestYaklang &&
-                moreYaklangVersionList.length &&
-                lowerYaklangLastVersion
-            ) {
+            const lowerYaklangLastVersion =
+                moreYaklangVersionList.indexOf(currentYaklang) === -1 ||
+                moreYaklangVersionList.indexOf(currentYaklang) > moreYaklangVersionList.indexOf(latestYaklang)
+            if (!!currentYaklang && !!latestYaklang && moreYaklangVersionList.length && lowerYaklangLastVersion) {
                 isShowedUpdateHint.current = true
                 return true
             }
@@ -357,7 +369,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     setTimeout(() => {
                         setDatabaseErrorVisible(false)
                         setDatabaseErrorLoading(false)
-                        handleLinkEnginePort()
+                        handleLinkEnginePort(true)
                     }, 300)
                 })
         })

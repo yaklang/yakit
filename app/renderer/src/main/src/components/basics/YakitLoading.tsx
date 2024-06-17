@@ -1,15 +1,18 @@
-import React, {useMemo} from "react"
+import React, {useMemo, useState} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
-import {YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
+import {EngineOtherOperation, YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {DynamicStatusProps} from "@/store"
-import {Tooltip} from "antd"
+import {Divider, Dropdown, Form, Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
 import styles from "./yakitLoading.module.scss"
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import {setLocalValue} from "@/utils/kv"
+import {LocalGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -68,7 +71,7 @@ export interface YakitLoadingProp {
     /** 远程控制时的刷新按钮loading */
     remoteControlRefreshLoading: boolean
 
-    btnClickCallback: (type: YaklangEngineMode | YakitStatusType) => any
+    btnClickCallback: (type: YaklangEngineMode | YakitStatusType | EngineOtherOperation) => any
 }
 
 export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
@@ -82,6 +85,56 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         btnClickCallback,
         checkLog
     } = props
+
+    const [form] = Form.useForm()
+
+    const changePortBtn = () => {
+        return (
+            <Dropdown
+                trigger={["click"]}
+                placement='bottomLeft'
+                overlay={() => (
+                    <>
+                        <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
+                            <Form.Item
+                                label={"端口号"}
+                                rules={[
+                                    {required: true, message: `请输入端口号`},
+                                    {
+                                        pattern:
+                                            /^[1-9]$|(^[1-9][0-9]$)|(^[1-9][0-9][0-9]$)|(^[1-9][0-9][0-9][0-9]$)|(^[1-6][0-5][0-5][0-3][0-5]$)/,
+                                        message: "请输入正确的端口号"
+                                    }
+                                ]}
+                                name={"newLinkport"}
+                            >
+                                <YakitInput />
+                            </Form.Item>
+                        </Form>
+                        <div style={{textAlign: "right"}}>
+                            <YakitButton
+                                size='small'
+                                loading={restartLoading}
+                                onClick={() => {
+                                    form.validateFields().then((res) => {
+                                        setLocalValue(LocalGV.YaklangEnginePort, res.newLinkport)
+                                        btnClickCallback("changePort")
+                                    })
+                                }}
+                            >
+                                确定
+                            </YakitButton>
+                        </div>
+                    </>
+                )}
+                overlayClassName={styles["change-port-dropdown-menu"]}
+            >
+                <YakitButton size='max' type='text'>
+                    切换端口
+                </YakitButton>
+            </Dropdown>
+        )
+    }
 
     const btns = useMemo(() => {
         if (yakitStatus === "checkError") {
@@ -155,14 +208,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         切换为{engineMode === "local" ? "远程" : "本地"}模式
                     </YakitButton>
 
-                    <YakitButton
-                        className={styles["btn-style"]}
-                        size='max'
-                        type='text'
-                        onClick={() => setShowEngineLog(!showEngineLog)}
-                    >
-                        {showEngineLog ? "隐藏日志" : "查看日志"}
-                    </YakitButton>
+                    <div>
+                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
+                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        {changePortBtn()}
+                    </div>
                 </>
             )
         }
