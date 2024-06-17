@@ -30,7 +30,7 @@ import {SolidRefreshIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {DeleteRiskRequest, apiDeleteRisk, apiNewRiskRead, apiQueryRisks} from "./utils"
+import {DeleteRiskRequest, ExportHtmlProps, apiDeleteRisk, apiExportHtml, apiNewRiskRead, apiQueryRisks} from "./utils"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -48,6 +48,9 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {ExportSelect} from "@/components/DataExport/DataExport"
 import {RemoteGV} from "@/yakitGV"
+import {getHtmlTemplate} from "./htmlTemplate"
+import {yakitNotify} from "@/utils/notification"
+import moment from "moment"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -424,17 +427,17 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onRemove = useMemoizedFn(() => {
         // 带条件删除
         let removeQuery: DeleteRiskRequest = {}
-        if (selectList.length > 0) {
-            // 勾选删除
-            const ids = selectList.map((item) => item.Id)
-            removeQuery = {
-                Ids: ids
-            }
-        } else {
+        if (allCheck) {
             removeQuery = {
                 Filter: {
                     ...query
                 }
+            }
+        } else {
+            // 勾选删除
+            const ids = selectList.map((item) => item.Id)
+            removeQuery = {
+                Ids: ids
             }
         }
         /*TODO - 带对接接口*/
@@ -448,6 +451,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 onExportCSV()
                 break
             case "export-html":
+                onExportHTML()
                 break
             default:
                 break
@@ -516,23 +520,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 header,
                 optsSingleCellSetting
             }
-            if (selectList.length > 0) {
-                exportData = formatJson(filterVal, selectList)
-                resolve({
-                    ...resolveData,
-                    exportData,
-                    response: {
-                        Total: selectList.length,
-                        Data: selectList,
-                        Pagination: {
-                            Page: 1,
-                            Limit: selectList.length,
-                            OrderBy: query.Pagination.OrderBy,
-                            Order: query.Pagination.Order
-                        }
-                    }
-                })
-            } else {
+            if (allCheck) {
                 const exportQuery: QueryRisksRequest = {
                     ...query,
                     Pagination: {
@@ -549,8 +537,58 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         response: res
                     })
                 })
+            } else {
+                exportData = formatJson(filterVal, selectList)
+                resolve({
+                    ...resolveData,
+                    exportData,
+                    response: {
+                        Total: selectList.length,
+                        Data: selectList,
+                        Pagination: {
+                            Page: 1,
+                            Limit: selectList.length,
+                            OrderBy: query.Pagination.OrderBy,
+                            Order: query.Pagination.Order
+                        }
+                    }
+                })
             }
         })
+    })
+    const onExportHTML = useMemoizedFn(async () => {
+        setLoading(true)
+        try {
+            let risks: Risk[] = []
+            if (allCheck) {
+                const exportQuery: QueryRisksRequest = {
+                    ...query,
+                    Pagination: {
+                        ...query.Pagination,
+                        Page: 1,
+                        Limit: total
+                    }
+                }
+
+                const res = await apiQueryRisks(exportQuery)
+                risks = [...res.Data]
+            } else {
+                risks = [...selectList]
+            }
+            const htmlContent = getHtmlTemplate()
+            const params: ExportHtmlProps = {
+                htmlContent,
+                fileName: `riskTable-${moment().valueOf()}`,
+                data: risks
+            }
+            apiExportHtml(params)
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        } catch (error) {
+            yakitNotify("error", `导出html失败:${error}`)
+            setLoading(false)
+        }
     })
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
@@ -608,7 +646,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     setIsRefresh(!isRefresh)
                     setSelectList([])
                     setAllCheck(false)
+                } else {
+                    if (allCheck) {
+                        setSelectList(d)
+                    }
                 }
+
                 if (+res.Total !== selectList.length) {
                     setAllCheck(false)
                 }
@@ -620,6 +663,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: Risk[], checked: boolean) => {
         if (checked) {
             setAllCheck(true)
+            setSelectList(response.Data)
         } else {
             setAllCheck(false)
             setSelectList([])
@@ -671,7 +715,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         return selectList.map((ele) => ele.Hash) || []
     }, [selectList])
     return (
-        <div className={styles["yakit-risk-table"]}>
+        <div className={styles["yakit-risk-table"]} id='riskTable'>
             <YakitResizeBox
                 firstMinSize={400}
                 secondMinSize={200}
@@ -726,14 +770,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                     </div>
                                 </div>
                                 <div className={styles["table-head-extra"]}>
-                                    {/* <ExportExcel
-                                btnProps={{
-                                    size: btnSize,
-                                    type: "outline2"
-                                }}
-                                getData={getData}
-                                text='导出全部'
-                            /> */}
                                     <YakitInput.Search
                                         value={keywords}
                                         onChange={(e) => setKeywords(e.target.value)}
@@ -928,112 +964,49 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     }, [info.Severity])
     const items: ReactNode[] = useMemo(() => {
         const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
-        let details: any
-        let requestKeys: string[] = []
-        let responseKeys: string[] = []
-
-        if (info.Details) {
-            details = typeof info.Details === "string" ? JSON.parse(info.Details) : info.Details
-            if (details) {
-                requestKeys = Object.keys(details)
-                    .filter((key) => key.startsWith("request_"))
-                    .sort()
-                responseKeys = Object.keys(details)
-                    .filter((key) => key.startsWith("response_"))
-                    .sort()
-            }
-        }
-
         const itemList: ReactNode[] = []
-        if (requestKeys.length > 0 || responseKeys.length > 0) {
-            for (let i = 0; i < Math.max(requestKeys.length, responseKeys.length); i++) {
-                if (requestKeys[i]) {
-                    itemList.push(
-                        <Descriptions.Item label={"Request_" + (i + 1)} span={3} key={requestKeys[i]}>
-                            <div style={{height: 300}}>
-                                {quotedRequest ? (
-                                    <div>{quotedRequest}</div>
-                                ) : (
-                                    <NewHTTPPacketEditor
-                                        defaultHttps={isHttps}
-                                        originValue={new TextEncoder().encode(details[requestKeys[i]])}
-                                        readOnly={true}
-                                        noHeader={true}
-                                        webFuzzerCallBack={() => {
-                                            onClose && onClose()
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </Descriptions.Item>
-                    )
-                }
-                if (responseKeys[i]) {
-                    itemList.push(
-                        <Descriptions.Item label={"Response_" + (i + 1)} span={3} key={responseKeys[i]}>
-                            <div style={{height: 300}}>
-                                {quotedResponse ? (
-                                    <div>{quotedResponse}</div>
-                                ) : (
-                                    <NewHTTPPacketEditor
-                                        defaultHttps={isHttps}
-                                        originValue={new TextEncoder().encode(details[responseKeys[i]])}
-                                        readOnly={true}
-                                        noHeader={true}
-                                        webFuzzerCallBack={() => {
-                                            onClose && onClose()
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </Descriptions.Item>
-                    )
-                }
-            }
-        } else {
-            if ((info?.Request || []).length > 0) {
-                itemList.push(
-                    <Descriptions.Item label='Request' span={3}>
-                        <div style={{height: 300}}>
-                            {quotedRequest ? (
-                                <div>{quotedRequest}</div>
-                            ) : (
-                                <NewHTTPPacketEditor
-                                    defaultHttps={isHttps}
-                                    originValue={info?.Request || new Uint8Array()}
-                                    readOnly={true}
-                                    noHeader={true}
-                                    webFuzzerCallBack={() => {
-                                        onClose && onClose()
-                                    }}
-                                />
-                            )}
-                        </div>
-                    </Descriptions.Item>
-                )
-            }
-            if ((info?.Response || []).length > 0) {
-                itemList.push(
-                    <Descriptions.Item label='Response' span={3}>
-                        <div style={{height: 300}}>
-                            {quotedResponse ? (
-                                <div>{quotedResponse}</div>
-                            ) : (
-                                <NewHTTPPacketEditor
-                                    defaultHttps={isHttps}
-                                    webFuzzerValue={info?.Request || new Uint8Array()}
-                                    originValue={info?.Response || new Uint8Array()}
-                                    readOnly={true}
-                                    noHeader={true}
-                                    webFuzzerCallBack={() => {
-                                        onClose && onClose()
-                                    }}
-                                />
-                            )}
-                        </div>
-                    </Descriptions.Item>
-                )
-            }
+        if ((info?.Request || []).length > 0) {
+            itemList.push(
+                <Descriptions.Item label='Request' span={3}>
+                    <div style={{height: 300}}>
+                        {quotedRequest ? (
+                            <div>{quotedRequest}</div>
+                        ) : (
+                            <NewHTTPPacketEditor
+                                defaultHttps={isHttps}
+                                originValue={info?.Request || new Uint8Array()}
+                                readOnly={true}
+                                noHeader={true}
+                                webFuzzerCallBack={() => {
+                                    onClose && onClose()
+                                }}
+                            />
+                        )}
+                    </div>
+                </Descriptions.Item>
+            )
+        }
+        if ((info?.Response || []).length > 0) {
+            itemList.push(
+                <Descriptions.Item label='Response' span={3}>
+                    <div style={{height: 300}}>
+                        {quotedResponse ? (
+                            <div>{quotedResponse}</div>
+                        ) : (
+                            <NewHTTPPacketEditor
+                                defaultHttps={isHttps}
+                                webFuzzerValue={info?.Request || new Uint8Array()}
+                                originValue={info?.Response || new Uint8Array()}
+                                readOnly={true}
+                                noHeader={true}
+                                webFuzzerCallBack={() => {
+                                    onClose && onClose()
+                                }}
+                            />
+                        )}
+                    </div>
+                </Descriptions.Item>
+            )
         }
 
         return itemList
