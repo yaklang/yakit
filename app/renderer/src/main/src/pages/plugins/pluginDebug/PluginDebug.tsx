@@ -40,6 +40,7 @@ import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../utils
 import classNames from "classnames"
 import styles from "./PluginDebug.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
     const {plugin, getContainer, visible, onClose, onMerge} = props
@@ -441,7 +442,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     const onStartExecute = useMemoizedFn(() => {
         if (form) {
             form.validateFields()
-                .then(async(value: any) => {
+                .then(async (value: any) => {
                     // console.log("插件执行时的表单值", value)
                     // 保存参数-请求路径的选项
                     if (pathRef && pathRef.current) {
@@ -484,10 +485,13 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     debugPluginStreamEvent.reset()
                     setRuntimeId("")
                     setActiveTab("execResult")
-                    if(pluginType === "codec"){
+                    if (pluginType === "codec") {
                         const codecInfo = await onCodeToInfo(pluginType, newCode || "")
-                        if((codecInfo?.Tags||[]).includes("AI工具")){
-                            emiter.emit("onOpenFuzzerModal",JSON.stringify({text:value["Input"]||"",code:"newCode",isAiPlugin:true}))
+                        if ((codecInfo?.Tags || []).includes("AI工具")) {
+                            emiter.emit(
+                                "onOpenFuzzerModal",
+                                JSON.stringify({text: value["Input"] || "", code: "newCode", isAiPlugin: true})
+                            )
                         }
                     }
                     apiDebugPlugin(requestParams, tokenRef.current).then(() => {
@@ -511,122 +515,142 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     // 停靠模式-浮窗
     return (
         <div className={styles["plugin-debug-wrapper"]}>
-            <div className={styles["left-wrapper"]}>
-                <YakitCard
-                    title='参数列表'
-                    style={{borderTop: 0}}
-                    headClassName={styles["left-header-wrapper"]}
-                    extra={
-                        <div className={styles["header-extra"]}>
-                            {plugin?.Type === "yak" && (
-                                <>
-                                    <YakitButton type='text' loading={fetchParamsLoading} onClick={onFetchParams}>
-                                        获取参数
-                                        <OutlineRefreshIcon />
-                                    </YakitButton>
-                                    <div className={styles["divider-wrapper"]}></div>
-                                </>
-                            )}
-                            {isExecuting ? (
-                                <YakitButton danger onClick={onStopExecute}>
-                                    停止
-                                </YakitButton>
-                            ) : (
-                                <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
-                                    执行
-                                </YakitButton>
-                            )}
-                        </div>
-                    }
-                    bodyClassName={styles["left-body-wrapper"]}
-                >
-                    <div className={styles["form-wrapper"]}>
-                        <Form
-                            form={form}
-                            onFinish={() => {}}
-                            size='small'
-                            labelCol={{span: 8}}
-                            wrapperCol={{span: 16}}
-                            labelWrap={true}
-                            validateMessages={{
-                                /* eslint-disable no-template-curly-in-string */
-                                required: "${label} 是必填字段"
-                            }}
-                        >
-                            <div className={styles["custom-params-wrapper"]}>{pluginRequiredItem(pluginType)}</div>
-                            {isShowGroupParams ? null : pluginOptionalItem(pluginType)}
-                        </Form>
-                    </div>
-                </YakitCard>
-            </div>
-            <div className={styles["right-wrapper"]}>
-                <div className={styles["right-header-wrapper"]}>
-                    <YakitRadioButtons
-                        buttonStyle='solid'
-                        value={activeTab}
-                        options={[
-                            {value: "code", label: "源码"},
-                            {value: "execResult", label: "执行结果"}
-                        ]}
-                        onChange={(e) => setActiveTab(e.target.value)}
-                    />
-                    <div className={styles["header-info"]}>
-                        <YakitTag color={pluginTypeColor as YakitTagColor}>
-                            {pluginTypeToName[pluginType].name || pluginType}
-                        </YakitTag>
-                        {
-                            <div
-                                className={classNames(styles["info-name"], "yakit-content-single-ellipsis")}
-                                title={plugin?.ScriptName || ""}
-                            >
-                                {plugin?.ScriptName || ""}
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <div className={styles["right-body-wrapper"]}>
-                    <div
-                        tabIndex={activeTab !== "code" ? -1 : 1}
-                        className={classNames(styles["tab-show"], {
-                            [styles["tab-hidden"]]: activeTab !== "code"
-                        })}
-                    >
-                        <YakitEditor type={pluginType} value={newCode} setValue={setNewCode} />
-                    </div>
-
-                    <div
-                        tabIndex={activeTab !== "execResult" ? -1 : 1}
-                        className={classNames(styles["tab-show"], {
-                            [styles["tab-hidden"]]: activeTab !== "execResult"
-                        })}
-                    >
-                        {runtimeId ? (
-                            <>
-                                {streamInfo.progressState.length > 1 && (
-                                    <div className={styles["plugin-executing-progress"]}>
-                                        {streamInfo.progressState.map((ele, index) => (
-                                            <React.Fragment key={ele.id}>
-                                                {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
-                                                <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                                            </React.Fragment>
-                                        ))}
-                                    </div>
-                                )}
-                                <div className={styles["result-body"]}>
-                                    <PluginExecuteResult
-                                        streamInfo={streamInfo}
-                                        runtimeId={runtimeId}
-                                        loading={isExecuting}
-                                    />
+            <YakitResizeBox
+                isVer={false}
+                lineDirection="left"
+                firstNode={
+                    <div className={styles["left-wrapper"]}>
+                        <YakitCard
+                            title='参数列表'
+                            style={{borderTop: 0}}
+                            headClassName={styles["left-header-wrapper"]}
+                            extra={
+                                <div className={styles["header-extra"]}>
+                                    {plugin?.Type === "yak" && (
+                                        <>
+                                            <YakitButton
+                                                type='text'
+                                                loading={fetchParamsLoading}
+                                                onClick={onFetchParams}
+                                            >
+                                                获取参数
+                                                <OutlineRefreshIcon />
+                                            </YakitButton>
+                                            <div className={styles["divider-wrapper"]}></div>
+                                        </>
+                                    )}
+                                    {isExecuting ? (
+                                        <YakitButton danger onClick={onStopExecute}>
+                                            停止
+                                        </YakitButton>
+                                    ) : (
+                                        <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
+                                            执行
+                                        </YakitButton>
+                                    )}
                                 </div>
-                            </>
-                        ) : (
-                            <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
-                        )}
+                            }
+                            bodyClassName={styles["left-body-wrapper"]}
+                        >
+                            <div className={styles["form-wrapper"]}>
+                                <Form
+                                    form={form}
+                                    onFinish={() => {}}
+                                    size='small'
+                                    labelCol={{span: 8}}
+                                    wrapperCol={{span: 16}}
+                                    labelWrap={true}
+                                    validateMessages={{
+                                        /* eslint-disable no-template-curly-in-string */
+                                        required: "${label} 是必填字段"
+                                    }}
+                                >
+                                    <div className={styles["custom-params-wrapper"]}>
+                                        {pluginRequiredItem(pluginType)}
+                                    </div>
+                                    {isShowGroupParams ? null : pluginOptionalItem(pluginType)}
+                                </Form>
+                            </div>
+                        </YakitCard>
                     </div>
-                </div>
-            </div>
+                }
+                firstRatio="15%"
+                firstMinSize="340px"
+                secondNode={
+                    <div className={styles["right-wrapper"]}>
+                        <div className={styles["right-header-wrapper"]}>
+                            <YakitRadioButtons
+                                buttonStyle='solid'
+                                value={activeTab}
+                                options={[
+                                    {value: "code", label: "源码"},
+                                    {value: "execResult", label: "执行结果"}
+                                ]}
+                                onChange={(e) => setActiveTab(e.target.value)}
+                            />
+                            <div className={styles["header-info"]}>
+                                <YakitTag color={pluginTypeColor as YakitTagColor}>
+                                    {pluginTypeToName[pluginType].name || pluginType}
+                                </YakitTag>
+                                {
+                                    <div
+                                        className={classNames(styles["info-name"], "yakit-content-single-ellipsis")}
+                                        title={plugin?.ScriptName || ""}
+                                    >
+                                        {plugin?.ScriptName || ""}
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div className={styles["right-body-wrapper"]}>
+                            <div
+                                tabIndex={activeTab !== "code" ? -1 : 1}
+                                className={classNames(styles["tab-show"], {
+                                    [styles["tab-hidden"]]: activeTab !== "code"
+                                })}
+                            >
+                                <YakitEditor type={pluginType} value={newCode} setValue={setNewCode} />
+                            </div>
+
+                            <div
+                                tabIndex={activeTab !== "execResult" ? -1 : 1}
+                                className={classNames(styles["tab-show"], {
+                                    [styles["tab-hidden"]]: activeTab !== "execResult"
+                                })}
+                            >
+                                {runtimeId ? (
+                                    <>
+                                        {streamInfo.progressState.length > 1 && (
+                                            <div className={styles["plugin-executing-progress"]}>
+                                                {streamInfo.progressState.map((ele, index) => (
+                                                    <React.Fragment key={ele.id}>
+                                                        {index !== 0 && (
+                                                            <Divider type='vertical' style={{margin: 0, top: 2}} />
+                                                        )}
+                                                        <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+                                                    </React.Fragment>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className={styles["result-body"]}>
+                                            <PluginExecuteResult
+                                                streamInfo={streamInfo}
+                                                runtimeId={runtimeId}
+                                                loading={isExecuting}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                }
+                secondRatio="50%"
+                secondMinSize="620px"
+            />
         </div>
     )
 })
