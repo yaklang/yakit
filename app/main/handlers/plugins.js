@@ -70,31 +70,38 @@ module.exports = (win, getClient) => {
     // 批量本地插件导入
     let importYakScriptStream
     ipcMain.handle("ImportYakScriptStream", async (e, params) => {
-        const data = fs.readFileSync(params.Filename, null);
-        const uint8Array = new Uint8Array(data);
-        params.Data = uint8Array
-        importYakScriptStream = getClient().ImportYakScriptStream(params)
-
-        importYakScriptStream.on("data", (e) => {
+        try {
+            const data = fs.readFileSync(params.Filename, null);
+            const uint8Array = new Uint8Array(data);
+            params.Data = uint8Array
+            importYakScriptStream = getClient().ImportYakScriptStream(params)
+            importYakScriptStream.on("data", (e) => {
+                if (!win) {
+                    return
+                }
+                win.webContents.send("import-yak-script-data", e)
+            })
+            importYakScriptStream.on("error", (e) => {
+                if (!win) {
+                    return
+                }
+                win.webContents.send("import-yak-script-error", { message: e.message })
+            })
+            importYakScriptStream.on("end", () => {
+                importYakScriptStream.cancel()
+                importYakScriptStream = null
+                if (!win) {
+                    return
+                }
+                win.webContents.send("import-yak-script-end")
+            })
+        } catch (error) {
             if (!win) {
                 return
             }
-            win.webContents.send("import-yak-script-data", e)
-        })
-        importYakScriptStream.on("error", (e) => {
-            if (!win) {
-                return
-            }
-            win.webContents.send("import-yak-script-error", { message: e.message })
-        })
-        importYakScriptStream.on("end", () => {
-            importYakScriptStream.cancel()
-            importYakScriptStream = null
-            if (!win) {
-                return
-            }
+            win.webContents.send("import-yak-script-error", { message: error.message })
             win.webContents.send("import-yak-script-end")
-        })
+        }
     })
     ipcMain.handle("cancel-ImportYakScriptStream", async () => {
         if (importYakScriptStream) importYakScriptStream.cancel()

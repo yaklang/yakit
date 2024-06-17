@@ -886,8 +886,10 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                                 name: "localPluginPath",
                                 label: "本地插件路径",
                                 labelCol: {span: 5},
-                                wrapperCol: {span: 19}
+                                wrapperCol: {span: 19},
+                                rules: [{required: true, message: "请输入本地插件路径"}]
                             }}
+                            multiple={false}
                             selectType='file'
                             fileExtensionIsExist={false}
                             onChange={(val) => {

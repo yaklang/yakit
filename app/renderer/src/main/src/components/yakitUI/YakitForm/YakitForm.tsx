@@ -86,7 +86,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         autoCompleteProps = {},
         disabled,
         isShowPathNumber = true,
-        multiple,
+        multiple = true,
         showFailedFlag = true,
         fileExtensionIsExist = true
     } = props
@@ -133,7 +133,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "textarea":
                 return (
                     <YakitInput.TextArea
-                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
                         value={fileName || name}
                         disabled={disabled}
                         {...textareaProps}
@@ -179,7 +179,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "autoComplete":
                 return (
                     <YakitAutoComplete
-                        placeholder='路径支持手动输入'
+                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
                         value={fileName || name}
                         disabled={disabled}
                         {...autoCompleteProps}
@@ -225,7 +225,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             default:
                 return (
                     <YakitInput
-                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
                         size={size}
                         value={fileName || name}
                         disabled={disabled}

@@ -157,7 +157,7 @@ export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (prop
                 e.preventDefault()
             }}
         >
-            <Form.Item label={"文件夹名"} rules={[{required: true, message: "请填写文件夹名"}]} name={"OutputFilename"}>
+            <Form.Item label={"文件名"} rules={[{required: true, message: "请填写文件夹名"}]} name={"OutputFilename"}>
                 <YakitInput />
             </Form.Item>
 
