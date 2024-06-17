@@ -55,6 +55,7 @@ import {
     apiDownloadPluginOnline,
     apiFetchGroupStatisticsOnline,
     apiFetchOnlineList,
+    apiFetchResetPlugins,
     convertDownloadOnlinePluginBatchRequestParams,
     convertPluginsRequestParams,
     excludeNoExistfilter
@@ -212,6 +213,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [allCheck, setAllCheck] = useState<boolean>(false)
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
+    const [loadingTip, setLoadingTip] = useState<string>("")
     const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
     const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: getPluginOnlinePageData(pluginOnlinePageData).plugin_type,
@@ -244,7 +246,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
-    const [visibleUploadAll, setVisibleUploadAll] = useState<boolean>(false)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
 
@@ -409,6 +410,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             setTimeout(() => {
                 isLoadingRef.current = false
                 setLoading(false)
+                setLoadingTip("")
             }, 200)
         }),
         {wait: 200, leading: true}
@@ -576,7 +578,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         filtersDetailRef.current = detailFilter
         fetchList(true)
     })
-    const onUploadAll = useMemoizedFn(() => {
+    const onResetAll = useMemoizedFn(() => {
         if (!userInfo.isLogin) {
             yakitNotify("error", "请先登录")
             return
@@ -585,7 +587,20 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             yakitNotify("error", "暂无权限")
             return
         }
-        setVisibleUploadAll(true)
+
+        setLoadingTip("一键重置中...")
+        setLoading(true)
+        apiFetchResetPlugins()
+            .then((res) => {
+                if (res.ok) {
+                    yakitNotify("success", "一键重置成功")
+                    onRefListAndTotalAndGroup()
+                }
+            })
+            .catch((err) => {
+                setLoadingTip("")
+                setLoading(false)
+            })
     })
     const onSetShowFilter = useMemoizedFn((v) => {
         setRemoteValue(PluginGV.StoreFilterCloseStatus, `${v}`)
@@ -674,6 +689,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             >
                 <PluginsContainer
                     loading={loading && isLoadingRef.current}
+                    loadingTip={loadingTip}
                     visible={showFilter}
                     setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
@@ -882,9 +898,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                         <YakitButton
                                             type='outline1'
                                             icon={<OutlineClouduploadIcon />}
-                                            onClick={onUploadAll}
+                                            onClick={onResetAll}
                                         >
-                                            一键上传
+                                            一键重置
                                         </YakitButton>
                                     )}
                                     <YakitButton
@@ -901,7 +917,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 </PluginsContainer>
             </PluginsLayout>
             {visibleOnline && <YakitGetOnlinePlugin visible={visibleOnline} setVisible={setVisibleOnline} />}
-            {visibleUploadAll && <PluginsUploadAll visible={visibleUploadAll} setVisible={setVisibleUploadAll} />}
         </>
     )
 })

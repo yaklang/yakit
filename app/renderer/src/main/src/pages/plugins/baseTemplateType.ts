@@ -34,6 +34,7 @@ export interface PluginsContainerProps {
     groupList: FilterPanelGroupItem[]
     /** ClassName */
     filterClassName?: string
+    loadingTip?: string
 }
 
 export interface PluginDetailsProps<T> {
