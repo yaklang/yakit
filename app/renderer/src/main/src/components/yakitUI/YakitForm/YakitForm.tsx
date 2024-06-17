@@ -150,6 +150,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                 showFailedFlag && failed("请输入正确的路径")
                                 return
                             }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
+                                return
+                            }
                             const type = name.substring(index, name.length)
                             getContent(name, type)
                             if (textareaProps.onPressEnter) textareaProps.onPressEnter(e)
@@ -168,6 +172,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -196,6 +204,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                     showFailedFlag && failed("请输入正确的路径")
                                     return
                                 }
+                                if (fileNumber > 1 && multiple === false) {
+                                    failed("不支持多选")
+                                    return
+                                }
                                 const type = name.substring(index, name.length)
                                 getContent(name, type)
                             }
@@ -214,6 +226,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -243,6 +259,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                 showFailedFlag && failed("请输入正确的路径")
                                 return
                             }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
+                                return
+                            }
                             const type = name.substring(index, name.length)
                             getContent(name, type)
                             if (inputProps.onPressEnter) inputProps.onPressEnter(e)
@@ -261,6 +281,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
