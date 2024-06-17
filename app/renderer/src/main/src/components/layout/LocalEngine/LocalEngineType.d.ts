@@ -7,6 +7,7 @@ export interface LocalEngineProps {
     setLog: (log: string[]) => any
     onLinkEngine: (port: number) => any
     setYakitStatus: (v: YakitStatusType) => any
+    checkEngineDownloadLatestVersion: () => any
 }
 
 export interface LocalEngineLinkFuncProps {

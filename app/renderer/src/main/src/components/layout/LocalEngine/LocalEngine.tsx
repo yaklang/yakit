@@ -1,19 +1,22 @@
-import React, {forwardRef, memo, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {LocalEngineProps} from "./LocalEngineType"
 import {LocalGVS} from "@/enums/localGlobal"
 import {getLocalValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {getRandomLocalEnginePort} from "../WelcomeConsoleUtil"
-import {isCommunityEdition} from "@/utils/envfile"
-import {failed, info} from "@/utils/notification"
+import {getReleaseEditionName, isCommunityEdition} from "@/utils/envfile"
+import {failed, info, yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {UpdateYakitAndYaklang} from "../update/UpdateYakitAndYaklang"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
-        const {system, setLog, onLinkEngine, setYakitStatus} = props
+        const {system, setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion} = props
 
         const [localPort, setLocalPort] = useState<number>(0)
 
@@ -74,7 +77,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         const onFetchLocalAndLatsVersion = useMemoizedFn(() => {
             setTimeout(() => {
-                handleFetchYakitAndYaklangLocalVersion(handleFetchYakitAndYaklangLatestVersion)
+                handleFetchYakitAndYaklangLocalVersion(handleFetchYakitAndYaklangLatestVersion, true)
             }, 500)
         })
 
@@ -82,8 +85,20 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const preventUpdateHint = useRef<boolean>(false)
         /** 是否已弹出更新框 */
         const isShowedUpdateHint = useRef<boolean>(false)
+        /** 校验引擎来源 主要作用是是否直接连引擎（校验弹窗的出现和这个变量的值不一定是一致的） */
+        const checkEngineSourcePreventLinkLocalEnging = useRef<boolean>(false)
 
-        const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async (callback?: () => any) => {
+        // 2秒判断是否有更新 - 校验弹窗出现，没有则进入连接引擎
+        const timingLinkLocalEnging = () => {
+            setTimeout(() => {
+                if (checkEngineSourcePreventLinkLocalEnging.current) return
+                if (isShowedUpdateHint.current) return
+                preventUpdateHint.current = true
+                handleLinkLocalEnging()
+            }, 2000)
+        }
+
+        const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(async (callback?: () => any, checkEngine?: boolean) => {
             try {
                 let localYakit = (await ipcRenderer.invoke("fetch-yakit-version")) || ""
                 setCurrentYakit(localYakit)
@@ -92,21 +107,129 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             try {
                 setLog(["获取引擎版本号..."])
                 let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
+                localYaklang = localYaklang.startsWith("v") ? localYaklang.slice(1) : localYaklang
                 setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
                 setCurrentYaklang(localYaklang)
-                setTimeout(() => {
-                    if (isShowedUpdateHint.current) return
-                    preventUpdateHint.current = true
-                    // 这里的2秒是判断是否有更新弹窗出现
-                    handleLinkLocalEnging()
-                }, 2000)
+                if (checkEngine) {
+                    await checkEngineSource(localYaklang)
+                } else {
+                    if (callback) callback()
+                } 
+                timingLinkLocalEnging()
             } catch (error) {
                 setLog(["获取引擎版本号...", `错误: ${error}`])
                 setYakitStatus("checkError")
+                if (callback) callback()
             }
-
-            if (callback) callback()
         })
+
+        // 校验引擎是否来源正确
+        const [versionAbnormalVisible, setVersionAbnormalVisible] = useState<boolean>(false)
+        const [versionAbnormalLoading, setVersionAbnormalLoading] = useState<boolean>(false)
+        const timeout = (ms: number) =>
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Check engine source request timed out")), ms))
+        const checkEngineSource = async (localYaklang: string) => {
+            try {
+                setLog([`本地引擎版本${localYaklang}，校验引擎正确性中`])
+                const [res1, res2] = await Promise.all([
+                    Promise.race([ipcRenderer.invoke("fetch-check-yaklang-source", localYaklang), timeout(3000)]),
+                    ipcRenderer.invoke("CalcEngineSha265")
+                ])
+                // 校验结果值判断比较
+                if (res1 === res2) {
+                    setLog(["引擎来源正确"])
+                    handleFetchYakitAndYaklangLatestVersion()
+                } else {
+                    checkEngineSourcePreventLinkLocalEnging.current = true
+                    setVersionAbnormalVisible(true)
+                }
+            } catch (error) {
+                handleFetchYakitAndYaklangLatestVersion()
+            }
+        }
+        
+        const onUseCurrentEngine = () => {
+            setLog(["引擎校验已结束"])
+            setVersionAbnormalVisible(false)
+            checkEngineSourcePreventLinkLocalEnging.current = false
+            handleFetchYakitAndYaklangLatestVersion()
+            timingLinkLocalEnging()
+        }
+
+        const onUseOfficialEngine = async () => {
+            try {
+                const res = await ipcRenderer.invoke("GetBuildInEngineVersion")
+                if (res !== "") {
+                    initBuildInEngine()
+                } else {
+                    installEngine()
+                }
+            } catch (error) {
+                installEngine()
+            }
+        }
+
+        const initBuildInEngine = () => {
+            setVersionAbnormalLoading(true)
+            ipcRenderer
+                .invoke("InitBuildInEngine", {})
+                .then(() => {
+                    yakitNotify("info", "解压内置引擎成功")
+                    setVersionAbnormalVisible(false)
+                    showYakitModal({
+                        closable: false,
+                        maskClosable: false,
+                        keyboard: false,
+                        type: "white",
+                        title: "引擎解压成功，需要重启",
+                        content: (
+                            <div style={{height: 80, padding: 24, display: "flex", alignItems: "center"}}>
+                                <YakitButton
+                                    onClick={() => {
+                                        ipcRenderer
+                                            .invoke("relaunch")
+                                            .then(() => {})
+                                            .catch((e) => {
+                                                failed(`重启失败: ${e}`)
+                                            })
+                                    }}
+                                >
+                                    点此立即重启
+                                </YakitButton>
+                            </div>
+                        ),
+                        footer: null
+                    })
+                })
+                .catch((e) => {
+                    yakitNotify("error", `初始化内置引擎失败：${e}`)
+                })
+                .finally(() => setTimeout(() => setVersionAbnormalLoading(false), 300))
+        }
+
+        useEffect(() => {
+            emiter.on("execLocalEngineInitBuildInEngine", initBuildInEngine)
+            return () => {
+                emiter.off("execLocalEngineInitBuildInEngine", initBuildInEngine)
+            }
+        }, [])
+
+        // 下载最新引擎并安装
+        const installEngine = () => {
+            setVersionAbnormalVisible(false)
+            checkEngineDownloadLatestVersion()
+        }
+
+        const checkEngineDownloadLatestVersionCancel = () => {
+            checkEngineSourcePreventLinkLocalEnging.current = true
+            setVersionAbnormalVisible(true)
+        }
+        useEffect(() => {
+            emiter.on("checkEngineDownloadLatestVersionCancel", checkEngineDownloadLatestVersionCancel)
+            return () => {
+                emiter.off("checkEngineDownloadLatestVersionCancel", checkEngineDownloadLatestVersionCancel)
+            }
+        }, [])
 
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {
             if (!isCommunityEdition()) {
@@ -159,13 +282,15 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const initLink = useMemoizedFn(() => {
             isShowedUpdateHint.current = false
             preventUpdateHint.current = isCommunityEdition() ? false : true
+            checkEngineSourcePreventLinkLocalEnging.current = false
             handleCheckDataBase()
         })
         // 检查版本后直接连接
         const toLink = useMemoizedFn(() => {
             isShowedUpdateHint.current = false
             preventUpdateHint.current = true
-            handleFetchYakitAndYaklangLocalVersion()
+            checkEngineSourcePreventLinkLocalEnging.current = false
+            handleFetchYakitAndYaklangLocalVersion(() => {}, false)
         })
 
         useImperativeHandle(
@@ -190,7 +315,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         /** ---------- 软件自启的更新检测弹框 Start ---------- */
         const isShowUpdate = useMemo(() => {
             if (!isCommunityEdition()) return false
-
             if (!!currentYakit && !!latestYakit && `v${currentYakit}` !== latestYakit) {
                 isShowedUpdateHint.current = true
                 return true
@@ -265,6 +389,22 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         okButtonProps={{loading: databaseErrorLoading}}
                         cancelButtonProps={{style: {display: "none"}}}
                         onOk={onFixDatabaseError}
+                    />
+                )}
+                {versionAbnormalVisible && (
+                    <YakitHint
+                        getContainer={document.getElementById("yakit-uilayout-body") || undefined}
+                        mask={true}
+                        isDrag={false}
+                        visible={versionAbnormalVisible}
+                        title='引擎版本异常'
+                        content='当前引擎非官方发布版本，为避免出现问题，不建议使用'
+                        okButtonText='使用官方引擎'
+                        cancelButtonText='使用当前引擎'
+                        okButtonProps={{loading: versionAbnormalLoading}}
+                        cancelButtonProps={{loading: versionAbnormalLoading}}
+                        onOk={onUseOfficialEngine}
+                        onCancel={onUseCurrentEngine}
                     />
                 )}
             </>

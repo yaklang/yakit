@@ -4,6 +4,7 @@ const process = require("process");
 const path = require("path");
 const os = require("os");
 const fs = require("fs");
+const gracefulfs = require("graceful-fs");
 const https = require("https");
 const EventEmitter = require('events');
 const zip = require('node-stream-zip');
@@ -629,10 +630,10 @@ module.exports = {
                             try {
                                 let targetEngine = path.join(yaklangEngineDir, isWindows ? "yak.exe" : "yak")
                                 if (!isWindows) {
-                                    fs.copyFileSync(buildInPath, targetEngine)
+                                    gracefulfs.copyFileSync(buildInPath, targetEngine)
                                     fs.chmodSync(targetEngine, 0o755)
                                 } else {
-                                    fs.copyFileSync(buildInPath, targetEngine)
+                                    gracefulfs.copyFileSync(buildInPath, targetEngine)
                                 }
                                 resolve()
                             } catch (e) {

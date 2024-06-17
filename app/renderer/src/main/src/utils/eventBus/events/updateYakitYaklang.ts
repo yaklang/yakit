@@ -7,4 +7,12 @@ export type UpdateYakitYaklangEventProps = {
     startAndCreateEngineProcess?: boolean
     /** 下载指定版本yaklang */
     downYaklangSpecifyVersion: string
+    /** 校验引擎下载最新引擎失败或取消 */
+    checkEngineDownloadLatestVersionCancel?: string
+    /** 系统检测校验引擎是否是官方发布 下载最新引擎 */
+    useOfficialEngineByDownload?: string
+    /** 系统检测校验引擎是否是官方发布 使用内置引擎 */
+    useOfficialEngineByDownloadByBuiltIn?: string
+    /** 执行localEngine文件中的内置引擎 */
+    execLocalEngineInitBuildInEngine?: string
 }
