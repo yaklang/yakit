@@ -1,5 +1,6 @@
 const { app, ipcMain, dialog } = require("electron");
-const FS = require("fs")
+const FS = require("fs");
+const { async } = require("node-stream-zip");
 const path = require("path")
 
 module.exports = (win, getClient) => {
@@ -18,28 +19,38 @@ module.exports = (win, getClient) => {
         return await asyncFetchFileInfoByPath(path)
     })
 
+    const asyncExportRiskHtml = (path) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const { htmlContent, fileName, data } = params
+                const { filePath } = await dialog.showSaveDialog({
+                    title: fileName,
+                    defaultPath: path.join(app.getPath('desktop'), fileName),
+                });
+
+                if (filePath) {
+                    const folderPath = filePath;
+
+                    if (!FS.existsSync(folderPath)) {
+                        FS.mkdirSync(folderPath);
+                    }
+
+                    const filePath1 = path.join(folderPath, `${fileName}.html`);
+                    const filePath2 = path.join(folderPath, 'data.js');
+                    FS.writeFileSync(filePath1, htmlContent, 'utf-8');
+                    FS.writeFileSync(filePath2, `const initData = ${JSON.stringify(data)}`, 'utf-8');
+                    resolve(filePath);
+                } else {
+                    resolve('');
+                }
+            } catch (error) {
+                reject(error)
+            }
+        })
+    }
 
     ipcMain.handle('export-risk-html', async (event, params) => {
-        const { htmlContent, fileName, data } = params
-        const { filePath } = await dialog.showSaveDialog({
-            title: fileName,
-            defaultPath: path.join(app.getPath('desktop'), fileName),
-        });
+        return await asyncExportRiskHtml(params)
 
-        if (filePath) {
-            const folderPath = filePath;
-
-            if (!FS.existsSync(folderPath)) {
-                FS.mkdirSync(folderPath);
-            }
-
-            const filePath1 = path.join(folderPath, `${fileName}.html`);
-            const filePath2 = path.join(folderPath, 'data.js');
-            FS.writeFileSync(filePath1, htmlContent, 'utf-8');
-            FS.writeFileSync(filePath2, `const initData = ${JSON.stringify(data)}`, 'utf-8');
-            return filePath;
-        } else {
-            return null;
-        }
     });
 }
