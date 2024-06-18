@@ -55,6 +55,7 @@ export const excludeNoExistfilter = (
     let updateFilterFlag = false
     let realFilter: PluginFilterParams = structuredClone(oldfilters)
     Object.keys(oldfilters).forEach((key) => {
+        if (!oldfilters[key]) return
         oldfilters[key].forEach((item: API.PluginsSearchData) => {
             const value = item.value
             newfilters.forEach((item2) => {
@@ -985,18 +986,28 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
     })
 }
 
+interface FetchOnlinePluginInfoRequest {
+    uuid?: string
+    scriptName?: string
+    token?: string
+}
 /**
  * @name 获取指定插件的详情(线上)
  */
-export const apiFetchOnlinePluginInfo: (uuid: string, isShowError?: boolean) => Promise<API.PluginsDetail> = (
-    uuid,
+export const apiFetchOnlinePluginInfo: APIFunc<FetchOnlinePluginInfoRequest, API.PluginsDetail> = (
+    params,
     isShowError
 ) => {
     return new Promise(async (resolve, reject) => {
-        PluginNetWorkApi<{uuid: string; token?: string}, API.PluginsDetail>({
+        if (!params.scriptName && !params.uuid) {
+            if (isShowError !== false) yakitNotify("error", "未获取到查询插件的UUID或插件名称")
+            reject("未获取到查询插件的UUID或插件名称")
+            return
+        }
+        PluginNetWorkApi<{uuid?: string; scriptName?: string; token?: string}, API.PluginsDetail>({
             method: "post",
             url: "plugins/detail",
-            data: {uuid: uuid}
+            data: {...params}
         })
             .then(resolve)
             .catch((err) => {

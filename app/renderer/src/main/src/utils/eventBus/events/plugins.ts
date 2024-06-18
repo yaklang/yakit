@@ -36,4 +36,11 @@ export type PluginsEventProps = {
     ownDeleteToRecycleList?: string
     /** 回收站 还原操作通知 我的插件刷新列表 */
     recycleRestoreToOwnList?: string
+
+    /** 插件详情删除本地插件 通知本地列表的变量刷新 */
+    detailDeleteLocalPlugin: string
+    /** 插件详情删除我的插件 通知我的列表的变量刷新 */
+    detailDeleteOwnPlugin: string
+    /** 插件详情更改公开|私密 通知我的列表里状态更新 */
+    detailChangeStatusOwnPlugin: string
 }

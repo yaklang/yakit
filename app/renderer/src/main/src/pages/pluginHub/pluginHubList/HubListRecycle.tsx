@@ -28,6 +28,7 @@ import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useGetSetState from "../hooks/useGetSetState"
 import emiter from "@/utils/eventBus/eventBus"
+import {PluginOperateHint} from "../defaultConstant"
 
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
@@ -467,7 +468,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
             <NoPromptHint
                 visible={delHint}
                 title='是否要删除插件'
-                content='确认后插件将彻底删除，无法找回'
+                content={PluginOperateHint["delRecycle"]}
                 cacheKey={RemotePluginGV.RecyclePluginRemoveCheck}
                 onCallback={delHintCallback}
             />

@@ -9,7 +9,6 @@ import {HubSideBarList} from "../defaultConstant"
 import {HubListOnline} from "./HubListOnline"
 
 import classNames from "classnames"
-import "../../plugins/plugins.scss"
 import styles from "./PluginHubList.module.scss"
 
 interface PluginHubListProps {
@@ -18,10 +17,12 @@ interface PluginHubListProps {
     isDetail: boolean
     /** 进入指定插件的详情页 */
     toPluginDetail: (info: PluginToDetailInfo) => void
+    /** 是否隐藏详情页面 */
+    setHiddenDetailPage: (v: boolean) => any
 }
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
-    const {rootElementId, isDetail, toPluginDetail} = props
+    const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage} = props
 
     /** ---------- Tabs组件逻辑 Start ---------- */
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
@@ -45,6 +46,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
             if (!rendered.current.has(type)) {
                 rendered.current.add(type)
             }
+            setHiddenDetailPage(type === "recycle")
             setActive(type)
         }
     })

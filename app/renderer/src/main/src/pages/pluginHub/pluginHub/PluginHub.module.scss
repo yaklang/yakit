@@ -1,0 +1,21 @@
+.yakit-plugin-hub {
+    width: 100%;
+    height: 100%;
+    display: flex;
+
+    .list {
+        max-width: 100%;
+        &.out-list {
+            width: 100%;
+        }
+    }
+
+    .detail {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .hidden {
+        display: none;
+    }
+}

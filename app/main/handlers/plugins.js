@@ -167,4 +167,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("YaklangInspectInformation", async (e, params) => {
         return await asyncYaklangInspectInformation(params)
     })
+
+    // 通过 uuid 下载线上插件
+    const asyncDownloadOnlinePluginByUUID = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginByUUID(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DownloadOnlinePluginByUUID", async (e, params) => {
+        return await asyncDownloadOnlinePluginByUUID(params)
+    })
 }

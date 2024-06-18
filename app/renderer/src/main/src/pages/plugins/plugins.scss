@@ -74,6 +74,12 @@
         top: 1px;
     }
 }
+.plugins-tooltip.ant-tooltip-placement-right {
+    padding-left: 4px;
+    .ant-tooltip-arrow {
+        left: 1px;
+    }
+}
 // -------------------- form组件样式 ↓↓↓ --------------------
 .plugins-form {
     width: 100%;

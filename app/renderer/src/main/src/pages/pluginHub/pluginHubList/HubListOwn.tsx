@@ -48,6 +48,7 @@ import {FilterPopoverBtn} from "@/pages/plugins/funcTemplate"
 import {Tooltip} from "antd"
 import {SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {statusTag} from "@/pages/plugins/baseTemplate"
+import {DefaultOnlinePlugin, PluginOperateHint} from "../defaultConstant"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -305,7 +306,40 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 delHintCache.current = res === "true"
             })
             .catch((err) => {})
+
+        emiter.on("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
+        emiter.on("detailChangeStatusOwnPlugin", handleChangeStatus)
+        return () => {
+            emiter.off("detailChangeStatusOwnPlugin", handleChangeStatus)
+            emiter.off("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
+        }
     }, [])
+    // 详情删除线上插件触发列表的局部更新
+    const handleDetailDeleteToOnline = useMemoizedFn((info: string) => {
+        if (!info) return
+        try {
+            const plugin: {name: string; uuid: string} = JSON.parse(info)
+            if (!plugin.name && !plugin.uuid) return
+            const index = selectList.findIndex((ele) => ele.uuid === plugin.uuid)
+            const data: YakitPluginOnlineDetail = {
+                ...DefaultOnlinePlugin,
+                uuid: plugin.uuid || "",
+                script_name: plugin.name || ""
+            }
+            if (index !== -1) {
+                optCheck(data, false)
+            }
+            fetchInitTotal()
+            fetchFilterGroup()
+            emiter.emit("ownDeleteToRecycleList")
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [data]
+                }
+            })
+        } catch (error) {}
+    })
 
     // 是否出现二次确认框
     const delHintCache = useRef<boolean>(false)
@@ -416,6 +450,27 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     /** ---------- 删除插件 End ---------- */
 
     /** ---------- 单个操作(下载|改为公开/私密)的回调 Start ---------- */
+    const handleChangeStatus = useMemoizedFn((content: string) => {
+        if (!content) return
+        try {
+            const plugin: {name: string; uuid: string; is_private: boolean; status: number} = JSON.parse(content)
+            if (!plugin.name && !plugin.uuid) return
+            const el = response.data.find((ele) => ele.uuid === plugin.uuid)
+            if (!el) return
+            const data: YakitPluginOnlineDetail = {
+                ...el,
+                is_private: plugin.is_private,
+                status: plugin.status
+            }
+            dispatch({
+                type: "update",
+                payload: {
+                    item: data
+                }
+            })
+        } catch (error) {}
+    })
+
     const optCallback = useMemoizedFn((type: string, info: YakitPluginOnlineDetail) => {
         if (type === "download") {
         }
@@ -711,7 +766,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             <NoPromptHint
                 visible={delHint}
                 title='是否要删除插件'
-                content='确认删除插件后，插件将会放在回收站'
+                content={PluginOperateHint["delOnline"]}
                 cacheKey={RemotePluginGV.UserPluginRemoveCheck}
                 onCallback={delHintCallback}
             />

@@ -52,7 +52,7 @@ import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "@/pages/plugin
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {PluginLocalUpload, PluginLocalUploadSingle} from "@/pages/plugins/local/PluginLocalUpload"
 import {PluginLocalExport} from "@/pages/plugins/local/PluginLocalExportProps"
-import {DefaultExportRequest} from "../defaultConstant"
+import {DefaultExportRequest, DefaultLocalPlugin} from "../defaultConstant"
 import useGetSetState from "../hooks/useGetSetState"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {Tooltip} from "antd"
@@ -336,7 +336,37 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 delHintCache.current = res === "true"
             })
             .catch((err) => {})
+
+        emiter.on("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
+        return () => {
+            emiter.off("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
+        }
     }, [])
+    // 详情删除本地插件触发列表的局部更新
+    const handleDetailDeleteToLocal = useMemoizedFn((info: string) => {
+        if (!info) return
+        try {
+            const plugin: {name: string; id: string} = JSON.parse(info)
+            if (!plugin.name) return
+            const index = selectList.findIndex((ele) => ele.ScriptName === plugin.name)
+            const data: YakScript = {
+                ...DefaultLocalPlugin,
+                Id: Number(plugin.id) || 0,
+                ScriptName: plugin.name || ""
+            }
+            if (index !== -1) {
+                optCheck(data, false)
+            }
+            fetchInitTotal()
+            fetchFilterGroup()
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [data]
+                }
+            })
+        } catch (error) {}
+    })
 
     // 是否出现二次确认框
     const delHintCache = useRef<boolean>(false)
