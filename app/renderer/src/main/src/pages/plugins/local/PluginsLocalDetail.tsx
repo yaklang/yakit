@@ -145,7 +145,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onExport = useMemoizedFn(() => {
         if (!plugin) return
-        onDetailExport([plugin.Id], () => {
+        onDetailExport([plugin.ScriptName], () => {
             onCheck(false)
         })
     })

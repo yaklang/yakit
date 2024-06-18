@@ -86,8 +86,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         autoCompleteProps = {},
         disabled,
         isShowPathNumber = true,
-        multiple,
-        showFailedFlag = true
+        multiple = true,
+        showFailedFlag = true,
+        fileExtensionIsExist = true
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
@@ -99,7 +100,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         }
         const index = path.lastIndexOf(".")
 
-        if (selectType === "file" && index === -1) {
+        if (selectType === "file" && index === -1 && fileExtensionIsExist) {
             failed("请输入正确的路径")
             return
         }
@@ -132,7 +133,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "textarea":
                 return (
                     <YakitInput.TextArea
-                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
                         value={fileName || name}
                         disabled={disabled}
                         {...textareaProps}
@@ -145,8 +146,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         onPressEnter={(e) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
-                            if (selectType === "file" && index === -1) {
+                            if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -165,8 +170,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             if (!name) return
                             const index = name.lastIndexOf(".")
-                            if (selectType === "file" && index === -1) {
+                            if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -178,7 +187,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "autoComplete":
                 return (
                     <YakitAutoComplete
-                        placeholder='路径支持手动输入'
+                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
                         value={fileName || name}
                         disabled={disabled}
                         {...autoCompleteProps}
@@ -191,8 +200,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (e.key === "Enter") {
                                 e.stopPropagation()
                                 const index = name.lastIndexOf(".")
-                                if (selectType === "file" && index === -1) {
+                                if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                     showFailedFlag && failed("请输入正确的路径")
+                                    return
+                                }
+                                if (fileNumber > 1 && multiple === false) {
+                                    failed("不支持多选")
                                     return
                                 }
                                 const type = name.substring(index, name.length)
@@ -211,8 +224,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             if (!name) return
                             const index = name.lastIndexOf(".")
-                            if (selectType === "file" && index === -1) {
+                            if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -224,7 +241,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             default:
                 return (
                     <YakitInput
-                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
                         size={size}
                         value={fileName || name}
                         disabled={disabled}
@@ -238,8 +255,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         onPressEnter={(e) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
-                            if (selectType === "file" && index === -1) {
+                            if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -258,8 +279,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             if (!name) return
                             const index = name.lastIndexOf(".")
-                            if (selectType === "file" && index === -1) {
+                            if (selectType === "file" && index === -1 && fileExtensionIsExist) {
                                 showFailedFlag && failed("请输入正确的路径")
+                                return
+                            }
+                            if (fileNumber > 1 && multiple === false) {
+                                failed("不支持多选")
                                 return
                             }
                             const type = name.substring(index, name.length)
@@ -327,7 +352,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     const absolutePath: string[] = []
                     data.filePaths.forEach((p) => {
                         const path = p.replace(/\\/g, "\\")
-                        if (isAcceptEligible(path, props.accept || ".*")) {
+                        if (fileExtensionIsExist) {
+                            if (isAcceptEligible(path, props.accept || ".*")) {
+                                absolutePath.push(path)
+                            }
+                        } else {
                             absolutePath.push(path)
                         }
                     })
@@ -374,10 +403,14 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         for (let index = 0; index < filesLength; index++) {
             const element = files[index]
             const path = element.path || ""
-            if (isAcceptEligible(path, props.accept || ".*")) {
-                paths.push(path)
+            if (fileExtensionIsExist) {
+                if (isAcceptEligible(path, props.accept || ".*")) {
+                    paths.push(path)
+                } else {
+                    isNoFit.push(path)
+                }
             } else {
-                isNoFit.push(path)
+                paths.push(path)
             }
         }
         if (isNoFit.length > 0) {

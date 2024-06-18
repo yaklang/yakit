@@ -7,9 +7,14 @@ import {
     SaveProgressStream
 } from "@/components/YakitUploadModal/YakitUploadModal"
 import {v4 as uuidv4} from "uuid"
-import {yakitFailed} from "@/utils/notification"
-import {ExportParamsProps, ExportYakScriptLocalResponse} from "./PluginsLocalType"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
+import {ExportYakScriptLocalResponse, ExportYakScriptStreamRequest} from "./PluginsLocalType"
 import {useDebounceEffect} from "ahooks"
+import {Form} from "antd"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {ExecResult} from "@/pages/invoker/schema"
+import {ExecResultMessage} from "@/components/yakitLogSchema"
+import {openABSFileLocated} from "@/utils/openWebsite"
 const {ipcRenderer} = window.require("electron")
 
 declare type getContainerFunc = () => HTMLElement
@@ -17,7 +22,7 @@ interface PluginLocalExportProps {
     visible: boolean
     onClose: () => void
     getContainer?: string | HTMLElement | getContainerFunc | false
-    exportLocalParams: ExportParamsProps
+    exportLocalParams: ExportYakScriptStreamRequest
 }
 
 export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
@@ -34,7 +39,7 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
                 // 发送导出流信号
                 const sendExportSignal = async () => {
                     try {
-                        await ipcRenderer.invoke("ExportLocalYakScriptStream", exportLocalParams)
+                        await ipcRenderer.invoke("ExportYakScriptStream", exportLocalParams)
                     } catch (error) {
                         yakitFailed(error + "")
                     }
@@ -44,31 +49,40 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
                 // 每200毫秒渲染一次数据
                 timer = setInterval(() => {
                     setLocalStreamData(localStreamDataRef.current)
-                    setLocallogListInfo([...locallogListInfoRef.current])
+                    // setLocallogListInfo([...locallogListInfoRef.current])
                 }, 200)
 
-                // 接收导出返回的流数据
-                ipcRenderer.on("export-yak-script-data", (e, data: ExportYakScriptLocalResponse) => {
-                    localStreamDataRef.current = {Progress: data.Progress}
-                    // 只展示错误日志和最后一条日志
-                    if (data.MessageType === "error" || data.Progress === 1) {
+                ipcRenderer.on("export-yak-script-data", (e, data: ExecResult) => {
+                    let obj: ExecResultMessage = JSON.parse(Buffer.from(data.Message).toString())
+                    if (obj.type === "log" && obj.content.level === "file") {
                         locallogListInfoRef.current.unshift({
-                            message: data.Message,
-                            isError: ["error", "finalError"].includes(data.MessageType),
+                            message: obj.content.data,
+                            isError: false,
                             key: uuidv4()
                         })
                     }
-                    // 导出成功或状态为finished自动关闭弹窗
-                    if (["success", "finished"].includes(data.MessageType) && data.Progress === 1) {
-                        setTimeout(() => {
-                            handleExportLocalPluginFinish()
-                        }, 300)
+                    if (obj.type === "progress") {
+                        localStreamDataRef.current = {Progress: obj.content.progress}
+                        if (obj.content.progress === 1) {
+                            const logMsg = locallogListInfoRef.current[locallogListInfoRef.current.length - 1].message
+                            try {
+                                const logObj = JSON.parse(logMsg) || {}
+                                ipcRenderer.invoke("is-file-exists", logObj.path).then((flag: boolean) => {
+                                    if (flag) {
+                                        openABSFileLocated(logObj.path)
+                                    }
+                                })
+                            } catch (error) {}
+                            setTimeout(() => {
+                                handleExportLocalPluginFinish()
+                            }, 300)
+                        }
                     }
                 })
 
                 return () => {
                     clearInterval(timer)
-                    ipcRenderer.invoke("cancel-exportYakScript")
+                    ipcRenderer.invoke("cancel-ExportYakScriptStream")
                     ipcRenderer.removeAllListeners("export-yak-script-data")
                 }
             }
@@ -85,6 +99,10 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
     }
 
     const handleExportLocalPluginFinish = () => {
+        if (localStreamDataRef.current && localStreamDataRef.current.Progress !== 1) {
+            ipcRenderer.invoke("cancel-ExportYakScriptStream")
+            yakitNotify("info", "取消导出插件")
+        }
         resetLocalExport()
         onClose()
     }
@@ -117,5 +135,44 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
                 ></ImportAndExportStatusInfo>
             </div>
         </YakitModal>
+    )
+}
+
+interface PluginLocalExportFormProps {
+    onCancel: () => void
+    onOK: (values: {OutputFilename: string; Password: string}) => void
+}
+export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (props) => {
+    const {onCancel, onOK} = props
+    const [form] = Form.useForm()
+
+    return (
+        <Form
+            form={form}
+            layout={"horizontal"}
+            labelCol={{span: 5}}
+            wrapperCol={{span: 18}}
+            onValuesChange={(changedValues, allValues) => {}}
+            onSubmitCapture={(e) => {
+                e.preventDefault()
+            }}
+        >
+            <Form.Item label={"文件名"} rules={[{required: true, message: "请填写文件夹名"}]} name={"OutputFilename"}>
+                <YakitInput />
+            </Form.Item>
+
+            <Form.Item label={"密码"} name={"Password"}>
+                <YakitInput />
+            </Form.Item>
+
+            <div style={{display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, marginRight: 20}}>
+                <YakitButton type='outline2' onClick={onCancel}>
+                    取消
+                </YakitButton>
+                <YakitButton type={"primary"} onClick={() => form.validateFields().then((res) => onOK(res))}>
+                    确定
+                </YakitButton>
+            </div>
+        </Form>
     )
 }

@@ -1,6 +1,6 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {
-    ExportParamsProps,
+    ExportYakScriptStreamRequest,
     LocalExtraOperateProps,
     PluginGroupList,
     PluginLocalBackProps,
@@ -72,17 +72,15 @@ import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors
 import {SavePluginInfoSignalProps} from "../editDetails/PluginEditDetails"
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
-import {PluginLocalExport} from "./PluginLocalExportProps"
+import {PluginLocalExport, PluginLocalExportForm} from "./PluginLocalExportProps"
 
 const {ipcRenderer} = window.require("electron")
 
-const initExportLocalParams: ExportParamsProps = {
-    OutputDir: "",
-    YakScriptIds: [],
-    Keywords: "",
-    Type: "",
-    UserName: "",
-    Tags: ""
+const initExportLocalParams: ExportYakScriptStreamRequest = {
+    OutputFilename: "",
+    Password: "",
+    Filter: cloneDeep(defaultFilter)
+    // YakScriptIds: [],
 }
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
@@ -133,7 +131,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 
     // 导出本地插件
     const [exportStatusModalVisible, setExportStatusModalVisible] = useState<boolean>(false)
-    const [exportParams, setExportParams] = useState<ExportParamsProps>(initExportLocalParams)
+    const [exportParams, setExportParams] = useState<ExportYakScriptStreamRequest>(initExportLocalParams)
     const exportCallbackRef = useRef<() => void>()
 
     // 选中插件的数量
@@ -508,7 +506,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 
     /**导出 */
     const onExportPlugin = useMemoizedFn((data: YakScript) => {
-        onExport([data.Id])
+        onExport([data.ScriptName])
     })
     /**单个删除插件之前操作  */
     const onRemovePluginBefore = useMemoizedFn((data: YakScript) => {
@@ -645,23 +643,35 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         })
     })
 
-    const onExport = useMemoizedFn(async (Ids: number[], callback?: () => void) => {
+    const onExport = useMemoizedFn(async (ScriptNames: string[], callback?: () => void) => {
         try {
-            const showSaveDialogRes = await ipcRenderer.invoke("openDialog", {properties: ["openDirectory"]})
-            if (showSaveDialogRes.canceled) return
-            if (queryFetchList.current) {
-                const params: ExportParamsProps = {
-                    OutputDir: showSaveDialogRes.filePaths[0],
-                    YakScriptIds: Ids,
-                    Keywords: queryFetchList.current.Keyword || "",
-                    Type: queryFetchList.current.Type || "",
-                    UserName: queryFetchList.current.UserName || "",
-                    Tags: queryFetchList.current.Tag + ""
-                }
-                setExportParams(params)
-                setExportStatusModalVisible(true)
-                exportCallbackRef.current = callback
-            }
+            let m = showYakitModal({
+                title: "导出插件",
+                width: 450,
+                closable: true,
+                maskClosable: false,
+                footer: null,
+                content: (
+                    <div style={{margin: "15px 0"}}>
+                        <PluginLocalExportForm
+                            onCancel={() => m.destroy()}
+                            onOK={(values) => {
+                                if (queryFetchList.current) {
+                                    const params: ExportYakScriptStreamRequest = {
+                                        OutputFilename: values.OutputFilename,
+                                        Password: values.Password,
+                                        Filter: {...queryFetchList.current, IncludedScriptNames: ScriptNames}
+                                    }
+                                    setExportParams(params)
+                                    setExportStatusModalVisible(true)
+                                    exportCallbackRef.current = callback
+                                }
+                                m.destroy()
+                            }}
+                        ></PluginLocalExportForm>
+                    </div>
+                )
+            })
         } catch (error) {
             yakitFailed(error + "")
         }
@@ -830,8 +840,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                     onClick: ({key}) => {
                                         switch (key) {
                                             case "export":
-                                                const Ids: number[] = selectList.map((ele) => Number(ele.Id))
-                                                onExport(Ids)
+                                                const ScriptNames: string[] = selectList.map((ele) => ele.ScriptName)
+                                                onExport(ScriptNames)
                                                 break
                                             case "upload":
                                                 const pluginNames = selectList.map((ele) => ele.ScriptName) || []

@@ -1,4 +1,4 @@
-import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
+import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {LocalPluginAppAction} from "../pluginReducer"
 import {API} from "@/services/swagger/resposeType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
@@ -99,13 +99,10 @@ export interface LocalPluginExecuteProps {
     linkPluginConfig?: HybridScanPluginConfig
 }
 
-export interface ExportParamsProps {
-    OutputDir: string
-    YakScriptIds: number[]
-    Keywords: string
-    Type: string
-    UserName: string
-    Tags: string
+export interface ExportYakScriptStreamRequest {
+    OutputFilename: string
+    Password: string
+    Filter: QueryYakScriptRequest
 }
 
 export interface ExportYakScriptLocalResponse {
