@@ -522,7 +522,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     <div className={styles["left-wrapper"]}>
                         <YakitCard
                             title='参数列表'
-                            style={{borderTop: 0}}
+                            style={{border: 0}}
                             headClassName={styles["left-header-wrapper"]}
                             extra={
                                 <div className={styles["header-extra"]}>
@@ -576,6 +576,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 }
                 firstRatio="15%"
                 firstMinSize="340px"
+                firstNodeStyle={{padding: 0}}
                 secondNode={
                     <div className={styles["right-wrapper"]}>
                         <div className={styles["right-header-wrapper"]}>
