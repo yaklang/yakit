@@ -45,7 +45,7 @@ import {IMonacoEditor} from "@/utils/editors"
 import {getDefaultActiveFile, onSyntaxCheck, removeAreaFileInfo, updateAreaFileInfo} from "../utils"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
-import {info} from "@/utils/notification"
+import {info, warn} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {Divider} from "antd"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
@@ -55,6 +55,8 @@ import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import { JumpToEditorProps } from "../BottomEditorDetails/BottomEditorDetailsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -392,6 +394,47 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
+    // 重命名
+    const onRename = useMemoizedFn((info: FileDetailInfo) => {
+        let newName: string = info.name
+        const m = showYakitModal({
+            title: "重命名",
+            content: (
+                <div style={{padding: 20}}>
+                    <YakitInput
+                        defaultValue={info.name}
+                        placeholder='请输入新名称'
+                        allowClear
+                        onChange={(e) => {
+                            const {value} = e.target
+                            newName = value
+                        }}
+                    />
+                </div>
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            onOk: () => {
+                if(newName.length === 0){
+                    warn("请输入新名称")
+                    return
+                }
+                // 未保存文件直接更改
+                if(info.isUnSave){
+                    const newAreaInfo = updateAreaFileInfo(areaInfo,{...info,name:newName},info.path)
+                    setAreaInfo && setAreaInfo(newAreaInfo)
+                    m.destroy()
+                }
+                // 非临时文件先调用改名接口再更改此处（此时还得更新文件树）
+                else{
+
+                }
+            },
+            width: 400
+        })
+    })
+
     // 在文件夹中显示
     const onOpenFolder = useMemoizedFn((info: FileDetailInfo) => {
         // openABSFileLocated("")
@@ -400,7 +443,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     // 在文件列表显示
     const onOpenFileList = useMemoizedFn((info: FileDetailInfo) => {})
 
-    const menuData: YakitMenuItemType[] = useMemo(() => {
+    const menuData = useMemoizedFn((info: FileDetailInfo) => {
         const base: YakitMenuItemType[] = [
             {
                 label: "关闭",
@@ -416,25 +459,31 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             },
             {type: "divider"},
             {
+                label: "重命名",
+                key: "rename"
+            },
+            {
                 label: "在文件夹中显示",
-                key: "openFolder"
+                key: "openFolder",
+                disabled: info.isUnSave
             },
             {
                 label: "在文件列表显示",
-                key: "openFileList"
+                key: "openFileList",
+                disabled: info.isUnSave
             }
         ]
         if (splitDirection.length > 0) {
-            let direction = splitDirection.map((item) => {
+            let direction: YakitMenuItemType[]  = splitDirection.map((item) => {
                 return {
                     label: onDirectionToName(item),
                     key: item
                 }
             })
-            return [...base, {type: "divider"}, ...direction]
+            return [...base, {type: "divider"}, ...direction] as YakitMenuItemType[] 
         }
         return [...base]
-    }, [splitDirection])
+    })
 
     // 右键菜单
     const handleContextMenu = useMemoizedFn((info: FileDetailInfo) => {
@@ -443,7 +492,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         showByRightContext({
             width: 180,
             type: "grey",
-            data: [...menuData],
+            data: menuData(info),
             onClick: ({key, keyPath}) => {
                 switch (key) {
                     case "removeCurrent":
@@ -454,6 +503,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         return
                     case "removeAll":
                         onRemoveAll(info)
+                        return
+                    case "rename":
+                        onRename(info)
                         return
                     case "openFolder":
                         onOpenFolder(info)
@@ -897,6 +949,26 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
     }, [editorInfo?.position])
 
+    // 选中光标位置
+    const onJumpEditorDetailFun = useMemoizedFn((data)=>{
+        try {
+            const obj: JumpToEditorProps = JSON.parse(data)
+            const {id,selections} = obj
+            if(reqEditor && editorInfo?.path === id){
+                reqEditor?.setSelection(selections)
+            }
+        } catch (error) {
+            
+        }
+    })
+
+    useEffect(() => {
+        emiter.on("onJumpEditorDetail", onJumpEditorDetailFun)
+        return () => {
+            emiter.off("onJumpEditorDetail", onJumpEditorDetailFun)
+        }
+    }, [])
+
     return (
         <div className={styles["runner-tab-pane"]}>
             <YakitEditor
@@ -914,15 +986,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 })
 
 export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((props) => {
-    // 新建文件
-    const createFile = useMemoizedFn(()=>{
-        
-    })
+    const {addFileTab} = props
 
     // 打开文件
-    const openFile = useMemoizedFn(()=>{
-
-    })
+    const openFile = useMemoizedFn(() => {})
 
     // 打开文件夹
     const openFolder = useMemoizedFn(() => {
@@ -951,7 +1018,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             <div className={styles["operate"]}>
                 <div className={styles["title-style"]}>快捷创建</div>
                 <div className={styles["operate-btn-group"]}>
-                    <div className={classNames(styles["btn-style"], styles["btn-new-file"])}>
+                    <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
                         <div className={styles["btn-title"]}>
                             <YakRunnerNewFileIcon />
                             新建文件

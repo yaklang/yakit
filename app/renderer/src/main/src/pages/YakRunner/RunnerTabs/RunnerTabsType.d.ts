@@ -76,6 +76,8 @@ export interface RunnerTabPaneProps {
     tabsId: string
 }
 
-export interface YakRunnerWelcomePageProps {}
+export interface YakRunnerWelcomePageProps {
+    addFileTab: () => void
+}
 
 export type SplitDirectionProps = "top"|"bottom"|"left"|"right"
