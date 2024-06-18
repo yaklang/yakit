@@ -94,15 +94,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 trigger={["click"]}
                 placement='bottomLeft'
                 overlay={() => (
-                    <>
+                    <div style={{margin: 15}}>
                         <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
                             <Form.Item
                                 label={"端口号"}
                                 rules={[
                                     {required: true, message: `请输入端口号`},
                                     {
-                                        pattern:
-                                            /^[1-9]$|(^[1-9][0-9]$)|(^[1-9][0-9][0-9]$)|(^[1-9][0-9][0-9][0-9]$)|(^[1-6][0-5][0-5][0-3][0-5]$)/,
+                                        pattern: /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
                                         message: "请输入正确的端口号"
                                     }
                                 ]}
@@ -111,7 +110,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 <YakitInput />
                             </Form.Item>
                         </Form>
-                        <div style={{textAlign: "right"}}>
+                        <div style={{textAlign: "right", marginTop: 10}}>
                             <YakitButton
                                 size='small'
                                 loading={restartLoading}
@@ -125,7 +124,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 确定
                             </YakitButton>
                         </div>
-                    </>
+                    </div>
                 )}
                 overlayClassName={styles["change-port-dropdown-menu"]}
             >
