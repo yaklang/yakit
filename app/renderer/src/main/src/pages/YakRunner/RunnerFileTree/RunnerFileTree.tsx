@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useMemo} from "react"
+import React, {memo, useEffect, useMemo, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -15,13 +15,50 @@ import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
-import {getDefaultActiveFile, removeAreaFileInfo, setAreaFileActive, updateAreaFileInfo} from "../utils"
+import {
+    addAreaFileInfo,
+    getCodeByPath,
+    getDefaultActiveFile,
+    getOpenFileInfo,
+    getYakRunnerHistory,
+    judgeAreaExistFilePath,
+    removeAreaFileInfo,
+    setAreaFileActive,
+    setYakRunnerHistory,
+    updateAreaFileInfo
+} from "../utils"
+import moment from "moment"
+import {YakRunnerHistoryProps} from "../YakRunnerType"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
-    const {fileTree} = useStore()
-    const {handleFileLoadData} = useDispatcher()
+    const {fileTree, areaInfo, activeFile} = useStore()
+    const {handleFileLoadData, setAreaInfo, setActiveFile} = useDispatcher()
+
+    const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
+
+    const getHistoryList = useMemoizedFn(async (data?: string) => {
+        try {
+            if (data) {
+                const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
+                setHistoryList(historyData)
+            } else {
+                const list = await getYakRunnerHistory()
+                setHistoryList(list)
+            }
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        getHistoryList()
+        // 通知历史记录发生改变
+        emiter.on("onRefreshRunnerHistory", getHistoryList)
+        return () => {
+            emiter.off("onRefreshRunnerHistory", getHistoryList)
+        }
+    }, [])
 
     const onLoadData = useMemoizedFn((node: FileNodeProps) => {
         if (handleFileLoadData) return handleFileLoadData(node)
@@ -33,7 +70,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const menuData: YakitMenuItemType[] = useMemo(() => {
-        return [
+        let newMenu: YakitMenuItemType[] = [
             {
                 key: "createFile",
                 label: "新建文件"
@@ -52,31 +89,113 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             {
                 key: "openFolder",
                 label: "打开文件夹"
-            },
-            {
-                key: "history",
-                label: "最近打开",
-                children: [
-                    {
-                        key: "6",
-                        label: "xxx"
-                    }
-                ]
             }
         ]
-    }, [])
+        if (historyList.length > 0) {
+            newMenu.push({
+                key: "history",
+                label: "最近打开",
+                children: [...historyList.map((item) => ({key: item.path, label: item.name}))]
+            })
+        }
+        return newMenu
+    }, [historyList])
+
+    // 通过路径打开文件
+    const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
+        // 校验是否已存在 如若存在则不创建只定位
+        const file = await judgeAreaExistFilePath(areaInfo, path)
+        if (file) {
+            const newAreaInfo = setAreaFileActive(areaInfo, path)
+            setAreaInfo && setAreaInfo(newAreaInfo)
+            setActiveFile && setActiveFile(file)
+        } else {
+            const code = await getCodeByPath(path)
+            const scratchFile: FileDetailInfo = {
+                name,
+                code,
+                icon: "_f_yak",
+                isActive: true,
+                openTimestamp: moment().unix(),
+                // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
+                path,
+                language: name.split(".").pop() === "yak" ? "yak" : "http"
+            }
+            // 注入语法检测
+            const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
+            const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, syntaxActiveFile, activeFile)
+            setAreaInfo && setAreaInfo(newAreaInfo)
+            setActiveFile && setActiveFile(newActiveFile)
+
+            // 创建文件时接入历史记录
+            const history: YakRunnerHistoryProps = {
+                isFile: true,
+                name,
+                path
+            }
+            setYakRunnerHistory(history)
+        }
+    })
+
+    // 打开文件
+    const openFile = useMemoizedFn(async () => {
+        try {
+            const openFileInfo = await getOpenFileInfo()
+            if (openFileInfo) {
+                const {path, name} = openFileInfo
+                openFileByPath(path, name)
+            }
+        } catch (error) {}
+    })
+
+    // 打开文件夹
+    const openFolder = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory"]
+            })
+            .then((data: any) => {
+                if (data.filePaths.length) {
+                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                    console.log("打开文件夹路径", absolutePath)
+                }
+            })
+    })
+
+    // 打开历史
+    const openHistory = useMemoizedFn((key) => {
+        const filterArr = historyList.filter((item) => item.path === key)
+        if (filterArr.length > 0) {
+            const item = filterArr[0]
+            // 打开文件
+            if (item.isFile) {
+                openFileByPath(item.path, item.name)
+            }
+            // 打开文件夹
+            else {
+                console.log("打开文件夹---待接入");
+                
+            }
+        }
+    })
 
     const menuSelect = useMemoizedFn((key) => {
+        console.log("key---", key)
+
         switch (key) {
             case "createFile":
                 break
             case "createFolder":
                 break
             case "openFile":
+                openFile()
                 break
             case "openFolder":
+                openFolder()
                 break
             default:
+                openHistory(key)
                 break
         }
     })
@@ -134,11 +253,11 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
-    const openItem = useMemoizedFn(async(data: FileDetailInfo) => {
+    const openItem = useMemoizedFn(async (data: FileDetailInfo) => {
         // 注入语法检测 由于点击项必为激活项默认给true
-        const newActiveFile = {...await getDefaultActiveFile(data),isActive:true}
+        const newActiveFile = {...(await getDefaultActiveFile(data)), isActive: true}
         // 更改当前tabs active
-        const activeAreaInfo = setAreaFileActive(areaInfo, data)
+        const activeAreaInfo = setAreaFileActive(areaInfo, data.path)
         // 将新的语法检测注入areaInfo
         const newAreaInfo = updateAreaFileInfo(activeAreaInfo, newActiveFile, newActiveFile.path)
         setAreaInfo && setAreaInfo(newAreaInfo)

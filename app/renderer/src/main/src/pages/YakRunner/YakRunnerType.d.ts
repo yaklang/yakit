@@ -15,32 +15,19 @@ export interface YakRunnerCodeProps {
     name?: string
 }
 
-export declare namespace YakRunnerView {
-    /** 光标位置 */
-    export interface CursorPosition {
-        line: number
-        column: number
-    }
-    /** 打开文件信息 */
-    export interface OpenFile extends FileNodeProps {
-        /** 是否有未保存的更改 */
-        isDirty: boolean
-        /** 是否为当前活动文件 */
-        isActive: boolean
-        /** 文件语言 */
-        language: string
-        /** 当前光标位置 */
-        position: CursorPosition
-        /** 源码 */
-        code: string
-    }
-}
-
 export interface ViewsInfoProps {
     direction: "vertical" | "horizontal" | ""
     views: ViewFileProps | ViewsInfoProps[] | null
 }
 
+export interface YakRunnerHistoryProps {
+    // 是否为文件
+    isFile: boolean
+    // 展示名称
+    name: string
+    // 路径
+    path: string
+}
 
 export interface TabFileProps {
     // 窗口唯一标识符

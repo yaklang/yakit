@@ -1,4 +1,4 @@
-import {yakitNotify} from "@/utils/notification"
+import {failed, warn, yakitNotify} from "@/utils/notification"
 import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType"
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeProps} from "./FileTree/FileTreeType"
@@ -9,10 +9,12 @@ import {
     IMonacoEditorMarker,
     YakStaticAnalyzeErrorResult
 } from "@/utils/editorMarkers"
-import {AreaInfoProps, TabFileProps} from "./YakRunnerType"
+import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "./YakRunnerType"
 import cloneDeep from "lodash/cloneDeep"
 import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {v4 as uuidv4} from "uuid"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -97,6 +99,25 @@ export const onSyntaxCheck = (code: string) => {
 }
 
 /**
+ * @name 判断分栏数据里是否存在某个节点file数据
+ */
+export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string): Promise<FileDetailInfo | null> => {
+    return new Promise(async (resolve, reject) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        newAreaInfo.forEach((item, index) => {
+            item.elements.forEach((itemIn, indexIn) => {
+                itemIn.files.forEach((file, fileIndex) => {
+                    if (file.path === path) {
+                        resolve(file)
+                    }
+                })
+            })
+        })
+        resolve(null)
+    })
+}
+
+/**
  * @name 更新分栏数据里某个节点的file数据
  */
 // 根据path更新指定内容
@@ -155,12 +176,12 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
 /**
  * @name 更改分栏数据里某个节点的isActive活动数据
  */
-export const setAreaFileActive = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
+export const setAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {
             itemIn.files.forEach((file, fileIndex) => {
-                if (file.path === info.path) {
+                if (file.path === path) {
                     newAreaInfo[index].elements[indexIn].files = newAreaInfo[index].elements[indexIn].files.map(
                         (item) => ({...item, isActive: false})
                     )
@@ -229,7 +250,6 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
 /**
  * @name 注入语法检查结果
  */
-
 export const getDefaultActiveFile = async (info: FileDetailInfo) => {
     let newActiveFile = info
     // 注入语法检查结果
@@ -240,4 +260,96 @@ export const getDefaultActiveFile = async (info: FileDetailInfo) => {
         }
     }
     return newActiveFile
+}
+
+/**
+ * @name 获取打开文件的path与name
+ */
+export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件",
+                properties: ["openFile"]
+            })
+            .then((data: {filePaths: string[]}) => {
+                const filesLength = data.filePaths.length
+                if (filesLength === 1) {
+                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                    const name: string = path.split(/[\\/]/).pop() || ""
+                    console.log("fileInfo---", path, name)
+                    resolve({
+                        path,
+                        name
+                    })
+                } else if (filesLength > 1) {
+                    warn("只支持单选文件")
+                }
+                resolve(null)
+            })
+            .catch(() => {
+                reject()
+            })
+    })
+}
+
+/**
+ * @name 根据文件path获取其内容
+ */
+export const getCodeByPath = (path: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("fetch-file-content", path)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch(() => {
+                failed("无法获取该文件内容，请检查后后重试！")
+                reject()
+            })
+    })
+}
+
+const YakRunnerOpenHistory = "YakRunnerOpenHistory"
+
+/**
+ * @name 更改YakRunner历史记录
+ */
+export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
+    getRemoteValue(YakRunnerOpenHistory).then((data) => {
+        try {
+            if (!data) {
+                setRemoteValue(YakRunnerOpenHistory, JSON.stringify([newHistory]))
+                emiter.emit("onRefreshRunnerHistory", JSON.stringify([newHistory]))
+                return
+            }
+            const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
+            const newHistoryData: YakRunnerHistoryProps[] = [
+                newHistory,
+                ...historyData.filter((item) => item.path !== newHistory.path)
+            ].slice(0, 10)
+            setRemoteValue(YakRunnerOpenHistory, JSON.stringify(newHistoryData))
+            emiter.emit("onRefreshRunnerHistory", JSON.stringify(newHistoryData))
+        } catch (error) {}
+    })
+}
+
+/**
+ * @name 获取YakRunner历史记录
+ */
+export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
+    return new Promise(async (resolve, reject) => {
+        getRemoteValue(YakRunnerOpenHistory).then((data) => {
+            try {
+                if (!data) {
+                    resolve([])
+                    return
+                }
+                const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
+                resolve(historyData)
+            } catch (error) {
+                resolve([])
+            }
+        })
+    })
 }
