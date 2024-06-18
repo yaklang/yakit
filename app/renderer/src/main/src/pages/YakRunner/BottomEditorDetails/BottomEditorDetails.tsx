@@ -55,7 +55,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 selections,
                 id: activeFile?.path || ""
             }
-            console.log("跳转至编辑器并选中", obj)
             emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
         }
     })

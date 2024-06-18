@@ -454,7 +454,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     // 布局处理
     const onChangeArea = useMemoizedFn(() => {
         if (areaInfo.length === 0) {
-            return <YakRunnerWelcomePage />
+            return <YakRunnerWelcomePage addFileTab={addFileTab}/>
         }
         return (
             <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
