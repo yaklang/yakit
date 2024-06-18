@@ -4,7 +4,7 @@ import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
 import {FileNodeProps} from "./FileTree/FileTreeType"
-import {grpcFetchFileTree, updateFileTree} from "./utils"
+import {addAreaFileInfo, grpcFetchFileTree, updateFileTree} from "./utils"
 import {AreaInfoProps, TabFileProps, ViewsInfoProps, YakRunnerProps} from "./YakRunnerType"
 import {getRemoteValue} from "@/utils/kv"
 import {YakRunnerRemoteGV} from "@/enums/yakRunner"
@@ -30,10 +30,12 @@ import {SplitView} from "./SplitView/SplitView"
 import {HelpInfoList} from "./CollapseList/CollapseList"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
-import {convert, getKeyboard, clearKeyboard, setKeyboard} from "./keyDown/keyDown"
+import {getKeyboard, clearKeyboard, setKeyboard} from "./keyDown/keyDown"
 import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
+import moment from "moment"
+import { keySortHandle } from "@/components/yakitUI/YakitEditor/editorUtils"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -58,7 +60,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".yak",
                         path: "/Users/nonight/work/yakitVersion/.yak",
-                        icon: "_file",
+                        icon: "_f_yak",
                         code: `a() 
 
                         f = () => {
@@ -66,29 +68,33 @@ const defaultAreaInfo: AreaInfoProps[] = [
                         }
                         
                         http.Get("")`,
-                        language: "yak"
+                        language: "yak",
+                        openTimestamp: 1718604560
                     },
                     {
                         name: ".yaklang",
                         path: "/Users/nonight/work/yakitVersion/.yaklang",
-                        icon: "_f_markdown",
+                        icon: "_f_yak",
                         code: "123",
                         language: "yak",
-                        isActive: true
+                        isActive: true,
+                        openTimestamp: 1718604561
                     },
                     {
                         name: ".tt",
                         path: "/Users/nonight/work/yakitVersion/.tt",
                         icon: "_file",
                         code: "tt",
-                        language: "text"
+                        language: "text",
+                        openTimestamp: 1718604562
                     },
                     {
                         name: ".ttt",
                         path: "/Users/nonight/work/yakitVersion/.ttt",
                         icon: "_f_markdown",
                         code: "ttt",
-                        language: "text"
+                        language: "text",
+                        openTimestamp: 1718604563
                     }
                 ]
             }
@@ -147,6 +153,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [fileTree, setFileTree] = useState<FileNodeProps[]>([])
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>(defaultAreaInfo)
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
+    const [runnerTabsId,setRunnerTabsId] = useState<string>()
 
     const currentPath = useRef<FileNodeProps | undefined>()
 
@@ -221,16 +228,18 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         return {
             fileTree: fileTree,
             areaInfo: areaInfo,
-            activeFile: activeFile
+            activeFile: activeFile,
+            runnerTabsId: runnerTabsId
         }
-    }, [fileTree, areaInfo, activeFile])
+    }, [fileTree, areaInfo, activeFile, runnerTabsId])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
             setFileTree: setFileTree,
             handleFileLoadData: handleFileLoadData,
             setAreaInfo: setAreaInfo,
-            setActiveFile: setActiveFile
+            setActiveFile: setActiveFile,
+            setRunnerTabsId: setRunnerTabsId
         }
     }, [])
 
@@ -243,19 +252,20 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         const scratchFile: FileDetailInfo = {
             name: `Untitle-${unTitleCountRef.current}.yak`,
             code: "# input your yak code\nprintln(`Hello Yak World!`)",
-            icon: "_file",
+            icon: "_f_yak",
             isActive: true,
+            openTimestamp: moment().unix(),
             // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
             path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
             language: "yak",
             isUnSave: true
         }
         unTitleCountRef.current += 1
+        const {newAreaInfo,newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
+        
+        setAreaInfo(newAreaInfo)
+        setActiveFile(newActiveFile)
     })
-
-    const ctrl_n = () => {
-        addFileTab()
-    }
 
     const ctrl_c = () => {
         // 存储文件
@@ -264,8 +274,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
-        setKeyboard("Control-n", {onlyid: uuidv4(), callback: ctrl_n})
-        setKeyboard("Control-c", {onlyid: uuidv4(), callback: ctrl_c})
+        setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
+        setKeyboard("17-67", {onlyid: uuidv4(), callback: ctrl_c})
     })
 
     useEffect(() => {
@@ -276,16 +286,17 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const handleKeyPress = (event) => {
         // 在这里处理全局键盘事件
         // console.log("Key keydown:",event)
-        const {shiftKey, ctrlKey, altKey, metaKey, key} = event
-        let activeKey: string[] = []
-        if (shiftKey) activeKey.push("Shift")
-        if (ctrlKey) activeKey.push("Control")
-        if (altKey) activeKey.push("Alt")
-        if (metaKey) activeKey.push("Meta")
-        activeKey.push(key)
-        const newkey = convert(activeKey)
-        console.log("newkey---", newkey)
+        // 此处在使用key时发现字母竟区分大小写-故使用which替换
+        const {shiftKey, ctrlKey, altKey, metaKey, key, which } = event
+        let activeKey: number[] = []
+        if (shiftKey) activeKey.push(16)
+        if (ctrlKey) activeKey.push(17)
+        if (altKey) activeKey.push(18)
+        if (metaKey) activeKey.push(93)
+        activeKey.push(which)
+        const newkey = keySortHandle(activeKey).join("-")
         let arr = getKeyboard(newkey)
+        // console.log("newkey---", newkey,arr)
         if (!arr) return
         event.stopPropagation()
         arr.forEach((item) => {
@@ -478,6 +489,16 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             </DragDropContext>
         )
     })
+
+    useEffect(() => {
+        // 执行结束
+        ipcRenderer.on("client-yak-end", () => {
+            setRunnerTabsId(undefined)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("client-yak-end")
+        }
+    }, [])
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0}>

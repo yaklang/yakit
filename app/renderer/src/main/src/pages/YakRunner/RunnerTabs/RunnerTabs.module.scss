@@ -4,7 +4,7 @@
     display: flex;
     flex-direction: column;
     .extra-box {
-        padding-right: 12px;
+        padding: 0px 12px;
         display: flex;
         gap: 4px;
         flex-direction: row;
@@ -33,6 +33,57 @@
     }
 }
 
+.fake-content {
+    content: "";
+    width: 100%;
+    border-top: 1px solid;
+    left: 0;
+    position: absolute;
+    height: 0;
+}
+
+.white-link {
+    @extend .fake-content;
+    border-color: #fff;
+}
+
+.grey-link {
+    @extend .fake-content;
+    border-color: var(--yakit-border-color);
+}
+
+.primary-link {
+    @extend .fake-content;
+    border-color: var(--yakit-primary-5) !important;
+}
+
+.dragging {
+    background-color: #fff;
+
+    &::before {
+        @extend .white-link;
+        bottom: -1px;
+        border-width: 2px;
+    }
+}
+
+.base-show-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--yakit-body-text-color);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.base-operate-icon {
+    @extend .base-show-icon;
+
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
+}
+
 /* ---------- RunnerTabBar ----------*/
 .runner-tab-bar {
     display: flex;
@@ -41,12 +92,100 @@
     background: #f8f8f8;
     position: relative;
 
+    .runner-tab-body {
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        background-color: var(--yakit-card-background-color);
+        position: relative;
+
+        &::after {
+            @extend .fake-content;
+            bottom: 0;
+            border-color: var(--yakit-border-color);
+        }
+    }
+
+    .outline-plus-icon {
+        @extend .base-operate-icon;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .outline-chevron-double-left {
+        @extend .base-operate-icon;
+        background-color: var(--yakit-card-background-color);
+        width: 20px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+        position: absolute;
+        left: 0;
+        z-index: 11;
+
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        &::after {
+            @extend .grey-link;
+            height: 1px;
+            bottom: 0px;
+            z-index: 2;
+        }
+    }
+
+    .outline-chevron-double-right {
+        @extend .base-operate-icon;
+        background-color: var(--yakit-card-background-color);
+        width: 20px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+
+        position: absolute;
+        right: 0px;
+        z-index: 11;
+
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        &::after {
+            @extend .grey-link;
+            height: 1px;
+            bottom: 0px;
+            z-index: 2;
+        }
+    }
+
+    .outline-chevron-double-display-none {
+        display: none;
+    }
+
     .bar-wrapper {
         flex: 1;
         overflow: hidden;
         .bar-container {
             width: 100%;
             display: flex;
+            overflow: auto;
+        }
+        .bar-container::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
         }
     }
 
@@ -63,7 +202,25 @@
 
 /* ---------- RunnerTabBarItem ----------*/
 .runner-tab-bar-item {
+    display: flex;
+    height: 32px;
+    padding: 4px 0px;
+    padding-left: 0;
+    align-items: center;
+    cursor: pointer;
+    // flex: 1 1;
+    word-break: keep-all;
     position: relative;
+    overflow: hidden;
+    max-width: 200px;
+    min-width: 32px;
+    justify-content: space-between;
+    background-color: var(--yakit-card-background-color);
+    font-size: 12px;
+    transition:
+        min-width 0.1s linear,
+        padding 0.1s linear;
+    flex-basis: fit-content;
     .item-wrapper {
         min-width: 24px;
         height: 32px;
@@ -82,20 +239,28 @@
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
         }
-        .del-btn {
-            visibility: hidden;
-            opacity: 0;
+        .extra-icon {
+            display: none;
+            .dot {
+                width: 10px;
+                height: 10px;
+                background: #f28b44;
+                border-radius: 50%;
+                margin: 5px;
+                position: relative;
+                cursor: pointer;
+            }
         }
     }
 }
 
 .runner-tab-bar-item:hover {
     background-color: #ffffff;
-    .item-wrapper .del-btn {
-        visibility: visible;
-        opacity: 1;
-    }
 }
 
 .runner-tab-bar-item:not(:first-child) {
@@ -111,6 +276,7 @@
 }
 
 .runner-tab-bar-item.selected {
+    min-width: fit-content;
     background-color: #f0f1f3;
     &::after {
         content: "";
@@ -125,14 +291,36 @@
 
     .item-wrapper {
         .text-style {
+            white-space: nowrap;
             color: #f28b44;
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
         }
-        .del-btn {
-            visibility: visible;
-            opacity: 1;
+        .extra-icon {
+            display: block;
+            .dot {
+                display: none;
+            }
+            .del-btn {
+                display: block;
+            }
+        }
+        .extra-icon.extra-icon-dot {
+            .dot {
+                display: block;
+            }
+            .del-btn {
+                display: none;
+            }
+            &:hover{
+                .dot {
+                    display: none;
+                }
+                .del-btn {
+                    display: block;
+                }
+            }
         }
         &::before {
             display: none;
@@ -173,11 +361,6 @@
             visibility: hidden;
             opacity: 0;
         }
-    }
-
-    .item-wrapper .del-btn {
-        visibility: visible;
-        opacity: 1;
     }
 }
 

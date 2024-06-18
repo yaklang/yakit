@@ -13,11 +13,6 @@ export const getKeyboard = (key: string) => {
     return keyboard.get(key)
 }
 
-export const convert = (activeKey: string[]): string => {
-    let sortKeys = activeKey.sort().join("-")
-    return sortKeys
-}
-
 export const clearKeyboard = () => {
     keyboard.clear()
 }

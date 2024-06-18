@@ -4,10 +4,15 @@ import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
 import {StringToUint8Array} from "@/utils/str"
-import {ConvertYakStaticAnalyzeErrorToMarker, IMonacoEditorMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
-import {AreaInfoProps} from "./YakRunnerType"
+import {
+    ConvertYakStaticAnalyzeErrorToMarker,
+    IMonacoEditorMarker,
+    YakStaticAnalyzeErrorResult
+} from "@/utils/editorMarkers"
+import {AreaInfoProps, TabFileProps} from "./YakRunnerType"
 import cloneDeep from "lodash/cloneDeep"
 import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -168,10 +173,64 @@ export const setAreaFileActive = (areaInfo: AreaInfoProps[], info: FileDetailInf
 }
 
 /**
+ * @name 新增分栏数据里某个节点的file数据
+ */
+export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo, activeFile?: FileDetailInfo) => {
+    let newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    let newActiveFile: FileDetailInfo = info
+    try {
+        // 如若存在激活项则向激活项后添加新增项并重新指定激活项目
+        if (newAreaInfo.length > 0 && activeFile) {
+            newAreaInfo.forEach((item, index) => {
+                item.elements.forEach((itemIn, indexIn) => {
+                    itemIn.files.forEach((file, fileIndex) => {
+                        //
+                        if (file.path === activeFile.path) {
+                            newAreaInfo[index].elements[indexIn].files = newAreaInfo[index].elements[indexIn].files.map(
+                                (item) => ({
+                                    ...item,
+                                    isActive: false
+                                })
+                            )
+                            newAreaInfo[index].elements[indexIn].files.splice(fileIndex + 1, 0, info)
+                        }
+                    })
+                })
+            })
+        } else {
+            if (newAreaInfo.length === 0) {
+                const newElements: TabFileProps[] = [
+                    {
+                        id: uuidv4(),
+                        files: [info]
+                    }
+                ]
+                newAreaInfo = [{elements: newElements}]
+            } else {
+                newAreaInfo[0].elements[0].files = newAreaInfo[0].elements[0].files.map((item) => ({
+                    ...item,
+                    isActive: false
+                }))
+                newAreaInfo[0].elements[0].files = [...newAreaInfo[0].elements[0].files, info]
+            }
+        }
+        return {
+            newAreaInfo,
+            newActiveFile
+        }
+    } catch (error) {
+        return {
+            newAreaInfo,
+            newActiveFile
+        }
+    }
+}
+
+/**
  * @name 注入语法检查结果
  */
 
-export const getDefaultActiveFile = async(info: FileDetailInfo) => {
+export const getDefaultActiveFile = async (info: FileDetailInfo) => {
     let newActiveFile = info
     // 注入语法检查结果
     if (newActiveFile.language === "yak") {
