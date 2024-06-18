@@ -673,11 +673,20 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         let m = showYakitModal({
                                             title: "一键重置",
                                             centered: true,
-                                            width: 600,
+                                            width: 400,
                                             closable: true,
                                             maskClosable: false,
                                             footer: (
                                                 <div style={{textAlign: "right", width: "100%", margin: "0 15px 15px"}}>
+                                                    <YakitButton
+                                                        type="outline1"
+                                                        style={{marginRight: 15}}
+                                                        onClick={() => {
+                                                            m.destroy()
+                                                        }}
+                                                    >
+                                                        取消
+                                                    </YakitButton>
                                                     <YakitButton
                                                         onClick={() => {
                                                             onResetAll()
