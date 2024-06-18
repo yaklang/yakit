@@ -176,8 +176,8 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
             })
         })
         list.sort((a, b) => {
-            const nameA = a.name.toUpperCase() // 不区分大小写
-            const nameB = b.name.toUpperCase() // 不区分大小写
+            const nameA = a.openTimestamp
+            const nameB = b.openTimestamp
 
             if (nameA < nameB) {
                 return -1 // 如果 a 在 b 前面，返回负数

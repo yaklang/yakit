@@ -26,6 +26,8 @@ import styles from "./RunnerTabs.module.scss"
 import {KeyToIcon} from "../FileTree/icon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
+    OutlineChevrondoubleleftIcon,
+    OutlineChevrondoublerightIcon,
     OutlineImportIcon,
     OutlinePlayIcon,
     OutlinePlusIcon,
@@ -35,7 +37,7 @@ import {
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {YakRunnerNewFileIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
+import {useLongPress, useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, TabFileProps} from "../YakRunnerType"
@@ -51,6 +53,8 @@ import {v4 as uuidv4} from "uuid"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -60,8 +64,8 @@ const layoutToString = (v: number[]) => {
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo,activeFile} = useStore()
-    const {setActiveFile, setAreaInfo} = useDispatcher()
+    const {areaInfo, activeFile, runnerTabsId} = useStore()
+    const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
     const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
     useEffect(() => {
@@ -113,19 +117,10 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     const [executing, setExecuting] = useState<boolean>(false)
 
-    useEffect(() => {
-        ipcRenderer.on("client-yak-end", () => {
-            setExecuting(false)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("client-yak-end")
-        }
-    }, [])
-
     const onRunYak = useMemoizedFn(async () => {
         let newActiveFile = onActiveItem
         if (newActiveFile && setActiveFile) {
-            setExecuting(true)
+            setRunnerTabsId && setRunnerTabsId(tabsId)
             setActiveFile(newActiveFile)
             // 打开底部
             emiter.emit("onOpenBottomDetail", JSON.stringify({type: "output"}))
@@ -307,14 +302,49 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         return <></>
     })
 
-    // 关闭当前项
-    const onRemoveCurrent = useMemoizedFn((info: FileDetailInfo) => {
+    const onRemoveFun = useMemoizedFn((info: FileDetailInfo) => {
         // 如若删除项为当前焦点聚集项
         if (activeFile?.path === info.path) {
             setActiveFile && setActiveFile(undefined)
         }
-        const newAreaInfo = removeAreaFileInfo(areaInfo,info)
+        const newAreaInfo = removeAreaFileInfo(areaInfo, info)
         setAreaInfo && setAreaInfo(newAreaInfo)
+    })
+
+    // 关闭当前项
+    const onRemoveCurrent = useMemoizedFn((info: FileDetailInfo) => {
+        if (info.isUnSave && info.code.length > 0) {
+            const m = showYakitModal({
+                title: "文件未保存",
+                content: <div style={{margin: "10px 24px"}}>是否要保存{info.name}里面的内容吗？</div>,
+                width: 400,
+                type: "white",
+                closable: false,
+                centered: true,
+                onOkText: "保存",
+                onCancelText: "不保存",
+                onOk: () => {
+                    ipcRenderer
+                        .invoke("openDialog", {
+                            title: "请选择文件夹",
+                            properties: ["openDirectory"]
+                        })
+                        .then((data: any) => {
+                            if (data.filePaths.length) {
+                                let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                                console.log("保存路径", absolutePath)
+                            }
+                        })
+                    m.destroy()
+                },
+                onCancel: () => {
+                    onRemoveFun(info)
+                    m.destroy()
+                }
+            })
+            return
+        }
+        onRemoveFun(info)
     })
 
     // 关闭其他项
@@ -453,7 +483,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 </>
                 {isShowExtra && (
                     <>
-                        <YakitButton icon={<OutlinePlayIcon />} loading={executing} onClick={onRunYak}>
+                        <YakitButton
+                            icon={<OutlinePlayIcon />}
+                            loading={runnerTabsId === tabsId}
+                            disabled={!!runnerTabsId && runnerTabsId !== tabsId}
+                            onClick={onRunYak}
+                        >
                             执行
                         </YakitButton>
                     </>
@@ -481,31 +516,141 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
 const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
     const {tabsId, tabsList, extra, handleContextMenu, onRemoveCurrent} = props
+    const {activeFile} = useStore()
+    const tabMenuSubRef = useRef<any>()
+    const scrollLeftIconRef = useRef<any>()
+    const scrollRightIconRef = useRef<any>()
+    const [scroll, setScroll] = useState<ScrollProps>({
+        scrollLeft: 0,
+        scrollBottom: 0,
+        scrollRight: 0
+    })
+    useLongPress(
+        () => {
+            if (!tabMenuSubRef.current) return
+            if (!scrollLeftIconRef.current) return
+            tabMenuSubRef.current.scrollLeft = 0
+        },
+        scrollLeftIconRef,
+        {
+            delay: 300,
+            onClick: () => {
+                if (!tabMenuSubRef.current) return
+                tabMenuSubRef.current.scrollLeft -= 100
+            },
+            onLongPressEnd: () => {
+                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft + 0
+            }
+        }
+    )
+    useLongPress(
+        () => {
+            if (!tabMenuSubRef.current) return
+            if (!scrollRightIconRef.current) return
+            tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
+        },
+        scrollRightIconRef,
+        {
+            delay: 300,
+            onClick: () => {
+                if (!tabMenuSubRef.current) return
+                tabMenuSubRef.current.scrollLeft += 100
+            },
+            onLongPressEnd: () => {
+                tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollLeft - 0
+            }
+        }
+    )
+
+    useEffect(() => {
+        if (tabsList.length === 0) return
+        if (activeFile?.path === tabsList[tabsList.length - 1].path) {
+            scrollToRightMost()
+        }
+    }, [activeFile])
+
+    /**滚动到最后边 */
+    const scrollToRightMost = useMemoizedFn(() => {
+        if (!tabMenuSubRef.current) {
+            const tabMenuSub = document.getElementById(`runner-tab-menu-sub-${tabsId}`)
+            tabMenuSubRef.current = tabMenuSub
+        }
+        if (!tabMenuSubRef.current) return
+
+        if (tabMenuSubRef.current.scrollWidth > 0) {
+            tabMenuSubRef.current.scrollLeft = tabMenuSubRef.current.scrollWidth
+        } else {
+            setTimeout(() => {
+                scrollToRightMost()
+            }, 200)
+        }
+    })
+    const onScrollTabMenu = useThrottleFn(
+        (e) => {
+            if (tabMenuSubRef.current) {
+                const {scrollWidth, scrollLeft, clientWidth} = tabMenuSubRef.current
+                const scrollRight = scrollWidth - scrollLeft - clientWidth
+
+                setScroll({
+                    ...scroll,
+                    scrollLeft: scrollLeft,
+                    scrollRight: scrollRight
+                })
+            }
+        },
+        {wait: 200}
+    ).run
     return (
         <div className={classNames(styles["runner-tab-bar"])}>
             <div className={styles["bar-wrapper"]}>
                 <Droppable droppableId={tabsId} direction='horizontal'>
                     {(provided) => {
                         return (
-                            <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={classNames(styles["bar-container"])}
-                            >
-                                {tabsList.map((item, index) => {
-                                    return (
-                                        <Fragment key={item.path}>
-                                            <RunnerTabBarItem
-                                                index={index}
-                                                info={item}
-                                                tabsId={tabsId}
-                                                handleContextMenu={handleContextMenu}
-                                                onRemoveCurrent={onRemoveCurrent}
-                                            />
-                                        </Fragment>
-                                    )
-                                })}
-                                {provided.placeholder}
+                            <div className={styles["runner-tab-body"]}>
+                                <div
+                                    className={classNames(styles["outline-chevron-double-left"], {
+                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollLeft <= 0
+                                    })}
+                                    ref={scrollLeftIconRef}
+                                >
+                                    <OutlineChevrondoubleleftIcon />
+                                </div>
+                                <div
+                                    className={classNames(styles["bar-container"])}
+                                    id={`runner-tab-menu-sub-${tabsId}`}
+                                    ref={provided.innerRef}
+                                    onScroll={onScrollTabMenu}
+                                    {...provided.droppableProps}
+                                >
+                                    {tabsList.map((item, index) => {
+                                        return (
+                                            <Fragment key={item.path}>
+                                                <RunnerTabBarItem
+                                                    index={index}
+                                                    info={item}
+                                                    tabsId={tabsId}
+                                                    handleContextMenu={handleContextMenu}
+                                                    onRemoveCurrent={onRemoveCurrent}
+                                                />
+                                            </Fragment>
+                                        )
+                                    })}
+                                    {provided.placeholder}
+                                </div>
+                                <div
+                                    className={classNames(styles["outline-chevron-double-right"], {
+                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollRight <= 0
+                                    })}
+                                    ref={scrollRightIconRef}
+                                >
+                                    <OutlineChevrondoublerightIcon />
+                                </div>
+                                {/* {pageItem.hideAdd !== true && (
+                                    <OutlinePlusIcon
+                                        className={styles["outline-plus-icon"]}
+                                        onClick={() => onAddSubPage()}
+                                    />
+                                )} */}
                             </div>
                         )
                     }}
@@ -575,13 +720,22 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                         >
                             <img src={KeyToIcon[info.icon].iconPath} />
                             <div className={styles["text-style"]}>{info.name}</div>
-                            <YakitButton
-                                className={styles["del-btn"]}
-                                type='text2'
-                                size='small'
-                                icon={<OutlineXIcon />}
-                                onClick={closeTabItem}
-                            />
+                            <div
+                                className={classNames(styles["extra-icon"], {
+                                    [styles["extra-icon-dot"]]: info.isUnSave && info.code.length > 0
+                                })}
+                            >
+                                {/* 未保存的提示点 */}
+                                <div className={styles["dot"]} />
+                                {/* 关闭 */}
+                                <YakitButton
+                                    className={styles["del-btn"]}
+                                    type='text2'
+                                    size='small'
+                                    icon={<OutlineXIcon />}
+                                    onClick={closeTabItem}
+                                />
+                            </div>
                         </div>
                     </div>
                 )
@@ -760,6 +914,31 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 })
 
 export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((props) => {
+    // 新建文件
+    const createFile = useMemoizedFn(()=>{
+        
+    })
+
+    // 打开文件
+    const openFile = useMemoizedFn(()=>{
+
+    })
+
+    // 打开文件夹
+    const openFolder = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory"]
+            })
+            .then((data: any) => {
+                if (data.filePaths.length) {
+                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                    console.log("打开文件夹路径", absolutePath)
+                }
+            })
+    })
+
     return (
         <div className={styles["yak-runner-welcome-page"]}>
             <div className={styles["title"]}>
@@ -779,14 +958,14 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                         </div>
                         <OutlinePlusIcon className={styles["icon-style"]} />
                     </div>
-                    <div className={classNames(styles["btn-style"], styles["btn-open-file"])}>
+                    <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
                         <div className={styles["btn-title"]}>
                             <YakRunnerOpenFileIcon />
                             打开文件
                         </div>
                         <OutlineImportIcon className={styles["icon-style"]} />
                     </div>
-                    <div className={classNames(styles["btn-style"], styles["btn-open-folder"])}>
+                    <div className={classNames(styles["btn-style"], styles["btn-open-folder"])} onClick={openFolder}>
                         <div className={styles["btn-title"]}>
                             <YakRunnerOpenFolderIcon />
                             打开文件夹
