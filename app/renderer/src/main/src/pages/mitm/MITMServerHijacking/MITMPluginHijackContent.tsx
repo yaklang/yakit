@@ -4,7 +4,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {MITMPluginTemplateShort} from "@/pages/invoker/data/MITMPluginTamplate"
+import {HotPatchTemplate} from "@/pages/invoker/data/MITMPluginTamplate"
 import {YakScript, YakScriptHooks} from "@/pages/invoker/schema"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {EditorProps, YakCodeEditor} from "@/utils/editors"
@@ -57,7 +57,7 @@ interface MITMPluginHijackContentProps {
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
-    Content: MITMPluginTemplateShort,
+    Content: HotPatchTemplate,
     Type: "",
     Params: [],
     CreatedAt: 0,
@@ -268,7 +268,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                     if (setting) {
                         setScript({...script, Content: setting})
                     } else {
-                        setScript({...script, Content: MITMPluginTemplateShort})
+                        setScript({...script, Content: HotPatchTemplate})
                     }
                     onRefresh()
                 })
