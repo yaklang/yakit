@@ -1,5 +1,4 @@
 import {ReactNode} from "react"
-import {YakRunnerView} from "../YakRunnerType"
 import { CodeScoreSmokingEvaluateResponseProps } from "@/pages/plugins/funcTemplateType"
 import { IMonacoEditorMarker } from "@/utils/editorMarkers"
 export interface CursorPosition{
