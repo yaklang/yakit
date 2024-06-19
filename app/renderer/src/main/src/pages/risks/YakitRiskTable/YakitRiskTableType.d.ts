@@ -2,7 +2,10 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {Risk} from "../schema"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 
-export interface YakitRiskTableProps {}
+export interface YakitRiskTableProps {
+    query: QueryRisksRequest
+    setQuery: (v: QueryRisksRequest) => void
+}
 
 export interface QueryRisksRequest {
     Pagination: Paging
@@ -15,11 +18,24 @@ export interface QueryRisksRequest {
     Severity: string
     FromId: number
     UntilId: number
+    Tags: string
+    /** 全部'' 已读:'true'，未读：'false' */
+    IsRead: string
+    Title: string
+
+    /**前端展示使用 列表 */
+    RiskTypeList?: string[]
+    /**前端展示使用 */
+    SeverityList?: string[]
+    /**前端展示使用 */
+    TagList?: string[]
+    /**IP段 */
+    IPList?: string[]
 }
 
 export type QueryRisksResponse = QueryGeneralResponse<Risk>
 
-export interface YakitRiskDetailsProps{
+export interface YakitRiskDetailsProps {
     info: Risk
     isShowTime?: boolean
     shrink?: boolean
@@ -28,8 +44,8 @@ export interface YakitRiskDetailsProps{
     onClose?: () => void
 }
 
-export interface YakitRiskSelectTagProps{
+export interface YakitRiskSelectTagProps {
     info: Risk
     onClose?: () => void
-    onSave:(info: Risk)=>void
+    onSave: (info: Risk) => void
 }

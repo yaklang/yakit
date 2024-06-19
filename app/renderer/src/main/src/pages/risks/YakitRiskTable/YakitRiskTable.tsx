@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useMemo, useState} from "react"
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {
     QueryRisksRequest,
     QueryRisksResponse,
@@ -13,7 +13,7 @@ import {Descriptions, Divider, Form} from "antd"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
@@ -30,7 +30,19 @@ import {SolidRefreshIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {DeleteRiskRequest, ExportHtmlProps, apiDeleteRisk, apiExportHtml, apiNewRiskRead, apiQueryRisks} from "./utils"
+import {
+    DeleteRiskRequest,
+    ExportHtmlProps,
+    FieldGroup,
+    SetTagForRiskRequest,
+    apiDeleteRisk,
+    apiExportHtml,
+    apiNewRiskRead,
+    apiQueryAvailableRiskType,
+    apiQueryRiskTags,
+    apiQueryRisks,
+    apiSetTagForRisk
+} from "./utils"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -51,6 +63,7 @@ import {RemoteGV} from "@/yakitGV"
 import {getHtmlTemplate} from "./htmlTemplate"
 import {yakitNotify} from "@/utils/notification"
 import moment from "moment"
+import {FieldName} from "../RiskTable"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -72,6 +85,8 @@ const batchRefreshMenuData: YakitMenuItemProps[] = [
         label: "重置查询条件刷新"
     }
 ]
+
+/**name字段里面的内容不可随意更改，与查询条件有关 */
 export const SeverityMapTag = [
     {
         key: ["info", "fingerprint", "infof", "default"],
@@ -219,44 +234,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
 
     const [exportTitle, setExportTitle] = useState<string[]>([])
 
-    const [riskTypeVerbose, setRiskTypeVerbose] = useState<FiltersItemProps[]>([
-        {
-            value: "CVE基线检查",
-            label: "CVE基线检查"
-        },
-        {
-            value: "弱口令",
-            label: "弱口令"
-        },
-        {
-            value: "其他",
-            label: "其他"
-        }
-    ])
+    const [riskTypeVerbose, setRiskTypeVerbose] = useState<FieldName[]>([])
 
-    const [tag, setTag] = useState<FiltersItemProps[]>([
-        {
-            value: "严重",
-            label: "严重"
-        },
-        {
-            value: "高危",
-            label: "高危"
-        },
-        {
-            value: "中危",
-            label: "中危"
-        },
-        {
-            value: "低危",
-            label: "低危"
-        },
-        {
-            value: "信息",
-            label: "信息"
-        }
-    ])
+    const [tag, setTag] = useState<FieldGroup[]>([])
 
+    const riskTableRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(riskTableRef)
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.Total
@@ -266,8 +249,21 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         return +response.Total
     }, [response.Total])
     useEffect(() => {
-        update(1)
-    }, [])
+        if (inViewport) {
+            getRiskTags()
+            getRiskType()
+        }
+    }, [inViewport])
+    useDebounceEffect(
+        () => {
+            update(1)
+        },
+        [query, type],
+        {
+            wait: 200,
+            leading: true
+        }
+    )
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
@@ -282,17 +278,24 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 title: "标题",
                 dataKey: "TitleVerbose",
                 filterProps: {
+                    filterKey: "Title",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
-                }
+                },
+                render: (_, record) => record?.TitleVerbose || record.Title || "-"
             },
             {
                 title: "类型",
                 dataKey: "RiskTypeVerbose",
                 filterProps: {
+                    filterKey: "RiskTypeList",
                     filtersType: "select",
                     filterMultiple: true,
-                    filters: riskTypeVerbose
+                    filters: riskTypeVerbose.map((item) => ({
+                        value: item.Name,
+                        label: item.Verbose,
+                        total: item.Total
+                    }))
                 }
             },
             {
@@ -309,6 +312,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     )
                 },
                 filterProps: {
+                    filterKey: "SeverityList",
                     filtersType: "select",
                     filterMultiple: true,
                     filters: [
@@ -339,17 +343,23 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 title: "IP",
                 dataKey: "IP",
                 filterProps: {
+                    filterKey: "Network",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
                 }
             },
             {
                 title: "Tag",
-                dataKey: "Tag",
+                dataKey: "Tags",
                 filterProps: {
+                    filterKey: "TagList",
                     filtersType: "select",
                     filterMultiple: true,
-                    filters: tag
+                    filters: tag.map((item) => ({
+                        value: item.Value,
+                        label: item.Value,
+                        total: item.Total
+                    }))
                 },
                 minWidth: 120,
                 render: (text, record, index) => (
@@ -361,7 +371,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                 onOpenSelect(record)
                             }}
                         >
-                            <span>{text || "-"}</span>
+                            <span>{!!text ? text.replaceAll("|", ",") : "-"}</span>
                             <OutlineChevrondownIcon />
                         </div>
                     </>
@@ -379,7 +389,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
                 title: "操作",
                 dataKey: "action",
-                width: 60,
+                width: 50,
                 fixed: "right",
                 render: (text, record: Risk, index) => (
                     <>
@@ -397,6 +407,14 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
         ]
     }, [riskTypeVerbose, tag])
+    const getRiskTags = useMemoizedFn(() => {
+        apiQueryRiskTags().then((res) => {
+            setTag(res.RiskTags)
+        })
+    })
+    const getRiskType = useMemoizedFn(() => {
+        apiQueryAvailableRiskType().then(setRiskTypeVerbose)
+    })
     const onOpenSelect = useMemoizedFn((record: Risk) => {
         const m = showYakitModal({
             title: `序号【${record.Id}】`,
@@ -408,15 +426,21 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         })
     })
     const onSaveTags = useMemoizedFn((info: Risk) => {
-        /*TODO -  等后端接口好了需要验证*/
-        const index = response.Data.findIndex((item) => item.Hash === info.Hash)
-        if (index === -1) return
-        response.Data[index] = {
-            ...info
+        const params: SetTagForRiskRequest = {
+            Id: info.Id,
+            Hash: info.Hash,
+            Tags: !!info.Tags ? info.Tags?.split("|") : []
         }
-        setResponse({
-            ...response,
-            Data: [...response.Data]
+        apiSetTagForRisk(params).then(() => {
+            const index = response.Data.findIndex((item) => item.Hash === info.Hash)
+            if (index === -1) return
+            response.Data[index] = {
+                ...info
+            }
+            setResponse({
+                ...response,
+                Data: [...response.Data]
+            })
         })
     })
     const onRemoveSingle = useMemoizedFn((id) => {
@@ -612,15 +636,25 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         setQuery({
             ...query,
+            ...filter,
             Pagination: {
                 ...query.Pagination,
                 Order: sort.order,
                 OrderBy: sort.orderBy
             }
         })
-        setTimeout(() => {
-            update(1, limit)
-        }, 100)
+    })
+    const getQuerySeverity = useMemoizedFn((list: string[]) => {
+        return SeverityMapTag.filter((ele) => list.includes(ele.name))
+            .map((ele) => ele.key)
+            .join(",")
+    })
+    const getQueryNetwork = useMemoizedFn((network: string, ipList: string[]) => {
+        let ip = network
+        if (ipList.length > 0) {
+            ip = !!ip ? `${ip},${ipList.join(",")}` : ipList.join(",")
+        }
+        return ip
     })
     const update = useMemoizedFn((page?: number, limit?: number) => {
         setLoading(true)
@@ -631,6 +665,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         const finalParams: QueryRisksRequest = {
             ...query,
+            RiskType: !!query.RiskTypeList ? query.RiskTypeList.join(",") : "",
+            Severity: !!query.SeverityList ? getQuerySeverity(query.SeverityList) : "",
+            Tags: !!query.TagList ? query.TagList.join("|") : "",
+            Network: getQueryNetwork(query.Network, query.IPList || []),
+            IsRead: type === "all" ? "" : "false",
             Pagination: paginationProps
         }
         apiQueryRisks(finalParams)
@@ -658,8 +697,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
-    const onSearch = useMemoizedFn(() => {})
-    const onPressEnter = useMemoizedFn(() => {})
+    const onSearch = useMemoizedFn((val) => {
+        setQuery({
+            ...query,
+            Search: val
+        })
+    })
+    const onPressEnter = useMemoizedFn(() => {
+        onSearch(keywords)
+    })
     const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: Risk[], checked: boolean) => {
         if (checked) {
             setAllCheck(true)
@@ -715,7 +761,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         return selectList.map((ele) => ele.Hash) || []
     }, [selectList])
     return (
-        <div className={styles["yakit-risk-table"]} id='riskTable'>
+        <div className={styles["yakit-risk-table"]} ref={riskTableRef}>
             <YakitResizeBox
                 firstMinSize={400}
                 secondMinSize={200}
@@ -748,7 +794,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                                 label: "全部"
                                             },
                                             {
-                                                value: "unread",
+                                                value: "false",
                                                 label: "未读"
                                             }
                                         ]}
@@ -871,40 +917,54 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         </div>
     )
 })
-
+const defaultTags = [
+    {
+        label: "误报",
+        value: "误报"
+    },
+    {
+        label: "忽略",
+        value: "忽略"
+    },
+    {
+        label: "已处理",
+        value: "已处理"
+    },
+    {
+        label: "待处理",
+        value: "待处理"
+    }
+]
 const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
     const {info, onClose, onSave} = props
+    const initSelectTags = useCreation(() => {
+        let tagList: {label: string; value: string}[] = []
+        if (!!info?.Tags) {
+            tagList =
+                (info?.Tags || "").split("|").map((item) => ({
+                    label: item,
+                    value: item
+                })) || []
+        }
+        return tagList
+    }, [info.Tags])
     const tags = useCreation(() => {
-        return [
-            {
-                label: "误报",
-                value: "误报"
-            },
-            {
-                label: "忽略",
-                value: "忽略"
-            },
-            {
-                label: "已处理",
-                value: "已处理"
-            },
-            {
-                label: "待处理",
-                value: "待处理"
-            }
-        ]
-    }, [info])
+        const list = initSelectTags.filter((item) => {
+            return !defaultTags.find((i) => i.value === item.value)
+        })
+        return defaultTags.concat(list)
+    }, [info.Tags, initSelectTags])
     const onFinish = useMemoizedFn((value) => {
         onSave({
             ...info,
-            ...value
+            Tags: !!value.TagList ? value.TagList.join("|") : ""
         })
         if (onClose) onClose()
     })
     return (
         <div className={styles["yakit-risk-select-tag"]}>
             <Form onFinish={onFinish}>
-                <Form.Item label='Tags' name='Tags'>
+                <Form.Item label='Tags' name='TagList' initialValue={initSelectTags}>
                     <YakitSelect mode='tags' allowClear>
                         {tags.map((item) => {
                             return (

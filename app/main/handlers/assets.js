@@ -117,6 +117,51 @@ module.exports = (win, getClient) => {
         return await asyncQueryRisks(params)
     })
 
+    const asyncSetTagForRisk = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetTagForRisk(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetTagForRisk", async (e, params) => {
+        return await asyncSetTagForRisk(params)
+    })
+
+    const asyncQueryRiskTags = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryRiskTags(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryRiskTags", async (e, params) => {
+        return await asyncQueryRiskTags(params)
+    })
+
+    const asyncRiskFieldGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RiskFieldGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("RiskFieldGroup", async (e, params) => {
+        return await asyncRiskFieldGroup(params)
+    })
+
     // asyncQueryRisk wrapper
     const asyncQueryRisk = (params) => {
         return new Promise((resolve, reject) => {
