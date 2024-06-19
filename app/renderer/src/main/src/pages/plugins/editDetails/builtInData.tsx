@@ -35,5 +35,5 @@ export const RiskLevelToTag: Record<string, {color: string; name: string}> = {
     high: {color: "danger", name: "高危"},
     warning: {color: "info", name: "中危"},
     low: {color: "yellow", name: "低危"},
-    info: {color: "success", name: "信息/指纹"}
+    info: {color: "success", name: "信息"}
 }

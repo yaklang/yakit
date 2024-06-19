@@ -1694,7 +1694,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                                             case "critical":
                                                 return "严重"
                                             case "info":
-                                                return "信息/指纹"
+                                                return "信息"
                                             default:
                                                 return "未知"
                                         }

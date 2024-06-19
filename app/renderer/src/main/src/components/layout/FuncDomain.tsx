@@ -2010,7 +2010,7 @@ interface RisksProps {
 
 /** 漏洞与风险等级对应关系 */
 const RiskType: {[key: string]: string} = {
-    "信息/指纹": "info",
+    "信息": "info",
     低危: "low",
     中危: "middle",
     高危: "high",

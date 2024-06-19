@@ -402,7 +402,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                     <Form.Item name='severity' label='漏洞级别'>
                                         <YakitSelect defaultValue='all' style={{width: 180}}>
                                             <Option value='all'>全部</Option>
-                                            <Option value='info'>信息/指纹</Option>
+                                            <Option value='info'>信息</Option>
                                             <Option value='critical'>严重</Option>
                                             <Option value='high'>高危</Option>
                                             <Option value='warning'>中危</Option>
