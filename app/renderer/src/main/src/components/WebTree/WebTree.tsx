@@ -3,6 +3,7 @@ import YakitTree, {TreeKey} from "../yakitUI/YakitTree/YakitTree"
 import type {DataNode} from "antd/es/tree"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import {
+    OutlineChevrondownIcon,
     OutlineDocumentIcon,
     OutlineFolderremoveIcon,
     OutlineLink2Icon,
@@ -381,6 +382,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     <YakitTree
                         height={height !== undefined ? height - treeTopWrapHeight : undefined}
                         multiple={false}
+                        switcherIcon={<OutlineChevrondownIcon className={styles["switcher-icon"]} />}
                         treeData={searchTreeFlag.current ? searchWebTreeData : webTreeData}
                         loadData={onLoadWebTreeData}
                         expandedKeys={expandedKeys}
