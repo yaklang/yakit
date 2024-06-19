@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {RiskTable} from "./RiskTable"
+import {FieldName} from "./RiskTable"
 import {
     IPListItemProps,
     IPListProps,
@@ -44,8 +44,8 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
 const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
     const {advancedQuery, setAdvancedQuery, query, setQuery} = props
     const [ipList, setIpList] = useState<FieldGroup[]>([])
-    const [levelList, setLevelList] = useState<FieldGroup[]>([])
-    const [typeList, setTypeList] = useState<FieldGroup[]>([])
+    const [levelList, setLevelList] = useState<FieldName[]>([])
+    const [typeList, setTypeList] = useState<FieldName[]>([])
     const queryBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(queryBodyRef)
     useEffect(() => {
@@ -59,10 +59,10 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
         })
     })
     const onSelectIP = useMemoizedFn((ipItem: FieldGroup) => {
-        const index = (query.IPList || []).findIndex((ele) => ele === ipItem.Value)
+        const index = (query.IPList || []).findIndex((ele) => ele === ipItem.Name)
         let newIPList = query.IPList || []
         if (index === -1) {
-            newIPList = [...newIPList, ipItem.Value]
+            newIPList = [...newIPList, ipItem.Name]
         } else {
             newIPList.splice(index, 1)
         }
@@ -98,9 +98,17 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
             <div className={styles["risk-query-body"]}>
                 <IPList list={ipList} onSelect={onSelectIP} selectList={selectIPList} onReset={onResetIP} />
                 <Divider style={{margin: "8px 0px"}} />
-                <VulnerabilityLevel data={levelList} onSelect={(val) => onSelect(val, "SeverityList")} />
+                <VulnerabilityLevel
+                    selectList={query.SeverityList || []}
+                    data={levelList}
+                    onSelect={(val) => onSelect(val, "SeverityList")}
+                />
                 <Divider style={{margin: "8px 0px"}} />
-                <VulnerabilityType data={typeList} onSelect={(val) => onSelect(val, "RiskTypeList")} />
+                <VulnerabilityType
+                    selectList={query.RiskTypeList || []}
+                    data={typeList}
+                    onSelect={(val) => onSelect(val, "RiskTypeList")}
+                />
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </div>
         </div>
@@ -134,7 +142,7 @@ const IPList: React.FC<IPListProps> = React.memo((props) => {
                     rowKey='value'
                     defItemHeight={32}
                     renderRow={(record, index: number) => (
-                        <IPListItem item={record} onSelect={onSelect} isSelect={selectList.includes(record.Value)} />
+                        <IPListItem item={record} onSelect={onSelect} isSelect={selectList.includes(record.Name)} />
                     )}
                 />
             </div>
@@ -150,14 +158,14 @@ const IPListItem: React.FC<IPListItemProps> = React.memo((props) => {
             })}
             onClick={() => onSelect(item)}
         >
-            <div className={styles["ip-list-item-label"]}>{item.Value}</div>
+            <div className={styles["ip-list-item-label"]}>{item.Name}</div>
             <div className={styles["ip-list-item-value"]}>{item.Total}</div>
         </div>
     )
 })
 /**漏洞等级 */
 const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props) => {
-    const {data, onSelect} = props
+    const {data, onSelect, selectList} = props
     const pieRef = useRef<VulnerabilityLevelPieRefProps>({onReset: () => {}})
     const onReset = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -177,13 +185,13 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
                     重置
                 </YakitButton>
             </div>
-            <VulnerabilityLevelPie ref={pieRef} list={data} onSelect={onSelect} />
+            <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
         </div>
     )
 })
 
 const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) => {
-    const {data, onSelect} = props
+    const {data, onSelect, selectList} = props
     const pieRef = useRef<VulnerabilityTypePieRefProps>({onReset: () => {}})
     const onReset = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -203,7 +211,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
                     重置
                 </YakitButton>
             </div>
-            <VulnerabilityTypePie ref={pieRef} list={data} onSelect={onSelect} />
+            <VulnerabilityTypePie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
         </div>
     )
 })

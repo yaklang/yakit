@@ -356,8 +356,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     filtersType: "select",
                     filterMultiple: true,
                     filters: tag.map((item) => ({
-                        value: item.Value,
-                        label: item.Value,
+                        value: item.Name,
+                        label: item.Name,
                         total: item.Total
                     }))
                 },
@@ -674,7 +674,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         apiQueryRisks(finalParams)
             .then((res) => {
-                console.log("res", finalParams, res)
+                // console.log("res", finalParams, res)
                 const newPage = +res.Pagination.Page
                 const d = newPage === 1 ? res.Data : (response?.Data || []).concat(res.Data)
                 setResponse({
@@ -775,6 +775,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 firstNode={
                     <TableVirtualResize<Risk>
                         scrollToIndex={scrollToIndex}
+                        query={query}
                         loading={loading}
                         isRefresh={isRefresh}
                         titleHeight={32}

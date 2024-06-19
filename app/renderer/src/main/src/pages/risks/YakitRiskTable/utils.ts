@@ -75,7 +75,7 @@ export interface QueryRiskTagsResponse {
     RiskTags: FieldGroup[]
 }
 export interface FieldGroup {
-    Value: string
+    Name: string
     Total: number
 }
 /** QueryRiskTags */
@@ -132,8 +132,8 @@ export const apiSetTagForRisk: (params: SetTagForRiskRequest) => Promise<SetTagF
 
 export interface RiskFieldGroupResponse {
     RiskIPGroup: FieldGroup[]
-    RiskLevelGroup: FieldGroup[]
-    RiskTypeGroup: FieldGroup[]
+    RiskLevelGroup: FieldName[]
+    RiskTypeGroup: FieldName[]
 }
 /** RiskFieldGroup */
 export const apiRiskFieldGroup: () => Promise<RiskFieldGroupResponse> = () => {

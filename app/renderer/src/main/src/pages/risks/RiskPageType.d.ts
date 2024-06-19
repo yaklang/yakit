@@ -1,3 +1,4 @@
+import {FieldName} from "./RiskTable"
 import {QueryRisksRequest} from "./YakitRiskTable/YakitRiskTableType"
 import {FieldGroup} from "./YakitRiskTable/utils"
 
@@ -22,10 +23,12 @@ export interface IPListItemProps {
     onSelect: (v: FieldGroup) => void
 }
 export interface VulnerabilityLevelProps {
-    data: FieldGroup[]
+    selectList:string[]
+    data: FieldName[]
     onSelect: (v: string[]) => void
 }
 export interface VulnerabilityTypeProps {
-    data: FieldGroup[]
+    selectList:string[]
+    data: FieldName[]
     onSelect: (v: string[]) => void
 }
