@@ -106,6 +106,12 @@
     .icon-hover-style {
         color: var(--yakit-primary-5);
     }
+    .wrench-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 
     :global {
         .ant-badge-count {

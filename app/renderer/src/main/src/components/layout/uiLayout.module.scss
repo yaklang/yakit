@@ -245,15 +245,83 @@
     }
 }
 
+.sampling-popover {
+    width: 272px;
+    padding-top: 2px;
+    border-radius: 4px;
+    overflow: hidden;
+
+    :global {
+        .ant-popover-inner-content {
+            padding: 0;
+        }
+    }
+
+    .sampling-info {
+        display: flex;
+        align-items: center;
+        color: var(--yakit-primary-5);
+        padding-top: 8px;
+        &-item {
+            display: inline-block;
+            padding-left: 12px;
+            cursor: pointer;
+        }
+    }
+
+    .sampling-footer {
+        border-top: 1px solid var(--yakit-border-color);
+        border-radius: 0px 0px 4px 4px;
+        width: 100%;
+        display: flex;
+        background: var(--yakit-card-background-color);
+        height: 28px;
+        user-select: none;
+        margin-top: 14px;
+        .footer-bottom {
+            flex: 1;
+            font-weight: 500;
+            font-size: 12px;
+            height: 28px;
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .sampling-exit {
+            color: var(--yakit-danger-5);
+            border-right: 1px solid var(--yakit-border-color);
+            svg {
+                width: 16px;
+                color: var(--yakit-danger-5);
+                margin-right: 2px;
+            }
+        }
+
+        .sampling-refresh {
+            color: var(--yakit-primary-5);
+            svg {
+                width: 16px;
+                color: var(--yakit-primary-5);
+                margin-right: 2px;
+            }
+        }
+    }
+}
+
 .stop-screen-recorder {
     display: flex;
     align-items: center;
+    padding-left: 2px;
+    margin-right: 5px;
 
     .stop-icon {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-right: 8px;
+        margin-right: 5px;
         position: relative;
         width: 24px;
         height: 24px;
@@ -267,7 +335,7 @@
     }
 }
 
-.ai-describe{
+.ai-describe {
     width: 100%;
     background: rgba(86, 201, 145, 0.1);
     color: rgba(133, 137, 158, 1);

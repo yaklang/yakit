@@ -5,4 +5,6 @@ export type GlobalEventProps = {
     setYakitHeaderDraggable: boolean
     /**切换二级菜单的选中项目 */
     switchSubMenuItem: string
+    /**触发性能采样 */
+    performanceSampling?: string
 }

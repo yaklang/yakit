@@ -50,7 +50,7 @@ import {LocalEngineLinkFuncProps} from "./LocalEngine/LocalEngineType"
 import {DownloadYakit} from "./update/DownloadYakit"
 import {DownloadYaklang} from "./update/DownloadYaklang"
 import {HelpDoc} from "./HelpDoc/HelpDoc"
-import {SolidHomeIcon} from "@/assets/icon/solid"
+import {SolidCheckCircleIcon, SolidHomeIcon} from "@/assets/icon/solid"
 import {ChatCSGV} from "@/enums/chatCS"
 import {CheckEngineVersion} from "./CheckEngineVersion/CheckEngineVersion"
 import {EngineRemoteGV} from "@/enums/engine"
@@ -65,6 +65,12 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {CodecParamsProps} from "../yakChat/chatCS"
 import NewThirdPartyApplicationConfig from "../configNetwork/NewThirdPartyApplicationConfig"
+import {usePerformanceSampling} from "@/store/performanceSampling"
+import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
+import {OutlineExitIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
+import {Tooltip} from "antd"
+import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1185,6 +1191,126 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** ---------- ChatCS End ---------- */
 
+    /** ---------- 软件顶部展示采样中 Start ---------- */
+    const {performanceSamplingInfo, setPerformanceSamplingLog, setSampling} = usePerformanceSampling()
+    const [isShowSamplingInfo, setIsShowSamplingInfo] = useState<boolean>(false)
+    const resetPerformanceSampling = useMemoizedFn(() => {
+        setSampling(false)
+        setPerformanceSamplingLog([])
+        setIsShowSamplingInfo(false)
+    })
+    useEffect(() => {
+        if (!performanceSamplingInfo.isPerformanceSampling) {
+            setIsShowSamplingInfo(true)
+        }
+    }, [performanceSamplingInfo.isPerformanceSampling])
+
+    const performanceSampling = useCreation(() => {
+        return (
+            <>
+                {performanceSamplingInfo.isPerformanceSampling ? (
+                    <YakitButton
+                        type='primary'
+                        colors='infoBlue'
+                        className={styles["stop-screen-recorder"]}
+                        size='middle'
+                    >
+                        <div className={styles["stop-icon"]}>
+                            <StopIcon />
+                        </div>
+                        <span className={styles["stop-text"]}>采样中</span>
+                    </YakitButton>
+                ) : (
+                    <>
+                        {performanceSamplingInfo.log.length ? (
+                            <YakitPopover
+                                overlayClassName={styles["sampling-popover"]}
+                                content={
+                                    <div
+                                        onBlur={() => {
+                                            setIsShowSamplingInfo(false)
+                                        }}
+                                    >
+                                        {performanceSamplingInfo.log.map((item, index) => (
+                                            <div className={classNames(styles["sampling-info"])} key={index}>
+                                                <Tooltip title='点击打开所在目录' placement="top" align={{offset: [40, 0]}}>
+                                                    <span
+                                                        className={classNames(
+                                                            styles["sampling-info-item"]
+                                                        )}
+                                                        onClick={() => {
+                                                            ipcRenderer
+                                                                .invoke("is-file-exists", item.path)
+                                                                .then((flag: boolean) => {
+                                                                    if (flag) {
+                                                                        openABSFileLocated(item.path)
+                                                                    } else {
+                                                                        failed("目标文件已不存在!")
+                                                                    }
+                                                                })
+                                                                .catch(() => {})
+                                                        }}
+                                                    >
+                                                        {item.path.substring(item.path.lastIndexOf("\\") + 1)}
+                                                    </span>
+                                                </Tooltip>
+                                                <CopyComponents copyText={item.path} />
+                                            </div>
+                                        ))}
+                                        <div className={classNames(styles["sampling-footer"])}>
+                                            <div
+                                                className={classNames(styles["footer-bottom"], styles["sampling-exit"])}
+                                                onClick={resetPerformanceSampling}
+                                            >
+                                                <OutlineExitIcon />
+                                                退出
+                                            </div>
+                                            <div
+                                                className={classNames(
+                                                    styles["footer-bottom"],
+                                                    styles["sampling-refresh"]
+                                                )}
+                                                onClick={() => {
+                                                    resetPerformanceSampling()
+                                                    emiter.emit("performanceSampling")
+                                                }}
+                                            >
+                                                <OutlineRefreshIcon />
+                                                重新采样
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                trigger='click'
+                                placement='bottom'
+                                visible={isShowSamplingInfo}
+                                onVisibleChange={(visible) => {
+                                    if (!visible) setIsShowSamplingInfo(false)
+                                }}
+                            >
+                                <YakitButton
+                                    type='primary'
+                                    colors='success'
+                                    className={styles["stop-screen-recorder"]}
+                                    size='middle'
+                                    onClick={() => setIsShowSamplingInfo(true)}
+                                >
+                                    <div className={styles["stop-icon"]}>
+                                        <SolidCheckCircleIcon />
+                                    </div>
+                                    <span className={styles["stop-text"]}>采样完成</span>
+                                </YakitButton>
+                            </YakitPopover>
+                        ) : (
+                            <></>
+                        )}
+                    </>
+                )}
+            </>
+        )
+    }, [performanceSamplingInfo, isShowSamplingInfo])
+    /** ---------- 软件顶部展示采样中 End ---------- */
+
     /** ---------- 软件顶部展示录屏中状态 Start ---------- */
     const {screenRecorderInfo} = useScreenRecorder()
     const stopScreen = useCreation(() => {
@@ -1198,7 +1324,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         type='primary'
                         colors='danger'
                         className={styles["stop-screen-recorder"]}
-                        size='large'
+                        size='middle'
                     >
                         <div className={styles["stop-icon"]}>
                             <StopIcon />
@@ -1406,6 +1532,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     onDoubleClick={maxScreen}
                                 />
                                 <div className={styles["header-right"]}>
+                                    {performanceSampling}
+
                                     {stopScreen}
 
                                     <HelpDoc system={system} arch={arch} engineLink={engineLink} />
@@ -1487,6 +1615,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     <HelpDoc system={system} arch={arch} engineLink={engineLink} />
 
                                     {stopScreen}
+
+                                    {performanceSampling}
                                 </div>
 
                                 <div
