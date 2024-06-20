@@ -65,10 +65,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         return Promise.reject()
     })
 
-    useEffect(() => {
-        console.log("我是runner-file-tree")
-    }, [])
-
     const menuData: YakitMenuItemType[] = useMemo(() => {
         let newMenu: YakitMenuItemType[] = [
             {
@@ -127,7 +123,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             setAreaInfo && setAreaInfo(newAreaInfo)
             setActiveFile && setActiveFile(newActiveFile)
 
-            // 创建文件时接入历史记录
+            // 打开文件时接入历史记录
             const history: YakRunnerHistoryProps = {
                 isFile: true,
                 name,
@@ -158,7 +154,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             .then((data: any) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    console.log("打开文件夹路径", absolutePath)
+                    emiter.emit("onOpenFolderList",absolutePath)
                 }
             })
     })
@@ -174,15 +170,12 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             }
             // 打开文件夹
             else {
-                console.log("打开文件夹---待接入");
-                
+                emiter.emit("onOpenFolderList",item.path)
             }
         }
     })
 
     const menuSelect = useMemoizedFn((key) => {
-        console.log("key---", key)
-
         switch (key) {
             case "createFile":
                 break
@@ -197,6 +190,18 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             default:
                 openHistory(key)
                 break
+        }
+    })
+
+    // 文件树选中
+    const onSelectFileTree = useMemoizedFn((
+        selectedKeys: string[],
+        e: {selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps}
+    )=>{
+        console.log("onSelectFileTree",selectedKeys,e);
+        if(e.selected){
+            const {path, name} = e.node
+            openFileByPath(path, name)
         }
     })
 
@@ -225,7 +230,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
                         <div className={styles["file-tree-tree"]}>
                             <div className={styles["tree-body"]}>
-                                <FileTree data={fileTree} onLoadData={onLoadData} />
+                                <FileTree data={fileTree} onLoadData={onLoadData} onSelect={onSelectFileTree}/>
                             </div>
                         </div>
                     </div>

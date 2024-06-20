@@ -353,3 +353,19 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
         })
     })
 }
+
+/**
+ * @name 保存文件
+ */
+export const saveCodeByFile = (file: FileDetailInfo):Promise<null> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer.invoke("write-file", {
+            route: file.path,
+            data: file.code
+        }).then(()=>{
+            resolve(null)
+        }).catch(()=>{
+            reject()
+        })
+    })
+}

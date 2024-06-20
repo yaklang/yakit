@@ -1,16 +1,16 @@
 import {ReactNode} from "react"
-import { CodeScoreSmokingEvaluateResponseProps } from "@/pages/plugins/funcTemplateType"
-import { IMonacoEditorMarker } from "@/utils/editorMarkers"
-export interface CursorPosition{
-    lineNumber: number;         // 当前行号
-    column: number;             // 当前字符位置
+import {CodeScoreSmokingEvaluateResponseProps} from "@/pages/plugins/funcTemplateType"
+import {IMonacoEditorMarker} from "@/utils/editorMarkers"
+export interface CursorPosition {
+    lineNumber: number // 当前行号
+    column: number // 当前字符位置
 }
 
 export interface Selection {
-    startLineNumber: number;     // 开始-行号
-    startColumn: number;        // 开始-字符位置
-    endLineNumber: number;      // 结束-行号
-    endColumn: number;          // 结束-字符位置
+    startLineNumber: number // 开始-行号
+    startColumn: number // 开始-字符位置
+    endLineNumber: number // 结束-行号
+    endColumn: number // 结束-字符位置
 }
 
 export interface FileDetailInfo {
@@ -33,7 +33,7 @@ export interface FileDetailInfo {
     /** 当前光标位置 */
     position?: CursorPosition
     /** 当前选择区域 */
-    selections?:Selection
+    selections?: Selection
     /** 是否未保存（用于临时文件创建） */
     isUnSave?: boolean
     /** 语法检查（代码打开时执行） */
@@ -49,7 +49,7 @@ export interface FileDetailInfo {
 }
 
 // 将所有属性变为可选
-export type OptionalFileDetailInfo = Partial<FileDetailInfo>;
+export type OptionalFileDetailInfo = Partial<FileDetailInfo>
 
 export interface RunnerTabsProps {
     tabsId: string
@@ -59,16 +59,16 @@ export interface RunnerTabBarProps {
     tabsId: string
     tabsList: FileDetailInfo[]
     extra?: ReactNode
-    handleContextMenu:(info: FileDetailInfo)=>void
-    onRemoveCurrent:(info: FileDetailInfo)=>void
+    handleContextMenu: (info: FileDetailInfo) => void
+    onRemoveCurrent: (info: FileDetailInfo) => void
 }
 
 export interface RunnerTabBarItemProps {
     index: number
     info: FileDetailInfo
     tabsId: string
-    handleContextMenu:(info: FileDetailInfo)=>void
-    onRemoveCurrent:(info: FileDetailInfo)=>void
+    handleContextMenu: (info: FileDetailInfo) => void
+    onRemoveCurrent: (info: FileDetailInfo) => void
 }
 
 export interface RunnerTabPaneProps {
@@ -79,4 +79,11 @@ export interface YakRunnerWelcomePageProps {
     addFileTab: () => void
 }
 
-export type SplitDirectionProps = "top"|"bottom"|"left"|"right"
+export interface YakitRunnerSaveModalProps {
+    info: FileDetailInfo
+    isShowModal: boolean
+    setShowModal: (v: boolean) => void
+    onRemoveFun: (info: FileDetailInfo) => void
+}
+
+export type SplitDirectionProps = "top" | "bottom" | "left" | "right"

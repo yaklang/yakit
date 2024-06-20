@@ -4,11 +4,19 @@ import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
 import {FileNodeProps} from "./FileTree/FileTreeType"
-import {addAreaFileInfo, grpcFetchFileTree, updateFileTree} from "./utils"
-import {AreaInfoProps, TabFileProps, ViewsInfoProps, YakRunnerProps} from "./YakRunnerType"
+import {
+    addAreaFileInfo,
+    grpcFetchFileTree,
+    removeAreaFileInfo,
+    saveCodeByFile,
+    setYakRunnerHistory,
+    updateAreaFileInfo,
+    updateFileTree
+} from "./utils"
+import {AreaInfoProps, TabFileProps, ViewsInfoProps, YakRunnerHistoryProps, YakRunnerProps} from "./YakRunnerType"
 import {getRemoteValue} from "@/utils/kv"
 import {YakRunnerRemoteGV} from "@/enums/yakRunner"
-import {yakitNotify} from "@/utils/notification"
+import {failed, success, yakitNotify} from "@/utils/notification"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
 import {FolderDefault} from "./FileTree/icon"
 import {RunnerTabs, YakRunnerWelcomePage} from "./RunnerTabs/RunnerTabs"
@@ -35,7 +43,8 @@ import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
 import moment from "moment"
-import { keySortHandle } from "@/components/yakitUI/YakitEditor/editorUtils"
+import {keySortHandle} from "@/components/yakitUI/YakitEditor/editorUtils"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -151,9 +160,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     /** ---------- 文件树 Start ---------- */
     const fileCache = useRef<Map<string, FileNodeProps[]>>(new Map())
     const [fileTree, setFileTree] = useState<FileNodeProps[]>([])
-    const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>(defaultAreaInfo)
+    const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
-    const [runnerTabsId,setRunnerTabsId] = useState<string>()
+    const [runnerTabsId, setRunnerTabsId] = useState<string>()
 
     const currentPath = useRef<FileNodeProps | undefined>()
 
@@ -170,30 +179,52 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             })
     })
 
-    useEffect(() => {
-        const node: FileNodeProps = {
-            name: "release",
-            path: "D:/Work/yakit/release",
-            isFolder: true,
-            icon: FolderDefault
-        }
-        currentPath.current = {...node}
-        handleFetchFileList(node.path, (value) => {
-            if (value) setFileTree([{...node, children: value}])
-        })
-        getRemoteValue(YakRunnerRemoteGV.CurrentOpenPath)
-            .then((info?: string) => {
-                if (info) {
-                    try {
-                        const file: FileNodeProps = JSON.parse(info)
-                        currentPath.current = {...file}
-                        handleFetchFileList(file.path, (value) => {
-                            if (value) setFileTree([{...file, children: value}])
-                        })
-                    } catch (error) {}
-                }
+    // 加载文件列表
+    const onOpenFolderListFun = useMemoizedFn((absolutePath: string) => {
+        console.log("onOpenFolderListFun", absolutePath)
+        const folders = absolutePath.split("\\") // 使用双反斜杠对路径进行分割
+        const lastFolder = folders[folders.length - 1] // 获取数组中的最后一个元素
+        if (absolutePath.length > 0 && lastFolder.length > 0) {
+            const node: FileNodeProps = {
+                name: lastFolder,
+                path: absolutePath,
+                isFolder: true,
+                icon: FolderDefault
+            }
+
+            currentPath.current = {...node}
+            handleFetchFileList(node.path, (value) => {
+                if (value) setFileTree([{...node, children: value}])
             })
-            .catch(() => {})
+            getRemoteValue(YakRunnerRemoteGV.CurrentOpenPath)
+                .then((info?: string) => {
+                    if (info) {
+                        try {
+                            const file: FileNodeProps = JSON.parse(info)
+                            currentPath.current = {...file}
+                            handleFetchFileList(file.path, (value) => {
+                                if (value) setFileTree([{...file, children: value}])
+                            })
+                        } catch (error) {}
+                    }
+                })
+                .catch(() => {})
+
+            // 打开文件夹时接入历史记录
+            const history: YakRunnerHistoryProps = {
+                isFile: false,
+                name: lastFolder,
+                path: absolutePath
+            }
+            setYakRunnerHistory(history)
+        }
+    })
+
+    useEffect(() => {
+        emiter.on("onOpenFolderList", onOpenFolderListFun)
+        return () => {
+            emiter.off("onOpenFolderList", onOpenFolderListFun)
+        }
     }, [])
 
     // 加载下一层
@@ -261,21 +292,73 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             isUnSave: true
         }
         unTitleCountRef.current += 1
-        const {newAreaInfo,newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
-        
+        const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
+
         setAreaInfo(newAreaInfo)
         setActiveFile(newActiveFile)
     })
 
-    const ctrl_c = () => {
+    const [codePath, setCodePath] = useState<string>("")
+    // 默认保存路径
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-code-path").then((path: string) => {
+            ipcRenderer
+                .invoke("is-exists-file", path)
+                .then(() => {
+                    setCodePath("")
+                })
+                .catch(() => {
+                    setCodePath(path)
+                })
+        })
+    }, [])
+    const ctrl_s = useMemoizedFn(() => {
         // 存储文件
-        console.log("ctrl_c")
-    }
+        try {
+            // 如若未保存 则
+            if (activeFile && activeFile.isUnSave && activeFile.code.length > 0) {
+                ipcRenderer
+                    .invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${activeFile.name}`)
+                    .then(async (res) => {
+                        console.log("res---", res)
+
+                        const path = res.filePath
+                        const name = res.name
+                        if (path.length > 0) {
+                            const suffix = name.split(".").pop()
+
+                            const file: FileDetailInfo = {
+                                ...activeFile,
+                                path,
+                                isUnSave: false,
+                                language: suffix === "yak" ? suffix : "http"
+                            }
+                            await saveCodeByFile(file)
+                            success("保存成功")
+                            const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
+                            const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
+                            setAreaInfo && setAreaInfo(newAreaInfo)
+                            setActiveFile && setActiveFile(file)
+
+                            // 创建文件时接入历史记录
+                            const history: YakRunnerHistoryProps = {
+                                isFile: true,
+                                name,
+                                path
+                            }
+                            setYakRunnerHistory(history)
+                        }
+                    })
+            }
+        } catch (error) {
+            failed(`${activeFile?.name}保存失败`)
+        }
+    })
 
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
-        setKeyboard("17-67", {onlyid: uuidv4(), callback: ctrl_c})
+        setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
     })
 
     useEffect(() => {
@@ -287,7 +370,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         // 在这里处理全局键盘事件
         // console.log("Key keydown:",event)
         // 此处在使用key时发现字母竟区分大小写-故使用which替换
-        const {shiftKey, ctrlKey, altKey, metaKey, key, which } = event
+        const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
         let activeKey: number[] = []
         if (shiftKey) activeKey.push(16)
         if (ctrlKey) activeKey.push(17)
@@ -296,7 +379,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         activeKey.push(which)
         const newkey = keySortHandle(activeKey).join("-")
         let arr = getKeyboard(newkey)
-        // console.log("newkey---", newkey,arr)
+        // console.log("newkey---", newkey, arr)
         if (!arr) return
         event.stopPropagation()
         arr.forEach((item) => {
@@ -454,7 +537,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     // 布局处理
     const onChangeArea = useMemoizedFn(() => {
         if (areaInfo.length === 0) {
-            return <YakRunnerWelcomePage addFileTab={addFileTab}/>
+            return <YakRunnerWelcomePage addFileTab={addFileTab} />
         }
         return (
             <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
