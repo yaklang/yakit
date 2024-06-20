@@ -9,7 +9,7 @@ import {
 import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {Risk} from "../schema"
-import {Descriptions, Divider, Form} from "antd"
+import {Descriptions, Divider, Form, Tooltip} from "antd"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -18,6 +18,8 @@ import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
     OutlineExportIcon,
+    OutlineEyeIcon,
+    OutlineOpenIcon,
     OutlineSearchIcon,
     OutlineTrashIcon,
     OutlineXIcon
@@ -65,6 +67,7 @@ import moment from "moment"
 import {FieldName} from "../RiskTable"
 import {defQueryRisksRequest} from "./constants"
 import emiter from "@/utils/eventBus/eventBus"
+import {FuncBtn} from "@/pages/plugins/funcTemplate"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -211,6 +214,7 @@ const yakitRiskCellStyle = {
     }
 }
 export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) => {
+    const {advancedQuery, setAdvancedQuery} = props
     const [loading, setLoading] = useState(false)
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [response, setResponse] = useState<QueryRisksResponse>({
@@ -261,9 +265,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     }, [inViewport])
     useDebounceEffect(
         () => {
-            update(1)
+            if (inViewport) update(1)
         },
-        [query, type],
+        [query, type, inViewport],
         {
             wait: 200,
             leading: true
@@ -756,7 +760,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     })
                 })
             })
+            emiter.emit("onRefRisksRead", JSON.stringify({Id: val.Id}))
         }
+    })
+    /** TODO - 全部已读 */
+    const onAllRead = useMemoizedFn(() => {})
+    const onExpend = useMemoizedFn(() => {
+        setAdvancedQuery(true)
     })
     const ResizeBoxProps = useCreation(() => {
         let p = {
@@ -794,6 +804,19 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         renderTitle={
                             <div className={styles["table-renderTitle"]}>
                                 <div className={styles["table-renderTitle-left"]}>
+                                    {!advancedQuery && (
+                                        <Tooltip
+                                            title='展开筛选'
+                                            placement='topLeft'
+                                            overlayClassName='plugins-tooltip'
+                                        >
+                                            <YakitButton
+                                                type='text2'
+                                                onClick={onExpend}
+                                                icon={<OutlineOpenIcon onClick={onExpend} />}
+                                            ></YakitButton>
+                                        </Tooltip>
+                                    )}
                                     <div className={styles["table-renderTitle-text"]}>风险与漏洞</div>
                                     <YakitRadioButtons
                                         value={type}
@@ -837,6 +860,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                         onPressEnter={onPressEnter}
                                     />
                                     <Divider type='vertical' style={{margin: 0}} />
+                                    <FuncBtn
+                                        maxWidth={1200}
+                                        type='outline2'
+                                        icon={<OutlineEyeIcon />}
+                                        onClick={onAllRead}
+                                        name='全部已读'
+                                    />
                                     <YakitDropdownMenu
                                         menu={{
                                             data: batchExportMenuData,
@@ -850,9 +880,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                             disabled: total === 0
                                         }}
                                     >
-                                        <YakitButton type='outline2' icon={<OutlineExportIcon />}>
-                                            导出为...
-                                        </YakitButton>
+                                        <FuncBtn
+                                            maxWidth={1200}
+                                            type='outline2'
+                                            icon={<OutlineExportIcon />}
+                                            onClick={onAllRead}
+                                            name=' 导出为...'
+                                        />
                                     </YakitDropdownMenu>
                                     <YakitPopconfirm
                                         title={
@@ -862,14 +896,14 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                         }
                                         onConfirm={onRemove}
                                     >
-                                        <YakitButton
+                                        <FuncBtn
+                                            maxWidth={1200}
                                             type='outline1'
                                             colors='danger'
                                             icon={<OutlineTrashIcon />}
                                             disabled={total === 0}
-                                        >
-                                            {selectNum === 0 ? "清空" : "删除数据"}
-                                        </YakitButton>
+                                            name={selectNum === 0 ? "清空" : "删除"}
+                                        />
                                     </YakitPopconfirm>
                                     <YakitDropdownMenu
                                         menu={{

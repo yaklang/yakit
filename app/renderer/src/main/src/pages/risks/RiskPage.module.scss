@@ -39,11 +39,16 @@
 }
 .risk-query {
     @extend %flex-column;
-    min-width: 300px;
+    width: 300px;
+    flex-shrink: 0;
     max-width: 300px;
     border-right: 1px solid var(--yakit-border-color);
     overflow: hidden;
     height: 100%;
+    opacity: 1;
+    transition:
+        width 0.2s ease,
+        opacity 0.2s ease;
     :global {
         .ant-collapse {
             padding: 8px 12px 0px;
@@ -67,6 +72,11 @@
         flex: 1;
         overflow-y: auto;
     }
+}
+
+.risk-query-hidden {
+    width: 0;
+    opacity: 0;
 }
 
 .ip-list-body {

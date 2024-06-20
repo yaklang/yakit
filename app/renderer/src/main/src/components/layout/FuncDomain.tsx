@@ -2010,7 +2010,7 @@ interface RisksProps {
 
 /** 漏洞与风险等级对应关系 */
 const RiskType: {[key: string]: string} = {
-    "信息": "info",
+    信息: "info",
     低危: "low",
     中危: "middle",
     高危: "high",
@@ -2084,10 +2084,11 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                         }, 5000)
                     }
                 })
-
+            emiter.on("onRefRisksRead", onRefRisksRead)
             return () => {
                 clearInterval(timeRef.current)
                 emiter.off("onRefreshQueryNewRisk", update)
+                emiter.off("onRefRisksRead", onRefRisksRead)
             }
         } else {
             if (timeRef.current) clearInterval(timeRef.current)
@@ -2096,6 +2097,21 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             setRisks({Data: [], Total: 0, NewRiskTotal: 0})
         }
     }, [isEngineLink])
+
+    const onRefRisksRead = useMemoizedFn((res) => {
+        try {
+            const value = JSON.parse(res)
+            const newRiskTotal = risks.NewRiskTotal - 1
+            setRisks({
+                ...risks,
+                NewRiskTotal: newRiskTotal > 0 ? newRiskTotal : 0,
+                Data: risks.Data.map((item) => {
+                    if (item.Id === value.Id) item.IsRead = true
+                    return item
+                })
+            })
+        } catch (error) {}
+    })
 
     /** 单条点击阅读 */
     const singleRead = useMemoizedFn((info: LatestRiskInfo) => {
@@ -2141,14 +2157,14 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                         return item
                     })
                 })
-                emiter.emit('onRefRiskList')
+                emiter.emit("onRefRiskList")
             })
             .catch(() => {})
     })
     /** 查看全部 */
     const viewAll = useMemoizedFn(() => {
         addToTab(YakitRoute.DB_Risk)
-        emiter.emit('onRefRiskList')
+        emiter.emit("onRefRiskList")
     })
 
     const notice = useMemo(() => {

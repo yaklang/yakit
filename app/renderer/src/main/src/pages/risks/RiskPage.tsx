@@ -24,20 +24,37 @@ import cloneDeep from "lodash/cloneDeep"
 import {FieldGroup, apiRiskFieldGroup} from "./YakitRiskTable/utils"
 import {VulnerabilityLevelPieRefProps} from "./VulnerabilityLevelPie/VulnerabilityLevelPieType"
 import {VulnerabilityTypePieRefProps} from "./VulnerabilityTypePie/VulnerabilityTypePieType"
-import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {OutlineCloseIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [query, setQuery] = useState<QueryRisksRequest>(cloneDeep(defQueryRisksRequest))
+    // 获取筛选展示状态
+    useEffect(() => {
+        getRemoteValue(RemoteGV.RiskQueryShow).then((value: string) => {
+            setAdvancedQuery(value !== "false")
+        })
+    }, [])
+    const onSetQueryShow = useMemoizedFn((val) => {
+        setAdvancedQuery(val)
+        setRemoteValue(RemoteGV.RiskQueryShow, `${val}`)
+    })
     return (
         <div className={styles["risk-page"]}>
             <RiskQuery
                 advancedQuery={advancedQuery}
-                setAdvancedQuery={setAdvancedQuery}
+                setAdvancedQuery={onSetQueryShow}
                 query={query}
                 setQuery={setQuery}
             />
-            <YakitRiskTable query={query} setQuery={setQuery} />
+            <YakitRiskTable
+                query={query}
+                setQuery={setQuery}
+                advancedQuery={advancedQuery}
+                setAdvancedQuery={onSetQueryShow}
+            />
         </div>
     )
 }
@@ -86,15 +103,24 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
         })
     })
 
+    const onClose = useMemoizedFn(() => {
+        setAdvancedQuery(false)
+    })
+
     const selectIPList = useCreation(() => {
         return query.IPList || []
     }, [query.IPList])
 
     return (
-        <div className={styles["risk-query"]} ref={queryBodyRef}>
+        <div
+            className={classNames(styles["risk-query"], {[styles["risk-query-hidden"]]: !advancedQuery})}
+            ref={queryBodyRef}
+        >
             <div className={styles["risk-query-heard"]}>
                 <span>高级查询</span>
-                <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />
+                <Tooltip title='收起筛选' placement='top' overlayClassName='plugins-tooltip'>
+                    <YakitButton type='text2' onClick={onClose} icon={<OutlineCloseIcon />}></YakitButton>
+                </Tooltip>
             </div>
             <div className={styles["risk-query-body"]}>
                 <IPList list={ipList} onSelect={onSelectIP} selectList={selectIPList} onReset={onResetIP} />

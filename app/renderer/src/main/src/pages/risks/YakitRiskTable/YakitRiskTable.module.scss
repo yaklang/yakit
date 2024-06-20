@@ -142,7 +142,8 @@ $keyColor: map-keys($tagColor);
 }
 
 .table-renderTitle {
-    @extend %display-flex-center;
+    display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     padding-bottom: 8px;
 
@@ -153,7 +154,8 @@ $keyColor: map-keys($tagColor);
 
     .table-renderTitle-left {
         @extend %display-flex-center;
-        gap: 16px;
+        gap: 8px 16px;
+        flex-wrap: wrap;
         .table-renderTitle-text {
             color: var(--yakit-header-color);
             font-size: 16px;

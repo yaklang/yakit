@@ -90,15 +90,17 @@ export enum RemoteGV {
     /**@name fuzzer序列页面中,页面配置内容的显/隐 */
     FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
     /**@name WebFuzzer最大响应数量限制 */
-    FuzzerResMaxNumLimit="fuzzer_res_max_limit",
+    FuzzerResMaxNumLimit = "fuzzer_res_max_limit",
     /**@name Histroy编码缓存 */
-    HistoryResCodeKey="history_res_code_key",
+    HistoryResCodeKey = "history_res_code_key",
     /**@name WebFuzzer编码缓存 */
-    webFuzzerEditorCodeKey="webfuzzer_editor_code_key",
+    webFuzzerEditorCodeKey = "webfuzzer_editor_code_key",
     /**@name WebFuzzer一个编辑器编码缓存 */
-    webFuzzerOneResEditorCodeKey="webfuzzer_one_res_editor_code_key",
+    webFuzzerOneResEditorCodeKey = "webfuzzer_one_res_editor_code_key",
     /**@name 漏洞风险导出字段缓存 */
-    RiskExportFields="risk-export-fields",
+    RiskExportFields = "risk-export-fields",
+    /**@name RiskPage页面中,高级查询内容的显/隐 */
+    RiskQueryShow = "risk-query-show"
 }
 
 /** 项目逻辑全局变量 */

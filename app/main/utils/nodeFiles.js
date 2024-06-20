@@ -19,7 +19,7 @@ module.exports = (win, getClient) => {
         return await asyncFetchFileInfoByPath(path)
     })
 
-    const asyncExportRiskHtml = (path) => {
+    const asyncExportRiskHtml = (params) => {
         return new Promise(async (resolve, reject) => {
             try {
                 const { htmlContent, fileName, data } = params

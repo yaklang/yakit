@@ -3,6 +3,9 @@ import {Risk} from "../schema"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 
 export interface YakitRiskTableProps {
+    /**是否开启高级查询 */
+    advancedQuery: boolean
+    setAdvancedQuery: (b: boolean) => void
     query: QueryRisksRequest
     setQuery: (v: QueryRisksRequest) => void
 }
