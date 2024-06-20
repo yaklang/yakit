@@ -13,6 +13,7 @@
     .open-file {
         width: 100%;
         padding: 4px 0;
+        border-bottom: 1px solid #eaecf3;
     }
 
     .file-tree {
@@ -29,7 +30,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid #eaecf3;
             .title-style {
                 color: #85899e;
                 font-size: 12px;

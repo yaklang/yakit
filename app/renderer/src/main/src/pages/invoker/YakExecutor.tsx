@@ -348,9 +348,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                 data: info.code
             })
         } else {
+            
+            
             ipcRenderer.invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${info.tab}`).then((res) => {
                 if (res.canceled) return
-
+console.log("show-save-dialog",`${codePath}${codePath ? "/" : ""}${info.tab}`,res);
                 const path = res.filePath
                 const name = res.name
                 ipcRenderer

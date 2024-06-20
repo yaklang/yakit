@@ -8,7 +8,7 @@ import classNames from "classnames"
 import styles from "./SplitView.module.scss"
 
 export const SplitView: React.FC<SplitViewProp> = memo((props) => {
-    const {isVertical = false, elements = [], minWidth = 220, minHeight = 200} = props
+    const {isVertical = false, elements = [], minWidth = 220, minHeight = 200, isLastHidden} = props
 
     const [isVer, _] = useState<boolean>(isVertical || false)
 
@@ -96,9 +96,27 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
                 if (isVer) {
                     divDom.style.height = `${height}px`
                     divDom.style.top = `${top}px`
+                    // 以下代码为对第二块的隐藏 而不销毁重新创建
+                    if(isLastHidden && i === 0){
+                        divDom.style.height = "100%"
+                    }
+                    divDom.style.display = "block"
+                    if(isLastHidden && positions.current.length=== i+1){
+                        divDom.style.display = "none"
+                    }
                 } else {
                     divDom.style.width = `${width}px`
                     divDom.style.left = `${left}px`
+                    divDom.style.position = "absolute"
+                    divDom.style.top = "0px"
+                    // 以下代码为对第二块的隐藏 而不销毁重新创建
+                    if(isLastHidden && i === 0){
+                        divDom.style.width = "100%"
+                    }
+                    divDom.style.display = "block"
+                    if(isLastHidden && positions.current.length=== i+1){
+                        divDom.style.display = "none"
+                    }
                 }
             }
 
@@ -119,7 +137,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
         setViewIDs()
         setSashIDs()
         setPosition()
-    }, [elements.length])
+    }, [elements.length,isLastHidden])
     /** ---------- view信息相关逻辑 End ---------- */
 
     /** ---------- 监听容器整体尺寸大小变化 Start ---------- */
@@ -272,7 +290,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
     return (
         <div ref={wrapperRef} data-split-view-id={wrapperId} className={styles["split-view"]}>
             {/* 位移线 */}
-            <div className={classNames(styles["sash-container"], {[styles["hover"]]: !isOver})}>
+            {!isLastHidden&&<div className={classNames(styles["sash-container"], {[styles["hover"]]: !isOver})}>
                 {elements.map((item, index) => {
                     if (index === elements.length - 1) return null
                     return (
@@ -288,7 +306,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
                         ></div>
                     )
                 })}
-            </div>
+            </div>}
 
             {/* 分屏区域 */}
             <div
