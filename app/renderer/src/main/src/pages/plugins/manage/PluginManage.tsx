@@ -14,6 +14,7 @@ import {
 import {TypeSelectOpt} from "../funcTemplateType"
 import {
     OutlineClouddownloadIcon,
+    OutlineClouduploadIcon,
     OutlineDotshorizontalIcon,
     OutlinePencilaltIcon,
     OutlineRefreshIcon,
@@ -40,6 +41,7 @@ import {
     apiDownloadPluginCheck,
     apiFetchCheckList,
     apiFetchGroupStatisticsCheck,
+    apiFetchResetPlugins,
     convertDownloadOnlinePluginBatchRequestParams,
     convertPluginsRequestParams,
     excludeNoExistfilter
@@ -57,6 +59,7 @@ import styles from "./pluginManage.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginGroupList} from "../local/PluginsLocalType"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 interface PluginManageProps {}
 
@@ -570,6 +573,39 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         fetchList(true)
         fetchPluginFilters()
     })
+    // 一键重置
+    const showResetAll = useMemo(() => {
+        if (userInfo.role === "admin") {
+            if (isEnpriTrace()) return true
+            return false
+        }
+        return false
+    }, [userInfo.role])
+    const [resetLoading, setResetLoading] = useState<boolean>(false)
+    const onResetAll = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            yakitNotify("error", "请先登录")
+            return
+        }
+        if (userInfo.role !== "admin") {
+            yakitNotify("error", "暂无权限")
+            return
+        }
+
+        setResetLoading(true)
+        apiFetchResetPlugins()
+            .then((res) => {
+                if (res.ok) {
+                    yakitNotify("success", "一键重置成功")
+                    onRefListAndTotalAndGroup()
+                    setResetLoading(false)
+                }
+            })
+            .catch((err) => {
+                yakitNotify("error", err)
+                setResetLoading(false)
+            })
+    })
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
             {!!plugin && (
@@ -625,6 +661,54 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 onClick={() => onBatchDownload()}
                                 disabled={initTotal === 0}
                             />
+                            {showResetAll && (
+                                <FuncBtn
+                                    maxWidth={1150}
+                                    icon={<OutlineClouduploadIcon />}
+                                    type='outline2'
+                                    size='large'
+                                    loading={resetLoading}
+                                    name={"一键重置"}
+                                    onClick={() => {
+                                        let m = showYakitModal({
+                                            title: "一键重置",
+                                            centered: true,
+                                            width: 400,
+                                            closable: true,
+                                            maskClosable: false,
+                                            footer: (
+                                                <div style={{textAlign: "right", width: "100%", margin: "0 15px 15px"}}>
+                                                    <YakitButton
+                                                        type="outline1"
+                                                        style={{marginRight: 15}}
+                                                        onClick={() => {
+                                                            m.destroy()
+                                                        }}
+                                                    >
+                                                        取消
+                                                    </YakitButton>
+                                                    <YakitButton
+                                                        onClick={() => {
+                                                            onResetAll()
+                                                            m.destroy()
+                                                        }}
+                                                    >
+                                                        确定
+                                                    </YakitButton>
+                                                </div>
+                                            ),
+                                            content: (
+                                                <div style={{padding: 15}}>
+                                                    一键重置会清空线上所有数据，再从服务器内置库中重新内置插件数据，是否确认重置
+                                                </div>
+                                            ),
+                                            onCancel: () => {
+                                                m.destroy()
+                                            }
+                                        })
+                                    }}
+                                />
+                            )}
                             <FuncBtn
                                 maxWidth={1150}
                                 icon={<OutlineTrashIcon />}
@@ -648,23 +732,28 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         if (item.groupKey === "plugin_group") {
                             item.groupExtraOptBtn = magGroupState ? (
                                 <>
-                                {(shouldVerifyEnpriTraceLogin()&&userInfo.role === "admin")||!shouldVerifyEnpriTraceLogin()?<>
-                                    <YakitButton
-                                        type='text'
-                                        onClick={() =>
-                                            emiter.emit(
-                                                "openPage",
-                                                JSON.stringify({
-                                                    route: YakitRoute.Plugin_Groups,
-                                                    params: {pluginGroupType: "online"}
-                                                })
-                                            )
-                                        }
-                                    >
-                                        管理分组
-                                    </YakitButton>
-                                    <div className={styles["divider-style"]} />
-                                </>:<></>}
+                                    {(shouldVerifyEnpriTraceLogin() && userInfo.role === "admin") ||
+                                    !shouldVerifyEnpriTraceLogin() ? (
+                                        <>
+                                            <YakitButton
+                                                type='text'
+                                                onClick={() =>
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.Plugin_Groups,
+                                                            params: {pluginGroupType: "online"}
+                                                        })
+                                                    )
+                                                }
+                                            >
+                                                管理分组
+                                            </YakitButton>
+                                            <div className={styles["divider-style"]} />
+                                        </>
+                                    ) : (
+                                        <></>
+                                    )}
                                 </>
                             ) : (
                                 <></>

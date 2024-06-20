@@ -590,6 +590,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
         setLoadingTip("一键重置中...")
         setLoading(true)
+        isLoadingRef.current = true
         apiFetchResetPlugins()
             .then((res) => {
                 if (res.ok) {
@@ -598,8 +599,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 }
             })
             .catch((err) => {
+                yakitNotify("error", err)
                 setLoadingTip("")
                 setLoading(false)
+                isLoadingRef.current = false
             })
     })
     const onSetShowFilter = useMemoizedFn((v) => {
