@@ -206,6 +206,17 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                     </YakitTag>
                 </>
             )}
+            <YakitTag
+                style={{
+                    marginLeft: 8,
+                    alignSelf: "center",
+                    maxWidth: 140,
+                    cursor: "pointer"
+                }}
+                size='small'
+            >
+                123 ms
+            </YakitTag>
         </div>
     )
 })
