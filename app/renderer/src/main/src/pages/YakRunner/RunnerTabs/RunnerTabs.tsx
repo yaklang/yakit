@@ -8,7 +8,8 @@ import {
     RunnerTabPaneProps,
     RunnerTabsProps,
     YakRunnerWelcomePageProps,
-    SplitDirectionProps
+    SplitDirectionProps,
+    YakitRunnerSaveModalProps
 } from "./RunnerTabsType"
 import {
     DragDropContext,
@@ -37,7 +38,7 @@ import {
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {YakRunnerNewFileIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {useLongPress, useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
+import {useDebounceFn, useLongPress, useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
@@ -50,12 +51,13 @@ import {
     getYakRunnerHistory,
     onSyntaxCheck,
     removeAreaFileInfo,
+    saveCodeByFile,
     setYakRunnerHistory,
     updateAreaFileInfo
 } from "../utils"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
-import {failed, info, warn} from "@/utils/notification"
+import {failed, info, warn, success} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {Divider, Upload} from "antd"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
@@ -68,6 +70,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import moment from "moment"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -81,6 +84,10 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
     const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
+
+    const [modalInfo, setModalInfo] = useState<FileDetailInfo>()
+    const [isShowModal, setShowModal] = useState<boolean>(false)
+
     useEffect(() => {
         let direction: SplitDirectionProps[] = []
         let showTabs: FileDetailInfo[] = []
@@ -127,8 +134,6 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         }
         return null
     }, [tabsList])
-
-    const [executing, setExecuting] = useState<boolean>(false)
 
     const onRunYak = useMemoizedFn(async () => {
         let newActiveFile = onActiveItem
@@ -333,34 +338,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     // 关闭当前项
     const onRemoveCurrent = useMemoizedFn((info: FileDetailInfo) => {
         if (info.isUnSave && info.code.length > 0) {
-            const m = showYakitModal({
-                title: "文件未保存",
-                content: <div style={{margin: "10px 24px"}}>是否要保存{info.name}里面的内容吗？</div>,
-                width: 400,
-                type: "white",
-                closable: false,
-                centered: true,
-                onOkText: "保存",
-                onCancelText: "不保存",
-                onOk: () => {
-                    ipcRenderer
-                        .invoke("openDialog", {
-                            title: "请选择文件夹",
-                            properties: ["openDirectory"]
-                        })
-                        .then((data: any) => {
-                            if (data.filePaths.length) {
-                                let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                                console.log("保存路径", absolutePath)
-                            }
-                        })
-                    m.destroy()
-                },
-                onCancel: () => {
-                    onRemoveFun(info)
-                    m.destroy()
-                }
-            })
+            setShowModal(true)
+            setModalInfo(info)
             return
         }
         onRemoveFun(info)
@@ -580,6 +559,14 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             <div className={styles["tabs-pane"]}>
                 <RunnerTabPane tabsId={tabsId} />
             </div>
+            {modalInfo && (
+                <YakitRunnerSaveModal
+                    isShowModal={isShowModal}
+                    setShowModal={setShowModal}
+                    info={modalInfo}
+                    onRemoveFun={onRemoveFun}
+                />
+            )}
         </div>
     )
 })
@@ -843,12 +830,24 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const positionRef = useRef<CursorPosition>()
     const selectionRef = useRef<Selection>()
 
-    // 更新编辑器文件内容(由于全局未使用到activeFile-code字段，为减少渲染，暂不更新)
+    // 自动保存
+    const autoSaveCurrentFile = useDebounceFn(
+        (newEditorInfo: FileDetailInfo) => {
+            saveCodeByFile(newEditorInfo)
+        },
+        {
+            wait: 500
+        }
+    )
+
+    // 更新编辑器文件内容(activeFile-code字段在光标位置改变时就已更新，为减少渲染，则不更新)
     const updateAreaInputInfo = useMemoizedFn((content: string) => {
         const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
         // console.log("更新编辑器文件内容", newAreaInfo)
         if (editorInfo) {
-            setEditorInfo({...editorInfo, code: content})
+            const newEditorInfo = {...editorInfo, code: content}
+            autoSaveCurrentFile.run(newEditorInfo)
+            setEditorInfo(newEditorInfo)
         }
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
@@ -870,7 +869,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
         setActiveFile && setActiveFile(newActiveFile)
         const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
-        // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
+        console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -890,7 +889,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         const cursorPosition = reqEditor.onDidChangeCursorPosition((e) => {
             if (!isFocus) return
             const {position} = e
-            console.log("当前光标位置：", position)
+            // console.log("当前光标位置：", position)
             positionRef.current = position
             updateBottomEditorDetails()
         })
@@ -899,7 +898,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             if (!isFocus) return
             const selection = e.selection
             const {startLineNumber, startColumn, endLineNumber, endColumn} = selection
-            console.log("当前光标选中位置", startLineNumber, startColumn, endLineNumber, endColumn)
+            // console.log("当前光标选中位置", startLineNumber, startColumn, endLineNumber, endColumn)
             selectionRef.current = {startLineNumber, startColumn, endLineNumber, endColumn}
             // 选中时也调用了onDidChangeCursorPosition考虑优化掉重复调用
             // updateBottomEditorDetails()
@@ -907,7 +906,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         // 监听编辑器是否聚焦
         const focusEditor = reqEditor.onDidFocusEditorWidget(() => {
             isFocus = true
-            console.log("聚焦", reqEditor.getPosition())
+            // console.log("聚焦", reqEditor.getPosition())
             // 此处获取光标位置的原因是由于点击空白区域焦点获取时 onDidChangeCursorPosition 无法监听
             if (reqEditor.getPosition()) {
                 const focusLineNumber = reqEditor.getPosition()?.lineNumber
@@ -925,7 +924,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         // 监听编辑器是否失焦
         const blurEditor = reqEditor.onDidBlurEditorWidget(() => {
             isFocus = false
-            console.log("失焦")
+            // console.log("失焦")
         })
 
         return () => {
@@ -939,7 +938,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 更新光标位置
     const updatePosition = useMemoizedFn(() => {
-        console.log("更新光标位置", editorInfo)
+        // console.log("更新光标位置", editorInfo)
 
         if (reqEditor && editorInfo) {
             const {position, selections} = editorInfo
@@ -1018,7 +1017,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     }, [])
 
     // 通过路径打开文件
-    const openFileByPath = useMemoizedFn(async (path: string, name: string)=>{
+    const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
         // 由于此处的打开文件 不存在已打开文件 故无需校验
         const code = await getCodeByPath(path)
         const scratchFile: FileDetailInfo = {
@@ -1067,7 +1066,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             .then((data: any) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    console.log("打开文件夹路径", absolutePath)
+                    emiter.emit("onOpenFolderList",absolutePath)
                 }
             })
     })
@@ -1091,7 +1090,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                         </div>
                         <OutlinePlusIcon className={styles["icon-style"]} />
                     </div>
-                    {/* <Upload multiple={false} maxCount={1} showUploadList={false} beforeUpload={(f: any) => openFile(f)}> */}
                     <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
                         <div className={styles["btn-title"]}>
                             <YakRunnerOpenFileIcon />
@@ -1099,7 +1097,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                         </div>
                         <OutlineImportIcon className={styles["icon-style"]} />
                     </div>
-                    {/* </Upload> */}
                     <div className={classNames(styles["btn-style"], styles["btn-open-folder"])} onClick={openFolder}>
                         <div className={styles["btn-title"]}>
                             <YakRunnerOpenFolderIcon />
@@ -1113,11 +1110,20 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             <div className={styles["recent-open"]}>
                 <div className={styles["title-style"]}>最近打开</div>
                 <div className={styles["recent-list"]}>
-                    {historyList.slice(0,3).map((item, index) => {
+                    {historyList.slice(0, 3).map((item, index) => {
                         return (
-                            <div key={item.path} className={styles["list-opt"]} onClick={()=>{
-                                openFileByPath(item.path,item.name)
-                            }}>
+                            <div
+                                key={item.path}
+                                className={styles["list-opt"]}
+                                onClick={() => {
+                                    if(item.isFile){
+                                        openFileByPath(item.path, item.name)
+                                    }
+                                    else{
+                                        emiter.emit("onOpenFolderList",item.path)
+                                    }
+                                }}
+                            >
                                 <div className={styles["file-name"]}>{item.name}</div>
                                 <div className={styles["file-path"]}>{item.path}</div>
                             </div>
@@ -1128,3 +1134,96 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
         </div>
     )
 })
+
+export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props) => {
+    const {isShowModal, setShowModal, info, onRemoveFun} = props
+    const {setActiveFile, setAreaInfo} = useDispatcher()
+    const {areaInfo} = useStore()
+
+    const [codePath, setCodePath] = useState<string>("")
+
+    // 默认保存路径
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-code-path").then((path: string) => {
+            ipcRenderer
+                .invoke("is-exists-file", path)
+                .then(() => {
+                    setCodePath("")
+                })
+                .catch(() => {
+                    setCodePath(path)
+                })
+        })
+    }, [])
+
+    const onSaveFile = useMemoizedFn(() => {
+        setShowModal(false)
+        ipcRenderer.invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${info.name}`).then(async (res) => {
+            const path = res.filePath
+            const name = res.name
+            if (path.length > 0) {
+                const suffix = name.split(".").pop()
+
+                const file: FileDetailInfo = {
+                    ...info,
+                    path,
+                    isUnSave: false,
+                    language: suffix === "yak" ? suffix : "http"
+                }
+                await saveCodeByFile(file)
+                success("保存成功")
+                // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
+                const removeAreaInfo = removeAreaFileInfo(areaInfo,file)
+                const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
+                setAreaInfo && setAreaInfo(newAreaInfo)
+                setActiveFile && setActiveFile(file)
+
+                // 创建文件时接入历史记录
+                const history: YakRunnerHistoryProps = {
+                    isFile: true,
+                    name,
+                    path
+                }
+                setYakRunnerHistory(history)
+            }
+        })
+    })
+
+    return (
+        <YakitModal
+            title='文件未保存'
+            closable={true}
+            width={400}
+            type={"white"}
+            visible={isShowModal}
+            onCancel={() => setShowModal(false)}
+            footer={null}
+            className={styles["yakit-runner-save-modal"]}
+            bodyStyle={{padding: 0}}
+        >
+            <div style={{margin: "10px 24px"}}>是否要保存{info.name}里面的内容吗？</div>
+            <div style={{padding: "0px 24px 24px", display: "flex", gap: 12, justifyContent: "end"}}>
+                <YakitButton
+                    type='text2'
+                    onClick={() => {
+                        setShowModal(false)
+                    }}
+                >
+                    取消
+                </YakitButton>
+                <YakitButton
+                    type='text'
+                    onClick={() => {
+                        onRemoveFun(info)
+                        setShowModal(false)
+                    }}
+                >
+                    不保存
+                </YakitButton>
+                <YakitButton type='primary' onClick={onSaveFile}>
+                    保存
+                </YakitButton>
+            </div>
+        </YakitModal>
+    )
+}
