@@ -547,6 +547,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                     yakitNotify("success", "创建 / 保存 插件成功")
                     setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                     onLocalAndOnlineSend(data)
+                    emiter.emit("editorLocalSaveToDetail", `${Number(data.Id) || 0}`)
                     resolve(data)
                 })
                 .catch((e: any) => {

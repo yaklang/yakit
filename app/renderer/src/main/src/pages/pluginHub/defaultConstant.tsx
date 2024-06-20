@@ -38,7 +38,9 @@ export const PluginOperateHint: Record<string, string> = {
     /** 禁用线上功能的提示语 */
     banOnlineOP: "请上传后再使用",
     /** 禁用本地功能的提示语 */
-    banLocalOP: "请下载后再使用"
+    banLocalOP: "请下载后再使用",
+    /** 内置插件禁用功能的提示语 */
+    banCorePluginOP: "内置插件无该功能"
 }
 
 /** @name 本地插件信息的默认模板 */

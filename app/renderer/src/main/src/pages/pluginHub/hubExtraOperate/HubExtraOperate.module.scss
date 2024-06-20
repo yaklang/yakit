@@ -37,6 +37,18 @@
 .hub-button-hidden {
     display: none !important;
 }
+.hub-button-icon-padding{
+    padding: 4px;
+}
+.hub-button-icon-small-padding{
+    padding: 2px;
+}
+.hub-button-icon-large-padding{
+    padding: 3px;
+}
+.hub-button-icon-max-padding{
+    padding: 5px;
+}
 
 /* ---------- HubOperateHint ----------*/
 .hub-operate-hint {
@@ -167,7 +179,7 @@
             gap: 8px;
         }
         .constant-wrapper {
-            flex: 1 0 0;
+            flex: 1;
             overflow: hidden;
         }
     }

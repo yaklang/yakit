@@ -989,18 +989,17 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
 interface FetchOnlinePluginInfoRequest {
     uuid?: string
     scriptName?: string
-    token?: string
 }
 /**
  * @name 获取指定插件的详情(线上)
  */
 export const apiFetchOnlinePluginInfo: APIFunc<FetchOnlinePluginInfoRequest, API.PluginsDetail> = (
     params,
-    isShowError
+    hiddenError
 ) => {
     return new Promise(async (resolve, reject) => {
         if (!params.scriptName && !params.uuid) {
-            if (isShowError !== false) yakitNotify("error", "未获取到查询插件的UUID或插件名称")
+            if (!hiddenError) yakitNotify("error", "未获取到查询插件的UUID或插件名称")
             reject("未获取到查询插件的UUID或插件名称")
             return
         }
@@ -1011,7 +1010,7 @@ export const apiFetchOnlinePluginInfo: APIFunc<FetchOnlinePluginInfoRequest, API
         })
             .then(resolve)
             .catch((err) => {
-                if (isShowError !== false) yakitNotify("error", "获取线上插件详情失败:" + err)
+                if (!hiddenError) yakitNotify("error", "获取线上插件详情失败:" + err)
                 reject(err)
             })
     })
@@ -1534,9 +1533,15 @@ export const onToEditPlugin = (plugin: YakScript) => {
 /**
  * @description 获取插件详情，通过插件id
  */
-export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = (Id) => {
+export const apiGetYakScriptById: APIFunc<string | number, YakScript> = (Id, hiddenError) => {
     return new Promise((resolve, reject) => {
-        ipcRenderer.invoke("GetYakScriptById", {Id}).then(resolve).catch(reject)
+        ipcRenderer
+            .invoke("GetYakScriptById", {Id})
+            .then(resolve)
+            .catch((error) => {
+                if (!hiddenError) yakitNotify("error", `插件本地插件详情失败：${error}`)
+                reject(error)
+            })
     })
 }
 

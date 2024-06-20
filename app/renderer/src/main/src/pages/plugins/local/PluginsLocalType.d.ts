@@ -97,6 +97,9 @@ export interface LocalPluginExecuteProps {
     headExtraNode: ReactNode
     /**插件UI联动相关参数*/
     linkPluginConfig?: HybridScanPluginConfig
+    /** 隐藏插件 ID */
+    isHiddenUUID?: boolean
+    infoExtra?: ReactNode
 }
 
 export interface ExportYakScriptStreamRequest {

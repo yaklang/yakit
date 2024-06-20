@@ -41,8 +41,12 @@
 
 .plugin-hub-container {
     :global {
-        .ant-tabs-nav-wrap {
-            margin-top: 12px;
+        .ant-tabs-right {
+            & > .ant-tabs-nav {
+                .ant-tabs-nav-wrap {
+                    margin-top: 12px;
+                }
+            }
         }
     }
 }
@@ -58,6 +62,19 @@
         flex: 1;
         overflow: hidden;
         padding-top: 12px;
+    }
+}
+.tab-pane-exectue {
+    width: 100%;
+    height: 100%;
+    padding-bottom: 12px;
+    overflow: hidden overlay;
+    display: flex;
+    flex-direction: column;
+    .execute-spin {
+        display: flex;
+        align-items: center;
+        padding-top: 10%;
     }
 }
 .tab-pane-empty {
@@ -86,8 +103,9 @@
 }
 
 .info-extra-node {
+    flex: 1;
+    overflow: hidden;
     display: flex;
-    justify-content: flex-end;
     align-items: center;
     gap: 8px;
     .stared-icon {

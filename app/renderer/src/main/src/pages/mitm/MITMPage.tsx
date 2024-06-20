@@ -989,6 +989,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 UUID: [formValue.localId]
             }).then(() => {
                 setVisible(false)
+                // 刷新本地列表
+                emiter.emit("onRefLocalPluginList", "")
                 success("插件导入成功")
             })
         }

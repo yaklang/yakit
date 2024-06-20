@@ -132,13 +132,17 @@
         }
     }
     .inner-list {
-        width: 430px;
+        width: 410px;
         height: 100%;
     }
 
     .hidden-view {
         display: none;
     }
+}
+.plugin-hub-tab-detail-list {
+    width: 410px;
+    border-right: 1px solid #eaecf3;
 }
 .hub-list-header-extra {
     display: flex;
@@ -213,6 +217,9 @@
             .ant-collapse-item .ant-collapse-header {
                 padding-left: 10px;
                 padding-right: 10px;
+            }
+            .ant-collapse-item:first-child > .ant-collapse-header {
+                border-top: 0;
             }
         }
         .clear-btn {

@@ -5,6 +5,7 @@ import {
     PluginStarsRequest,
     apiFetchLocalPluginInfo,
     apiFetchOnlinePluginInfo,
+    apiGetYakScriptById,
     apiPluginStars
 } from "@/pages/plugins/utils"
 import {API} from "@/services/swagger/resposeType"
@@ -32,6 +33,8 @@ import {RemoteGV} from "@/yakitGV"
 import {useStore} from "@/store"
 import {HubDetailHeader} from "../hubExtraOperate/funcTemplate"
 import {FooterExtraBtn} from "../pluginHubList/funcTemplate"
+import {PluginComment} from "@/pages/plugins/baseComment"
+import {LocalPluginExecute} from "@/pages/plugins/local/LocalPluginExecute"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -47,8 +50,6 @@ const wrapperId = `plugin-hub-detail${uuidv4()}`
 export interface PluginHubDetailRefProps {
     /** 设置需要展示的插件详情 */
     handleSetPlugin: (info: PluginToDetailInfo) => any
-    /** 清除正在展示的插件详情 */
-    handleClearPlugin: () => any
 }
 
 interface PluginHubDetailProps {
@@ -89,19 +90,34 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         useEffect(() => {
             fetchPrivateDomain()
             emiter.on("onSwitchPrivateDomain", fetchPrivateDomain)
+            emiter.on("editorLocalSaveToDetail", handleUpdateLocalPlugin)
             return () => {
                 emiter.off("onSwitchPrivateDomain", fetchPrivateDomain)
+                emiter.off("editorLocalSaveToDetail", handleUpdateLocalPlugin)
             }
         }, [])
+
+        // 通过本地 ID 更新本地插件信息
+        const handleUpdateLocalPlugin = useMemoizedFn((id: string) => {
+            if (!localPlugin) return
+            const ID = Number(id) || 0
+            if (!ID) return
+            if (Number(localPlugin.Id) === ID) {
+                apiGetYakScriptById(ID, true)
+                    .then((res) => {
+                        setLocalPlugin({...res})
+                    })
+                    .catch((err) => {
+                        yakitNotify("error", "更新本地插件信息失败: " + err)
+                    })
+            }
+        })
         /** ---------- 基础全局功能 End ---------- */
 
         useImperativeHandle(
             ref,
             () => ({
-                handleSetPlugin: handleSetPlugin,
-                handleClearPlugin: () => {
-                    console.log("handleClearPlugin")
-                }
+                handleSetPlugin: handleSetPlugin
             }),
             []
         )
@@ -136,6 +152,12 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const [localPlugin, setLocalPlugin] = useState<YakScript | undefined>()
         const hasLocal = useMemo(() => !!localPlugin, [localPlugin])
 
+        // 是否是内置插件
+        const isCorePlugin = useMemo(() => {
+            if (!localPlugin) return false
+            return !!localPlugin.IsCorePlugin
+        }, [localPlugin])
+
         // 复制来源插件(必须是自己的插件)
         const copySourcePlugin = useMemo(() => {
             if (onlinePlugin?.isAuthor) {
@@ -169,7 +191,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const fetchOnlinePlugin: () => Promise<API.PluginsDetail> = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
                 if (!currentRequest.current || !currentRequest.current.uuid) return reject("false")
-                apiFetchOnlinePluginInfo({uuid: currentRequest.current.uuid}).then(resolve).catch(reject)
+                apiFetchOnlinePluginInfo({uuid: currentRequest.current.uuid}, true).then(resolve).catch(reject)
             })
         })
         // 获取插件本地信息
@@ -210,8 +232,8 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     }
                     if (online.status === "rejected") {
                         setOnlinePlugin(undefined)
-                        const {reason} = online as PromiseRejectedResult
-                        if (reason !== "false") yakitNotify("error", `获取线上插件错误: ${reason}`)
+                        // const {reason} = online as PromiseRejectedResult
+                        // if (reason !== "false") yakitNotify("error", `获取线上插件错误: ${reason}`)
                     }
 
                     if (local.status === "fulfilled") {
@@ -220,8 +242,8 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     }
                     if (local.status === "rejected") {
                         setLocalPlugin(undefined)
-                        const {reason} = local as PromiseRejectedResult
-                        if (reason !== "false") yakitNotify("error", `获取本地插件错误: ${reason}`)
+                        // const {reason} = local as PromiseRejectedResult
+                        // if (reason !== "false") yakitNotify("error", `获取本地插件错误: ${reason}`)
                     }
 
                     if (activeTab) {
@@ -267,7 +289,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         return {
                             ...plugin,
                             downloaded_total: plugin.downloaded_total + 1,
-                            downloatTotalString: thousandthConversion(plugin.downloaded_total + 1)
+                            downloadedTotalString: thousandthConversion(plugin.downloaded_total + 1)
                         }
                     })
                     yakitNotify("success", "下载插件成功")
@@ -319,6 +341,8 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     .invoke("GetYakScriptByName", {Name: localPlugin.ScriptName})
                     .then((i: YakScript) => {
                         setLocalPlugin({...i, isLocalPlugin: privateDomain.current !== i.OnlineBaseUrl})
+                        // 刷新本地列表
+                        emiter.emit("onRefLocalPluginList", "")
                     })
                     .catch((e) => {
                         yakitNotify("error", "查询插件最新数据失败: " + e)
@@ -332,6 +356,8 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             commentCountString: thousandthConversion(res.comment_num),
                             downloadedTotalString: thousandthConversion(res.downloaded_total)
                         })
+                        // 刷新我的列表
+                        emiter.emit("onRefUserPluginList", "")
                     })
                     .catch((err) => {})
             }
@@ -389,16 +415,12 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     setOnlinePlugin((plugin) => {
                         if (!plugin) return undefined
                         const isStar = plugin.is_stars
-                        const downloadTotal = isStar
-                            ? plugin.downloaded_total === 0
-                                ? 0
-                                : plugin.downloaded_total - 1
-                            : plugin.downloaded_total + 1
+                        const starsTotal = isStar ? (plugin.stars === 0 ? 0 : plugin.stars - 1) : plugin.stars + 1
                         return {
                             ...plugin,
                             is_stars: !isStar,
-                            downloaded_total: downloadTotal,
-                            downloatTotalString: thousandthConversion(downloadTotal)
+                            stars: starsTotal,
+                            starsCountString: thousandthConversion(starsTotal)
                         }
                     })
                 })
@@ -430,7 +452,9 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
 
                             let hint = ""
                             if (["online", "comment", "log"].includes(key as string)) {
-                                hint = PluginOperateHint["banOnlineOP"]
+                                hint = isCorePlugin
+                                    ? PluginOperateHint["banCorePluginOP"]
+                                    : PluginOperateHint["banOnlineOP"]
                             } else {
                                 hint = PluginOperateHint["banLocalOP"]
                             }
@@ -547,50 +571,85 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                 )}
                             </TabPane>
                             <TabPane tab='执行' key='exectue' disabled={!hasLocal}>
-                                <div className={styles["plugin-comment-wrapper"]}></div>
+                                <div className={styles["tab-pane-exectue"]}>
+                                    {!loading ? (
+                                        <>
+                                            {!!localPlugin ? (
+                                                <LocalPluginExecute
+                                                    plugin={localPlugin}
+                                                    headExtraNode={extraNode}
+                                                    isHiddenUUID={true}
+                                                    infoExtra={infoExtraNode}
+                                                />
+                                            ) : (
+                                                <div className={styles["tab-pane-empty"]}>
+                                                    <YakitEmpty title='暂无插件信息' />
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <YakitSpin wrapperClassName={styles["execute-spin"]} />
+                                    )}
+                                </div>
                             </TabPane>
                             <TabPane tab='本地' key='local' disabled={!hasLocal}>
-                                <div className={styles["tab-pane-wrapper"]}>
-                                    <HubDetailHeader
-                                        pluginName={localPlugin?.ScriptName || "-"}
-                                        help={localPlugin?.Help}
-                                        tags={localPlugin?.Tags}
-                                        extraNode={extraNode}
-                                        img={localPlugin?.HeadImg || ""}
-                                        user={localPlugin?.Author || "-"}
-                                        updated_at={localPlugin?.UpdatedAt || 0}
-                                        prImgs={(localPlugin?.CollaboratorInfo || []).map((ele) => ({
-                                            headImg: ele.HeadImg,
-                                            userName: ele.UserName
-                                        }))}
-                                        type={localPlugin?.Type || "plaintext"}
-                                    />
-                                    <div className={styles["detail-content"]}>
-                                        <YakitEditor
+                                {!!localPlugin ? (
+                                    <div className={styles["tab-pane-wrapper"]}>
+                                        <HubDetailHeader
+                                            pluginName={localPlugin?.ScriptName || "-"}
+                                            help={localPlugin?.Help || "-"}
                                             type={localPlugin?.Type || "yak"}
-                                            value={localPlugin?.Content || ""}
-                                            readOnly={true}
+                                            tags={localPlugin?.Tags || ""}
+                                            extraNode={extraNode}
+                                            img={localPlugin?.HeadImg || ""}
+                                            user={localPlugin?.Author || "-"}
+                                            prImgs={(localPlugin?.CollaboratorInfo || []).map((ele) => ({
+                                                headImg: ele.HeadImg,
+                                                userName: ele.UserName
+                                            }))}
+                                            updated_at={localPlugin?.UpdatedAt || 0}
+                                            basePluginName={copySourcePlugin}
+                                            // infoExtra={infoExtraNode}
                                         />
+                                        <div className={styles["detail-content"]}>
+                                            <YakitEditor
+                                                type={localPlugin?.Type || "yak"}
+                                                value={localPlugin?.Content || ""}
+                                                readOnly={true}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className={styles["tab-pane-empty"]}>
+                                        <YakitEmpty title='暂无插件信息' />
+                                    </div>
+                                )}
                             </TabPane>
                             <TabPane tab='评论' key='comment' disabled={!hasOnline}>
                                 <div className={styles["tab-pane-wrapper"]}>
                                     <HubDetailHeader
                                         pluginName={onlinePlugin?.script_name || "-"}
                                         help={onlinePlugin?.help || "-"}
+                                        type={onlinePlugin?.type || "yak"}
                                         tags={onlinePlugin?.tags || ""}
                                         extraNode={extraNode}
                                         img={onlinePlugin?.head_img || ""}
                                         user={onlinePlugin?.authors || "-"}
-                                        updated_at={onlinePlugin?.updated_at || 0}
                                         prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
                                             headImg: ele.head_img,
                                             userName: ele.user_name
                                         }))}
-                                        type={onlinePlugin?.type || "yak"}
+                                        updated_at={onlinePlugin?.updated_at || 0}
+                                        basePluginName={copySourcePlugin}
+                                        infoExtra={infoExtraNode}
                                     />
-                                    {/* <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin}} /> */}
+                                    {!!onlinePlugin ? (
+                                        <PluginComment isLogin={isLogin} plugin={{...onlinePlugin}} />
+                                    ) : (
+                                        <div className={styles["tab-pane-empty"]}>
+                                            <YakitEmpty title='暂无插件信息' />
+                                        </div>
+                                    )}
                                 </div>
                             </TabPane>
                             <TabPane tab='日志' key='log' disabled={!hasOnline}>
@@ -598,18 +657,20 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                     <HubDetailHeader
                                         pluginName={onlinePlugin?.script_name || "-"}
                                         help={onlinePlugin?.help || "-"}
+                                        type={onlinePlugin?.type || "yak"}
                                         tags={onlinePlugin?.tags || ""}
                                         extraNode={extraNode}
                                         img={onlinePlugin?.head_img || ""}
                                         user={onlinePlugin?.authors || "-"}
-                                        updated_at={onlinePlugin?.updated_at || 0}
                                         prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
                                             headImg: ele.head_img,
                                             userName: ele.user_name
                                         }))}
-                                        type={onlinePlugin?.type || "yak"}
+                                        updated_at={onlinePlugin?.updated_at || 0}
+                                        basePluginName={copySourcePlugin}
+                                        infoExtra={infoExtraNode}
                                     />
-                                    {/* <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} /> */}
+                                    <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} />
                                 </div>
                             </TabPane>
                         </PluginTabs>

@@ -8,7 +8,7 @@ import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./PluginHub.module.scss"
 
-const {ipcRenderer} = window.require("electron")
+// const {ipcRenderer} = window.require("electron")
 
 const wrapperId = "yakit-plugin-hub"
 

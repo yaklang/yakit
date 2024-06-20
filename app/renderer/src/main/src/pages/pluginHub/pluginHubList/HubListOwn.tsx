@@ -581,7 +581,11 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     }
 
     return (
-        <div className={styles["plugin-hub-tab-list"]}>
+        <div
+            className={classNames(styles["plugin-hub-tab-list"], {
+                [styles["plugin-hub-tab-detail-list"]]: isDetailList && !hiddenDetailList && !isLogin
+            })}
+        >
             <OnlineJudgment isJudgingLogin={true}>
                 <YakitSpin
                     wrapperClassName={isDetailList ? styles["hidden-view"] : ""}

@@ -1334,17 +1334,18 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     return (
         <div className={styles["local-opt-footer-extra"]}>
             {isShowUpload && (
-                <Tooltip title='上传'>
-                    <YakitButton
-                        type='text2'
-                        icon={<OutlineClouduploadIcon />}
-                        loading={uploadLoading}
-                        onClick={handleUpload}
-                    />
-                </Tooltip>
+                <>
+                    <Tooltip title='上传'>
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineClouduploadIcon />}
+                            loading={uploadLoading}
+                            onClick={handleUpload}
+                        />
+                    </Tooltip>
+                    <div className={styles["divider-style"]}></div>
+                </>
             )}
-
-            <div className={styles["divider-style"]}></div>
 
             <Tooltip title='编辑'>
                 <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEdit} />

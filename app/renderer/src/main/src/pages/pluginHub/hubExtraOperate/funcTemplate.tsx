@@ -41,7 +41,7 @@ interface HubButtonProps extends YakitButtonProp {
     hint?: string
 }
 export const HubButton: React.FC<HubButtonProps> = memo((props) => {
-    const {name, width, iconWidth, hint, className, disabled, ...rest} = props
+    const {name, width, iconWidth, hint, className, disabled, size, ...rest} = props
 
     const isIcon = useMemo(() => {
         if (!width || !iconWidth) return false
@@ -54,9 +54,21 @@ export const HubButton: React.FC<HubButtonProps> = memo((props) => {
         return ""
     }, [name, hint, disabled, isIcon])
 
+    const paddingClass = useMemo(() => {
+        if (size === "small") return "hub-button-icon-small-paddin"
+        if (size === "large") return "hub-button-icon-large-padding"
+        if (size === "max") return "hub-button-icon-max-padding"
+        return "hub-button-icon-padding"
+    }, [size])
+
     return (
         <Tooltip overlayClassName='plugins-tooltip' title={tooltipHint}>
-            <YakitButton {...rest} className={className} disabled={false}>
+            <YakitButton
+                {...rest}
+                className={classNames(className, {[styles[paddingClass]]: isIcon})}
+                disabled={false}
+                size={size}
+            >
                 <span className={isIcon ? styles["hub-button-hidden"] : ""}>{name}</span>
             </YakitButton>
         </Tooltip>
@@ -475,13 +487,13 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                 </div>
 
                 <div className={styles["divider-style"]}></div>
-                <div className={classNames(styles["constant-wrapper"], styles["text-style"])}>{`更新时间 : ${formatDate(
-                    updated_at
-                )}`}</div>
+                <div
+                    className={classNames(styles["text-style"], {[styles["constant-wrapper"]]: !infoExtra})}
+                >{`更新时间 : ${formatDate(updated_at)}`}</div>
 
                 {!!infoExtra && (
                     <>
-                        <div className={styles["divider-style"]} />
+                        <div style={{marginRight: 10}} className={styles["divider-style"]} />
                         {infoExtra}
                     </>
                 )}

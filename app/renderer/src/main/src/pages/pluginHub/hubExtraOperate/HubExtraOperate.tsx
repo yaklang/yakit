@@ -4,8 +4,12 @@ import {
     OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
     OutlineDotshorizontalIcon,
+    OutlineExclamationIcon,
+    OutlineLockclosedIcon,
     OutlineLockopenIcon,
+    OutlineMinuscircleIcon,
     OutlinePencilaltIcon,
+    OutlinePluscircleIcon,
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
@@ -90,19 +94,19 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                     {
                         key: "addMenu",
                         label: "添加到菜单栏",
-                        itemIcon: <OutlineTrashIcon />,
+                        itemIcon: <OutlinePluscircleIcon />,
                         type: !!local ? undefined : "info"
                     },
                     {
                         key: "removeMenu",
                         label: "移出菜单栏",
-                        itemIcon: <OutlineTrashIcon />,
+                        itemIcon: <OutlineMinuscircleIcon />,
                         type: !!local ? undefined : "info"
                     },
                     {
                         key: "export",
                         label: "导出",
-                        itemIcon: <OutlineTrashIcon />,
+                        itemIcon: <OutlineExclamationIcon />,
                         type: !!local ? undefined : "info"
                     }
                 ]
@@ -118,7 +122,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 first.push({
                     key: "status",
                     label: online?.is_private ? "改为公开" : "改为私密",
-                    itemIcon: <OutlineLockopenIcon />
+                    itemIcon: online?.is_private ? <OutlineLockopenIcon /> : <OutlineLockclosedIcon />
                 })
                 second.push({
                     key: "delOnline",
@@ -133,19 +137,19 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 {
                     key: "addMenu",
                     label: "添加到菜单栏",
-                    itemIcon: <OutlineTrashIcon />,
+                    itemIcon: <OutlinePluscircleIcon />,
                     type: isLocal ? undefined : "info"
                 },
                 {
                     key: "removeMenu",
                     label: "移出菜单栏",
-                    itemIcon: <OutlineTrashIcon />,
+                    itemIcon: <OutlineMinuscircleIcon />,
                     type: isLocal ? undefined : "info"
                 },
                 {
                     key: "export",
                     label: "导出",
-                    itemIcon: <OutlineTrashIcon />,
+                    itemIcon: <OutlineExclamationIcon />,
                     type: isLocal ? undefined : "info"
                 }
             ])
@@ -341,7 +345,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             ipcRenderer
                 .invoke("copy-clipboard", online.uuid || "")
                 .then(() => {
-                    yakitNotify("success", "插件UUID已复制到剪切板")
+                    yakitNotify("success", "分享ID已复制到剪切板")
                 })
                 .catch(() => {})
         })

@@ -53,7 +53,9 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         executeStatus,
         setExecuteStatus,
         linkPluginConfig,
-        onDownPlugin
+        onDownPlugin,
+        isHiddenUUID,
+        infoExtra
     } = props
 
     const [form] = Form.useForm()
@@ -106,7 +108,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const getOnlinePlugin = useMemoizedFn(() => {
         if (!!plugin.isLocalPlugin) return
         if (!!plugin.IsCorePlugin) return
-        apiFetchOnlinePluginInfo({uuid: plugin.UUID}, false).then((info) => {
+        apiFetchOnlinePluginInfo({uuid: plugin.UUID}, true).then((info) => {
             if (Number(info.updated_at || 0) > Number(plugin.UpdatedAt || 0)) {
                 setIsShowUpdate(true)
             }
@@ -349,6 +351,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                         userName: ele.UserName
                     }))}
                     type={plugin.Type}
+                    isHiddenUUID={isHiddenUUID}
+                    infoExtra={infoExtra}
                 />
             </ExpandAndRetract>
             <div
