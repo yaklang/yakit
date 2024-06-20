@@ -345,51 +345,100 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         onRemoveFun(info)
     })
 
+    // 需要用户判断是否保存的列表
+    const [waitSaveList, setWaitSaveList] = useState<FileDetailInfo[]>([])
+    // 关闭其他项
+    const [waitRemoveOtherItem, setWaitRemoveOtherItem] = useState<FileDetailInfo>()
+    // 关闭所有项
+    const [waitRemoveAll, setWaitRemoveAll] = useState<boolean>(false)
+
+    // 保存提示队列
+    useUpdateEffect(() => {
+        if (waitSaveList.length > 0) {
+            const info = waitSaveList[waitSaveList.length - 1]
+            setShowModal(true)
+            setModalInfo(info)
+        }
+        if (waitSaveList.length === 0 && waitRemoveOtherItem) {
+            onRemoveOther(waitRemoveOtherItem)
+        }
+        if (waitSaveList.length === 0 && waitRemoveAll) {
+            onRemoveAll()
+        }
+    }, [waitSaveList, waitRemoveOtherItem, waitRemoveAll])
+
     // 关闭其他项
     const onRemoveOther = useMemoizedFn((info: FileDetailInfo) => {
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        let closeArr: FileDetailInfo[] = []
+        let waitRemoveArr: FileDetailInfo[] = []
         newAreaInfo.forEach((item, idx) => {
             item.elements.forEach((itemIn, idxin) => {
                 if (itemIn.id === tabsId) {
                     itemIn.files.forEach((file, fileIndex) => {
                         if (file.path === info.path) {
+                            // 存在未保存项时暂不关闭(等待队列依次询问是否保存后关闭，如若点击取消则停止关闭)
+                            waitRemoveArr = itemIn.files.filter((item) => item.path !== info.path && item.isUnSave)
+                            // 需关闭项
+                            closeArr = itemIn.files.filter((item) => item.path !== info.path)
+
                             // 剩余展示项
-                            let onlyItem: FileDetailInfo | null = null
                             let onlyArr = itemIn.files
                                 .filter((item) => item.path === info.path)
-                                .map((item) => ({...item, isActive: true}))
-                            if (onlyArr.length > 0) {
-                                onlyItem = onlyArr[0]
-                            }
-                            if (onlyItem) {
-                                newAreaInfo[idx].elements[idxin].files = [onlyItem]
-                            }
-                            isResetActiveFile(itemIn.files.filter((item) => item.path !== info.path))
+                                .map((item) => {
+                                    if (item.path === info.path) {
+                                        return {...item, isActive: true}
+                                    }
+                                    return {...item, isActive: false}
+                                })
+                            newAreaInfo[idx].elements[idxin].files = onlyArr
                         }
                     })
                 }
             })
         })
-        setAreaInfo && setAreaInfo(newAreaInfo)
+        // 不存在未保存项目时 直接关闭项目
+        if (waitRemoveArr.length === 0) {
+            isResetActiveFile(closeArr)
+            setAreaInfo && setAreaInfo(newAreaInfo)
+            setWaitRemoveOtherItem(undefined)
+        }
+        // 等待未保存项目处理完后，再调用 onRemoveOther
+        else {
+            setWaitSaveList(waitRemoveArr)
+            setWaitRemoveOtherItem(info)
+        }
     })
 
     // 关闭所有
-    const onRemoveAll = useMemoizedFn((info: FileDetailInfo) => {
+    const onRemoveAll = useMemoizedFn(() => {
         const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        let closeArr: FileDetailInfo[] = []
+        let waitRemoveArr: FileDetailInfo[] = []
         newAreaInfo.forEach((item, idx) => {
             item.elements.forEach((itemIn, idxin) => {
                 if (itemIn.id === tabsId) {
+                    // 存在未保存项时暂不关闭(等待队列依次询问是否保存后关闭，如若点击取消则停止关闭)
+                    waitRemoveArr = itemIn.files.filter((item) => item.isUnSave)
+                    // 需关闭项
+                    closeArr = itemIn.files
                     // 如若仅存在一项 则删除此大项并更新布局
                     if (item.elements.length > 1) {
-                        newAreaInfo[idx].elements = newAreaInfo[idx].elements.filter((item) => item.id !== tabsId)
+                        newAreaInfo[idx].elements = item.elements.filter((item) => item.id !== tabsId)
                     } else if (item.elements.length <= 1) {
                         newAreaInfo.splice(idx, 1)
                     }
-                    isResetActiveFile(itemIn.files)
                 }
             })
         })
-        setAreaInfo && setAreaInfo(newAreaInfo)
+        if (waitRemoveArr.length === 0) {
+            isResetActiveFile(closeArr)
+            setAreaInfo && setAreaInfo(newAreaInfo)
+            setWaitRemoveAll(false)
+        } else {
+            setWaitSaveList(waitRemoveArr)
+            setWaitRemoveAll(true)
+        }
     })
 
     // 重命名
@@ -499,7 +548,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         onRemoveOther(info)
                         return
                     case "removeAll":
-                        onRemoveAll(info)
+                        onRemoveAll()
                         return
                     case "rename":
                         onRename(info)
@@ -565,6 +614,10 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                     setShowModal={setShowModal}
                     info={modalInfo}
                     onRemoveFun={onRemoveFun}
+                    waitSaveList={waitSaveList}
+                    setWaitSaveList={setWaitSaveList}
+                    setWaitRemoveOtherItem={setWaitRemoveOtherItem}
+                    setWaitRemoveAll={setWaitRemoveAll}
                 />
             )}
         </div>
@@ -1066,7 +1119,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             .then((data: any) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFolderList",absolutePath)
+                    emiter.emit("onOpenFolderList", absolutePath)
                 }
             })
     })
@@ -1116,11 +1169,10 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                 key={item.path}
                                 className={styles["list-opt"]}
                                 onClick={() => {
-                                    if(item.isFile){
+                                    if (item.isFile) {
                                         openFileByPath(item.path, item.name)
-                                    }
-                                    else{
-                                        emiter.emit("onOpenFolderList",item.path)
+                                    } else {
+                                        emiter.emit("onOpenFolderList", item.path)
                                     }
                                 }}
                             >
@@ -1136,7 +1188,16 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
 })
 
 export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props) => {
-    const {isShowModal, setShowModal, info, onRemoveFun} = props
+    const {
+        isShowModal,
+        setShowModal,
+        info,
+        onRemoveFun,
+        waitSaveList,
+        setWaitSaveList,
+        setWaitRemoveOtherItem,
+        setWaitRemoveAll
+    } = props
     const {setActiveFile, setAreaInfo} = useDispatcher()
     const {areaInfo} = useStore()
 
@@ -1156,6 +1217,25 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         })
     }, [])
 
+    const onCancle = useMemoizedFn(() => {
+        // 重置保存队列
+        setWaitRemoveAll(false)
+        setWaitRemoveOtherItem(undefined)
+        setWaitSaveList([])
+
+        setShowModal(false)
+    })
+
+    const onUnSave = useMemoizedFn(() => {
+        if (waitSaveList.length > 0) {
+            // 减少保存队列
+            setWaitSaveList(waitSaveList.slice(0, -1))
+        }
+
+        onRemoveFun(info)
+        setShowModal(false)
+    })
+
     const onSaveFile = useMemoizedFn(() => {
         setShowModal(false)
         ipcRenderer.invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${info.name}`).then(async (res) => {
@@ -1173,10 +1253,15 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                 await saveCodeByFile(file)
                 success("保存成功")
                 // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
-                const removeAreaInfo = removeAreaFileInfo(areaInfo,file)
+                const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
                 const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(file)
+
+                if (waitSaveList.length > 0) {
+                    // 减少保存队列
+                    setWaitSaveList(waitSaveList.slice(0, -1))
+                }
 
                 // 创建文件时接入历史记录
                 const history: YakRunnerHistoryProps = {
@@ -1185,6 +1270,9 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     path
                 }
                 setYakRunnerHistory(history)
+            } else {
+                warn("未获取保存路径，取消保存")
+                onCancle()
             }
         })
     })
@@ -1192,7 +1280,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     return (
         <YakitModal
             title='文件未保存'
-            closable={true}
+            closable={false}
             width={400}
             type={"white"}
             visible={isShowModal}
@@ -1203,21 +1291,10 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         >
             <div style={{margin: "10px 24px"}}>是否要保存{info.name}里面的内容吗？</div>
             <div style={{padding: "0px 24px 24px", display: "flex", gap: 12, justifyContent: "end"}}>
-                <YakitButton
-                    type='text2'
-                    onClick={() => {
-                        setShowModal(false)
-                    }}
-                >
+                <YakitButton type='text2' onClick={onCancle}>
                     取消
                 </YakitButton>
-                <YakitButton
-                    type='text'
-                    onClick={() => {
-                        onRemoveFun(info)
-                        setShowModal(false)
-                    }}
-                >
+                <YakitButton type='text' onClick={onUnSave}>
                     不保存
                 </YakitButton>
                 <YakitButton type='primary' onClick={onSaveFile}>
