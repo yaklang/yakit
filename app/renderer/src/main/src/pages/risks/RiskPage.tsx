@@ -13,7 +13,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {Divider} from "antd"
+import {Divider, Tooltip} from "antd"
 import classNames from "classnames"
 import {VulnerabilityLevelPie} from "./VulnerabilityLevelPie/VulnerabilityLevelPie"
 import {VulnerabilityTypePie} from "./VulnerabilityTypePie/VulnerabilityTypePie"
@@ -24,6 +24,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {FieldGroup, apiRiskFieldGroup} from "./YakitRiskTable/utils"
 import {VulnerabilityLevelPieRefProps} from "./VulnerabilityLevelPie/VulnerabilityLevelPieType"
 import {VulnerabilityTypePieRefProps} from "./VulnerabilityTypePie/VulnerabilityTypePieType"
+import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
@@ -200,7 +201,12 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
     return (
         <div className={styles["vulnerability-type"]}>
             <div className={styles["vulnerability-type-heard"]}>
-                <div className={styles["vulnerability-type-heard-title"]}>漏洞类型 Top 10</div>
+                <div className={styles["vulnerability-type-heard-title"]}>
+                    漏洞类型 Top 10
+                    <Tooltip title='全部选中后,需要点击重置才能恢复初始查询所有类型'>
+                        <OutlineInformationcircleIcon className={styles["info-icon"]} />
+                    </Tooltip>
+                </div>
                 <YakitButton
                     type='text'
                     colors='danger'

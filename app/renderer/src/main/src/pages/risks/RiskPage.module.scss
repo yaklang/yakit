@@ -15,9 +15,14 @@
     .#{$name}-heard {
         @extend %flex-row;
         justify-content: space-between;
+        align-items: center;
         height: 24px;
         @content;
         .#{$name}-heard-title {
+            @extend %flex-row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
             color: var(--yakit-header-color);
             font-size: 12px;
             font-style: normal;
@@ -120,6 +125,13 @@
     flex: 1;
     padding: 8px 12px;
     @include heard("vulnerability-type");
+    .info-icon {
+        color: var(--yakit-helper-text-color);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 }
 
 .btn-padding-right-0 {
