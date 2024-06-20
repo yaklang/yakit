@@ -647,12 +647,16 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         try {
             let m = showYakitModal({
                 title: "导出插件",
-                width: 450,
+                width: 500,
                 closable: true,
                 maskClosable: false,
                 footer: null,
+                centered: true,
                 content: (
-                    <div style={{margin: "15px 0"}}>
+                    <div style={{marginBottom: 15}}>
+                        <div className={styles.infoBox}>
+                            远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+                        </div>
                         <PluginLocalExportForm
                             onCancel={() => m.destroy()}
                             onOK={(values) => {
