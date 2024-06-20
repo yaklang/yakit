@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {FileTreeNodeProps, FileTreeProps, FileNodeProps} from "./FileTreeType"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {Tree} from "antd"
@@ -11,6 +11,7 @@ import {LoadingOutlined} from "@ant-design/icons"
 
 import classNames from "classnames"
 import styles from "./FileTree.module.scss"
+import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -33,6 +34,7 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
 
     const wrapper = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(wrapper)
+    const size = useSize(wrapper)
     const getInViewport = useMemoizedFn(() => inViewport)
 
     const [isDownCtrlCmd, setIsDownCtrlCmd] = useState<boolean>(false)
@@ -120,7 +122,8 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
     return (
         <div ref={wrapper} className={styles["file-tree"]}>
             <Tree
-                virtual={false}
+                // virtual={false}
+                height={size?.height}
                 fieldNames={{title: "name", key: "path", children: "children"}}
                 treeData={data}
                 blockNode={true}
@@ -216,7 +219,17 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             width: 180,
             type: "grey",
             data: [...menuData],
-            onClick: ({key, keyPath}) => {}
+            onClick: ({key, keyPath}) => {
+                console.log("handleContextMenu", key, keyPath)
+                switch (key) {
+                    case "openFileSystem":
+                        openABSFileLocated(info.path)
+                        break
+
+                    default:
+                        break
+                }
+            }
         })
     })
 

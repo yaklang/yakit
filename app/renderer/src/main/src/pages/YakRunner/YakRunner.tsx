@@ -3,7 +3,7 @@ import {useMemoizedFn} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
-import {FileNodeProps} from "./FileTree/FileTreeType"
+import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
     grpcFetchFileTree,
@@ -45,6 +45,7 @@ import {v4 as uuidv4} from "uuid"
 import moment from "moment"
 import {keySortHandle} from "@/components/yakitUI/YakitEditor/editorUtils"
 import emiter from "@/utils/eventBus/eventBus"
+import { setFileDetail } from "./FileMap/FileMap"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -159,14 +160,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     /** ---------- 文件树 Start ---------- */
     const fileCache = useRef<Map<string, FileNodeProps[]>>(new Map())
-    const [fileTree, setFileTree] = useState<FileNodeProps[]>([])
+    const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
 
-    const currentPath = useRef<FileNodeProps | undefined>()
-
-    const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeProps[] | null) => any) => {
+    const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
         grpcFetchFileTree(path)
             .then((res) => {
                 console.log("文件树", res)
@@ -175,7 +174,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             })
             .catch((error) => {
                 yakitNotify("error", `获取文件列表失败: ${error}`)
-                if (callback) callback(null)
+                if (callback) callback([])
             })
     })
 
@@ -185,30 +184,32 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         const folders = absolutePath.split("\\") // 使用双反斜杠对路径进行分割
         const lastFolder = folders[folders.length - 1] // 获取数组中的最后一个元素
         if (absolutePath.length > 0 && lastFolder.length > 0) {
-            const node: FileNodeProps = {
+            const tree: FileTreeListProps = {
+                path: absolutePath,
+            }
+            const node:FileNodeMapProps = {
                 name: lastFolder,
                 path: absolutePath,
                 isFolder: true,
                 icon: FolderDefault
             }
+            setFileDetail(absolutePath,node)
 
-            currentPath.current = {...node}
-            handleFetchFileList(node.path, (value) => {
-                if (value) setFileTree([{...node, children: value}])
+            handleFetchFileList(absolutePath, (list) => {
+                if(list.length>0){
+                    const children: FileTreeListProps[] = []
+                    list.forEach((item)=>{
+                        // 数组平铺
+                        setFileDetail(item.path,item)
+                        // 注入结构
+                        children.push({path:item.path})
+                    })
+
+                    if (list) setFileTree([{...tree, children}])
+                }
+                
+                
             })
-            getRemoteValue(YakRunnerRemoteGV.CurrentOpenPath)
-                .then((info?: string) => {
-                    if (info) {
-                        try {
-                            const file: FileNodeProps = JSON.parse(info)
-                            currentPath.current = {...file}
-                            handleFetchFileList(file.path, (value) => {
-                                if (value) setFileTree([{...file, children: value}])
-                            })
-                        } catch (error) {}
-                    }
-                })
-                .catch(() => {})
 
             // 打开文件夹时接入历史记录
             const history: YakRunnerHistoryProps = {
@@ -232,9 +233,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         return new Promise((resolve, reject) => {
             handleFetchFileList(node.path, (value) => {
                 if (value) {
+                    value.forEach((item)=>{
+                        // 数组平铺
+                        setFileDetail(item.path,item)
+                    })
                     setTimeout(() => {
-                        setFileTree((old) => {
-                            return updateFileTree(old, node.path, value)
+                        setFileTree((oldFileTree) => {
+                            return updateFileTree(oldFileTree, node.path, value.map((item)=>({path:item.path})))
                         })
                         resolve("")
                     }, 300)
