@@ -1,3 +1,5 @@
+@use "../../../theme/themeify.scss" as tools;
+
 %display-flex-center {
     display: flex;
     align-items: center;
@@ -70,7 +72,8 @@ $keyColor: map-keys($tagColor);
         }
     }
     .yakit-risk-table-cell-unread {
-        background-color: #f6544a14;
+        // background-color: #f6544a14;
+        background-color: tools.fetch-color-transparen(var(--yakit-color-blue), 5%);
     }
 }
 .yakit-risk-details-content {

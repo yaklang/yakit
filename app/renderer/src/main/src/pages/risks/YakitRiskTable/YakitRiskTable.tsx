@@ -24,7 +24,6 @@ import {
 } from "@/assets/icon/outline"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
-import {defQueryRisksRequest} from "./constants"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {SolidRefreshIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -64,6 +63,8 @@ import {getHtmlTemplate} from "./htmlTemplate"
 import {yakitNotify} from "@/utils/notification"
 import moment from "moment"
 import {FieldName} from "../RiskTable"
+import {defQueryRisksRequest} from "./constants"
+import emiter from "@/utils/eventBus/eventBus"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -253,6 +254,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             getRiskTags()
             getRiskType()
         }
+        emiter.on("onRefRiskList", onRefRiskList)
+        return () => {
+            emiter.off("onRefRiskList", onRefRiskList)
+        }
     }, [inViewport])
     useDebounceEffect(
         () => {
@@ -389,7 +394,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
                 title: "操作",
                 dataKey: "action",
-                width: 50,
+                width: 60,
                 fixed: "right",
                 render: (text, record: Risk, index) => (
                     <>
@@ -407,6 +412,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
         ]
     }, [riskTypeVerbose, tag])
+    const onRefRiskList = useMemoizedFn(() => {
+        update(1)
+    })
     const getRiskTags = useMemoizedFn(() => {
         apiQueryRiskTags().then((res) => {
             setTag(res.RiskTags)
@@ -632,7 +640,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
         if (sort.order === "none") {
             sort.order = "desc"
-            sort.orderBy = "updated_at"
+            sort.orderBy = "created_at"
         }
         setQuery({
             ...query,
@@ -676,7 +684,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             .then((res) => {
                 // console.log("res", finalParams, res)
                 const newPage = +res.Pagination.Page
-                const d = newPage === 1 ? res.Data : (response?.Data || []).concat(res.Data)
+                const resData = res.Data.map((ele) => ({
+                    ...ele,
+                    cellClassName: ele.IsRead ? "" : styles["yakit-risk-table-cell-unread"]
+                }))
+                const d = newPage === 1 ? resData : (response?.Data || []).concat(resData)
                 setResponse({
                     ...res,
                     Data: d
@@ -731,20 +743,20 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         if (val?.Id !== currentSelectItem?.Id) {
             setCurrentSelectItem(val)
         }
-        /**TODO - 点击的row为未读的数据，需要变成已读 */
-        apiNewRiskRead({Ids: [val.Id]}).then(() => {
-            setResponse({
-                ...response,
-                Data: response.Data.map((ele) => {
-                    if (ele.Id === val.Id) {
-                        ele.IsRead = true
-                        /**TODO - 模拟，下面这个样式是未读得 */
-                        // ele.cellClassName = styles["yakit-risk-table-cell-unread"]
-                    }
-                    return ele
+        if (!val.IsRead) {
+            apiNewRiskRead({Ids: [val.Id]}).then(() => {
+                setResponse({
+                    ...response,
+                    Data: response.Data.map((ele) => {
+                        if (ele.Id === val.Id) {
+                            ele.IsRead = true
+                            ele.cellClassName = ""
+                        }
+                        return ele
+                    })
                 })
             })
-        })
+        }
     })
     const ResizeBoxProps = useCreation(() => {
         let p = {

@@ -203,7 +203,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
             <div className={styles["vulnerability-type-heard"]}>
                 <div className={styles["vulnerability-type-heard-title"]}>
                     漏洞类型 Top 10
-                    <Tooltip title='全部选中后,需要点击重置才能恢复初始查询所有类型'>
+                    <Tooltip title='手动选择所有漏洞类型后，点击重置即可查看所有数据'>
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </Tooltip>
                 </div>

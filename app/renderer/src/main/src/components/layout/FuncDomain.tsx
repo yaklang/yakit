@@ -2141,12 +2141,14 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                         return item
                     })
                 })
+                emiter.emit('onRefRiskList')
             })
             .catch(() => {})
     })
     /** 查看全部 */
     const viewAll = useMemoizedFn(() => {
         addToTab(YakitRoute.DB_Risk)
+        emiter.emit('onRefRiskList')
     })
 
     const notice = useMemo(() => {
