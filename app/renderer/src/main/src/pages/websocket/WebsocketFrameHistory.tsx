@@ -63,7 +63,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
     useEffect(() => {
         update()
-    }, [])
+    }, [params.WebsocketRequestHash])
 
     return <AutoCard
         title={"Websocket 数据帧"} size={"small"} bodyStyle={{overflowY: "auto", padding: 0}}
