@@ -84,6 +84,10 @@ export interface YakitRunnerSaveModalProps {
     isShowModal: boolean
     setShowModal: (v: boolean) => void
     onRemoveFun: (info: FileDetailInfo) => void
+    waitSaveList: FileDetailInfo[]
+    setWaitSaveList: (v: FileDetailInfo[]) => void
+    setWaitRemoveOtherItem: (v: FileDetailInfo | undefined) => void
+    setWaitRemoveAll: (v: boolean) => void
 }
 
 export type SplitDirectionProps = "top" | "bottom" | "left" | "right"
