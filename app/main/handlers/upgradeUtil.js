@@ -516,7 +516,11 @@ module.exports = {
                 childProcess.exec(isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`, err => {
                     flag = true
                     if (err) {
-                        reject(err)
+                        if (err.message.indexOf('The process cannot access the file because it is being used by another process')) {
+                            reject("operation not permitted")
+                        } else {
+                            reject(err)
+                        }
                         return
                     }
                     resolve()

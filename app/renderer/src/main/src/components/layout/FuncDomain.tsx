@@ -74,7 +74,7 @@ import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {yakProcess} from "./PerformanceDisplay"
-
+import YakitLogo from "@/assets/yakitLogo.png"
 const {ipcRenderer} = window.require("electron")
 
 export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean) => {
@@ -1157,7 +1157,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
             <div className={styles["update-header-wrapper"]}>
                 <div className={styles["header-info"]}>
                     <div className={styles["update-icon"]}>
-                        <YakitWhiteSvgIcon />
+                        <img src={YakitLogo} width={30} />
                     </div>
                     {/* 等使用更新内容时，下面"当前版本"-div需要被删除 */}
                     <div>
@@ -1279,7 +1279,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
             <div className={styles["update-header-wrapper"]}>
                 <div className={styles["header-info"]}>
                     <div className={styles["update-icon"]}>
-                        <YaklangSvgIcon />
+                        <img src={YakitLogo} width={30} />
                     </div>
                     <div
                         style={{
