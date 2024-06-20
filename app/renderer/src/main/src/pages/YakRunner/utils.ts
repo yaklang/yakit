@@ -1,7 +1,7 @@
 import {failed, warn, yakitNotify} from "@/utils/notification"
 import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType"
 import {RequestYakURLResponse} from "../yakURLTree/data"
-import {FileNodeProps} from "./FileTree/FileTreeType"
+import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
 import {StringToUint8Array} from "@/utils/str"
 import {
@@ -18,7 +18,7 @@ import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
-export const grpcFetchFileTree: (path: string) => Promise<FileNodeProps[]> = (path) => {
+export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "GET",
@@ -28,7 +28,7 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeProps[]> = (pa
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
 
-            const data: FileNodeProps[] = list.Resources.map((item) => {
+            const data: FileNodeMapProps[] = list.Resources.map((item) => {
                 const isFile = !item.ResourceType
                 const isFolder = item.ResourceType === "dir"
                 const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
@@ -52,23 +52,23 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeProps[]> = (pa
 /**
  * @name 更新树数据里某个节点的children数据
  */
-export const updateFileTree: (data: FileNodeProps[], key: string, updateData: FileNodeProps[]) => FileNodeProps[] = (
-    data,
-    key,
+export const updateFileTree: (oldFileTree: FileTreeListProps[], path: string, updateData: FileTreeListProps[]) => FileTreeListProps[] = (
+    oldFileTree,
+    path,
     updateData
 ) => {
-    if (!key) return data
+    if (!path) return oldFileTree
 
     const isValid = updateData && updateData.length > 0
 
-    return data.map((node) => {
-        if (node.path === key) {
-            return {...node, isLeaf: !isValid, children: isValid ? updateData : undefined}
+    return oldFileTree.map((node) => {
+        if (node.path === path) {
+            return {...node, children: isValid ? updateData : undefined}
         }
         if (node.children && node.children.length > 0) {
             return {
                 ...node,
-                children: updateFileTree(node.children, key, updateData)
+                children: updateFileTree(node.children, path, updateData)
             }
         }
         return node
@@ -357,15 +357,39 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
 /**
  * @name 保存文件
  */
-export const saveCodeByFile = (file: FileDetailInfo):Promise<null> => {
+export const saveCodeByFile = (file: FileDetailInfo): Promise<null> => {
     return new Promise(async (resolve, reject) => {
-        ipcRenderer.invoke("write-file", {
-            route: file.path,
-            data: file.code
-        }).then(()=>{
-            resolve(null)
-        }).catch(()=>{
-            reject()
-        })
+        ipcRenderer
+            .invoke("write-file", {
+                route: file.path,
+                data: file.code
+            })
+            .then(() => {
+                resolve(null)
+            })
+            .catch(() => {
+                reject()
+            })
+    })
+}
+
+/**
+ * @name 更改名称
+ */
+
+export const renameByFile = (file: FileDetailInfo,newName:string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        const oldPath = file.path
+        const newPath = file.path.replace(file.name,newName)
+        console.log("xxx",oldPath,newPath);
+        
+        ipcRenderer
+            .invoke("rename-file", {old: oldPath, new: newPath})
+            .then(() => {
+                resolve(newPath)
+            })
+            .catch(() => {
+                reject()
+            })
     })
 }

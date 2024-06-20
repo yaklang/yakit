@@ -4,8 +4,8 @@ import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePluscircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {CollapseList} from "../CollapseList/CollapseList"
-import {FileNodeProps} from "../FileTree/FileTreeType"
-import {KeyToIcon} from "../FileTree/icon"
+import {FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
+import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {FileTree} from "../FileTree/FileTree"
@@ -30,6 +30,7 @@ import {
 import moment from "moment"
 import {YakRunnerHistoryProps} from "../YakRunnerType"
 import emiter from "@/utils/eventBus/eventBus"
+import { getAllFileValue, getFileDetail } from "../FileMap/FileMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -38,6 +39,22 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {handleFileLoadData, setAreaInfo, setActiveFile} = useDispatcher()
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
+
+    // 将文件详情注入文件树结构中
+    const initFileTree = useMemoizedFn((data: FileTreeListProps[])=>{
+        return data.map((item)=>{
+            const itemDetail = getFileDetail(item.path)
+            let obj:FileNodeProps = {...itemDetail}
+            if(item.children){
+                obj.children = initFileTree(item.children)
+            }
+            return obj
+        })
+    })
+
+    const fileDetailTree = useMemo(()=>{
+        return initFileTree(fileTree)
+    },[fileTree])
 
     const getHistoryList = useMemoizedFn(async (data?: string) => {
         try {
@@ -107,10 +124,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             setActiveFile && setActiveFile(file)
         } else {
             const code = await getCodeByPath(path)
+            const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
             const scratchFile: FileDetailInfo = {
                 name,
                 code,
-                icon: "_f_yak",
+                icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
                 isActive: true,
                 openTimestamp: moment().unix(),
                 // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
@@ -230,7 +248,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
                         <div className={styles["file-tree-tree"]}>
                             <div className={styles["tree-body"]}>
-                                <FileTree data={fileTree} onLoadData={onLoadData} onSelect={onSelectFileTree}/>
+                                <FileTree data={fileDetailTree} onLoadData={onLoadData} onSelect={onSelectFileTree}/>
                             </div>
                         </div>
                     </div>

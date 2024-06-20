@@ -24,7 +24,7 @@ import {
 
 import classNames from "classnames"
 import styles from "./RunnerTabs.module.scss"
-import {KeyToIcon} from "../FileTree/icon"
+import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineChevrondoubleleftIcon,
@@ -51,6 +51,7 @@ import {
     getYakRunnerHistory,
     onSyntaxCheck,
     removeAreaFileInfo,
+    renameByFile,
     saveCodeByFile,
     setYakRunnerHistory,
     updateAreaFileInfo
@@ -462,20 +463,28 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             onCancel: () => {
                 m.destroy()
             },
-            onOk: () => {
+            onOk: async () => {
+                if(info.name === newName){
+                    m.destroy()
+                    return
+                }
                 if (newName.length === 0) {
                     warn("请输入新名称")
                     return
                 }
-                // 未保存文件直接更改
-                if (info.isUnSave) {
-                    const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name: newName}, info.path)
+                // 保存后的文件需要根据路径调用改名接口
+                if (!info.isUnSave) {
+                    const newPath = await renameByFile(info, newName)
+                    const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name: newName, path: newPath}, info.path)
+                    isResetActiveFile([info])
                     setAreaInfo && setAreaInfo(newAreaInfo)
-                    m.destroy()
+                } else {
+                    // 未保存文件直接更改文件树
+                    const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name: newName}, info.path)
+                    isResetActiveFile([info])
+                    setAreaInfo && setAreaInfo(newAreaInfo)
                 }
-                // 非临时文件先调用改名接口再更改此处（此时还得更新文件树）
-                else {
-                }
+                m.destroy()
             },
             width: 400
         })
@@ -483,7 +492,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     // 在文件夹中显示
     const onOpenFolder = useMemoizedFn((info: FileDetailInfo) => {
-        // openABSFileLocated("")
+        openABSFileLocated(info.path)
     })
 
     // 在文件列表显示
@@ -533,8 +542,6 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     // 右键菜单
     const handleContextMenu = useMemoizedFn((info: FileDetailInfo) => {
-        console.log("info===", info)
-
         showByRightContext({
             width: 180,
             type: "grey",
@@ -1073,10 +1080,11 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
         // 由于此处的打开文件 不存在已打开文件 故无需校验
         const code = await getCodeByPath(path)
+        const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
         const scratchFile: FileDetailInfo = {
             name,
             code,
-            icon: "_f_yak",
+            icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
             isActive: true,
             openTimestamp: moment().unix(),
             // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
