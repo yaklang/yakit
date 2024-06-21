@@ -3,6 +3,7 @@ import YakitTree, {TreeKey} from "../yakitUI/YakitTree/YakitTree"
 import type {DataNode} from "antd/es/tree"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import {
+    OutlineChevrondownIcon,
     OutlineDocumentIcon,
     OutlineFolderremoveIcon,
     OutlineLink2Icon,
