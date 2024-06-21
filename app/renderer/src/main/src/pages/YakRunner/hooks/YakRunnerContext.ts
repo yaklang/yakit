@@ -12,7 +12,7 @@ export interface YakRunnerContextStore {
 
 export interface YakRunnerContextDispatcher {
     setFileTree?: Dispatch<SetStateAction<FileTreeListProps[]>>
-    handleFileLoadData?: (node: FileNodeProps) => Promise<any>
+    handleFileLoadData?: (path: string) => Promise<any>
     setAreaInfo?: Dispatch<SetStateAction<AreaInfoProps[]>>
     setActiveFile?: Dispatch<SetStateAction<FileDetailInfo|undefined>>
     setRunnerTabsId?: Dispatch<SetStateAction<string|undefined>>
