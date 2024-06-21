@@ -9,7 +9,6 @@ import {
     VulnerabilityTypeProps
 } from "./RiskPageType"
 import styles from "./RiskPage.module.scss"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
@@ -27,10 +26,16 @@ import {VulnerabilityTypePieRefProps} from "./VulnerabilityTypePie/Vulnerability
 import {OutlineCloseIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
+    const [exportHtmlLoading, setExportHtmlLoading] = useState<boolean>(false)
     const [query, setQuery] = useState<QueryRisksRequest>(cloneDeep(defQueryRisksRequest))
+    const riskBodyRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(riskBodyRef)
+
     // 获取筛选展示状态
     useEffect(() => {
         getRemoteValue(RemoteGV.RiskQueryShow).then((value: string) => {
@@ -42,38 +47,52 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
         setRemoteValue(RemoteGV.RiskQueryShow, `${val}`)
     })
     return (
-        <div className={styles["risk-page"]}>
-            <RiskQuery
-                advancedQuery={advancedQuery}
-                setAdvancedQuery={onSetQueryShow}
-                query={query}
-                setQuery={setQuery}
-            />
-            <YakitRiskTable
-                query={query}
-                setQuery={setQuery}
-                advancedQuery={advancedQuery}
-                setAdvancedQuery={onSetQueryShow}
-            />
-        </div>
+        <YakitSpin spinning={exportHtmlLoading}>
+            <div className={styles["risk-page"]} ref={riskBodyRef}>
+                <RiskQuery
+                    inViewport={inViewport}
+                    advancedQuery={advancedQuery}
+                    setAdvancedQuery={onSetQueryShow}
+                    query={query}
+                    setQuery={setQuery}
+                />
+                <YakitRiskTable
+                    query={query}
+                    setQuery={setQuery}
+                    advancedQuery={advancedQuery}
+                    setAdvancedQuery={onSetQueryShow}
+                    setExportHtmlLoading={setExportHtmlLoading}
+                />
+            </div>
+        </YakitSpin>
     )
 }
 
 const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
-    const {advancedQuery, setAdvancedQuery, query, setQuery} = props
+    const {inViewport, advancedQuery, setAdvancedQuery, query, setQuery} = props
     const [ipList, setIpList] = useState<FieldGroup[]>([])
     const [levelList, setLevelList] = useState<FieldName[]>([])
     const [typeList, setTypeList] = useState<FieldName[]>([])
-    const queryBodyRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(queryBodyRef)
     useEffect(() => {
-        if (inViewport) getGroups()
+        if (!inViewport) return
+        getGroups()
+        emiter.on("onRefRiskFieldGroup", onRefRiskFieldGroup)
+        return () => {
+            emiter.off("onRefRiskFieldGroup", onRefRiskFieldGroup)
+        }
     }, [inViewport])
+    const onRefRiskFieldGroup = useMemoizedFn(() => {
+        getGroups()
+    })
     const getGroups = useMemoizedFn(() => {
         apiRiskFieldGroup().then((res) => {
-            setIpList(res.RiskIPGroup)
-            setLevelList(res.RiskLevelGroup)
-            setTypeList(res.RiskTypeGroup)
+            const {RiskIPGroup, RiskLevelGroup, RiskTypeGroup} = res
+            setIpList(RiskIPGroup)
+            setLevelList(RiskLevelGroup)
+            setTypeList(RiskTypeGroup)
+            if (RiskIPGroup.length === 0 && RiskLevelGroup.length === 0 && RiskTypeGroup.length === 0) {
+                setAdvancedQuery(false)
+            }
         })
     })
     const onSelectIP = useMemoizedFn((ipItem: FieldGroup) => {
@@ -112,10 +131,7 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
     }, [query.IPList])
 
     return (
-        <div
-            className={classNames(styles["risk-query"], {[styles["risk-query-hidden"]]: !advancedQuery})}
-            ref={queryBodyRef}
-        >
+        <div className={classNames(styles["risk-query"], {[styles["risk-query-hidden"]]: !advancedQuery})}>
             <div className={styles["risk-query-heard"]}>
                 <span>高级查询</span>
                 <Tooltip title='收起筛选' placement='top' overlayClassName='plugins-tooltip'>

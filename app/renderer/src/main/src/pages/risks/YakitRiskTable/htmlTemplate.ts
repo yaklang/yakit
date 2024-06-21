@@ -25,7 +25,7 @@ export const getHtmlTemplate = () => {
         <script type="text/babel">
             const { Table, Tag, Descriptions, Input, Space, Button } = antd
             const { SearchOutlined } = icons
-            const data = initData
+            const data = initData||[]
             const SeverityMapTag = [
                 {
                     key: ["info", "fingerprint", "infof", "default"],
@@ -272,7 +272,7 @@ export const getHtmlTemplate = () => {
                         },
                     }}
                     dataSource={data}
-                    rowKey='Hash'
+                    rowKey='Id'
                     pagination={
                         {
                             defaultPageSize: 100

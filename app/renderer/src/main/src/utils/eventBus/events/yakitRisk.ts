@@ -1,4 +1,6 @@
 export type YakitRiskProps = {
     /** 刷新risk页面表格数据 */
     onRefRiskList?: string
+    /** 刷新risk页面 统计 数据 */
+    onRefRiskFieldGroup?: string
 }

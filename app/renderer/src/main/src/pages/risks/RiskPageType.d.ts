@@ -4,6 +4,7 @@ import {FieldGroup} from "./YakitRiskTable/utils"
 
 export interface RiskPageProp {}
 export interface RiskQueryProps {
+    inViewport: boolean
     /**是否开启高级查询 */
     advancedQuery: boolean
     setAdvancedQuery: (b: boolean) => void
@@ -23,12 +24,12 @@ export interface IPListItemProps {
     onSelect: (v: FieldGroup) => void
 }
 export interface VulnerabilityLevelProps {
-    selectList:string[]
+    selectList: string[]
     data: FieldName[]
     onSelect: (v: string[]) => void
 }
 export interface VulnerabilityTypeProps {
-    selectList:string[]
+    selectList: string[]
     data: FieldName[]
     onSelect: (v: string[]) => void
 }
