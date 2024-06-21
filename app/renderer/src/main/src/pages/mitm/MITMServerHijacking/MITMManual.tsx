@@ -12,7 +12,8 @@ import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/Yakit
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
-import { Uint8ArrayToString } from "@/utils/str"
+import {Uint8ArrayToString} from "@/utils/str"
+import {TraceInfo} from "../MITMPage"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -23,6 +24,7 @@ interface MITMManualHeardExtraProps {
     currentIsWebsocket: boolean
     currentIsForResponse: boolean
     hijackResponseType: "onlyOne" | "all" | "never"
+    traceInfo: TraceInfo
     setHijackResponseType: (v: "onlyOne" | "all" | "never") => void
     onDiscardRequest: () => void
     onSubmitData: () => void
@@ -47,7 +49,8 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
         calloutColor,
         onSetCalloutColor,
         beautifyOpen,
-        onSetBeautifyOpen
+        onSetBeautifyOpen,
+        traceInfo
     } = props
     return (
         <div className={styles["autoForward-manual"]}>
@@ -56,6 +59,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     urlInfo={urlInfo}
                     ipInfo={ipInfo}
                     status={status}
+                    traceInfo={traceInfo}
                     currentIsWebsocket={currentIsWebsocket}
                     currentIsForResponse={currentIsForResponse}
                 />
@@ -89,10 +93,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                 </div>
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>美化:</span>
-                    <YakitSwitch
-                        checked={beautifyOpen}
-                        onChange={onSetBeautifyOpen}
-                    />
+                    <YakitSwitch checked={beautifyOpen} onChange={onSetBeautifyOpen} />
                 </div>
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>劫持响应:</span>
@@ -147,9 +148,10 @@ interface ManualUrlInfoProps {
     currentIsWebsocket: boolean
     currentIsForResponse: boolean
     className?: string
+    traceInfo: TraceInfo
 }
 export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) => {
-    const {urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className} = props
+    const {urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className, traceInfo} = props
     return (
         <div className={classNames(styles["autoForward-manual-urlInfo"], className)}>
             <div className={classNames(styles["manual-url-info"], "content-ellipsis")}>
@@ -206,17 +208,21 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                     </YakitTag>
                 </>
             )}
-            <YakitTag
-                style={{
-                    marginLeft: 8,
-                    alignSelf: "center",
-                    maxWidth: 140,
-                    cursor: "pointer"
-                }}
-                size='small'
-            >
-                123 ms
-            </YakitTag>
+            {traceInfo.DurationMs ? (
+                <YakitTag
+                    style={{
+                        marginLeft: 8,
+                        alignSelf: "center",
+                        maxWidth: 140,
+                        cursor: "pointer"
+                    }}
+                    size='small'
+                >
+                    {traceInfo.DurationMs} ms
+                </YakitTag>
+            ) : (
+                <></>
+            )}
         </div>
     )
 })
@@ -386,7 +392,9 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             onChange={setModifiedPacket}
             noPacketModifier={true}
             readOnly={status === "hijacking"}
-            refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}${Uint8ArrayToString(currentPacket)}${beautifyOpen}`}
+            refreshTrigger={
+                (forResponse ? `rsp` : `req`) + `${currentPacketId}${Uint8ArrayToString(currentPacket)}${beautifyOpen}`
+            }
             contextMenu={mitmManualRightMenu}
             editorOperationRecord='MITM_Manual_EDITOR_RECORF'
             isWebSocket={currentIsWebsocket && status !== "hijacking"}
