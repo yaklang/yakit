@@ -247,9 +247,10 @@
 
 .sampling-popover {
     width: 272px;
-    padding-top: 2px;
+    padding-top: 3px;
     border-radius: 4px;
     overflow: hidden;
+    border: 1px solid var(--yakit-border-color);
 
     :global {
         .ant-popover-inner-content {
@@ -315,6 +316,7 @@
     display: flex;
     align-items: center;
     padding-left: 2px;
+    padding-right: 2px;
     margin-right: 5px;
 
     .stop-icon {
@@ -344,12 +346,6 @@
 
 @media screen and (max-width: 1200px) {
     .stop-screen-recorder {
-        :global {
-            .ant-btn {
-                padding-left: 8px;
-                padding-right: 8px;
-            }
-        }
         .stop-icon {
             margin-right: 0;
         }
