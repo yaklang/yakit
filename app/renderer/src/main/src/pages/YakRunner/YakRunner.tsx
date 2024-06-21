@@ -45,7 +45,13 @@ import {v4 as uuidv4} from "uuid"
 import moment from "moment"
 import {keySortHandle} from "@/components/yakitUI/YakitEditor/editorUtils"
 import emiter from "@/utils/eventBus/eventBus"
-import { setFileDetail } from "./FileMap/FileMap"
+import {
+    clearMapFileDetail,
+    getMapAllFileKey,
+    getMapAllFileValue,
+    getMapFileDetail,
+    setMapFileDetail
+} from "./FileMap/FileMap"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -168,7 +174,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
         grpcFetchFileTree(path)
             .then((res) => {
-                console.log("文件树", res)
+                // console.log("文件树", res)
 
                 if (callback) callback(res)
             })
@@ -178,37 +184,101 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             })
     })
 
-    // 加载文件列表
+    // 轮询下标
+    const loadIndexRef = useRef<number>(0)
+    // 接口是否运行中
+    const isFetchRef = useRef<boolean>(false)
+
+    // 提前注入Map
+    const insertFileMap = useMemoizedFn((path) => {
+        console.log("提前注入Map", path)
+        isFetchRef.current = true
+        loadIndexRef.current += 1
+        handleFetchFileList(path, (value) => {
+            isFetchRef.current = false
+            if (value.length > 0) {
+                // 此处还需缓存结构Map用于结构信息
+                /* 示例 [
+                    {
+                        key:path,
+                        child:[path1,path2,...]
+                    },
+                    {
+                        key:path1,
+                        child:[path11,path12,...]
+                    }]
+                */
+                value.forEach((item) => {
+                    // 数组平铺
+                    setMapFileDetail(item.path, item)
+                })
+            }
+        })
+    })
+
+    // 轮询提前加载未打开文件
+    const loadFileMap = useMemoizedFn(() => {
+        // 接口运行中 暂时拦截下一个接口请求
+        if (isFetchRef.current) return
+        const keys = getMapAllFileKey()
+        const index = loadIndexRef.current
+        if (!keys[index]) return
+        // 如果为文件时无需加载 加载下一个
+        if (!getMapFileDetail(keys[index]).isFolder) {
+            loadIndexRef.current += 1
+            return
+        }
+        // 校验其子项是否存在
+        const childKey = keys.filter((item) => item.startsWith(`${keys[index]}\\`))
+        if (childKey.length !== 0) {
+            loadIndexRef.current += 1
+            return
+        }
+        insertFileMap(keys[index])
+    })
+    useEffect(() => {
+        let id = setInterval(() => {
+            loadFileMap()
+        }, 50)
+        return () => clearInterval(id)
+    }, [])
+
+    // 重置Map与轮询
+    const resetMap = useMemoizedFn(() => {
+        loadIndexRef.current = 0
+        clearMapFileDetail()
+    })
+
+    // 加载文件列表(初次加载)
     const onOpenFolderListFun = useMemoizedFn((absolutePath: string) => {
         console.log("onOpenFolderListFun", absolutePath)
         const folders = absolutePath.split("\\") // 使用双反斜杠对路径进行分割
         const lastFolder = folders[folders.length - 1] // 获取数组中的最后一个元素
         if (absolutePath.length > 0 && lastFolder.length > 0) {
+            resetMap()
             const tree: FileTreeListProps = {
-                path: absolutePath,
+                path: absolutePath
             }
-            const node:FileNodeMapProps = {
+            const node: FileNodeMapProps = {
                 name: lastFolder,
                 path: absolutePath,
                 isFolder: true,
                 icon: FolderDefault
             }
-            setFileDetail(absolutePath,node)
+            setMapFileDetail(absolutePath, node)
 
             handleFetchFileList(absolutePath, (list) => {
-                if(list.length>0){
+                if (list.length > 0) {
                     const children: FileTreeListProps[] = []
-                    list.forEach((item)=>{
+                    list.forEach((item) => {
                         // 数组平铺
-                        setFileDetail(item.path,item)
+                        setMapFileDetail(item.path, item)
                         // 注入结构
-                        children.push({path:item.path})
+                        children.push({path: item.path})
                     })
 
                     if (list) setFileTree([{...tree, children}])
                 }
-                
-                
             })
 
             // 打开文件夹时接入历史记录
@@ -229,24 +299,47 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
 
     // 加载下一层
-    const handleFileLoadData = useMemoizedFn((node: FileNodeProps) => {
+    const handleFileLoadData = useMemoizedFn((path: string) => {
         return new Promise((resolve, reject) => {
-            handleFetchFileList(node.path, (value) => {
-                if (value) {
-                    value.forEach((item)=>{
-                        // 数组平铺
-                        setFileDetail(item.path,item)
-                    })
-                    setTimeout(() => {
-                        setFileTree((oldFileTree) => {
-                            return updateFileTree(oldFileTree, node.path, value.map((item)=>({path:item.path})))
+            const keys = getMapAllFileKey()
+            // 校验其子项是否存在
+            const childKey = keys.filter((item) => item.startsWith(`${path}\\`))
+
+            if (childKey.length > 0) {
+                console.log("缓存加载",childKey.map((path) => ({path})));
+                
+                setFileTree((oldFileTree) => {
+                    return updateFileTree(
+                        oldFileTree,
+                        path,
+                        childKey.map((path) => ({path}))
+                    )
+                })
+                resolve("")
+            } else {
+                handleFetchFileList(path, (value) => {
+                    if (value.length > 0) {
+                        value.forEach((item) => {
+                            // 数组平铺
+                            setMapFileDetail(item.path, item)
                         })
-                        resolve("")
-                    }, 300)
-                } else {
-                    reject()
-                }
-            })
+                        setTimeout(() => {
+                            console.log("接口加载",value.map((item) => ({path: item.path})));
+                            
+                            setFileTree((oldFileTree) => {
+                                return updateFileTree(
+                                    oldFileTree,
+                                    path,
+                                    value.map((item) => ({path: item.path}))
+                                )
+                            })
+                            resolve("")
+                        }, 300)
+                    } else {
+                        reject()
+                    }
+                })
+            }
         })
     })
     /** ---------- 文件树 End ---------- */

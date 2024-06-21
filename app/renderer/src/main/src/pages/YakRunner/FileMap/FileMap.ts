@@ -1,21 +1,14 @@
 import {FileNodeMapProps} from "../FileTree/FileTreeType"
 import {v4 as uuidv4} from "uuid"
-export const filesDetail: Map<string, FileNodeMapProps> = new Map()
+export const filesMap: Map<string, FileNodeMapProps> = new Map()
 
-export const setFileDetail = (path: string, info: FileNodeMapProps) => {
-    filesDetail.set(path, info)
-
-    // if (filesDetail.has(path)) {
-    //     const item = fileDetail.get(path)
-    //     item?.push(info)
-    // } else {
-    //     filesDetail.set(path, info)
-    // }
+export const setMapFileDetail = (path: string, info: FileNodeMapProps) => {
+    filesMap.set(path, info)
 }
 
-export const getFileDetail = (path: string) => {
+export const getMapFileDetail = (path: string) => {
     return (
-        filesDetail.get(path) || {
+        filesMap.get(path) || {
             name: "读取失败文件",
             isFolder: false,
             isLeaf: true,
@@ -25,14 +18,27 @@ export const getFileDetail = (path: string) => {
     )
 }
 
-export const getAllFileValue = () => {
-    return Array.from(filesDetail.values())
+export const getMapAllFileValue = () => {
+    return Array.from(filesMap.values())
 }
 
-export const clearFileDetail = () => {
-    filesDetail.clear()
+export const getMapAllFileKey = () => {
+    return Array.from(filesMap.keys())
 }
 
-export const removeFileDetail = (path: string) => {
-    filesDetail.delete(path)
+export const getMapAllFileSize = () => {
+    return filesMap.size
 }
+
+export const clearMapFileDetail = () => {
+    filesMap.clear()
+}
+
+export const removeMapFileDetail = (path: string) => {
+    filesMap.delete(path)
+}
+
+
+// myMap.forEach((value, key) => {
+//   console.log(`${key} = ${value}`);
+// });

@@ -30,7 +30,7 @@ import {
 import moment from "moment"
 import {YakRunnerHistoryProps} from "../YakRunnerType"
 import emiter from "@/utils/eventBus/eventBus"
-import { getAllFileValue, getFileDetail } from "../FileMap/FileMap"
+import { getMapAllFileValue, getMapFileDetail } from "../FileMap/FileMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -43,7 +43,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     // 将文件详情注入文件树结构中
     const initFileTree = useMemoizedFn((data: FileTreeListProps[])=>{
         return data.map((item)=>{
-            const itemDetail = getFileDetail(item.path)
+            const itemDetail = getMapFileDetail(item.path)
             let obj:FileNodeProps = {...itemDetail}
             if(item.children){
                 obj.children = initFileTree(item.children)
@@ -78,7 +78,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const onLoadData = useMemoizedFn((node: FileNodeProps) => {
-        if (handleFileLoadData) return handleFileLoadData(node)
+        if (handleFileLoadData) return handleFileLoadData(node.path)
         return Promise.reject()
     })
 
