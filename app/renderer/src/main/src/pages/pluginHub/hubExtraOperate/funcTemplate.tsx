@@ -55,7 +55,7 @@ export const HubButton: React.FC<HubButtonProps> = memo((props) => {
     }, [name, hint, disabled, isIcon])
 
     const paddingClass = useMemo(() => {
-        if (size === "small") return "hub-button-icon-small-paddin"
+        if (size === "small") return "hub-button-icon-small-padding"
         if (size === "large") return "hub-button-icon-large-padding"
         if (size === "max") return "hub-button-icon-max-padding"
         return "hub-button-icon-padding"

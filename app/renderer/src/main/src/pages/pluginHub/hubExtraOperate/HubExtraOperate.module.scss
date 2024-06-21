@@ -37,16 +37,24 @@
 .hub-button-hidden {
     display: none !important;
 }
-.hub-button-icon-padding{
+.hub-button-icon-padding {
     padding: 4px;
 }
-.hub-button-icon-small-padding{
+.hub-button-icon-small-padding {
     padding: 2px;
+    svg {
+        width: 14px;
+        height: 14px;
+    }
 }
-.hub-button-icon-large-padding{
+.hub-button-icon-large-padding {
     padding: 3px;
+    svg {
+        width: 20px;
+        height: 20px;
+    }
 }
-.hub-button-icon-max-padding{
+.hub-button-icon-max-padding {
     padding: 5px;
 }
 
