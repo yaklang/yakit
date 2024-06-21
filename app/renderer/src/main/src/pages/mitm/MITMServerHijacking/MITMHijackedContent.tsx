@@ -179,7 +179,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     }, [hijackResponseType, currentPacketId])
     // 自动转发劫持，进行的操作
     const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
-        console.log(123, msg.traceInfo)
         if (msg?.RemoteAddr) {
             setIpInfo(msg?.RemoteAddr)
         } else {
