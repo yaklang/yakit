@@ -4912,9 +4912,20 @@ message MITMResponse {
 
   // Websocket 相关配置
   bool isWebsocket = 37;
+  repeated string websocketEncode = 38;
   // Websocket 传输的数据
   bytes Payload = 39;
-  repeated string websocketEncode = 38;
+
+  // 响应跟踪信息
+  TraceInfo traceInfo = 40;
+}
+
+message TraceInfo {
+  repeated string AvailableDNSServers = 1;
+  int64 DurationMs = 2; // ServerTime
+  int64 DNSDurationMs = 3; // DNSTime
+  int64 ConnDurationMs = 4; // ConnTime
+  int64 TotalDurationMs = 5; // TotalTime
 }
 
 message YakScriptHooks {

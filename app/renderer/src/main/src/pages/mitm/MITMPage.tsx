@@ -40,6 +40,13 @@ const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
 
+export interface TraceInfo {
+    AvailableDNSServers: string[]
+    DurationMs: number
+    DNSDurationMs: number
+    ConnDurationMs: number
+    TotalDurationMs: number
+}
 export interface MITMResponse extends MITMFilterSchema {
     isHttps: boolean
     request: Uint8Array
@@ -56,6 +63,7 @@ export interface MITMResponse extends MITMFilterSchema {
 
     isWebsocket?: boolean
     Payload: Uint8Array
+    traceInfo: TraceInfo
 }
 
 export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL_PLUGIN"

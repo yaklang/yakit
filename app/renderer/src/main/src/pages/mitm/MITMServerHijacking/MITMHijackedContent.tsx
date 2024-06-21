@@ -3,7 +3,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {failed, info, yakitFailed} from "@/utils/notification"
 import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {MITMResponse} from "../MITMPage"
+import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
 import {MITMLogHeardExtra} from "./MITMLog"
@@ -62,14 +62,22 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         currentPacketId: number
         isHttp: boolean
         isResponse: boolean
+        traceInfo: TraceInfo
     }>({
         requestPacket: new Buffer([]),
         currentPacketId: 0,
         currentPacket: new Buffer([]),
         isHttp: true,
-        isResponse: false
+        isResponse: false,
+        traceInfo: {
+            AvailableDNSServers: [],
+            DurationMs: 0,
+            DNSDurationMs: 0,
+            ConnDurationMs: 0,
+            TotalDurationMs: 0
+        }
     })
-    const {currentPacket, currentPacketId, isHttp, requestPacket, isResponse} = currentPacketInfo
+    const {currentPacket, currentPacketId, isHttp, requestPacket, isResponse, traceInfo} = currentPacketInfo
 
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]))
 
@@ -197,7 +205,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     currentPacketId: msg.responseId,
                     isHttp: msg.isHttps,
                     requestPacket: msg.request,
-                    isResponse: true
+                    isResponse: true,
+                    traceInfo: msg.traceInfo || {
+                        AvailableDNSServers: [],
+                        DurationMs: 0,
+                        DNSDurationMs: 0,
+                        ConnDurationMs: 0,
+                        TotalDurationMs: 0
+                    }
                 })
             }
         } else {
@@ -218,7 +233,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         currentPacketId: msg.id,
                         isHttp: msg.isHttps,
                         requestPacket: msg.request,
-                        isResponse: true
+                        isResponse: true,
+                        traceInfo: msg.traceInfo || {
+                            AvailableDNSServers: [],
+                            DurationMs: 0,
+                            DNSDurationMs: 0,
+                            ConnDurationMs: 0,
+                            TotalDurationMs: 0
+                        }
                     })
                     setUrlInfo(msg.url)
                     // ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
@@ -234,7 +256,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             currentPacket: new Buffer([]),
             requestPacket: new Buffer([]),
             isHttp: true,
-            isResponse: false
+            isResponse: false,
+            traceInfo: {
+                AvailableDNSServers: [],
+                DurationMs: 0,
+                DNSDurationMs: 0,
+                ConnDurationMs: 0,
+                TotalDurationMs: 0
+            }
         })
     }
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
@@ -377,6 +406,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         currentIsWebsocket={currentIsWebsocket}
                         currentIsForResponse={currentIsForResponse}
                         hijackResponseType={hijackResponseType}
+                        traceInfo={traceInfo}
                         setHijackResponseType={onSetHijackResponseType}
                         onDiscardRequest={onDiscardRequest}
                         onSubmitData={forward}
@@ -407,6 +437,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 status={status}
                                 currentIsWebsocket={currentIsWebsocket}
                                 currentIsForResponse={currentIsForResponse}
+                                traceInfo={traceInfo}
                                 className={styles["mitm-hijacked-manual-content-url"]}
                             />
                         )}
