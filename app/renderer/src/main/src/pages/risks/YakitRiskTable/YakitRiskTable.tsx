@@ -220,7 +220,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [response, setResponse] = useState<QueryRisksResponse>({
         Data: [],
-        Pagination: {...genDefaultPagination(20), OrderBy: "created_at"},
+        Pagination: {...genDefaultPagination(20)},
         Total: 0
     })
     const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -231,9 +231,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const [selectList, setSelectList] = useState<Risk[]>([])
     const [currentSelectItem, setCurrentSelectItem] = useState<Risk>()
     const [query, setQuery] = useControllableValue<QueryRisksRequest>(props, {
-        defaultValue: {
-            ...cloneDeep(defQueryRisksRequest)
-        },
+        defaultValue: cloneDeep(defQueryRisksRequest),
         valuePropName: "query",
         trigger: "setQuery"
     })
@@ -634,10 +632,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 update(1)
                 break
             case "resetRefresh":
-                setQuery(cloneDeep(defQueryRisksRequest))
-                setTimeout(() => {
-                    update(1)
-                }, 200)
+                setQuery(cloneDeep(defQueryRisksRequest)) // 条件变化会自动查询新数据
                 break
             default:
                 break
@@ -682,12 +677,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         return finalParams
     })
-    const update = useMemoizedFn((page?: number, limit?: number) => {
+    const update = useMemoizedFn((page?: number) => {
         setLoading(true)
         const paginationProps = {
             ...query.Pagination,
             Page: page || 1,
-            Limit: limit || query.Pagination.Limit
+            Limit: query.Pagination.Limit
         }
         const finalParams: QueryRisksRequest = {
             ...getQuery(),

@@ -2,7 +2,7 @@ import {genDefaultPagination} from "@/pages/invoker/schema"
 import {QueryRisksRequest} from "./YakitRiskTableType"
 
 export const defQueryRisksRequest: QueryRisksRequest = {
-    Pagination: genDefaultPagination(20),
+    Pagination: {Page: 1, Limit: 50, OrderBy: "created_at", Order: "desc"},
     Search: "",
     Network: "",
     Ports: "",
@@ -16,7 +16,7 @@ export const defQueryRisksRequest: QueryRisksRequest = {
     IsRead: "", // 全部'' 已读:'true'，未读：'false'
     Title: "",
     RiskTypeList: [],
-    SeverityList:[],
-    TagList:[],
-    IPList:[],
+    SeverityList: [],
+    TagList: [],
+    IPList: []
 }
