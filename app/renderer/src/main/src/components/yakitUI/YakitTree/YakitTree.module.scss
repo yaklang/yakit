@@ -7,7 +7,13 @@
     --checkbox-border-primary-color: var(--yakit-primary-5);
     --checkbox-box-shadow-color: var(--yakit-primary-2);
     --checkbox-hover-color: var(--yakit-primary-4);
-    
+    .switcher-icon {
+        color: #85899e;
+        svg {
+            height: 12px;
+            width: 12px;
+        }
+    }
     :global {
         .ant-tree-checkbox-inner {
             border-color: var(--checkbox-border-color);

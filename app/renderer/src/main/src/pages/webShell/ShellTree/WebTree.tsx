@@ -560,7 +560,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         height={height !== undefined ? height - treeTopWrapHeight : undefined}
                         multiple={false}
                         treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
-                        switcherIcon={<OutlineChevrondownIcon className={styles["switcher-icon"]} />}
                         // loadData={onLoadWebTreeData}
                         expandedKeys={expandedKeys}
                         onExpand={(

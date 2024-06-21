@@ -4,6 +4,7 @@ import type {DataNode as TreeNode, TreeProps} from "antd/es/tree"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import styles from "./YakitTree.module.scss"
 import classNames from "classnames"
+import { OutlineChevrondownIcon } from "@/assets/icon/outline"
 
 export type TreeKey = string | number
 interface YakitTreeProps extends TreeProps {
@@ -22,6 +23,7 @@ const YakitTree: React.FC<YakitTreeProps> = React.memo((props) => {
                     {...props}
                     showLine={showLine ? {showLeafIcon: false} : false}
                     showIcon={showIcon}
+                    switcherIcon={<OutlineChevrondownIcon className={styles["switcher-icon"]} />}
                 ></Tree>
             ) : (
                 <YakitEmpty />

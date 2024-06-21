@@ -382,7 +382,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     <YakitTree
                         height={height !== undefined ? height - treeTopWrapHeight : undefined}
                         multiple={false}
-                        switcherIcon={<OutlineChevrondownIcon className={styles["switcher-icon"]} />}
                         treeData={searchTreeFlag.current ? searchWebTreeData : webTreeData}
                         loadData={onLoadWebTreeData}
                         expandedKeys={expandedKeys}
