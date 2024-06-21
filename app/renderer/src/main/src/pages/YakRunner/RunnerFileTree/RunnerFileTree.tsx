@@ -30,7 +30,7 @@ import {
 import moment from "moment"
 import {YakRunnerHistoryProps} from "../YakRunnerType"
 import emiter from "@/utils/eventBus/eventBus"
-import { getMapAllFileValue, getMapFileDetail } from "../FileMap/FileMap"
+import { getMapAllFileValue, getMapFileDetail } from "../FileTreeMap/FileMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -52,9 +52,23 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         })
     })
 
+    const [refreshTree,setRefreshTree] = useState<boolean>(false)
+    const onRefreshFileTreeFun = useMemoizedFn(()=>{
+        console.log("刷新文件树");
+        setRefreshTree(!refreshTree)
+    })
+
+    useEffect(() => {
+        // 刷新文件树
+        emiter.on("onRefreshFileTree", onRefreshFileTreeFun)
+        return () => {
+            emiter.off("onRefreshFileTree", onRefreshFileTreeFun)
+        }
+    }, [])
+
     const fileDetailTree = useMemo(()=>{
         return initFileTree(fileTree)
-    },[fileTree])
+    },[fileTree,refreshTree])
 
     const getHistoryList = useMemoizedFn(async (data?: string) => {
         try {

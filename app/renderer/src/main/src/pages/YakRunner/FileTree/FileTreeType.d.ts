@@ -9,6 +9,8 @@ export interface FileTreeListProps {
 
 // Map存储文件列表详情
 export interface FileNodeMapProps {
+    /** 父文件路径 */
+    parent: string | null
     /** 文件名 */
     name: string
     /** 文件绝对路径 */
@@ -21,6 +23,8 @@ export interface FileNodeMapProps {
 }
 
 export interface FileNodeProps {
+    /** 父文件路径 */
+    parent: string | null
     /** 文件名 */
     name: string
     /** 文件绝对路径 */

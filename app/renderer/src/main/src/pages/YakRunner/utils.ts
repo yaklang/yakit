@@ -34,6 +34,7 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
                 const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
                 const isLeaf = isFile || !item.HaveChildrenNodes
                 return {
+                    parent: path,
                     name: item.ResourceName,
                     path: item.Path,
                     isFolder: isFolder,
