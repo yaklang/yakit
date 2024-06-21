@@ -211,10 +211,10 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
             {traceInfo.DurationMs ? (
                 <YakitTag
                     style={{
-                        marginLeft: 8,
                         alignSelf: "center",
-                        maxWidth: 140,
-                        cursor: "pointer"
+                        maxWidth: 100,
+                        cursor: "pointer",
+                        padding: '0 4px'
                     }}
                     size='small'
                 >
