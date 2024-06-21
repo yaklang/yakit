@@ -647,8 +647,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         ipcRenderer
             .invoke("QueryMITMRuleExtractedData", {
                 Pagination: {
-                    Order: "asc",
-                    OrderBy: "created_at",
                     Page: 1,
                     Limit: 10
                 },

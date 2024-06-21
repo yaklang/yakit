@@ -7,7 +7,7 @@ import classNames from "classnames"
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type" | "ghost" | "shape"> {
     type?: "primary" | "secondary2" | "outline1" | "outline2" | "text" | "text2"
     /** 当colors和danger同时存在，以colors为准 */
-    colors?: "success" | "danger" | "primary"
+    colors?: "success" | "danger" | "primary" | "infoBlue"
     size?: "small" | "middle" | "large" | "max"
     isHover?: boolean
     isActive?: boolean
@@ -29,6 +29,7 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
         if (!colors && danger) return "yakit-button-danger"
         if (colors === "success") return "yakit-button-success"
         if (colors === "danger") return "yakit-button-danger"
+        if (colors === "infoBlue") return "yakit-button-infoBlue"
         return ""
     }, [colors, danger])
 

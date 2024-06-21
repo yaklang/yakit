@@ -70,11 +70,18 @@ import {serverPushStatus} from "@/utils/duplex/duplex"
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlineSearchIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {yakProcess} from "./PerformanceDisplay"
 import YakitLogo from "@/assets/yakitLogo.png"
+import {DebugPluginRequest, apiDebugPlugin, apiQueryYakScript} from "@/pages/plugins/utils"
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import {randomString} from "@/utils/randomUtil"
+import {PerformanceSamplingLog, usePerformanceSampling} from "@/store/performanceSampling"
+
 const {ipcRenderer} = window.require("electron")
 
 export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean) => {
@@ -2238,6 +2245,10 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         if (system === "Darwin" || system === "Windows_NT") {
             return [
                 {
+                    label: "性能采样",
+                    key: "performance-sampling"
+                },
+                {
                     label: isRecording ? (
                         <div
                             className={styles["stop-screen-menu-item"]}
@@ -2295,6 +2306,10 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         }
         return [
             {
+                label: "性能采样",
+                key: "performance-sampling"
+            },
+            {
                 label: isRecording ? (
                     <div
                         className={styles["stop-screen-menu-item"]}
@@ -2324,6 +2339,9 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
     const menuSelect = useMemoizedFn((type: string) => {
         setShow(false)
         switch (type) {
+            case "performance-sampling":
+                handlePerformanceSampling()
+                break
             case "screenCap":
                 if (isRecording) {
                     ipcRenderer.invoke("cancel-StartScrecorder", token)
@@ -2348,6 +2366,93 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         }
     })
 
+    // 性能采样
+    const {performanceSamplingInfo, setPerformanceSamplingLog, setSampling} = usePerformanceSampling()
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: performanceSamplingInfo.token,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
+            setSampling(false)
+        }
+    })
+    useEffect(() => {
+        try {
+            if (
+                streamInfo.progressState.length &&
+                streamInfo.progressState[0].id === "main" &&
+                streamInfo.progressState[0].progress === 1
+            ) {
+                const logs: PerformanceSamplingLog[] = []
+                streamInfo.logState.forEach((item) => {
+                    if (item.level === "file") {
+                        const {title, path, dir} = JSON.parse(item.data) || {}
+                        logs.push({title, path, dir})
+                    }
+                })
+                setPerformanceSamplingLog(logs)
+                yakitNotify("success", "采样完成，点击顶部绿色按钮可查看结果")
+            }
+        } catch (error) {
+            setPerformanceSamplingLog([])
+        }
+    }, [streamInfo])
+    const handlePerformanceSampling = () => {
+        if (performanceSamplingInfo.isPerformanceSampling) return
+        const params = {
+            Pagination: {
+                Limit: 20,
+                Page: 1,
+                OrderBy: "updated_at",
+                Order: "desc"
+            },
+            Keyword: "核心引擎性能采样",
+            Type: "yak"
+        }
+        apiQueryYakScript(params)
+            .then((res) => {
+                if (!res.Data) res.Data = []
+                if (!res.Data.length) {
+                    yakitNotify("info", "找不到Yak 原生插件：核心引擎性能采样")
+                } else {
+                    const samplingPlugin = res.Data[0]
+                    const yakExecutorParams: YakExecutorParam[] = []
+                    samplingPlugin.Params.forEach((item) => {
+                        yakExecutorParams.push({
+                            Key: item.Field,
+                            Value: item.TypeVerbose === "boolean" ? item.DefaultValue === "true" : item.DefaultValue
+                        })
+                    })
+                    const executeParams: DebugPluginRequest = {
+                        Code: "",
+                        PluginType: samplingPlugin.Type,
+                        Input: "",
+                        HTTPRequestTemplate: {
+                            ...defPluginExecuteFormValue
+                        },
+                        ExecParams: yakExecutorParams,
+                        PluginName: samplingPlugin.ScriptName
+                    }
+                    setPerformanceSamplingLog([])
+                    debugPluginStreamEvent.reset()
+                    apiDebugPlugin(executeParams, performanceSamplingInfo.token).then(() => {
+                        debugPluginStreamEvent.start()
+                        setSampling(true)
+                    })
+                }
+            })
+            .catch((err) => {
+                yakitNotify("error", err)
+            })
+    }
+    useEffect(() => {
+        emiter.on("performanceSampling", handlePerformanceSampling)
+        return () => {
+            emiter.off("performanceSampling", handlePerformanceSampling)
+        }
+    }, [])
+
     const menu = (
         <YakitMenu
             width={142}
@@ -2369,7 +2474,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                        <CameraIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+                        <OutlineWrenchIcon className={classNames(show ? styles["icon-hover-style"] : styles["icon-style"], styles['wrench-icon'])} />
                     </div>
                 </div>
             </YakitPopover>

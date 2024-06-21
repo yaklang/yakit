@@ -458,6 +458,9 @@
     &.yakit-button-danger {
         @include generatePrimary("danger");
     }
+    &.yakit-button-infoBlue {
+        @include generatePrimary("infoBlue");
+    }
 }
 .yakit-button-secondary2 {
     @include generateSecondary2("primary");
@@ -467,6 +470,9 @@
     &.yakit-button-danger {
         @include generateSecondary2("danger");
     }
+    &.yakit-button-infoBlue {
+        @include generateSecondary2("infoBlue");
+    }
 }
 .yakit-button-outline1 {
     @include generateOutline1("primary");
@@ -475,6 +481,9 @@
     }
     &.yakit-button-danger {
         @include generateOutline1("danger");
+    }
+    &.yakit-button-infoBlue {
+        @include generateOutline1("infoBlue");
     }
 }
 .yakit-button-outline2 {
@@ -487,6 +496,9 @@
     }
     &.yakit-button-danger {
         @include generateText("danger");
+    }
+    &.yakit-button-infoBlue {
+        @include generateText("infoBlue");
     }
 }
 .yakit-button-text2 {

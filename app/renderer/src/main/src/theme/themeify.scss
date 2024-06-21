@@ -22,6 +22,14 @@ $color-list: (
         color-4: var(--yakit-danger-4),
         color-5: var(--yakit-danger-5),
         color-6: var(--yakit-danger-6)
+    ),
+    infoBlue: (
+        color-1: var(--yakit-infoBlue-1),
+        color-2: var(--yakit-infoBlue-2),
+        color-3: var(--yakit-infoBlue-3),
+        color-4: var(--yakit-infoBlue-4),
+        color-5: var(--yakit-infoBlue-5),
+        color-6: var(--yakit-infoBlue-6)
     )
 );
 @function fetch-color($type, $color) {
