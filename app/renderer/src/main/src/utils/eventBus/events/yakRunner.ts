@@ -3,4 +3,5 @@ export type YakRunnerEventProps = {
     onOpenBottomDetail: string
     onRefreshRunnerHistory: string
     onOpenFolderList: string
+    onRefreshFileTree?: string
 }

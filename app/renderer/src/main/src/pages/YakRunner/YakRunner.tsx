@@ -51,7 +51,8 @@ import {
     getMapAllFileValue,
     getMapFileDetail,
     setMapFileDetail
-} from "./FileMap/FileMap"
+} from "./FileTreeMap/FileMap"
+import { getMapFolderDetail, setMapFolderDetail } from "./FileTreeMap/ChildMap"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -208,10 +209,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         child:[path11,path12,...]
                     }]
                 */
+                let childArr:string[] = []
+                // 文件Map
                 value.forEach((item) => {
-                    // 数组平铺
+                    // 注入文件结构Map
+                    childArr.push(item.path)
+                    // 文件Map
                     setMapFileDetail(item.path, item)
                 })
+                setMapFolderDetail(path,childArr)
             }
         })
     })
@@ -260,22 +266,29 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 path: absolutePath
             }
             const node: FileNodeMapProps = {
+                parent: null,
                 name: lastFolder,
                 path: absolutePath,
                 isFolder: true,
                 icon: FolderDefault
             }
             setMapFileDetail(absolutePath, node)
-
+            
             handleFetchFileList(absolutePath, (list) => {
                 if (list.length > 0) {
                     const children: FileTreeListProps[] = []
+                    
+                    let childArr:string[] = []
                     list.forEach((item) => {
-                        // 数组平铺
+                        // 注入文件结构Map
+                        childArr.push(item.path)
+                        // 文件Map
                         setMapFileDetail(item.path, item)
-                        // 注入结构
+                        // 注入tree结构
                         children.push({path: item.path})
                     })
+                    // 文件结构Map
+                    setMapFolderDetail(absolutePath,childArr)
 
                     if (list) setFileTree([{...tree, children}])
                 }
@@ -301,30 +314,32 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     // 加载下一层
     const handleFileLoadData = useMemoizedFn((path: string) => {
         return new Promise((resolve, reject) => {
-            const keys = getMapAllFileKey()
             // 校验其子项是否存在
-            const childKey = keys.filter((item) => item.startsWith(`${path}\\`))
-
-            if (childKey.length > 0) {
-                console.log("缓存加载",childKey.map((path) => ({path})));
+            const childArr = getMapFolderDetail(path)
+            if (childArr.length > 0) {
+                console.log("缓存加载");
                 
                 setFileTree((oldFileTree) => {
                     return updateFileTree(
                         oldFileTree,
                         path,
-                        childKey.map((path) => ({path}))
+                        childArr.map((path) => ({path}))
                     )
                 })
                 resolve("")
             } else {
                 handleFetchFileList(path, (value) => {
                     if (value.length > 0) {
+                        let childArr:string[] = []
                         value.forEach((item) => {
-                            // 数组平铺
+                            // 注入文件结构Map
+                            childArr.push(item.path)
+                            // 文件Map
                             setMapFileDetail(item.path, item)
                         })
+                        setMapFolderDetail(path,childArr)
                         setTimeout(() => {
-                            console.log("接口加载",value.map((item) => ({path: item.path})));
+                            console.log("接口加载");
                             
                             setFileTree((oldFileTree) => {
                                 return updateFileTree(

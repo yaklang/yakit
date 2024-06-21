@@ -12,6 +12,9 @@ import {LoadingOutlined} from "@ant-design/icons"
 import classNames from "classnames"
 import styles from "./FileTree.module.scss"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import { getMapFileDetail, setMapFileDetail } from "../FileTreeMap/FileMap"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -152,6 +155,10 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
 const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const {isDownCtrlCmd, info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded} = props
 
+    // 是否为编辑模式
+    const [isEdit, setEdit] = useState<boolean>(false)
+    const [value, setValue] = useState<string>(info.name)
+
     const isFoucsed = useMemo(() => {
         return foucsedKey === info.path
     }, [foucsedKey, info.path])
@@ -180,6 +187,28 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             if (isDownCtrlCmd) handleSelect()
             else handleExpand()
         }
+    })
+
+    const onRename = useMemoizedFn(() => {
+        setEdit(true)
+    })
+
+    const onSave = useMemoizedFn(() => {
+        if (value.length !== 0 && value !== info.name) {
+            // 重命名 调用接口成功后更新tree
+            console.log("更新", value)
+            // 文件夹重命名
+            if(info.isFolder){
+
+            }
+            // 文件重命名
+            else{
+                console.log("xxxxxxxxx UI实验 还未接入接口");
+                setMapFileDetail(info.path,{...getMapFileDetail(info.path),name:value})
+            }
+            emiter.emit("onRefreshFileTree")
+        }
+        setEdit(false)
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {
@@ -225,7 +254,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     case "openFileSystem":
                         openABSFileLocated(info.path)
                         break
-
+                    case "rename":
+                        onRename()
+                        break
                     default:
                         break
                 }
@@ -273,7 +304,22 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     <img src={iconImage} />
                 </div>
                 <div className={classNames(styles["content-body"], "yakit-content-single-ellipsis")} title={info.name}>
-                    {info.name}
+                    {isEdit ? (
+                        <YakitInput
+                            wrapperClassName={styles["file-tree-input-wrapper"]}
+                            className={styles["file-tree-input"]}
+                            value={value}
+                            onChange={(e) => {
+                                setValue(e.target.value)
+                            }}
+                            autoFocus
+                            onBlur={onSave}
+                            onPressEnter={onSave}
+                            size='small'
+                        />
+                    ) : (
+                        info.name
+                    )}
                 </div>
             </div>
         </div>
