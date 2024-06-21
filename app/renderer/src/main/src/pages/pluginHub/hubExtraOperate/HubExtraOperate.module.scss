@@ -1,0 +1,199 @@
+/* ---------- HubExtraOperate ----------*/
+.hub-extra-operate {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    .btn-group {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 4px;
+    }
+    .divider-style {
+        width: 1px;
+        height: 12px;
+        background-color: #eaecf3;
+    }
+
+    .share-disabled-btn {
+        background-color: transparent !important;
+        color: var(--yakit-disable-text-color) !important;
+        border-color: transparent !important;
+        cursor: not-allowed;
+        svg {
+            color: var(--yakit-disable-text-color) !important;
+        }
+    }
+    .download-disabled-btn {
+        background: var(--yakit-disable-text-color) !important;
+        color: var(--ui-text-inverse-color) !important;
+        border-color: var(--yakit-disable-text-color) !important;
+        cursor: not-allowed;
+    }
+}
+
+/* ---------- HubButton ----------*/
+.hub-button-hidden {
+    display: none !important;
+}
+.hub-button-icon-padding{
+    padding: 4px;
+}
+.hub-button-icon-small-padding{
+    padding: 2px;
+}
+.hub-button-icon-large-padding{
+    padding: 3px;
+}
+.hub-button-icon-max-padding{
+    padding: 5px;
+}
+
+/* ---------- HubOperateHint ----------*/
+.hub-operate-hint {
+    .operate-style {
+        color: #f28b44;
+    }
+    .content-style {
+        color: #85899e;
+    }
+}
+
+/* ---------- RemovePluginMenuContent ----------*/
+.remove-plugin-menu-content {
+    padding: 24px;
+    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* ---------- AddPluginMenuContent ----------*/
+.add-plugin-menu-content {
+    padding: 12px;
+    .form-btn-group {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+/* ---------- HubDetailHeader ----------*/
+.hub-detail-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    .header-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .header-info {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            .info-title {
+                height: 24px;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #31343f;
+                font-size: 16px;
+                font-weight: 600;
+                line-height: 24px;
+                .title-style {
+                    flex: 1;
+                    overflow: hidden;
+                }
+                .subtitle-wrapper {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    .help-icon {
+                        cursor: pointer;
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                            color: #b4bbca;
+                        }
+                    }
+                }
+            }
+            .info-tags {
+                flex: 1;
+                min-width: 120px;
+                overflow: hidden;
+                display: inline-flex;
+                align-items: center;
+            }
+        }
+    }
+    .author-wrapper {
+        overflow: hidden;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+
+        .divider-style {
+            width: 1px;
+            height: 12px;
+            background-color: #eaecf3;
+            margin-left: 16px;
+            margin-right: 16px;
+        }
+        .text-style {
+            color: #31343f;
+            font-size: 12px;
+            line-height: 16px;
+        }
+        .left-wrapper {
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .author-wrapper {
+            min-width: 103px;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            .name-wrapper {
+                flex: 1;
+                overflow: hidden;
+            }
+        }
+        .copy-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .constant-wrapper {
+            flex: 1;
+            overflow: hidden;
+        }
+    }
+}
+.contributes-popover {
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px;
+        }
+    }
+}
+.contributes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 120px;
+}

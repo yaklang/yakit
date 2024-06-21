@@ -230,7 +230,15 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             )}
             {mode === "插件" && (
                 <>
-                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Plugin_Store)}>
+                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Plugin_Hub)}>
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicPluginStoreIcon />
+                            </div>
+                        </div>
+                        <div className={styles["title-style"]}>插件仓库</div>
+                    </div>
+                    {/* <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Plugin_Store)}>
                         <div className={styles["menu-icon-wrapper"]}>
                             <div className={styles["icon-wrapper"]}>
                                 <PublicPluginStoreIcon />
@@ -255,7 +263,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             </div>
                         </div>
                         <div className={styles["title-style"]}>本地</div>
-                    </div>
+                    </div> */}
                     <div className={styles["divider-style"]}></div>
                     <div
                         className={styles["vertical-menu-wrapper"]}

@@ -106,6 +106,9 @@ export interface PluginDetailHeaderProps {
     basePluginName?: string
     /** wrapper classname */
     wrapperClassName?: string
+    /** 隐藏插件 ID */
+    isHiddenUUID?: boolean
+    infoExtra?: ReactNode
 }
 /**协作者信息 */
 export interface CollaboratorInfoProps {

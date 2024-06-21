@@ -123,7 +123,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
     const fetchPluginDetail = useDebounceFn(
         useMemoizedFn((onlineId) => {
             setPluginLoading(true)
-            apiFetchOnlinePluginInfo(onlineId)
+            apiFetchOnlinePluginInfo({uuid: onlineId})
                 .then((info) => {
                     if (uuid === onlineId) {
                         setPlugin(info)

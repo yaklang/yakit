@@ -831,8 +831,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
 
     // 发送事件到本地
     const sendMsgToLocalPlugin = () => {
+        // 页面路由变动，要调整
         if (sendPluginLocal) {
-            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
+            // emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
         }
         emiter.emit("onImportRefLocalPluginList", "")
     }
@@ -989,6 +990,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 UUID: [formValue.localId]
             }).then(() => {
                 setVisible(false)
+                // 刷新本地列表
+                emiter.emit("onImportRefLocalPluginList", "")
                 success("插件导入成功")
             })
         }

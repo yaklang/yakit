@@ -31,4 +31,19 @@ export type PluginsEventProps = {
     onRefSinglePluginExecution?: string
     /** 刷新Codec相关菜单 */
     onRefPluginCodecMenu?: string
+
+    /** 我的插件 删除操作通知 回收站刷新列表 */
+    ownDeleteToRecycleList?: string
+    /** 回收站 还原操作通知 我的插件刷新列表 */
+    recycleRestoreToOwnList?: string
+
+    /** 插件详情删除本地插件 通知本地列表的变量刷新 */
+    detailDeleteLocalPlugin: string
+    /** 插件详情删除我的插件 通知我的列表的变量刷新 */
+    detailDeleteOwnPlugin: string
+    /** 插件详情更改公开|私密 通知我的列表里状态更新 */
+    detailChangeStatusOwnPlugin: string
+
+    /** 插件编辑-本地保存成功后通知详情更新插件信息 */
+    editorLocalSaveToDetail: string
 }

@@ -27,6 +27,11 @@ export interface PluginExecuteDetailHeardProps {
     /**插件UI联动相关参数*/
     linkPluginConfig?: HybridScanPluginConfig
     onDownPlugin: () => void
+    /** 隐藏插件 ID */
+    isHiddenUUID?: boolean
+    infoExtra?: ReactNode
+    /** 隐藏更新按钮 */
+    hiddenUpdateBtn?: boolean
 }
 
 export interface YakExtraParamProps {

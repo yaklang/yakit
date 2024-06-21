@@ -139,6 +139,7 @@ import {YakitRoute} from "../enums/yakitRoute"
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
+const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -171,6 +172,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "plugin-store": {label: "插件商店", describe: "目前插件为6大类型，可根据需要灵活编写插件，支持从插件商店下载插件"},
     "plugin-owner": {label: "我的插件"},
     "plugin-local": {label: "本地插件"},
+    "plugin-hub": {label: "插件仓库"},
     "plugin-groups": {label: "插件组管理"},
     "batch-executor-page-ex": {label: "批量执行", describe: "自由选择需要的 POC 进行批量漏洞检测"},
     dnslog: {label: "DNSLog", describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"},
@@ -228,6 +230,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
+    YakitRoute.Plugin_Hub,
     YakitRoute.Plugin_Groups,
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
@@ -269,6 +272,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
+    YakitRoute.Plugin_Hub,
     YakitRoute.Plugin_Groups,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
@@ -439,20 +443,29 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Mod_Brute:
             return <NewBrute id={params?.id || ""} />
         case YakitRoute.Plugin_Store:
-            // 社区版的插件商店不用判断登录,企业版/简易版的插件商店登录后才可查看
-            return (
-                <OnlineJudgment isJudgingLogin={!isCommunityEdition()}>
-                    <PluginsOnline />
-                </OnlineJudgment>
-            )
+            return null
+        // 社区版的插件商店不用判断登录,企业版/简易版的插件商店登录后才可查看
+        // return (
+        //     <OnlineJudgment isJudgingLogin={!isCommunityEdition()}>
+        //         <PluginsOnline />
+        //     </OnlineJudgment>
+        // )
         case YakitRoute.Plugin_Owner:
-            return (
-                <OnlineJudgment isJudgingLogin={true}>
-                    <PluginUser />
-                </OnlineJudgment>
-            )
+            return null
+        // return (
+        //     <OnlineJudgment isJudgingLogin={true}>
+        //         <PluginUser />
+        //     </OnlineJudgment>
+        // )
         case YakitRoute.Plugin_Local:
-            return <PluginsLocal />
+            return null
+        // return <PluginsLocal />
+        case YakitRoute.Plugin_Hub:
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <PluginHub />
+                </Suspense>
+            )
         case YakitRoute.Plugin_Groups:
             return <PluginGroups pluginGroupType={params?.pluginGroupType} />
         case YakitRoute.BatchExecutorPage:
@@ -725,17 +738,21 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
         label: "插件",
         children: [
             {
-                page: YakitRoute.Plugin_Store,
-                ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
+                page: YakitRoute.Plugin_Hub,
+                ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub]
             },
-            {
-                page: YakitRoute.Plugin_Owner,
-                ...YakitRouteToPageInfo[YakitRoute.Plugin_Owner]
-            },
-            {
-                page: YakitRoute.Plugin_Local,
-                ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
-            },
+            // {
+            //     page: YakitRoute.Plugin_Store,
+            //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
+            // },
+            // {
+            //     page: YakitRoute.Plugin_Owner,
+            //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Owner]
+            // },
+            // {
+            //     page: YakitRoute.Plugin_Local,
+            //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
+            // },
             {
                 page: YakitRoute.BatchExecutorPage,
                 ...YakitRouteToPageInfo[YakitRoute.BatchExecutorPage]
@@ -941,6 +958,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidPluginLocalIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
     },
+    [YakitRoute.Plugin_Hub]: {
+        page: YakitRoute.Plugin_Hub,
+        icon: <PrivateOutlinePluginStoreIcon />,
+        hoverIcon: <PrivateSolidPluginStoreIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub]
+    },
     [YakitRoute.BatchExecutorPage]: {
         page: YakitRoute.BatchExecutorPage,
         icon: <PrivateOutlineBatchPluginIcon />,
@@ -1117,6 +1140,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.Plugin_Store,
             YakitRoute.Plugin_Owner,
             YakitRoute.Plugin_Local,
+            YakitRoute.Plugin_Hub,
             YakitRoute.BatchExecutorPage
         ])
     },
@@ -1200,6 +1224,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.Plugin_Store,
             YakitRoute.Plugin_Owner,
             YakitRoute.Plugin_Local,
+            YakitRoute.Plugin_Hub,
             YakitRoute.BatchExecutorPage
         ])
     },
@@ -1260,6 +1285,12 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
                 icon: <PrivateOutlinePluginLocalIcon />,
                 hoverIcon: <PrivateSolidPluginLocalIcon />,
                 ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
+            },
+            {
+                page: YakitRoute.Plugin_Hub,
+                icon: <PrivateOutlinePluginStoreIcon />,
+                hoverIcon: <PrivateSolidPluginStoreIcon />,
+                ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub]
             },
             {
                 page: YakitRoute.BatchExecutorPage,

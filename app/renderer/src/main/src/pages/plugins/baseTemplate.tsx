@@ -259,7 +259,9 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         prImgs = [],
         type,
         basePluginName,
-        wrapperClassName
+        wrapperClassName,
+        isHiddenUUID,
+        infoExtra
     } = props
 
     const tagList = useMemo(() => {
@@ -358,7 +360,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             </>
                         )}
                     </div>
-                    {pluginId && (
+                    {!isHiddenUUID && pluginId && (
                         <>
                             <div
                                 style={{marginLeft: contributes.length > 0 ? 8 : 16}}
@@ -396,9 +398,16 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                 </div>
 
                 <div className={styles["divider-style"]}></div>
-                <div className={classNames(styles["constant-wrapper"], styles["text-style"])}>{`更新时间 : ${formatDate(
+                <div className={classNames(styles["text-style"], {[styles['constant-wrapper']]: !infoExtra})}>{`更新时间 : ${formatDate(
                     updated_at
                 )}`}</div>
+
+                {!!infoExtra && (
+                    <>
+                        <div className={styles["divider-style"]}></div>
+                        {infoExtra}
+                    </>
+                )}
             </div>
         </div>
     )

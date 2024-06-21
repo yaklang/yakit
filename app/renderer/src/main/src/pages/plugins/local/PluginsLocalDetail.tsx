@@ -23,7 +23,6 @@ import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {PluginDetailsTabProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {failed, success, yakitNotify} from "@/utils/notification"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {AddToMenuActionForm} from "@/pages/yakitStore/PluginOperator"
 import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
@@ -46,6 +45,7 @@ import {useStore} from "@/store"
 import Login from "@/pages/Login"
 import {NetWorkApi} from "@/services/fetch"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {AddPluginMenuContent} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -232,7 +232,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         if (!plugin) return
         const m = showYakitModal({
             title: `添加到菜单栏中[${plugin.Id}]`,
-            content: <AddToMenuActionForm visible={true} setVisible={() => m.destroy()} script={plugin} />,
+            content: <AddPluginMenuContent onCancel={() => m.destroy()} script={plugin} />,
             onCancel: () => {
                 m.destroy()
             },
