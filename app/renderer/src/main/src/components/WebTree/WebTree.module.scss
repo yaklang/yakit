@@ -139,6 +139,9 @@
                 .ant-tree-switcher.ant-tree-switcher-noop {
                     background-color: var(--yakit-primary-4);
                 }
+                .ant-tree-node-content-wrapper.ant-tree-node-selected {
+                    background-color: var(--yakit-primary-4);
+                }
             }
             .ant-tree-switcher.ant-tree-switcher-noop {
                 background-color: var(--yakit-primary-5);
