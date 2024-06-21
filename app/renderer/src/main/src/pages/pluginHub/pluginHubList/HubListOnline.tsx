@@ -341,7 +341,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const onNewPlugin = useMemoizedFn(() => {
         emiter.emit(
             "openPage",
-            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Store}})
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
         )
     })
 
@@ -360,9 +360,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const [scrollTo, setScrollTo] = useState<number>(0)
     useUpdateEffect(() => {
         if (isDetailList) {
-            setTimeout(() => {
-                setScrollTo(showIndex.current)
-            }, 100)
+            // setTimeout(() => {
+            //     setScrollTo(showIndex.current)
+            // }, 100)
         }
     }, [isDetailList])
 

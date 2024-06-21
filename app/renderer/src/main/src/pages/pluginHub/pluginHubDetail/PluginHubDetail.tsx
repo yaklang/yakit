@@ -69,7 +69,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const onNewPlugin = useMemoizedFn(() => {
             emiter.emit(
                 "openPage",
-                JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.NewHome}})
+                JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
             )
         })
 
@@ -557,11 +557,13 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                             infoExtra={infoExtraNode}
                                         />
                                         <div className={styles["detail-content"]}>
-                                            <YakitEditor
-                                                type={onlinePlugin?.type || "plaintext"}
-                                                value={onlinePlugin?.content || ""}
-                                                readOnly={true}
-                                            />
+                                            <div className={styles["editer-body"]}>
+                                                <YakitEditor
+                                                    type={onlinePlugin?.type || "plaintext"}
+                                                    value={onlinePlugin?.content || ""}
+                                                    readOnly={true}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (
@@ -580,6 +582,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                                     headExtraNode={extraNode}
                                                     isHiddenUUID={true}
                                                     infoExtra={infoExtraNode}
+                                                    hiddenUpdateBtn={true}
                                                 />
                                             ) : (
                                                 <div className={styles["tab-pane-empty"]}>
@@ -588,7 +591,9 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                             )}
                                         </>
                                     ) : (
-                                        <YakitSpin wrapperClassName={styles["execute-spin"]} />
+                                        <div className={styles["tab-pane-empty"]}>
+                                            <YakitEmpty title='暂无插件信息' />
+                                        </div>
                                     )}
                                 </div>
                             </TabPane>
@@ -609,14 +614,16 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                             }))}
                                             updated_at={localPlugin?.UpdatedAt || 0}
                                             basePluginName={copySourcePlugin}
-                                            // infoExtra={infoExtraNode}
+                                            infoExtra={infoExtraNode}
                                         />
                                         <div className={styles["detail-content"]}>
+                                        <div className={styles["editer-body"]}>
                                             <YakitEditor
                                                 type={localPlugin?.Type || "yak"}
                                                 value={localPlugin?.Content || ""}
                                                 readOnly={true}
                                             />
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (

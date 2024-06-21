@@ -23,7 +23,10 @@ export const CommunityDeprecatedSecondMenu: string[] = [
     "crt子域名收集",
     "纯暴力子域名收集",
     "SEO综合查询",
-    "被动子域名收集"
+    "被动子域名收集",
+    "插件商店",
+    "我的插件",
+    "本地插件"
 ]
 
 /**

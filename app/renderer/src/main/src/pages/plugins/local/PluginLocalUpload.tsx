@@ -412,9 +412,10 @@ interface PluginLocalUploadSingleProps {
     /**上传成功的回调 */
     onUploadSuccess: () => void
     plugin: YakScript
+    onFailed?: () => void
 }
 export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = React.memo((props) => {
-    const {plugin, onClose, onUploadSuccess} = props
+    const {plugin, onClose, onUploadSuccess, onFailed} = props
     const [current, setCurrent] = useState<number>(0)
     const [isPrivate, setIsPrivate] = useState<boolean>(true)
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -422,7 +423,7 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
     const taskTokenRef = useRef(randomString(40))
 
     const {onStart} = usePluginUploadHooks({
-        isSingle:true,
+        isSingle: true,
         taskToken: taskTokenRef.current,
         onUploadData: () => {},
         onUploadSuccess: () => {
@@ -440,6 +441,14 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
     const onPrivateSelectionPrev = useMemoizedFn((v) => {
         setCurrent(current + 1)
         setIsPrivate(v)
+    })
+    /** 检测后的回调 */
+    const hanleTestCallback = useMemoizedFn((result: boolean) => {
+        if (result) {
+            onUpload()
+        } else {
+            if (onFailed) onFailed()
+        }
     })
     /**检测后上传 */
     const onUpload = useMemoizedFn(() => {
@@ -465,7 +474,7 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
             },
             {
                 title: "自动检测",
-                content: <PluginAutoTestSingle plugin={plugin} onNext={onUpload} />
+                content: <PluginAutoTestSingle plugin={plugin} onNext={hanleTestCallback} />
             }
         ]
     }, [current, plugin, isPrivate, uploadLoading])
@@ -479,14 +488,12 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
 interface PluginAutoTestSingleProps {
     plugin: YakScript
     /**下一步 */
-    onNext: () => void
+    onNext: (v: boolean) => void
 }
 const PluginAutoTestSingle: React.FC<PluginAutoTestSingleProps> = React.memo((props) => {
     const {plugin, onNext} = props
     const onCodeScoreCallback = useMemoizedFn((isPass: boolean) => {
-        if (isPass) {
-            onNext()
-        }
+        onNext(isPass)
     })
     return (
         <>

@@ -1506,7 +1506,7 @@ export const apiHybridScanByMode: (
  * @param plugin
  * @returns
  */
-export const onToEditPlugin = (plugin: YakScript) => {
+export const onToEditPlugin = (plugin: YakScript, route?: YakitRoute) => {
     if (plugin.IsCorePlugin) {
         yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
         return
@@ -1524,7 +1524,7 @@ export const onToEditPlugin = (plugin: YakScript) => {
             "openPage",
             JSON.stringify({
                 route: YakitRoute.ModifyYakitScript,
-                params: {source: YakitRoute.Plugin_Local, id: +plugin.Id}
+                params: {source: route || YakitRoute.Plugin_Local, id: +plugin.Id}
             })
         )
     }

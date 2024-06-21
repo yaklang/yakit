@@ -14,7 +14,7 @@ const wrapperId = "yakit-plugin-hub"
 
 interface PluginHubProps {}
 
-export const PluginHub: React.FC<PluginHubProps> = memo((props) => {
+const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     const {} = props
 
     const [isDetail, setIsDetail] = useState<boolean>(false)
@@ -61,3 +61,5 @@ export const PluginHub: React.FC<PluginHubProps> = memo((props) => {
         </div>
     )
 })
+
+export default PluginHub

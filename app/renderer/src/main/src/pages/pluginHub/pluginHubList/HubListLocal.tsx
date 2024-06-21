@@ -20,7 +20,7 @@ import {
     apiQueryYakScriptByYakScriptName
 } from "@/pages/plugins/utils"
 import {yakitNotify} from "@/utils/notification"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
 import {
@@ -40,7 +40,7 @@ import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {FilterPopoverBtn, FuncFilterPopover} from "@/pages/plugins/funcTemplate"
-import {ExportParamsProps, PluginGroupList} from "@/pages/plugins/local/PluginsLocalType"
+import {ExportYakScriptStreamRequest, PluginGroupList} from "@/pages/plugins/local/PluginsLocalType"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
@@ -51,8 +51,8 @@ import {randomString} from "@/utils/randomUtil"
 import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "@/pages/plugins/pluginUploadHooks"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {PluginLocalUpload, PluginLocalUploadSingle} from "@/pages/plugins/local/PluginLocalUpload"
-import {PluginLocalExport} from "@/pages/plugins/local/PluginLocalExportProps"
-import {DefaultExportRequest, DefaultLocalPlugin} from "../defaultConstant"
+import {PluginLocalExport, PluginLocalExportForm} from "@/pages/plugins/local/PluginLocalExportProps"
+import {DefaultExportRequest, DefaultLocalPlugin, PluginOperateHint} from "../defaultConstant"
 import useGetSetState from "../hooks/useGetSetState"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {Tooltip} from "antd"
@@ -510,7 +510,11 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         if (batchUploadLoading) return
         setBatchUploadLoading(true)
 
-        const list = selectList.map((item) => item.ScriptName) || []
+        const list = selectList.filter((item) => !item.IsCorePlugin).map((item) => item.ScriptName) || []
+        if (!allChecked && list.length === 0) {
+            yakitNotify("error", "勾选的插件全为内置插件或没有勾选插件")
+            return
+        }
         const m = showYakitModal({
             type: "white",
             title: "批量上传插件",
@@ -518,9 +522,11 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 <PluginLocalUpload
                     pluginNames={list}
                     onClose={() => {
-                        setBatchDelLoading(false)
+                        setBatchUploadLoading(false)
                         m.destroy()
                         setTimeout(() => {
+                            // 刷新我的列表
+                            emiter.emit("onRefUserPluginList", "")
                             fetchList(true)
                         }, 200)
                     }}
@@ -528,7 +534,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             ),
             footer: null,
             modalAfterClose: () => {
-                setBatchDelLoading(false)
+                setBatchUploadLoading(false)
                 onCheck(false)
             }
         })
@@ -568,6 +574,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             setSingleUpload((arr) => arr.filter((item) => item.ScriptName !== info.ScriptName))
                             m.destroy()
                         }}
+                        onFailed={() => {
+                            setSingleUpload((arr) => arr.filter((item) => item.ScriptName !== info.ScriptName))
+                        }}
                     />
                 ),
                 footer: null
@@ -595,60 +604,60 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     /** ---------- 上传插件 End ---------- */
 
     /** ---------- 导出插件 Start ---------- */
-    // 导出插件的选择位置框是否展示
-    const isShowExportDialog = useRef<boolean>(false)
     // 导出本地插件
     const [exportModal, setExportModal] = useState<boolean>(false)
-    const exportParams = useRef<ExportParamsProps>({...DefaultExportRequest})
+    const exportParams = useRef<ExportYakScriptStreamRequest>({...DefaultExportRequest})
     const exportSource = useRef<string>("")
     const onHeaderExtraExport = useMemoizedFn(() => {
-        if (isShowExportDialog.current) {
-            yakitNotify("error", "正在选择导出地址中...")
-            return
-        }
         exportSource.current = "batch"
-        const Ids: number[] = selectList.map((ele) => Number(ele.Id)).filter((item) => !!item)
-        openExportModal(Ids)
+        const names: string[] = selectList.map((ele) => ele.ScriptName).filter((item) => !!item)
+        openExportModal(names)
     })
     // 单个导出
     const onFooterExtraExport = useMemoizedFn((info: YakScript) => {
-        if (isShowExportDialog.current) {
-            yakitNotify("error", "正在选择导出地址中...")
-            return
-        }
-        const ids = Number(info.Id) ? [Number(info.Id)] : []
-        if (ids.length > 0) {
-            exportSource.current = "single"
-            openExportModal(ids)
-        }
+        exportSource.current = "single"
+        openExportModal([info.ScriptName])
     })
-    const openExportModal = useMemoizedFn(async (ids: number[]) => {
+    const openExportModal = useMemoizedFn(async (names: string[]) => {
         if (exportModal) return
         try {
-            isShowExportDialog.current = true
-            const showSaveDialogRes = await ipcRenderer.invoke("openDialog", {properties: ["openDirectory"]})
-            isShowExportDialog.current = false
-            if (showSaveDialogRes.canceled) return
-
-            const page: PluginListPageMeta = {
-                page: +response.Pagination.Page,
-                limit: +response.Pagination.Limit || 20
-            }
-            const queryFilters = {...getFilters()}
-            const querySearch = {...getSearch()}
-            const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams({filter: queryFilters, search: querySearch, pageParams: page})
-            }
-            const params: ExportParamsProps = {
-                OutputDir: showSaveDialogRes.filePaths[0],
-                YakScriptIds: ids,
-                Keywords: query.Keyword || "",
-                Type: query.Type || "",
-                UserName: query.UserName || "",
-                Tags: query.Tag + ""
-            }
-            exportParams.current = params
-            setExportModal(true)
+            let m = showYakitModal({
+                title: "导出插件",
+                width: 450,
+                closable: true,
+                maskClosable: false,
+                footer: null,
+                content: (
+                    <div style={{margin: "15px 0"}}>
+                        <PluginLocalExportForm
+                            onCancel={() => m.destroy()}
+                            onOK={(values) => {
+                                const page: PluginListPageMeta = {
+                                    page: +response.Pagination.Page,
+                                    limit: +response.Pagination.Limit || 20
+                                }
+                                const queryFilters = {...getFilters()}
+                                const querySearch = {...getSearch()}
+                                const query: QueryYakScriptRequest = {
+                                    ...convertLocalPluginsRequestParams({
+                                        filter: queryFilters,
+                                        search: querySearch,
+                                        pageParams: page
+                                    })
+                                }
+                                const params: ExportYakScriptStreamRequest = {
+                                    OutputFilename: values.OutputFilename,
+                                    Password: values.Password,
+                                    Filter: {...query, IncludedScriptNames: names}
+                                }
+                                exportParams.current = params
+                                setExportModal(true)
+                                m.destroy()
+                            }}
+                        ></PluginLocalExportForm>
+                    </div>
+                )
+            })
         } catch (error) {
             yakitNotify("error", error + "")
         }
@@ -667,7 +676,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const onNewPlugin = useMemoizedFn(() => {
         emiter.emit(
             "openPage",
-            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Store}})
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
         )
     })
     // 管理分组
@@ -690,9 +699,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const [scrollTo, setScrollTo] = useState<number>(0)
     useUpdateEffect(() => {
         if (isDetailList) {
-            setTimeout(() => {
-                setScrollTo(showIndex.current)
-            }, 100)
+            // setTimeout(() => {
+            //     setScrollTo(showIndex.current)
+            // }, 100)
         }
     }, [isDetailList])
 
@@ -1008,7 +1017,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             <NoPromptHint
                 visible={delHint}
                 title='是否要删除插件'
-                content='确认删除插件后，插件将会放在回收站'
+                content={PluginOperateHint["delLocal"]}
                 cacheKey={RemotePluginGV.LocalPluginRemoveCheck}
                 onCallback={delHintCallback}
             />

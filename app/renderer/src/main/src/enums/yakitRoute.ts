@@ -17,6 +17,7 @@ export enum YakitRoute {
     Plugin_Store = "plugin-store",
     Plugin_Owner = "plugin-owner",
     Plugin_Local = "plugin-local",
+    Plugin_Hub = "plugin-hub",
     Plugin_Groups = "plugin-groups",
     BatchExecutorPage = "batch-executor-page-ex",
     /** 反连 */

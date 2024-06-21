@@ -4,7 +4,7 @@ import {
     OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
     OutlineDotshorizontalIcon,
-    OutlineExclamationIcon,
+    OutlineExportIcon,
     OutlineLockclosedIcon,
     OutlineLockopenIcon,
     OutlineMinuscircleIcon,
@@ -15,7 +15,7 @@ import {
 } from "@/assets/icon/outline"
 import {CodeScoreModule, FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 import {API} from "@/services/swagger/resposeType"
-import {YakScript} from "@/pages/invoker/schema"
+import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {yakitNotify} from "@/utils/notification"
 import {AddPluginMenuContent, HubButton, HubOperateHint, RemovePluginMenuContent} from "./funcTemplate"
@@ -26,16 +26,21 @@ import {
     apiDeletePluginMine,
     apiDeleteYakScriptByIds,
     apiUpdatePluginPrivateMine,
+    convertLocalPluginsRequestParams,
     onToEditPlugin
 } from "@/pages/plugins/utils"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {useStore} from "@/store"
 import {PluginLocalUploadSingle} from "@/pages/plugins/local/PluginLocalUpload"
 import useListenWidth from "../hooks/useListenWidth"
-import {PluginLocalExport} from "@/pages/plugins/local/PluginLocalExportProps"
-import {ExportParamsProps} from "@/pages/plugins/local/PluginsLocalType"
+import {PluginLocalExport, PluginLocalExportForm} from "@/pages/plugins/local/PluginLocalExportProps"
 import {DefaultExportRequest, PluginOperateHint} from "../defaultConstant"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
+import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
+import {ExportYakScriptStreamRequest} from "@/pages/plugins/local/PluginsLocalType"
+import {defaultSearch} from "@/pages/plugins/builtInData"
+import cloneDeep from "lodash/cloneDeep"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
@@ -106,7 +111,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                     {
                         key: "export",
                         label: "导出",
-                        itemIcon: <OutlineExclamationIcon />,
+                        itemIcon: <OutlineExportIcon />,
                         type: !!local ? undefined : "info"
                     }
                 ]
@@ -149,7 +154,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 {
                     key: "export",
                     label: "导出",
-                    itemIcon: <OutlineExclamationIcon />,
+                    itemIcon: <OutlineExportIcon />,
                     type: isLocal ? undefined : "info"
                 }
             ])
@@ -336,7 +341,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         const handleEdit = useMemoizedFn(() => {
             activeOperate.current = ""
             if (!local) return
-            onToEditPlugin(local)
+            onToEditPlugin(local, YakitRoute.Plugin_Hub)
         })
         // 插件分享
         const handleShare = useMemoizedFn(() => {
@@ -413,9 +418,10 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                                 if (isPass) {
                                     await onUpdatePrivate(online)
                                     m.destroy()
-                                } else {
-                                    m.destroy()
                                 }
+                                //  else {
+                                //     m.destroy()
+                                // }
                             }}
                         />
                     ),
@@ -455,40 +461,52 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         })
 
         /** ---------- 导出插件 Start ---------- */
-        // 导出插件的选择位置框是否展示
-        const isShowExportDialog = useRef<boolean>(false)
         // 导出本地插件
         const [exportModal, setExportModal] = useState<boolean>(false)
-        const exportParams = useRef<ExportParamsProps>({...DefaultExportRequest})
+        const exportParams = useRef<ExportYakScriptStreamRequest>({...DefaultExportRequest})
 
         const handleExport = useMemoizedFn(async () => {
             if (!local) return
-            if (isShowExportDialog.current) {
-                yakitNotify("error", "正在选择导出地址中...")
-                return
-            }
-
-            const ids = Number(local.Id) ? [Number(local.Id)] : []
-            openExportModal(ids)
+            openExportModal([local.ScriptName])
         })
-        const openExportModal = useMemoizedFn(async (ids: number[]) => {
+        const openExportModal = useMemoizedFn(async (names: string[]) => {
             if (exportModal) return
             try {
-                isShowExportDialog.current = true
-                const showSaveDialogRes = await ipcRenderer.invoke("openDialog", {properties: ["openDirectory"]})
-                isShowExportDialog.current = false
-                if (showSaveDialogRes.canceled) return
-
-                const params: ExportParamsProps = {
-                    OutputDir: showSaveDialogRes.filePaths[0],
-                    YakScriptIds: ids,
-                    Keywords: "",
-                    Type: "",
-                    UserName: "",
-                    Tags: ""
-                }
-                exportParams.current = params
-                setExportModal(true)
+                let m = showYakitModal({
+                    title: "导出插件",
+                    width: 450,
+                    closable: true,
+                    maskClosable: false,
+                    footer: null,
+                    content: (
+                        <div style={{margin: "15px 0"}}>
+                            <PluginLocalExportForm
+                                onCancel={() => m.destroy()}
+                                onOK={(values) => {
+                                    const page: PluginListPageMeta = {
+                                        page: 1,
+                                        limit: 20
+                                    }
+                                    const query: QueryYakScriptRequest = {
+                                        ...convertLocalPluginsRequestParams({
+                                            filter: {},
+                                            search: cloneDeep(defaultSearch),
+                                            pageParams: page
+                                        })
+                                    }
+                                    const params: ExportYakScriptStreamRequest = {
+                                        OutputFilename: values.OutputFilename,
+                                        Password: values.Password,
+                                        Filter: {...query, IncludedScriptNames: names}
+                                    }
+                                    exportParams.current = params
+                                    setExportModal(true)
+                                    m.destroy()
+                                }}
+                            ></PluginLocalExportForm>
+                        </div>
+                    )
+                })
             } catch (error) {
                 yakitNotify("error", error + "")
             }

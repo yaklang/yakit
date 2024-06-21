@@ -43,4 +43,7 @@ export type PluginsEventProps = {
     detailDeleteOwnPlugin: string
     /** 插件详情更改公开|私密 通知我的列表里状态更新 */
     detailChangeStatusOwnPlugin: string
+
+    /** 插件编辑-本地保存成功后通知详情更新插件信息 */
+    editorLocalSaveToDetail: string
 }

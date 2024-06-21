@@ -668,6 +668,7 @@ export declare namespace API {
          * 协作者
          */
         collaborator?: CollaboratorInfo[]
+        isAuthor?: boolean
     }
     export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
     export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail {}

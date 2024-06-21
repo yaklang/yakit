@@ -30,6 +30,8 @@ export interface PluginExecuteDetailHeardProps {
     /** 隐藏插件 ID */
     isHiddenUUID?: boolean
     infoExtra?: ReactNode
+    /** 隐藏更新按钮 */
+    hiddenUpdateBtn?: boolean
 }
 
 export interface YakExtraParamProps {

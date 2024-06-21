@@ -70,7 +70,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
             if (isDetail) {
                 return hiddenDetail ? "展开详情列表" : "收起详情列表"
             } else {
-                return activeHidden ? "展开搜索条件" : "收起搜索条件"
+                return activeHidden ? "展开高级筛选" : "收起高级筛选"
             }
         } else {
             const item = HubSideBarList.find((item) => item.key === key)
@@ -84,6 +84,8 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                 {HubSideBarList.map((item, index) => {
                     const isActive = item.key === active
                     const hint = barHint(item.key, isActive)
+                    const selected =
+                        item.key !== "recycle" && active === item.key && (isDetail ? hiddenDetail : activeHidden)
                     const visible = !!hintShow[item.key]
                     return (
                         <Tooltip
@@ -100,9 +102,8 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                         >
                             <div
                                 className={classNames(styles["side-bar-list-item"], {
-                                    [styles["side-bar-list-item-active"]]: active === item.key,
-                                    [styles["side-bar-list-item-selected"]]:
-                                        item.key !== "recycle" && active === item.key && activeHidden
+                                    [styles["side-bar-list-item-active"]]: isActive,
+                                    [styles["side-bar-list-item-selected"]]: selected
                                 })}
                                 onClick={() => onSetActive(item.key)}
                             >

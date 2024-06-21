@@ -364,7 +364,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
         help,
         type,
         tags,
-        tagMinWidth = 20,
+        tagMinWidth = 120,
         extraNode,
         img,
         user,
@@ -412,7 +412,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                             </Tooltip>
                         </div>
                     </div>
-                    <div style={{minWidth: tagMinWidth || 20}} className={styles["info-tags"]}>
+                    <div style={{minWidth: tagMinWidth || 120}} className={styles["info-tags"]}>
                         {pluginTypeToName[type] && pluginTypeToName[type].name && (
                             <YakitTag color={pluginTypeToName[type]?.color as any}>
                                 {pluginTypeToName[type]?.name}
@@ -493,7 +493,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
 
                 {!!infoExtra && (
                     <>
-                        <div style={{marginRight: 10}} className={styles["divider-style"]} />
+                        <div className={styles["divider-style"]} />
                         {infoExtra}
                     </>
                 )}

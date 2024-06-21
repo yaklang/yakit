@@ -6,9 +6,11 @@ import {
     OutlineOwnPluginIcon,
     OutlineTrashSecondIcon
 } from "@/assets/icon/outline"
-import {ExportParamsProps} from "../plugins/local/PluginsLocalType"
 import {YakScript} from "../invoker/schema"
 import {YakitPluginOnlineDetail} from "../plugins/online/PluginsOnlineType"
+import {ExportYakScriptStreamRequest} from "../plugins/local/PluginsLocalType"
+import cloneDeep from "lodash/cloneDeep"
+import {defaultFilter} from "../plugins/builtInData"
 
 export const HubSideBarList: {key: PluginSourceType; title: string; icon: ReactNode; hint: string}[] = [
     {key: "online", title: "插件商店", icon: <OutlineOnlinePluginIcon />, hint: "插件商店"},
@@ -18,13 +20,10 @@ export const HubSideBarList: {key: PluginSourceType; title: string; icon: ReactN
 ]
 
 /** @name 插件导出-默认参数 */
-export const DefaultExportRequest: ExportParamsProps = {
-    OutputDir: "",
-    YakScriptIds: [],
-    Keywords: "",
-    Type: "",
-    UserName: "",
-    Tags: ""
+export const DefaultExportRequest: ExportYakScriptStreamRequest = {
+    OutputFilename: "",
+    Password: "",
+    Filter: cloneDeep(defaultFilter)
 }
 
 /** @name 插件相关操作提示语 */

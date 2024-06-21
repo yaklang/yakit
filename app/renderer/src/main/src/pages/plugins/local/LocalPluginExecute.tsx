@@ -13,7 +13,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
-    const {plugin, headExtraNode, linkPluginConfig, isHiddenUUID, infoExtra} = props
+    const {plugin, headExtraNode, linkPluginConfig, isHiddenUUID, infoExtra, hiddenUpdateBtn} = props
     /**执行状态 */
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [runtimeId, setRuntimeId] = useState<string>("")
@@ -82,6 +82,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 onDownPlugin={onDownPlugin}
                 isHiddenUUID={isHiddenUUID}
                 infoExtra={infoExtra}
+                hiddenUpdateBtn={hiddenUpdateBtn}
             />
             {isShowResult && (
                 <PluginExecuteResult

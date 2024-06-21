@@ -569,7 +569,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
      * @description 带参数的页面跳转
      */
     const goStoreRoute = (params) => {
-        emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Store, params: {...params}}))
+        // emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Store, params: {...params}}))
     }
 
     const selectIconShow = (v: string) => {
@@ -580,7 +580,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     }
     /**切换至插件商店页面，不带参数 */
     const openStoreRoute = useMemoizedFn(() => {
-        setOpenPage({route: YakitRoute.Plugin_Store})
+        // setOpenPage({route: YakitRoute.Plugin_Store})
     })
 
     const onRefresh = useMemoizedFn(() => {
@@ -785,8 +785,8 @@ export const newHomeList: newHomeListData[] = [
         subMenuData: [
             {
                 id: "3-1",
-                key: YakitRoute.Plugin_Store,
-                ...YakitRouteToPageInfo[YakitRoute.Plugin_Store],
+                key: YakitRoute.Plugin_Hub,
+                ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub],
                 icon: <PrivateSolidPluginStoreIcon />,
                 isShow: true
             },

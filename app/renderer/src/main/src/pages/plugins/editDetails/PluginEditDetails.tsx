@@ -1012,8 +1012,14 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
         const targetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
         let parent: YakitRoute | undefined = undefined
-        if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.pluginInfoEditor) {
-            parent = targetCache.pageParamsInfo.pluginInfoEditor.source
+        if (isModify) {
+            if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.pluginInfoEditor) {
+                parent = targetCache.pageParamsInfo.pluginInfoEditor?.source || undefined
+            }
+        } else {
+            if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.addYakitScriptPageInfo) {
+                parent = targetCache.pageParamsInfo.addYakitScriptPageInfo?.source || undefined
+            }
         }
 
         if (parent) {

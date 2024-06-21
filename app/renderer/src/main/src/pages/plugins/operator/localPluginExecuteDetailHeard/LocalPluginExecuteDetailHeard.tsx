@@ -55,7 +55,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         linkPluginConfig,
         onDownPlugin,
         isHiddenUUID,
-        infoExtra
+        infoExtra,
+        hiddenUpdateBtn
     } = props
 
     const [form] = Form.useForm()
@@ -293,7 +294,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         e.stopPropagation()
         onDownPlugin()
     })
-    
+
     return (
         <>
             <ExpandAndRetract
@@ -329,7 +330,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                                     <>
                                         {!isExpand && <YakitButton onClick={onExecuteInTop}>执行</YakitButton>}
                                         {extraNode}
-                                        {isShowUpdate && (
+                                        {!hiddenUpdateBtn && isShowUpdate && (
                                             <>
                                                 <div className='divider-style' />
                                                 <YakitButton type='primary' onClick={onDown}>

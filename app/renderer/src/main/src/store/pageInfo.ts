@@ -67,6 +67,8 @@ export interface AddYakitScriptPageInfoProps {
     pluginType: string
     /**插件源码 */
     code: string
+    source?: YakitRoute
+    [key: string]: any
 }
 export interface SpaceEnginePageInfoProps {}
 
@@ -133,7 +135,6 @@ export interface ScanPortPageInfoProps {
     targets: string
 }
 
-
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
 
@@ -192,10 +193,9 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(
         persist(
             (set, get) => ({
-                
                 pages: new Map(),
                 selectGroupId: new Map(),
-                
+
                 setPagesData: (key, values) => {
                     const newVal = new Map(get().pages).set(key, values)
                     set({

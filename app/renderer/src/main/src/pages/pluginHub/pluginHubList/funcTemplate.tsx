@@ -55,6 +55,8 @@ import {YakEditor} from "@/utils/editors"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {SolidThumbupIcon} from "@/assets/icon/solid"
 import {YakScript} from "@/pages/invoker/schema"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 import YakitLogo from "@/assets/yakitLogo.png"
 import UnLogin from "@/assets/unLogin.png"
@@ -111,6 +113,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                 wrapperClassName
             )}
         >
+            <div className={styles["hub-list-filter-header"]}>高级筛选</div>
             <div className={styles["hub-list-filter-body"]}>
                 <YakitCollapse
                     activeKey={activeKey}
@@ -629,7 +632,7 @@ export const HubGridOpt: React.FC<HubGridOptProps> = memo((props) => {
                     <div className={styles["content-wrapper"]}>
                         <div className={styles["tags-wrapper"]}>
                             {pluginTypeToName[type] && pluginTypeToName[type].name && (
-                                <YakitTag color={pluginTypeToName[type]?.color as any}>
+                                <YakitTag style={{marginRight: 0}} color={pluginTypeToName[type]?.color as any}>
                                     {pluginTypeToName[type]?.name}
                                 </YakitTag>
                             )}
@@ -1103,7 +1106,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
                                 m.destroy()
                             } else {
                                 setStateLoading(false)
-                                m.destroy()
+                                // m.destroy()
                             }
                         }}
                     />
@@ -1303,7 +1306,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
             yakitNotify("error", "插件信息错误，请刷新列表后重试")
             return
         }
-        onToEditPlugin(info)
+        onToEditPlugin(info, YakitRoute.Plugin_Hub)
     })
 
     const onMenus = useMemoizedFn(({key}) => {
@@ -1330,6 +1333,32 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         }
         onDel(info)
     })
+
+    const menus = useMemo(() => {
+        if (!!info.IsCorePlugin) {
+            return [
+                {
+                    key: "export",
+                    label: "导出",
+                    itemIcon: <OutlineExportIcon />
+                }
+            ]
+        }
+        return [
+            {
+                key: "export",
+                label: "导出",
+                itemIcon: <OutlineExportIcon />
+            },
+            {
+                key: "del",
+                label: "删除本地",
+                type: "danger",
+                itemIcon: <OutlineTrashIcon />,
+                disabled: delLoading
+            }
+        ]
+    }, [info])
 
     return (
         <div className={styles["local-opt-footer-extra"]}>
@@ -1358,20 +1387,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
                 menu={{
                     selectedKeys: [],
                     type: "primary",
-                    data: [
-                        {
-                            key: "export",
-                            label: "导出",
-                            itemIcon: <OutlineExportIcon />
-                        },
-                        {
-                            key: "del",
-                            label: "删除本地",
-                            type: "danger",
-                            itemIcon: <OutlineTrashIcon />,
-                            disabled: delLoading
-                        }
-                    ],
+                    data: menus as YakitMenuItemType[],
                     onClick: onMenus
                 }}
                 button={{type: "text2"}}
