@@ -18,6 +18,27 @@ import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
+const initFileTreeData = (list,path) => {
+    return list.Resources.map((item) => {
+        const isFile = !item.ResourceType
+        const isFolder = item.ResourceType === "dir"
+        const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
+        const isLeaf = isFile || !item.HaveChildrenNodes
+        return {
+            parent: path,
+            name: item.ResourceName,
+            path: item.Path,
+            isFolder: isFolder,
+            icon: isFolder ? FolderDefault : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+            isLeaf: isLeaf
+        }
+    })
+
+}
+
+/**
+ * @name 文件树获取
+ */
 export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
     return new Promise(async (resolve, reject) => {
         const params = {
@@ -27,22 +48,8 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-
-            const data: FileNodeMapProps[] = list.Resources.map((item) => {
-                const isFile = !item.ResourceType
-                const isFolder = item.ResourceType === "dir"
-                const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
-                const isLeaf = isFile || !item.HaveChildrenNodes
-                return {
-                    parent: path,
-                    name: item.ResourceName,
-                    path: item.Path,
-                    isFolder: isFolder,
-                    icon: isFolder ? FolderDefault : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-                    isLeaf: isLeaf
-                }
-            })
-
+            console.log("文件树", list)
+            const data: FileNodeMapProps[] = initFileTreeData(list,path)
             resolve(data)
         } catch (error) {
             reject(error)
@@ -51,13 +58,116 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 }
 
 /**
+ * @name 文件树重命名
+ */
+export const grpcFetchRenameFileTree: (path: string, newName: string) => Promise<FileNodeMapProps[]> = (
+    path,
+    newName
+) => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "POST",
+            Url: {
+                Schema: "file",
+                Query: [
+                    {Key: "op", Value: "rename"},
+                    {
+                        Key: "newname",
+                        Value: newName
+                    }
+                ],
+                Path: path
+            }
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            console.log("文件树重命名", list)
+            const data: FileNodeMapProps[] = initFileTreeData(list,path)
+            resolve(data)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 文件保存
+ */
+export const grpcFetchSaveFile: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "POST",
+            Url: {
+                Schema: "file",
+                Query: [
+                    {Key: "op", Value: "content"},
+                ],
+                Path: path
+            }
+            // Body: []byte(fileContent),
+        }
+    })
+}
+
+/**
+ * @name 新建文件
+ */
+export const grpcFetchCreateFile:(path: string) => Promise<FileNodeMapProps[]> = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "PUT",
+            Url: {
+                Schema: "file",
+                Query: [
+                    {Key: "type", Value: "file"},
+                ],
+                Path: path
+            }
+        }
+    })
+}
+
+/**
+ * @name 新建文件夹
+ */
+export const grpcFetchCreateFolder:(path: string) => Promise<FileNodeMapProps[]> = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "PUT",
+            Url: {
+                Schema: "file",
+                Query: [
+                    {Key: "type", Value: "dir"},
+                ],
+                Path: path
+            }
+        }
+    })
+}
+
+/**
+ * @name 删除文件
+ */
+export const grpcFetchDeleteFile:(path: string) => Promise<FileNodeMapProps[]> = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "DELETE",
+            Url: {
+                Schema: "file",
+                Path: path
+            }
+        }
+    })
+}
+
+/**
  * @name 更新树数据里某个节点的children数据
  */
-export const updateFileTree: (oldFileTree: FileTreeListProps[], path: string, updateData: FileTreeListProps[]) => FileTreeListProps[] = (
-    oldFileTree,
-    path,
-    updateData
-) => {
+export const updateFileTree: (
+    oldFileTree: FileTreeListProps[],
+    path: string,
+    updateData: FileTreeListProps[]
+) => FileTreeListProps[] = (oldFileTree, path, updateData) => {
     if (!path) return oldFileTree
 
     const isValid = updateData && updateData.length > 0
@@ -70,6 +180,42 @@ export const updateFileTree: (oldFileTree: FileTreeListProps[], path: string, up
             return {
                 ...node,
                 children: updateFileTree(node.children, path, updateData)
+            }
+        }
+        return node
+    })
+}
+
+/**
+ * @name 更新树数据里某个文件夹及其子文件的path数据
+ */
+export const updateFileTreePath = (fileTree: FileTreeListProps[], path: string, newPath: string) => {
+    return fileTree.map((node) => {
+        if (node.path.startsWith(path)) {
+            return {...node, path: node.path.replace(path, newPath)}
+        }
+        if (node.children && node.children.length > 0) {
+            return {
+                ...node,
+                children: updateFileTreePath(node.children, path, newPath)
+            }
+        }
+        return node
+    })
+}
+
+/**
+ * @name 移除树数据里某个文件夹下的子文件夹结构
+ */
+export const removeFileTreeChild = (fileTree: FileTreeListProps[], path: string, newPath: string) => {
+    return fileTree.map((node) => {
+        if (node.path === path) {
+            return {path: newPath}
+        }
+        if (node.children && node.children.length > 0) {
+            return {
+                ...node,
+                children: removeFileTreeChild(node.children, path, newPath)
             }
         }
         return node
@@ -192,6 +338,21 @@ export const setAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
         })
     })
     return newAreaInfo
+}
+
+/**
+ * @name 更改项是否包含激活展示文件，包含则取消激活
+ */
+export const isResetActiveFile = (
+    files: FileDetailInfo[] | FileNodeProps[],
+    activeFile: FileDetailInfo | undefined
+) => {
+    files.forEach((file) => {
+        if (file.path === activeFile?.path) {
+            return undefined
+        }
+    })
+    return activeFile
 }
 
 /**
@@ -367,27 +528,6 @@ export const saveCodeByFile = (file: FileDetailInfo): Promise<null> => {
             })
             .then(() => {
                 resolve(null)
-            })
-            .catch(() => {
-                reject()
-            })
-    })
-}
-
-/**
- * @name 更改名称
- */
-
-export const renameByFile = (file: FileDetailInfo,newName:string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        const oldPath = file.path
-        const newPath = file.path.replace(file.name,newName)
-        console.log("xxx",oldPath,newPath);
-        
-        ipcRenderer
-            .invoke("rename-file", {old: oldPath, new: newPath})
-            .then(() => {
-                resolve(newPath)
             })
             .catch(() => {
                 reject()

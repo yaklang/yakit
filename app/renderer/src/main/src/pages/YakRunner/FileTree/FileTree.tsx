@@ -13,8 +13,12 @@ import classNames from "classnames"
 import styles from "./FileTree.module.scss"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import { getMapFileDetail, setMapFileDetail } from "../FileTreeMap/FileMap"
+import { getMapAllFileKey, getMapFileDetail, removeMapFileDetail, setMapFileDetail } from "../FileTreeMap/FileMap"
 import emiter from "@/utils/eventBus/eventBus"
+import { grpcFetchRenameFileTree, isResetActiveFile, removeFileTreeChild, updateAreaFileInfo, updateFileTreePath } from "../utils"
+import useStore from "../hooks/useStore"
+import useDispatcher from "../hooks/useDispatcher"
+import { getMapAllFolderKey, getMapFolderDetail, removeMapFolderDetail, setMapFolderDetail } from "../FileTreeMap/ChildMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -154,7 +158,8 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const {isDownCtrlCmd, info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded} = props
-
+    const {areaInfo, activeFile, fileTree} = useStore()
+    const {setAreaInfo, setActiveFile,setFileTree} = useDispatcher()
     // 是否为编辑模式
     const [isEdit, setEdit] = useState<boolean>(false)
     const [value, setValue] = useState<string>(info.name)
@@ -180,6 +185,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     const handleClick = useMemoizedFn(() => {
+        if(isEdit) return
         if (info.isLeaf) {
             handleSelect()
         } else {
@@ -193,22 +199,72 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         setEdit(true)
     })
 
-    const onSave = useMemoizedFn(() => {
-        if (value.length !== 0 && value !== info.name) {
+    const onSave = useMemoizedFn(async() => {
+        try {
+            if (value.length !== 0 && value !== info.name) {
             // 重命名 调用接口成功后更新tree
-            console.log("更新", value)
+            const result = await grpcFetchRenameFileTree(info.path,value)
+            console.log("更新", result)
+            if(result.length === 0) return
+            const {path,name} = result[0]
             // 文件夹重命名
             if(info.isFolder){
-
+                // 移除文件夹下所有文件详细信息
+                const removeFileArr = getMapAllFileKey().filter((item)=>item.startsWith(info.path))
+                // 移除文件夹下的所有文件夹结构
+                const removeFolderArr = getMapAllFolderKey().filter((item)=>item.startsWith(info.path))
+                removeFileArr.forEach((item)=>{
+                    removeMapFileDetail(item)
+                })
+                removeFolderArr.forEach((item)=>{
+                    removeMapFolderDetail(item)
+                })
+                // 注入新详情Map
+                setMapFileDetail(path, result[0])
+                // 修改FileTree渲染数据
+                const newFileTree = removeFileTreeChild(fileTree,info.path,path)
+                console.log("fileTree---",fileTree,newFileTree,result[0]);
+                setFileTree && setFileTree(newFileTree)
+                // 此处还需更改布局信息（由于接口存在BUG，等待后续处理）
             }
             // 文件重命名
             else{
-                console.log("xxxxxxxxx UI实验 还未接入接口");
-                setMapFileDetail(info.path,{...getMapFileDetail(info.path),name:value})
+                // 存在则更改
+                const fileMap = getMapFileDetail(info.path)
+                if(fileMap.name !== "读取文件失败" && !fileMap.path.endsWith("-fail")){
+                    // 移除原有文件数据
+                    removeMapFileDetail(info.path)
+                    // 新增文件树数据
+                    setMapFileDetail(path,result[0])
+                }
+                const folderMap = getMapFolderDetail(info.parent||"")
+                // 获取重命名文件所在存储结构
+                if(info.parent && folderMap.includes(info.path)){
+                    const newFolderMap = folderMap.map((item)=>{
+                        if(item===info.path) return path
+                        return item
+                    })
+                    setMapFolderDetail(info.parent,newFolderMap)
+                }
+                // 修改FileTree渲染数据
+                const newFileTree = updateFileTreePath(fileTree,info.path,path)
+                console.log("newFileTree--",fileTree,info.path,path,newFileTree);
+                
+                // 修改分栏数据
+                const newAreaInfo = updateAreaFileInfo(areaInfo,{name,path},info.path)
+                // 更名后重置激活元素
+                const newActiveFile = isResetActiveFile([info],activeFile)
+                setFileTree && setFileTree(newFileTree)
+                setActiveFile && setActiveFile(newActiveFile)
+                setAreaInfo && setAreaInfo(newAreaInfo)
             }
-            emiter.emit("onRefreshFileTree")
+            // emiter.emit("onRefreshFileTree")
         }
         setEdit(false)
+        } catch (error) {
+            fail("保存失败")
+        }
+        
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {
@@ -252,6 +308,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 console.log("handleContextMenu", key, keyPath)
                 switch (key) {
                     case "openFileSystem":
+                        console.log("文件夹中显示",info.path);
                         openABSFileLocated(info.path)
                         break
                     case "rename":

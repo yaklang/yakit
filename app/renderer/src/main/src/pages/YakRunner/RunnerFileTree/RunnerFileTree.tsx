@@ -54,7 +54,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
     const [refreshTree,setRefreshTree] = useState<boolean>(false)
     const onRefreshFileTreeFun = useMemoizedFn(()=>{
-        console.log("刷新文件树");
+        console.log("刷新文件树",fileTree);
         setRefreshTree(!refreshTree)
     })
 
@@ -129,7 +129,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [historyList])
 
     // 通过路径打开文件
-    const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
+    const openFileByPath = useMemoizedFn(async (path: string, name: string, parent?: string|null) => {
         // 校验是否已存在 如若存在则不创建只定位
         const file = await judgeAreaExistFilePath(areaInfo, path)
         if (file) {
@@ -147,6 +147,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 openTimestamp: moment().unix(),
                 // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                 path,
+                parent: parent||null,
                 language: name.split(".").pop() === "yak" ? "yak" : "http"
             }
             // 注入语法检测
@@ -232,8 +233,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     )=>{
         console.log("onSelectFileTree",selectedKeys,e);
         if(e.selected){
-            const {path, name} = e.node
-            openFileByPath(path, name)
+            const {path, name,parent} = e.node
+            openFileByPath(path, name, parent)
         }
     })
 
