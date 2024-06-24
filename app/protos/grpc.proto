@@ -2940,6 +2940,7 @@ message QueryNewRiskResponse {
   repeated NewRisk Data = 1;
   int64 NewRiskTotal = 2;
   int64 Total = 3;
+  int64 Unread = 4;
 }
 
 message QueryRiskTagsResponse {
@@ -4540,6 +4541,7 @@ message QueryHTTPFlowRequest {
   repeated string RuntimeIDs = 40;
 
   repeated string IncludeHash = 41;
+  repeated string HiddenIndex = 42;
 }
 
 message HTTPFlowsToOnlineRequest {
