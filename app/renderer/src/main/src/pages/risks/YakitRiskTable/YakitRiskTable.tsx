@@ -273,6 +273,16 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     )
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
+        const tagTable = tag.map((item) => ({
+            value: item.Name,
+            label: item.Name,
+            total: item.Total
+        }))
+        const riskTypeVerboseTable = riskTypeVerbose.map((item) => ({
+            value: item.Name,
+            label: item.Verbose,
+            total: item.Total
+        }))
         return [
             {
                 title: "序号",
@@ -299,11 +309,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     filterKey: "RiskTypeList",
                     filtersType: "select",
                     filterMultiple: true,
-                    filters: riskTypeVerbose.map((item) => ({
-                        value: item.Name,
-                        label: item.Verbose,
-                        total: item.Total
-                    }))
+                    filters: riskTypeVerboseTable
                 }
             },
             {
@@ -364,11 +370,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     filterKey: "TagList",
                     filtersType: "select",
                     filterMultiple: true,
-                    filters: tag.map((item) => ({
-                        value: item.Name,
-                        label: item.Name,
-                        total: item.Total
-                    }))
+                    filters: tagTable
                 },
                 minWidth: 120,
                 render: (text, record, index) => (

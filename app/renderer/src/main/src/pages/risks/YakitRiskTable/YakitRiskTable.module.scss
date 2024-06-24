@@ -194,6 +194,7 @@ $keyColor: map-keys($tagColor);
     @extend %display-flex-center;
     justify-content: space-between;
     gap: 4px;
+    cursor: pointer;
     svg {
         width: 16px;
         height: 16px;
