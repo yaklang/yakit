@@ -18,7 +18,9 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
 }
 
 export interface NewRiskReadRequest {
+    /**@deprecated */
     AfterId?: string
+    /**传空数组代表全部已读 */
     Ids: number[]
 }
 export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (query) => {

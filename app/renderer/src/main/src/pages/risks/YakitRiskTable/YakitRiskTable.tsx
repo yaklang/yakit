@@ -418,7 +418,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         ]
     }, [riskTypeVerbose, tag])
     const onRefRiskList = useMemoizedFn(() => {
-        update(1)
+        setTimeout(() => {
+            update(1)
+        }, 200)
     })
     const getRiskTags = useMemoizedFn(() => {
         apiQueryRiskTags().then((res) => {
@@ -768,8 +770,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             emiter.emit("onRefRisksRead", JSON.stringify({Id: val.Id}))
         }
     })
-    /** TODO - 全部已读 */
-    const onAllRead = useMemoizedFn(() => {})
+    const onAllRead = useMemoizedFn(() => {
+        apiNewRiskRead({Ids: []}).then(() => {
+            update(1)
+            emiter.emit("onRefRisksRead", JSON.stringify({Id: "", isAllRead: true}))
+        })
+    })
     const onExpend = useMemoizedFn(() => {
         setAdvancedQuery(true)
     })

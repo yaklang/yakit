@@ -2006,6 +2006,8 @@ interface RisksProps {
     Data: LatestRiskInfo[]
     Total: number
     NewRiskTotal: number
+    /**全部未读 */
+    Unread: number
 }
 
 /** 漏洞与风险等级对应关系 */
@@ -2026,7 +2028,8 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     const [risks, setRisks] = useState<RisksProps>({
         Data: [],
         Total: 0,
-        NewRiskTotal: 0
+        NewRiskTotal: 0,
+        Unread: 0
     })
 
     /** 定时器 */
@@ -2048,6 +2051,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 const risksOjb: RisksProps = {
                     Total: res.Total,
                     NewRiskTotal: res.NewRiskTotal,
+                    Unread: res.Unread,
                     Data: [...res.Data]
                 }
                 setRisks({...risksOjb})
@@ -2094,22 +2098,35 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             if (timeRef.current) clearInterval(timeRef.current)
             timeRef.current = null
             fetchNode.current = 0
-            setRisks({Data: [], Total: 0, NewRiskTotal: 0})
+            setRisks({Data: [], Total: 0, NewRiskTotal: 0, Unread: 0})
         }
     }, [isEngineLink])
 
     const onRefRisksRead = useMemoizedFn((res) => {
         try {
             const value = JSON.parse(res)
-            const newRiskTotal = risks.NewRiskTotal - 1
-            setRisks({
-                ...risks,
-                NewRiskTotal: newRiskTotal > 0 ? newRiskTotal : 0,
-                Data: risks.Data.map((item) => {
-                    if (item.Id === value.Id) item.IsRead = true
-                    return item
+            if (!!value.isAllRead) {
+                // 全部已读
+                setRisks({
+                    ...risks,
+                    Unread: 0,
+                    NewRiskTotal: 0,
+                    Data: risks.Data.map((item) => ({...item, IsRead: true}))
                 })
-            })
+            } else if (!!value.Id) {
+                // 单条已读
+                const newRiskTotal = risks.NewRiskTotal - 1
+                const newUnread = risks.Unread - 1
+                setRisks({
+                    ...risks,
+                    Unread: newUnread > 0 ? newUnread : 0,
+                    NewRiskTotal: newRiskTotal > 0 ? newRiskTotal : 0,
+                    Data: risks.Data.map((item) => {
+                        if (item.Id === value.Id) item.IsRead = true
+                        return item
+                    })
+                })
+            }
         } catch (error) {}
     })
 
@@ -2118,9 +2135,12 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         ipcRenderer
             .invoke("set-risk-info-read", {AfterId: fetchNode.current, Ids: [info.Id]})
             .then((res: Risk) => {
+                const newUnread = risks.Unread - 1 > 0 ? risks.Unread - 1 : 0
+                const newRiskTotal = risks.NewRiskTotal - 1 > 0 ? risks.NewRiskTotal - 1 : 0
                 setRisks({
                     ...risks,
-                    NewRiskTotal: info.IsRead ? risks.NewRiskTotal : risks.NewRiskTotal - 1,
+                    NewRiskTotal: info.IsRead ? risks.NewRiskTotal : newRiskTotal,
+                    Unread: info.IsRead ? risks.Unread : newUnread,
                     Data: risks.Data.map((item) => {
                         if (item.Id === info.Id && item.Title === info.Title) item.IsRead = true
                         return item
@@ -2147,10 +2167,11 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     /** 全部已读 */
     const allRead = useMemoizedFn(() => {
         ipcRenderer
-            .invoke("set-risk-info-read", {AfterId: fetchNode.current})
+            .invoke("set-risk-info-read", {Ids: []})
             .then((res: Risk) => {
                 setRisks({
                     ...risks,
+                    Unread: 0,
                     NewRiskTotal: 0,
                     Data: risks.Data.map((item) => {
                         item.IsRead = true
@@ -2172,7 +2193,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
                     <div className={styles["risk-header"]}>
-                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.NewRiskTotal || 0} 条）
+                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.Unread || 0} 条）
                     </div>
 
                     <div className={styles["risk-info"]}>
@@ -2493,7 +2514,12 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
-                        <OutlineWrenchIcon className={classNames(show ? styles["icon-hover-style"] : styles["icon-style"], styles['wrench-icon'])} />
+                        <OutlineWrenchIcon
+                            className={classNames(
+                                show ? styles["icon-hover-style"] : styles["icon-style"],
+                                styles["wrench-icon"]
+                            )}
+                        />
                     </div>
                 </div>
             </YakitPopover>
