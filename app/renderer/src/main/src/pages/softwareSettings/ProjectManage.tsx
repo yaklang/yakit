@@ -512,7 +512,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         update()
     }, [])
 
-    const update = useMemoizedFn((page?: number) => {
+    const update = useMemoizedFn((page?: number, delId?: number) => {
         const param: ProjectParamsProp = {
             ...getParams(),
             Pagination: {
@@ -532,9 +532,19 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .then((rsp: ProjectsResponse) => {
                 try {
                     if (param.Pagination.Page > 1) {
-                        setData({...rsp, Projects: getData().Projects.concat(rsp.Projects)})
+                        const projects = getData()
+                            .Projects.concat(rsp.Projects)
+                            .filter(
+                                (item, index, self) =>
+                                    item.Id != delId && index === self.findIndex((t) => t.Id === item.Id)
+                            )
+                        const newData = {
+                            ...rsp,
+                            Projects: projects
+                        }
+                        setData(newData)
                     } else {
-                        setData(rsp)
+                        setData({...rsp})
                     }
                     setSearch({name: param.ProjectName || "", total: +rsp.Total})
                 } catch (e) {
@@ -565,7 +575,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
             .then((e) => {
                 info("删除成功")
-                update()
+                update(undefined, +delId.Id)
                 ipcRenderer
                     .invoke("GetCurrentProject")
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
@@ -1244,7 +1254,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     refreshMode={"debounce"}
                                     refreshRate={50}
                                 />
-                                <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto overlay"}}>
+                                <div
+                                    ref={containerRef as any}
+                                    style={{height: vlistHeigth, overflow: "auto overlay", overflowAnchor: "none"}}
+                                >
                                     <div ref={wrapperRef as any}>
                                         {__data.Projects.length === 0 ? (
                                             <>
