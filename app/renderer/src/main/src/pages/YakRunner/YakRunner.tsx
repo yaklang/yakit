@@ -77,6 +77,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".yak",
                         path: "/Users/nonight/work/yakitVersion/.yak",
+                        parent: null,
                         icon: "_f_yak",
                         code: `a() 
 
@@ -91,6 +92,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".yaklang",
                         path: "/Users/nonight/work/yakitVersion/.yaklang",
+                        parent: null,
                         icon: "_f_yak",
                         code: "123",
                         language: "yak",
@@ -100,6 +102,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".tt",
                         path: "/Users/nonight/work/yakitVersion/.tt",
+                        parent: null,
                         icon: "_file",
                         code: "tt",
                         language: "text",
@@ -108,6 +111,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".ttt",
                         path: "/Users/nonight/work/yakitVersion/.ttt",
+                        parent: null,
                         icon: "_f_markdown",
                         code: "ttt",
                         language: "text",
@@ -401,6 +405,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             openTimestamp: moment().unix(),
             // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
             path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
+            parent: null,
             language: "yak",
             isUnSave: true
         }

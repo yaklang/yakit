@@ -16,6 +16,8 @@ export interface Selection {
 export interface FileDetailInfo {
     /** 文件名 */
     name: string
+    /** 父级路径 */
+    parent: string | null
     /** 路径 可做唯一标识符 */
     path: string
     /** 图标 */

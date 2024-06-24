@@ -10,7 +10,7 @@ export const getMapFileDetail = (path: string) => {
     return (
         filesMap.get(path) || {
             parent: null,
-            name: "读取失败文件",
+            name: "读取文件失败",
             isFolder: false,
             isLeaf: true,
             path: `${uuidv4()}-fail`,

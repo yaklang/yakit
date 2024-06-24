@@ -49,12 +49,14 @@ import {
     getDefaultActiveFile,
     getOpenFileInfo,
     getYakRunnerHistory,
+    grpcFetchRenameFileTree,
+    isResetActiveFile,
     onSyntaxCheck,
     removeAreaFileInfo,
-    renameByFile,
     saveCodeByFile,
     setYakRunnerHistory,
-    updateAreaFileInfo
+    updateAreaFileInfo,
+    updateFileTreePath
 } from "../utils"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
@@ -72,6 +74,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import moment from "moment"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from "../FileTreeMap/FileMap"
+import { getMapFolderDetail, setMapFolderDetail } from "../FileTreeMap/ChildMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -81,8 +85,8 @@ const layoutToString = (v: number[]) => {
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile, runnerTabsId} = useStore()
-    const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
+    const {areaInfo, activeFile, runnerTabsId, fileTree} = useStore()
+    const {setActiveFile, setAreaInfo, setRunnerTabsId, setFileTree} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
     const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
 
@@ -321,18 +325,10 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         return <></>
     })
 
-    // 关闭项是否包含激活展示文件
-    const isResetActiveFile = (files: FileDetailInfo[]) => {
-        files.forEach((file) => {
-            if (file.path === activeFile?.path) {
-                setActiveFile && setActiveFile(undefined)
-            }
-        })
-    }
-
     const onRemoveFun = useMemoizedFn((info: FileDetailInfo) => {
-        isResetActiveFile([info])
+        const newActiveFile = isResetActiveFile([info], activeFile)
         const newAreaInfo = removeAreaFileInfo(areaInfo, info)
+        setActiveFile && setActiveFile(newActiveFile)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -400,7 +396,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         })
         // 不存在未保存项目时 直接关闭项目
         if (waitRemoveArr.length === 0) {
-            isResetActiveFile(closeArr)
+            const newActiveFile = isResetActiveFile(closeArr, activeFile)
+            setActiveFile && setActiveFile(newActiveFile)
             setAreaInfo && setAreaInfo(newAreaInfo)
             setWaitRemoveOtherItem(undefined)
         }
@@ -433,7 +430,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             })
         })
         if (waitRemoveArr.length === 0) {
-            isResetActiveFile(closeArr)
+            const newActiveFile = isResetActiveFile(closeArr, activeFile)
+            setActiveFile && setActiveFile(newActiveFile)
             setAreaInfo && setAreaInfo(newAreaInfo)
             setWaitRemoveAll(false)
         } else {
@@ -464,7 +462,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 m.destroy()
             },
             onOk: async () => {
-                if(info.name === newName){
+                if (info.name === newName) {
                     m.destroy()
                     return
                 }
@@ -474,14 +472,44 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 }
                 // 保存后的文件需要根据路径调用改名接口
                 if (!info.isUnSave) {
-                    const newPath = await renameByFile(info, newName)
-                    const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name: newName, path: newPath}, info.path)
-                    isResetActiveFile([info])
-                    setAreaInfo && setAreaInfo(newAreaInfo)
+                    try {
+                        const result = await grpcFetchRenameFileTree(info.path, newName)
+                        const {path, name} = result[0]
+                        // 存在则更改
+                        const fileMap = getMapFileDetail(info.path)
+                        if (fileMap.name !== "读取文件失败" && !fileMap.path.endsWith("-fail")) {
+                            // 移除原有文件数据
+                            removeMapFileDetail(info.path)
+                            // 新增文件树数据
+                            setMapFileDetail(path, result[0])
+                        }
+                        const folderMap = getMapFolderDetail(info.parent || "")
+                        // 获取重命名文件所在存储结构
+                        if (info.parent && folderMap.includes(info.path)) {
+                            const newFolderMap = folderMap.map((item) => {
+                                if (item === info.path) return path
+                                return item
+                            })
+                            setMapFolderDetail(info.parent, newFolderMap)
+                        }
+                        // 修改FileTree渲染数据
+                        const newFileTree = updateFileTreePath(fileTree, info.path, path)
+
+                        // 修改分栏数据
+                        const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name, path}, info.path)
+                        // 更名后重置激活元素
+                        const newActiveFile = isResetActiveFile([info], activeFile)
+                        setFileTree && setFileTree(newFileTree)
+                        setActiveFile && setActiveFile(newActiveFile)
+                        setAreaInfo && setAreaInfo(newAreaInfo)
+                    } catch (error) {
+                        fail("保存失败")
+                    }
                 } else {
                     // 未保存文件直接更改文件树
                     const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name: newName}, info.path)
-                    isResetActiveFile([info])
+                    const newActiveFile = isResetActiveFile([info], activeFile)
+                    setActiveFile && setActiveFile(newActiveFile)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
                 m.destroy()
@@ -1089,6 +1117,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             openTimestamp: moment().unix(),
             // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
             path,
+            parent: null,
             language: name.split(".").pop() === "yak" ? "yak" : "http"
         }
         // 注入语法检测

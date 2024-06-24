@@ -10,6 +10,18 @@ export const getMapFolderDetail = (path: string) => {
     
 }
 
+export const getMapAllFolderValue = () => {
+    return Array.from(foldersMap.values())
+}
+
+export const getMapAllFolderKey = () => {
+    return Array.from(foldersMap.keys())
+}
+
 export const clearMapFolderDetail = () => {
     foldersMap.clear()
+}
+
+export const removeMapFolderDetail = (path: string) => {
+    foldersMap.delete(path)
 }
