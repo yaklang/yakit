@@ -536,7 +536,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             .Projects.concat(rsp.Projects)
                             .filter(
                                 (item, index, self) =>
-                                    item.Id != delId && index === self.findIndex((t) => t.Id === item.Id)
+                                    +item.Id !== delId && index === self.findIndex((t) => t.Id === item.Id)
                             )
                         const newData = {
                             ...rsp,
