@@ -553,6 +553,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 if (j === "CreatedAt") {
                     return formatTimestamp(v[j])
                 }
+                if (["Request", "Response"].includes(j)) {
+                    return Buffer.from(v[j]).toString("utf8")
+                }
                 return v[j]
             })
         )
@@ -618,33 +621,35 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onExportHTML = useMemoizedFn(async () => {
         if (+response.Total === 0) return
         setExportHtmlLoading(true)
-        try {
-            let risks: Risk[] = []
-            if (allCheck || selectList.length === 0) {
-                const exportQuery: QueryRisksRequest = {
-                    ...query,
-                    Pagination: {
-                        ...query.Pagination,
-                        Page: 1,
-                        Limit: total
-                    }
+        let risks: Risk[] = []
+        if (allCheck || selectList.length === 0) {
+            const exportQuery: QueryRisksRequest = {
+                ...query,
+                Pagination: {
+                    ...query.Pagination,
+                    Page: 1,
+                    Limit: total
                 }
-
-                const res = await apiQueryRisks(exportQuery)
-                risks = [...res.Data]
-            } else {
-                risks = [...selectList]
             }
-            const htmlContent = getHtmlTemplate()
-            const params: ExportHtmlProps = {
-                htmlContent,
-                fileName: `riskTable-${moment().valueOf()}`,
-                data: risks
-            }
-            apiExportHtml(params)
-        } catch (error) {
-            yakitNotify("error", `导出html失败:${error}`)
+            const res = await apiQueryRisks(exportQuery)
+            risks = [...res.Data]
+        } else {
+            risks = [...selectList]
         }
+        const newRisks = risks.map((ele) => ({
+            ...ele,
+            RequestString: Buffer.from(ele.Request || new Uint8Array()).toString("utf8"),
+            ResponseString: Buffer.from(ele.Response || new Uint8Array()).toString("utf8")
+        }))
+        const htmlContent = getHtmlTemplate()
+        const params: ExportHtmlProps = {
+            htmlContent,
+            fileName: `riskTable-${moment().valueOf()}`,
+            data: newRisks
+        }
+        apiExportHtml(params).catch((error) => {
+            yakitNotify("error", `导出html失败:${error}`)
+        })
         setTimeout(() => {
             setExportHtmlLoading(false)
         }, 200)

@@ -198,18 +198,6 @@ export const getHtmlTemplate = () => {
                     columns={columns}
                     expandable={{
                         expandedRowRender: (info) => {
-                            const details = {
-                                request: '',
-                                response: ''
-                            };
-                            if (info.Details) {
-                                const value = !!info.Details ? JSON.parse(info.Details) : {
-                                    request: '',
-                                    response: ''
-                                }
-                                details.request = !!value.request ? value.request : ''
-                                details.response = !!value.response ? value.response : ''
-                            }
                             return (
                                 <>
                                     <Descriptions bordered size='small' column={3}>
@@ -247,19 +235,19 @@ export const getHtmlTemplate = () => {
                                                 {info.Payload || "-"}
                                             </Descriptions.Item>
                                             {
-                                                !!details.request && <>
+                                                !!info.RequestString && <>
                                                     <Descriptions.Item label='Request' span={3}>
                                                         <div style={{ height: 300, overflow: 'auto', }}>
-                                                            <pre style={{ whiteSpace: 'pre-wrap' }}><code>{details.request}</code></pre>
+                                                            <pre style={{ whiteSpace: 'pre-wrap' }}><code>{info.RequestString}</code></pre>
                                                         </div>
                                                     </Descriptions.Item>
                                                 </>
                                             }
                                             {
-                                                !!details.response && <>
+                                                !!info.ResponseString && <>
                                                     <Descriptions.Item label='Response' span={3}>
                                                         <div style={{ height: 300, overflow: 'auto', }}>
-                                                            <pre style={{ whiteSpace: 'pre-wrap' }}><code>{details.response}</code></pre>
+                                                            <pre style={{ whiteSpace: 'pre-wrap' }}><code>{info.ResponseString}</code></pre>
                                                         </div>
                                                     </Descriptions.Item>
                                                 </>
