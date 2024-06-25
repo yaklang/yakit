@@ -512,7 +512,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         update()
     }, [])
 
-    const update = useMemoizedFn((page?: number, delId?: number) => {
+    const update = useMemoizedFn((page?: number) => {
         const param: ProjectParamsProp = {
             ...getParams(),
             Pagination: {
@@ -532,15 +532,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .then((rsp: ProjectsResponse) => {
                 try {
                     if (param.Pagination.Page > 1) {
-                        const projects = getData()
-                            .Projects.concat(rsp.Projects)
-                            .filter(
-                                (item, index, self) =>
-                                    +item.Id !== delId && index === self.findIndex((t) => t.Id === item.Id)
-                            )
                         const newData = {
                             ...rsp,
-                            Projects: projects
+                            Projects: getData().Projects.concat(rsp.Projects)
                         }
                         setData(newData)
                     } else {
@@ -575,7 +569,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
             .then((e) => {
                 info("删除成功")
-                update(undefined, +delId.Id)
+                const projects = getData().Projects.filter((item) => +item.Id !== delId.Id)
+                const newData = {
+                    ...getData(),
+                    Projects: projects
+                }
+                setData(newData)
                 ipcRenderer
                     .invoke("GetCurrentProject")
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
