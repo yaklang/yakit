@@ -142,7 +142,7 @@ const exportFields = [
     },
     {
         label: "Tag",
-        value: "Tag",
+        value: "Tags",
         isDefaultChecked: false
     },
     {
@@ -432,7 +432,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onOpenSelect = useMemoizedFn((record: Risk) => {
         const m = showYakitModal({
-            title: `序号【${record.Id}】- ${record.TitleVerbose || record.Title}`,
+            title: (
+                <div className='content-ellipsis'>
+                    序号【{record.Id}】- {record.TitleVerbose || record.Title}
+                </div>
+            ),
             content: <YakitRiskSelectTag info={record} onClose={() => m.destroy()} onSave={onSaveTags} />,
             footer: null,
             onCancel: () => {
@@ -468,6 +472,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             emiter.emit("onRefRiskFieldGroup")
         })
     })
+    /**批量删除后，重置查询条件刷新 */
     const onRemove = useMemoizedFn(() => {
         let removeQuery: DeleteRiskRequest = {
             Filter: {
@@ -482,7 +487,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
         }
         apiDeleteRisk(removeQuery).then(() => {
-            update(1)
+            onResetRefresh()
             emiter.emit("onRefRiskFieldGroup")
         })
     })
@@ -499,6 +504,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
     const onExportCSV = useMemoizedFn(() => {
+        if (+response.Total === 0) return
         const exportValue = exportFields.map((item) => item.label)
         const initCheckFields = exportFields.filter((ele) => ele.isDefaultChecked).map((item) => item.label)
         const m = showYakitModal({
@@ -524,6 +530,18 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const formatJson = (filterVal, jsonData) => {
         return jsonData.map((v, index) =>
             filterVal.map((j) => {
+                if (j === "Tags") {
+                    const value = v["Tags"] || ""
+                    return value.replaceAll("|", ",")
+                }
+                if (j === "FromYakScript") {
+                    const value = v["FromYakScript"] || "漏洞检测"
+                    return value
+                }
+                if (j === "TitleVerbose") {
+                    const value = v["TitleVerbose"] || v["Title"] || ""
+                    return value
+                }
                 if (j === "Type") {
                     const value = v["RiskTypeVerbose"] || v["RiskType"] || ""
                     return value.replaceAll("NUCLEI-", "")
@@ -598,6 +616,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         })
     })
     const onExportHTML = useMemoizedFn(async () => {
+        if (+response.Total === 0) return
         setExportHtmlLoading(true)
         try {
             let risks: Risk[] = []
@@ -636,11 +655,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 update(1)
                 break
             case "resetRefresh":
-                setQuery(cloneDeep(defQueryRisksRequest)) // 条件变化会自动查询新数据
+                onResetRefresh()
                 break
             default:
                 break
         }
+    })
+    /**条件变化会自动查询新数据 */
+    const onResetRefresh = useMemoizedFn(() => {
+        setQuery(cloneDeep(defQueryRisksRequest))
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
         if (sort.order === "none") {
@@ -1085,7 +1108,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         const itemList: ReactNode[] = []
         if ((info?.Request || []).length > 0) {
             itemList.push(
-                <Descriptions.Item label='Request' span={3}>
+                <Descriptions.Item key='Request' label='Request' span={3}>
                     <div style={{height: 300}}>
                         {quotedRequest ? (
                             <div>{quotedRequest}</div>
@@ -1106,7 +1129,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         }
         if ((info?.Response || []).length > 0) {
             itemList.push(
-                <Descriptions.Item label='Response' span={3}>
+                <Descriptions.Item key='Response' label='Response' span={3}>
                     <div style={{height: 300}}>
                         {quotedResponse ? (
                             <div>{quotedResponse}</div>

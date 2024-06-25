@@ -119,6 +119,7 @@ export const getHtmlTemplate = () => {
                     title: "标题",
                     dataIndex: "TitleVerbose",
                     key: "TitleVerbose",
+                    render: (_, record) => record?.TitleVerbose || record.Title || "-",
                     ...getColumnSearchProps('TitleVerbose'),
                 },
                 {
@@ -178,8 +179,9 @@ export const getHtmlTemplate = () => {
                 },
                 {
                     title: "Tag",
-                    dataIndex: "Tag",
-                    key: "Tag"
+                    dataIndex: "Tags",
+                    key: "Tag",
+                    render: (text) => !!text ? text.replaceAll("|", ",") : "-"
                 },
                 {
                     title: "发现时间",

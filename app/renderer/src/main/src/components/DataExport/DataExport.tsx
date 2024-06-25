@@ -342,7 +342,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
             <Checkbox.Group style={{width: "100%", padding: 24}} value={checkValue} onChange={onChange}>
                 <Row>
                     {exportValue.map((item) => (
-                        <Col span={6} className={styles["item"]}>
+                        <Col span={6} className={styles["item"]} key={item}>
                             <YakitCheckbox value={item}>{item}</YakitCheckbox>
                         </Col>
                     ))}
