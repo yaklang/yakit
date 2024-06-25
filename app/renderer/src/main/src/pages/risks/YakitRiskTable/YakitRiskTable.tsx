@@ -382,7 +382,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             }}
                         >
                             <span>{!!text ? text.replaceAll("|", ",") : "-"}</span>
-                            <OutlineChevrondownIcon />
+                            <OutlineChevrondownIcon className={styles["table-tag-icon"]} />
                         </div>
                     </>
                 )

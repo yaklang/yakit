@@ -195,10 +195,18 @@ $keyColor: map-keys($tagColor);
     justify-content: space-between;
     gap: 4px;
     cursor: pointer;
-    svg {
-        width: 16px;
-        height: 16px;
+    &:hover {
+        .table-tag-icon {
+            opacity: 1;
+        }
+    }
+    .table-tag-icon {
+        opacity: 0;
         color: var(--yakit-helper-text-color);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
     }
 }
 
