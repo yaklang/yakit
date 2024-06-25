@@ -532,9 +532,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .then((rsp: ProjectsResponse) => {
                 try {
                     if (param.Pagination.Page > 1) {
-                        setData({...rsp, Projects: getData().Projects.concat(rsp.Projects)})
+                        const newData = {
+                            ...rsp,
+                            Projects: getData().Projects.concat(rsp.Projects)
+                        }
+                        setData(newData)
                     } else {
-                        setData(rsp)
+                        setData({...rsp})
                     }
                     setSearch({name: param.ProjectName || "", total: +rsp.Total})
                 } catch (e) {
@@ -565,7 +569,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
             .then((e) => {
                 info("删除成功")
-                update()
+                const projects = getData().Projects.filter((item) => +item.Id !== delId.Id)
+                const newData = {
+                    ...getData(),
+                    Projects: projects
+                }
+                setData(newData)
                 ipcRenderer
                     .invoke("GetCurrentProject")
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
@@ -1244,7 +1253,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     refreshMode={"debounce"}
                                     refreshRate={50}
                                 />
-                                <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto overlay"}}>
+                                <div
+                                    ref={containerRef as any}
+                                    style={{height: vlistHeigth, overflow: "auto overlay", overflowAnchor: "none"}}
+                                >
                                     <div ref={wrapperRef as any}>
                                         {__data.Projects.length === 0 ? (
                                             <>
