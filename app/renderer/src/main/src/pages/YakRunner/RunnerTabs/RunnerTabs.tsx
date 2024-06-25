@@ -49,14 +49,14 @@ import {
     getDefaultActiveFile,
     getOpenFileInfo,
     getYakRunnerHistory,
+    grpcFetchCreateFile,
     grpcFetchRenameFileTree,
+    grpcFetchSaveFile,
     isResetActiveFile,
     onSyntaxCheck,
     removeAreaFileInfo,
-    saveCodeByFile,
     setYakRunnerHistory,
     updateAreaFileInfo,
-    updateFileTreePath
 } from "../utils"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
@@ -85,8 +85,8 @@ const layoutToString = (v: number[]) => {
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile, runnerTabsId, fileTree} = useStore()
-    const {setActiveFile, setAreaInfo, setRunnerTabsId, setFileTree} = useDispatcher()
+    const {areaInfo, activeFile, runnerTabsId} = useStore()
+    const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
     const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
 
@@ -473,7 +473,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 // 保存后的文件需要根据路径调用改名接口
                 if (!info.isUnSave) {
                     try {
-                        const result = await grpcFetchRenameFileTree(info.path, newName)
+                        const result = await grpcFetchRenameFileTree(info.path, newName,info.parent)
                         const {path, name} = result[0]
                         // 存在则更改
                         const fileMap = getMapFileDetail(info.path)
@@ -492,14 +492,11 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                             })
                             setMapFolderDetail(info.parent, newFolderMap)
                         }
-                        // 修改FileTree渲染数据
-                        const newFileTree = updateFileTreePath(fileTree, info.path, path)
 
                         // 修改分栏数据
                         const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name, path}, info.path)
                         // 更名后重置激活元素
                         const newActiveFile = isResetActiveFile([info], activeFile)
-                        setFileTree && setFileTree(newFileTree)
                         setActiveFile && setActiveFile(newActiveFile)
                         setAreaInfo && setAreaInfo(newAreaInfo)
                     } catch (error) {
@@ -921,7 +918,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 自动保存
     const autoSaveCurrentFile = useDebounceFn(
         (newEditorInfo: FileDetailInfo) => {
-            saveCodeByFile(newEditorInfo)
+            const {path,code} = newEditorInfo
+            grpcFetchSaveFile(path,code)
         },
         {
             wait: 500
@@ -1287,8 +1285,8 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     isUnSave: false,
                     language: suffix === "yak" ? suffix : "http"
                 }
-                await saveCodeByFile(file)
-                success("保存成功")
+                await grpcFetchCreateFile(file.path,file.code)
+                success(`${file.name} 保存成功`)
                 // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
                 const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
                 const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)

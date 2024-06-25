@@ -1,4 +1,6 @@
-export interface RunnerFileTreeProps {}
+export interface RunnerFileTreeProps {
+    addFileTab: () => void
+}
 
 export interface OpenedFileProps{
     
