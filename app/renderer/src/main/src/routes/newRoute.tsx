@@ -12,7 +12,6 @@ import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
 import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
-import {ReadOnlyBatchExecutorByRecoverUid} from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
@@ -103,9 +102,6 @@ import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/Mat
 import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {PluginEditDetails} from "@/pages/plugins/editDetails/PluginEditDetails"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
-import {PluginsLocal} from "@/pages/plugins/local/PluginsLocal"
-import {PluginUser} from "@/pages/plugins/user/PluginUser"
-import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {PluginGroupType, PluginGroups} from "@/pages/plugins/group/PluginGroups"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
@@ -511,13 +507,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <TrustListPage />
         case YakitRoute.ControlAdminPage:
             return <ControlAdminPage />
-        case YakitRoute.BatchExecutorRecover:
-            return (
-                <ReadOnlyBatchExecutorByRecoverUid
-                    Uid={params?.recoverUid}
-                    BaseProgress={params?.recoverBaseProgress}
-                />
-            )
         case YakitRoute.AddYakitScript:
             return <PluginEditDetails />
         case YakitRoute.ModifyYakitScript:
