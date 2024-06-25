@@ -2924,6 +2924,7 @@ message QueryRisksRequest {
   string Tags = 11;
   string IsRead = 12;
   string Title = 13;
+  repeated int64 Ids = 14;
 }
 
 message QueryRisksResponse {
