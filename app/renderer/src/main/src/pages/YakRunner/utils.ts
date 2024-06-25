@@ -18,8 +18,17 @@ import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
-const initFileTreeData = (list,path) => {
-    return list.Resources.map((item) => {
+const initFileTreeData = (list, path) => {
+    return list.Resources.sort((a, b) => {
+        // 将 ResourceType 为 'dir' 的对象排在前面
+        if (a.ResourceType === "dir" && b.ResourceType !== "dir") {
+            return -1 // a排在b前面
+        } else if (a.ResourceType !== "dir" && b.ResourceType === "dir") {
+            return 1 // b排在a前面
+        } else {
+            return 0 // 保持原有顺序
+        }
+    }).map((item) => {
         const isFile = !item.ResourceType
         const isFolder = item.ResourceType === "dir"
         const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
@@ -33,7 +42,6 @@ const initFileTreeData = (list,path) => {
             isLeaf: isLeaf
         }
     })
-
 }
 
 /**
@@ -48,8 +56,8 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("文件树", list)
-            const data: FileNodeMapProps[] = initFileTreeData(list,path)
+            console.log("文件树", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, path)
             resolve(data)
         } catch (error) {
             reject(error)
@@ -60,10 +68,11 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 /**
  * @name 文件树重命名
  */
-export const grpcFetchRenameFileTree: (path: string, newName: string) => Promise<FileNodeMapProps[]> = (
-    path,
-    newName
-) => {
+export const grpcFetchRenameFileTree: (
+    path: string,
+    newName: string,
+    parentPath: string | null
+) => Promise<FileNodeMapProps[]> = (path, newName, parentPath) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "POST",
@@ -81,8 +90,8 @@ export const grpcFetchRenameFileTree: (path: string, newName: string) => Promise
         }
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("文件树重命名", list)
-            const data: FileNodeMapProps[] = initFileTreeData(list,path)
+            console.log("文件树重命名", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
             resolve(data)
         } catch (error) {
             reject(error)
@@ -93,18 +102,25 @@ export const grpcFetchRenameFileTree: (path: string, newName: string) => Promise
 /**
  * @name 文件保存
  */
-export const grpcFetchSaveFile: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNodeMapProps[]> = (path, code) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "POST",
             Url: {
                 Schema: "file",
-                Query: [
-                    {Key: "op", Value: "content"},
-                ],
+                Query: [{Key: "op", Value: "content"}],
                 Path: path
-            }
+            },
             // Body: []byte(fileContent),
+            Body: StringToUint8Array(code)
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            console.log("文件保存", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, path)
+            resolve(data)
+        } catch (error) {
+            reject(error)
         }
     })
 }
@@ -112,17 +128,26 @@ export const grpcFetchSaveFile: (path: string) => Promise<FileNodeMapProps[]> = 
 /**
  * @name 新建文件
  */
-export const grpcFetchCreateFile:(path: string) => Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchCreateFile: (path: string, code?: string) => Promise<FileNodeMapProps[]> = (path, code) => {
     return new Promise(async (resolve, reject) => {
-        const params = {
+        const params: any = {
             Method: "PUT",
             Url: {
                 Schema: "file",
-                Query: [
-                    {Key: "type", Value: "file"},
-                ],
+                Query: [{Key: "type", Value: "file"}],
                 Path: path
             }
+        }
+        if (code && code.length > 0) {
+            params.Body = StringToUint8Array(code)
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            console.log("新建文件", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, path)
+            resolve(data)
+        } catch (error) {
+            reject(error)
         }
     })
 }
@@ -130,15 +155,13 @@ export const grpcFetchCreateFile:(path: string) => Promise<FileNodeMapProps[]> =
 /**
  * @name 新建文件夹
  */
-export const grpcFetchCreateFolder:(path: string) => Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchCreateFolder: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "PUT",
             Url: {
                 Schema: "file",
-                Query: [
-                    {Key: "type", Value: "dir"},
-                ],
+                Query: [{Key: "type", Value: "dir"}],
                 Path: path
             }
         }
@@ -148,7 +171,7 @@ export const grpcFetchCreateFolder:(path: string) => Promise<FileNodeMapProps[]>
 /**
  * @name 删除文件
  */
-export const grpcFetchDeleteFile:(path: string) => Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "DELETE",
@@ -156,6 +179,14 @@ export const grpcFetchDeleteFile:(path: string) => Promise<FileNodeMapProps[]> =
                 Schema: "file",
                 Path: path
             }
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            console.log("删除文件", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, path)
+            resolve(data)
+        } catch (error) {
+            reject(error)
         }
     })
 }
@@ -180,42 +211,6 @@ export const updateFileTree: (
             return {
                 ...node,
                 children: updateFileTree(node.children, path, updateData)
-            }
-        }
-        return node
-    })
-}
-
-/**
- * @name 更新树数据里某个文件夹及其子文件的path数据
- */
-export const updateFileTreePath = (fileTree: FileTreeListProps[], path: string, newPath: string) => {
-    return fileTree.map((node) => {
-        if (node.path.startsWith(path)) {
-            return {...node, path: node.path.replace(path, newPath)}
-        }
-        if (node.children && node.children.length > 0) {
-            return {
-                ...node,
-                children: updateFileTreePath(node.children, path, newPath)
-            }
-        }
-        return node
-    })
-}
-
-/**
- * @name 移除树数据里某个文件夹下的子文件夹结构
- */
-export const removeFileTreeChild = (fileTree: FileTreeListProps[], path: string, newPath: string) => {
-    return fileTree.map((node) => {
-        if (node.path === path) {
-            return {path: newPath}
-        }
-        if (node.children && node.children.length > 0) {
-            return {
-                ...node,
-                children: removeFileTreeChild(node.children, path, newPath)
             }
         }
         return node
@@ -265,6 +260,26 @@ export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string):
 }
 
 /**
+ * @name 判断分栏数据里是否存在某些节点file数据
+ */
+export const judgeAreaExistFilesPath = (areaInfo: AreaInfoProps[], pathArr: string[]): Promise<FileDetailInfo[]> => {
+    return new Promise(async (resolve, reject) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        let hasArr: FileDetailInfo[] = []
+        newAreaInfo.forEach((item, index) => {
+            item.elements.forEach((itemIn, indexIn) => {
+                itemIn.files.forEach((file, fileIndex) => {
+                    if (pathArr.includes(file.path)) {
+                        hasArr.push(file)
+                    }
+                })
+            })
+        })
+        resolve(hasArr)
+    })
+}
+
+/**
  * @name 更新分栏数据里某个节点的file数据
  */
 // 根据path更新指定内容
@@ -277,6 +292,32 @@ export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFile
                     newAreaInfo[index].elements[indexIn].files[fileIndex] = {
                         ...newAreaInfo[index].elements[indexIn].files[fileIndex],
                         ...data
+                    }
+                }
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
+ * @name 更新分栏数据里所选节点的path与parent信息(重命名文件夹导致其内部文件path与parent发生变化)
+ */
+export const updateAreaFilesPathInfo = (
+    areaInfo: AreaInfoProps[],
+    path: string[],
+    oldPath: string,
+    newPath: string
+) => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, index) => {
+        item.elements.forEach((itemIn, indexIn) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (path.includes(file.path)) {
+                    newAreaInfo[index].elements[indexIn].files[fileIndex] = {
+                        ...newAreaInfo[index].elements[indexIn].files[fileIndex],
+                        path: file.path.replace(oldPath, newPath),
+                        parent: file.parent ? file.parent.replace(oldPath, newPath) : null
                     }
                 }
             })
@@ -302,7 +343,7 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
                     } else if (item.elements.length <= 1 && itemIn.files.length === 1) {
                         newAreaInfo.splice(idx, 1)
                     }
-                    // 存在多项则移除删除项
+                    // 存在多项则只移除删除项
                     else {
                         newAreaInfo[idx].elements[idxin].files = newAreaInfo[idx].elements[idxin].files.filter(
                             (item) => item.path !== info.path
@@ -318,6 +359,48 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
         })
     })
     return newAreaInfo
+}
+
+/**
+ * @name 删除分栏数据里多个节点的file数据并重新布局
+ */
+export const removeAreaFilesInfo = (areaInfo: AreaInfoProps[], removePath: string[]) => {
+    // 如若有为空项则删除
+    const buildAreaInfo = (areaInfo) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        // 移除elements中的files层
+        newAreaInfo.forEach((item, idx) => {
+            item.elements.forEach((itemIn, idxin) => {
+                if (itemIn.files.length === 0) {
+                    newAreaInfo[idx].elements = newAreaInfo[idx].elements.filter((item) => item.id !== itemIn.id)
+                }
+            })
+        })
+        // 移除elements层
+        let indexArr: number[] = [] // 还有数据的项目
+        newAreaInfo.forEach((item, idx) => {
+            if (item.elements.length !== 0) {
+                indexArr.push(idx)
+            }
+        })
+        let resultAreaInfo: AreaInfoProps[] = []
+        indexArr.forEach((index) => {
+            resultAreaInfo.push(newAreaInfo[index])
+        })
+        return resultAreaInfo
+    }
+
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, idx) => {
+        item.elements.forEach((itemIn, idxin) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (removePath.includes(file.path)) {
+                    newAreaInfo[idx].elements[idxin].files = itemIn.files.filter((item) => item.path !== file.path)
+                }
+            })
+        })
+    })
+    return buildAreaInfo(newAreaInfo)
 }
 
 /**
@@ -338,6 +421,15 @@ export const setAreaFileActive = (areaInfo: AreaInfoProps[], path: string) => {
         })
     })
     return newAreaInfo
+}
+
+/**
+ * @name 更改激活展示文件
+ */
+export const updateActiveFile = (activeFile: FileDetailInfo, data: OptionalFileDetailInfo, path?: string) => {
+    let newActiveFile: FileDetailInfo = cloneDeep(activeFile)
+    newActiveFile = {...newActiveFile, ...data}
+    return newActiveFile
 }
 
 /**
@@ -513,24 +605,5 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
                 resolve([])
             }
         })
-    })
-}
-
-/**
- * @name 保存文件
- */
-export const saveCodeByFile = (file: FileDetailInfo): Promise<null> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("write-file", {
-                route: file.path,
-                data: file.code
-            })
-            .then(() => {
-                resolve(null)
-            })
-            .catch(() => {
-                reject()
-            })
     })
 }

@@ -11,7 +11,7 @@ import styles from "./LeftSideBar.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
-    const {} = props
+    const {addFileTab} = props
 
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<string>>(new Set(["file-tree"]))
@@ -60,7 +60,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                             [styles["hidden-content"]]: active !== "file-tree"
                         })}
                     >
-                        <RunnerFileTree />
+                        <RunnerFileTree addFileTab={addFileTab} />
                     </div>
                 )}
                 {rendered.current.has("help-doc") && (

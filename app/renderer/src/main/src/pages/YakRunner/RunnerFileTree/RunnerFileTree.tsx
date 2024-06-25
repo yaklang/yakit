@@ -30,31 +30,36 @@ import {
 import moment from "moment"
 import {YakRunnerHistoryProps} from "../YakRunnerType"
 import emiter from "@/utils/eventBus/eventBus"
-import { getMapAllFileValue, getMapFileDetail } from "../FileTreeMap/FileMap"
+import {getMapAllFileValue, getMapFileDetail} from "../FileTreeMap/FileMap"
+import {getMapFolderDetail} from "../FileTreeMap/ChildMap"
 
 const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
+    const {addFileTab} = props
     const {fileTree, areaInfo, activeFile} = useStore()
     const {handleFileLoadData, setAreaInfo, setActiveFile} = useDispatcher()
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
-    // 将文件详情注入文件树结构中
-    const initFileTree = useMemoizedFn((data: FileTreeListProps[])=>{
-        return data.map((item)=>{
+    // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
+    const initFileTree = useMemoizedFn((data: FileTreeListProps[]) => {
+        return data.map((item) => {
             const itemDetail = getMapFileDetail(item.path)
-            let obj:FileNodeProps = {...itemDetail}
-            if(item.children){
-                obj.children = initFileTree(item.children)
+            let obj: FileNodeProps = {...itemDetail}
+
+            const childArr = getMapFolderDetail(item.path)
+            if (itemDetail.isFolder) {
+                const newChild = childArr.map((item) => ({path: item}))
+                obj.children = initFileTree(newChild)
             }
             return obj
         })
     })
 
-    const [refreshTree,setRefreshTree] = useState<boolean>(false)
-    const onRefreshFileTreeFun = useMemoizedFn(()=>{
-        console.log("刷新文件树",fileTree);
+    const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    const onRefreshFileTreeFun = useMemoizedFn(() => {
+        console.log("刷新文件树", fileTree)
         setRefreshTree(!refreshTree)
     })
 
@@ -66,9 +71,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     }, [])
 
-    const fileDetailTree = useMemo(()=>{
+    const fileDetailTree = useMemo(() => {
         return initFileTree(fileTree)
-    },[fileTree,refreshTree])
+    }, [fileTree, refreshTree])
 
     const getHistoryList = useMemoizedFn(async (data?: string) => {
         try {
@@ -92,6 +97,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const onLoadData = useMemoizedFn((node: FileNodeProps) => {
+        console.log("onLoadData", node)
+
+        // 删除最外层文件夹时无需加载
+        if (node.parent === null) return Promise.reject()
         if (handleFileLoadData) return handleFileLoadData(node.path)
         return Promise.reject()
     })
@@ -104,7 +113,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             },
             {
                 key: "createFolder",
-                label: "新建文件夹"
+                label: "新建文件夹",
+                // 未打开文件夹时 无法新建文件夹
+                disabled: fileTree.length === 0
             },
             {
                 type: "divider"
@@ -126,10 +137,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             })
         }
         return newMenu
-    }, [historyList])
+    }, [historyList, fileTree])
+
+    const createFile = useMemoizedFn(()=>{
+        // 未打开文件夹时 创建临时文件
+        if(fileTree.length === 0){
+            addFileTab()
+        }
+    })
 
     // 通过路径打开文件
-    const openFileByPath = useMemoizedFn(async (path: string, name: string, parent?: string|null) => {
+    const openFileByPath = useMemoizedFn(async (path: string, name: string, parent?: string | null) => {
         // 校验是否已存在 如若存在则不创建只定位
         const file = await judgeAreaExistFilePath(areaInfo, path)
         if (file) {
@@ -147,7 +165,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 openTimestamp: moment().unix(),
                 // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                 path,
-                parent: parent||null,
+                parent: parent || null,
                 language: name.split(".").pop() === "yak" ? "yak" : "http"
             }
             // 注入语法检测
@@ -187,7 +205,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             .then((data: any) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFolderList",absolutePath)
+                    emiter.emit("onOpenFolderList", absolutePath)
                 }
             })
     })
@@ -203,7 +221,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             }
             // 打开文件夹
             else {
-                emiter.emit("onOpenFolderList",item.path)
+                emiter.emit("onOpenFolderList", item.path)
             }
         }
     })
@@ -211,6 +229,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const menuSelect = useMemoizedFn((key) => {
         switch (key) {
             case "createFile":
+                createFile()
                 break
             case "createFolder":
                 break
@@ -227,16 +246,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     })
 
     // 文件树选中
-    const onSelectFileTree = useMemoizedFn((
-        selectedKeys: string[],
-        e: {selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps}
-    )=>{
-        console.log("onSelectFileTree",selectedKeys,e);
-        if(e.selected){
-            const {path, name,parent} = e.node
-            openFileByPath(path, name, parent)
+    const onSelectFileTree = useMemoizedFn(
+        (selectedKeys: string[], e: {selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps}) => {
+            console.log("onSelectFileTree", selectedKeys, e)
+            if (e.selected) {
+                const {path, name, parent, isFolder} = e.node
+                if (!isFolder) {
+                    openFileByPath(path, name, parent)
+                }
+            }
         }
-    })
+    )
 
     return (
         <div className={styles["runner-file-tree"]}>
@@ -263,7 +283,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
                         <div className={styles["file-tree-tree"]}>
                             <div className={styles["tree-body"]}>
-                                <FileTree data={fileDetailTree} onLoadData={onLoadData} onSelect={onSelectFileTree}/>
+                                <FileTree data={fileDetailTree} onLoadData={onLoadData} onSelect={onSelectFileTree} />
                             </div>
                         </div>
                     </div>
