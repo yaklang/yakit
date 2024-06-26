@@ -279,7 +279,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             total: item.Total
         }))
         const riskTypeVerboseTable = riskTypeVerbose.map((item) => ({
-            value: item.Name,
+            value: item.Verbose,
             label: item.Verbose,
             total: item.Total
         }))
