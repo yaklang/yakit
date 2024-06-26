@@ -3,12 +3,12 @@ import {useMemoizedFn} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
-import {FileNodeProps} from "./FileTree/FileTreeType"
+import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
+    grpcFetchCreateFile,
     grpcFetchFileTree,
     removeAreaFileInfo,
-    saveCodeByFile,
     setYakRunnerHistory,
     updateAreaFileInfo,
     updateFileTree
@@ -45,6 +45,14 @@ import {v4 as uuidv4} from "uuid"
 import moment from "moment"
 import {keySortHandle} from "@/components/yakitUI/YakitEditor/editorUtils"
 import emiter from "@/utils/eventBus/eventBus"
+import {
+    clearMapFileDetail,
+    getMapAllFileKey,
+    getMapAllFileValue,
+    getMapFileDetail,
+    setMapFileDetail
+} from "./FileTreeMap/FileMap"
+import { clearMapFolderDetail, getMapFolderDetail, setMapFolderDetail } from "./FileTreeMap/ChildMap"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -69,6 +77,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".yak",
                         path: "/Users/nonight/work/yakitVersion/.yak",
+                        parent: null,
                         icon: "_f_yak",
                         code: `a() 
 
@@ -83,6 +92,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".yaklang",
                         path: "/Users/nonight/work/yakitVersion/.yaklang",
+                        parent: null,
                         icon: "_f_yak",
                         code: "123",
                         language: "yak",
@@ -92,6 +102,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".tt",
                         path: "/Users/nonight/work/yakitVersion/.tt",
+                        parent: null,
                         icon: "_file",
                         code: "tt",
                         language: "text",
@@ -100,6 +111,7 @@ const defaultAreaInfo: AreaInfoProps[] = [
                     {
                         name: ".ttt",
                         path: "/Users/nonight/work/yakitVersion/.ttt",
+                        parent: null,
                         icon: "_f_markdown",
                         code: "ttt",
                         language: "text",
@@ -158,15 +170,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const {initCode} = props
 
     /** ---------- 文件树 Start ---------- */
-    const fileCache = useRef<Map<string, FileNodeProps[]>>(new Map())
-    const [fileTree, setFileTree] = useState<FileNodeProps[]>([])
+    const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
 
-    const currentPath = useRef<FileNodeProps | undefined>()
-
-    const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeProps[] | null) => any) => {
+    const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
         grpcFetchFileTree(path)
             .then((res) => {
                 console.log("文件树", res)
@@ -175,40 +184,121 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             })
             .catch((error) => {
                 yakitNotify("error", `获取文件列表失败: ${error}`)
-                if (callback) callback(null)
+                if (callback) callback([])
             })
     })
 
-    // 加载文件列表
+    // 轮询下标
+    const loadIndexRef = useRef<number>(0)
+    // 接口是否运行中
+    const isFetchRef = useRef<boolean>(false)
+
+    // 提前注入Map
+    const insertFileMap = useMemoizedFn((path) => {
+        console.log("提前注入Map", path)
+        isFetchRef.current = true
+        loadIndexRef.current += 1
+        handleFetchFileList(path, (value) => {
+            isFetchRef.current = false
+            if (value.length > 0) {
+                // 此处还需缓存结构Map用于结构信息
+                /* 示例 [
+                    {
+                        key:path,
+                        child:[path1,path2,...]
+                    },
+                    {
+                        key:path1,
+                        child:[path11,path12,...]
+                    }]
+                */
+                let childArr:string[] = []
+                // 文件Map
+                value.forEach((item) => {
+                    // 注入文件结构Map
+                    childArr.push(item.path)
+                    // 文件Map
+                    setMapFileDetail(item.path, item)
+                })
+                setMapFolderDetail(path,childArr)
+            }
+        })
+    })
+
+    // 轮询提前加载未打开文件
+    const loadFileMap = useMemoizedFn(() => {
+        // 接口运行中 暂时拦截下一个接口请求
+        if (isFetchRef.current) return
+        const keys = getMapAllFileKey()
+        const index = loadIndexRef.current
+        if (!keys[index]) return
+        // 如果为文件时无需加载 加载下一个
+        if (!getMapFileDetail(keys[index]).isFolder) {
+            loadIndexRef.current += 1
+            return
+        }
+        // 校验其子项是否存在
+        const childKey = keys.filter((item) => item.startsWith(`${keys[index]}\\`))
+        if (childKey.length !== 0) {
+            loadIndexRef.current += 1
+            return
+        }
+        insertFileMap(keys[index])
+    })
+    useEffect(() => {
+        let id = setInterval(() => {
+            loadFileMap()
+        }, 50)
+        return () => clearInterval(id)
+    }, [])
+
+    // 重置Map与轮询
+    const resetMap = useMemoizedFn(() => {
+        loadIndexRef.current = 0
+        clearMapFileDetail()
+        clearMapFolderDetail()
+        // FileTree缓存清除
+        emiter.emit("onResetFileTree")
+    })
+
+    // 加载文件列表(初次加载)
     const onOpenFolderListFun = useMemoizedFn((absolutePath: string) => {
-        console.log("onOpenFolderListFun", absolutePath)
+        // console.log("onOpenFolderListFun", absolutePath)
         const folders = absolutePath.split("\\") // 使用双反斜杠对路径进行分割
         const lastFolder = folders[folders.length - 1] // 获取数组中的最后一个元素
         if (absolutePath.length > 0 && lastFolder.length > 0) {
-            const node: FileNodeProps = {
+            resetMap()
+            const node: FileNodeMapProps = {
+                parent: null,
                 name: lastFolder,
                 path: absolutePath,
                 isFolder: true,
                 icon: FolderDefault
             }
-
-            currentPath.current = {...node}
-            handleFetchFileList(node.path, (value) => {
-                if (value) setFileTree([{...node, children: value}])
-            })
-            getRemoteValue(YakRunnerRemoteGV.CurrentOpenPath)
-                .then((info?: string) => {
-                    if (info) {
-                        try {
-                            const file: FileNodeProps = JSON.parse(info)
-                            currentPath.current = {...file}
-                            handleFetchFileList(file.path, (value) => {
-                                if (value) setFileTree([{...file, children: value}])
-                            })
-                        } catch (error) {}
+            
+            
+            handleFetchFileList(absolutePath, (list) => {
+                    // 如若打开空文件夹 则不可展开 
+                    if(list.length === 0){
+                        node.isLeaf = true
                     }
-                })
-                .catch(() => {})
+                    setMapFileDetail(absolutePath, node)
+                    const children: FileTreeListProps[] = []
+                    
+                    let childArr:string[] = []
+                    list.forEach((item) => {
+                        // 注入文件结构Map
+                        childArr.push(item.path)
+                        // 文件Map
+                        setMapFileDetail(item.path, item)
+                        // 注入tree结构
+                        children.push({path: item.path})
+                    })
+                    // 文件结构Map
+                    setMapFolderDetail(absolutePath,childArr)
+
+                    if (list) setFileTree([{path: absolutePath}])
+            })
 
             // 打开文件夹时接入历史记录
             const history: YakRunnerHistoryProps = {
@@ -228,20 +318,35 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
 
     // 加载下一层
-    const handleFileLoadData = useMemoizedFn((node: FileNodeProps) => {
+    const handleFileLoadData = useMemoizedFn((path: string) => {
         return new Promise((resolve, reject) => {
-            handleFetchFileList(node.path, (value) => {
-                if (value) {
-                    setTimeout(() => {
-                        setFileTree((old) => {
-                            return updateFileTree(old, node.path, value)
+            // 校验其子项是否存在
+            const childArr = getMapFolderDetail(path)
+            if (childArr.length > 0) {
+                console.log("缓存加载");
+                emiter.emit("onRefreshFileTree")
+                resolve("")
+            } else {
+                handleFetchFileList(path, (value) => {
+                    if (value.length > 0) {
+                        let childArr:string[] = []
+                        value.forEach((item) => {
+                            // 注入文件结构Map
+                            childArr.push(item.path)
+                            // 文件Map
+                            setMapFileDetail(item.path, item)
                         })
-                        resolve("")
-                    }, 300)
-                } else {
-                    reject()
-                }
-            })
+                        setMapFolderDetail(path,childArr)
+                        setTimeout(() => {
+                            console.log("接口加载");
+                            emiter.emit("onRefreshFileTree")
+                            resolve("")
+                        }, 300)
+                    } else {
+                        reject()
+                    }
+                })
+            }
         })
     })
     /** ---------- 文件树 End ---------- */
@@ -288,6 +393,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             openTimestamp: moment().unix(),
             // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
             path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
+            parent: null,
             language: "yak",
             isUnSave: true
         }
@@ -333,8 +439,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 isUnSave: false,
                                 language: suffix === "yak" ? suffix : "http"
                             }
-                            await saveCodeByFile(file)
-                            success("保存成功")
+                            await grpcFetchCreateFile(file.path,file.code)
+                            success(`${activeFile?.name} 保存成功`)
                             const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
                             const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
                             setAreaInfo && setAreaInfo(newAreaInfo)
@@ -586,15 +692,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0}>
                 <div className={styles["yak-runner-body"]}>
-                    <LeftSideBar />
+                    <LeftSideBar addFileTab={addFileTab}/>
                     <div className={styles["yak-runner-code"]}>
                         <div className={styles["code-container"]}>
-                            {/* <SplitView
-                                elements={[
-                                    {element: <SplitView isVertical={true} elements={[{element: 1}, {element: 2}]} />},
-                                    {element: 2}
-                                ]}
-                            /> */}
                             {onFixedEditorDetails(onChangeArea())}
                         </div>
                     </div>
