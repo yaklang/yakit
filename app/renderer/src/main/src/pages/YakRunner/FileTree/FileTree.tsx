@@ -68,7 +68,7 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
             handleFetchSystem(() => (systemRef.current = SystemInfo.system))
         }
     }, [])
-
+    const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(wrapper)
     const size = useSize(wrapper)
@@ -78,6 +78,14 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
 
     // 复制 粘贴
     const [copyPath, setCopyPath] = useState<string>("")
+
+    useEffect(() => {
+        // 滚动文件树
+        emiter.on("onScrollToFileTree", onScrollToFileTreeFun)
+        return () => {
+            emiter.off("onScrollToFileTree", onScrollToFileTreeFun)
+        }
+    }, [])
 
     useEffect(() => {
         let system = SystemInfo.system
@@ -115,6 +123,33 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
         return selectedNodes.map((node) => node.path)
     }, [selectedNodes])
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
+
+    const scrollExpandedKeys = useRef<string[]>([])
+    const scrollExpandedKeysFun = useMemoizedFn((path)=>{
+        const fileDetail = getMapFileDetail(path)
+        if(fileDetail.parent!==null){
+            scrollExpandedKeys.current = [...scrollExpandedKeys.current,fileDetail.parent]
+            scrollExpandedKeysFun(fileDetail.parent)
+        }
+    })
+
+    const onScrollToFileTreeFun = useMemoizedFn((path)=>{
+        scrollExpandedKeys.current = []
+        // 获取 Tree 组件的实例
+        const treeInstance = treeRef.current;
+        // 如果 Tree 实例存在且有 scrollTo 方法
+        if (treeInstance && treeInstance.scrollTo) {
+            // 打开扩展项
+            scrollExpandedKeysFun(path)
+            setExpandedKeys(filter([...expandedKeys,...scrollExpandedKeys.current]))
+            setFoucsedKey(path)
+            // 调用 scrollTo 方法滚动到指定节点
+            setTimeout(()=>{
+                treeInstance.scrollTo({ key: path, align: 'middle' });
+            },200)
+            
+        }
+    })
 
     const onResetFileTreeFun = useMemoizedFn((path?: string) => {
         if (path) {
@@ -203,6 +238,7 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
         <div ref={wrapper} className={styles["file-tree"]}>
             <Tree
                 // virtual={false}
+                ref={treeRef}
                 height={size?.height}
                 fieldNames={{title: "name", key: "path", children: "children"}}
                 treeData={data}
