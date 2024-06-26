@@ -779,14 +779,18 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
     const onSetCurrentRow = useMemoizedFn((val?: Risk) => {
-        if (!val) return
-        if (!currentSelectItem) {
-            const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
-            setScrollToIndex(index)
+        if (!val) {
+            setCurrentSelectItem(undefined)
+            return
         }
         if (val?.Id !== currentSelectItem?.Id) {
             setCurrentSelectItem(val)
         }
+        if (!currentSelectItem) {
+            const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
+            setScrollToIndex(index)
+        }
+
         if (!val.IsRead) {
             apiNewRiskRead({Ids: [val.Id]}).then(() => {
                 setResponse({
