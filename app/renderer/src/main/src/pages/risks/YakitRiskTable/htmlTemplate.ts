@@ -119,6 +119,7 @@ export const getHtmlTemplate = () => {
                     title: "标题",
                     dataIndex: "TitleVerbose",
                     key: "TitleVerbose",
+                    ellipsis:true,
                     render: (_, record) => record?.TitleVerbose || record.Title || "-",
                     ...getColumnSearchProps('TitleVerbose'),
                 },
@@ -175,7 +176,8 @@ export const getHtmlTemplate = () => {
                 {
                     title: "Url",
                     dataIndex: "Url",
-                    key: "Url"
+                    key: "Url",
+                    ellipsis:true,
                 },
                 {
                     title: "Tag",
