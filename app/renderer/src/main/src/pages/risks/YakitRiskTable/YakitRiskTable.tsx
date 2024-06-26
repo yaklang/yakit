@@ -589,7 +589,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
             if (allCheck || selectList.length === 0) {
                 const exportQuery: QueryRisksRequest = {
-                    ...query,
+                    ...getQuery(),
                     Pagination: {
                         ...query.Pagination,
                         Page: 1,
@@ -629,7 +629,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         let risks: Risk[] = []
         if (allCheck || selectList.length === 0) {
             const exportQuery: QueryRisksRequest = {
-                ...query,
+                ...getQuery(),
                 Pagination: {
                     ...query.Pagination,
                     Page: 1,
