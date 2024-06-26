@@ -523,9 +523,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     // 在文件列表显示
-    const onOpenFileList = useMemoizedFn((info: FileDetailInfo) => {})
+    const onOpenFileList = useMemoizedFn((info: FileDetailInfo) => {
+        emiter.emit("onScrollToFileTree",info.path)
+    })
 
     const menuData = useMemoizedFn((info: FileDetailInfo) => {
+        const inFileTree = getMapFileDetail(info.path)
         const base: YakitMenuItemType[] = [
             {
                 label: "关闭",
@@ -552,7 +555,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             {
                 label: "在文件列表显示",
                 key: "openFileList",
-                disabled: info.isUnSave
+                disabled: info.isUnSave||inFileTree.parent===null
             }
         ]
         if (splitDirection.length > 0) {
