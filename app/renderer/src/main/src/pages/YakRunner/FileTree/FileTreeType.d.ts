@@ -19,6 +19,8 @@ export interface FileNodeMapProps {
     isFolder: boolean
     /** 显示icon */
     icon: string
+    // 是否新建
+    isCreate?: boolean
     isLeaf?: boolean
 }
 
@@ -33,6 +35,8 @@ export interface FileNodeProps {
     isFolder: boolean
     /** 显示icon */
     icon: string
+    // 是否新建
+    isCreate?: boolean
     isLeaf?: boolean
     children?: FileNodeProps[]
 }
@@ -40,6 +44,8 @@ export interface FileNodeProps {
 export interface FileTreeProps {
     data: FileNodeProps[]
     onLoadData: (node: FileNodeProps) => Promise<any>
+    foucsedKey: string
+    setFoucsedKey: (v:string) => void
     onSelect?: (
         selectedKeys: string[],
         e: {selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps}
@@ -57,4 +63,7 @@ export interface FileTreeNodeProps {
 
     onSelected: (selected: boolean, node: FileNodeProps) => any
     onExpanded: (expanded: boolean, node: FileNodeProps) => void
+
+    copyPath: string
+    setCopyPath: (v:string) => void
 }
