@@ -114,6 +114,8 @@ export const getHtmlTemplate = () => {
                     key: "Id",
                     sorter: (a, b) => +a.Id - +b.Id,
                     sortDirections: ['descend', 'ascend'],
+                    width:150,
+                    ellipsis:true,
                 },
                 {
                     title: "标题",
@@ -132,6 +134,7 @@ export const getHtmlTemplate = () => {
                     title: "等级",
                     dataIndex: "Severity",
                     key: "Severity",
+                    width:100,
                     filters: [
                         {
                             text: '信息',
@@ -171,7 +174,8 @@ export const getHtmlTemplate = () => {
                 {
                     title: "IP",
                     dataIndex: "IP",
-                    key: "IP"
+                    key: "IP",
+                    width:150,
                 },
                 {
                     title: "Url",
@@ -189,6 +193,7 @@ export const getHtmlTemplate = () => {
                     title: "发现时间",
                     dataIndex: "CreatedAt",
                     key: "CreatedAt",
+                    width:200,
                     render: (time) => moment.unix(+time).format('YYYY-MM-DD HH:mm:ss'),
                     sorter: (a, b) => +a.CreatedAt - +b.CreatedAt,
                     sortDirections: ['descend', 'ascend'],

@@ -824,7 +824,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     return (
         <div className={styles["yakit-risk-table"]} ref={riskTableRef}>
             <YakitResizeBox
-                firstMinSize={400}
+                firstMinSize={160}
                 secondMinSize={200}
                 isVer={true}
                 lineStyle={{display: !!currentSelectItem?.Id ? "" : "none"}}
