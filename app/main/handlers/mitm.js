@@ -215,6 +215,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitm-set-downstream-proxy", (e, downstreamProxy) => {
         if (stream) {
             stream.write({
+                SetDownstreamProxy : true,
                 downstreamProxy
             })
         }
