@@ -364,6 +364,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
             },
             {
+                title: "Url",
+                dataKey: "Url"
+            },
+            {
                 title: "Tag",
                 dataKey: "Tags",
                 filterProps: {
@@ -517,6 +521,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     exportKey={RemoteGV.RiskExportFields}
                     getData={getExcelData}
                     onClose={() => m.destroy()}
+                    fileName='风险与漏洞'
                 />
             ),
             onCancel: () => {

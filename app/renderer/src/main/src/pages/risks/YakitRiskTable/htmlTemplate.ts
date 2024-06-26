@@ -77,23 +77,14 @@ export const getHtmlTemplate = () => {
                                 size="small"
                                 style={{ width: 90 }}
                             >
-                                Search
+                                搜索
                             </Button>
                             <Button
                                 onClick={() => clearFilters && handleReset(clearFilters)}
                                 size="small"
                                 style={{ width: 90 }}
                             >
-                                Reset
-                            </Button>
-                            <Button
-                                type="link"
-                                size="small"
-                                onClick={() => {
-                                    confirm({ closeDropdown: false });
-                                }}
-                            >
-                                Filter
+                                重置
                             </Button>
                         </Space>
                     </div>
@@ -128,7 +119,8 @@ export const getHtmlTemplate = () => {
                 {
                     title: "类型",
                     dataIndex: "RiskTypeVerbose",
-                    key: "RiskTypeVerbose"
+                    key: "RiskTypeVerbose",
+                    ...getColumnSearchProps('RiskTypeVerbose'),
                 },
                 {
                     title: "等级",
@@ -182,6 +174,7 @@ export const getHtmlTemplate = () => {
                     dataIndex: "Url",
                     key: "Url",
                     ellipsis:true,
+                    ...getColumnSearchProps('Url'),
                 },
                 {
                     title: "Tag",
