@@ -90,7 +90,13 @@ export enum RemoteGV {
     /**@name fuzzer序列页面中,页面配置内容的显/隐 */
     FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
     /**@name WebFuzzer最大响应数量限制 */
-    FuzzerResMaxNumLimit="fuzzer_res_max_limit"
+    FuzzerResMaxNumLimit="fuzzer_res_max_limit",
+    /**@name Histroy编码缓存 */
+    HistoryResCodeKey="history_res_code_key",
+    /**@name WebFuzzer编码缓存 */
+    webFuzzerEditorCodeKey="webfuzzer_editor_code_key",
+    /**@name WebFuzzer一个编辑器编码缓存 */
+    webFuzzerOneResEditorCodeKey="webfuzzer_one_res_editor_code_key"
 }
 
 /** 项目逻辑全局变量 */

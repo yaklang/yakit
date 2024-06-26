@@ -35,6 +35,7 @@ import {RemoteGV} from "@/yakitGV"
 import ReactResizeDetector from "react-resize-detector"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
+import {CodingPopover} from "@/components/HTTPFlowDetail"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -786,6 +787,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         })
 
         const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
+        // 编辑器编码
+        const [codeKey, setCodeKey] = useState<string>("")
+        const [codeLoading, setCodeLoading] = useState<boolean>(false)
+        const [codeValue, setCodeValue] = useState<Uint8Array>(new Uint8Array())
         useEffect(() => {
             if (currentSelectItem) {
                 getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then((res) => {
@@ -795,8 +800,23 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         setTypeOptionVal(undefined)
                     }
                 })
+                getRemoteValue(RemoteGV.webFuzzerEditorCodeKey).then((res) => {
+                    if (!!res) {
+                        setCodeKey(res)
+                    } else {
+                        setCodeKey("")
+                    }
+                })
             }
         }, [currentSelectItem, currentSelectShowType])
+
+        const originReqOrResValue = useMemo(() => {
+            return (
+                (currentSelectShowType === "request"
+                    ? currentSelectItem?.RequestRaw
+                    : currentSelectItem?.ResponseRaw) || new Buffer([])
+            )
+        }, [currentSelectShowType, currentSelectItem])
 
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
@@ -909,12 +929,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             readOnly={true}
                             hideSearch={true}
                             noHex={true}
+                            loading={codeLoading}
                             // noHeader={true}
-                            originValue={
-                                (currentSelectShowType === "request"
-                                    ? currentSelectItem?.RequestRaw
-                                    : currentSelectItem?.ResponseRaw) || new Buffer([])
-                            }
+                            originValue={codeKey === "" ? originReqOrResValue : codeValue}
                             onAddOverlayWidget={(editor) => {
                                 setEditor(editor)
                             }}
@@ -986,7 +1003,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 ),
                                 <YakitButton size='small' onClick={onExecResults} key='extractData'>
                                     提取数据
-                                </YakitButton>
+                                </YakitButton>,
+                                <CodingPopover
+                                    key='coding'
+                                    originValue={originReqOrResValue}
+                                    onSetCodeLoading={setCodeLoading}
+                                    codeKey={codeKey}
+                                    onSetCodeKey={(codeKey) => {
+                                        setRemoteValue(RemoteGV.webFuzzerEditorCodeKey, codeKey)
+                                        setCodeKey(codeKey)
+                                    }}
+                                    onSetCodeValue={setCodeValue}
+                                />
                             ]}
                             typeOptionVal={typeOptionVal}
                             onTypeOptionVal={(typeOptionVal) => {
