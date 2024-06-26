@@ -695,12 +695,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     <LeftSideBar addFileTab={addFileTab}/>
                     <div className={styles["yak-runner-code"]}>
                         <div className={styles["code-container"]}>
-                            {/* <SplitView
-                                elements={[
-                                    {element: <SplitView isVertical={true} elements={[{element: 1}, {element: 2}]} />},
-                                    {element: 2}
-                                ]}
-                            /> */}
                             {onFixedEditorDetails(onChangeArea())}
                         </div>
                     </div>

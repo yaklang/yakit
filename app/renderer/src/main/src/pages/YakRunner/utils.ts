@@ -34,7 +34,7 @@ const initFileTreeData = (list, path) => {
         const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
         const isLeaf = isFile || !item.HaveChildrenNodes
         return {
-            parent: path,
+            parent: path || null,
             name: item.ResourceName,
             path: item.Path,
             isFolder: isFolder,
@@ -128,7 +128,7 @@ export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNode
 /**
  * @name 新建文件
  */
-export const grpcFetchCreateFile: (path: string, code?: string) => Promise<FileNodeMapProps[]> = (path, code) => {
+export const grpcFetchCreateFile: (path: string, code?: string|null, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (path, code,parentPath) => {
     return new Promise(async (resolve, reject) => {
         const params: any = {
             Method: "PUT",
@@ -144,7 +144,7 @@ export const grpcFetchCreateFile: (path: string, code?: string) => Promise<FileN
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
             console.log("新建文件", params, list)
-            const data: FileNodeMapProps[] = initFileTreeData(list, path)
+            const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
             resolve(data)
         } catch (error) {
             reject(error)
@@ -155,7 +155,7 @@ export const grpcFetchCreateFile: (path: string, code?: string) => Promise<FileN
 /**
  * @name 新建文件夹
  */
-export const grpcFetchCreateFolder: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchCreateFolder: (path: string, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (path,parentPath) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "PUT",
@@ -164,6 +164,14 @@ export const grpcFetchCreateFolder: (path: string) => Promise<FileNodeMapProps[]
                 Query: [{Key: "type", Value: "dir"}],
                 Path: path
             }
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            console.log("新建文件夹", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
+            resolve(data)
+        } catch (error) {
+            reject(error)
         }
     })
 }

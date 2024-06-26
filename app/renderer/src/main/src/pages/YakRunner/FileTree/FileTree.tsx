@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useInViewport, useMemoizedFn, useSize} from "ahooks"
-import {FileTreeNodeProps, FileTreeProps, FileNodeProps} from "./FileTreeType"
+import {FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps} from "./FileTreeType"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {Tree} from "antd"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
@@ -16,12 +16,16 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     clearMapFileDetail,
     getMapAllFileKey,
+    getMapAllFileValue,
     getMapFileDetail,
     removeMapFileDetail,
     setMapFileDetail
 } from "../FileTreeMap/FileMap"
 import emiter from "@/utils/eventBus/eventBus"
 import {
+    getCodeByPath,
+    grpcFetchCreateFile,
+    grpcFetchCreateFolder,
     grpcFetchDeleteFile,
     grpcFetchRenameFileTree,
     isResetActiveFile,
@@ -42,7 +46,9 @@ import {
     removeMapFolderDetail,
     setMapFolderDetail
 } from "../FileTreeMap/ChildMap"
-import {success} from "@/utils/notification"
+import {failed, success} from "@/utils/notification"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import cloneDeep from "lodash/cloneDeep"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,7 +60,7 @@ const FolderMenu: YakitMenuItemProps[] = [
 ]
 
 export const FileTree: React.FC<FileTreeProps> = (props) => {
-    const {data, onLoadData, onSelect, onExpand} = props
+    const {data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey} = props
 
     const systemRef = useRef<System | undefined>(SystemInfo.system)
     useEffect(() => {
@@ -69,6 +75,10 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
     const getInViewport = useMemoizedFn(() => inViewport)
 
     const [isDownCtrlCmd, setIsDownCtrlCmd] = useState<boolean>(false)
+
+    // 复制 粘贴
+    const [copyPath, setCopyPath] = useState<string>("")
+
     useEffect(() => {
         let system = SystemInfo.system
         if (!system) {
@@ -99,31 +109,31 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
         }
     }, [])
 
-    const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     const [selectedNodes, setSelectedNodes] = React.useState<FileNodeProps[]>([])
 
     const selectedKeys = useMemo(() => {
         return selectedNodes.map((node) => node.path)
     }, [selectedNodes])
-    const [expandedNodes, setExpandedNodes] = React.useState<FileNodeProps[]>([])
-    const expandedKeys = useMemo(() => {
-        return expandedNodes.map((node) => node.path)
-    }, [expandedNodes])
+    const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
 
     const onResetFileTreeFun = useMemoizedFn((path?: string) => {
         if (path) {
             if (foucsedKey === path) {
                 setFoucsedKey("")
             }
+            if (copyPath.length !== 0 && copyPath.startsWith(path)) {
+                setCopyPath("")
+            }
             const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
-            const newExpandedNodes = expandedNodes.filter((item) => !item.path.startsWith(path))
+            const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
             setSelectedNodes(newSelectedNodes)
-            setExpandedNodes(newExpandedNodes)
+            setExpandedKeys(newExpandedKeys)
         } else {
             // 全部清空
+            setCopyPath("")
             setFoucsedKey("")
             setSelectedNodes([])
-            setExpandedNodes([])
+            setExpandedKeys([])
         }
     })
 
@@ -132,6 +142,21 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
         emiter.on("onResetFileTree", onResetFileTreeFun)
         return () => {
             emiter.off("onResetFileTree", onResetFileTreeFun)
+        }
+    }, [])
+
+    // 数组去重
+    const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+
+    const onExpandedFileTreeFun = useMemoizedFn((path) => {
+        setExpandedKeys(filter([...expandedKeys, path]))
+    })
+
+    useEffect(() => {
+        // 展开文件树
+        emiter.on("onExpandedFileTree", onExpandedFileTreeFun)
+        return () => {
+            emiter.off("onExpandedFileTree", onExpandedFileTreeFun)
         }
     }, [])
 
@@ -160,19 +185,17 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
     })
 
     const handleExpand = useMemoizedFn((expanded: boolean, node: FileNodeProps) => {
-        let arr = [...expandedNodes]
+        let arr = [...expandedKeys]
         if (expanded) {
-            arr = arr.filter((item) => item.path !== node.path)
+            arr = arr.filter((item) => item !== node.path)
         } else {
-            arr = [...arr, node]
+            arr = [...arr, node.path]
         }
         if (selectedNodes.length > 0) setSelectedNodes([selectedNodes[selectedNodes.length - 1]])
-        setExpandedNodes([...arr])
+        setFoucsedKey(node.path)
+        setExpandedKeys([...arr])
         if (onExpand) {
-            onExpand(
-                arr.map((item) => item.path),
-                {expanded: !expanded, node}
-            )
+            onExpand(arr, {expanded: !expanded, node})
         }
     })
 
@@ -200,6 +223,8 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
                             expandedKeys={expandedKeys}
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
+                            copyPath={copyPath}
+                            setCopyPath={setCopyPath}
                         />
                     )
                 }}
@@ -209,12 +234,15 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
 }
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
-    const {isDownCtrlCmd, info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded} = props
+    const {isDownCtrlCmd, info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded, copyPath, setCopyPath} =
+        props
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
     // 是否为编辑模式
     const [isEdit, setEdit] = useState<boolean>(false)
     const [value, setValue] = useState<string>(info.name)
+
+    const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
 
     const isFoucsed = useMemo(() => {
         return foucsedKey === info.path
@@ -247,11 +275,55 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         }
     })
 
+    // 复制
+    const onCopy = useMemoizedFn(() => {
+        setCopyPath(info.path)
+    })
+
+    // 粘贴
+    const onPaste = useMemoizedFn(async () => {
+        try {
+            console.log("粘贴", info.path, copyPath)
+            const fileDetail = getMapFileDetail(copyPath)
+            const code = await getCodeByPath(copyPath)
+            const newPath = `${info.path}\\${fileDetail.name}`
+            const result = await grpcFetchCreateFile(newPath, code)
+            console.log("粘贴---",result);
+            
+            if (result.length === 0) return
+            const {path, name, parent} = result[0]
+
+            setMapFileDetail(path, result[0])
+            const folderDetail = getMapFolderDetail(info.path)
+            const newFolderDetail: string[] = cloneDeep(folderDetail)
+            // 如若为空文件夹 则可点击打开
+            if (newFolderDetail.length === 0) {
+                const fileDetail = getMapFileDetail(info.path)
+                setMapFileDetail(info.path, {...fileDetail, isLeaf: false})
+            }
+            // 新增文件时其位置应处于文件夹后
+            let insert: number = 0
+            newFolderDetail.some((item, index) => {
+                const {isFolder} = getMapFileDetail(item)
+                if (isFolder) insert += 1
+                return !isFolder
+            })
+            newFolderDetail.splice(insert, 0, path)
+            setMapFolderDetail(info.path, newFolderDetail)
+            setCopyPath("")
+            emiter.emit("onExpandedFileTree", info.path)
+            emiter.emit("onRefreshFileTree")
+        } catch (error) {
+            setCopyPath("")
+            failed(`粘贴失败${error}`)
+        }
+    })
+
     const onRename = useMemoizedFn(() => {
         setEdit(true)
     })
 
-    const onSave = useMemoizedFn(async () => {
+    const onRenameFun = useMemoizedFn(async () => {
         try {
             if (value.length !== 0 && value !== info.name) {
                 // 重命名 调用接口成功后更新tree
@@ -345,10 +417,71 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             }
             setEdit(false)
         } catch (error) {
-            fail("保存失败")
+            failed("保存失败")
         }
     })
 
+    // 移除新建项
+    const resetCreate = useMemoizedFn(() => {
+        removeMapFileDetail(info.path)
+        if (info.parent) {
+            const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
+            // 如若没有子项 将文件夹收起
+            if (newFolderDetail.length === 0) {
+                const fileDetail = getMapFileDetail(info.parent)
+                setMapFileDetail(info.parent, {...fileDetail, isLeaf: true})
+                emiter.emit("onResetFileTree", info.parent)
+            }
+            setMapFolderDetail(info.parent, newFolderDetail)
+        }
+        emiter.emit("onRefreshFileTree")
+    })
+
+    const onCreateFun = useMemoizedFn(async () => {
+        if (value.length > 0) {
+            try {
+                const newPath = `${info.parent}\\${value}`
+                // 区分新建文件夹 新建文件接口
+                const result = info.isFolder
+                    ? await grpcFetchCreateFolder(newPath, info.parent)
+                    : await grpcFetchCreateFile(newPath, null, info.parent)
+                console.log("新建----", result)
+                if (result.length === 0) return
+                const {path, name, parent} = result[0]
+                removeMapFileDetail(info.path)
+                setMapFileDetail(path, result[0])
+                if (parent) {
+                    const newFolderDetail = getMapFolderDetail(parent).map((item) => {
+                        if (item === info.path) return path
+                        return item
+                    })
+                    setMapFolderDetail(parent, newFolderDetail)
+                }
+                emiter.emit("onRefreshFileTree")
+            } catch (error) {
+                resetCreate()
+                failed("新建失败")
+            }
+        }
+        // 没有内容 新建失效
+        else {
+            resetCreate()
+        }
+    })
+
+    // 输入框回车 或 失焦
+    const onSave = useMemoizedFn(async () => {
+        // 新建
+        if (info.isCreate) {
+            onCreateFun()
+        }
+        // 重命名
+        else {
+            onRenameFun()
+        }
+    })
+
+    // 删除
     const onDelete = useMemoizedFn(async () => {
         try {
             await grpcFetchDeleteFile(info.path)
@@ -365,8 +498,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         removeMapFileDetail(item)
                     })
                     // 移除文件夹下的所有文件夹结构及其父结构下的此项
-                    const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
-                    setMapFolderDetail(info.parent, newFolderDetail)
+                    const folderDetail = getMapFolderDetail(info.parent)
+                    if (folderDetail.length > 0) {
+                        const newFolderDetail = folderDetail.filter((item) => item !== info.path)
+                        setMapFolderDetail(info.parent, newFolderDetail)
+                    }
 
                     const deleteFolderArr = getMapAllFolderKey().filter((item) => item.startsWith(info.path))
                     deleteFolderArr.forEach((item) => {
@@ -375,14 +511,12 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 }
 
                 // 此处还需移除已经删除文件的布局信息
-                const removePath = (await judgeAreaExistFilesPath(areaInfo,deleteFileArr)).map(
-                    (item) => item.path
-                )
-                if(removePath.includes(activeFile?.path||"")){
-                    setActiveFile&&setActiveFile(undefined)
+                const removePath = (await judgeAreaExistFilesPath(areaInfo, deleteFileArr)).map((item) => item.path)
+                if (removePath.includes(activeFile?.path || "")) {
+                    setActiveFile && setActiveFile(undefined)
                 }
-                const newAreaInfo = removeAreaFilesInfo(areaInfo,removePath)
-                console.log("移除的newAreaInfo",newAreaInfo);
+                const newAreaInfo = removeAreaFilesInfo(areaInfo, removePath)
+                console.log("移除的newAreaInfo", newAreaInfo)
                 setAreaInfo && setAreaInfo(newAreaInfo)
             }
             // 文件删除
@@ -390,8 +524,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 if (info.parent) {
                     const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
                     // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
-                    if(newFolderDetail.length === 0){
-                        setMapFileDetail(info.parent,{...getMapFileDetail(info.parent),isLeaf:true})
+                    if (newFolderDetail.length === 0) {
+                        setMapFileDetail(info.parent, {...getMapFileDetail(info.parent), isLeaf: true})
                     }
                     setMapFolderDetail(info.parent, newFolderDetail)
                 }
@@ -404,10 +538,27 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             }
             emiter.emit("onResetFileTree", info.path)
             emiter.emit("onRefreshFileTree")
+            setRemoveCheckVisible(false)
             success(`${info.name} 删除成功`)
         } catch (error) {
-            fail("删除失败")
+            failed("删除失败")
         }
+    })
+
+    useEffect(() => {
+        if (info.isCreate) {
+            setEdit(true)
+        }
+    }, [])
+
+    // 新建文件
+    const onNewFile = useMemoizedFn((path: string) => {
+        emiter.emit("onNewFileInFileTree", path)
+    })
+
+    // 新建文件夹
+    const onNewFolder = useMemoizedFn((path: string) => {
+        emiter.emit("onNewFolderInFileTree", path)
     })
 
     const menuData: YakitMenuItemType[] = useMemo(() => {
@@ -422,7 +573,16 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 key: "rename"
             }
         ]
-        if (info.isLeaf) {
+        if (info.isFolder) {
+            return [
+                ...FolderMenu,
+                {type: "divider"},
+                // {label: "复制", key: "copy"},
+                {label: "粘贴", key: "paste", disabled: copyPath.length === 0},
+                {type: "divider"},
+                ...base
+            ]
+        } else {
             return [
                 {label: "在文件夹中显示", key: "openFileSystem"},
                 {type: "divider"},
@@ -430,17 +590,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 {type: "divider"},
                 ...base
             ]
-        } else {
-            return [
-                ...FolderMenu,
-                {type: "divider"},
-                {label: "复制", key: "copy"},
-                {label: "粘贴", key: "paste", disabled: true},
-                {type: "divider"},
-                ...base
-            ]
         }
-    }, [info.isLeaf])
+    }, [info.isFolder, copyPath])
 
     const handleContextMenu = useMemoizedFn(() => {
         showByRightContext({
@@ -450,15 +601,27 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             onClick: ({key, keyPath}) => {
                 console.log("handleContextMenu", key, keyPath)
                 switch (key) {
+                    case "newFile":
+                        onNewFile(info.path)
+                        break
+                    case "newFolder":
+                        onNewFolder(info.path)
+                        break
                     case "openFileSystem":
                         console.log("文件夹中显示", info.path)
                         openABSFileLocated(info.path)
+                        break
+                    case "copy":
+                        onCopy()
+                        break
+                    case "paste":
+                        onPaste()
                         break
                     case "rename":
                         onRename()
                         break
                     case "delete":
-                        onDelete()
+                        setRemoveCheckVisible(true)
                         break
                     default:
                         break
@@ -484,47 +647,59 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     }, [info.icon, isFolder, isExpanded])
 
     return (
-        <div
-            className={classNames(styles["file-tree-node"], {
-                [styles["node-selected"]]: isSelected,
-                [styles["node-foucsed"]]: isFoucsed
-            })}
-            onClick={handleClick}
-            onContextMenu={handleContextMenu}
-        >
-            {!info.isLeaf && (
-                <div className={classNames(styles["node-switcher"], {[styles["expanded"]]: isExpanded})}>
-                    <OutlineChevronrightIcon />
-                </div>
-            )}
+        <>
+            <div
+                className={classNames(styles["file-tree-node"], {
+                    // [styles["node-selected"]]: isSelected,
+                    [styles["node-foucsed"]]: isFoucsed
+                })}
+                onClick={handleClick}
+                onContextMenu={handleContextMenu}
+            >
+                {!info.isLeaf && (
+                    <div className={classNames(styles["node-switcher"], {[styles["expanded"]]: isExpanded})}>
+                        <OutlineChevronrightIcon />
+                    </div>
+                )}
 
-            <div className={styles["node-loading"]}>
-                <LoadingOutlined />
-            </div>
+                <div className={styles["node-loading"]}>
+                    <LoadingOutlined />
+                </div>
 
-            <div className={styles["node-content"]}>
-                <div className={styles["content-icon"]}>
-                    <img src={iconImage} />
-                </div>
-                <div className={classNames(styles["content-body"], "yakit-content-single-ellipsis")} title={info.name}>
-                    {isEdit ? (
-                        <YakitInput
-                            wrapperClassName={styles["file-tree-input-wrapper"]}
-                            className={styles["file-tree-input"]}
-                            value={value}
-                            onChange={(e) => {
-                                setValue(e.target.value)
-                            }}
-                            autoFocus
-                            onBlur={onSave}
-                            onPressEnter={onSave}
-                            size='small'
-                        />
-                    ) : (
-                        info.name
-                    )}
+                <div className={styles["node-content"]}>
+                    <div className={styles["content-icon"]}>
+                        <img src={iconImage} />
+                    </div>
+                    <div
+                        className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}
+                        title={info.name}
+                    >
+                        {isEdit ? (
+                            <YakitInput
+                                wrapperClassName={styles["file-tree-input-wrapper"]}
+                                className={styles["file-tree-input"]}
+                                value={value}
+                                onChange={(e) => {
+                                    setValue(e.target.value)
+                                }}
+                                autoFocus
+                                onBlur={onSave}
+                                onPressEnter={onSave}
+                                size='small'
+                            />
+                        ) : (
+                            info.name
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+            <YakitHint
+                visible={removeCheckVisible}
+                title={`是否要删除${info.name}`}
+                content='确认删除后将会彻底删除'
+                onOk={onDelete}
+                onCancel={() => setRemoveCheckVisible(false)}
+            />
+        </>
     )
 }

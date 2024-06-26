@@ -474,7 +474,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 if (!info.isUnSave) {
                     try {
                         const result = await grpcFetchRenameFileTree(info.path, newName,info.parent)
-                        const {path, name} = result[0]
+                        const {path, name,  parent} = result[0]
                         // 存在则更改
                         const fileMap = getMapFileDetail(info.path)
                         if (fileMap.name !== "读取文件失败" && !fileMap.path.endsWith("-fail")) {
@@ -483,9 +483,10 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                             // 新增文件树数据
                             setMapFileDetail(path, result[0])
                         }
-                        const folderMap = getMapFolderDetail(info.parent || "")
+                        
                         // 获取重命名文件所在存储结构
-                        if (info.parent && folderMap.includes(info.path)) {
+                        if (info.parent) {
+                            const folderMap = getMapFolderDetail(info.parent)
                             const newFolderMap = folderMap.map((item) => {
                                 if (item === info.path) return path
                                 return item
@@ -499,8 +500,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         const newActiveFile = isResetActiveFile([info], activeFile)
                         setActiveFile && setActiveFile(newActiveFile)
                         setAreaInfo && setAreaInfo(newAreaInfo)
+                        emiter.emit("onRefreshFileTree")
                     } catch (error) {
-                        fail("保存失败")
+                        failed("保存失败")
                     }
                 } else {
                     // 未保存文件直接更改文件树
