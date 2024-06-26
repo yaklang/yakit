@@ -4793,6 +4793,9 @@ message MITMRequest {
 
   // force close
   bool ForceDisableKeepAlive = 59;
+
+  // runtime change proxy
+  bool SetDownstreamProxy = 60;
 }
 
 message Certificate {
