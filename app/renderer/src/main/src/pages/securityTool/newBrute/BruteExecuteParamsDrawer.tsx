@@ -45,7 +45,7 @@ const BruteExecuteParamsDrawer: React.FC<BruteExecuteParamsDrawerProps> = React.
             width='60%'
             title='额外参数'
         >
-            <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+            <Form size='small' labelWrap={true} labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
                 <BruteSettings visible={visible} form={form} />
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>

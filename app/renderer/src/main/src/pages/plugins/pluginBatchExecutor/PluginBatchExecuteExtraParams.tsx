@@ -66,7 +66,7 @@ const PluginBatchExecuteExtraParamsDrawer: React.FC<PluginBatchExecuteExtraParam
             width='40%'
             title='额外参数'
         >
-            <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+            <Form size='small' labelWrap={true} labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
                 <PluginBatchExecuteExtraParams
                     pathRef={pathRef}
                     proxyRef={proxyRef}

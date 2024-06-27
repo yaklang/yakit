@@ -88,7 +88,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                 case "yak":
                 case "lua":
                     return (
-                        <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+                        <Form size='small' labelWrap={true} labelCol={{span: 8}} wrapperCol={{span: 16}} form={form}>
                             <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} pluginType={pluginType} />
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </Form>
@@ -98,7 +98,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                 case "port-scan":
                 case "nuclei":
                     return (
-                        <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+                        <Form size='small' labelWrap={true} labelCol={{span: 8}} wrapperCol={{span: 16}} form={form}>
                             <FixExtraParamsNode form={form} pathRef={pathRef} onReset={onReset} />
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </Form>
