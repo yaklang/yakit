@@ -22,13 +22,9 @@
             display: flex;
             font-size: 12px;
         }
+
         .ant-tag {
             width: 100%;
-        }
-
-        .ant-select-selector {
-            display: flex;
-            align-items: center;
         }
 
         .ant-select-clear {
@@ -38,18 +34,14 @@
         .ant-select-arrow .anticon:not(.ant-select-suffix) {
             pointer-events: none;
         }
-        .ant-select-single.ant-select-show-arrow .ant-select-selection-item {
-            margin-bottom: 2px;
-        }
+
         .ant-select-single .ant-select-selector .ant-select-selection-item,
         .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
-            display: flex;
             font-size: 12px;
-            line-height: normal;
+            line-height: 26px;
         }
 
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            // padding: 6px 12px;
             border-radius: 4px;
             border: 1px solid var(--select-border-color);
             width: 100%;
@@ -77,7 +69,7 @@
             border-radius: 4px;
             border: 1px solid var(--select-border-color);
             background: var(--yakit-card-background-color);
-            margin-top: 1px;
+            margin: 0;
             color: var(--yakit-body-text-color);
         }
 
@@ -132,6 +124,7 @@
 // ========================== mode tags ==========================
 .yakit-select-wrapper-tags {
     --select-primary-icon-color: var(--yakit-primary-5);
+    
     :global {
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) .ant-select-item-option-state {
             color: var(--select-primary-icon-color);
@@ -162,6 +155,7 @@
         }
         .ant-tag {
             margin-right: 0;
+            display: flex;
         }
     }
 }
@@ -178,16 +172,24 @@
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             height: 32px;
             min-height: 32px;
-            padding: 2px 12px 0 4px;
         }
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-            padding: 2px 12px 0 12px;
+            padding: 0px 12px;
+        }
+        .ant-select-multiple .ant-select-selector {
+            padding: 1px 4px;
+        }
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+            line-height: 30px;
+        }
+
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 30px;
         }
 
         .ant-select-single .ant-select-selector .ant-select-selection-item,
         .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
             font-size: 14px;
-            height: 20px;
         }
 
         .ant-select-selection-overflow {
@@ -198,10 +200,12 @@
             height: 24px;
             line-height: 24px;
             margin-bottom: 2px;
+            margin-top: 2px;
         }
         .ant-select-multiple .ant-select-selection-item {
             height: 24px;
             line-height: 24px;
+            margin: 0;
         }
     }
 }
@@ -214,15 +218,19 @@
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             height: 28px;
             min-height: 28px;
-            padding: 2px 12px 0 4px;
+            // padding: 0px 12px 0 4px;
         }
 
-        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
-            margin-bottom: 2px;
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 26px;
         }
 
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-            padding: 2px 12px 0 12px;
+            padding: 0px 12px;
+        }
+
+        .ant-select-multiple .ant-select-selector {
+            padding: 1px 4px;
         }
 
         .ant-select-selection-overflow {
@@ -233,10 +241,12 @@
             height: 20px;
             line-height: 20px;
             margin-bottom: 2px;
+            margin-top: 2px;
         }
         .ant-select-multiple .ant-select-selection-item {
             height: 20px;
             line-height: 20px;
+            margin: 0;
         }
         .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
             height: 20px;
@@ -252,13 +262,23 @@
     :global {
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             height: 24px;
-            padding: 0px 12px 0 4px;
+            // padding: 0px 12px 0 4px;
             line-height: 16px;
         }
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             padding: 0px 12px 0 8px;
         }
 
+        .ant-select-multiple .ant-select-selector {
+            padding: 1px 4px;
+        }
+
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+            line-height: 22px;
+        }
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 22px;
+        }
         .ant-select-selection-overflow {
             min-height: 16px;
         }
@@ -267,6 +287,7 @@
             height: 16px;
             line-height: 16px;
             margin-bottom: 2px;
+            margin-top: 2px;
         }
 
         .ant-select-multiple .ant-select-selector::after {
@@ -275,7 +296,7 @@
         .ant-select-multiple .ant-select-selection-item {
             height: 16px;
             line-height: 16px;
-            margin-top: 1px;
+            margin: 0;
             border-radius: 2px;
         }
         .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
