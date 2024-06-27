@@ -960,7 +960,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
         setActiveFile && setActiveFile(newActiveFile)
         const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
-        console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
+        // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -1063,7 +1063,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const obj: JumpToEditorProps = JSON.parse(data)
             const {id, selections} = obj
             if (reqEditor && editorInfo?.path === id) {
-                reqEditor?.setSelection(selections)
+                reqEditor.setSelection(selections)
+                reqEditor.revealLineInCenter(selections.startLineNumber)
             }
         } catch (error) {}
     })

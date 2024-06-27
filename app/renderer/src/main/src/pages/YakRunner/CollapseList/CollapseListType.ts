@@ -1,4 +1,5 @@
 import {ReactNode} from "react"
+import { monaco } from "react-monaco-editor"
 
 export interface CollapseListProp<T> {
     /**
@@ -13,6 +14,9 @@ export interface CollapseListProp<T> {
     renderItem: (info: T) => ReactNode
 }
 
-export interface HelpInfoListProps {
-    list: {key: number}[]
+export interface HelpInfoListProps {}
+
+export interface DefinitionListProps {
+    lineContent: string
+    range: monaco.Range
 }

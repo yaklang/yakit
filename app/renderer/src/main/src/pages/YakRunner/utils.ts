@@ -447,12 +447,13 @@ export const isResetActiveFile = (
     files: FileDetailInfo[] | FileNodeProps[],
     activeFile: FileDetailInfo | undefined
 ) => {
+    let newActiveFile = activeFile
     files.forEach((file) => {
         if (file.path === activeFile?.path) {
-            return undefined
+            newActiveFile = undefined
         }
     })
-    return activeFile
+    return newActiveFile
 }
 
 /**

@@ -273,14 +273,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, syntaxActiveFile, activeFile)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(newActiveFile)
-
-                // 打开文件时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                    isFile: true,
-                    name,
-                    path
-                }
-                setYakRunnerHistory(history)
             }
         } catch (error) {}
     })
@@ -292,6 +284,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             if (openFileInfo) {
                 const {path, name} = openFileInfo
                 openFileByPath(path, name)
+                 // 打开文件时接入历史记录
+                 const history: YakRunnerHistoryProps = {
+                    isFile: true,
+                    name,
+                    path
+                }
+                setYakRunnerHistory(history)
             }
         } catch (error) {}
     })
@@ -319,6 +318,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             // 打开文件
             if (item.isFile) {
                 openFileByPath(item.path, item.name)
+                // 打开文件时接入历史记录
+                const history: YakRunnerHistoryProps = {
+                    isFile: true,
+                    name:item.name,
+                    path:item.path
+                }
+                setYakRunnerHistory(history)
             }
             // 打开文件夹
             else {
