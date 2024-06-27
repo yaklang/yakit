@@ -94,6 +94,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             ipcRenderer.removeAllListeners("client-yak-data")
         }
     }, [xtermRef])
+
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -143,21 +144,51 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 </div>
             </div>
             <div className={styles["content"]}>
-                {showType.includes("output") && showItem === "output" && (
-                    <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef} />
+                {showType.includes("output") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "output"
+                        })}
+                    >
+                        <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef} />
+                    </div>
                 )}
-                {/* 帮助信息只有yak有 */}
-                {showType.includes("helpInfo") && showItem === "helpInfo" && (
-                    <HelpInfoList list={[{key: 1}, {key: 2}, {key: 3}, {key: 4}, {key: 5}]} />
-                )}
-                {showType.includes("syntaxCheck") && showItem === "syntaxCheck" && (
-                    <>
+
+                {showType.includes("syntaxCheck") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "syntaxCheck"
+                        })}
+                    >
                         {activeFile ? (
                             <SyntaxCheckList syntaxCheckData={syntaxCheckData} onJumpToEditor={onJumpToEditor} />
                         ) : (
                             <div className={styles["no-syntax-check"]}>请选中具体文件查看语法检查信息</div>
                         )}
-                    </>
+                    </div>
+                )}
+                {showType.includes("terminal") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "terminal"
+                        })}
+                    >
+                        <div className={styles["no-syntax-check"]}>等待后端接口</div>
+                    </div>
+                )}
+                {/* 帮助信息只有yak有 */}
+                {showType.includes("helpInfo") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "helpInfo"
+                        })}
+                    >
+                        {activeFile?.language === "yak" ? (
+                            <HelpInfoList />
+                        ) : (
+                            <div className={styles["no-syntax-check"]}>请选中yak文件查看帮助信息</div>
+                        )}
+                    </div>
                 )}
             </div>
         </div>

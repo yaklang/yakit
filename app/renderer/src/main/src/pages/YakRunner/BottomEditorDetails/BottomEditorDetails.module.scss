@@ -54,6 +54,14 @@
     .content {
         flex: 1;
         overflow: auto;
+        .render-hideen{
+            height: 100%;
+            width: 100%;
+            display: none;
+        }
+        .render-show{
+            display: block;
+        }
         .no-syntax-check{
             height: 100%;
             display: flex;
