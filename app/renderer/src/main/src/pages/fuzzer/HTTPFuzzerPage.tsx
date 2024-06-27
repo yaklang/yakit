@@ -2951,7 +2951,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             loading={codeLoading}
                             showDefaultExtra={false}
                             title={secondNodeTitle && secondNodeTitle()}
-                            extra={
+                            codingBtn={
                                 <CodingPopover
                                     key='coding'
                                     originValue={fuzzerResponse.ResponseRaw}

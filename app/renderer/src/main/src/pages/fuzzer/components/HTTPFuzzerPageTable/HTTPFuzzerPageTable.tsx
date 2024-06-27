@@ -1003,7 +1003,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 ),
                                 <YakitButton size='small' onClick={onExecResults} key='extractData'>
                                     提取数据
-                                </YakitButton>,
+                                </YakitButton>
+                            ]}
+                            codingBtn={
                                 <CodingPopover
                                     key='coding'
                                     originValue={originReqOrResValue}
@@ -1015,7 +1017,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     }}
                                     onSetCodeValue={setCodeValue}
                                 />
-                            ]}
+                            }
                             typeOptionVal={typeOptionVal}
                             onTypeOptionVal={(typeOptionVal) => {
                                 if (typeOptionVal !== undefined) {

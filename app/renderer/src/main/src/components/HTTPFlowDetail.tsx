@@ -1232,19 +1232,19 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 />
             )
         }
-        extraBtn.push(
-            <CodingPopover
-                key='coding'
-                originValue={originRspValue}
-                onSetCodeLoading={setCodeLoading}
-                codeKey={codeKey}
-                onSetCodeKey={(codeKey) => {
-                    setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
-                    setCodeKey(codeKey)
-                }}
-                onSetCodeValue={setCodeValue}
-            />
-        )
+        // extraBtn.push(
+        //     <CodingPopover
+        //         key='coding'
+        //         originValue={originRspValue}
+        //         onSetCodeLoading={setCodeLoading}
+        //         codeKey={codeKey}
+        //         onSetCodeKey={(codeKey) => {
+        //             setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
+        //             setCodeKey(codeKey)
+        //         }}
+        //         onSetCodeValue={setCodeValue}
+        //     />
+        // )
         return extraBtn
     }
 
@@ -1426,6 +1426,19 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             ...sendCodeCompareMenuItem("response")
                         }}
                         extra={secondNodeResExtraBtn()}
+                        codingBtn={
+                            <CodingPopover
+                                key='coding'
+                                originValue={originRspValue}
+                                onSetCodeLoading={setCodeLoading}
+                                codeKey={codeKey}
+                                onSetCodeKey={(codeKey) => {
+                                    setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
+                                    setCodeKey(codeKey)
+                                }}
+                                onSetCodeValue={setCodeValue}
+                            />
+                        }
                         isResponse={true}
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}

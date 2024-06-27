@@ -204,8 +204,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
     const [headerShow, setHeaderShow] = useState<boolean>(false)
 
+    const [stopUpdate, setStopUpdate] = useState<boolean>(false)
+
     useDebounceEffect(
         () => {
+            if (stopUpdate) {
+                setStopUpdate(false)
+                return
+            }
             if (!containerRef || !wrapperRef) return
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
             const containerHeight = containerRef.current?.clientHeight
@@ -568,6 +574,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         ipcRenderer
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
             .then((e) => {
+                setStopUpdate(true)
                 info("删除成功")
                 const projects = getData().Projects.filter((item) => +item.Id !== delId.Id)
                 const newData = {
