@@ -9,7 +9,7 @@ import {
 import {showDrawer} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
-import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
+import {CodingPopover, FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed, yakitNotify, warn} from "../../utils/notification"
 import {
@@ -2175,8 +2175,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             <div className={styles["fuzzer-secondNode-extra"]}>
                 {!rsp.IsTooLargeResponse ? (
                     <>
-                        {+(secondNodeSize?.width || 0) >= 610 && searchNode}
-                        {+(secondNodeSize?.width || 0) < 610 && (
+                        {+(secondNodeSize?.width || 0) >= 650 && searchNode}
+                        {+(secondNodeSize?.width || 0) < 650 && (
                             <YakitPopover content={searchNode}>
                                 <YakitButton icon={<SearchIcon />} size={size} type='outline2' />
                             </YakitPopover>
@@ -2907,6 +2907,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
 
         // 一个响应的编辑器美化渲染缓存
         const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
+        // 编辑器编码
+        const [codeKey, setCodeKey] = useState<string>("")
+        const [codeLoading, setCodeLoading] = useState<boolean>(false)
+        const [codeValue, setCodeValue] = useState<Uint8Array>(new Uint8Array())
         useEffect(() => {
             if (fuzzerResponse.ResponseRaw) {
                 getRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
@@ -2914,6 +2918,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         setResTypeOptionVal(res)
                     } else {
                         setResTypeOptionVal(undefined)
+                    }
+                })
+                getRemoteValue(RemoteGV.webFuzzerOneResEditorCodeKey).then((res) => {
+                    if (!!res) {
+                        setCodeKey(res)
+                    } else {
+                        setCodeKey("")
                     }
                 })
             }
@@ -2932,13 +2943,27 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
-                            originValue={fuzzerResponse.ResponseRaw}
+                            originValue={codeKey === "" ? fuzzerResponse.ResponseRaw : codeValue}
                             hideSearch={true}
                             isResponse={true}
                             noHex={true}
                             // noHeader={true}
+                            loading={codeLoading}
                             showDefaultExtra={false}
                             title={secondNodeTitle && secondNodeTitle()}
+                            codingBtn={
+                                <CodingPopover
+                                    key='coding'
+                                    originValue={fuzzerResponse.ResponseRaw}
+                                    onSetCodeLoading={setCodeLoading}
+                                    codeKey={codeKey}
+                                    onSetCodeKey={(codeKey) => {
+                                        setRemoteValue(RemoteGV.webFuzzerOneResEditorCodeKey, codeKey)
+                                        setCodeKey(codeKey)
+                                    }}
+                                    onSetCodeValue={setCodeValue}
+                                />
+                            }
                             extraEnd={secondNodeExtra && secondNodeExtra()}
                             editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE'
                             emptyOr={

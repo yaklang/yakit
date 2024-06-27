@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef, ReactNode} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useImperativeHandle} from "react"
 import {
     Button,
     Card,
@@ -18,7 +18,7 @@ import {
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
-import {failed} from "../utils/notification"
+import {failed, yakitNotify} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
 import {HTTPHistorySourcePageType, HTTPPacketFuzzable} from "./HTTPHistory"
@@ -29,10 +29,10 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {HTTPFlowExtractedData, HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
+import {ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
@@ -48,6 +48,8 @@ import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {RemoteGV} from "@/yakitGV"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
+import {YakitPopover} from "./yakitUI/YakitPopover/YakitPopover"
+import {SolidCheckIcon} from "@/assets/icon/solid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1133,6 +1135,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 编辑器美化缓存
     const [reqTypeOptionVal, setReqTypeOptionVal] = useState<RenderTypeOptionVal>()
     const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
+    // 编辑器编码
+    const [codeKey, setCodeKey] = useState<string>("")
+    const [codeLoading, setCodeLoading] = useState<boolean>(false)
+    const [codeValue, setCodeValue] = useState<Uint8Array>(new Uint8Array())
     useEffect(() => {
         if (flow) {
             getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
@@ -1149,8 +1155,102 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     setResTypeOptionVal(undefined)
                 }
             })
+            getRemoteValue(RemoteGV.HistoryResCodeKey).then((res) => {
+                if (!!res) {
+                    setCodeKey(res)
+                } else {
+                    setCodeKey("")
+                }
+            })
         }
     }, [flow])
+
+    // 响应额外按钮
+    const secondNodeResExtraBtn = () => {
+        let extraBtn: ReactElement[] = []
+        if (flow?.IsTooLargeResponse) {
+            extraBtn.push(
+                <YakitDropdownMenu
+                    key='intact-rsp'
+                    menu={{
+                        data: [
+                            {key: "tooLargeResponseHeaderFile", label: "查看Header"},
+                            {key: "tooLargeResponseBodyFile", label: "查看Body"}
+                        ],
+                        onClick: ({key}) => {
+                            switch (key) {
+                                case "tooLargeResponseHeaderFile":
+                                    ipcRenderer
+                                        .invoke("is-file-exists", flow.TooLargeResponseHeaderFile)
+                                        .then((flag: boolean) => {
+                                            if (flag) {
+                                                openABSFileLocated(flow.TooLargeResponseHeaderFile)
+                                            } else {
+                                                failed("目标文件已不存在!")
+                                            }
+                                        })
+                                        .catch(() => {})
+                                    break
+                                case "tooLargeResponseBodyFile":
+                                    ipcRenderer
+                                        .invoke("is-file-exists", flow.TooLargeResponseBodyFile)
+                                        .then((flag: boolean) => {
+                                            if (flag) {
+                                                openABSFileLocated(flow.TooLargeResponseBodyFile)
+                                            } else {
+                                                failed("目标文件已不存在!")
+                                            }
+                                        })
+                                        .catch(() => {})
+                                    break
+                                default:
+                                    break
+                            }
+                        }
+                    }}
+                    dropdown={{
+                        trigger: ["click"],
+                        placement: "bottom"
+                    }}
+                >
+                    <YakitButton type='primary' size='small'>
+                        完整响应
+                    </YakitButton>
+                </YakitDropdownMenu>
+            )
+        } else {
+            extraBtn.push(
+                <Button
+                    key='chrome'
+                    className={styles["extra-chrome-btn"]}
+                    type={"text"}
+                    size={"small"}
+                    icon={<ChromeSvgIcon />}
+                    onClick={() => {
+                        flow?.Response && showResponseViaResponseRaw(flow?.Response)
+                    }}
+                />
+            )
+        }
+        // extraBtn.push(
+        //     <CodingPopover
+        //         key='coding'
+        //         originValue={originRspValue}
+        //         onSetCodeLoading={setCodeLoading}
+        //         codeKey={codeKey}
+        //         onSetCodeKey={(codeKey) => {
+        //             setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
+        //             setCodeKey(codeKey)
+        //         }}
+        //         onSetCodeValue={setCodeValue}
+        //     />
+        // )
+        return extraBtn
+    }
+
+    const resEditorLoading = useMemo(() => {
+        return flowResponseLoad || codeLoading
+    }, [flowResponseLoad, codeLoading])
 
     return (
         <YakitResizeBox
@@ -1279,10 +1379,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         isShowBeautifyRender={!flow?.IsTooLargeResponse}
                         title={(() => {
-                            let titleEle = [<span style={{fontSize: 12}}>Response</span>]
+                            let titleEle = [
+                                <span style={{fontSize: 12}} key={"title-Response"}>
+                                    Response
+                                </span>
+                            ]
                             if (isShowBeforeData && beforeRspValue.length > 0) {
                                 titleEle = [
-                                    <div className={classNames(styles["type-options-checkable-tag"])}>
+                                    <div className={classNames(styles["type-options-checkable-tag"])} key={"title-Res"}>
                                         <YakitCheckableTag
                                             checked={rspType === "current"}
                                             onChange={(checked) => {
@@ -1309,7 +1413,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             // 超大响应
                             if (flow?.IsTooLargeResponse) {
                                 titleEle.push(
-                                    <YakitTag style={{marginLeft: 8}} color='danger'>
+                                    <YakitTag style={{marginLeft: 8}} color='danger' key={"title-IsTooLargeResponse"}>
                                         超大响应
                                     </YakitTag>
                                 )
@@ -1321,82 +1425,25 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             ...copyUrlMenuItem,
                             ...sendCodeCompareMenuItem("response")
                         }}
-                        extra={[
-                            (() => {
-                                if (flow?.IsTooLargeResponse)
-                                    return (
-                                        <YakitDropdownMenu
-                                            menu={{
-                                                data: [
-                                                    {key: "tooLargeResponseHeaderFile", label: "查看Header"},
-                                                    {key: "tooLargeResponseBodyFile", label: "查看Body"}
-                                                ],
-                                                onClick: ({key}) => {
-                                                    switch (key) {
-                                                        case "tooLargeResponseHeaderFile":
-                                                            ipcRenderer
-                                                                .invoke(
-                                                                    "is-file-exists",
-                                                                    flow.TooLargeResponseHeaderFile
-                                                                )
-                                                                .then((flag: boolean) => {
-                                                                    if (flag) {
-                                                                        openABSFileLocated(
-                                                                            flow.TooLargeResponseHeaderFile
-                                                                        )
-                                                                    } else {
-                                                                        failed("目标文件已不存在!")
-                                                                    }
-                                                                })
-                                                                .catch(() => {})
-                                                            break
-                                                        case "tooLargeResponseBodyFile":
-                                                            ipcRenderer
-                                                                .invoke("is-file-exists", flow.TooLargeResponseBodyFile)
-                                                                .then((flag: boolean) => {
-                                                                    if (flag) {
-                                                                        openABSFileLocated(
-                                                                            flow.TooLargeResponseBodyFile
-                                                                        )
-                                                                    } else {
-                                                                        failed("目标文件已不存在!")
-                                                                    }
-                                                                })
-                                                                .catch(() => {})
-                                                            break
-                                                        default:
-                                                            break
-                                                    }
-                                                }
-                                            }}
-                                            dropdown={{
-                                                trigger: ["click"],
-                                                placement: "bottom"
-                                            }}
-                                        >
-                                            <YakitButton type='primary' size='small'>
-                                                完整响应
-                                            </YakitButton>
-                                        </YakitDropdownMenu>
-                                    )
-                                return (
-                                    <Button
-                                        className={styles["extra-chrome-btn"]}
-                                        type={"text"}
-                                        size={"small"}
-                                        icon={<ChromeSvgIcon />}
-                                        onClick={() => {
-                                            showResponseViaResponseRaw(flow?.Response)
-                                        }}
-                                    />
-                                )
-                            })()
-                        ]}
+                        extra={secondNodeResExtraBtn()}
+                        codingBtn={
+                            <CodingPopover
+                                key='coding'
+                                originValue={originRspValue}
+                                onSetCodeLoading={setCodeLoading}
+                                codeKey={codeKey}
+                                onSetCodeKey={(codeKey) => {
+                                    setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
+                                    setCodeKey(codeKey)
+                                }}
+                                onSetCodeValue={setCodeValue}
+                            />
+                        }
                         isResponse={true}
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
-                        loading={flowResponseLoad}
-                        originValue={originRspValue}
+                        loading={resEditorLoading}
+                        originValue={codeKey === "" ? originRspValue : codeValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
@@ -1426,6 +1473,113 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         />
     )
 })
+
+interface CodingPopoverProps {
+    originValue: Uint8Array
+    codeKey: string
+    onSetCodeLoading: (loading: boolean) => void
+    onSetCodeKey: (codeKey: string) => void
+    onSetCodeValue: (codeValue: Uint8Array) => void
+}
+export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
+    const {originValue, codeKey, onSetCodeKey, onSetCodeValue, onSetCodeLoading} = props
+    const [codeShow, setCodeShow] = useState<boolean>(false)
+
+    useDebounceEffect(
+        () => {
+            if (codeKey) {
+                fetchNewCodec(codeKey)
+            }
+        },
+        [originValue],
+        {
+            wait: 500
+        }
+    )
+
+    const handleClickCoding = (codeVal: string) => {
+        if (codeKey === codeVal) {
+            onSetCodeKey("")
+        } else {
+            fetchNewCodec(codeVal)
+        }
+    }
+
+    const fetchNewCodec = (codeVal: string) => {
+        const newCodecParams = {
+            InputBytes: originValue,
+            WorkFlow: [
+                {
+                    CodecType: "CharsetToUTF8",
+                    Params: [
+                        {
+                            Key: "charset",
+                            Value: codeVal
+                        }
+                    ]
+                }
+            ]
+        }
+        onSetCodeLoading(true)
+        ipcRenderer
+            .invoke("NewCodec", newCodecParams)
+            .then((data: {Result: string; RawResult: Uint8Array}) => {
+                onSetCodeValue(data.RawResult)
+                onSetCodeKey(codeVal)
+            })
+            .catch((e) => {
+                onSetCodeValue(originValue)
+                yakitNotify("error", `${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    onSetCodeLoading(false)
+                }, 250)
+            })
+    }
+
+    return (
+        <YakitPopover
+            trigger='click'
+            overlayClassName={styles["codec-menu-popover"]}
+            overlayStyle={{paddingTop: 2}}
+            placement='bottomLeft'
+            content={
+                <div className={styles["codec-menu-cont-wrapper"]}>
+                    {[
+                        {label: "gb18030", codeKey: "gb18030"},
+                        {label: "windows-1252", codeKey: "windows-1252"},
+                        {label: "iso-8859-1", codeKey: "iso-8859-1"},
+                        {label: "big5", codeKey: "big5"},
+                        {label: "utf-16", codeKey: "utf-16"}
+                    ].map((item) => (
+                        <div
+                            key={item.codeKey}
+                            className={classNames(styles["codec-menu-item"], {
+                                [styles["active"]]: codeKey === item.codeKey
+                            })}
+                            onClick={() => handleClickCoding(item.codeKey)}
+                        >
+                            {item.label}
+                            {codeKey === item.codeKey && <SolidCheckIcon className={styles["check-icon"]} />}
+                        </div>
+                    ))}
+                </div>
+            }
+            visible={codeShow}
+            onVisibleChange={(visible) => setCodeShow(visible)}
+        >
+            <YakitButton
+                size='small'
+                type={codeKey !== "" ? "primary" : "outline2"}
+                onClick={(e) => e.preventDefault()}
+            >
+                编码
+                {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            </YakitButton>
+        </YakitPopover>
+    )
+}
 
 function infoTypeVerbose(i: HTTPFlowInfoType) {
     switch (i) {

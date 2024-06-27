@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
@@ -1164,6 +1164,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /**默认选中美化或渲染 */
     typeOptionVal?: RenderTypeOptionVal
     onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
+    /** 编码按钮 */
+    codingBtn?: ReactElement
 }
 
 export type RenderTypeOptionVal = "beautify" | "render"
@@ -1621,6 +1623,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     ))}
                                 </div>
                             )}
+                            {props.codingBtn}
                             {dataCompare && dataCompare.rightCode.length > 0 && (
                                 <YakitButton
                                     size={"small"}
