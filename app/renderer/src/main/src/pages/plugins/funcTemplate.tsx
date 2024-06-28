@@ -313,6 +313,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                     onChange: onValueChange,
                     onSearch: onSearch
                 }}
+                beforeOptionWidth={82}
             />
             <YakitPopover
                 overlayClassName={styles["func-search-popver"]}
@@ -326,6 +327,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                             onChange: onValueChange,
                             onSearch: onSearch
                         }}
+                        beforeOptionWidth={82}
                     />
                 }
                 trigger='click'

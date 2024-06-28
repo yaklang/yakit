@@ -64,7 +64,7 @@ const SimpleDetectExtraParamsDrawer: React.FC<SimpleDetectExtraParamsDrawerProps
             width='65%'
             title='额外参数'
         >
-            <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={bruteForm} style={{marginBottom: 8}}>
+            <Form size='small' labelWrap={true} labelCol={{span: 6}} wrapperCol={{span: 18}} form={bruteForm} style={{marginBottom: 8}}>
                 <YakitCollapse
                     destroyInactivePanel={false}
                     activeKey={activeKey}
