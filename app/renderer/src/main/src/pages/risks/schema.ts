@@ -28,4 +28,15 @@ export interface Risk {
     Request?: Uint8Array
     Response?: Uint8Array
     RuntimeId?: string
+
+    CVE?: string
+    TaskName?: string
+    Tags?: string
+    IsRead?: boolean
+    /**前端导出html使用 */
+    RequestString?: string
+    /**前端导出html使用 */
+    ResponseString?: string
+    /**前端使用:表格样式 */
+    cellClassName?: string
 }

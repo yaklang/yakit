@@ -80,7 +80,7 @@ export const cellColorFontSetting = {
             color: {rgb: "000000"}
         }
     },
-    "信息/指纹": {
+    "信息": {
         font: {
             color: {rgb: "8c8c8c"}
         }
@@ -107,7 +107,7 @@ export const TitleColor = [
     {
         key: ["info", "fingerprint", "infof", "default"],
         value: "title-info",
-        name: "信息/指纹",
+        name: "信息",
         img: infoImg,
         tag: "title-background-info"
     },
@@ -961,7 +961,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                 <div>
                                     最近更新时间
                                     <span className='subtitle-font'>
-                                        {info.CreatedAt > 0 ? formatTimestamp(info.CreatedAt) : "-"}
+                                        {!!info.UpdatedAt ? formatTimestamp(info.UpdatedAt) : "-"}
                                     </span>
                                 </div>
                             )}

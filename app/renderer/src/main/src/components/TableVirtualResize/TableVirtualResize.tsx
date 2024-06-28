@@ -421,42 +421,46 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [wrapperRef])
     // 计算左右宽度以及固定列
     const getLeftOrRightFixedWidth = useMemoizedFn(() => {
-        const newColumns: ColumnsTypeProps[] = []
-        columns.forEach((l, index) => {
-            const ele = {...l}
-            if (ele.fixed === "left") {
-                if (index > 0) {
-                    const leftList = columns
-                        .filter((e, i) => i < index && e.fixed === "left")
-                        .map((c, n) => {
-                            if ((c.minWidth || 0) > (c.width || 0)) {
-                                return c.minWidth || 0
-                            } else {
-                                return c.width || getColWidth()
-                            }
-                        })
-                    const left: number = leftList.length > 1 ? leftList.reduce((p, c) => p + c) : leftList[0] || 0
-                    ele.left = left
+        // 改为回调模式解决拿不到最新的columns数据
+        setColumns((oldColumns) => {
+            const newColumns: ColumnsTypeProps[] = []
+            oldColumns.forEach((l, index) => {
+                const ele = {...l}
+                if (ele.fixed === "left") {
+                    if (index > 0) {
+                        const leftList = oldColumns
+                            .filter((e, i) => i < index && e.fixed === "left")
+                            .map((c, n) => {
+                                if ((c.minWidth || 0) > (c.width || 0)) {
+                                    return c.minWidth || 0
+                                } else {
+                                    return c.width || getColWidth()
+                                }
+                            })
+                        const left: number = leftList.length > 1 ? leftList.reduce((p, c) => p + c) : leftList[0] || 0
+                        ele.left = left
+                    }
                 }
-            }
-            if (ele.fixed === "right") {
-                if (index > 0) {
-                    const rightList = columns
-                        .filter((e, i) => i > index && e.fixed === "right")
-                        .map((c, n) => {
-                            if ((c.minWidth || 0) > (c.width || 0)) {
-                                return c.minWidth || 0
-                            } else {
-                                return c.width || getColWidth()
-                            }
-                        })
-                    const right: number = rightList.length > 1 ? rightList.reduce((p, c) => p + c) : rightList[0] || 0
-                    ele.right = right
+                if (ele.fixed === "right") {
+                    if (index > 0) {
+                        const rightList = oldColumns
+                            .filter((e, i) => i > index && e.fixed === "right")
+                            .map((c, n) => {
+                                if ((c.minWidth || 0) > (c.width || 0)) {
+                                    return c.minWidth || 0
+                                } else {
+                                    return c.width || getColWidth()
+                                }
+                            })
+                        const right: number =
+                            rightList.length > 1 ? rightList.reduce((p, c) => p + c) : rightList[0] || 0
+                        ele.right = right
+                    }
                 }
-            }
-            newColumns.push(ele)
+                newColumns.push(ele)
+            })
+            return [...newColumns]
         })
-        setColumns([...newColumns])
     })
     const [colWidth, setColWidth, getColWidth] = useGetState<number>(0)
     // 初始化表格宽度和列宽度

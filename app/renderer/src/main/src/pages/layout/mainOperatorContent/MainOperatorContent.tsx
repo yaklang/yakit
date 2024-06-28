@@ -49,7 +49,6 @@ import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal
 import {defaultUserInfo} from "@/pages/MainOperator"
 import {useStore} from "@/store"
 import {getRemoteProjectValue, getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
 import {GroupCount, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -662,8 +661,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
             if (type === "plugin-store") addYakRunning(data)
-            if (type === "batch-exec-recover") addBatchExecRecover(data as UnfinishedBatchTask)
-            if (type === "simple-batch-exec-recover") addSimpleBatchExecRecover(data as UnfinishedSimpleDetectBatchTask)
             if (type === "add-yakit-script") addYakScript(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
@@ -870,32 +867,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.invoke("send-to-yak-running", {name, code})
             setCurrentTabKey(YakitRoute.YakScript)
         }
-    })
-    const addBatchExecRecover = useMemoizedFn((task: UnfinishedBatchTask) => {
-        openMenuPage(
-            {route: YakitRoute.BatchExecutorRecover},
-            {
-                pageParams: {
-                    recoverUid: task.Uid,
-                    recoverBaseProgress: task.Percent
-                },
-                hideAdd: true
-            }
-        )
-    })
-    const addSimpleBatchExecRecover = useMemoizedFn((task: UnfinishedSimpleDetectBatchTask) => {
-        openMenuPage(
-            {route: YakitRoute.SimpleDetect},
-            {
-                pageParams: {
-                    recoverUid: task.Uid,
-                    recoverBaseProgress: task.Percent,
-                    recoverOnlineGroup: task.YakScriptOnlineGroup,
-                    recoverTaskName: task.TaskName
-                },
-                hideAdd: true
-            }
-        )
     })
 
     const addFacadeServer = useMemoizedFn((res: any) => {

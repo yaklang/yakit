@@ -7,4 +7,6 @@ export type GlobalEventProps = {
     switchSubMenuItem: string
     /**触发性能采样 */
     performanceSampling?: string
+    /**刷新顶部漏洞风险的已读未读状态 */
+    onRefRisksRead: string
 }

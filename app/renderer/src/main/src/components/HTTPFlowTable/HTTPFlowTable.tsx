@@ -2337,6 +2337,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     exportKey={toWebFuzzer ? "WEBFUZZER-HISTORY-EXPORT-KEY" : "MITM-HTTP-HISTORY-EXPORT-KEY"}
                     fileName={!toWebFuzzer ? "History" : "WebFuzzer"}
                     getData={(pagination) => getExcelData(pagination, list)}
+                    onClose={()=>m.destroy()}
                 />
             ),
             onCancel: () => {

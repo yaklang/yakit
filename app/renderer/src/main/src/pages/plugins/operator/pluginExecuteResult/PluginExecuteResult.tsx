@@ -44,6 +44,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {yakitFailed} from "@/utils/notification"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {v4 as uuidv4} from "uuid"
+import {YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 
 const {TabPane} = PluginTabs
 
@@ -365,7 +366,7 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
             footer: null,
             content: (
                 <div style={{padding: 24}}>
-                    <RiskDetails info={i} onClose={() => m.destroy()} />
+                    <YakitRiskDetails info={i} onClose={() => m.destroy()} />
                 </div>
             )
         })
