@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps} from "./FileTreeType"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
@@ -24,6 +24,7 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {
     getCodeByPath,
+    getPathJoin,
     grpcFetchCreateFile,
     grpcFetchCreateFolder,
     grpcFetchDeleteFile,
@@ -49,6 +50,7 @@ import {
 import {failed, success} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
+import {FileMonitorProps} from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -59,7 +61,7 @@ const FolderMenu: YakitMenuItemProps[] = [
     {label: "在终端打开", key: "openTernimal"}
 ]
 
-export const FileTree: React.FC<FileTreeProps> = (props) => {
+export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey} = props
 
     const systemRef = useRef<System | undefined>(SystemInfo.system)
@@ -125,29 +127,28 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
 
     const scrollExpandedKeys = useRef<string[]>([])
-    const scrollExpandedKeysFun = useMemoizedFn((path)=>{
+    const scrollExpandedKeysFun = useMemoizedFn((path) => {
         const fileDetail = getMapFileDetail(path)
-        if(fileDetail.parent!==null){
-            scrollExpandedKeys.current = [...scrollExpandedKeys.current,fileDetail.parent]
+        if (fileDetail.parent !== null) {
+            scrollExpandedKeys.current = [...scrollExpandedKeys.current, fileDetail.parent]
             scrollExpandedKeysFun(fileDetail.parent)
         }
     })
 
-    const onScrollToFileTreeFun = useMemoizedFn((path)=>{
+    const onScrollToFileTreeFun = useMemoizedFn((path) => {
         scrollExpandedKeys.current = []
         // 获取 Tree 组件的实例
-        const treeInstance = treeRef.current;
+        const treeInstance = treeRef.current
         // 如果 Tree 实例存在且有 scrollTo 方法
         if (treeInstance && treeInstance.scrollTo) {
             // 打开扩展项
             scrollExpandedKeysFun(path)
-            setExpandedKeys(filter([...expandedKeys,...scrollExpandedKeys.current]))
+            setExpandedKeys(filter([...expandedKeys, ...scrollExpandedKeys.current]))
             setFoucsedKey(path)
             // 调用 scrollTo 方法滚动到指定节点
-            setTimeout(()=>{
-                treeInstance.scrollTo({ key: path, align: 'middle' });
-            },200)
-            
+            setTimeout(() => {
+                treeInstance.scrollTo({key: path, align: "middle"})
+            }, 200)
         }
     })
 
@@ -267,7 +268,7 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
             />
         </div>
     )
-}
+})
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const {isDownCtrlCmd, info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded, copyPath, setCopyPath} =
@@ -319,16 +320,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 粘贴
     const onPaste = useMemoizedFn(async () => {
         try {
-            console.log("粘贴", info.path, copyPath)
             const fileDetail = getMapFileDetail(copyPath)
             const code = await getCodeByPath(copyPath)
-            const newPath = `${info.path}\\${fileDetail.name}`
-            const result = await grpcFetchCreateFile(newPath, code)
-            console.log("粘贴---",result);
-            
+            const currentPath = await getPathJoin(info.path, fileDetail.name)
+            if (currentPath.length === 0) return
+            const result = await grpcFetchCreateFile(currentPath, code)
             if (result.length === 0) return
             const {path, name, parent} = result[0]
-
             setMapFileDetail(path, result[0])
             const folderDetail = getMapFolderDetail(info.path)
             const newFolderDetail: string[] = cloneDeep(folderDetail)
@@ -474,14 +472,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     const onCreateFun = useMemoizedFn(async () => {
-        if (value.length > 0) {
+        if (value.length > 0 && info.parent) {
             try {
-                const newPath = `${info.parent}\\${value}`
+                const currentPath = await getPathJoin(info.parent, value)
+                if (currentPath.length === 0) return
                 // 区分新建文件夹 新建文件接口
                 const result = info.isFolder
-                    ? await grpcFetchCreateFolder(newPath, info.parent)
-                    : await grpcFetchCreateFile(newPath, null, info.parent)
-                console.log("新建----", result)
+                    ? await grpcFetchCreateFolder(currentPath, info.parent)
+                    : await grpcFetchCreateFile(currentPath, null, info.parent)
                 if (result.length === 0) return
                 const {path, name, parent} = result[0]
                 removeMapFileDetail(info.path)
@@ -517,75 +515,17 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         }
     })
 
-    // 删除
-    const onDelete = useMemoizedFn(async () => {
-        try {
-            await grpcFetchDeleteFile(info.path)
-            // 文件夹删除
-            if (info.isFolder) {
-                const deleteFileArr = getMapAllFileKey().filter((item) => item.startsWith(info.path))
-                // 删除最外层文件夹
-                if (info.parent === null) {
-                    clearMapFileDetail()
-                    clearMapFolderDetail()
-                    setFileTree && setFileTree([])
-                } else {
-                    deleteFileArr.forEach((item) => {
-                        removeMapFileDetail(item)
-                    })
-                    // 移除文件夹下的所有文件夹结构及其父结构下的此项
-                    const folderDetail = getMapFolderDetail(info.parent)
-                    if (folderDetail.length > 0) {
-                        const newFolderDetail = folderDetail.filter((item) => item !== info.path)
-                        setMapFolderDetail(info.parent, newFolderDetail)
-                    }
-
-                    const deleteFolderArr = getMapAllFolderKey().filter((item) => item.startsWith(info.path))
-                    deleteFolderArr.forEach((item) => {
-                        removeMapFolderDetail(item)
-                    })
-                }
-
-                // 此处还需移除已经删除文件的布局信息
-                const removePath = (await judgeAreaExistFilesPath(areaInfo, deleteFileArr)).map((item) => item.path)
-                if (removePath.includes(activeFile?.path || "")) {
-                    setActiveFile && setActiveFile(undefined)
-                }
-                const newAreaInfo = removeAreaFilesInfo(areaInfo, removePath)
-                console.log("移除的newAreaInfo", newAreaInfo)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-            }
-            // 文件删除
-            else {
-                if (info.parent) {
-                    const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
-                    // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
-                    if (newFolderDetail.length === 0) {
-                        setMapFileDetail(info.parent, {...getMapFileDetail(info.parent), isLeaf: true})
-                    }
-                    setMapFolderDetail(info.parent, newFolderDetail)
-                }
-                removeMapFileDetail(info.path)
-                const file = await judgeAreaExistFilePath(areaInfo, info.path)
-                if (file) {
-                    const newAreaInfo = removeAreaFileInfo(areaInfo, file)
-                    setAreaInfo && setAreaInfo(newAreaInfo)
-                }
-            }
-            emiter.emit("onResetFileTree", info.path)
-            emiter.emit("onRefreshFileTree")
-            setRemoveCheckVisible(false)
-            success(`${info.name} 删除成功`)
-        } catch (error) {
-            failed("删除失败")
-        }
-    })
-
     useEffect(() => {
         if (info.isCreate) {
             setEdit(true)
         }
     }, [])
+
+    // 删除
+    const onDelete = useMemoizedFn(async () => {
+        setRemoveCheckVisible(false)
+        emiter.emit("onDeleteInFileTree", info.path)
+    })
 
     // 新建文件
     const onNewFile = useMemoizedFn((path: string) => {
