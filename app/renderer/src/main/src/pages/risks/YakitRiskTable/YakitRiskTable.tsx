@@ -13,7 +13,7 @@ import {Descriptions, Divider, Form, Tooltip} from "antd"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
@@ -421,11 +421,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             }
         ]
     }, [riskTypeVerbose, tag])
-    const onRefRiskList = useMemoizedFn(() => {
-        setTimeout(() => {
+    const onRefRiskList = useDebounceFn(
+        () => {
             update(1)
-        }, 200)
-    })
+        },
+        {wait: 200}
+    ).run
     const getRiskTags = useMemoizedFn(() => {
         apiQueryRiskTags().then((res) => {
             setTag(res.RiskTags)
