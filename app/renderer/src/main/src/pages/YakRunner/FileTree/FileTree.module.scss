@@ -24,6 +24,9 @@
             flex: 1;
             overflow: hidden;
         }
+        .ant-tree-indent-unit{
+            width: 16px;
+        }
     }
 
     :global(.ant-tree-treenode-loading) {

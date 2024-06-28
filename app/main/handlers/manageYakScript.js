@@ -333,23 +333,41 @@ module.exports = (win, getClient) => {
 
     ipcMain.handle("openDialog", async (e, params) => {
         return await new Promise((resolve, reject) => {
-            dialog.showOpenDialog({
-                ...params
-            }).then((res)=>{
-                if(res){
-                    let result = {...res}
-                    resolve(result)
-                }
-                else{
-                    reject("获取文件失败")
-                }
-            })
+            dialog
+                .showOpenDialog({
+                    ...params
+                })
+                .then((res) => {
+                    if (res) {
+                        let result = {...res}
+                        resolve(result)
+                    } else {
+                        reject("获取文件失败")
+                    }
+                })
         })
     })
 
+    // 拼接路径
     ipcMain.handle("pathJoin", async (e, params) => {
-        const {dir,file} = params
+        const {dir, file} = params
         return path.join(dir, file)
+    })
+
+    // 获取上一级的路径
+    ipcMain.handle("pathParent", async (e, params) => {
+        const {filePath} = params
+        return path.dirname(filePath)
+    })
+
+    // 获取路径上的文件名(isExtra是否包含扩展名)
+    ipcMain.handle("pathFileName", async (e, params) => {
+        const {filePath, isExtra = true} = params
+        if (isExtra) {
+            return path.basename(filePath)
+        } else {
+            return path.basename(filePath, path.extname(filePath))
+        }
     })
 
     // asyncQueryYakScriptExecResult wrapper
@@ -446,5 +464,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SmokingEvaluatePlugin", async (e, params) => {
         return await asyncSmokingEvaluatePlugin(params)
     })
-
 }

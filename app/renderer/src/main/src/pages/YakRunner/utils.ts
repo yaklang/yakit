@@ -535,12 +535,11 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
                 title: "请选择文件",
                 properties: ["openFile"]
             })
-            .then((data: {filePaths: string[]}) => {
+            .then(async(data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
                     const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    const name: string = path.split(/[\\/]/).pop() || ""
-                    console.log("fileInfo---", path, name)
+                    const name: string = await getNameByPath(path)
                     resolve({
                         path,
                         name
@@ -614,5 +613,57 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
                 resolve([])
             }
         })
+    })
+}
+
+/**
+ * @name 路径拼接（兼容多系统）
+ */
+export const getPathJoin = (path:string,file:string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("pathJoin", {
+                dir: path,
+                file
+            })
+            .then((currentPath: string) => {
+                resolve(currentPath)
+            }).catch(()=>{
+                resolve("")
+            })
+    })
+}
+
+/**
+ * @name 获取上一级的路径（兼容多系统）
+ */
+export const getPathParent = (filePath:string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("pathParent", {
+                filePath
+            })
+            .then((currentPath: string) => {
+                resolve(currentPath)
+            }).catch(()=>{
+                resolve("")
+            })
+    })
+}
+
+/**
+ * @name 获取路径上的(文件/文件夹)名（兼容多系统）
+ */
+export const getNameByPath  = (filePath:string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("pathFileName", {
+                filePath
+            })
+            .then((currentName: string) => {
+                resolve(currentName)
+            }).catch(()=>{
+                resolve("")
+            })
     })
 }
