@@ -1,5 +1,6 @@
 const {ipcMain, dialog} = require("electron")
 const path = require("path")
+const fs = require("fs")
 module.exports = (win, getClient) => {
     // asyncQueryYakScript wrapper
     const asyncQueryYakScript = (params) => {
@@ -345,6 +346,20 @@ module.exports = (win, getClient) => {
                         reject("获取文件失败")
                     }
                 })
+        })
+    })
+
+    // 读取本地文件内容
+    ipcMain.handle("read-file-content", async (e,params) => {
+        console.log("read-file-content",params);
+        return new Promise((resolve, reject) => {
+            fs.readFile(params, 'utf-8', function (err, data) {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(data)
+                }
+            });
         })
     })
 

@@ -21,6 +21,8 @@ export interface FileNodeMapProps {
     icon: string
     // 是否新建
     isCreate?: boolean
+    // 是否读取失败
+    isReadFail?: boolean
     isLeaf?: boolean
 }
 

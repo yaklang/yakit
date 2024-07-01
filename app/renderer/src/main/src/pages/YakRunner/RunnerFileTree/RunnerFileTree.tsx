@@ -264,6 +264,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             }
             // 文件删除
             else {
+                console.log("info---",info);
+                
                 if (info.parent) {
                     const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
                     // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)

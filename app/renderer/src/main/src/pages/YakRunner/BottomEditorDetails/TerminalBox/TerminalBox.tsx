@@ -23,6 +23,16 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         if (!xtermRef) {
             return
         }
+        const params = {}
+        ipcRenderer
+            .invoke("runner-terminal-port", params)
+            .then(() => {
+                success("终端监听成功")
+            })
+            .catch((e: any) => {
+                failed(`ERROR: ${JSON.stringify(e)}`)
+            })
+            .finally(() => {})
     }, [xtermRef])
 
     // xtermClear(xtermRef)

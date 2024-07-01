@@ -324,7 +324,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             const code = await getCodeByPath(copyPath)
             const currentPath = await getPathJoin(info.path, fileDetail.name)
             if (currentPath.length === 0) return
-            const result = await grpcFetchCreateFile(currentPath, code)
+            const result = await grpcFetchCreateFile(currentPath, code,info.path)
             if (result.length === 0) return
             const {path, name, parent} = result[0]
             setMapFileDetail(path, result[0])
@@ -355,6 +355,12 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
     const onRename = useMemoizedFn(() => {
         setEdit(true)
+    })
+
+    // 重置重命名
+    const resetRename = useMemoizedFn(()=>{
+        setValue(info.name)
+        setEdit(false)
     })
 
     const onRenameFun = useMemoizedFn(async () => {
@@ -423,15 +429,24 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 else {
                     // 存在则更改
                     const fileMap = getMapFileDetail(info.path)
-                    if (fileMap.name !== "读取文件失败" && !fileMap.path.endsWith("-fail")) {
+                    if (!fileMap.isReadFail) {
                         // 移除原有文件数据
                         removeMapFileDetail(info.path)
                         // 新增文件树数据
                         setMapFileDetail(path, result[0])
                     }
-                    const folderMap = getMapFolderDetail(info.parent || "")
+                    let folderMap = getMapFolderDetail(info.parent || "")
+                    let cacheAreaInfo = areaInfo
                     // 获取重命名文件所在存储结构
                     if (info.parent && folderMap.includes(info.path)) {
+                        // 如若重命名为已有名称 则覆盖
+                        if(folderMap.includes(path)){
+                            const file = await judgeAreaExistFilePath(areaInfo,path)
+                                if(file){
+                                    cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                }
+                            folderMap = folderMap.filter((item)=>item!==path)
+                        }
                         const newFolderMap = folderMap.map((item) => {
                             if (item === info.path) return path
                             return item
@@ -440,7 +455,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     }
 
                     // 修改分栏数据
-                    const newAreaInfo = updateAreaFileInfo(areaInfo, {name, path}, info.path)
+                    const newAreaInfo = updateAreaFileInfo(cacheAreaInfo, {name, path}, info.path)
                     // 更名后重置激活元素
                     const newActiveFile = isResetActiveFile([info], activeFile)
                     setActiveFile && setActiveFile(newActiveFile)
@@ -451,7 +466,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             }
             setEdit(false)
         } catch (error) {
-            failed("保存失败")
+            resetRename()
+            failed(`保存失败 ${error}`)
         }
     })
 
@@ -494,7 +510,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 emiter.emit("onRefreshFileTree")
             } catch (error) {
                 resetCreate()
-                failed("新建失败")
+                failed(`新建失败 ${error}`)
             }
         }
         // 没有内容 新建失效

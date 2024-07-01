@@ -7,6 +7,7 @@ import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} f
 import {
     addAreaFileInfo,
     getNameByPath,
+    getPathParent,
     grpcFetchCreateFile,
     grpcFetchFileTree,
     removeAreaFileInfo,
@@ -179,7 +180,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
-        if(getMapFileDetail(path).isCreate){
+        if (getMapFileDetail(path).isCreate) {
             if (callback) callback([])
             return
         }
@@ -294,12 +295,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 加载文件列表(初次加载)
-    const onOpenFolderListFun = useMemoizedFn(async(absolutePath: string) => {
+    const onOpenFolderListFun = useMemoizedFn(async (absolutePath: string) => {
         // 开启文件夹监听
         startMonitorFolder(absolutePath)
         console.log("onOpenFolderListFun", absolutePath)
         const lastFolder = await getNameByPath(absolutePath)
-        
+
         if (absolutePath.length > 0 && lastFolder.length > 0) {
             resetMap()
             const node: FileNodeMapProps = {
@@ -459,8 +460,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 ipcRenderer
                     .invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${activeFile.name}`)
                     .then(async (res) => {
-                        console.log("res---", res)
-
                         const path = res.filePath
                         const name = res.name
                         if (path.length > 0) {
@@ -472,7 +471,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 isUnSave: false,
                                 language: suffix === "yak" ? suffix : "http"
                             }
-                            await grpcFetchCreateFile(file.path, file.code)
+                            const parentPath = await getPathParent(file.path)
+                            const parentDetail = getMapFileDetail(parentPath)
+                            await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? "" : parentPath)
                             success(`${activeFile?.name} 保存成功`)
                             const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
                             const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
