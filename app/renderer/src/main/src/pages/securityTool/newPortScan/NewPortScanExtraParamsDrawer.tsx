@@ -24,6 +24,7 @@ import {OutlineRefreshIcon} from "@/assets/icon/outline"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {isEnpriTraceAgent} from "@/utils/envfile"
+import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 
 const {YakitPanel} = YakitCollapse
 
@@ -55,7 +56,8 @@ const defaultFingerprintSetting = {
     ProbeMax: defPortScanExecuteExtraFormValue.ProbeMax,
     ProbeTimeout: defPortScanExecuteExtraFormValue.ProbeTimeout,
     Proxy: defPortScanExecuteExtraFormValue.Proxy,
-    FingerprintMode: defPortScanExecuteExtraFormValue.FingerprintMode
+    FingerprintMode: defPortScanExecuteExtraFormValue.FingerprintMode,
+    UserFingerprintFiles: defPortScanExecuteExtraFormValue.UserFingerprintFiles
 }
 /** SYN 配置 */
 const defaultSYNSetting = {
@@ -323,6 +325,8 @@ interface FingerprintSettingsPanelProps {
 export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> = React.memo((props) => {
     const {key, isSimpleDetect, ...restProps} = props
     const form = Form.useFormInstance()
+    const UserFingerprintFiles = Form.useWatch("UserFingerprintFiles", form)
+
     /**选择预设端口设置Ports值 */
     const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
         let res: string = (checkedValue || [])
@@ -470,6 +474,20 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                         ]}
                     />
                 </Form.Item>
+                <YakitFormDragger
+                    formItemProps={{
+                        name: "UserFingerprintFiles",
+                        label: "自定义指纹"
+                    }}
+                    accept='.yaml,.yml'
+                    help='可将yaml、yml文件拖入框内或'
+                    selectType='file'
+                    multiple={true}
+                    onChange={(val) => {
+                        form.setFieldsValue({UserFingerprintFiles: val})
+                    }}
+                    value={UserFingerprintFiles}
+                />
             </YakitPanel>
         </>
     )
