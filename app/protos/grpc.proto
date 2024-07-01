@@ -666,7 +666,9 @@ service Yak {
   rpc DeleteHybridScanTask(DeleteHybridScanTaskRequest) returns (Empty);
 
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
+  // 由于第三方应用配置改为从后端动态的获取表单字段名，所以弃用此接口改用GetSpaceEngineAccountStatusV2
   rpc GetSpaceEngineAccountStatus(GetSpaceEngineAccountStatusRequest) returns(SpaceEngineStatus);
+  rpc GetSpaceEngineAccountStatusV2(ThirdPartyApplicationConfig) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
 
   // 表达式执行
@@ -678,6 +680,11 @@ service Yak {
 
   // AI相关
   rpc CheckHahValidAiConfig(Empty) returns (GeneralResponse);
+
+  // 指纹库
+  rpc GetFingerprint(GetFingerprintRequest) returns (GetFingerprintResponse);
+  rpc AddFingerprint(AddFingerprintRequest) returns (AddFingerprintResponse);
+  rpc ModifyFingerprint(ModifyFingerprintRequest) returns (ModifyFingerprintResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -3555,6 +3562,7 @@ message PortScanRequest {
 
   // 爬虫是否启用 JS 解析
   bool BasicCrawlerEnableJSParser = 29;
+  repeated string UserFingerprintFiles = 30;
 }
 
 message DeletePortsRequest {
@@ -5169,4 +5177,23 @@ message GetThirdPartyAppConfigTemplate {
 }
 message GetThirdPartyAppConfigTemplateResponse{
   repeated GetThirdPartyAppConfigTemplate Templates = 2;
+}
+message GetFingerprintRequest{
+
+}
+message GetFingerprintResponse{
+
+}
+message AddFingerprintRequest{
+  string Name = 1;
+  string Fingerprint = 2;
+}
+message AddFingerprintResponse{
+
+}
+message ModifyFingerprintRequest{
+}
+
+message ModifyFingerprintResponse{
+
 }
