@@ -6,8 +6,6 @@ import {
     PluginDetailsListItemProps,
     PluginDetailsProps,
     PluginEditorDiffProps,
-    PluginFilterParams,
-    PluginListPageMeta,
     PluginModifyInfoProps,
     PluginModifySettingProps,
     PluginSearchParams,
@@ -41,22 +39,21 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PluginBaseParamProps, PluginSettingParamProps, YakRiskInfoProps} from "./pluginsType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {API} from "@/services/swagger/resposeType"
 import {YakEditor} from "@/utils/editors"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {BuiltInTags, RiskLevelToTag} from "./editDetails/builtInData"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {PluginGV, aduitStatusToName, pluginTypeToName} from "./builtInData"
+import {aduitStatusToName, pluginTypeToName} from "./builtInData"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 import UnLogin from "@/assets/unLogin.png"
 import YakitLogo from "@/assets/yakitLogo.png"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
+import {PluginSwitchTagToContent, PluginSwitchToTag} from "../pluginEditor/defaultconstants"
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
-import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -91,7 +88,17 @@ export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
 })
 /** @name 插件列表组件(带侧边搜索栏)  */
 export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) => {
-    const {loading, visible, setVisible, selecteds, onSelect, groupList, children, filterClassName, loadingTip = ""} = props
+    const {
+        loading,
+        visible,
+        setVisible,
+        selecteds,
+        onSelect,
+        groupList,
+        children,
+        filterClassName,
+        loadingTip = ""
+    } = props
     return (
         <YakitSpin spinning={loading} tip={loadingTip}>
             <div className={styles["plugins-container-wrapper"]}>
@@ -225,23 +232,9 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
 })
 
 /** @name 固定插件Tags转译 */
-export const onPluginTagsToName = (key:string):string => {
-        switch (key) {
-            case PluginGV.PluginYakDNSLogSwitch:
-                return "用于自定义 DNSLOG 平台"
-            case PluginGV.PluginCodecHttpSwitch:
-                return "用于HTTP数据包变形"
-            case PluginGV.PluginCodecContextMenuExecuteSwitch:
-                return "用于数据包右键"
-            case PluginGV.PluginCodecSingleHistorySwitch:
-                return "用于history右键(单选)"
-            case PluginGV.PluginCodecMultipleHistorySwitch:
-                return "用于history右键(多选)"
-            default:
-                return key
-        }
+export const onPluginTagsToName = (key: string): string => {
+    return PluginSwitchTagToContent[key] || key
 }
-
 
 /** @name 插件详情-头部信息 */
 export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props) => {
@@ -270,7 +263,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         let arr: string[] = []
         try {
             arr = tags ? tags.split(",") : []
-            arr = arr.map((item)=>onPluginTagsToName(item))
+            arr = arr.map((item) => onPluginTagsToName(item))
         } catch (error) {}
         return arr
     }, [tags])
@@ -398,9 +391,9 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                 </div>
 
                 <div className={styles["divider-style"]}></div>
-                <div className={classNames(styles["text-style"], {[styles['constant-wrapper']]: !infoExtra})}>{`更新时间 : ${formatDate(
-                    updated_at
-                )}`}</div>
+                <div
+                    className={classNames(styles["text-style"], {[styles["constant-wrapper"]]: !infoExtra})}
+                >{`更新时间 : ${formatDate(updated_at)}`}</div>
 
                 {!!infoExtra && (
                     <>
@@ -432,18 +425,18 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             if (riskShow) setRiskShow(false)
         })
 
-        const replaceTagName = useMemoizedFn((key:string)=>{
-            return {key,label:onPluginTagsToName(key)}
+        const replaceTagName = useMemoizedFn((key: string) => {
+            return {key, label: onPluginTagsToName(key)}
         })
 
         useEffect(() => {
             if (data) {
                 form.resetFields()
-                let newTags:any = data.Tags
-                if(Array.isArray(data.Tags) && data.Tags.length>0){
+                let newTags: any = data.Tags
+                if (Array.isArray(data.Tags) && data.Tags.length > 0) {
                     newTags = []
-                    data.Tags.forEach((item)=>{
-                        newTags.push(replaceTagName(item)) 
+                    data.Tags.forEach((item) => {
+                        newTags.push(replaceTagName(item))
                     })
                 }
                 data.Tags = newTags
@@ -452,14 +445,13 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             }
         }, [data])
 
-        const toTagsKey = useMemoizedFn((Tags)=>{
-            if(Array.isArray(Tags)&&Tags.length>0){
-                return Tags.map((item)=>{
-                    if(typeof item === "string"){
+        const toTagsKey = useMemoizedFn((Tags) => {
+            if (Array.isArray(Tags) && Tags.length > 0) {
+                return Tags.map((item) => {
+                    if (typeof item === "string") {
                         return item
-                    }
-                    else {
-                        return item?.key||""
+                    } else {
+                        return item?.key || ""
                     }
                 })
             }
@@ -782,13 +774,15 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                         <div className={styles["setting-switch"]}>
                             <div className={styles["switch-wrapper"]}>
                                 <YakitSwitch
-                                    checked={tags.includes(PluginGV.PluginYakDNSLogSwitch)}
+                                    checked={tags.includes(PluginSwitchToTag.PluginYakDNSLogSwitch)}
                                     onChange={(check) => {
                                         if (check) {
-                                            const arr = tags.concat([PluginGV.PluginYakDNSLogSwitch])
+                                            const arr = tags.concat([PluginSwitchToTag.PluginYakDNSLogSwitch])
                                             setTags([...arr])
                                         } else {
-                                            const arr = tags.filter((item) => item !== PluginGV.PluginYakDNSLogSwitch)
+                                            const arr = tags.filter(
+                                                (item) => item !== PluginSwitchToTag.PluginYakDNSLogSwitch
+                                            )
                                             setTags([...arr])
                                         }
                                     }}
@@ -802,13 +796,15 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                     <div className={styles["setting-switch"]}>
                         <div className={styles["switch-wrapper"]}>
                             <YakitSwitch
-                                checked={tags.includes(PluginGV.PluginCodecHttpSwitch)}
+                                checked={tags.includes(PluginSwitchToTag.PluginCodecHttpSwitch)}
                                 onChange={(check) => {
                                     if (check) {
-                                        const arr = tags.concat([PluginGV.PluginCodecHttpSwitch])
+                                        const arr = tags.concat([PluginSwitchToTag.PluginCodecHttpSwitch])
                                         setTags([...arr])
                                     } else {
-                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecHttpSwitch)
+                                        const arr = tags.filter(
+                                            (item) => item !== PluginSwitchToTag.PluginCodecHttpSwitch
+                                        )
                                         setTags([...arr])
                                     }
                                 }}
@@ -821,14 +817,14 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                     <div className={styles["setting-switch"]}>
                         <div className={styles["switch-wrapper"]}>
                             <YakitSwitch
-                                checked={tags.includes(PluginGV.PluginCodecContextMenuExecuteSwitch)}
+                                checked={tags.includes(PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch)}
                                 onChange={(check) => {
                                     if (check) {
-                                        const arr = tags.concat([PluginGV.PluginCodecContextMenuExecuteSwitch])
+                                        const arr = tags.concat([PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch])
                                         setTags([...arr])
                                     } else {
                                         const arr = tags.filter(
-                                            (item) => item !== PluginGV.PluginCodecContextMenuExecuteSwitch
+                                            (item) => item !== PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch
                                         )
                                         setTags([...arr])
                                     }
@@ -842,13 +838,15 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                     <div className={styles["setting-switch"]}>
                         <div className={styles["switch-wrapper"]}>
                             <YakitSwitch
-                                checked={tags.includes(PluginGV.PluginCodecSingleHistorySwitch)}
+                                checked={tags.includes(PluginSwitchToTag.PluginCodecSingleHistorySwitch)}
                                 onChange={(check) => {
                                     if (check) {
-                                        const arr = tags.concat([PluginGV.PluginCodecSingleHistorySwitch])
+                                        const arr = tags.concat([PluginSwitchToTag.PluginCodecSingleHistorySwitch])
                                         setTags([...arr])
                                     } else {
-                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecSingleHistorySwitch)
+                                        const arr = tags.filter(
+                                            (item) => item !== PluginSwitchToTag.PluginCodecSingleHistorySwitch
+                                        )
                                         setTags([...arr])
                                     }
                                 }}
@@ -861,13 +859,15 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                     <div className={styles["setting-switch"]}>
                         <div className={styles["switch-wrapper"]}>
                             <YakitSwitch
-                                checked={tags.includes(PluginGV.PluginCodecMultipleHistorySwitch)}
+                                checked={tags.includes(PluginSwitchToTag.PluginCodecMultipleHistorySwitch)}
                                 onChange={(check) => {
                                     if (check) {
-                                        const arr = tags.concat([PluginGV.PluginCodecMultipleHistorySwitch])
+                                        const arr = tags.concat([PluginSwitchToTag.PluginCodecMultipleHistorySwitch])
                                         setTags([...arr])
                                     } else {
-                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecMultipleHistorySwitch)
+                                        const arr = tags.filter(
+                                            (item) => item !== PluginSwitchToTag.PluginCodecMultipleHistorySwitch
+                                        )
                                         setTags([...arr])
                                     }
                                 }}

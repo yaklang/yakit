@@ -61,7 +61,7 @@ import {monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
 import {onInsertYakFuzzer, showDictsAndSelect} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
-import {GetPluginLanguage, PluginGV} from "@/pages/plugins/builtInData"
+import {GetPluginLanguage} from "@/pages/plugins/builtInData"
 import {createRoot} from "react-dom/client"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
@@ -72,6 +72,7 @@ import {HighLightText} from "@/components/HTTPFlowDetail"
 import {useStore} from "@/store/editorState"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
+import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 
 export interface CodecTypeProps {
     key?: string
@@ -234,7 +235,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             undefined,
             undefined,
             undefined,
-            [PluginGV.PluginCodecHttpSwitch]
+            [PluginSwitchToTag.PluginCodecHttpSwitch]
         )
     })
 
@@ -263,7 +264,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             undefined,
             undefined,
             undefined,
-            [PluginGV.PluginCodecContextMenuExecuteSwitch]
+            [PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch]
         )
     })
 

@@ -78,10 +78,10 @@ import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {useCampare} from "@/hook/useCompare/useCompare"
-import {PluginGV} from "@/pages/plugins/builtInData"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2384,7 +2384,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             undefined,
             undefined,
             undefined,
-            [PluginGV.PluginCodecSingleHistorySwitch]
+            [PluginSwitchToTag.PluginCodecSingleHistorySwitch]
         )
     })
 
@@ -2414,7 +2414,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             undefined,
             undefined,
             undefined,
-            [PluginGV.PluginCodecMultipleHistorySwitch]
+            [PluginSwitchToTag.PluginCodecMultipleHistorySwitch]
         )
     })
 

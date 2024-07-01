@@ -135,7 +135,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                     settingInfo.current = {...settingData}
                     //获取参数信息
                     const paramsList =
-                        res.type === "yak" ? await onCodeToInfo(res.type, res.content) : {CliParameter: []}
+                        res.type === "yak" ? await onCodeToInfo({type: res.type, code: res.content}) : {CliParameter: []}
                     setPlugin({
                         ScriptName: res.script_name,
                         Type: res.type,
@@ -190,7 +190,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 }
                 // yak类型-进行源码分析出参数和风险
                 if (data.Type === "yak") {
-                    const codeInfo = await onCodeToInfo(data.Type, data.Content)
+                    const codeInfo = await onCodeToInfo({type: data.Type, code: data.Content})
                     if (codeInfo) {
                         data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
                         data.Params = codeInfo.CliParameter

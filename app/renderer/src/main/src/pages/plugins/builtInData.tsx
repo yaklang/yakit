@@ -114,17 +114,6 @@ export enum PluginGV {
      */
     LocalPluginRemoveCheck = "local_plugin_remove_check",
 
-    /** @name 插件信息-yak类型额外参数(用于自定义DNSLOG平台)对应tag值 */
-    PluginYakDNSLogSwitch = "custom-dnslog-platform",
-    /** @name 插件信息-codec类型额外参数(用于HTTP数据包变形)对应tag值 */
-    PluginCodecHttpSwitch = "allow-custom-http-packet-mutate",
-    /** @name 插件信息-codec类型额外参数(用于数据包右键)对应tag值 */
-    PluginCodecContextMenuExecuteSwitch = "allow-custom-context-menu-execute",
-    /** @name 插件信息-codec类型额外参数(用于history右键(单选))对应tag值 */
-    PluginCodecSingleHistorySwitch = "allow-custom-single-history-mutate",
-    /** @name 插件信息-codec类型额外参数(用于history右键(多选))对应tag值 */
-    PluginCodecMultipleHistorySwitch = "allow-custom-multiple-history-mutate",
-
     /** @name 审核页左侧筛选条件栏是否关闭 */
     AuditFilterCloseStatus = "audit-filter-close-status",
     /** @name 商店页左侧筛选条件栏是否关闭 */
