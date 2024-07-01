@@ -48,15 +48,17 @@ import {
     getCodeByPath,
     getDefaultActiveFile,
     getOpenFileInfo,
+    getPathParent,
     getYakRunnerHistory,
     grpcFetchCreateFile,
     grpcFetchRenameFileTree,
     grpcFetchSaveFile,
     isResetActiveFile,
+    judgeAreaExistFilePath,
     onSyntaxCheck,
     removeAreaFileInfo,
     setYakRunnerHistory,
-    updateAreaFileInfo,
+    updateAreaFileInfo
 } from "../utils"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
@@ -74,8 +76,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import moment from "moment"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from "../FileTreeMap/FileMap"
-import { getMapFolderDetail, setMapFolderDetail } from "../FileTreeMap/ChildMap"
+import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
+import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -473,8 +475,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 // 保存后的文件需要根据路径调用改名接口
                 if (!info.isUnSave) {
                     try {
-                        const result = await grpcFetchRenameFileTree(info.path, newName,info.parent)
-                        const {path, name,  parent} = result[0]
+                        const result = await grpcFetchRenameFileTree(info.path, newName, info.parent)
+                        const {path, name, parent} = result[0]
                         // 存在则更改
                         const fileMap = getMapFileDetail(info.path)
                         if (fileMap.name !== "读取文件失败" && !fileMap.path.endsWith("-fail")) {
@@ -483,10 +485,20 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                             // 新增文件树数据
                             setMapFileDetail(path, result[0])
                         }
-                        
+
+                        let cacheAreaInfo = areaInfo
+
                         // 获取重命名文件所在存储结构
                         if (info.parent) {
-                            const folderMap = getMapFolderDetail(info.parent)
+                            let folderMap = getMapFolderDetail(info.parent)
+                            // 如若重命名为已有名称 则覆盖
+                            if (folderMap.includes(path)) {
+                                const file = await judgeAreaExistFilePath(areaInfo, path)
+                                if (file) {
+                                    cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                }
+                                folderMap = folderMap.filter((item) => item !== path)
+                            }
                             const newFolderMap = folderMap.map((item) => {
                                 if (item === info.path) return path
                                 return item
@@ -495,7 +507,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         }
 
                         // 修改分栏数据
-                        const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name, path}, info.path)
+                        const newAreaInfo = updateAreaFileInfo(cacheAreaInfo, {...info, name, path}, info.path)
                         // 更名后重置激活元素
                         const newActiveFile = isResetActiveFile([info], activeFile)
                         setActiveFile && setActiveFile(newActiveFile)
@@ -524,7 +536,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     // 在文件列表显示
     const onOpenFileList = useMemoizedFn((info: FileDetailInfo) => {
-        emiter.emit("onScrollToFileTree",info.path)
+        emiter.emit("onScrollToFileTree", info.path)
     })
 
     const menuData = useMemoizedFn((info: FileDetailInfo) => {
@@ -555,7 +567,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             {
                 label: "在文件列表显示",
                 key: "openFileList",
-                disabled: info.isUnSave||inFileTree.parent===null
+                disabled: info.isUnSave || inFileTree.parent === null
             }
         ]
         if (splitDirection.length > 0) {
@@ -914,7 +926,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 }
             })
         })
-    }, [areaInfo])
+    }, [areaInfo, reqEditor])
 
     // 光标位置信息
     const positionRef = useRef<CursorPosition>()
@@ -923,8 +935,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 自动保存
     const autoSaveCurrentFile = useDebounceFn(
         (newEditorInfo: FileDetailInfo) => {
-            const {path,code} = newEditorInfo
-            grpcFetchSaveFile(path,code)
+            const {path, code} = newEditorInfo
+            grpcFetchSaveFile(path, code)
         },
         {
             wait: 500
@@ -1079,6 +1091,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     return (
         <div className={styles["runner-tab-pane"]}>
             <YakitEditor
+                // 此处key存在意义为强制性刷新编辑器 用户清除ctrl + z缓存
+                key={editorInfo?.path}
                 editorDidMount={(editor) => {
                     setReqEditor(editor)
                 }}
@@ -1291,7 +1305,9 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     isUnSave: false,
                     language: suffix === "yak" ? suffix : "http"
                 }
-                await grpcFetchCreateFile(file.path,file.code)
+                const parentPath = await getPathParent(file.path)
+                const parentDetail = getMapFileDetail(parentPath)
+                await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? "" : parentPath)
                 success(`${file.name} 保存成功`)
                 // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
                 const removeAreaInfo = removeAreaFileInfo(areaInfo, file)

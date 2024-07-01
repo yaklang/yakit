@@ -561,7 +561,7 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
 export const getCodeByPath = (path: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("fetch-file-content", path)
+            .invoke("read-file-content", path)
             .then((res) => {
                 resolve(res)
             })

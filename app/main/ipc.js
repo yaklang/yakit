@@ -170,6 +170,7 @@ module.exports = {
 
         require("./handlers/execYak")(win, getClient)
         require("./handlers/listenPort")(win, getClient)
+        require("./handlers/yakRunnerTerminal")(win, getClient)
         require("./handlers/mitm")(win, getClient)
         require("./handlers/queryHTTPFlow")(win, getClient)
         require("./handlers/httpFuzzer")(win, getClient)

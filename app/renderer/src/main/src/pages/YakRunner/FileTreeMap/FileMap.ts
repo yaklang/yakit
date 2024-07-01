@@ -14,7 +14,8 @@ export const getMapFileDetail = (path: string) => {
             isFolder: false,
             isLeaf: true,
             path: `${uuidv4()}-fail`,
-            icon: "_f_yak"
+            icon: "_f_yak",
+            isReadFail: true
         }
     )
 }
