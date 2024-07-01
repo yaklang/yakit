@@ -22,6 +22,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {defaultXTermOptions} from "@/components/baseConsole/BaseConsole"
 import {XTerm} from "xterm-for-react"
 import {YakitSystem} from "@/yakitGVDefine"
+import { TerminalBox } from "./TerminalBox/TerminalBox"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -173,7 +174,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "terminal"
                         })}
                     >
-                        <div className={styles["no-syntax-check"]}>等待后端接口</div>
+                        <TerminalBox/>
                     </div>
                 )}
                 {/* 帮助信息只有yak有 */}
