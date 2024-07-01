@@ -1,0 +1,29 @@
+import {YakParamProps, YakRiskInfoProps} from "../plugins/pluginsType"
+
+/** @name 插件基础信息(前端逻辑专属) */
+export interface YakitPluginBaseInfo {
+    /** 插件类型 */
+    Type: string
+    /** 插件名称 */
+    ScriptName: string
+    /** 插件描述 */
+    Help?: string
+    /** 插件tags */
+    Tags: string[]
+    /** 备注 */
+    Notes?: string
+    /** 是否激活插件联动 */
+    EnablePluginSelector?: boolean
+    /** 插件联动类型 */
+    PluginSelectorTypes?: string[]
+}
+
+/** @name 插件全部信息(前端逻辑专属使用) */
+export interface YakitPluginInfo extends YakitPluginBaseInfo {
+    Id?: string
+    Content: string
+    /** 漏洞类型详情 */
+    RiskDetail?: YakRiskInfoProps[]
+    /** 参数信息 */
+    Params?: YakParamProps[]
+}
