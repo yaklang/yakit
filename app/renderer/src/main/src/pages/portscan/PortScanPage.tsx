@@ -32,6 +32,7 @@ export interface PortScanParams {
     SynConcurrent: number
     Active: boolean
     FingerprintMode: "service" | "web" | "all"
+    UserFingerprintFiles: string
     SaveToDB: boolean
     SaveClosedPorts: boolean
     TargetsFile?: string

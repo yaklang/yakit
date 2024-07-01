@@ -264,6 +264,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     Targets: "",
     Active: true,
     FingerprintMode: "all",
+    UserFingerprintFiles: "",
     Proto: ["tcp"],
     SaveClosedPorts: false,
     SaveToDB: true,
@@ -402,7 +403,10 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 ...extraParamsValue,
                 ...value,
                 Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
-                LinkPluginConfig: linkPluginConfig
+                LinkPluginConfig: linkPluginConfig,
+                UserFingerprintFiles: extraParamsValue.UserFingerprintFiles
+                    ? extraParamsValue.UserFingerprintFiles.split(",")
+                    : []
             }
             if(inputType === "path"){
                 executeParams["TargetsFile"] = executeParams["Targets"]
