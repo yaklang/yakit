@@ -25,11 +25,11 @@ import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {SolidTerminalIcon} from "@/assets/icon/solid"
 import {queryYakScriptList} from "../yakitStore/network"
-import {PluginGV} from "../plugins/builtInData"
 import {YakScript} from "../invoker/schema"
 import {IconSolidAIIcon} from "@/assets/icon/colors"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
+import {PluginSwitchToTag} from "../pluginEditor/defaultconstants"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
@@ -585,7 +585,7 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
             undefined,
             undefined,
             undefined,
-            [PluginGV.PluginCodecContextMenuExecuteSwitch]
+            [PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch]
         )
     })
 

@@ -188,7 +188,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             tags = (res.tags || "").split(",") || []
                         } catch (error) {}
                         const codeInfo =
-                            GetPluginLanguage(res.type) === "yak" ? await onCodeToInfo(res.type, res.content) : null
+                            GetPluginLanguage(res.type) === "yak" ? await onCodeToInfo({type: res.type, code: res.content}) : null
                         if (codeInfo && codeInfo.Tags.length > 0) {
                             // 去重
                             tags = filter([...tags, ...codeInfo.Tags])
@@ -387,7 +387,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             data.Content = content
 
-            const codeInfo = GetPluginLanguage(data.Type) === "yak" ? await onCodeToInfo(data.Type, data.Content) : null
+            const codeInfo = GetPluginLanguage(data.Type) === "yak" ? await onCodeToInfo({type: data.Type, code: data.Content}) : null
             let tags: string = data.Tags || ""
             if (codeInfo && codeInfo.Tags.length > 0) {
                 tags += `,${codeInfo.Tags.join(",")}`
@@ -551,7 +551,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
                     const paramsList =
                         GetPluginLanguage(plugin.type) === "yak"
-                            ? await onCodeToInfo(plugin.type, content)
+                            ? await onCodeToInfo({type: plugin.type, code: content})
                             : {CliParameter: []}
                     if (!paramsList) {
                         resolve("false")

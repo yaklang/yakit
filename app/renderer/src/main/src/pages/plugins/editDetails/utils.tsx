@@ -16,6 +16,7 @@ import {apiDownloadPluginMine} from "../utils"
 import {YakExtraParamProps} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {Uint8ArrayToString} from "@/utils/str"
+import {APIFunc} from "@/pages/pluginHub/utils/apiType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -465,16 +466,18 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
         })
 }
 
-/**
- * @name 获取源码中的参数和风险信息
- * @param type 插件类型
- * @param code 插件源码
- */
-export const onCodeToInfo: (type: string, code: string) => Promise<CodeToInfoResponseProps | null> = (type, code) => {
+interface PluginCodeToInfoRequest {
+    /** 插件类型 */
+    type: string
+    /** 插件源码 */
+    code: string
+}
+/** @name 获取源码中的参数和风险信息 */
+export const onCodeToInfo: APIFunc<PluginCodeToInfoRequest, CodeToInfoResponseProps | null> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         const request: CodeToInfoRequestProps = {
-            YakScriptType: type,
-            YakScriptCode: code
+            YakScriptType: params.type,
+            YakScriptCode: params.code
         }
         // console.log("onCodeToInfo-request", JSON.stringify(request))
         ipcRenderer
@@ -489,7 +492,7 @@ export const onCodeToInfo: (type: string, code: string) => Promise<CodeToInfoRes
                 })
             })
             .catch((e: any) => {
-                yakitNotify("error", "源码提取参数及风险信息失败: " + e)
+                if (!hiddenError) yakitNotify("error", "源码提取参数及风险信息失败: " + e)
                 resolve(null)
             })
     })
