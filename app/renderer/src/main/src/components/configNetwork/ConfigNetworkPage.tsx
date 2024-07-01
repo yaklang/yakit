@@ -73,6 +73,8 @@ export interface GlobalNetworkConfig {
 
     ExcludePluginScanURIs: string[]
     IncludePluginScanURIs: string[]
+
+    DbSaveSync: boolean
 }
 
 export interface ThirdPartyApplicationConfig {
@@ -135,7 +137,8 @@ export const defaultParams: GlobalNetworkConfig = {
     AuthInfos: [],
     SynScanNetInterface: "",
     ExcludePluginScanURIs: [],
-    IncludePluginScanURIs: []
+    IncludePluginScanURIs: [],
+    DbSaveSync: false
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -805,6 +808,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     <YakitSwitch
                                         checked={!params.SkipSaveHTTPFlow}
                                         onChange={(val) => setParams({...params, SkipSaveHTTPFlow: !val})}
+                                    />
+                                </Form.Item>
+                                <Form.Item label={"数据库同步存储"} tooltip='开启数据库同步存存储'>
+                                    <YakitSwitch
+                                        checked={params.DbSaveSync}
+                                        onChange={(val) => setParams({...params, DbSaveSync: val})}
                                     />
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
