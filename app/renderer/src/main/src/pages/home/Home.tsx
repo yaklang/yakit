@@ -434,7 +434,8 @@ const Home: React.FC<HomeProp> = (props) => {
     })
 
     // 下载安装MITM证书
-    const handleDownMitmCert = () => {
+    const handleDownMitmCert = (e) => {
+        e.stopPropagation()
         const m = showYakitModal({
             title: "生成自动安装脚本",
             width: "600px",
