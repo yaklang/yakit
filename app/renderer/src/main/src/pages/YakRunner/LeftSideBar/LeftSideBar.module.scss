@@ -1,15 +1,15 @@
 .left-side-bar {
     height: 100%;
     display: flex;
-    border-left: 1px solid #eaecf3;
-    border-right: 1px solid #eaecf3;
+    // border-left: 1px solid #eaecf3;
+    // border-right: 1px solid #eaecf3;
 
     &-list {
         display: inline-flex;
         flex-direction: column;
         align-items: flex-start;
         background: #f8f8f8;
-        border-right: 1px solid #eaecf3;
+        // border-right: 1px solid #eaecf3;
     }
 
     &-item {
@@ -43,7 +43,7 @@
     }
 
     &-item-active {
-        background-color: #f28b44;
+        background-color: var(--yakit-primary-5);
         .item-text {
             color: #ffffff;
         }
@@ -51,32 +51,37 @@
             color: #ffffff;
         }
     }
-    &-item-active::before {
-        position: absolute;
-        width: 1px;
-        height: 100%;
-        content: "";
-        top: 0;
-        left: -1px;
-        background-color: #f28b44;
+
+    &-item-advanced-config-unShow {
+        background-color: var(--yakit-primary-3);
     }
-    &-item-active::after {
-        position: absolute;
-        width: 1px;
-        height: 100%;
-        content: "";
-        top: 0;
-        right: -1px;
-        background-color: #f28b44;
-    }
+    
+    // &-item-active::before {
+    //     position: absolute;
+    //     width: 1px;
+    //     height: 100%;
+    //     content: "";
+    //     top: 0;
+    //     left: -1px;
+    //     background-color: #f28b44;
+    // }
+    // &-item-active::after {
+    //     position: absolute;
+    //     width: 1px;
+    //     height: 100%;
+    //     content: "";
+    //     top: 0;
+    //     right: -1px;
+    //     background-color: #f28b44;
+    // }
     &-item-active:hover {
-        background-color: #f28b44;
+        background-color: var(--yakit-primary-4);
     }
 
     &-content {
-        width: 301px;
+        flex: 1;
+        overflow: hidden;
         height: 100%;
-
         .content-wrapper {
             width: 100%;
             height: 100%;

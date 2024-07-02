@@ -57,6 +57,7 @@ import {
 import {clearMapFolderDetail, getMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {sendDuplexConn} from "@/utils/duplex/duplex"
 import {StringToUint8Array} from "@/utils/str"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -384,15 +385,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
     })
     /** ---------- 文件树 End ---------- */
+    const [isUnShow, setUnShow] = useState<boolean>(true)
 
-    /** ---------- 选中文件 Start ---------- */
-    /** 新建文件 */
-    const handleNewFile = useMemoizedFn(() => {})
-    /** 打开文件 */
-    const handleOpenFile = useMemoizedFn(() => {})
-    /** 打开文件夹 */
-    const handleOpenFolder = useMemoizedFn(() => {})
-    /** ---------- 选中文件 End ---------- */
+    useEffect(() => {
+        if (fileTree.length > 0) {
+            setUnShow(false)
+        } else {
+            setUnShow(true)
+        }
+    }, [fileTree])
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
@@ -726,10 +727,26 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0}>
                 <div className={styles["yak-runner-body"]}>
-                    <LeftSideBar addFileTab={addFileTab} />
-                    <div className={styles["yak-runner-code"]}>
-                        <div className={styles["code-container"]}>{onFixedEditorDetails(onChangeArea())}</div>
-                    </div>
+                    <YakitResizeBox
+                        freeze={!isUnShow}
+                        firstRatio={isUnShow ? "25px" : "300px"}
+                        firstNodeStyle={{padding: 0}}
+                        lineDirection='left'
+                        // isShowDefaultLineStyle={false}
+                        firstMinSize={isUnShow ? 25 : 200}
+                        secondMinSize={400}
+                        firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
+                        secondNodeStyle={isUnShow ? {padding: 0} : {overflow: "unset"}}
+                        secondNode={
+                            <div
+                                className={classNames(styles["yak-runner-code"], {
+                                    [styles["yak-runner-code-offset"]]: !isUnShow
+                                })}
+                            >
+                                <div className={styles["code-container"]}>{onFixedEditorDetails(onChangeArea())}</div>
+                            </div>
+                        }
+                    />
                     <RightSideBar />
                 </div>
 

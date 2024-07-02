@@ -1,4 +1,4 @@
-import React, {useRef} from "react"
+import React, {useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {OutlineDocumenttextIcon, OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {LeftSideBarProps, LeftSideType} from "./LeftSideBarType"
@@ -11,17 +11,17 @@ import styles from "./LeftSideBar.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
-    const {addFileTab} = props
+    const {addFileTab,isUnShow,setUnShow} = props
 
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<string>>(new Set(["file-tree"]))
 
     const [active, setActive] = React.useState<LeftSideType>("file-tree")
     const onSetActive = useMemoizedFn((type: LeftSideType) => {
-        if (type === active) {
-            setActive(undefined)
-            return
-        }
+        // if (type === active) {
+        //     setActive(undefined)
+        //     return
+        // }
         if (!rendered.current.has(type as string)) {
             rendered.current.add(type as string)
         }
@@ -34,18 +34,30 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
             <div className={styles["left-side-bar-list"]}>
                 <div
                     className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "file-tree"
+                        [styles["left-side-bar-item-active"]]: active === "file-tree",
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "file-tree" && isUnShow
                     })}
-                    onClick={() => onSetActive("file-tree")}
+                    onClick={() => {
+                        if (active === "file-tree") {
+                            setUnShow(!isUnShow)
+                        }
+                        onSetActive("file-tree")
+                    }}
                 >
                     <span className={styles["item-text"]}>资源管理器</span>
                     <OutlineDocumenttextIcon />
                 </div>
                 <div
                     className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "help-doc"
+                        [styles["left-side-bar-item-active"]]: active === "help-doc",
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "help-doc" && isUnShow
                     })}
-                    onClick={() => onSetActive("help-doc")}
+                    onClick={() => {
+                        if (active === "help-doc") {
+                            setUnShow(!isUnShow)
+                        }
+                        onSetActive("help-doc")
+                    }}
                 >
                     <span className={styles["item-text"]}>帮助文档</span>
                     <OutlineQuestionmarkcircleIcon />
@@ -54,7 +66,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
 
             {/* 侧边栏对应展示内容 */}
             <div className={styles["left-side-bar-content"]}>
-                {rendered.current.has("file-tree") && (
+                {rendered.current.has("file-tree") && !isUnShow && (
                     <div
                         className={classNames(styles["content-wrapper"], {
                             [styles["hidden-content"]]: active !== "file-tree"
@@ -63,7 +75,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         <RunnerFileTree addFileTab={addFileTab} />
                     </div>
                 )}
-                {rendered.current.has("help-doc") && (
+                {rendered.current.has("help-doc") && !isUnShow && (
                     <div
                         className={classNames(styles["content-wrapper"], {
                             [styles["hidden-content"]]: active !== "help-doc"
