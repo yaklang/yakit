@@ -107,9 +107,17 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         if (areaInfo.length <= 1) {
                             direction = [...direction, "top", "bottom"]
                         }
+                        // 如若下方依然可以分 则可向下拆分
+                        if (areaInfo.length > 1 && areaInfo[1].elements.length <= 1) {
+                            direction = [...direction, "bottom"]
+                        }
                         // 此项支持左右分
                         if (item.elements.length <= 1) {
                             direction = [...direction, "left", "right"]
+                        }
+                        // 如若上方依然可以分 则可向上拆分
+                        if (areaInfo.length > 1 && areaInfo[0].elements.length <= 1) {
+                            direction = [...direction, "top"]
                         }
                     }
                 }
@@ -266,14 +274,23 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         })
         if (moveItem) {
             if (direction === "top") {
-                newAreaInfo.unshift({
-                    elements: [moveItem]
-                })
+                if (newAreaInfo.length <= 1) {
+                    newAreaInfo.unshift({
+                        elements: [moveItem]
+                    })
+                }
+                else{
+                    newAreaInfo[0].elements.push(moveItem)
+                }
             }
             if (direction === "bottom") {
-                newAreaInfo.push({
-                    elements: [moveItem]
-                })
+                if (newAreaInfo.length <= 1) {
+                    newAreaInfo.push({
+                        elements: [moveItem]
+                    })
+                } else {
+                    newAreaInfo[1].elements.push(moveItem)
+                }
             }
             if (direction === "left") {
                 newAreaInfo[infoIndex].elements.unshift(moveItem)
@@ -1232,7 +1249,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                 }}
                             >
                                 <div className={styles["file-name"]}>{item.name}</div>
-                                <div className={styles["file-path"]}>{item.path}</div>
+                                <div className={classNames(styles["file-path"],"yakit-single-line-ellipsis")} >{item.path}</div>
                             </div>
                         )
                     })}

@@ -56,6 +56,14 @@
         .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
             margin-right: 8px;
         }
+        .ant-collapse-item > .ant-collapse-header .ant-collapse-header-text {
+            overflow: hidden;
+            div {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
     }
     .list-item {
         &-render {
