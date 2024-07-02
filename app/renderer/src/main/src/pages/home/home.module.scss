@@ -1106,15 +1106,15 @@
         &-left {
             margin-right: 10px;
             &-top {
-                height: 60%;
+                height: 58%;
                 margin-bottom: 10px;
             }
             &-bottom {
-                height: 40%;
+                height: 42%;
             }
         }
         .home-card {
-            gap: 12px;
+            gap: 10px;
             &-header {
                 &-title {
                     .title-icon {
@@ -1182,12 +1182,12 @@
             .example-blasting-wrapper {
                 padding: 18px 22px;
 
-                gap: 12px;
+                gap: 10px;
                 .example-blasting-title {
                     margin-bottom: 8px;
                 }
                 .example-blasting-video-wrapper {
-                    gap: 12px;
+                    gap: 10px;
                     .example-blasting-video {
                         font-size: 16px;
                     }
@@ -1237,7 +1237,7 @@
         .signle-jump-wrapper {
             margin-right: 10px;
 
-            gap: 12px;
+            gap: 10px;
             .signle-jump-item {
                 padding: 0 14px;
                 &-cont {
@@ -1262,9 +1262,9 @@
             padding: 22px;
             padding-bottom: 14px;
             .security-tools {
-                gap: 12px;
+                gap: 10px;
                 &-item {
-                    gap: 8px;
+                    gap: 6px;
                     .tools-icon {
                         svg {
                             width: 36px;
@@ -1282,9 +1282,9 @@
             margin-bottom: 10px;
             padding: 18px 14px;
 
-            gap: 12px;
+            gap: 10px;
             .tools-title-wrapper {
-                gap: 12px;
+                gap: 10px;
                 .tools-title-icon {
                     svg {
                         width: 28px;
