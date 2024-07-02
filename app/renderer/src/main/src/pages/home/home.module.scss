@@ -99,8 +99,8 @@
         }
     }
     .mitm-card {
+        overflow: visible;
         width: 50%;
-        padding-bottom: 0px;
         cursor: pointer;
         border: 1px solid #b5f2f9;
         background-color: #ebfcfe;
@@ -109,13 +109,13 @@
             background-color: rgba(53, 216, 238, 0.2);
         }
         .mitm-cont-wrapper {
-            overflow: hidden;
             flex: 1;
             border-radius: 8px 8px 0 0;
             background-size: cover;
             .mitm-glass-effect {
                 display: flex;
                 justify-content: center;
+                align-items: center;
                 height: 100%;
                 background: rgba(255, 255, 255, 0.3); /* 半透明背景 */
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 可选：添加阴影以增强效果 */
@@ -152,6 +152,8 @@
             background-color: rgba(86, 201, 145, 0.2);
         }
         .example-blasting-wrapper {
+            display: flex;
+            flex-direction: column;
             flex: 1;
             border-radius: 8px;
             background-color: #ffffff;
@@ -166,7 +168,7 @@
             .example-blasting-video-wrapper {
                 display: flex;
                 justify-content: space-between;
-                height: 76%;
+                flex: 1;
                 .example-blasting-video {
                     display: flex;
                     justify-content: center;
@@ -313,9 +315,9 @@
                 justify-content: center;
                 align-items: center;
                 overflow: hidden;
-                font-weight: 600;
                 white-space: nowrap;
                 text-overflow: ellipsis;
+                font-weight: 600;
             }
             .tools-title-desc {
                 overflow: hidden;
@@ -329,12 +331,18 @@
             :global {
                 .ant-input {
                     height: 26px;
+                    font-size: 14px;
+                }
+                .search-icon {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
                 }
             }
         }
         .tools-list-wrapper {
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow-y: overlay;
             flex: 1;
             .tools-list-item {
                 display: flex;
@@ -584,12 +592,8 @@
         .mitm-card {
             margin-right: 6px;
             padding: 18px;
+            padding-bottom: 0px;
             .mitm-cont-wrapper {
-                .mitm-glass-effect {
-                    .mitm-operation {
-                        padding-top: 15px;
-                    }
-                }
                 .mitm-operation {
                     .operation-dropdown-wrapper {
                         bottom: -145px;
@@ -607,6 +611,8 @@
             padding: 18px;
             .example-blasting-wrapper {
                 padding: 14px 18px;
+
+                gap: 4px;
                 .example-blasting-title {
                     margin-bottom: 6px;
                 }
@@ -722,19 +728,6 @@
                     font-size: 10px;
                 }
             }
-            .tools-search-wrapper {
-                :global {
-                    .ant-input {
-                        font-size: 12px;
-                    }
-                    .search-icon {
-                        svg {
-                            width: 12px;
-                            height: 12px;
-                        }
-                    }
-                }
-            }
             .tools-list-wrapper {
                 .tools-list-item {
                     padding: 8px;
@@ -791,6 +784,15 @@
                     font-size: 12px;
                 }
                 .data-preview-item-cont {
+                    .download-btn-icon {
+                        svg {
+                            width: 12px;
+                            height: 12px;
+                        }
+                    }
+                    .download-btn {
+                        font-size: 12px;
+                    }
                     .data-preview-item-number {
                         font-size: 14px;
                     }
@@ -814,7 +816,7 @@
 /* 适用于设备宽度介于1221px和1440px之间的样式 */
 @media (min-width: 1221px) and (max-width: 1440px) {
     .home-page-wrapper {
-        min-height: 705px;
+        min-height: 650px;
         padding: 12px 16px;
         &-left {
             margin-right: 8px;
@@ -875,12 +877,8 @@
         .mitm-card {
             margin-right: 8px;
             padding: 20px;
+            padding-bottom: 0px;
             .mitm-cont-wrapper {
-                .mitm-glass-effect {
-                    .mitm-operation {
-                        padding-top: 4%;
-                    }
-                }
                 .mitm-operation {
                     .operation-dropdown-wrapper {
                         bottom: -154px;
@@ -898,6 +896,8 @@
             padding: 20px;
             .example-blasting-wrapper {
                 padding: 16px 20px;
+
+                gap: 8px;
                 .example-blasting-title {
                     margin-bottom: 8px;
                 }
@@ -1013,19 +1013,6 @@
                     font-size: 12px;
                 }
             }
-            .tools-search-wrapper {
-                :global {
-                    .ant-input {
-                        font-size: 14px;
-                    }
-                    .search-icon {
-                        svg {
-                            width: 16px;
-                            height: 16px;
-                        }
-                    }
-                }
-            }
             .tools-list-wrapper {
                 .tools-list-item {
                     padding: 10px;
@@ -1082,6 +1069,15 @@
                     font-size: 14px;
                 }
                 .data-preview-item-cont {
+                    .download-btn-icon {
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                        }
+                    }
+                    .download-btn {
+                        font-size: 14px;
+                    }
                     .data-preview-item-number {
                         font-size: 16px;
                     }
@@ -1102,75 +1098,10 @@
         }
     }
 }
-@media (min-width: 1441px) and (max-width: 1920px) {
-    .mitm-card {
-        margin-right: 8px;
-        padding: 20px;
-        .mitm-cont-wrapper {
-            .mitm-glass-effect {
-                .mitm-operation {
-                    padding-top: 9%;
-                }
-            }
-            .mitm-operation {
-                .operation-dropdown-wrapper {
-                    bottom: -144px;
-                    padding: 14px;
-                    padding-bottom: 0;
-                    :global {
-                        .ant-form-item {
-                            margin-bottom: 9px;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-@media (min-width: 1921px) and (max-width: 2400px) {
-    .mitm-card {
-        margin-right: 10px;
-        padding: 22px;
-        .mitm-cont-wrapper {
-            .mitm-glass-effect {
-                .mitm-operation {
-                    padding-top: 5%;
-                }
-            }
-            .mitm-operation {
-                .operation-dropdown-wrapper {
-                    bottom: -170px;
-                    padding: 20px;
-                    padding-bottom: 0;
-                }
-            }
-        }
-    }
-}
-@media (min-width: 2401px) and (max-width: 2560px) {
-    .mitm-card {
-        margin-right: 10px;
-        padding: 22px;
-        .mitm-cont-wrapper {
-            .mitm-glass-effect {
-                .mitm-operation {
-                    padding-top: 20%;
-                }
-            }
-            .mitm-operation {
-                .operation-dropdown-wrapper {
-                    bottom: -170px;
-                    padding: 22px;
-                    padding-bottom: 0;
-                }
-            }
-        }
-    }
-}
 /* 适用于设备宽度介于1441px和2560px之间的样式 */
 @media (min-width: 1441px) and (max-width: 2560px) {
     .home-page-wrapper {
-        min-height: 750px;
+        min-height: 700px;
         padding: 14px 18px;
         &-left {
             margin-right: 10px;
@@ -1228,10 +1159,30 @@
                 }
             }
         }
+        .mitm-card {
+            margin-right: 10px;
+            padding: 22px;
+            padding-bottom: 0px;
+            .mitm-cont-wrapper {
+                .mitm-operation {
+                    .operation-dropdown-wrapper {
+                        bottom: -154px;
+                        padding: 20px 20px 10px 10px;
+                        :global {
+                            .ant-form-item {
+                                margin-bottom: 8px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         .webFuzzer-card {
             padding: 22px;
             .example-blasting-wrapper {
                 padding: 18px 22px;
+
+                gap: 12px;
                 .example-blasting-title {
                     margin-bottom: 8px;
                 }
@@ -1347,19 +1298,6 @@
                     font-size: 14px;
                 }
             }
-            .tools-search-wrapper {
-                :global {
-                    .ant-input {
-                        font-size: 16px;
-                    }
-                    .search-icon {
-                        svg {
-                            width: 20px;
-                            height: 20px;
-                        }
-                    }
-                }
-            }
             .tools-list-wrapper {
                 .tools-list-item {
                     padding: 12px;
@@ -1416,6 +1354,15 @@
                     font-size: 16px;
                 }
                 .data-preview-item-cont {
+                    .download-btn-icon {
+                        svg {
+                            width: 20px;
+                            height: 20px;
+                        }
+                    }
+                    .download-btn {
+                        font-size: 16px;
+                    }
                     .data-preview-item-number {
                         font-size: 18px;
                     }

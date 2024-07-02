@@ -58,7 +58,7 @@ import {RouteToPageProps} from "../layout/publicMenu/PublicMenu"
 import {usePluginToId} from "@/store/publicMenu"
 import {ResidentPluginName} from "@/routes/newRoute"
 import {Form, Tooltip} from "antd"
-import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -80,6 +80,7 @@ import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalL
 import {apiQueryPortsBase} from "../assetViewer/PortTable/utils"
 import {QueryPortsRequest} from "../assetViewer/PortAssetPage"
 import mitmBg from "../../assets/mitm-bg.png"
+import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 interface ToolInfo {
@@ -566,12 +567,30 @@ const Home: React.FC<HomeProp> = (props) => {
     // 工具箱搜索
     const onSearchVersion = (version: string) => {
         setSearchToolVal(version)
-        const arr = toolsList.filter((v) => v.label.toLocaleLowerCase().includes(version.toLocaleLowerCase()))
-        setSearchToolList(arr)
+        filterToolsList(version)
     }
+    const filterToolsList = useDebounceFn(
+        (version: string) => {
+            const arr = toolsList.filter((v) => v.label.toLocaleLowerCase().includes(version.toLocaleLowerCase()))
+            setSearchToolList(arr)
+        },
+        {wait: 300}
+    ).run
     const renderToolsList = useMemo(() => {
         return searchToolVal ? searchToolList : toolsList
     }, [searchToolVal, searchToolList, toolsList])
+
+    // 项目名称
+    const projectName = useMemo(() => {
+        if (isEnpriTraceAgent()) return getReleaseEditionName()
+        if (curProjectInfo?.ProjectName === "[temporary]") {
+            return "临时项目"
+        } else {
+            return curProjectInfo?.ProjectName
+                ? curProjectInfo?.ProjectName.substring(1, curProjectInfo?.ProjectName.length - 1)
+                : getReleaseEditionName()
+        }
+    }, [curProjectInfo])
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
@@ -1064,7 +1083,7 @@ const Home: React.FC<HomeProp> = (props) => {
                 <div className={styles["data-preview-wrapper"]}>
                     <div className={styles["data-preview-title"]}>
                         <SolidDocumenttextIcon className={styles["data-preview-title-icon"]} />
-                        <span className={styles["data-preview-title-text"]}>2023 护网项目_三期</span>
+                        <span className={styles["data-preview-title-text"]}>{projectName}</span>
                     </div>
                     <div className={styles["data-preview-item"]}>
                         <OutlineDatabaseIcon className={styles["data-preview-item-icon"]} />
@@ -1142,8 +1161,10 @@ const Home: React.FC<HomeProp> = (props) => {
                             {localPluginTotal < 30 ? (
                                 <YakitButton
                                     type='text'
-                                    icon={<CloudDownloadIcon />}
+                                    icon={<CloudDownloadIcon className={styles['download-btn-icon']} />}
                                     onClick={() => setVisibleOnline(true)}
+                                    style={{padding: 0}}
+                                    className={styles['download-btn']}
                                 >
                                     一键下载
                                 </YakitButton>
