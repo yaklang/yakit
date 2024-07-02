@@ -39,11 +39,17 @@
                     font-weight: 400;
                     line-height: 16px;
                 }
+                
             }
             .active-item {
                 background: var(--yakit-primary-5);
                 .title {
                     color: #fff;
+                }
+            }
+            .no-active-item{
+                &:hover{
+                    background-color: rgba(204, 210, 222, 0.5);
                 }
             }
         }

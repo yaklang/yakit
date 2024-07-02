@@ -86,7 +86,7 @@ const layoutToString = (v: number[]) => {
 }
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
-    const {tabsId} = props
+    const {tabsId,wrapperClassName} = props
     const {areaInfo, activeFile, runnerTabsId} = useStore()
     const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
@@ -662,7 +662,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     return (
-        <div className={styles["runner-tabs"]}>
+        <div className={classNames(styles["runner-tabs"], wrapperClassName || "")}>
             <RunnerTabBar
                 tabsId={tabsId}
                 tabsList={tabsList}
@@ -1204,8 +1204,8 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                 </div>
                 <div className={styles["header-style"]}>欢迎使用 Yak 语言</div>
             </div>
-
-            <div className={styles["operate"]}>
+            <div className={styles['operate-box']}>
+                <div className={styles["operate"]}>
                 <div className={styles["title-style"]}>快捷创建</div>
                 <div className={styles["operate-btn-group"]}>
                     <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
@@ -1255,6 +1255,8 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                     })}
                 </div>
             </div>
+            </div>
+            
         </div>
     )
 })

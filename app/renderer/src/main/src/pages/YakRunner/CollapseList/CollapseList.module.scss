@@ -14,6 +14,9 @@
         .ant-collapse-item > .ant-collapse-header {
             padding: 3px 12px 3px 8px;
             align-items: center;
+            &:hover{
+                background-color: #f8f8f8;
+            }
         }
         .ant-collapse-item > .ant-collapse-header .ant-collapse-expand-icon {
             line-height: 16px;
@@ -67,7 +70,8 @@
     }
     .list-item {
         &-render {
-            padding: 4px 12px 12px 32px;
+            padding: 0px 12px 0px 32px;
+
             position: relative;
             .render-tail {
                 width: 1px;

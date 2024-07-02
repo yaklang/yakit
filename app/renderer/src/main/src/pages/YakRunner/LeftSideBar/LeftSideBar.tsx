@@ -11,7 +11,7 @@ import styles from "./LeftSideBar.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
-    const {addFileTab,isUnShow,setUnShow} = props
+    const {addFileTab, isUnShow, setUnShow} = props
 
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<string>>(new Set(["file-tree"]))
@@ -29,7 +29,17 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
     })
 
     return (
-        <div className={classNames(styles["left-side-bar"], {[styles["folded"]]: !active})}>
+        <div
+            className={classNames(
+                styles["left-side-bar"],
+                {
+                    [styles["folded"]]: !active
+                },
+                {
+                    [styles["hidden"]]: isUnShow
+                }
+            )}
+        >
             {/* 左侧边栏 */}
             <div className={styles["left-side-bar-list"]}>
                 <div

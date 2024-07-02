@@ -55,6 +55,7 @@ export type OptionalFileDetailInfo = Partial<FileDetailInfo>
 
 export interface RunnerTabsProps {
     tabsId: string
+    wrapperClassName?: string
 }
 
 export interface RunnerTabBarProps {

@@ -133,6 +133,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const menuData: YakitMenuItemType[] = useMemo(() => {
         let newMenu: YakitMenuItemType[] = [
             {
+                key: "closeFolder",
+                label: "关闭文件夹",
+                disabled: fileTree.length === 0
+            },
+            {
                 key: "createFile",
                 label: "新建文件"
             },
@@ -264,8 +269,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             }
             // 文件删除
             else {
-                console.log("info---",info);
-                
+                console.log("info---", info)
+
                 if (info.parent) {
                     const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
                     // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
@@ -436,6 +441,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     }, [])
 
+    const closeFolder = useMemoizedFn(()=>{
+        setFileTree && setFileTree([])
+    })
+
     const createFile = useMemoizedFn(() => {
         // 未打开文件夹时 创建临时文件
         if (fileTree.length === 0) {
@@ -562,6 +571,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
     const menuSelect = useMemoizedFn((key) => {
         switch (key) {
+            case "closeFolder":
+                closeFolder()
+                break
             case "createFile":
                 createFile()
                 break
@@ -668,7 +680,14 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
             <div className={styles["opened-file-body"]}>
                 {info.map((item) => {
                     return (
-                        <div key={item.path} className={styles["file-item"]} onClick={() => openItem(item)}>
+                        <div
+                            key={item.path}
+                            className={classNames(styles["file-item"], {
+                                [styles["file-item-no-active"]]: activeFile?.path !== item.path,
+                                [styles["file-item-active"]]: activeFile?.path === item.path
+                            })}
+                            onClick={() => openItem(item)}
+                        >
                             <div className={styles["del-btn"]} onClick={(e) => removeItem(e, item)}>
                                 <OutlineXIcon />
                             </div>
