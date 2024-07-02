@@ -26,7 +26,7 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:
             return "EnpriTrace"
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
-            return "EnpriTraceAgent"
+            return "单兵武器装备库"
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return "BAS"
         default:

@@ -38,7 +38,7 @@ import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/Ya
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {failed, yakitNotify} from "@/utils/notification"
-import {YakScript} from "@/pages/invoker/schema"
+import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
 import {isEnpriTraceAgent} from "@/utils/envfile"
@@ -146,10 +146,23 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 // 简易企业版非管理员 无需插件权限
                 currentMenuList = currentMenuList.filter((item) => item.label !== "插件")
             }
-            setRouteMenu(currentMenuList)
-            setSubMenuData(currentMenuList[0]?.children || [])
-            setMenuId(currentMenuList[0]?.label)
-            return
+            const fixPluginName:string[] = ["子域名收集","基础爬虫","空间引擎集成版本","综合目录扫描与爆破"]
+            let pluginName:string[] = []
+            ipcRenderer.invoke("QueryYakScriptLocalAll").then(async (item: QueryYakScriptsResponse) => {
+                item.Data.forEach((i) => {
+                    if(fixPluginName.includes(i.ScriptName)){
+                        pluginName.push(i.ScriptName)
+                    }
+                })
+                if(pluginName.length>0){
+                    batchDownloadPlugin(currentMenuList, pluginName) 
+                }
+                else{
+                    setRouteMenu(currentMenuList)
+                    setSubMenuData(currentMenuList[0]?.children || [])
+                    setMenuId(currentMenuList[0]?.label)  
+                }
+            })
         } else {
             // 获取软件内菜单模式
             getRemoteValue(RemoteGV.PatternMenu).then((patternMenu) => {
@@ -693,9 +706,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     )}
                 </div>
                 <div className={classNames(style["heard-menu-right"])}>
-                    {!isEnpriTraceAgent() && (
-                        <>
                             <ExtraMenu onMenuSelect={onRouteMenuSelect} />
+                            {!isEnpriTraceAgent() && (
                             <Dropdown
                                 overlayClassName={style["customize-drop-menu"]}
                                 overlay={
@@ -763,9 +775,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
                                     </div>
                                 </YakitButton>
-                            </Dropdown>
-                        </>
-                    )}
+                            </Dropdown>)}
                     {!isExpand && (
                         <div className={style["heard-menu-sort"]} onClick={() => onExpand(true)}>
                             {!isExpand && <SortDescendingIcon />}

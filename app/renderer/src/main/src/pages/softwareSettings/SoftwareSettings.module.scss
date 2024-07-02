@@ -19,11 +19,14 @@
             overflow: hidden;
 
             .navbar-logo {
-                width: 101px;
+                // width: 101px;
                 height: 32px;
-                svg {
-                    width: 101px;
+                font-size: 18px;
+                font-weight: 600;
+                img {
+                    width: 32px;
                     height: 32px;
+                    margin-right: 12px;
                 }
             }
 

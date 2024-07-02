@@ -11,6 +11,7 @@ import { SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon } from "@/assets/ic
 
 import styles from "./ExtraMenu.module.scss"
 import { ImportLocalPlugin, LoadPluginMode } from "@/pages/mitm/MITMPage"
+import { isEnpriTraceAgent } from "@/utils/envfile"
 
 interface ExtraMenuProps {
     onMenuSelect: (route: RouteToPageProps) => void
@@ -88,7 +89,10 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     导入资源
                 </YakitButton>
             </YakitPopover>
-            <YakitButton
+            
+            {
+                !isEnpriTraceAgent&&<>
+                <YakitButton
                 type='secondary2'
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.Codec})
@@ -123,6 +127,10 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 loadPluginMode={loadPluginMode}
                 sendPluginLocal={true}
             />
+                </>
+            }
+            
+            
         </div>
     )
 })

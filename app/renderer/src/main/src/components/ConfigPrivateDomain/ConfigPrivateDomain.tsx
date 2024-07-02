@@ -16,6 +16,7 @@ import {InformationCircleIcon} from "@/assets/newIcon"
 import {RemoteGV} from "@/yakitGV"
 import {YakitRoute} from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import TelecomSmallLogo from "@/assets/img/telecom_logo_small.png"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -270,7 +271,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             {enterpriseLogin && (
                 <div className='login-title-show'>
                     <div className='icon-box'>
-                        <img src={yakitImg} className='type-icon-img' />
+                        <img src={TelecomSmallLogo} className='type-icon-img' />
                     </div>
                     <div className='title-box'>企业登录</div>
                 </div>

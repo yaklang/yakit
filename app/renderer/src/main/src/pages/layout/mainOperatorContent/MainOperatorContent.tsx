@@ -220,7 +220,24 @@ const getColor = (subPage) => {
 // 软件初始化时的默认打开页面数据
 export const getInitPageCache: () => PageCache[] = () => {
     if (isEnpriTraceAgent()) {
-        return []
+        return [
+            {
+                routeKey: routeConvertKey(YakitRoute.SimpleDetect, ""),
+                verbose: "安全检测",
+                menuName: YakitRouteToPageInfo[YakitRoute.SimpleDetect].label,
+                route: YakitRoute.SimpleDetect,
+                singleNode: false,
+                multipleNode: []
+            },
+            {
+                routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
+                verbose: "历史记录",
+                menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                route: YakitRoute.DB_HTTPHistory,
+                singleNode: true,
+                multipleNode: []
+            }
+        ]
     }
 
     if (isBreachTrace()) {
@@ -1742,14 +1759,23 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
                 // setSubPage([...subMenuList])
                 setPageCache([...pageCache])
             } else {
-                const newPage = pageCache.filter((_, i) => i !== index)
-                // setSubPage([])
-                setPageCache([...newPage])
-                if (newPage.length > 0) {
-                    const activeTabItem = pageCache[index - 1]
-                    const key = routeConvertKey(activeTabItem.route, activeTabItem.pluginName)
-                    setCurrentTabKey(key)
+                const pageCacheItem = pageCache[index]
+                let newPage = pageCache
+                // 多选的安全检测页面不可关闭
+                if(pageCacheItem&&pageCacheItem.route !== YakitRoute.SimpleDetect){
+                    newPage = pageCache.filter((_, i) => i !== index)
+                    setPageCache([...newPage])
+                    if (newPage.length > 0) {
+                        const activeTabItem = pageCache[index - 1]
+                        const key = routeConvertKey(activeTabItem.route, activeTabItem.pluginName)
+                        setCurrentTabKey(key)
+                    } 
+                    
                 }
+                else{
+                    setPageCache([...newPage])
+                }
+                
             }
         } catch (error) {}
     })
@@ -1807,14 +1833,17 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                                 <PageItem routeKey={pageItem.route} params={pageItem.pageParams} />
                             </React.Suspense>
                         ) : (
-                            <SubTabList
+                            <>
+                            {pageItem.multipleNode.length>0?<SubTabList
                                 pageCache={pageCache}
                                 currentTabKey={currentTabKey}
                                 openMultipleMenuPage={openMultipleMenuPage}
                                 pageItem={pageItem}
                                 index={index}
                                 onSetPageCache={onSetPageCache}
-                            />
+                            />:<></>}
+                            </>
+                            
                         )}
                     </div>
                 )

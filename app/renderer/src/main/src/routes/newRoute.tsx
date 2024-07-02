@@ -392,7 +392,7 @@ export const NoPaddingRoute: YakitRoute[] = [
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
 /** 一级tab固定展示tab  */
-export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
+export const defaultFixedTabs: YakitRoute[] = [YakitRoute.DB_HTTPHistory,YakitRoute.SimpleDetect]
 /** 用户退出登录后，需自动关闭的页面 */
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
@@ -1366,7 +1366,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
 export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
-        label: "安全检测",
+        label: "自动化扫描",
         children: [
             {
                 page: YakitRoute.SimpleDetect,
@@ -1378,7 +1378,91 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
     },
     {
         page: undefined,
-        label: "插件",
+        label: "基础渗透",
+        children: [
+            {
+                page: YakitRoute.HTTPHacker,
+                icon: <PrivateOutlineMitmIcon />,
+                hoverIcon: <PrivateSolidMitmIcon />,
+                label: "流量抓包劫持",
+            },
+            {
+                page: YakitRoute.HTTPFuzzer,
+                icon: <PrivateOutlineWebFuzzerIcon />,
+                hoverIcon: <PrivateSolidWebFuzzerIcon />,
+                label: "WEB数据包爆破",
+            },
+            {
+                page: YakitRoute.WebsocketFuzzer,
+                icon: <PrivateOutlineWebsocketFuzzerIcon />,
+                hoverIcon: <PrivateSolidWebsocketFuzzerIcon />,
+                label: "Websocket数据包爆破",
+            },
+            {
+                page: YakitRoute.Codec,
+                icon: <PrivateOutlineCodecIcon />,
+                hoverIcon: <PrivateSolidCodecIcon />,
+                ...YakitRouteToPageInfo[YakitRoute.Codec]
+            },
+            {
+                page: YakitRoute.DataCompare,
+                icon: <PrivateOutlineDataCompareIcon />,
+                hoverIcon: <PrivateSolidDataCompareIcon />,
+                ...YakitRouteToPageInfo[YakitRoute.DataCompare]
+            },
+            {
+                page: YakitRoute.PayloadManager,
+                icon: <PrivateOutlineWebsiteTreeIcon />,
+                hoverIcon: <PrivateSolidWebsiteTreeIcon />,
+                label: "Payload",
+            }
+        ]
+    },
+    {
+        page: undefined,
+        label: "信息收集",
+        children: [
+            {
+                page: YakitRoute.Mod_ScanPort,
+                icon: <PrivateOutlineScanPortIcon />,
+                hoverIcon: <PrivateSolidScanPortIcon />,
+                label:"端口扫描",
+            },
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "域名扫描",
+                icon: getFixedPluginIcon(ResidentPluginName.SubDomainCollection),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SubDomainCollection),
+                describe: getFixedPluginDescribe(ResidentPluginName.SubDomainCollection),
+                yakScripName: ResidentPluginName.SubDomainCollection
+            },
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "目录扫描",
+                icon: getFixedPluginIcon(ResidentPluginName.DirectoryScanning),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.DirectoryScanning),
+                describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),
+                yakScripName: ResidentPluginName.DirectoryScanning
+            },
+            {
+                page: YakitRoute.Plugin_OP,
+                label: "爬虫扫描",
+                icon: getFixedPluginIcon(ResidentPluginName.BasicCrawler),
+                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.BasicCrawler),
+                describe: getFixedPluginDescribe(ResidentPluginName.BasicCrawler),
+                yakScripName: ResidentPluginName.BasicCrawler
+            },
+            {
+                page: YakitRoute.Space_Engine,
+                icon: <PrivateOutlineSpaceEngineIcon />,
+                hoverIcon: <PrivateSolidSpaceEngineIcon />,
+                ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
+            }
+        ]
+    },
+    {
+        page: undefined,
+        label: "漏洞利用插件",
         children: [
             {
                 page: YakitRoute.Plugin_Store,
@@ -1397,18 +1481,12 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
                 icon: <PrivateOutlinePluginLocalIcon />,
                 hoverIcon: <PrivateSolidPluginLocalIcon />,
                 ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
-            },
-            {
-                page: YakitRoute.BatchExecutorPage,
-                icon: <PrivateOutlineBatchPluginIcon />,
-                hoverIcon: <PrivateSolidBatchPluginIcon />,
-                ...YakitRouteToPageInfo[YakitRoute.BatchExecutorPage]
             }
         ]
     },
     {
         page: undefined,
-        label: "数据库",
+        label: "数据展示",
         children: [
             {
                 page: YakitRoute.DB_Report,
@@ -1427,9 +1505,28 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
                 icon: <PrivateOutlineRiskIcon />,
                 hoverIcon: <PrivateSolidRiskIcon />,
                 ...YakitRouteToPageInfo[YakitRoute.DB_Risk]
+            },
+            {
+                page: YakitRoute.DB_Domain,
+                icon: <PrivateOutlineDomainIcon />,
+                hoverIcon: <PrivateSolidDomainIcon />,
+                ...YakitRouteToPageInfo[YakitRoute.DB_Domain]
+            },
+            {
+                page: YakitRoute.DB_HTTPHistory,
+                icon: <PrivateOutlineHTTPHistoryIcon />,
+                hoverIcon: <PrivateSolidHTTPHistoryIcon />,
+                label: "历史记录"
+            },
+            {
+                page: YakitRoute.DB_CVE,
+                icon: <PrivateOutlineCVEIcon />,
+                hoverIcon: <PrivateSolidCVEIcon />,
+                label: "CVE库管理"
             }
         ]
-    }
+    },
+
 ]
 // 要全部删除，但是里面的内容还没确定好
 /**@deprecated */

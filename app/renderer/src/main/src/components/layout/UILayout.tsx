@@ -58,6 +58,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FeatureRequest, ReportBug} from "@/utils/template/issues"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import TelecomSmallLogo from "@/assets/img/telecom_logo_small.png"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {ResultObjProps, remoteOperation} from "@/pages/dynamicControl/DynamicControl"
 import {useStore, yakitDynamicStatus} from "@/store"
@@ -1048,11 +1049,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     })}
                                                     onClick={() => changeYakitMode("soft")}
                                                 >
-                                                    <HomeSvgIcon
-                                                        className={
-                                                            yakitMode === "soft" ? styles["mode-icon-selected"] : ""
-                                                        }
-                                                    />
+                                                    {yakitMode === "soft" ? (
+                                                        <img src={TelecomSmallLogo} alt='logo' style={{width: 20}} />
+                                                    ) : (
+                                                        <img
+                                                            src={TelecomSmallLogo}
+                                                            alt='logo'
+                                                            style={{width: 20, opacity: 0.2}}
+                                                        />
+                                                    )}
                                                 </div>
                                             )}
 
@@ -1158,11 +1163,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     })}
                                                     onClick={() => changeYakitMode("soft")}
                                                 >
-                                                    <HomeSvgIcon
-                                                        className={
-                                                            yakitMode === "soft" ? styles["mode-icon-selected"] : ""
-                                                        }
-                                                    />
+                                                    {yakitMode === "soft" ? (
+                                                        <img src={TelecomSmallLogo} alt='logo' style={{width: 20}} />
+                                                    ) : (
+                                                        <img
+                                                            src={TelecomSmallLogo}
+                                                            alt='logo'
+                                                            style={{width: 20, opacity: 0.2}}
+                                                        />
+                                                    )}
                                                 </div>
                                             )}
 

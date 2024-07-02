@@ -101,6 +101,12 @@ FunctionEnd
         ${If} $0 != "" ; ee
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
+        ${Else}
+            ${StrStr} $0 $EXEFILE "单兵武器装备库"
+            ${If} $0 != "" ; ee
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "Dianxin_InstallPath"
+                StrCpy $EXE_NAME "单兵武器装备库"
+            ${EndIf}
         ${EndIf}
     ${EndIf}
 
@@ -118,11 +124,12 @@ FunctionEnd
     ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se 
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
-    ${Else}
-        ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
+    ${ElseIf} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
-        ${EndIf}
+    ${ElseIf} ${FileExists} `$INSTDIR\单兵武器装备库.exe` ; dianxin 
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "Dianxin_InstallPath"
+            StrCpy $EXE_NAME "单兵武器装备库"
     ${EndIf}
 
     !insertmacro checkInstalled

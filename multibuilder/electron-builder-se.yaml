@@ -1,8 +1,8 @@
-appId: 'io.yaklang.enpritraceagent'
+appId: 'io.yaklang.dianxin'
 extraMetadata: 
-  name: enpritraceagent
-productName: 'EnpriTraceAgent'
-copyright: Copyright © 2021 v1ll4n
+  name: dianxin
+productName: '单兵武器装备库'
+copyright: Copyright © 2024 yaklang.io
 
 extraFiles:
   - from: "bins/flag.txt"
@@ -50,7 +50,7 @@ mac:
       arch:
         - x64
         - arm64
-  icon: "app/assets/yakitselogo.icns"
+  icon: "app/assets/telecom_logo_small.png"
 
 linux:
   artifactName: ${productName}-${version}-linux-amd64.${ext}
@@ -80,15 +80,15 @@ win:
     - target: nsis
       arch:
         - x64
-  icon: "app/assets/yakitselogo.ico"
+  icon: "app/assets/telecom_logo_small.ico"
 
 nsis:
   oneClick: false 
   perMachine: false
   deleteAppDataOnUninstall: true
   allowToChangeInstallationDirectory: true 
-  installerIcon: app/assets/yakitselogo.ico 
-  uninstallerIcon: app/assets/yakitselogo.ico 
+  installerIcon: app/assets/telecom_logo_small.ico 
+  uninstallerIcon: app/assets/telecom_logo_small.ico 
   unicode: true
   include: build/yakit_build.nsh
   license: LICENSE.md

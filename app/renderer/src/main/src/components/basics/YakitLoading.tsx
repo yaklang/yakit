@@ -11,7 +11,7 @@ import type {DraggableEvent, DraggableData} from "react-draggable"
 import {failed, info, success} from "@/utils/notification"
 import {UpdateYakitAndYaklang} from "../layout/update/UpdateYakitAndYaklang"
 import {InstallEngine, QuestionModal} from "../layout/update/InstallEngine"
-
+import TelecomSmallLogo from "@/assets/img/telecom_logo_small.png"
 import classNames from "classnames"
 import styles from "./yakitLoading.module.scss"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
@@ -565,7 +565,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     {
                         isEnpriTraceAgent()&& <div className={styles["yakit-loading-icon-wrapper"]}>
                         <div className={styles["white-icon"]}>
-                            <img src={yakitSE} alt="暂无图片" />
+                            {/* <img src={yakitSE} alt="暂无图片" /> */}
+                            <img
+                            src={TelecomSmallLogo}
+                            alt="暂无图片"
+                        />
                         </div>
                     </div>
                     }
