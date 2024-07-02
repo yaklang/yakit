@@ -1092,10 +1092,6 @@ const Home: React.FC<HomeProp> = (props) => {
                             </span>
                         </div>
                     </div>
-                    <div className={styles["data-preview-item"]} style={{alignItems: "flex-start", marginTop: 6}}>
-                        <OutlineBugIcon className={styles["data-preview-item-icon"]} />
-                        <span className={styles["data-preview-item-text"]}>漏洞数据</span>
-                    </div>
                     {(riskLevelTotal("严重") ||
                         riskLevelTotal("高危") ||
                         riskLevelTotal("中危") ||
