@@ -573,6 +573,7 @@ export const getCodeByPath = (path: string): Promise<string> => {
 }
 
 const YakRunnerOpenHistory = "YakRunnerOpenHistory"
+const YakRunnerLastFolderPath = "YakRunnerLastFolderPath"
 
 /**
  * @name 更改YakRunner历史记录
@@ -592,7 +593,10 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
             ].slice(0, 10)
             setRemoteValue(YakRunnerOpenHistory, JSON.stringify(newHistoryData))
             emiter.emit("onRefreshRunnerHistory", JSON.stringify(newHistoryData))
-        } catch (error) {}
+        } catch (error) {
+            failed(`历史记录异常，重置历史 ${error}`)
+            setRemoteValue(YakRunnerOpenHistory, JSON.stringify([]))
+        }
     })
 }
 
@@ -611,6 +615,33 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
                 resolve(historyData)
             } catch (error) {
                 resolve([])
+            }
+        })
+    })
+}
+
+/**
+ * @name 更改上次文件夹打开路径
+ */
+export const setYakRunnerLastFolderPath = (newPath: string) => {
+    setRemoteValue(YakRunnerLastFolderPath, newPath)
+}
+
+/**
+ * @name 获取上次文件夹打开路径
+ */
+export const getYakRunnerLastFolderPath = (): Promise<string|null> => {
+    return new Promise(async (resolve, reject) => {
+        getRemoteValue(YakRunnerLastFolderPath).then((data) => {
+            try {
+                if (!data) {
+                    resolve(null)
+                    return
+                }
+                const historyData: string = data
+                resolve(historyData)
+            } catch (error) {
+                resolve(null)
             }
         })
     })

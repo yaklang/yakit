@@ -75,7 +75,7 @@ export const YakHelpDocItemLoad: React.FC<YakHelpDocItemLoadProps> = (props) => 
                 <>
                     {data.length > 0 ? (
                         <CollapseList
-                            type='output'
+                            type='sideBar'
                             onlyKey='key'
                             list={data}
                             titleRender={titleRender}

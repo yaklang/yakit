@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
@@ -8,10 +8,12 @@ import {
     addAreaFileInfo,
     getNameByPath,
     getPathParent,
+    getYakRunnerLastFolderPath,
     grpcFetchCreateFile,
     grpcFetchFileTree,
     removeAreaFileInfo,
     setYakRunnerHistory,
+    setYakRunnerLastFolderPath,
     updateAreaFileInfo,
     updateFileTree
 } from "./utils"
@@ -387,11 +389,26 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     /** ---------- 文件树 End ---------- */
     const [isUnShow, setUnShow] = useState<boolean>(true)
 
-    useEffect(() => {
-        if (fileTree.length > 0) {
+    // 根据历史读取上次打开的文件夹
+    const onSetUnShowFun = async() => {
+        const absolutePath = await getYakRunnerLastFolderPath()
+        if(absolutePath){
+            onOpenFolderListFun(absolutePath)
             setUnShow(false)
-        } else {
-            setUnShow(true)
+        }
+    }
+
+    useEffect(()=>{
+       onSetUnShowFun()
+    },[])
+
+    useUpdateEffect(() => {
+        if (fileTree.length > 0) {
+            setYakRunnerLastFolderPath(fileTree[0].path)
+            setUnShow(false)
+        }
+        else{
+            setYakRunnerLastFolderPath("")
         }
     }, [fileTree])
 
@@ -702,8 +719,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 <SplitView
                                     isLastHidden={areaInfo.length > 1 && areaInfo[1].elements.length === 1}
                                     elements={[
-                                        {element: <RunnerTabs tabsId={getTabsId(1, 0)} />},
-                                        {element: <RunnerTabs tabsId={getTabsId(1, 1)} />}
+                                        {element: <RunnerTabs wrapperClassName={styles["runner-tabs-top"]} tabsId={getTabsId(1, 0)} />},
+                                        {element: <RunnerTabs wrapperClassName={styles["runner-tabs-top"]} tabsId={getTabsId(1, 1)} />}
                                     ]}
                                 />
                             )
@@ -730,7 +747,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     <YakitResizeBox
                         freeze={!isUnShow}
                         firstRatio={isUnShow ? "25px" : "300px"}
-                        firstNodeStyle={{padding: 0}}
+                        firstNodeStyle={isUnShow?{padding: 0,maxWidth:25}:{padding: 0}}
                         lineDirection='left'
                         // isShowDefaultLineStyle={false}
                         firstMinSize={isUnShow ? 25 : 200}

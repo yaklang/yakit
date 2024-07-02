@@ -313,7 +313,7 @@
             .del-btn {
                 display: none;
             }
-            &:hover{
+            &:hover {
                 .dot {
                     display: none;
                 }
@@ -373,7 +373,6 @@
 /* ---------- YakRunnerWelcomePage ----------*/
 .yak-runner-welcome-page {
     height: 100%;
-    padding: 24px 12px 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -397,108 +396,121 @@
             line-height: 40px;
         }
     }
-
-    .operate {
-        padding: 20px;
+    .operate-box {
+        width: 100%;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        border-radius: 8px;
-        background: #f8f8f8;
-        .title-style {
-            color: #31343f;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 20px;
-        }
-        .operate-btn-group {
+        gap: 24px;
+        padding: 0px 145px;
+
+        .operate {
+            padding: 20px;
             display: flex;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 16px;
-            .btn-style {
-                flex: 1 0 0;
-                padding: 16px 16px 16px 12px;
+            flex-direction: column;
+            gap: 12px;
+            border-radius: 8px;
+            background: #f8f8f8;
+            .title-style {
+                color: #31343f;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+                text-align: center;
+            }
+            .operate-btn-group {
                 display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-radius: 4px;
-                cursor: pointer;
-                user-select: none;
-                .btn-title {
+                align-items: flex-start;
+                flex-wrap: wrap;
+                gap: 16px;
+                .btn-style {
+                    flex: 1 0 0;
+                    padding: 16px 16px 16px 12px;
                     display: flex;
+                    justify-content: space-between;
                     align-items: center;
-                    gap: 4px;
-                    color: #31343f;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    user-select: none;
+                    .btn-title {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        color: #31343f;
+                        font-size: 14px;
+                        font-weight: 400;
+                        line-height: 20px;
+                        white-space: nowrap;
+                        svg {
+                            width: 32px;
+                            height: 32px;
+                        }
+                    }
+
+                    .icon-style {
+                        svg {
+                            width: 20px;
+                            height: 20px;
+                            color: #85899e;
+                        }
+                    }
+                }
+                .btn-new-file {
+                    background: rgba(255, 182, 96, 0.1);
+                    &:hover {
+                        background: rgba(255, 182, 96, 0.2);
+                    }
+                }
+                .btn-open-file {
+                    background: rgba(86, 201, 145, 0.1);
+                    &:hover {
+                        background: rgba(86, 201, 145, 0.2);
+                    }
+                }
+                .btn-open-folder {
+                    background: rgba(53, 216, 238, 0.1);
+                    &:hover {
+                        background: rgba(53, 216, 238, 0.2);
+                    }
+                }
+            }
+        }
+
+        .recent-open {
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            .title-style {
+                color: #31343f;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            .recent-list {
+                display: flex;
+                flex-direction: column;
+                .list-opt {
+                    cursor: pointer;
+                    padding: 4px 0px;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
                     font-size: 14px;
                     font-weight: 400;
                     line-height: 20px;
                     white-space: nowrap;
-                    svg {
-                        width: 32px;
-                        height: 32px;
+                    .file-name {
+                        color: #f28b44;
                     }
-                }
-
-                .icon-style {
-                    svg {
-                        width: 20px;
-                        height: 20px;
-                        color: #85899e;
+                    .file-path {
+                        color: #b4bbca;
                     }
-                }
-            }
-            .btn-new-file {
-                background: rgba(255, 182, 96, 0.1);
-                &:hover {
-                    background: rgba(255, 182, 96, 0.2);
-                }
-            }
-            .btn-open-file {
-                background: rgba(86, 201, 145, 0.1);
-                &:hover {
-                    background: rgba(86, 201, 145, 0.2);
-                }
-            }
-            .btn-open-folder {
-                background: rgba(53, 216, 238, 0.1);
-                &:hover {
-                    background: rgba(53, 216, 238, 0.2);
-                }
-            }
-        }
-    }
-
-    .recent-open {
-        max-width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        .title-style {
-            color: #31343f;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 20px;
-        }
-        .recent-list {
-            display: flex;
-            flex-direction: column;
-            .list-opt {
-                cursor: pointer;
-                padding: 4px 0px;
-                display: flex;
-                align-items: flex-start;
-                gap: 8px;
-                font-size: 14px;
-                font-weight: 400;
-                line-height: 20px;
-                white-space: nowrap;
-                .file-name {
-                    color: #f28b44;
-                }
-                .file-path {
-                    color: #b4bbca;
+                    &:hover{
+                        .file-path {
+                            color: #f28b44;
+                            text-decoration: underline;
+                        }
+                    }
                 }
             }
         }

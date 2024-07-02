@@ -102,7 +102,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 <div className={styles["select-box"]}>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "output"
+                            [styles["active-item"]]: showItem === "output",
+                            [styles["no-active-item"]]: showItem !== "output"
                         })}
                         onClick={() => setShowItem("output")}
                     >
@@ -110,7 +111,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "syntaxCheck"
+                            [styles["active-item"]]: showItem === "syntaxCheck",
+                            [styles["no-active-item"]]: showItem !== "syntaxCheck"
                         })}
                         onClick={() => setShowItem("syntaxCheck")}
                     >
@@ -119,7 +121,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "terminal"
+                            [styles["active-item"]]: showItem === "terminal",
+                            [styles["no-active-item"]]: showItem !== "terminal"
                         })}
                         onClick={() => setShowItem("terminal")}
                     >
@@ -127,7 +130,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "helpInfo"
+                            [styles["active-item"]]: showItem === "helpInfo",
+                            [styles["no-active-item"]]: showItem !== "helpInfo"
                         })}
                         onClick={() => setShowItem("helpInfo")}
                     >
