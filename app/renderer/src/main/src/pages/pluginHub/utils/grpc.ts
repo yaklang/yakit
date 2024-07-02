@@ -13,7 +13,11 @@ export const grpcDownloadOnlinePlugin: APIFunc<DownloadOnlinePluginByUUID, YakSc
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("DownloadOnlinePluginByUUID", {UUID: params.uuid, Token: params.token || undefined})
-            .then(resolve)
+            .then((res) => {
+                // 刷新插件菜单
+                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+                resolve(res)
+            })
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "下载插件失败:" + e)
                 reject(e)

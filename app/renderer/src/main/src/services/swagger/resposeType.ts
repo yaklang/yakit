@@ -409,6 +409,9 @@ export declare namespace API {
         from_platform: string
         uid: string
     }
+    export interface PostPluginsResponse extends PluginsDetail {
+        isUpdate?: boolean
+    }
     export interface PluginTypeListResponse {
         data: PluginTypeList[]
     }

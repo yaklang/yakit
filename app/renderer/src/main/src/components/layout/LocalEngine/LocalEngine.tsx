@@ -89,7 +89,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         const onFetchLocalAndLatsVersion = useMemoizedFn(() => {
             setTimeout(() => {
-                handleFetchYakitAndYaklangLocalVersion(handleFetchYakitAndYaklangLatestVersion, true)
+                handleFetchYakitAndYaklangLocalVersion()
             }, 500)
         })
 
