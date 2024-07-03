@@ -7,7 +7,7 @@ import RehypeKatex from "rehype-katex"
 import RemarkGfm from "remark-gfm"
 import RehypeHighlight from "rehype-highlight"
 import mermaid from "mermaid"
-import rehypeRaw from 'rehype-raw'
+import rehypeRaw from "rehype-raw"
 import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
 
 import "./chatMarkdown.scss"
@@ -73,7 +73,7 @@ function Mermaid(props: {code: string; onError: () => void}) {
 function PreCode(props: {children: any}) {
     const ref = useRef<HTMLPreElement>(null)
     const [mermaidCode, setMermaidCode] = useState("")
-
+    const [copyStr, setCopyStr] = useState("")
     useEffect(() => {
         if (!ref.current) return
         const mermaidDom = ref.current.querySelector("code.language-mermaid")
@@ -82,17 +82,19 @@ function PreCode(props: {children: any}) {
         }
     }, [props.children])
 
+    useEffect(() => {
+        if (ref.current) {
+            setCopyStr(ref.current.innerText)
+        }
+    }, [ref.current])
+
     if (mermaidCode) {
         return <Mermaid code={mermaidCode} onError={() => setMermaidCode("")} />
     }
 
     return (
         <pre ref={ref}>
-            <CopyComponents
-                className='copy-code-button'
-                copyText={ref.current?.innerText || ""}
-                iconColor={"#85899e"}
-            />
+            <CopyComponents className='copy-code-button' copyText={copyStr || ""} iconColor={"#85899e"} />
 
             {props.children}
         </pre>

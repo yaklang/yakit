@@ -86,7 +86,7 @@ const layoutToString = (v: number[]) => {
 }
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
-    const {tabsId,wrapperClassName} = props
+    const {tabsId, wrapperClassName} = props
     const {areaInfo, activeFile, runnerTabsId} = useStore()
     const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
@@ -278,8 +278,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                     newAreaInfo.unshift({
                         elements: [moveItem]
                     })
-                }
-                else{
+                } else {
                     newAreaInfo[0].elements.push(moveItem)
                 }
             }
@@ -927,8 +926,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-    // 是否初次加载
-    const isFirstRef = useRef<boolean>(true)
+
     useEffect(() => {
         areaInfo.forEach((item) => {
             item.elements.forEach((itemIn) => {
@@ -962,6 +960,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 更新编辑器文件内容(activeFile-code字段在光标位置改变时就已更新，为减少渲染，则不更新)
     const updateAreaInputInfo = useMemoizedFn((content: string) => {
+        // 未保存文件不用自动保存
+        if(editorInfo?.isUnSave) return
         const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
         // console.log("更新编辑器文件内容", newAreaInfo)
         if (editorInfo) {
@@ -1059,10 +1059,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 更新光标位置
     const updatePosition = useMemoizedFn(() => {
         // console.log("更新光标位置", editorInfo)
-
         if (reqEditor && editorInfo) {
-            const {position, selections} = editorInfo
-            const {lineNumber, column} = position || {}
+            // 如若没有记录 默认1行1列
+            const {position={lineNumber:1,column:1}, selections} = editorInfo
+            const {lineNumber, column} = position
             if (lineNumber && column) {
                 reqEditor.setPosition({lineNumber, column})
                 reqEditor.focus()
@@ -1078,13 +1078,13 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         updateBottomEditorDetails()
     })
 
+    // 此处ref存在意义为清除ctrl + z缓存 同时更新光标位置
     useUpdateEffect(() => {
-        if (isFirstRef.current) {
-            isFirstRef.current = false
-        } else {
+        if (reqEditor && editorInfo) {
+            reqEditor.setValue(editorInfo.code)
             updatePosition()
         }
-    }, [editorInfo?.position])
+    }, [editorInfo?.path])
 
     // 选中光标位置
     const onJumpEditorDetailFun = useMemoizedFn((data) => {
@@ -1108,8 +1108,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     return (
         <div className={styles["runner-tab-pane"]}>
             <YakitEditor
-                // 此处key存在意义为强制性刷新编辑器 用户清除ctrl + z缓存
-                key={editorInfo?.path}
                 editorDidMount={(editor) => {
                     setReqEditor(editor)
                 }}
@@ -1204,59 +1202,63 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                 </div>
                 <div className={styles["header-style"]}>欢迎使用 Yak 语言</div>
             </div>
-            <div className={styles['operate-box']}>
+            <div className={styles["operate-box"]}>
                 <div className={styles["operate"]}>
-                <div className={styles["title-style"]}>快捷创建</div>
-                <div className={styles["operate-btn-group"]}>
-                    <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
-                        <div className={styles["btn-title"]}>
-                            <YakRunnerNewFileIcon />
-                            新建文件
-                        </div>
-                        <OutlinePlusIcon className={styles["icon-style"]} />
-                    </div>
-                    <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
-                        <div className={styles["btn-title"]}>
-                            <YakRunnerOpenFileIcon />
-                            打开文件
-                        </div>
-                        <OutlineImportIcon className={styles["icon-style"]} />
-                    </div>
-                    <div className={classNames(styles["btn-style"], styles["btn-open-folder"])} onClick={openFolder}>
-                        <div className={styles["btn-title"]}>
-                            <YakRunnerOpenFolderIcon />
-                            打开文件夹
-                        </div>
-                        <OutlineImportIcon className={styles["icon-style"]} />
-                    </div>
-                </div>
-            </div>
-
-            <div className={styles["recent-open"]}>
-                <div className={styles["title-style"]}>最近打开</div>
-                <div className={styles["recent-list"]}>
-                    {historyList.slice(0, 3).map((item, index) => {
-                        return (
-                            <div
-                                key={item.path}
-                                className={styles["list-opt"]}
-                                onClick={() => {
-                                    if (item.isFile) {
-                                        openFileByPath(item.path, item.name)
-                                    } else {
-                                        emiter.emit("onOpenFolderList", item.path)
-                                    }
-                                }}
-                            >
-                                <div className={styles["file-name"]}>{item.name}</div>
-                                <div className={classNames(styles["file-path"],"yakit-single-line-ellipsis")} >{item.path}</div>
+                    <div className={styles["title-style"]}>快捷创建</div>
+                    <div className={styles["operate-btn-group"]}>
+                        <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerNewFileIcon />
+                                新建文件
                             </div>
-                        )
-                    })}
+                            <OutlinePlusIcon className={styles["icon-style"]} />
+                        </div>
+                        <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerOpenFileIcon />
+                                打开文件
+                            </div>
+                            <OutlineImportIcon className={styles["icon-style"]} />
+                        </div>
+                        <div
+                            className={classNames(styles["btn-style"], styles["btn-open-folder"])}
+                            onClick={openFolder}
+                        >
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerOpenFolderIcon />
+                                打开文件夹
+                            </div>
+                            <OutlineImportIcon className={styles["icon-style"]} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles["recent-open"]}>
+                    <div className={styles["title-style"]}>最近打开</div>
+                    <div className={styles["recent-list"]}>
+                        {historyList.slice(0, 3).map((item, index) => {
+                            return (
+                                <div
+                                    key={item.path}
+                                    className={styles["list-opt"]}
+                                    onClick={() => {
+                                        if (item.isFile) {
+                                            openFileByPath(item.path, item.name)
+                                        } else {
+                                            emiter.emit("onOpenFolderList", item.path)
+                                        }
+                                    }}
+                                >
+                                    <div className={styles["file-name"]}>{item.name}</div>
+                                    <div className={classNames(styles["file-path"], "yakit-single-line-ellipsis")}>
+                                        {item.path}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
-            </div>
-            
         </div>
     )
 })

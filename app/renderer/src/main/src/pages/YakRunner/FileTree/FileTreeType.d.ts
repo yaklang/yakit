@@ -39,6 +39,8 @@ export interface FileNodeProps {
     icon: string
     // 是否新建
     isCreate?: boolean
+    // 层级
+    depth: number
     isLeaf?: boolean
     children?: FileNodeProps[]
 }
@@ -68,4 +70,6 @@ export interface FileTreeNodeProps {
 
     copyPath: string
     setCopyPath: (v:string) => void
+
+    setFoucsedKey: (v:string) => void
 }

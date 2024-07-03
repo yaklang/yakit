@@ -9,7 +9,7 @@ import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoListProps, ShowItemType} from "./BottomEditorDetailsType"
 import {HelpInfoList} from "../CollapseList/CollapseList"
-import {OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SyntaxCheckList} from "./SyntaxCheckList/SyntaxCheckList"
 import useStore from "../hooks/useStore"
@@ -22,7 +22,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {defaultXTermOptions} from "@/components/baseConsole/BaseConsole"
 import {XTerm} from "xterm-for-react"
 import {YakitSystem} from "@/yakitGVDefine"
-import { TerminalBox } from "./TerminalBox/TerminalBox"
+import {TerminalBox} from "./TerminalBox/TerminalBox"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -139,6 +139,9 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                 </div>
                 <div className={styles["extra"]}>
+                    {showItem === "terminal" && (
+                        <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={() => {}} />
+                    )}
                     <YakitButton
                         type='text2'
                         icon={<OutlineXIcon />}
@@ -178,7 +181,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "terminal"
                         })}
                     >
-                        <TerminalBox/>
+                        <TerminalBox />
                     </div>
                 )}
                 {/* 帮助信息只有yak有 */}
@@ -248,7 +251,42 @@ export const OutputInfoList: React.FC<OutputInfoListProps> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <XTerm ref={xtermRef} customKeyEventHandler={onCopy} options={defaultXTermOptions} />
+            <XTerm
+                ref={xtermRef}
+                customKeyEventHandler={onCopy}
+                options={{
+                    convertEol: true,
+                    theme: {
+                        foreground: "#536870",
+                        background: "#ffffff",
+                        cursor: "#536870",
+
+                        black: "#002831",
+                        brightBlack: "#001e27",
+
+                        red: "#d11c24",
+                        brightRed: "#bd3613",
+
+                        green: "#738a05",
+                        brightGreen: "#475b62",
+
+                        yellow: "#a57706",
+                        brightYellow: "#536870",
+
+                        blue: "#2176c7",
+                        brightBlue: "#708284",
+
+                        magenta: "#c61c6f",
+                        brightMagenta: "#5956ba",
+
+                        cyan: "#259286",
+                        brightCyan: "#819090",
+
+                        white: "#eae3cb",
+                        brightWhite: "#fcf4dc"
+                    }
+                }}
+            />
         </div>
     )
 }

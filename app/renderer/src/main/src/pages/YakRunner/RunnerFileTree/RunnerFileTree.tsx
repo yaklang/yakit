@@ -25,8 +25,10 @@ import {
     getPathParent,
     getYakRunnerHistory,
     grpcFetchDeleteFile,
+    grpcFetchFileTree,
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
+    loadFolderDetail,
     removeAreaFileInfo,
     removeAreaFilesInfo,
     setAreaFileActive,
@@ -48,6 +50,7 @@ import {
     clearMapFolderDetail,
     getMapAllFolderKey,
     getMapFolderDetail,
+    hasMapFolderDetail,
     removeMapFolderDetail,
     setMapFolderDetail
 } from "../FileTreeMap/ChildMap"
@@ -68,15 +71,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     // 选中的文件或文件夹
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
-    const initFileTree = useMemoizedFn((data: FileTreeListProps[]) => {
+    const initFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
         return data.map((item) => {
             const itemDetail = getMapFileDetail(item.path)
-            let obj: FileNodeProps = {...itemDetail}
+            let obj: FileNodeProps = {...itemDetail, depth}
 
             const childArr = getMapFolderDetail(item.path)
             if (itemDetail.isFolder) {
                 const newChild = childArr.map((item) => ({path: item}))
-                obj.children = initFileTree(newChild)
+                obj.children = initFileTree(newChild, depth + 1)
             }
             return obj
         })
@@ -97,7 +100,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const fileDetailTree = useMemo(() => {
-        return initFileTree(fileTree)
+        return initFileTree(fileTree, 1)
     }, [fileTree, refreshTree])
 
     const getHistoryList = useMemoizedFn(async (data?: string) => {
@@ -178,7 +181,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             name: "",
             path: currentPath,
             isFolder: false,
-            icon: "_f_notepad",
+            icon: "_f_yak",
             isCreate: true,
             isLeaf: true
         }
@@ -199,7 +202,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         })
         newFolderDetail.splice(insert, 0, newFileNodeMap.path)
         setMapFolderDetail(path, newFolderDetail)
-        emiter.emit("onExpandedFileTree", path)
+        // setFoucsedKey(currentPath)
+        // emiter.emit("onExpandedFileTree", path)
+        emiter.emit("onScrollToFileTree", currentPath)
         emiter.emit("onRefreshFileTree")
     })
 
@@ -224,7 +229,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             setMapFileDetail(path, {...fileDetail, isLeaf: false})
         }
         setMapFolderDetail(path, [newFileNodeMap.path, ...folderDetail])
-        emiter.emit("onExpandedFileTree", path)
+
+        // setFoucsedKey(currentPath)
+        // emiter.emit("onExpandedFileTree", path)
+        emiter.emit("onScrollToFileTree", currentPath)
         emiter.emit("onRefreshFileTree")
     })
 
@@ -441,11 +449,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     }, [])
 
-    const closeFolder = useMemoizedFn(()=>{
+    const closeFolder = useMemoizedFn(() => {
         setFileTree && setFileTree([])
     })
 
-    const createFile = useMemoizedFn(() => {
+    const createFile = useMemoizedFn(async() => {
         // 未打开文件夹时 创建临时文件
         if (fileTree.length === 0) {
             addFileTab()
@@ -455,6 +463,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             const fileDetail = getMapFileDetail(newFoucsedKey)
             // 文件夹直接创建
             if (fileDetail.isFolder) {
+                // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+                if (!hasMapFolderDetail(fileDetail.path)) {
+                    await loadFolderDetail(fileDetail.path)
+                }
                 onNewFile(fileDetail.path)
             }
             // 文件找到其上层路径创建
@@ -466,11 +478,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     })
 
-    const createFolder = useMemoizedFn(() => {
+    const createFolder = useMemoizedFn(async() => {
         const newFoucsedKey = foucsedKey || fileTree[0].path
         const fileDetail = getMapFileDetail(newFoucsedKey)
         // 文件夹直接创建
         if (fileDetail.isFolder) {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(fileDetail.path)) {
+                await loadFolderDetail(fileDetail.path)
+            }
             onNewFolder(fileDetail.path)
         }
         // 文件找到其上层路径创建
