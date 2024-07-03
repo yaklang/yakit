@@ -29,9 +29,19 @@ jobs:
       - name: "Download Yak Engine via wget(MacOS)"
         id: download-darwin-engine
         run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+
+      - name: "Download Yak Engine via wget(MacOS-arm64)"
+        id: download-darwin-engine-arm64
+        run: wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+
       - name: "Download Yak Engine via wget(Linux)"
         id: download-linux-engine
         run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+
+      - name: "Download Yak Engine via wget(Linux-arm64)"
+        id: download-linux-engine-arm64
+        run: wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+
       - name: "Download Yak Engine via wget(Windows)"
         id: download-windows-engine
         run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
@@ -141,13 +151,21 @@ jobs:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-      - name: Upload Yakit(Community) Artifacts Linux
+      - name: Upload Yakit(Community) Artifacts Linux(amd64)
         uses: actions/upload-artifact@v2
         if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
         with:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
           path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+
+      - name: Upload Yakit(Community) Artifacts Linux(arm64)
+        uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/community-') }}
+        with:
+          name: Yakit-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+
       # start Enterprise Edition
       - name: Upload Yakit(Enterprise) Artifacts Windows
         uses: actions/upload-artifact@v2
@@ -177,7 +195,13 @@ jobs:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
           path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-
+      - name: Upload Yakit(Enterprise) Artifacts Linux(arm64)
+        uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') }}
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
       # start Special Edition
       - name: Upload Yakit(Special) Artifacts Windows
         uses: actions/upload-artifact@v2
@@ -207,6 +231,13 @@ jobs:
           # Yakit-1.0.3-beta24-win32-x64.exe
           name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
           path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      - name: Upload Yakit(Special) Artifacts Linux(arm64)
+        uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') }}
+        with:
+          # Yakit-1.0.3-beta24-win32-x64.exe
+          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+          path: ./release/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
 
   publish_yakit_ee_to_oss:
     if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-ee') && !endsWith(github.ref, '/no-release') }}
@@ -244,6 +275,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      - name: Download Yakit (Linux arm64)
+        uses: actions/download-artifact@v2
+        with:
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
       - run: ls
         name: Ls Published Artifacts...
 
@@ -263,6 +298,7 @@ jobs:
             Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
             Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
             Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+            Yakit-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
   # special edition
   publish_yakit_se_to_oss:
     if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') && !endsWith(github.ref, '/no-release') }}
@@ -349,7 +385,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
-
+      - name: Download Yakit (Linux arm64)
+        uses: actions/download-artifact@v2
+        with:
+          name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-arm64.AppImage
       - run: ls
         name: Ls Published Artifacts...
 
@@ -409,7 +448,16 @@ jobs:
           asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
           asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
           asset_content_type: application/octet-stream
-
+      - name: Upload Release Asset (Linux-arm64)
+        uses: actions/upload-release-asset@v1
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-arm64.AppImage
+          asset_name: Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-arm64.AppImage
+          asset_content_type: application/octet-stream
       - name: Run
         run: ls
       #      - name: Upload yak to oss Latest
@@ -449,6 +497,7 @@ jobs:
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
             Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+            Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-arm64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-arm64.AppImage
       
       # - name: Update OSS latest file
       #   run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt

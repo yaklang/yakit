@@ -1,8 +1,6 @@
-appId: 'io.yaklang.yakit'
-productName: 'Yakit'
+appId: "io.yaklang.yakit"
+productName: "Yakit"
 copyright: Copyright © 2024 yaklang.io
-
-
 
 extraFiles:
   - from: "bins/scripts/auto-install-cert.zip"
@@ -27,6 +25,8 @@ extraFiles:
       - "!*.db"
   - from: "LICENSE.md"
     to: "LICENSE.md"
+  - from: "report/template.zip"
+    to: "report/template.zip"
 
 directories:
   buildResources: resources
@@ -42,13 +42,13 @@ publish:
 
 mac:
   artifactName: ${productName}-${version}-darwin-${arch}.${ext}
-  extraFiles:
-    - from: "bins/flag.darwin.txt"
-      to: "bins/flag.darwin.txt"
-    - from: "bins/yak_darwin_amd64.zip"
-      to: "bins/yak.zip"
-    - from: "report/template.zip"
-      to: "report/template.zip"
+  # extraFiles:
+  #   - from: "bins/flag.darwin.txt"
+  #     to: "bins/flag.darwin.txt"
+    # - from: bins/yak_darwin_${arch}.zip
+    #   to: "bins/yak.zip"
+    # - from: "report/template.zip"
+    #   to: "report/template.zip"
   target:
     - target: dmg
       arch:
@@ -57,18 +57,19 @@ mac:
   icon: "app/assets/yakitlogo.icns"
 
 linux:
-  artifactName: ${productName}-${version}-linux-amd64.${ext}
-  extraFiles:
-    - from: "bins/flag.linux.txt"
-      to: "bins/flag.linux.txt"
-    - from: "bins/yak_linux_amd64.zip"
-      to: "bins/yak.zip"
-    - from: "report/template.zip"
-      to: "report/template.zip"
+  # artifactName: ${productName}-${version}-linux-${arch}.${ext}
+  # extraFiles:
+  #   - from: "bins/flag.linux.txt"
+  #     to: "bins/flag.linux.txt"
+  #   - from: bins/yak_linux_${arch}.zip
+  #     to: "bins/yak.zip"
+  #   - from: "report/template.zip"
+  #     to: "report/template.zip"
   target:
     - target: AppImage
       arch:
         - x64
+        - arm64
   icon: "app/assets/yakitlogo.icns"
 
 win:
@@ -78,8 +79,6 @@ win:
       to: "bins/flag.windows.txt"
     - from: "bins/yak_windows_amd64.zip"
       to: "bins/yak.zip"
-    - from: "report/template.zip"
-      to: "report/template.zip"
   # requestedExecutionLevel: requireAdministrator
   target:
     - target: nsis
@@ -89,18 +88,20 @@ win:
 
 
 nsis:
-  oneClick: false 
+  oneClick: false
   perMachine: false
   deleteAppDataOnUninstall: true
-  allowToChangeInstallationDirectory: true 
-  installerIcon: app/assets/yakitlogo.ico 
-  uninstallerIcon: app/assets/yakitlogo.ico 
+  allowToChangeInstallationDirectory: true
+  installerIcon: app/assets/yakitlogo.ico
+  uninstallerIcon: app/assets/yakitlogo.ico
   unicode: true
   include: build/yakit_build.nsh
   license: LICENSE.md
   warningsAsErrors: false
   createDesktopShortcut: false
   createStartMenuShortcut: true
+
+beforePack: "buildHooks/before_pack.js"
 #publish:
 #  - provider: generic
 #    url: https://update.electron-builder.com
