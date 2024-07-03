@@ -906,7 +906,15 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
     }, [executeStatus])
 
     useEffect(() => {
-        onActionHybridScanByRuntimeId(pageInfo.runtimeId)
+        if (pageInfo.runtimeId) {
+            onActionHybridScanByRuntimeId(pageInfo.runtimeId)
+        } else {
+            /**不带runtimeId，但是带有一些表单的默认值，例如：【发送到漏洞检测】功能 */
+            const defaultFormValue = pageInfo.formValue
+            if (defaultFormValue && Object.keys(defaultFormValue).length > 0) {
+                pluginBatchExecuteContentRef.current?.onInitInputValue(defaultFormValue)
+            }
+        }
     }, [])
 
     /** 通过runtimeId查询该条记录详情 */
