@@ -39,7 +39,6 @@
                     font-weight: 400;
                     line-height: 16px;
                 }
-                
             }
             .active-item {
                 background: var(--yakit-primary-5);
@@ -47,38 +46,40 @@
                     color: #fff;
                 }
             }
-            .no-active-item{
-                &:hover{
+            .no-active-item {
+                &:hover {
                     background-color: rgba(204, 210, 222, 0.5);
                 }
             }
         }
         .extra {
             margin-right: 8px;
+            display: flex;
+            gap: 8px;
         }
     }
     .content {
         flex: 1;
         overflow: auto;
-        .render-hideen{
+        .render-hideen {
             height: 100%;
             width: 100%;
             display: none;
         }
-        .render-show{
+        .render-show {
             display: block;
         }
-        .no-syntax-check{
+        .no-syntax-check {
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 14px;
         }
-        .output-info-list{
+        .output-info-list {
             height: 100%;
             width: 100%;
-            background: rgb(232, 233, 232);
+            background: #ffffff;
         }
     }
 }

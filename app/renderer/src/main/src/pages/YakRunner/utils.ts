@@ -15,6 +15,8 @@ import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsTyp
 import {v4 as uuidv4} from "uuid"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
+import { setMapFileDetail } from "./FileTreeMap/FileMap"
+import { setMapFolderDetail } from "./FileTreeMap/ChildMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -56,7 +58,6 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("文件树", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, path)
             resolve(data)
         } catch (error) {
@@ -695,6 +696,32 @@ export const getNameByPath  = (filePath:string): Promise<string> => {
                 resolve(currentName)
             }).catch(()=>{
                 resolve("")
+            })
+    })
+}
+
+/**
+ * @name 用于用户操作过快时文件夹内数据还未来得及加载,提前加载
+ */
+export const loadFolderDetail = (path) => {
+    return new Promise(async (resolve, reject) => {
+        grpcFetchFileTree(path)
+            .then((res) => {
+                if (res.length > 0) {
+                    let childArr: string[] = []
+                    // 文件Map
+                    res.forEach((item) => {
+                        // 注入文件结构Map
+                        childArr.push(item.path)
+                        // 文件Map
+                        setMapFileDetail(item.path, item)
+                    })
+                    setMapFolderDetail(path, childArr)
+                }
+                resolve(null)
+            })
+            .catch((error) => {
+                resolve(null)
             })
     })
 }

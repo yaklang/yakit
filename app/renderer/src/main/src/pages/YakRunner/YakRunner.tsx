@@ -56,7 +56,7 @@ import {
     getMapFileDetail,
     setMapFileDetail
 } from "./FileTreeMap/FileMap"
-import {clearMapFolderDetail, getMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
+import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {sendDuplexConn} from "@/utils/duplex/duplex"
 import {StringToUint8Array} from "@/utils/str"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -189,7 +189,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
         grpcFetchFileTree(path)
             .then((res) => {
-                console.log("文件树", res)
+                // console.log("文件树", res)
 
                 if (callback) callback(res)
             })
@@ -206,7 +206,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 提前注入Map
     const insertFileMap = useMemoizedFn((path) => {
-        console.log("提前注入Map", path)
+        // console.log("提前注入Map", path)
         isFetchRef.current = true
         loadIndexRef.current += 1
         handleFetchFileList(path, (value) => {
@@ -248,9 +248,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             loadIndexRef.current += 1
             return
         }
-        // 校验其子项是否存在
-        const childKey = keys.filter((item) => item.startsWith(`${keys[index]}`) && item !== keys[index])
-        if (childKey.length !== 0) {
+        // 校验其子项是否存在 存在则无需加载
+        const isLoadChild = hasMapFolderDetail(keys[index])
+        if (isLoadChild) {
             loadIndexRef.current += 1
             return
         }
@@ -390,24 +390,23 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [isUnShow, setUnShow] = useState<boolean>(true)
 
     // 根据历史读取上次打开的文件夹
-    const onSetUnShowFun = async() => {
+    const onSetUnShowFun = async () => {
         const absolutePath = await getYakRunnerLastFolderPath()
-        if(absolutePath){
+        if (absolutePath) {
             onOpenFolderListFun(absolutePath)
             setUnShow(false)
         }
     }
 
-    useEffect(()=>{
-       onSetUnShowFun()
-    },[])
+    useEffect(() => {
+        onSetUnShowFun()
+    }, [])
 
     useUpdateEffect(() => {
         if (fileTree.length > 0) {
             setYakRunnerLastFolderPath(fileTree[0].path)
             setUnShow(false)
-        }
-        else{
+        } else {
             setYakRunnerLastFolderPath("")
         }
     }, [fileTree])
@@ -470,8 +469,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 })
         })
     }, [])
+
+    // 存储文件
     const ctrl_s = useMemoizedFn(() => {
-        // 存储文件
         try {
             // 如若未保存 则
             if (activeFile && activeFile.isUnSave && activeFile.code.length > 0) {
@@ -513,10 +513,20 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
+    // 关闭文件
+    const ctrl_w = useMemoizedFn(()=>{
+        console.log("ctrl_w");
+        if(activeFile){
+            const newAreaInfo =removeAreaFileInfo(areaInfo,activeFile)
+            setAreaInfo(newAreaInfo)
+        }
+    })
+
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
+        setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
     })
 
     useEffect(() => {
@@ -526,7 +536,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     const handleKeyPress = (event) => {
         // 在这里处理全局键盘事件
-        // console.log("Key keydown:",event)
+        console.log("Key keydown:", event)
         // 此处在使用key时发现字母竟区分大小写-故使用which替换
         const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
         let activeKey: number[] = []
@@ -719,8 +729,22 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 <SplitView
                                     isLastHidden={areaInfo.length > 1 && areaInfo[1].elements.length === 1}
                                     elements={[
-                                        {element: <RunnerTabs wrapperClassName={styles["runner-tabs-top"]} tabsId={getTabsId(1, 0)} />},
-                                        {element: <RunnerTabs wrapperClassName={styles["runner-tabs-top"]} tabsId={getTabsId(1, 1)} />}
+                                        {
+                                            element: (
+                                                <RunnerTabs
+                                                    wrapperClassName={styles["runner-tabs-top"]}
+                                                    tabsId={getTabsId(1, 0)}
+                                                />
+                                            )
+                                        },
+                                        {
+                                            element: (
+                                                <RunnerTabs
+                                                    wrapperClassName={styles["runner-tabs-top"]}
+                                                    tabsId={getTabsId(1, 1)}
+                                                />
+                                            )
+                                        }
                                     ]}
                                 />
                             )
@@ -747,13 +771,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     <YakitResizeBox
                         freeze={!isUnShow}
                         firstRatio={isUnShow ? "25px" : "300px"}
-                        firstNodeStyle={isUnShow?{padding: 0,maxWidth:25}:{padding: 0}}
+                        firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
                         lineDirection='left'
                         // isShowDefaultLineStyle={false}
                         firstMinSize={isUnShow ? 25 : 200}
                         secondMinSize={400}
                         firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
-                        secondNodeStyle={isUnShow ? {padding: 0} : {overflow: "unset"}}
+                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset"}}
                         secondNode={
                             <div
                                 className={classNames(styles["yak-runner-code"], {
