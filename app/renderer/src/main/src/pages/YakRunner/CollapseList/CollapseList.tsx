@@ -160,10 +160,11 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
         if (helpEditor) {
             const model = helpEditor.getModel()
             const position = activeFile?.position as monaco.Position
+
             if (model && position) {
                 const iWord = getWordWithPointAtPosition(model, position)
                 const type = getModelContext(model, "plugin") || "yak"
-
+                if (iWord.word.length === 0) return
                 await ipcRenderer
                     .invoke("YaklangLanguageFind", {
                         InspectType: "reference",
@@ -205,6 +206,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
             const position = activeFile?.position as monaco.Position
             if (model && position) {
                 const iWord = getWordWithPointAtPosition(model, position)
+                if (iWord.word.length === 0) return
                 const type = getModelContext(model, "plugin") || "yak"
 
                 await ipcRenderer

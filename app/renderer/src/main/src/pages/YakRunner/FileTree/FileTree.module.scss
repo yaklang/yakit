@@ -1,6 +1,7 @@
 /* ---------- FileTree ----------*/
 .file-tree {
     height: 100%;
+    padding: 0px 4px;
     :global {
         .ant-tree .ant-tree-treenode {
             padding-bottom: 0;
@@ -26,6 +27,13 @@
         }
         .ant-tree-indent-unit{
             width: 0px;
+        }
+        // 树的滚动条
+        .ant-tree-list-scrollbar{
+            width: 6px !important;
+        }
+        .ant-tree-list-scrollbar-thumb{
+            background: #c1c1c1 !important;
         }
     }
 

@@ -44,8 +44,10 @@ import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
 import {IMonacoEditor} from "@/utils/editors"
 import {
+    MAX_FILE_SIZE_BYTES,
     addAreaFileInfo,
     getCodeByPath,
+    getCodeSizeByPath,
     getDefaultActiveFile,
     getOpenFileInfo,
     getPathParent,
@@ -78,6 +80,8 @@ import moment from "moment"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
 import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -775,6 +779,11 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
         },
         {wait: 200}
     ).run
+    
+    useUpdateEffect(()=>{
+        onScrollTabMenu()
+    },[tabsList])
+
     return (
         <div className={classNames(styles["runner-tab-bar"])}>
             <div className={styles["bar-wrapper"]}>
@@ -961,7 +970,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 更新编辑器文件内容(activeFile-code字段在光标位置改变时就已更新，为减少渲染，则不更新)
     const updateAreaInputInfo = useMemoizedFn((content: string) => {
         // 未保存文件不用自动保存
-        if(editorInfo?.isUnSave) return
+        if (editorInfo?.isUnSave) return
         const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
         // console.log("更新编辑器文件内容", newAreaInfo)
         if (editorInfo) {
@@ -1061,7 +1070,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         // console.log("更新光标位置", editorInfo)
         if (reqEditor && editorInfo) {
             // 如若没有记录 默认1行1列
-            const {position={lineNumber:1,column:1}, selections} = editorInfo
+            const {position = {lineNumber: 1, column: 1}, selections} = editorInfo
             const {lineNumber, column} = position
             if (lineNumber && column) {
                 reqEditor.setPosition({lineNumber, column})
@@ -1127,6 +1136,8 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
 
+    const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
+
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
     const getHistoryList = useMemoizedFn(async () => {
@@ -1140,6 +1151,11 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     // 通过路径打开文件
     const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
         // 由于此处的打开文件 不存在已打开文件 故无需校验
+        const size = await getCodeSizeByPath(path)
+        if (size > MAX_FILE_SIZE_BYTES) {
+            setShowFileHint(true)
+            return
+        }
         const code = await getCodeByPath(path)
         const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
         const scratchFile: FileDetailInfo = {
@@ -1259,6 +1275,17 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                     </div>
                 </div>
             </div>
+            {/* 文件过大提示框 */}
+            <YakitHint
+                visible={isShowFileHint}
+                title='文件警告'
+                content='文件过大，无法使用YakRunner进行操作'
+                cancelButtonProps={{style: {display: "none"}}}
+                onOk={() => {
+                    setShowFileHint(false)
+                }}
+                okButtonText={"知道了"}
+            />
         </div>
     )
 })
@@ -1356,29 +1383,23 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     })
 
     return (
-        <YakitModal
-            title='文件未保存'
-            closable={false}
-            width={400}
-            type={"white"}
+        <YakitHint
             visible={isShowModal}
-            onCancel={() => setShowModal(false)}
-            footer={null}
-            className={styles["yakit-runner-save-modal"]}
-            bodyStyle={{padding: 0}}
-        >
-            <div style={{margin: "10px 24px"}}>是否要保存{info.name}里面的内容吗？</div>
-            <div style={{padding: "0px 24px 24px", display: "flex", gap: 12, justifyContent: "end"}}>
-                <YakitButton type='text2' onClick={onCancle}>
-                    取消
-                </YakitButton>
-                <YakitButton type='text' onClick={onUnSave}>
-                    不保存
-                </YakitButton>
-                <YakitButton type='primary' onClick={onSaveFile}>
-                    保存
-                </YakitButton>
-            </div>
-        </YakitModal>
+            title={"文件未保存"}
+            content={`是否要保存${info.name}里面的内容吗？`}
+            footer={
+                <div style={{marginTop: 24, display: "flex", gap: 12, justifyContent: "end"}}>
+                    <YakitButton type='text2' onClick={onCancle}>
+                        取消
+                    </YakitButton>
+                    <YakitButton type='text' onClick={onUnSave}>
+                        不保存
+                    </YakitButton>
+                    <YakitButton type='primary' onClick={onSaveFile}>
+                        保存
+                    </YakitButton>
+                </div>
+            }
+        />
     )
 }

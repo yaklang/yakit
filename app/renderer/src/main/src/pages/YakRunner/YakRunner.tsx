@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
@@ -433,27 +433,30 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const keyDownRef = useRef<HTMLDivElement>(null)
     const unTitleCountRef = useRef<number>(1)
 
-    const addFileTab = useMemoizedFn(() => {
-        // 新建临时文件
-        console.log("ctrl_n")
-        const scratchFile: FileDetailInfo = {
-            name: `Untitle-${unTitleCountRef.current}.yak`,
-            code: "# input your yak code\nprintln(`Hello Yak World!`)",
-            icon: "_f_yak",
-            isActive: true,
-            openTimestamp: moment().unix(),
-            // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
-            path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
-            parent: null,
-            language: "yak",
-            isUnSave: true
-        }
-        unTitleCountRef.current += 1
-        const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
+    const addFileTab = useThrottleFn(
+        () => {
+            // 新建临时文件
+            console.log("ctrl_n")
+            const scratchFile: FileDetailInfo = {
+                name: `Untitle-${unTitleCountRef.current}.yak`,
+                code: "# input your yak code\nprintln(`Hello Yak World!`)",
+                icon: "_f_yak",
+                isActive: true,
+                openTimestamp: moment().unix(),
+                // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
+                path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
+                parent: null,
+                language: "yak",
+                isUnSave: true
+            }
+            unTitleCountRef.current += 1
+            const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
 
-        setAreaInfo(newAreaInfo)
-        setActiveFile(newActiveFile)
-    })
+            setAreaInfo(newAreaInfo)
+            setActiveFile(newActiveFile)
+        },
+        {wait: 300}
+    ).run
 
     const [codePath, setCodePath] = useState<string>("")
     // 默认保存路径
@@ -514,10 +517,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 关闭文件
-    const ctrl_w = useMemoizedFn(()=>{
-        console.log("ctrl_w");
-        if(activeFile){
-            const newAreaInfo =removeAreaFileInfo(areaInfo,activeFile)
+    const ctrl_w = useMemoizedFn(() => {
+        console.log("ctrl_w")
+        if (activeFile) {
+            const newAreaInfo = removeAreaFileInfo(areaInfo, activeFile)
             setAreaInfo(newAreaInfo)
         }
     })
@@ -536,7 +539,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     const handleKeyPress = (event) => {
         // 在这里处理全局键盘事件
-        console.log("Key keydown:", event)
+        // console.log("Key keydown:", event)
         // 此处在使用key时发现字母竟区分大小写-故使用which替换
         const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
         let activeKey: number[] = []

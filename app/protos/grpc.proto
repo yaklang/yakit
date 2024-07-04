@@ -136,6 +136,8 @@ service Yak {
 
   // 开启端口
   rpc OpenPort(stream Input) returns (stream Output);
+  // editor terminal 交互
+  rpc YaklangTerminal(stream Input) returns (stream Output);
 
   // Exec
   rpc Exec(ExecRequest) returns (stream ExecResult);
@@ -5008,6 +5010,7 @@ message Input {
 
   string host = 2;
   uint32 port = 3;
+  string path = 4;
 }
 
 message Output {
