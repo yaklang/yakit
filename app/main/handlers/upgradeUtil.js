@@ -609,7 +609,12 @@ module.exports = {
                     const extractedFile = (() => {
                         switch (os.platform()) {
                             case "darwin":
-                                return "bins/yak_darwin_amd64"
+                                switch (os.arch()) {
+                                    case "arm64":
+                                        return "bins/yak_darwin_arm64"
+                                    default:
+                                        return "bins/yak_darwin_amd64"
+                                }
                             case "win32":
                                 return "bins/yak_windows_amd64.exe"
                             case "linux":
