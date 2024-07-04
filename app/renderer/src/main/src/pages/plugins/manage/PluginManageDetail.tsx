@@ -21,14 +21,25 @@ import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {PluginFilterParams, PluginInfoRefProps, PluginSearchParams, PluginSettingRefProps} from "../baseTemplateType"
+import {
+    PluginFilterParams,
+    PluginInfoRefProps,
+    PluginListPageMeta,
+    PluginSearchParams,
+    PluginSettingRefProps
+} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
 import {ApplicantIcon, AuthorImg, FilterPopoverBtn, FuncBtn} from "../funcTemplate"
 import {PluginBaseParamProps, PluginDataProps, PluginSettingParamProps} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
-import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
+import {
+    apiAuditPluginDetaiCheck,
+    apiFetchPluginDetailCheck,
+    convertPluginsRequestParams,
+    PluginsQueryProps
+} from "../utils"
 import {convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -41,6 +52,7 @@ import {riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
+import {shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 
 const {TabPane} = PluginTabs
 
@@ -126,14 +138,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             onDetailSearch
         } = props
         const userInfo = useStore((s) => s.userInfo)
-        /**获取传到接口所需的filters*/
-        const getRealFilters = (filter: PluginFilterParams, extra: {group: YakFilterRemoteObj[]}) => {
-            const realFilters: PluginFilterParams = {
-                ...filter,
-                plugin_group: extra.group.map((item) => ({value: item.name, count: item.total, label: item.name}))
-            }
-            return realFilters
-        }
         const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
         const onSearch = useMemoizedFn((value: PluginSearchParams) => {
             onDetailSearch(value, filters)
@@ -599,7 +603,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
         /** 管理分组展示状态 */
         const magGroupState = useMemo(() => {
-            if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
+            if (shouldVerifyEnpriTraceLogin() && userInfo.role === "admin") return true
+            if (!shouldVerifyEnpriTraceLogin() && ["admin", "superAdmin"].includes(userInfo.role || "")) return true
             else return false
         }, [userInfo.role])
 
@@ -611,6 +616,18 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }))
             return group || []
         }, [filters])
+
+        const getGroupPluginListQuery = useMemoizedFn((uuid: string[]) => {
+            const pageParams: PluginListPageMeta = {
+                page: +response.pagemeta.page,
+                limit: +response.pagemeta.limit
+            }
+            const params = {
+                ...convertPluginsRequestParams({...filters}, searchs, pageParams),
+                uuid: uuid
+            }
+            return params
+        })
 
         if (!plugin) return null
 
@@ -627,8 +644,13 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         <PluginGroup
                             isOnline={true}
                             selectGroup={selectGroup}
+                            pluginListQuery={getGroupPluginListQuery}
                             setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
                             isShowGroupMagBtn={magGroupState}
+                            onClickMagFun={onPluginBack}
+                            checkedPlugin={selectList.map((item) => item.uuid)}
+                            allChecked={allCheck}
+                            total={response.pagemeta.total}
                         />
                     </>
                 }

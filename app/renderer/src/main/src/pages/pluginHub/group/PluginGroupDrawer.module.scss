@@ -1,0 +1,34 @@
+.group-drawer-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    &-left {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        .plugin-groups-number {
+            padding: 0px 8px;
+            height: 16px;
+            line-height: 16px;
+            background: var(--yakit-background-color);
+            border-radius: 8px;
+            color: var(--yakit-body-text-color);
+            font-size: 12px;
+        }
+    }
+    &-right {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+}
+
+.add-new-group-btns {
+    display: flex;
+    gap: 4px;
+    margin-right: 24px;
+    justify-content: flex-end;
+}
+
+.group-drawer-cont-wrapper {
+}

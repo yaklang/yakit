@@ -182,6 +182,8 @@ interface HubOuterListProps {
     title: string
     /** 头部拓展元素 */
     headerExtra?: ReactNode
+    /**列表头部右侧拓展元素 */
+    listHeaderRightExtra?: ReactNode
     /** 全选 */
     allChecked: boolean
     setAllChecked: (val: boolean) => any
@@ -202,6 +204,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
     const {
         title,
         headerExtra,
+        listHeaderRightExtra,
         allChecked,
         setAllChecked,
         total,
@@ -272,74 +275,82 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
 
             <div className={styles["hub-outer-list-body"]}>
                 <div className={styles["hub-outer-list-body-header"]}>
-                    <div className={styles["header-check"]}>
-                        <YakitCheckbox
-                            indeterminate={checkIndeterminate}
-                            checked={allChecked}
-                            onChange={(e) => setAllChecked(e.target.checked)}
-                        />
-                        全选
-                    </div>
-
-                    <div className={styles["total-and-selected"]}>
-                        <div>
-                            Total <span className={styles["num-style"]}>{Number(total) || 0}</span>
+                    <div className={styles["hub-outer-list-body-header-left"]}>
+                        <div className={styles["header-check"]}>
+                            <YakitCheckbox
+                                indeterminate={checkIndeterminate}
+                                checked={allChecked}
+                                onChange={(e) => setAllChecked(e.target.checked)}
+                            />
+                            全选
                         </div>
-                        <div className={styles["divider-style"]} />
-                        <div>
-                            Selected <span className={styles["num-style"]}>{Number(selected) || 0}</span>
-                        </div>
-                    </div>
 
-                    {tagLength > 0 && (
-                        <div className={styles["header-filter-tag"]}>
-                            {tagLength <= 2 ? (
-                                showTagList.map((item) => {
-                                    return (
-                                        <YakitTag key={item.value} color='info' closable onClose={() => onDelTag(item)}>
-                                            {item.label}
-                                        </YakitTag>
-                                    )
-                                })
-                            ) : (
-                                <YakitPopover
-                                    overlayClassName={styles["hub-outer-list-filter-popover"]}
-                                    content={
-                                        <div className={styles["hub-outer-list-filter"]}>
-                                            {showTagList.map((item) => {
-                                                return (
-                                                    <Tooltip
-                                                        title={item.label}
-                                                        placement='top'
-                                                        overlayClassName='plugins-tooltip'
-                                                        key={item.value}
-                                                    >
-                                                        <YakitTag closable onClose={() => onDelTag(item)}>
-                                                            {item.label}
-                                                        </YakitTag>
-                                                    </Tooltip>
-                                                )
-                                            })}
-                                        </div>
-                                    }
-                                    trigger='hover'
-                                    onVisibleChange={setTagShow}
-                                    placement='bottomLeft'
-                                >
-                                    <div
-                                        className={classNames(styles["tag-total"], {
-                                            [styles["tag-total-active"]]: tagShow
-                                        })}
+                        <div className={styles["total-and-selected"]}>
+                            <div>
+                                Total <span className={styles["num-style"]}>{Number(total) || 0}</span>
+                            </div>
+                            <div className={styles["divider-style"]} />
+                            <div>
+                                Selected <span className={styles["num-style"]}>{Number(selected) || 0}</span>
+                            </div>
+                        </div>
+
+                        {tagLength > 0 && (
+                            <div className={styles["header-filter-tag"]}>
+                                {tagLength <= 2 ? (
+                                    showTagList.map((item) => {
+                                        return (
+                                            <YakitTag
+                                                key={item.value}
+                                                color='info'
+                                                closable
+                                                onClose={() => onDelTag(item)}
+                                            >
+                                                {item.label}
+                                            </YakitTag>
+                                        )
+                                    })
+                                ) : (
+                                    <YakitPopover
+                                        overlayClassName={styles["hub-outer-list-filter-popover"]}
+                                        content={
+                                            <div className={styles["hub-outer-list-filter"]}>
+                                                {showTagList.map((item) => {
+                                                    return (
+                                                        <Tooltip
+                                                            title={item.label}
+                                                            placement='top'
+                                                            overlayClassName='plugins-tooltip'
+                                                            key={item.value}
+                                                        >
+                                                            <YakitTag closable onClose={() => onDelTag(item)}>
+                                                                {item.label}
+                                                            </YakitTag>
+                                                        </Tooltip>
+                                                    )
+                                                })}
+                                            </div>
+                                        }
+                                        trigger='hover'
+                                        onVisibleChange={setTagShow}
+                                        placement='bottomLeft'
                                     >
-                                        <span>
-                                            筛选条件 <span className={styles["total-style"]}>{tagLength}</span>
-                                        </span>
-                                        <OutlineXIcon onClick={() => onDelAllTag()} />
-                                    </div>
-                                </YakitPopover>
-                            )}
-                        </div>
-                    )}
+                                        <div
+                                            className={classNames(styles["tag-total"], {
+                                                [styles["tag-total-active"]]: tagShow
+                                            })}
+                                        >
+                                            <span>
+                                                筛选条件 <span className={styles["total-style"]}>{tagLength}</span>
+                                            </span>
+                                            <OutlineXIcon onClick={() => onDelAllTag()} />
+                                        </div>
+                                    </YakitPopover>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <div className={styles["hub-outer-list-body-header-right"]}>{listHeaderRightExtra}</div>
                 </div>
 
                 <div className={styles["hub-outer-list-body-container"]}>{children || null}</div>

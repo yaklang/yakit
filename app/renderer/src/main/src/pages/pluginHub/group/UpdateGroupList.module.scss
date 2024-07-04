@@ -1,8 +1,15 @@
 .add-group-list-wrap {
-    width: 240px;
+    width: 320px;
+    .search-heard-text {
+        color: #85899E;
+        font-size: 12px;
+        margin-bottom: 10px;
+        padding: 0 12px;
+    }
     .search-heard {
         height: 28px;
         margin-bottom: 8px;
+        padding: 0 12px;
         :global {
             .ant-input {
                 font-size: 14px;
@@ -21,12 +28,19 @@
     .group-list {
         max-height: 240px;
         overflow: auto;
+        padding: 0 5px;
         &-item {
             height: 28px;
             display: flex;
             align-items: center;
             font-size: 12px;
             color: #31343f;
+            border-radius: 4px;
+            overflow: hidden;
+            padding-left: 8px;
+            &:hover {
+                background-color: #F0F1F3;
+            }
             .group-name-wrap {
                 width: 100%;
                 :global {
@@ -40,6 +54,18 @@
                     }
                 }
             }
+        }
+    }
+    .add-group-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 8px 16px;
+        background-color: #F8F8F8;
+        border-top: 1px solid var(--yakit-border-color);
+        &-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
     }
 }

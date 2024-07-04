@@ -194,7 +194,7 @@ service Yak {
   rpc DeleteYakScriptGroup(DeleteYakScriptGroupRequest) returns (Empty);
   rpc GetYakScriptGroup(QueryYakScriptRequest) returns (GetYakScriptGroupResponse);
   rpc ResetYakScriptGroup(ResetYakScriptGroupRequest) returns (Empty);
-
+  rpc SetGroup(SetGroupRequest) returns (Empty);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -3816,6 +3816,7 @@ message QueryYakScriptRequest {
 message PluginGroup {
   bool UnSetGroup = 1;
   repeated string Group = 2;
+  string IsPocBuiltIn = 3;
 }
 
 message QueryYakScriptResponse {
@@ -4014,6 +4015,10 @@ message GetYakScriptGroupResponse {
 
 message ResetYakScriptGroupRequest {
   string Token = 1;
+}
+
+message SetGroupRequest {
+  string GroupName = 1;
 }
 
 message GetYakScriptTagsAndTypeResponse {

@@ -53,7 +53,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     // 处理指定页面和详情类型功能
     const handleSpecifiedPageAndDetail = useMemoizedFn((data: PluginHubPageInfoProps) => {
         const {tabActive, detailInfo, refeshList} = data
-        onSetActive(tabActive || "online")
+        onSetActive(tabActive || "online", false)
         if (detailInfo) {
             setTimeout(() => {
                 onClickPlugin({type: tabActive, ...detailInfo})
@@ -94,7 +94,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const [active, setActive] = useState<PluginSourceType>()
 
     const [activeHidden, setActiveHidden] = useState<boolean>(false)
-    const onSetActive = useMemoizedFn((type: PluginSourceType) => {
+    const onSetActive = useMemoizedFn((type: PluginSourceType, isSwitchExpand = true) => {
         setHintShow((val) => {
             for (let key of Object.keys(val)) {
                 if (type === "recycle") val[key] = false
@@ -106,7 +106,9 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         })
         if (type === active) {
             if (active === "recycle") return
-            isDetail ? setHiddenDetail((val) => !val) : setActiveHidden((val) => !val)
+            if (isSwitchExpand) {
+                isDetail ? setHiddenDetail((val) => !val) : setActiveHidden((val) => !val)
+            }
         } else {
             if (!rendered.current.has(type)) {
                 rendered.current.add(type)

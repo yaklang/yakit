@@ -82,18 +82,28 @@ service.interceptors.response.use(
         return Promise.reject(error)
     }
 )
-
+let cancelTokenSource = null;
 function httpApi(method, url, params, headers, isAddParams = true,timeout = DefaultTimeOut) {
     if (!["get", "post"].includes(method)) {
         return Promise.reject(`call yak echo failed: ${e}`)
     }
+    // 如果有当前的请求，取消它
+    if (cancelTokenSource) {
+        cancelTokenSource.cancel('Operation canceled due to new request.');
+    }
+    // 创建一个新的CancelToken
+    cancelTokenSource = axios.CancelToken.source();
     return service({
         url: url,
         method: method,
         headers,
         params: isAddParams ? params : undefined,
         data: method === "post" ? params : undefined,
-        timeout
+        timeout,
+        cancelToken: cancelTokenSource.token,
+    }).finally(() => {
+        // 请求完成后清理cancelTokenSource
+        cancelTokenSource = null;
     })
 }
 

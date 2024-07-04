@@ -269,6 +269,22 @@ module.exports = (win, getClient) => {
         return await asyncDeleteYakScriptGroup(params)
     })
 
+    const asyncSetGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 插件组新增
+    ipcMain.handle("SetGroup", async (e, params) => {
+        return await asyncSetGroup(params)
+    })
+
     const asyncGetYakScriptGroup = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetYakScriptGroup(params, (err, data) => {

@@ -74,7 +74,13 @@ const HybridScanTaskListDrawer = React.lazy(
 )
 
 export const onToManageGroup = () => {
-    emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
+    emiter.emit(
+        "openPage",
+        JSON.stringify({
+            route: YakitRoute.Plugin_Hub,
+            params: {tabActive: "local"}
+        })
+    )
 }
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
@@ -326,8 +332,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
                     OrderBy: "updated_at",
                     Order: "desc"
                 },
-                Type: batchPluginType,
-                Group: {UnSetGroup: false, Group: selectGroupList}
+                Group: {UnSetGroup: false, Group: selectGroupList, IsPocBuiltIn: "true"}
             }
             try {
                 const res = await apiQueryYakScript(query)
@@ -678,7 +683,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
 
     const getQueryYakScriptGroup = useMemoizedFn(() => {
         setLoading(true)
-        apiFetchQueryYakScriptGroupLocal(false)
+        apiFetchQueryYakScriptGroupLocal(false, ["yak", "codec", "lua"])
             .then((res) => {
                 initialResponseRef.current = res
                 if (selectGroupList.length > 0) {
@@ -779,7 +784,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     </div>
                     <div className={styles["filter-body-right"]}>
                         <YakitButton type='text' onClick={onToManageGroup}>
-                            管理分组
+                            管理
                         </YakitButton>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <YakitButton type='text' danger onClick={onClearSelect}>
@@ -790,7 +795,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
             </div>
             {initialResponseRef.current.length === 0 ? (
                 <div className={styles["yak-poc-empty"]}>
-                    <YakitEmpty title='暂无数据' description='可一键获取默认分组与插件,或点击管理分组手动新建' />
+                    <YakitEmpty title='暂无数据' description='可一键获取默认分组与插件,或点击管理手动新建' />
                     <div className={styles["yak-poc-buttons"]}>
                         <YakitButton
                             type='outline1'
@@ -800,7 +805,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                             一键下载
                         </YakitButton>
                         <YakitButton icon={<OutlineCogIcon />} onClick={onToManageGroup}>
-                            管理分组
+                            管理
                         </YakitButton>
                     </div>
                 </div>

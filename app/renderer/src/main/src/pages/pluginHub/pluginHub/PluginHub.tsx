@@ -50,6 +50,7 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
                     isDetail={isDetail}
                     toPluginDetail={handlePluginDetail}
                     setHiddenDetailPage={setHiddenDetail}
+                    onBack={onBack}
                 />
             </div>
 

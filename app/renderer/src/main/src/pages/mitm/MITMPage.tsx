@@ -38,8 +38,8 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
 import {setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "./MITMConsts"
-import { onSetRemoteValuesBase } from "@/components/yakitUI/utils"
-import { CacheDropDownGV } from "@/yakitGV"
+import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
+import {CacheDropDownGV} from "@/yakitGV"
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
@@ -578,8 +578,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             Keyword: searchKeyword,
             Type: "mitm,port-scan",
             Tag: tags,
-            ExcludeTypes: ["yak", "codec"],
-            Group: {UnSetGroup: false, Group: groupNames}
+            Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"}
         }
         apiQueryYakScript(query).then((res) => {
             const data = res.Data || []
@@ -594,7 +593,20 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         <PluginGroup
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
-                            excludeType={["yak", "codec", "nuclei"]}
+                            excludeType={["yak", "codec", "lua", "nuclei"]}
+                            pluginListQuery={() => {
+                                return {
+                                    Tag: tags,
+                                    Type: "mitm,port-scan",
+                                    Keyword: searchKeyword,
+                                    Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                                    Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"},
+                                    IncludedScriptNames: isSelectAll ? [] : checkList
+                                }
+                            }}
+                            total={total}
+                            allChecked={isSelectAll}
+                            checkedPlugin={isSelectAll ? [] : checkList}
                         />
                         <div style={{paddingRight: 9}}>
                             <PluginSearch

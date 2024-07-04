@@ -5,6 +5,7 @@ import {useMemoizedFn} from "ahooks"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
 import styles from "./UpdateGroupList.module.scss"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export interface UpdateGroupListItem {
     groupName: string
@@ -14,10 +15,12 @@ export interface UpdateGroupListItem {
 interface UpdateGroupListProps {
     ref: React.Ref<any>
     originGroupList: UpdateGroupListItem[] // 原始组数据
+    onOk: () => void
+    onCanle: () => void
 }
 
 export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef((props, ref) => {
-    const {originGroupList} = props
+    const {originGroupList, onOk, onCanle} = props
     const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([])
     const [searchFlag, setSearchFlag] = useState<boolean>(false)
     const [searchVal, setSearchVal] = useState<string>("")
@@ -89,22 +92,21 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
         return copyList
     }
 
-    const onCheckedChange = useMemoizedFn((e, item, newAddFlag) => {
-        const checked: boolean = e.target.checked
+    const onCheckedChange = useMemoizedFn((checked: boolean, groupName: string, newAddFlag) => {
         if (searchFlag) {
             if (addGroupList.length) {
                 if (checked) {
-                    setGroupList([{groupName: item.groupName, checked}, ...groupList])
+                    setGroupList([{groupName: groupName, checked}, ...groupList])
                 } else {
-                    setGroupList(groupList.filter((i) => i.groupName !== item.groupName))
+                    setGroupList(groupList.filter((i) => i.groupName !== groupName))
                 }
-                setAddGroupList(changeFiled(addGroupList, item.groupName, checked))
+                setAddGroupList(changeFiled(addGroupList, groupName, checked))
             } else {
-                setSearchGroupList(changeFiled(searchGroupList, item.groupName, checked))
-                setGroupList(changeFiled(groupList, item.groupName, checked))
+                setSearchGroupList(changeFiled(searchGroupList, groupName, checked))
+                setGroupList(changeFiled(groupList, groupName, checked))
             }
         } else {
-            setGroupList(changeFiled(groupList, item.groupName, checked))
+            setGroupList(changeFiled(groupList, groupName, checked))
         }
 
         // 新增组 需要清除搜索的值
@@ -115,13 +117,25 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
 
     return (
         <div className={styles["add-group-list-wrap"]}>
+            <div className={styles["search-heard-text"]}>
+                勾选表示加入组，取消勾选则表示移出组，创建新分组直接在输入框输入名称回车即可。
+            </div>
             <div className={styles["search-heard"]}>
                 <YakitInput
+                    placeholder='添加到组...'
                     value={searchVal}
                     size='middle'
                     prefix={<OutlineSearchIcon className='search-icon' />}
                     allowClear={true}
                     onChange={(e) => onSearch(e.target.value.trim())}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.stopPropagation()
+                            if (searchFlag && addGroupList.length) {
+                                onCheckedChange(true, searchVal, true)
+                            }
+                        }
+                    }}
                 />
             </div>
             <div className={styles["group-list"]}>
@@ -135,7 +149,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
                                           checked={item.checked}
-                                          onChange={(e) => onCheckedChange(e, item, true)}
+                                          onChange={(e) => onCheckedChange(e.target.checked, item.groupName, true)}
                                       >
                                           新增分组 “{item.groupName}"
                                       </YakitCheckbox>
@@ -148,7 +162,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
                                           checked={item.checked}
-                                          onChange={(e) => onCheckedChange(e, item, false)}
+                                          onChange={(e) => onCheckedChange(e.target.checked, item.groupName, false)}
                                       >
                                           {item.groupName}
                                       </YakitCheckbox>
@@ -161,13 +175,23 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                                   <YakitCheckbox
                                       wrapperClassName={styles["group-name-wrap"]}
                                       checked={item.checked}
-                                      onChange={(e) => onCheckedChange(e, item, false)}
+                                      onChange={(e) => onCheckedChange(e.target.checked, item.groupName, false)}
                                   >
                                       {item.groupName}
                                   </YakitCheckbox>
                               </Tooltip>
                           </div>
                       ))}
+            </div>
+            <div className={styles["add-group-footer"]}>
+                <div className={styles["add-group-footer-btns"]}>
+                    <YakitButton type='outline2' onClick={onCanle}>
+                        取消
+                    </YakitButton>
+                    <YakitButton type='primary' onClick={onOk}>
+                        确认
+                    </YakitButton>
+                </div>
             </div>
         </div>
     )
