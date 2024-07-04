@@ -436,9 +436,8 @@ jobs:
       #          assets: |
       #            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
       #            Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/latest/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
-      - name: Update OSS latest file
-        run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
-      - name: Upload Yakit to oss(windows)
+
+      - name: Upload Yakit to oss
         uses: tvrcgo/upload-to-oss@master
         with:
           key-id: ${{ secrets.OSS_KEY_ID }}
@@ -446,8 +445,19 @@ jobs:
           region: oss-accelerate
           bucket: yaklang
           assets: |
-            ./yakit-version.txt:/yak/latest/yakit-version.txt
             Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
             Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
             Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+      
+      # - name: Update OSS latest file
+      #   run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
+      # - name: Upload Yakit Version to oss
+      #   uses: tvrcgo/upload-to-oss@master
+      #   with:
+      #     key-id: ${{ secrets.OSS_KEY_ID }}
+      #     key-secret: ${{ secrets.OSS_KEY_SECRET }}
+      #     region: oss-accelerate
+      #     bucket: yaklang
+      #     assets: |
+      #       ./yakit-version.txt:/yak/latest/yakit-version.txt
