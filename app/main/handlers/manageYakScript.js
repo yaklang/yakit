@@ -349,7 +349,20 @@ module.exports = (win, getClient) => {
         })
     })
 
-    // 读取本地文件内容
+    // 读取本地文件大小
+    ipcMain.handle("read-file-size", async (e,filePath) => {
+        return new Promise((resolve, reject) => {
+            fs.stat(filePath, (err, stats) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(stats.size); // 文件大小以字节为单位
+                }
+            });
+        })
+    })
+
+    // 读取本地文件内容(同时校验其文件大小是否读取本地文件10M，大于则不读取)
     ipcMain.handle("read-file-content", async (e,params) => {
         console.log("read-file-content",params);
         return new Promise((resolve, reject) => {

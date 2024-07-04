@@ -16,8 +16,10 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {
+    MAX_FILE_SIZE_BYTES,
     addAreaFileInfo,
     getCodeByPath,
+    getCodeSizeByPath,
     getDefaultActiveFile,
     getNameByPath,
     getOpenFileInfo,
@@ -58,6 +60,7 @@ import {v4 as uuidv4} from "uuid"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, success} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
+import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,6 +68,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {addFileTab} = props
     const {fileTree, areaInfo, activeFile} = useStore()
     const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
+    const [isShowFileHint,setShowFileHint] = useState<boolean>(false)
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
@@ -419,7 +423,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const onRefreshYakRunnerFileTreeFun = useMemoizedFn((data) => {
         try {
             const event: FileMonitorProps = JSON.parse(data)
-            console.log("event---", event)
             if (event.ChangeEvents) {
                 eventOperateFun(event.ChangeEvents)
             }
@@ -507,6 +510,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(file)
             } else {
+                const size = await getCodeSizeByPath(path)
+                if(size > MAX_FILE_SIZE_BYTES){
+                    setShowFileHint(true)
+                    return
+                }
                 const code = await getCodeByPath(path)
                 const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
                 const scratchFile: FileDetailInfo = {
@@ -658,6 +666,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     </div>
                 </div>
             </div>
+            {/* 文件过大提示框 */}
+            <YakitHint
+                visible={isShowFileHint}
+                title='文件警告'
+                content='文件过大，无法使用YakRunner进行操作'
+                cancelButtonProps={{style: {display:  "none" }}}
+                onOk={() => {
+                    setShowFileHint(false)
+                }}
+                okButtonText={"知道了"}
+            />
         </div>
     )
 }

@@ -15,8 +15,8 @@ import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsTyp
 import {v4 as uuidv4} from "uuid"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
-import { setMapFileDetail } from "./FileTreeMap/FileMap"
-import { setMapFolderDetail } from "./FileTreeMap/ChildMap"
+import {setMapFileDetail} from "./FileTreeMap/FileMap"
+import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -129,7 +129,11 @@ export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNode
 /**
  * @name 新建文件
  */
-export const grpcFetchCreateFile: (path: string, code?: string|null, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (path, code,parentPath) => {
+export const grpcFetchCreateFile: (
+    path: string,
+    code?: string | null,
+    parentPath?: string | null
+) => Promise<FileNodeMapProps[]> = (path, code, parentPath) => {
     return new Promise(async (resolve, reject) => {
         const params: any = {
             Method: "PUT",
@@ -156,7 +160,10 @@ export const grpcFetchCreateFile: (path: string, code?: string|null, parentPath?
 /**
  * @name 新建文件夹
  */
-export const grpcFetchCreateFolder: (path: string, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (path,parentPath) => {
+export const grpcFetchCreateFolder: (path: string, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (
+    path,
+    parentPath
+) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "PUT",
@@ -536,7 +543,7 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
                 title: "请选择文件",
                 properties: ["openFile"]
             })
-            .then(async(data: {filePaths: string[]}) => {
+            .then(async (data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
                     const path: string = data.filePaths[0].replace(/\\/g, "\\")
@@ -551,6 +558,28 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
                 resolve(null)
             })
             .catch(() => {
+                reject()
+            })
+    })
+}
+
+/**
+ * @name 最大限制10M
+ */
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
+/**
+ * @name 根据文件path获取其大小
+ */
+export const getCodeSizeByPath = (path: string): Promise<number> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("read-file-size", path)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch(() => {
+                failed("无法获取该文件大小，请检查后后重试！")
                 reject()
             })
     })
@@ -631,7 +660,7 @@ export const setYakRunnerLastFolderPath = (newPath: string) => {
 /**
  * @name 获取上次文件夹打开路径
  */
-export const getYakRunnerLastFolderPath = (): Promise<string|null> => {
+export const getYakRunnerLastFolderPath = (): Promise<string | null> => {
     return new Promise(async (resolve, reject) => {
         getRemoteValue(YakRunnerLastFolderPath).then((data) => {
             try {
@@ -651,7 +680,7 @@ export const getYakRunnerLastFolderPath = (): Promise<string|null> => {
 /**
  * @name 路径拼接（兼容多系统）
  */
-export const getPathJoin = (path:string,file:string): Promise<string> => {
+export const getPathJoin = (path: string, file: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("pathJoin", {
@@ -660,7 +689,8 @@ export const getPathJoin = (path:string,file:string): Promise<string> => {
             })
             .then((currentPath: string) => {
                 resolve(currentPath)
-            }).catch(()=>{
+            })
+            .catch(() => {
                 resolve("")
             })
     })
@@ -669,7 +699,7 @@ export const getPathJoin = (path:string,file:string): Promise<string> => {
 /**
  * @name 获取上一级的路径（兼容多系统）
  */
-export const getPathParent = (filePath:string): Promise<string> => {
+export const getPathParent = (filePath: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("pathParent", {
@@ -677,7 +707,8 @@ export const getPathParent = (filePath:string): Promise<string> => {
             })
             .then((currentPath: string) => {
                 resolve(currentPath)
-            }).catch(()=>{
+            })
+            .catch(() => {
                 resolve("")
             })
     })
@@ -686,7 +717,7 @@ export const getPathParent = (filePath:string): Promise<string> => {
 /**
  * @name 获取路径上的(文件/文件夹)名（兼容多系统）
  */
-export const getNameByPath  = (filePath:string): Promise<string> => {
+export const getNameByPath = (filePath: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("pathFileName", {
@@ -694,7 +725,8 @@ export const getNameByPath  = (filePath:string): Promise<string> => {
             })
             .then((currentName: string) => {
                 resolve(currentName)
-            }).catch(()=>{
+            })
+            .catch(() => {
                 resolve("")
             })
     })

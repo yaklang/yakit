@@ -23,12 +23,21 @@ import {defaultXTermOptions} from "@/components/baseConsole/BaseConsole"
 import {XTerm} from "xterm-for-react"
 import {YakitSystem} from "@/yakitGVDefine"
 import {TerminalBox} from "./TerminalBox/TerminalBox"
+import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {setEditorDetails, showItem, setShowItem} = props
+
+    const systemRef = useRef<System | undefined>(SystemInfo.system)
+    useEffect(() => {
+        if (!systemRef.current) {
+            handleFetchSystem(() => (systemRef.current = SystemInfo.system))
+        }
+    }, [])
+
     const {activeFile} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
@@ -181,7 +190,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "terminal"
                         })}
                     >
-                        <TerminalBox />
+                        {systemRef.current === "Windows_NT" ? (
+                            <div className={styles["no-syntax-check"]}>终端监修中</div>
+                        ) : (
+                            <TerminalBox isShow={showItem === "terminal"} />
+                        )}
                     </div>
                 )}
                 {/* 帮助信息只有yak有 */}

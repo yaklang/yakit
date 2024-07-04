@@ -410,8 +410,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <YakRunner/>
-            // return <NewHome />
+            return <NewHome />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -494,7 +493,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_CVE:
             return <CVEViewer />
         case YakitRoute.YakScript:
-            return <YakExecutor />
+            return <YakRunner/>
+            // return <YakExecutor />
         case YakitRoute.PayloadManager:
             return <NewPayload />
         case YakitRoute.AccountAdminPage:
