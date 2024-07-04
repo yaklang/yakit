@@ -422,7 +422,7 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
                             endLineNumber: position.lineNumber,
                             endColumn: position.column + 1,
                         })
-                        
+
                         // if next character is "(", remove the "(" and after content in the insertText
                         if (nextValue === "(") {
                             items = items.map(item => {
@@ -507,6 +507,7 @@ monaco.editor.onDidCreateEditor((editor) => {
                     const startPosition = LParenMatch.range.getStartPosition();
                     const endPosition = RParenMatch.range.getStartPosition();
                     range = new monaco.Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
+                    editorToSignatureHelpRangeMap.set(editor, range);
                 }
             }
         })
@@ -525,6 +526,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
         return new Promise(async (resolve, reject) => {
             let newPosition = new monaco.Position(position.lineNumber, position.column - 1)
             const editor = modelToEditorMap.get(model);
+            let rng: monaco.Range;
             if (editor) { // 修复在补全后的函数签名提示问题
                 // 补全后一般会选择某些内容
                 const LParenMatch = model.findPreviousMatch("(", position, false, false, null, false);
@@ -535,10 +537,19 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
                 // 如果找到了右括号，证明是一个完整的函数调用，可以设置editorToSignatureHelpRangeMap
                 if (RParenMatch) {
                     const RParenPosition = RParenMatch.range.getStartPosition();
-                    const rng = new monaco.Range(newPosition.lineNumber, newPosition.column, RParenPosition.lineNumber, RParenPosition.column)
+                    rng = new monaco.Range(newPosition.lineNumber, newPosition.column, RParenPosition.lineNumber, RParenPosition.column)
                     editorToSignatureHelpRangeMap.set(editor, rng);
+                } else {
+                    reject();
+                    return;
+                }
+                // rng include position
+                if (!rng.containsPosition(position)) {
+                    reject();
+                    return;
                 }
             }
+
             const iWord = getWordWithPointAtPosition(model, newPosition);
             let doc = "";
             let decl = "";
@@ -571,17 +582,46 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
                         resolve(null);
                         return
                     }
+
+                    let parameters: languages.ParameterInformation[] = [];
+                    let activeParameter: number = -1;
+                    if (rng != null) {
+                        const nowParamsInnerText = model.getValueInRange(rng)
+
+                        const startIdx = decl.indexOf('(');
+                        const endIdx = decl.lastIndexOf(')');
+                        if (startIdx != -1 && endIdx != -1 && startIdx < endIdx) {
+                            const paramsInnerText = decl.substring(startIdx + 1, endIdx);
+                            parameters = paramsInnerText.split(",").map((param, index) => {
+                                return {
+                                    label: param.trim(),
+                                }
+                            })
+                        }
+                        if (editor) {
+                            let nowPosition = editor.getPosition()!;
+                            let beforeText = model.getValueInRange({
+                                startLineNumber: rng.startLineNumber, 
+                                startColumn: rng.startColumn,
+                                endLineNumber: nowPosition.lineNumber,
+                                endColumn: nowPosition.column,
+                            })
+                            activeParameter = beforeText.match(/,/g)?.length || 0;
+                            console.log(activeParameter, parameters)
+                        }
+                    }
+
                     resolve({
                         value: {
                             signatures: [
                                 {
                                     label: decl,
-                                    parameters: [],
+                                    parameters: parameters,
                                     documentation: { value: doc, isTrusted: true },
                                 }
                             ],
                             activeSignature: 0,
-                            activeParameter: 0
+                            activeParameter: activeParameter,
                         },
                         dispose: () => { },
                     });
@@ -590,7 +630,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             })
         })
     },
-    signatureHelpTriggerCharacters: ['(', ')']
+    signatureHelpTriggerCharacters: ['(', ')', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.', ',']
 })
 
 monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
