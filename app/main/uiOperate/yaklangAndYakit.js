@@ -93,13 +93,21 @@ module.exports = (win, getClient) => {
             let url = ''
             switch (process.platform) {
                 case "darwin":
-                    url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_amd64.sha256.txt`
+                    if (process.arch === "arm64") {
+                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_arm64.sha256.txt`
+                    } else {
+                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_amd64.sha256.txt`
+                    }
                     break
                 case "win32":
                     url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_windows_amd64.exe.sha256.txt`
                     break
                 case "linux":
-                    url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_amd64.sha256.txt`
+                    if (process.arch === "arm64") {
+                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_arm64.sha256.txt`
+                    } else {
+                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_amd64.sha256.txt`
+                    }
                     break
             }
             if (url === '') {
