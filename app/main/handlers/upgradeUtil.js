@@ -31,6 +31,7 @@ const {
 const {
     cancelRequestWithProgress
 } = require("./utils/requestWithProgress");
+const { getCheckTextUrl } = require("../handlers/utils/network")
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
 const authMeta = [];
@@ -361,23 +362,12 @@ module.exports = {
             const dest = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
             return new Promise((resolve, reject) => {
                 try {
-                    let url = ''
-                    switch (process.platform) {
-                        case "darwin":
-                            url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_amd64.sha256.txt`
-                            break
-                        case "win32":
-                            url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_windows_amd64.exe.sha256.txt`
-                            break
-                        case "linux":
-                            url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_amd64.sha256.txt`
-                            break
-                    }
+                    const url = getCheckTextUrl()
 
                     if (url === "") {
                         reject(`Unsupported platform: ${process.platform}`)
                     }
-                    
+
                     if (fs.existsSync(dest)) {
                         let rsp = https.get(url)
                         rsp.on("response", (rsp) => {
@@ -412,7 +402,7 @@ module.exports = {
         ipcMain.handle("cancel-download-yak-engine-version", async (e, version) => {
             return await cancelRequestWithProgress(version)
         })
-        
+
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, isEnterprise) {
             return new Promise(async (resolve, reject) => {
@@ -510,7 +500,7 @@ module.exports = {
                             }
                         }
                     }
-                    
+
                 }
                 tryUnlink(2);
                 childProcess.exec(isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`, err => {
@@ -526,7 +516,7 @@ module.exports = {
                     resolve()
                 })
             })
-            
+
         }
 
         ipcMain.handle("install-yak-engine", async (e, version) => {

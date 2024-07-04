@@ -5,6 +5,7 @@ const https = require("https")
 const process = require("process");
 const { getLocalYaklangEngine, loadExtraFilePath } = require("../filePath")
 const { fetchLatestYakEngineVersion } = require("../handlers/utils/network")
+const { getCheckTextUrl } = require("../handlers/utils/network")
 
 module.exports = (win, getClient) => {
     /** yaklang引擎是否安装 */
@@ -90,26 +91,7 @@ module.exports = (win, getClient) => {
 
     const asyncFetchCheckYaklangSource = (version) => {
         return new Promise((resolve, reject) => {
-            let url = ''
-            switch (process.platform) {
-                case "darwin":
-                    if (process.arch === "arm64") {
-                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_arm64.sha256.txt`
-                    } else {
-                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_darwin_amd64.sha256.txt`
-                    }
-                    break
-                case "win32":
-                    url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_windows_amd64.exe.sha256.txt`
-                    break
-                case "linux":
-                    if (process.arch === "arm64") {
-                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_arm64.sha256.txt`
-                    } else {
-                        url = `https://aliyun-oss.yaklang.com/yak/${version}/yak_linux_amd64.sha256.txt`
-                    }
-                    break
-            }
+            let url = getCheckTextUrl()
             if (url === '') {
                 reject(`Unsupported platform: ${process.platform}`)
             }
