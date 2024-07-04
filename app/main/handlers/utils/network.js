@@ -3,7 +3,7 @@
 const axios = require("axios");
 const url = require("url");
 const process = require("process");
-const {requestWithProgress} = require("./requestWithProgress");
+const { requestWithProgress } = require("./requestWithProgress");
 const events = require("events");
 
 const ossDomains = ["aliyun-oss.yaklang.com", "yaklang.oss-cn-beijing.aliyuncs.com", "yaklang.oss-accelerate.aliyuncs.com"];
@@ -55,7 +55,7 @@ async function getAvailableOSSDomain() {
                 const url = `https://${domain}/yak/latest/version.txt`;
                 try {
                     console.info(`start to do axios.get to ${url}`)
-                    const response = await axios.get(url, {httpsAgent: getHttpsAgentByDomain(domain)});
+                    const response = await axios.get(url, { httpsAgent: getHttpsAgentByDomain(domain) });
                     if (response.status !== 200) {
                         console.error(`Failed to access (StatusCode) ${url}: ${response.status}`);
                         continue
@@ -85,7 +85,7 @@ async function getAvailableOSSDomain() {
 const fetchLatestYakEngineVersion = async () => {
     const domain = await getAvailableOSSDomain();
     const versionUrl = `https://${domain}/yak/latest/version.txt`;
-    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then(response => {
+    return axios.get(versionUrl, { httpsAgent: getHttpsAgentByDomain(domain) }).then(response => {
         const versionData = `${response.data}`.trim()
         if (versionData.length > 0) {
             return versionData.startsWith("v") ? versionData : `v${versionData}`
@@ -98,7 +98,7 @@ const fetchLatestYakEngineVersion = async () => {
 const fetchLatestYakitVersion = async () => {
     const domain = await getAvailableOSSDomain();
     const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`;
-    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then(response => {
+    return axios.get(versionUrl, { httpsAgent: getHttpsAgentByDomain(domain) }).then(response => {
         const versionData = `${response.data}`.trim()
         if (versionData.length > 0) {
             return versionData.startsWith("v") ? versionData : `v${versionData}`
@@ -111,7 +111,7 @@ const fetchLatestYakitVersion = async () => {
 const fetchLatestYakitEEVersion = async () => {
     const domain = await getAvailableOSSDomain();
     const versionUrl = `https://${domain}/yak/latest/yakit-ee-version.txt`;
-    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then(response => {
+    return axios.get(versionUrl, { httpsAgent: getHttpsAgentByDomain(domain) }).then(response => {
         const versionData = `${response.data}`.trim()
         if (versionData.length > 0) {
             return versionData.startsWith("v") ? versionData : `v${versionData}`
@@ -125,11 +125,19 @@ const getYakEngineDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain();
     switch (process.platform) {
         case "darwin":
-            return `https://${domain}/yak/${version}/yak_darwin_amd64`
+            if (process.arch === "arm64") {
+                return `https://${domain}/yak/${version}/yak_darwin_arm64`
+            } else {
+                return `https://${domain}/yak/${version}/yak_darwin_amd64`
+            }
         case "win32":
             return `https://${domain}/yak/${version}/yak_windows_amd64.exe`
         case "linux":
-            return `https://${domain}/yak/${version}/yak_linux_amd64`
+            if (process.arch === "arm64") {
+                return `https://${domain}/yak/${version}/yak_linux_arm64`
+            } else {
+                return `https://${domain}/yak/${version}/yak_linux_amd64`
+            }
         default:
             throw new Error(`Unsupported platform: ${process.platform}`)
     }
@@ -147,7 +155,11 @@ const getYakitCommunityDownloadUrl = async (version) => {
         case "win32":
             return `https://${domain}/yak/${version}/Yakit-${version}-windows-amd64.exe`
         case "linux":
-            return `https://${domain}/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
+            if (process.arch === "arm64") {
+                return `https://${domain}/yak/${version}/Yakit-${version}-linux-arm64.AppImage`
+            } else {
+                return `https://${domain}/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
+            }
     }
     throw new Error(`Unsupported platform: ${process.platform}`)
 }
