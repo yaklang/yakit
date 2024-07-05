@@ -7,7 +7,7 @@ import {API} from "@/services/swagger/resposeType"
 import styles from "./BottomEditorDetails.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
-import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoListProps, ShowItemType} from "./BottomEditorDetailsType"
+import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoProps, ShowItemType} from "./BottomEditorDetailsType"
 import {HelpInfoList} from "../CollapseList/CollapseList"
 import {OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -29,9 +29,7 @@ const {ipcRenderer} = window.require("electron")
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
-    const {setEditorDetails, showItem, setShowItem} = props
-    const ref = useRef(null)
-    const [inViewport] = useInViewport(ref)
+    const {isShowEditorDetails,setEditorDetails, showItem, setShowItem} = props
 
     const systemRef = useRef<System | undefined>(SystemInfo.system)
     useEffect(() => {
@@ -48,11 +46,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     useEffect(() => {
-        if (showItem && inViewport) {
+        if (showItem && isShowEditorDetails) {
             if(showType.includes(showItem)) return
             setShowType((arr) => filterItem([...arr, showItem]))
         }
-    }, [showItem, inViewport])
+    }, [showItem, isShowEditorDetails])
 
     const syntaxCheckData = useMemo(() => {
         if (activeFile?.syntaxCheck) {
@@ -75,6 +73,10 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const onOpenBottomDetailFun = useMemoizedFn((v: string) => {
         try {
             const {type}: {type: ShowItemType} = JSON.parse(v)
+            // 执行时需要清空输出
+            if(type === "output"){
+                xtermClear(xtermRef)
+            }
             setEditorDetails(true)
             setShowItem(type)
         } catch (error) {}
@@ -118,7 +120,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     }, [fileTree])
 
     return (
-        <div className={styles["bottom-editor-details"]} ref={ref}>
+        <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
                 <div className={styles["select-box"]}>
                     <div
@@ -189,7 +191,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "output"
                         })}
                     >
-                        <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef} />
+                        <OutputInfo outputCahceRef={outputCahceRef} xtermRef={xtermRef} />
                     </div>
                 )}
 
@@ -215,7 +217,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         {/* {systemRef.current === "Windows_NT" ? (
                             <div className={styles["no-syntax-check"]}>终端监修中</div>
                         ) : ( */}
-                        <TerminalBox isShow={showItem === "terminal"} folderPath={folderPath}/>
+                        <TerminalBox folderPath={folderPath} isShowEditorDetails={isShowEditorDetails}/>
                         {/* )} */}
                     </div>
                 )}
@@ -238,7 +240,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     )
 }
 
-export const OutputInfoList: React.FC<OutputInfoListProps> = (props) => {
+export const OutputInfo: React.FC<OutputInfoProps> = (props) => {
     const {outputCahceRef, xtermRef} = props
 
     useEffect(() => {

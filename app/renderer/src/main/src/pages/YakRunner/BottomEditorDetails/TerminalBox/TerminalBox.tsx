@@ -17,15 +17,12 @@ import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
 const {ipcRenderer} = window.require("electron")
 
 export interface TerminalBoxProps {
+    isShowEditorDetails: boolean
     folderPath: string
-    isShow: boolean
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {folderPath,isShow} = props
-    const {fileTree} = useStore()
+    const {isShowEditorDetails,folderPath} = props
     const xtermRef = useRef<any>(null)
-    const [inputValue, setInputValue] = useState<string>("")
-    const [defaultXterm, setDefaultXterm] = useState<string>("")
     // 是否允许输入及不允许输入的原因
     const [allowInput, setAllowInput] = useState<boolean>(true)
 
@@ -56,7 +53,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             })
             .then(() => {
                 startTerminalPath.current = folderPath
-                success(`终端${folderPath}监听成功`)
+                isShowEditorDetails&&success(`终端${folderPath}监听成功`)
             })
             .catch((e: any) => {
                 failed(`ERROR: ${JSON.stringify(e)}`)
@@ -75,7 +72,6 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 let str = Uint8ArrayToString(data.raw)
                 
                 writeXTerm(xtermRef, str)
-                setDefaultXterm(str)
             }
         })
 
@@ -90,7 +86,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             if(startTerminalPath.current === data){
                 setAllowInput(false)
             }
-            warn(`终端${data}被关闭`)
+            isShowEditorDetails&&warn(`终端${data}被关闭`)
         })
         return () => {
             // 移除

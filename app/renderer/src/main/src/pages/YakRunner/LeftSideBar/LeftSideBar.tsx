@@ -63,6 +63,9 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         [styles["left-side-bar-item-advanced-config-unShow"]]: active === "help-doc" && isUnShow
                     })}
                     onClick={() => {
+                        if(active === "file-tree"){
+                            setUnShow(false)
+                        }
                         if (active === "help-doc") {
                             setUnShow(!isUnShow)
                         }

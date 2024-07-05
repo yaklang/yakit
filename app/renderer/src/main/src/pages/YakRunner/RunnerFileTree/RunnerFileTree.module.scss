@@ -58,6 +58,7 @@
     user-select: none;
 }
 .opened-file-body {
+    padding: 0px 4px;
     @media screen and (min-height: 950px) {
         max-height: 220px;
     }

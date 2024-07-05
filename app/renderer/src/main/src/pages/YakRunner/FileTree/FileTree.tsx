@@ -290,7 +290,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         setCopyPath,
         setFoucsedKey
     } = props
-    const {areaInfo, activeFile} = useStore()
+    const {areaInfo, activeFile, fileTree} = useStore()
     const {setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
     // 是否为编辑模式
     const [isEdit, setEdit] = useState<boolean>(false)
@@ -388,6 +388,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 // 重命名 调用接口成功后更新tree
                 const result = await grpcFetchRenameFileTree(info.path, value, info.parent)
                 console.log("更新", result)
+
                 if (result.length === 0) return
                 const {path, name, icon} = result[0]
                 // 文件夹重命名
@@ -601,8 +602,16 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 key: "rename"
             }
         ]
+        const CloseFolder: YakitMenuItemType[] = []
+        if (fileTree.length > 0 && info.path === fileTree[0].path) {
+            CloseFolder.push({
+                label: "关闭文件夹",
+                key: "closeFolder"
+            })
+        }
         if (info.isFolder) {
             return [
+                ...CloseFolder,
                 ...FolderMenu,
                 {type: "divider"},
                 // {label: "复制", key: "copy"},
@@ -619,7 +628,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 ...base
             ]
         }
-    }, [info.isFolder, copyPath])
+    }, [info, copyPath])
+
+    const closeFolder = useMemoizedFn(() => {
+        setFileTree && setFileTree([])
+    })
 
     const handleContextMenu = useMemoizedFn(() => {
         showByRightContext({
@@ -629,6 +642,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             onClick: ({key, keyPath}) => {
                 console.log("handleContextMenu", key, keyPath)
                 switch (key) {
+                    case "closeFolder":
+                        closeFolder()
+                        break
                     case "newFile":
                         onNewFile(info.path)
                         break
