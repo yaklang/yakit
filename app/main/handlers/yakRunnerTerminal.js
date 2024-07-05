@@ -1,24 +1,23 @@
-const {ipcMain, clipboard} = require("electron");
+const {ipcMain, clipboard} = require("electron")
 
 module.exports = (win, getClient) => {
-
-    let streams = {};
+    let streams = {}
     const getStreamByPort = (path) => {
-        return streams[path];
+        return streams[path]
     }
     const removeStreamPort = (path) => {
-        // const stream = streams[path];
-        // if (stream) {
-        //     stream.cancel();
-        //     delete streams[path];
-        // }
-    };
+        const stream = streams[path]
+        if (stream) {
+            stream.cancel()
+            delete streams[path]
+        }
+    }
 
     ipcMain.handle("runner-terminal-query-addrs", () => {
-        return Object.keys(streams).map(i => `${i}`)
-    });
+        return Object.keys(streams).map((i) => `${i}`)
+    })
     ipcMain.handle("runner-terminal-input", async (e, path, data) => {
-        const stream = getStreamByPort(path);
+        const stream = getStreamByPort(path)
         if (stream) {
             stream.write({
                 raw: Buffer.from(data, "utf8")
@@ -27,22 +26,20 @@ module.exports = (win, getClient) => {
     })
     ipcMain.handle("runner-terminal-cancel", async (e, path) => {
         removeStreamPort(path)
-    });
+    })
     ipcMain.handle("runner-terminal", async (e, params) => {
         const {path} = params
         if (getStreamByPort(path)) {
-            throw Error("listened terminal");
+            throw Error("listened terminal")
         }
-        stream = getClient().YaklangTerminal();
+        stream = getClient().YaklangTerminal()
         // 如果有问题，重置
         stream.on("error", (e) => {
-            console.log("error---",e);
             removeStreamPort(path)
         })
 
         // 发送回数据
-        stream.on("data", data => {
-            console.log("data---",e);
+        stream.on("data", (data) => {
             if (data.control) {
                 if (win && data.waiting) {
                     win.webContents.send(`client-listening-terminal-success-${path}`)
@@ -58,14 +55,12 @@ module.exports = (win, getClient) => {
             }
         })
         stream.on("end", () => {
-            console.log("end---",e);
             removeStreamPort(path)
             if (win) {
-                win.webContents.send("client-listening-terminal-end", path);
+                win.webContents.send("client-listening-terminal-end", path)
             }
         })
-        console.log("start---",params);
         stream.write(params)
-        streams[path] = stream;
+        streams[path] = stream
     })
 }

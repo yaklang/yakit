@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {} from "antd"
 import {} from "@ant-design/icons"
-import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./BottomEditorDetails.module.scss"
@@ -30,6 +30,8 @@ const {ipcRenderer} = window.require("electron")
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {setEditorDetails, showItem, setShowItem} = props
+    const ref = useRef(null)
+    const [inViewport] = useInViewport(ref)
 
     const systemRef = useRef<System | undefined>(SystemInfo.system)
     useEffect(() => {
@@ -38,7 +40,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [])
 
-    const {activeFile} = useStore()
+    const {activeFile,fileTree} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
 
@@ -46,10 +48,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     useEffect(() => {
-        if (showItem) {
+        if (showItem && inViewport) {
+            if(showType.includes(showItem)) return
             setShowType((arr) => filterItem([...arr, showItem]))
         }
-    }, [showItem])
+    }, [showItem, inViewport])
 
     const syntaxCheckData = useMemo(() => {
         if (activeFile?.syntaxCheck) {
@@ -105,8 +108,17 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [xtermRef])
 
+    // 终端path为文件树根路径
+    const folderPath = useMemo(() => {
+        if (fileTree.length > 0) {
+            return fileTree[0].path
+        } else {
+            return ""
+        }
+    }, [fileTree])
+
     return (
-        <div className={styles["bottom-editor-details"]}>
+        <div className={styles["bottom-editor-details"]} ref={ref}>
             <div className={styles["header"]}>
                 <div className={styles["select-box"]}>
                     <div
@@ -149,7 +161,17 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 </div>
                 <div className={styles["extra"]}>
                     {showItem === "terminal" && (
-                        <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={() => {}} />
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineTrashIcon />}
+                            onClick={() => {
+                                ipcRenderer.invoke("runner-terminal-cancel",folderPath).finally(() => {
+                                    setEditorDetails(false)
+                                    // 重新渲染
+                                    setShowType(showType.filter((item) => item !== "terminal"))
+                                })
+                            }}
+                        />
                     )}
                     <YakitButton
                         type='text2'
@@ -190,11 +212,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "terminal"
                         })}
                     >
-                        {systemRef.current === "Windows_NT" ? (
+                        {/* {systemRef.current === "Windows_NT" ? (
                             <div className={styles["no-syntax-check"]}>终端监修中</div>
-                        ) : (
-                            <TerminalBox isShow={showItem === "terminal"} />
-                        )}
+                        ) : ( */}
+                        <TerminalBox isShow={showItem === "terminal"} folderPath={folderPath}/>
+                        {/* )} */}
                     </div>
                 )}
                 {/* 帮助信息只有yak有 */}
