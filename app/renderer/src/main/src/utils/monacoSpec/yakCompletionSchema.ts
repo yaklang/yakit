@@ -606,7 +606,7 @@ export const newYaklangCompletionHandlerProvider = (model: editor.ITextModel, po
                 if (iWord.word.endsWith(".")) {
                     range.startColumn = position.column;
                     range.endColumn = position.column;
-                } else if (iWord.word.indexOf(".") > 0) {
+                } else if (iWord.word.indexOf(".") >= 0) {
                     const index = iWord.word.lastIndexOf(".");
                     range.startColumn = range.startColumn + index + 1;
                 }
