@@ -38,7 +38,7 @@ import {
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {YakRunnerNewFileIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {useDebounceFn, useLongPress, useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
+import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
@@ -57,7 +57,6 @@ import {
     grpcFetchSaveFile,
     isResetActiveFile,
     judgeAreaExistFilePath,
-    onSyntaxCheck,
     removeAreaFileInfo,
     setYakRunnerHistory,
     updateAreaFileInfo
@@ -111,17 +110,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         if (areaInfo.length <= 1) {
                             direction = [...direction, "top", "bottom"]
                         }
-                        // 如若下方依然可以分 则可向下拆分
-                        if (areaInfo.length > 1 && areaInfo[1].elements.length <= 1) {
-                            direction = [...direction, "bottom"]
-                        }
                         // 此项支持左右分
                         if (item.elements.length <= 1) {
                             direction = [...direction, "left", "right"]
-                        }
-                        // 如若上方依然可以分 则可向上拆分
-                        if (areaInfo.length > 1 && areaInfo[0].elements.length <= 1) {
-                            direction = [...direction, "top"]
                         }
                     }
                 }
@@ -363,6 +354,22 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         }
         onRemoveFun(info)
     })
+
+    const onCloseFileFun = useMemoizedFn((path: string) => {
+        tabsList.some((file) => {
+            if (file.path === path) {
+                onRemoveCurrent(file)
+            }
+            return file.path === path
+        })
+    })
+
+    useEffect(() => {
+        emiter.on("onCloseFile", onCloseFileFun)
+        return () => {
+            emiter.off("onCloseFile", onCloseFileFun)
+        }
+    }, [])
 
     // 需要用户判断是否保存的列表
     const [waitSaveList, setWaitSaveList] = useState<FileDetailInfo[]>([])
@@ -764,28 +771,30 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
             }, 200)
         }
     })
+
+    const ref = useRef(null);
+    const size = useSize(ref);
     const onScrollTabMenu = useThrottleFn(
         (e) => {
             if (tabMenuSubRef.current) {
                 const {scrollWidth, scrollLeft, clientWidth} = tabMenuSubRef.current
                 const scrollRight = scrollWidth - scrollLeft - clientWidth
-
                 setScroll({
                     ...scroll,
-                    scrollLeft: scrollLeft,
-                    scrollRight: scrollRight
+                    scrollLeft,
+                    scrollRight
                 })
             }
         },
         {wait: 200}
     ).run
-    
-    useUpdateEffect(()=>{
+
+    useUpdateEffect(() => {
         onScrollTabMenu()
-    },[tabsList])
+    }, [tabsList,size?.width])
 
     return (
-        <div className={classNames(styles["runner-tab-bar"])}>
+        <div className={classNames(styles["runner-tab-bar"])} ref={ref}>
             <div className={styles["bar-wrapper"]}>
                 <Droppable droppableId={tabsId} direction='horizontal'>
                     {(provided) => {
@@ -969,13 +978,14 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 更新编辑器文件内容(activeFile-code字段在光标位置改变时就已更新，为减少渲染，则不更新)
     const updateAreaInputInfo = useMemoizedFn((content: string) => {
-        // 未保存文件不用自动保存
-        if (editorInfo?.isUnSave) return
         const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
         // console.log("更新编辑器文件内容", newAreaInfo)
         if (editorInfo) {
             const newEditorInfo = {...editorInfo, code: content}
-            autoSaveCurrentFile.run(newEditorInfo)
+            // 未保存文件不用自动保存
+            if(!editorInfo?.isUnSave){
+                autoSaveCurrentFile.run(newEditorInfo)
+            }
             setEditorInfo(newEditorInfo)
         }
         setAreaInfo && setAreaInfo(newAreaInfo)
@@ -1388,16 +1398,18 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
             title={"文件未保存"}
             content={`是否要保存${info.name}里面的内容吗？`}
             footer={
-                <div style={{marginTop: 24, display: "flex", gap: 12, justifyContent: "end"}}>
-                    <YakitButton type='text2' onClick={onCancle}>
+                <div className={styles["hint-right-btn"]}>
+                    <YakitButton size='max' type='outline2' onClick={onCancle}>
                         取消
                     </YakitButton>
-                    <YakitButton type='text' onClick={onUnSave}>
-                        不保存
-                    </YakitButton>
-                    <YakitButton type='primary' onClick={onSaveFile}>
-                        保存
-                    </YakitButton>
+                    <div className={styles["btn-group-wrapper"]}>
+                        <YakitButton size='max' type='outline2' onClick={onUnSave}>
+                            不保存
+                        </YakitButton>
+                        <YakitButton size='max' onClick={onSaveFile}>
+                            保存
+                        </YakitButton>
+                    </div>
                 </div>
             }
         />

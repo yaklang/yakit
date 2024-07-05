@@ -22,10 +22,8 @@ import {monaco} from "react-monaco-editor"
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 
-const content = `chr 将传入的值根据ascii码表转换为对应的字符\n\nExample:\n\`\`\`\nchr(65) // A\nchr("65") // A\n\`\`\``
-
 export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
-    const {type = "sideBar", onlyKey, list, titleRender, renderItem} = props
+    const {type = "sideBar", onlyKey, list, titleRender, renderItem,collapseProps} = props
 
     const wrapperClassName = useMemo(() => {
         if (type === "sideBar") return styles["collapse-list-side-bar"]
@@ -46,6 +44,7 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
                     const {isActive} = panelProps
                     return <OutlineChevronrightIcon className={classNames({"collapse-expand-arrow": !!isActive})} />
                 }}
+                {...collapseProps}
             >
                 {list.map((item, index) => {
                     return (
@@ -208,7 +207,6 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
                 const iWord = getWordWithPointAtPosition(model, position)
                 if (iWord.word.length === 0) return
                 const type = getModelContext(model, "plugin") || "yak"
-
                 await ipcRenderer
                     .invoke("YaklangLanguageFind", {
                         InspectType: "definition",

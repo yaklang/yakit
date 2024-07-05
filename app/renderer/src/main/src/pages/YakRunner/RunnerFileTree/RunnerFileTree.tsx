@@ -771,6 +771,9 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
                         list={[[...getOpenFileList]]}
                         titleRender={titleRender}
                         renderItem={renderItem}
+                        collapseProps={{
+                            defaultActiveKey:['collapse-list-0']
+                        }}
                     />
                 </div>
             ) : (

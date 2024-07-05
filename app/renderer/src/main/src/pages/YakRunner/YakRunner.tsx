@@ -520,8 +520,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const ctrl_w = useMemoizedFn(() => {
         console.log("ctrl_w")
         if (activeFile) {
-            const newAreaInfo = removeAreaFileInfo(areaInfo, activeFile)
-            setAreaInfo(newAreaInfo)
+            emiter.emit("onCloseFile", activeFile.path)
         }
     })
 
@@ -586,6 +585,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             <BottomEditorDetails
                                 showItem={showItem}
                                 setShowItem={setShowItem}
+                                isShowEditorDetails={isShowEditorDetails}
                                 setEditorDetails={setEditorDetails}
                             />
                         )

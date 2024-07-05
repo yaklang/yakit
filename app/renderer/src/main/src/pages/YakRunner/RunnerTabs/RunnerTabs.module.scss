@@ -398,6 +398,7 @@
     }
     .operate-box {
         width: 100%;
+        max-width: 1200px;
         display: flex;
         flex-direction: column;
         gap: 24px;
@@ -505,7 +506,7 @@
                     .file-path {
                         color: #b4bbca;
                     }
-                    &:hover{
+                    &:hover {
                         .file-path {
                             color: #f28b44;
                             text-decoration: underline;
@@ -514,5 +515,15 @@
                 }
             }
         }
+    }
+}
+.hint-right-btn {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+
+    .btn-group-wrapper {
+        display: flex;
+        gap: 8px;
     }
 }
