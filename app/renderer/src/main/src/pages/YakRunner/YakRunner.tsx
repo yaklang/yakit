@@ -301,7 +301,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const onOpenFolderListFun = useMemoizedFn(async (absolutePath: string) => {
         // 开启文件夹监听
         startMonitorFolder(absolutePath)
-        console.log("onOpenFolderListFun", absolutePath)
+        // console.log("onOpenFolderListFun", absolutePath)
         const lastFolder = await getNameByPath(absolutePath)
 
         if (absolutePath.length > 0 && lastFolder.length > 0) {
