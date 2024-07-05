@@ -1155,6 +1155,9 @@ message GlobalNetworkConfig {
   string PrimaryAIType = 17;
 
   repeated string AiApiPriority = 18;
+
+  // 开启数据库同步存储
+  bool DbSaveSync = 19;
 }
 
 message AuthInfo {
