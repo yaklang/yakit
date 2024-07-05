@@ -11,6 +11,7 @@
     }
 
     .open-file {
+        min-height: 32px;
         width: 100%;
         padding: 4px 0;
         border-bottom: 1px solid #eaecf3;
@@ -42,7 +43,7 @@
             overflow: hidden;
             .tree-body {
                 height: 100%;
-                overflow: hidden auto;
+                overflow: hidden;
             }
         }
     }
@@ -63,6 +64,7 @@
     max-height: 130px;
     overflow: hidden auto;
     .file-item {
+        border-radius: 4px;
         padding: 3px 12px 3px 24px;
         display: flex;
         align-items: center;
@@ -95,6 +97,12 @@
             line-height: 16px;
         }
 
+        
+        &.active {
+            background-color: rgba(242, 139, 68, 0.06);
+        }
+    }
+    .file-item-no-active{
         &:hover {
             background-color: #f8f8f8;
             .del-btn {
@@ -108,8 +116,21 @@
                 }
             }
         }
-        &.active {
-            background-color: rgba(242, 139, 68, 0.06);
+    }
+    .file-item-active{
+        background-color: rgba(242, 139, 68, 0.06);
+        border: 1px solid #f28b44;
+        &:hover {
+            .del-btn {
+                svg {
+                    display: block;
+                }
+                &:hover {
+                    svg {
+                        color: #f28b44;
+                    }
+                }
+            }
         }
     }
 }

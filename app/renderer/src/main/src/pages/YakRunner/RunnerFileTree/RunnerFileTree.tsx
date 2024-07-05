@@ -16,13 +16,23 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {
+    MAX_FILE_SIZE_BYTES,
     addAreaFileInfo,
     getCodeByPath,
+    getCodeSizeByPath,
     getDefaultActiveFile,
+    getNameByPath,
     getOpenFileInfo,
+    getPathJoin,
+    getPathParent,
     getYakRunnerHistory,
+    grpcFetchDeleteFile,
+    grpcFetchFileTree,
     judgeAreaExistFilePath,
+    judgeAreaExistFilesPath,
+    loadFolderDetail,
     removeAreaFileInfo,
+    removeAreaFilesInfo,
     setAreaFileActive,
     setYakRunnerHistory,
     updateAreaFileInfo
@@ -30,32 +40,50 @@ import {
 import moment from "moment"
 import {YakRunnerHistoryProps} from "../YakRunnerType"
 import emiter from "@/utils/eventBus/eventBus"
-import {getMapAllFileValue, getMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
-import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
+import {
+    clearMapFileDetail,
+    getMapAllFileKey,
+    getMapAllFileValue,
+    getMapFileDetail,
+    removeMapFileDetail,
+    setMapFileDetail
+} from "../FileTreeMap/FileMap"
+import {
+    clearMapFolderDetail,
+    getMapAllFolderKey,
+    getMapFolderDetail,
+    hasMapFolderDetail,
+    removeMapFolderDetail,
+    setMapFolderDetail
+} from "../FileTreeMap/ChildMap"
 import {v4 as uuidv4} from "uuid"
 import cloneDeep from "lodash/cloneDeep"
+import {failed, success} from "@/utils/notification"
+import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
+import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {addFileTab} = props
     const {fileTree, areaInfo, activeFile} = useStore()
-    const {handleFileLoadData, setAreaInfo, setActiveFile} = useDispatcher()
+    const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
+    const [isShowFileHint,setShowFileHint] = useState<boolean>(false)
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
     // 选中的文件或文件夹
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
-    const initFileTree = useMemoizedFn((data: FileTreeListProps[]) => {
+    const initFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
         return data.map((item) => {
             const itemDetail = getMapFileDetail(item.path)
-            let obj: FileNodeProps = {...itemDetail}
+            let obj: FileNodeProps = {...itemDetail, depth}
 
             const childArr = getMapFolderDetail(item.path)
             if (itemDetail.isFolder) {
                 const newChild = childArr.map((item) => ({path: item}))
-                obj.children = initFileTree(newChild)
+                obj.children = initFileTree(newChild, depth + 1)
             }
             return obj
         })
@@ -76,7 +104,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const fileDetailTree = useMemo(() => {
-        return initFileTree(fileTree)
+        return initFileTree(fileTree, 1)
     }, [fileTree, refreshTree])
 
     const getHistoryList = useMemoizedFn(async (data?: string) => {
@@ -112,6 +140,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const menuData: YakitMenuItemType[] = useMemo(() => {
         let newMenu: YakitMenuItemType[] = [
             {
+                key: "closeFolder",
+                label: "关闭文件夹",
+                disabled: fileTree.length === 0
+            },
+            {
                 key: "createFile",
                 label: "新建文件"
             },
@@ -144,13 +177,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [historyList, fileTree])
 
     // 新建文件
-    const onNewFile = useMemoizedFn((path: string) => {
+    const onNewFile = useMemoizedFn(async (path: string) => {
+        const currentPath = await getPathJoin(path, `${uuidv4()}-create`)
+        if (currentPath.length === 0) return
         const newFileNodeMap: FileNodeMapProps = {
             parent: path,
             name: "",
-            path: `${path}\\${uuidv4()}-create`,
+            path: currentPath,
             isFolder: false,
-            icon: "_f_notepad",
+            icon: "_f_yak",
             isCreate: true,
             isLeaf: true
         }
@@ -171,16 +206,20 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         })
         newFolderDetail.splice(insert, 0, newFileNodeMap.path)
         setMapFolderDetail(path, newFolderDetail)
-        emiter.emit("onExpandedFileTree", path)
+        // setFoucsedKey(currentPath)
+        // emiter.emit("onExpandedFileTree", path)
+        emiter.emit("onScrollToFileTree", currentPath)
         emiter.emit("onRefreshFileTree")
     })
 
     // 新建文件夹
-    const onNewFolder = useMemoizedFn((path: string) => {
+    const onNewFolder = useMemoizedFn(async (path: string) => {
+        const currentPath = await getPathJoin(path, `${uuidv4()}-create`)
+        if (currentPath.length === 0) return
         const newFileNodeMap: FileNodeMapProps = {
             parent: path,
             name: "",
-            path: `${path}\\${uuidv4()}-create`,
+            path: currentPath,
             isFolder: true,
             icon: "_fd_default",
             isCreate: true,
@@ -194,8 +233,206 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             setMapFileDetail(path, {...fileDetail, isLeaf: false})
         }
         setMapFolderDetail(path, [newFileNodeMap.path, ...folderDetail])
-        emiter.emit("onExpandedFileTree", path)
+
+        // setFoucsedKey(currentPath)
+        // emiter.emit("onExpandedFileTree", path)
+        emiter.emit("onScrollToFileTree", currentPath)
         emiter.emit("onRefreshFileTree")
+    })
+
+    // 删除文件/文件夹
+    const onDeleteFun = useMemoizedFn(async (path) => {
+        const info = getMapFileDetail(path)
+        try {
+            await grpcFetchDeleteFile(info.path)
+            // 文件夹删除
+            if (info.isFolder) {
+                const deleteFileArr = getMapAllFileKey().filter((item) => item.startsWith(info.path))
+                // 删除最外层文件夹
+                if (info.parent === null) {
+                    clearMapFileDetail()
+                    clearMapFolderDetail()
+                    setFileTree && setFileTree([])
+                } else {
+                    deleteFileArr.forEach((item) => {
+                        removeMapFileDetail(item)
+                    })
+                    // 移除文件夹下的所有文件夹结构及其父结构下的此项
+                    const folderDetail = getMapFolderDetail(info.parent)
+                    if (folderDetail.length > 0) {
+                        const newFolderDetail = folderDetail.filter((item) => item !== info.path)
+                        setMapFolderDetail(info.parent, newFolderDetail)
+                    }
+
+                    const deleteFolderArr = getMapAllFolderKey().filter((item) => item.startsWith(info.path))
+                    deleteFolderArr.forEach((item) => {
+                        removeMapFolderDetail(item)
+                    })
+                }
+
+                // 此处还需移除已经删除文件的布局信息
+                const removePath = (await judgeAreaExistFilesPath(areaInfo, deleteFileArr)).map((item) => item.path)
+                if (removePath.includes(activeFile?.path || "")) {
+                    setActiveFile && setActiveFile(undefined)
+                }
+                const newAreaInfo = removeAreaFilesInfo(areaInfo, removePath)
+                console.log("移除的newAreaInfo", newAreaInfo)
+                setAreaInfo && setAreaInfo(newAreaInfo)
+            }
+            // 文件删除
+            else {
+                console.log("info---", info)
+
+                if (info.parent) {
+                    const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
+                    // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
+                    if (newFolderDetail.length === 0) {
+                        setMapFileDetail(info.parent, {...getMapFileDetail(info.parent), isLeaf: true})
+                    }
+                    setMapFolderDetail(info.parent, newFolderDetail)
+                }
+                removeMapFileDetail(info.path)
+                const file = await judgeAreaExistFilePath(areaInfo, info.path)
+                if (file) {
+                    const newAreaInfo = removeAreaFileInfo(areaInfo, file)
+                    setAreaInfo && setAreaInfo(newAreaInfo)
+                }
+            }
+            emiter.emit("onResetFileTree", info.path)
+            emiter.emit("onRefreshFileTree")
+            success(`${info.name} 删除成功`)
+        } catch (error) {
+            failed(`${info.name} 删除失败${error}`)
+        }
+    })
+
+    const eventOperateFun = useMemoizedFn((eventArr: FileMonitorItemProps[]) => {
+        eventArr.forEach(async (event) => {
+            const {Op, Path, IsDir} = event
+            // 文件夹处理
+            if (IsDir) {
+                switch (Op) {
+                    case "delete":
+                        const info = getMapFileDetail(Path)
+                        const deleteFileArr = getMapAllFileKey().filter((item) => item.startsWith(info.path))
+                        // 删除最外层文件夹
+                        if (info.parent === null) {
+                            clearMapFileDetail()
+                            clearMapFolderDetail()
+                            setFileTree && setFileTree([])
+                        } else {
+                            deleteFileArr.forEach((item) => {
+                                removeMapFileDetail(item)
+                            })
+                            // 移除文件夹下的所有文件夹结构及其父结构下的此项
+                            const folderDetail = getMapFolderDetail(info.parent)
+                            if (folderDetail.length > 0) {
+                                const newFolderDetail = folderDetail.filter((item) => item !== info.path)
+                                setMapFolderDetail(info.parent, newFolderDetail)
+                            }
+
+                            const deleteFolderArr = getMapAllFolderKey().filter((item) => item.startsWith(info.path))
+                            deleteFolderArr.forEach((item) => {
+                                removeMapFolderDetail(item)
+                            })
+                        }
+                        emiter.emit("onResetFileTree", info.path)
+                        emiter.emit("onRefreshFileTree")
+                        break
+                    case "create":
+                        const parentPath = await getPathParent(Path)
+                        const folderName = await getNameByPath(Path)
+                        const newFileNodeMap: FileNodeMapProps = {
+                            parent: parentPath,
+                            name: folderName,
+                            path: Path,
+                            isFolder: true,
+                            icon: "_fd_default",
+                            isLeaf: true
+                        }
+                        setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
+                        const folderDetail = getMapFolderDetail(parentPath)
+                        // 如若为空文件夹 则可点击打开
+                        if (folderDetail.length === 0) {
+                            const fileDetail = getMapFileDetail(parentPath)
+                            setMapFileDetail(parentPath, {...fileDetail, isLeaf: false})
+                        }
+                        setMapFolderDetail(parentPath, [newFileNodeMap.path, ...folderDetail])
+                        emiter.emit("onRefreshFileTree")
+                        break
+                    default:
+                        break
+                }
+            }
+            // 文件处理
+            else {
+                switch (Op) {
+                    case "delete":
+                        const info = getMapFileDetail(Path)
+                        if (info.parent) {
+                            const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
+                            // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
+                            if (newFolderDetail.length === 0) {
+                                setMapFileDetail(info.parent, {...getMapFileDetail(info.parent), isLeaf: true})
+                            }
+                            setMapFolderDetail(info.parent, newFolderDetail)
+                        }
+                        removeMapFileDetail(info.path)
+                        emiter.emit("onResetFileTree", info.path)
+                        emiter.emit("onRefreshFileTree")
+                        break
+                    case "create":
+                        const parentPath = await getPathParent(Path)
+                        const fileName = await getNameByPath(Path)
+                        const suffix = fileName.indexOf(".") > -1 ? fileName.split(".").pop() : ""
+                        const newFileNodeMap: FileNodeMapProps = {
+                            parent: parentPath,
+                            name: fileName,
+                            path: Path,
+                            isFolder: false,
+                            icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+                            isLeaf: true
+                        }
+                        setMapFileDetail(newFileNodeMap.path, newFileNodeMap)
+                        const folderDetail = getMapFolderDetail(parentPath)
+                        const newFolderDetail: string[] = cloneDeep(folderDetail)
+                        // 如若为空文件夹 则可点击打开
+                        if (newFolderDetail.length === 0) {
+                            const fileDetail = getMapFileDetail(parentPath)
+                            setMapFileDetail(parentPath, {...fileDetail, isLeaf: false})
+                        }
+                        // 新增文件时其位置应处于文件夹后
+                        let insert: number = 0
+                        newFolderDetail.some((item, index) => {
+                            const {isFolder} = getMapFileDetail(item)
+                            if (isFolder) insert += 1
+                            return !isFolder
+                        })
+                        newFolderDetail.splice(insert, 0, newFileNodeMap.path)
+                        setMapFolderDetail(parentPath, newFolderDetail)
+                        emiter.emit("onRefreshFileTree")
+                        break
+                    default:
+                        break
+                }
+            }
+        })
+    })
+
+    // 文件树结构监控
+    const onRefreshYakRunnerFileTreeFun = useMemoizedFn((data) => {
+        try {
+            const event: FileMonitorProps = JSON.parse(data)
+            if (event.ChangeEvents) {
+                eventOperateFun(event.ChangeEvents)
+            }
+            if (event.CreateEvents) {
+                eventOperateFun(event.CreateEvents)
+            }
+            if (event.DeleteEvents.length > 0) {
+                eventOperateFun(event.DeleteEvents)
+            }
+        } catch (error) {}
     })
 
     useEffect(() => {
@@ -203,13 +440,23 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         emiter.on("onNewFileInFileTree", onNewFile)
         // 监听新建文件夹
         emiter.on("onNewFolderInFileTree", onNewFolder)
+        // 监听删除
+        emiter.on("onDeleteInFileTree", onDeleteFun)
+        // 文件树结构监控（监听外部变化）
+        emiter.on("onRefreshYakRunnerFileTree", onRefreshYakRunnerFileTreeFun)
         return () => {
             emiter.off("onNewFileInFileTree", onNewFile)
             emiter.off("onNewFolderInFileTree", onNewFolder)
+            emiter.off("onDeleteInFileTree", onDeleteFun)
+            emiter.off("onRefreshYakRunnerFileTree", onRefreshYakRunnerFileTreeFun)
         }
     }, [])
 
-    const createFile = useMemoizedFn(() => {
+    const closeFolder = useMemoizedFn(() => {
+        setFileTree && setFileTree([])
+    })
+
+    const createFile = useMemoizedFn(async() => {
         // 未打开文件夹时 创建临时文件
         if (fileTree.length === 0) {
             addFileTab()
@@ -219,6 +466,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             const fileDetail = getMapFileDetail(newFoucsedKey)
             // 文件夹直接创建
             if (fileDetail.isFolder) {
+                // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+                if (!hasMapFolderDetail(fileDetail.path)) {
+                    await loadFolderDetail(fileDetail.path)
+                }
                 onNewFile(fileDetail.path)
             }
             // 文件找到其上层路径创建
@@ -230,11 +481,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     })
 
-    const createFolder = useMemoizedFn(() => {
+    const createFolder = useMemoizedFn(async() => {
         const newFoucsedKey = foucsedKey || fileTree[0].path
         const fileDetail = getMapFileDetail(newFoucsedKey)
         // 文件夹直接创建
         if (fileDetail.isFolder) {
+            // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+            if (!hasMapFolderDetail(fileDetail.path)) {
+                await loadFolderDetail(fileDetail.path)
+            }
             onNewFolder(fileDetail.path)
         }
         // 文件找到其上层路径创建
@@ -255,6 +510,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(file)
             } else {
+                const size = await getCodeSizeByPath(path)
+                if(size > MAX_FILE_SIZE_BYTES){
+                    setShowFileHint(true)
+                    return
+                }
                 const code = await getCodeByPath(path)
                 const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
                 const scratchFile: FileDetailInfo = {
@@ -273,14 +533,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, syntaxActiveFile, activeFile)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(newActiveFile)
-
-                // 打开文件时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                    isFile: true,
-                    name,
-                    path
-                }
-                setYakRunnerHistory(history)
             }
         } catch (error) {}
     })
@@ -292,6 +544,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             if (openFileInfo) {
                 const {path, name} = openFileInfo
                 openFileByPath(path, name)
+                // 打开文件时接入历史记录
+                const history: YakRunnerHistoryProps = {
+                    isFile: true,
+                    name,
+                    path
+                }
+                setYakRunnerHistory(history)
             }
         } catch (error) {}
     })
@@ -319,6 +578,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             // 打开文件
             if (item.isFile) {
                 openFileByPath(item.path, item.name)
+                // 打开文件时接入历史记录
+                const history: YakRunnerHistoryProps = {
+                    isFile: true,
+                    name: item.name,
+                    path: item.path
+                }
+                setYakRunnerHistory(history)
             }
             // 打开文件夹
             else {
@@ -329,6 +595,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
     const menuSelect = useMemoizedFn((key) => {
         switch (key) {
+            case "closeFolder":
+                closeFolder()
+                break
             case "createFile":
                 createFile()
                 break
@@ -397,6 +666,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     </div>
                 </div>
             </div>
+            {/* 文件过大提示框 */}
+            <YakitHint
+                visible={isShowFileHint}
+                title='文件警告'
+                content='文件过大，无法使用YakRunner进行操作'
+                cancelButtonProps={{style: {display:  "none" }}}
+                onOk={() => {
+                    setShowFileHint(false)
+                }}
+                okButtonText={"知道了"}
+            />
         </div>
     )
 }
@@ -435,7 +715,14 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
             <div className={styles["opened-file-body"]}>
                 {info.map((item) => {
                     return (
-                        <div key={item.path} className={styles["file-item"]} onClick={() => openItem(item)}>
+                        <div
+                            key={item.path}
+                            className={classNames(styles["file-item"], {
+                                [styles["file-item-no-active"]]: activeFile?.path !== item.path,
+                                [styles["file-item-active"]]: activeFile?.path === item.path
+                            })}
+                            onClick={() => openItem(item)}
+                        >
                             <div className={styles["del-btn"]} onClick={(e) => removeItem(e, item)}>
                                 <OutlineXIcon />
                             </div>

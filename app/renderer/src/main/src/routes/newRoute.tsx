@@ -502,7 +502,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_CVE:
             return <CVEViewer />
         case YakitRoute.YakScript:
-            return <YakExecutor />
+            return <YakRunner/>
+            // return <YakExecutor />
         case YakitRoute.PayloadManager:
             return <NewPayload />
         case YakitRoute.AccountAdminPage:

@@ -44,19 +44,23 @@ import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
 import {IMonacoEditor} from "@/utils/editors"
 import {
+    MAX_FILE_SIZE_BYTES,
     addAreaFileInfo,
     getCodeByPath,
+    getCodeSizeByPath,
     getDefaultActiveFile,
     getOpenFileInfo,
+    getPathParent,
     getYakRunnerHistory,
     grpcFetchCreateFile,
     grpcFetchRenameFileTree,
     grpcFetchSaveFile,
     isResetActiveFile,
+    judgeAreaExistFilePath,
     onSyntaxCheck,
     removeAreaFileInfo,
     setYakRunnerHistory,
-    updateAreaFileInfo,
+    updateAreaFileInfo
 } from "../utils"
 import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
@@ -74,8 +78,10 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import moment from "moment"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from "../FileTreeMap/FileMap"
-import { getMapFolderDetail, setMapFolderDetail } from "../FileTreeMap/ChildMap"
+import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
+import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -84,7 +90,7 @@ const layoutToString = (v: number[]) => {
 }
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
-    const {tabsId} = props
+    const {tabsId, wrapperClassName} = props
     const {areaInfo, activeFile, runnerTabsId} = useStore()
     const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
@@ -105,9 +111,17 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         if (areaInfo.length <= 1) {
                             direction = [...direction, "top", "bottom"]
                         }
+                        // 如若下方依然可以分 则可向下拆分
+                        if (areaInfo.length > 1 && areaInfo[1].elements.length <= 1) {
+                            direction = [...direction, "bottom"]
+                        }
                         // 此项支持左右分
                         if (item.elements.length <= 1) {
                             direction = [...direction, "left", "right"]
+                        }
+                        // 如若上方依然可以分 则可向上拆分
+                        if (areaInfo.length > 1 && areaInfo[0].elements.length <= 1) {
+                            direction = [...direction, "top"]
                         }
                     }
                 }
@@ -264,14 +278,22 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         })
         if (moveItem) {
             if (direction === "top") {
-                newAreaInfo.unshift({
-                    elements: [moveItem]
-                })
+                if (newAreaInfo.length <= 1) {
+                    newAreaInfo.unshift({
+                        elements: [moveItem]
+                    })
+                } else {
+                    newAreaInfo[0].elements.push(moveItem)
+                }
             }
             if (direction === "bottom") {
-                newAreaInfo.push({
-                    elements: [moveItem]
-                })
+                if (newAreaInfo.length <= 1) {
+                    newAreaInfo.push({
+                        elements: [moveItem]
+                    })
+                } else {
+                    newAreaInfo[1].elements.push(moveItem)
+                }
             }
             if (direction === "left") {
                 newAreaInfo[infoIndex].elements.unshift(moveItem)
@@ -473,8 +495,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 // 保存后的文件需要根据路径调用改名接口
                 if (!info.isUnSave) {
                     try {
-                        const result = await grpcFetchRenameFileTree(info.path, newName,info.parent)
-                        const {path, name,  parent} = result[0]
+                        const result = await grpcFetchRenameFileTree(info.path, newName, info.parent)
+                        const {path, name, parent} = result[0]
                         // 存在则更改
                         const fileMap = getMapFileDetail(info.path)
                         if (fileMap.name !== "读取文件失败" && !fileMap.path.endsWith("-fail")) {
@@ -483,10 +505,20 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                             // 新增文件树数据
                             setMapFileDetail(path, result[0])
                         }
-                        
+
+                        let cacheAreaInfo = areaInfo
+
                         // 获取重命名文件所在存储结构
                         if (info.parent) {
-                            const folderMap = getMapFolderDetail(info.parent)
+                            let folderMap = getMapFolderDetail(info.parent)
+                            // 如若重命名为已有名称 则覆盖
+                            if (folderMap.includes(path)) {
+                                const file = await judgeAreaExistFilePath(areaInfo, path)
+                                if (file) {
+                                    cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                }
+                                folderMap = folderMap.filter((item) => item !== path)
+                            }
                             const newFolderMap = folderMap.map((item) => {
                                 if (item === info.path) return path
                                 return item
@@ -495,7 +527,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         }
 
                         // 修改分栏数据
-                        const newAreaInfo = updateAreaFileInfo(areaInfo, {...info, name, path}, info.path)
+                        const newAreaInfo = updateAreaFileInfo(cacheAreaInfo, {...info, name, path}, info.path)
                         // 更名后重置激活元素
                         const newActiveFile = isResetActiveFile([info], activeFile)
                         setActiveFile && setActiveFile(newActiveFile)
@@ -524,7 +556,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     // 在文件列表显示
     const onOpenFileList = useMemoizedFn((info: FileDetailInfo) => {
-        emiter.emit("onScrollToFileTree",info.path)
+        emiter.emit("onScrollToFileTree", info.path)
     })
 
     const menuData = useMemoizedFn((info: FileDetailInfo) => {
@@ -555,7 +587,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             {
                 label: "在文件列表显示",
                 key: "openFileList",
-                disabled: info.isUnSave||inFileTree.parent===null
+                disabled: info.isUnSave || inFileTree.parent === null
             }
         ]
         if (splitDirection.length > 0) {
@@ -633,7 +665,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     return (
-        <div className={styles["runner-tabs"]}>
+        <div className={classNames(styles["runner-tabs"], wrapperClassName || "")}>
             <RunnerTabBar
                 tabsId={tabsId}
                 tabsList={tabsList}
@@ -747,6 +779,11 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
         },
         {wait: 200}
     ).run
+    
+    useUpdateEffect(()=>{
+        onScrollTabMenu()
+    },[tabsList])
+
     return (
         <div className={classNames(styles["runner-tab-bar"])}>
             <div className={styles["bar-wrapper"]}>
@@ -898,8 +935,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-    // 是否初次加载
-    const isFirstRef = useRef<boolean>(true)
+
     useEffect(() => {
         areaInfo.forEach((item) => {
             item.elements.forEach((itemIn) => {
@@ -914,7 +950,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 }
             })
         })
-    }, [areaInfo])
+    }, [areaInfo, reqEditor])
 
     // 光标位置信息
     const positionRef = useRef<CursorPosition>()
@@ -923,8 +959,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 自动保存
     const autoSaveCurrentFile = useDebounceFn(
         (newEditorInfo: FileDetailInfo) => {
-            const {path,code} = newEditorInfo
-            grpcFetchSaveFile(path,code)
+            const {path, code} = newEditorInfo
+            grpcFetchSaveFile(path, code)
         },
         {
             wait: 500
@@ -933,6 +969,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 更新编辑器文件内容(activeFile-code字段在光标位置改变时就已更新，为减少渲染，则不更新)
     const updateAreaInputInfo = useMemoizedFn((content: string) => {
+        // 未保存文件不用自动保存
+        if (editorInfo?.isUnSave) return
         const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
         // console.log("更新编辑器文件内容", newAreaInfo)
         if (editorInfo) {
@@ -960,7 +998,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
         setActiveFile && setActiveFile(newActiveFile)
         const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
-        console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
+        // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
@@ -1030,10 +1068,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 更新光标位置
     const updatePosition = useMemoizedFn(() => {
         // console.log("更新光标位置", editorInfo)
-
         if (reqEditor && editorInfo) {
-            const {position, selections} = editorInfo
-            const {lineNumber, column} = position || {}
+            // 如若没有记录 默认1行1列
+            const {position = {lineNumber: 1, column: 1}, selections} = editorInfo
+            const {lineNumber, column} = position
             if (lineNumber && column) {
                 reqEditor.setPosition({lineNumber, column})
                 reqEditor.focus()
@@ -1049,13 +1087,13 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         updateBottomEditorDetails()
     })
 
+    // 此处ref存在意义为清除ctrl + z缓存 同时更新光标位置
     useUpdateEffect(() => {
-        if (isFirstRef.current) {
-            isFirstRef.current = false
-        } else {
+        if (reqEditor && editorInfo) {
+            reqEditor.setValue(editorInfo.code)
             updatePosition()
         }
-    }, [editorInfo?.position])
+    }, [editorInfo?.path])
 
     // 选中光标位置
     const onJumpEditorDetailFun = useMemoizedFn((data) => {
@@ -1063,7 +1101,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const obj: JumpToEditorProps = JSON.parse(data)
             const {id, selections} = obj
             if (reqEditor && editorInfo?.path === id) {
-                reqEditor?.setSelection(selections)
+                reqEditor.setSelection(selections)
+                reqEditor.revealLineInCenter(selections.startLineNumber)
             }
         } catch (error) {}
     })
@@ -1097,6 +1136,8 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
 
+    const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
+
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
     const getHistoryList = useMemoizedFn(async () => {
@@ -1110,6 +1151,11 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     // 通过路径打开文件
     const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
         // 由于此处的打开文件 不存在已打开文件 故无需校验
+        const size = await getCodeSizeByPath(path)
+        if (size > MAX_FILE_SIZE_BYTES) {
+            setShowFileHint(true)
+            return
+        }
         const code = await getCodeByPath(path)
         const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
         const scratchFile: FileDetailInfo = {
@@ -1172,57 +1218,74 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                 </div>
                 <div className={styles["header-style"]}>欢迎使用 Yak 语言</div>
             </div>
-
-            <div className={styles["operate"]}>
-                <div className={styles["title-style"]}>快捷创建</div>
-                <div className={styles["operate-btn-group"]}>
-                    <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
-                        <div className={styles["btn-title"]}>
-                            <YakRunnerNewFileIcon />
-                            新建文件
-                        </div>
-                        <OutlinePlusIcon className={styles["icon-style"]} />
-                    </div>
-                    <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
-                        <div className={styles["btn-title"]}>
-                            <YakRunnerOpenFileIcon />
-                            打开文件
-                        </div>
-                        <OutlineImportIcon className={styles["icon-style"]} />
-                    </div>
-                    <div className={classNames(styles["btn-style"], styles["btn-open-folder"])} onClick={openFolder}>
-                        <div className={styles["btn-title"]}>
-                            <YakRunnerOpenFolderIcon />
-                            打开文件夹
-                        </div>
-                        <OutlineImportIcon className={styles["icon-style"]} />
-                    </div>
-                </div>
-            </div>
-
-            <div className={styles["recent-open"]}>
-                <div className={styles["title-style"]}>最近打开</div>
-                <div className={styles["recent-list"]}>
-                    {historyList.slice(0, 3).map((item, index) => {
-                        return (
-                            <div
-                                key={item.path}
-                                className={styles["list-opt"]}
-                                onClick={() => {
-                                    if (item.isFile) {
-                                        openFileByPath(item.path, item.name)
-                                    } else {
-                                        emiter.emit("onOpenFolderList", item.path)
-                                    }
-                                }}
-                            >
-                                <div className={styles["file-name"]}>{item.name}</div>
-                                <div className={styles["file-path"]}>{item.path}</div>
+            <div className={styles["operate-box"]}>
+                <div className={styles["operate"]}>
+                    <div className={styles["title-style"]}>快捷创建</div>
+                    <div className={styles["operate-btn-group"]}>
+                        <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerNewFileIcon />
+                                新建文件
                             </div>
-                        )
-                    })}
+                            <OutlinePlusIcon className={styles["icon-style"]} />
+                        </div>
+                        <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerOpenFileIcon />
+                                打开文件
+                            </div>
+                            <OutlineImportIcon className={styles["icon-style"]} />
+                        </div>
+                        <div
+                            className={classNames(styles["btn-style"], styles["btn-open-folder"])}
+                            onClick={openFolder}
+                        >
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerOpenFolderIcon />
+                                打开文件夹
+                            </div>
+                            <OutlineImportIcon className={styles["icon-style"]} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles["recent-open"]}>
+                    <div className={styles["title-style"]}>最近打开</div>
+                    <div className={styles["recent-list"]}>
+                        {historyList.slice(0, 3).map((item, index) => {
+                            return (
+                                <div
+                                    key={item.path}
+                                    className={styles["list-opt"]}
+                                    onClick={() => {
+                                        if (item.isFile) {
+                                            openFileByPath(item.path, item.name)
+                                        } else {
+                                            emiter.emit("onOpenFolderList", item.path)
+                                        }
+                                    }}
+                                >
+                                    <div className={styles["file-name"]}>{item.name}</div>
+                                    <div className={classNames(styles["file-path"], "yakit-single-line-ellipsis")}>
+                                        {item.path}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
+            {/* 文件过大提示框 */}
+            <YakitHint
+                visible={isShowFileHint}
+                title='文件警告'
+                content='文件过大，无法使用YakRunner进行操作'
+                cancelButtonProps={{style: {display: "none"}}}
+                onOk={() => {
+                    setShowFileHint(false)
+                }}
+                okButtonText={"知道了"}
+            />
         </div>
     )
 })
@@ -1290,7 +1353,9 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     isUnSave: false,
                     language: suffix === "yak" ? suffix : "http"
                 }
-                await grpcFetchCreateFile(file.path,file.code)
+                const parentPath = await getPathParent(file.path)
+                const parentDetail = getMapFileDetail(parentPath)
+                await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? "" : parentPath)
                 success(`${file.name} 保存成功`)
                 // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
                 const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
@@ -1318,29 +1383,23 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     })
 
     return (
-        <YakitModal
-            title='文件未保存'
-            closable={false}
-            width={400}
-            type={"white"}
+        <YakitHint
             visible={isShowModal}
-            onCancel={() => setShowModal(false)}
-            footer={null}
-            className={styles["yakit-runner-save-modal"]}
-            bodyStyle={{padding: 0}}
-        >
-            <div style={{margin: "10px 24px"}}>是否要保存{info.name}里面的内容吗？</div>
-            <div style={{padding: "0px 24px 24px", display: "flex", gap: 12, justifyContent: "end"}}>
-                <YakitButton type='text2' onClick={onCancle}>
-                    取消
-                </YakitButton>
-                <YakitButton type='text' onClick={onUnSave}>
-                    不保存
-                </YakitButton>
-                <YakitButton type='primary' onClick={onSaveFile}>
-                    保存
-                </YakitButton>
-            </div>
-        </YakitModal>
+            title={"文件未保存"}
+            content={`是否要保存${info.name}里面的内容吗？`}
+            footer={
+                <div style={{marginTop: 24, display: "flex", gap: 12, justifyContent: "end"}}>
+                    <YakitButton type='text2' onClick={onCancle}>
+                        取消
+                    </YakitButton>
+                    <YakitButton type='text' onClick={onUnSave}>
+                        不保存
+                    </YakitButton>
+                    <YakitButton type='primary' onClick={onSaveFile}>
+                        保存
+                    </YakitButton>
+                </div>
+            }
+        />
     )
 }

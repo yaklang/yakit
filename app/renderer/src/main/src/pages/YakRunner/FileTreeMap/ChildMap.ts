@@ -7,7 +7,6 @@ export const setMapFolderDetail = (path: string, info: string[]) => {
 
 export const getMapFolderDetail = (path: string) => {
     return foldersMap.get(path)||[]
-    
 }
 
 export const getMapAllFolderValue = () => {
@@ -24,4 +23,8 @@ export const clearMapFolderDetail = () => {
 
 export const removeMapFolderDetail = (path: string) => {
     foldersMap.delete(path)
+}
+
+export const hasMapFolderDetail = (path) => {
+    return foldersMap.has(path);
 }

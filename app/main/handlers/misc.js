@@ -605,6 +605,12 @@ module.exports = (win, getClient) => {
 
     const streamDuplexConnectionMap = new Map();
     ipcMain.handle("cancel-DuplexConnection", handlerHelper.cancelHandler(streamDuplexConnectionMap));
+    ipcMain.handle("DuplexConnectionWrite", (e, params, token) => {
+        let stream = streamDuplexConnectionMap.get(token)
+        if (!!stream) {
+            stream.write(params)
+        }
+    })
     ipcMain.handle("DuplexConnection", (e, params, token) => {
         let stream = streamDuplexConnectionMap.get(token)
         if (stream) {

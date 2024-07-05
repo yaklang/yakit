@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps} from "./FileTreeType"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
@@ -24,6 +24,7 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {
     getCodeByPath,
+    getPathJoin,
     grpcFetchCreateFile,
     grpcFetchCreateFolder,
     grpcFetchDeleteFile,
@@ -31,6 +32,7 @@ import {
     isResetActiveFile,
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
+    loadFolderDetail,
     removeAreaFileInfo,
     removeAreaFilesInfo,
     updateActiveFile,
@@ -43,12 +45,14 @@ import {
     clearMapFolderDetail,
     getMapAllFolderKey,
     getMapFolderDetail,
+    hasMapFolderDetail,
     removeMapFolderDetail,
     setMapFolderDetail
 } from "../FileTreeMap/ChildMap"
 import {failed, success} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
+import {FileMonitorProps} from "@/utils/duplex/duplex"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -59,7 +63,7 @@ const FolderMenu: YakitMenuItemProps[] = [
     {label: "在终端打开", key: "openTernimal"}
 ]
 
-export const FileTree: React.FC<FileTreeProps> = (props) => {
+export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey} = props
 
     const systemRef = useRef<System | undefined>(SystemInfo.system)
@@ -125,29 +129,32 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
 
     const scrollExpandedKeys = useRef<string[]>([])
-    const scrollExpandedKeysFun = useMemoizedFn((path)=>{
+    const scrollExpandedKeysFun = useMemoizedFn((path) => {
         const fileDetail = getMapFileDetail(path)
-        if(fileDetail.parent!==null){
-            scrollExpandedKeys.current = [...scrollExpandedKeys.current,fileDetail.parent]
+        if (fileDetail.isFolder) {
+            scrollExpandedKeys.current = [...scrollExpandedKeys.current, fileDetail.path]
+        }
+        if (fileDetail.parent !== null) {
             scrollExpandedKeysFun(fileDetail.parent)
         }
     })
 
-    const onScrollToFileTreeFun = useMemoizedFn((path)=>{
+    const onScrollToFileTreeFun = useMemoizedFn((path) => {
         scrollExpandedKeys.current = []
         // 获取 Tree 组件的实例
-        const treeInstance = treeRef.current;
+        const treeInstance = treeRef.current
         // 如果 Tree 实例存在且有 scrollTo 方法
         if (treeInstance && treeInstance.scrollTo) {
             // 打开扩展项
             scrollExpandedKeysFun(path)
-            setExpandedKeys(filter([...expandedKeys,...scrollExpandedKeys.current]))
+            setExpandedKeys(filter([...expandedKeys, ...scrollExpandedKeys.current]))
+            console.log("niuniu---", filter([...expandedKeys, ...scrollExpandedKeys.current]))
+
             setFoucsedKey(path)
             // 调用 scrollTo 方法滚动到指定节点
-            setTimeout(()=>{
-                treeInstance.scrollTo({ key: path, align: 'middle' });
-            },200)
-            
+            setTimeout(() => {
+                treeInstance.scrollTo({key: path, align: "middle"})
+            }, 200)
         }
     })
 
@@ -261,17 +268,28 @@ export const FileTree: React.FC<FileTreeProps> = (props) => {
                             onExpanded={handleExpand}
                             copyPath={copyPath}
                             setCopyPath={setCopyPath}
+                            setFoucsedKey={setFoucsedKey}
                         />
                     )
                 }}
             />
         </div>
     )
-}
+})
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
-    const {isDownCtrlCmd, info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded, copyPath, setCopyPath} =
-        props
+    const {
+        isDownCtrlCmd,
+        info,
+        foucsedKey,
+        selectedKeys,
+        expandedKeys,
+        onSelected,
+        onExpanded,
+        copyPath,
+        setCopyPath,
+        setFoucsedKey
+    } = props
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
     // 是否为编辑模式
@@ -319,16 +337,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 粘贴
     const onPaste = useMemoizedFn(async () => {
         try {
-            console.log("粘贴", info.path, copyPath)
             const fileDetail = getMapFileDetail(copyPath)
             const code = await getCodeByPath(copyPath)
-            const newPath = `${info.path}\\${fileDetail.name}`
-            const result = await grpcFetchCreateFile(newPath, code)
-            console.log("粘贴---",result);
-            
+            const currentPath = await getPathJoin(info.path, fileDetail.name)
+            if (currentPath.length === 0) return
+            const result = await grpcFetchCreateFile(currentPath, code, info.path)
             if (result.length === 0) return
             const {path, name, parent} = result[0]
-
             setMapFileDetail(path, result[0])
             const folderDetail = getMapFolderDetail(info.path)
             const newFolderDetail: string[] = cloneDeep(folderDetail)
@@ -356,7 +371,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     const onRename = useMemoizedFn(() => {
+        setFoucsedKey(info.path)
         setEdit(true)
+    })
+
+    // 重置重命名
+    const resetRename = useMemoizedFn(() => {
+        setFoucsedKey("")
+        setValue(info.name)
+        setEdit(false)
     })
 
     const onRenameFun = useMemoizedFn(async () => {
@@ -366,7 +389,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 const result = await grpcFetchRenameFileTree(info.path, value, info.parent)
                 console.log("更新", result)
                 if (result.length === 0) return
-                const {path, name} = result[0]
+                const {path, name, icon} = result[0]
                 // 文件夹重命名
                 if (info.isFolder) {
                     if (info.parent) {
@@ -425,24 +448,34 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 else {
                     // 存在则更改
                     const fileMap = getMapFileDetail(info.path)
-                    if (fileMap.name !== "读取文件失败" && !fileMap.path.endsWith("-fail")) {
+                    if (!fileMap.isReadFail) {
                         // 移除原有文件数据
                         removeMapFileDetail(info.path)
                         // 新增文件树数据
                         setMapFileDetail(path, result[0])
                     }
-                    const folderMap = getMapFolderDetail(info.parent || "")
+                    let folderMap = getMapFolderDetail(info.parent || "")
+                    let cacheAreaInfo = areaInfo
                     // 获取重命名文件所在存储结构
                     if (info.parent && folderMap.includes(info.path)) {
+                        // 如若重命名为已有名称 则覆盖
+                        if (folderMap.includes(path)) {
+                            const file = await judgeAreaExistFilePath(areaInfo, path)
+                            if (file) {
+                                cacheAreaInfo = removeAreaFileInfo(areaInfo, file)
+                            }
+                            folderMap = folderMap.filter((item) => item !== path)
+                        }
                         const newFolderMap = folderMap.map((item) => {
                             if (item === info.path) return path
                             return item
                         })
                         setMapFolderDetail(info.parent, newFolderMap)
                     }
-
+                    const suffix = name.split(".").pop()
+                    const language = suffix === "yak" ? suffix : "http"
                     // 修改分栏数据
-                    const newAreaInfo = updateAreaFileInfo(areaInfo, {name, path}, info.path)
+                    const newAreaInfo = updateAreaFileInfo(cacheAreaInfo, {name, path, icon, language}, info.path)
                     // 更名后重置激活元素
                     const newActiveFile = isResetActiveFile([info], activeFile)
                     setActiveFile && setActiveFile(newActiveFile)
@@ -453,7 +486,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             }
             setEdit(false)
         } catch (error) {
-            failed("保存失败")
+            resetRename()
+            failed(`保存失败 ${error}`)
         }
     })
 
@@ -470,18 +504,26 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             }
             setMapFolderDetail(info.parent, newFolderDetail)
         }
+        setFoucsedKey("")
         emiter.emit("onRefreshFileTree")
     })
 
     const onCreateFun = useMemoizedFn(async () => {
-        if (value.length > 0) {
+        if (value.length > 0 && info.parent) {
             try {
-                const newPath = `${info.parent}\\${value}`
+                let fileName = value
+                let lastDotIndex = value.lastIndexOf(".")
+                // 文件路径中没有点号，即没有后缀
+                if (lastDotIndex === -1) {
+                    // let ext = value.substring(lastDotIndex);
+                    fileName = `${value}.yak`
+                }
+                const currentPath = await getPathJoin(info.parent, fileName)
+                if (currentPath.length === 0) return
                 // 区分新建文件夹 新建文件接口
                 const result = info.isFolder
-                    ? await grpcFetchCreateFolder(newPath, info.parent)
-                    : await grpcFetchCreateFile(newPath, null, info.parent)
-                console.log("新建----", result)
+                    ? await grpcFetchCreateFolder(currentPath, info.parent)
+                    : await grpcFetchCreateFile(currentPath, null, info.parent)
                 if (result.length === 0) return
                 const {path, name, parent} = result[0]
                 removeMapFileDetail(info.path)
@@ -496,7 +538,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 emiter.emit("onRefreshFileTree")
             } catch (error) {
                 resetCreate()
-                failed("新建失败")
+                failed(`新建失败 ${error}`)
             }
         }
         // 没有内容 新建失效
@@ -517,83 +559,33 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         }
     })
 
-    // 删除
-    const onDelete = useMemoizedFn(async () => {
-        try {
-            await grpcFetchDeleteFile(info.path)
-            // 文件夹删除
-            if (info.isFolder) {
-                const deleteFileArr = getMapAllFileKey().filter((item) => item.startsWith(info.path))
-                // 删除最外层文件夹
-                if (info.parent === null) {
-                    clearMapFileDetail()
-                    clearMapFolderDetail()
-                    setFileTree && setFileTree([])
-                } else {
-                    deleteFileArr.forEach((item) => {
-                        removeMapFileDetail(item)
-                    })
-                    // 移除文件夹下的所有文件夹结构及其父结构下的此项
-                    const folderDetail = getMapFolderDetail(info.parent)
-                    if (folderDetail.length > 0) {
-                        const newFolderDetail = folderDetail.filter((item) => item !== info.path)
-                        setMapFolderDetail(info.parent, newFolderDetail)
-                    }
-
-                    const deleteFolderArr = getMapAllFolderKey().filter((item) => item.startsWith(info.path))
-                    deleteFolderArr.forEach((item) => {
-                        removeMapFolderDetail(item)
-                    })
-                }
-
-                // 此处还需移除已经删除文件的布局信息
-                const removePath = (await judgeAreaExistFilesPath(areaInfo, deleteFileArr)).map((item) => item.path)
-                if (removePath.includes(activeFile?.path || "")) {
-                    setActiveFile && setActiveFile(undefined)
-                }
-                const newAreaInfo = removeAreaFilesInfo(areaInfo, removePath)
-                console.log("移除的newAreaInfo", newAreaInfo)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-            }
-            // 文件删除
-            else {
-                if (info.parent) {
-                    const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
-                    // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
-                    if (newFolderDetail.length === 0) {
-                        setMapFileDetail(info.parent, {...getMapFileDetail(info.parent), isLeaf: true})
-                    }
-                    setMapFolderDetail(info.parent, newFolderDetail)
-                }
-                removeMapFileDetail(info.path)
-                const file = await judgeAreaExistFilePath(areaInfo, info.path)
-                if (file) {
-                    const newAreaInfo = removeAreaFileInfo(areaInfo, file)
-                    setAreaInfo && setAreaInfo(newAreaInfo)
-                }
-            }
-            emiter.emit("onResetFileTree", info.path)
-            emiter.emit("onRefreshFileTree")
-            setRemoveCheckVisible(false)
-            success(`${info.name} 删除成功`)
-        } catch (error) {
-            failed("删除失败")
-        }
-    })
-
     useEffect(() => {
         if (info.isCreate) {
             setEdit(true)
         }
     }, [])
 
-    // 新建文件
-    const onNewFile = useMemoizedFn((path: string) => {
+    // 删除
+    const onDelete = useMemoizedFn(async () => {
+        setRemoveCheckVisible(false)
+        emiter.emit("onDeleteInFileTree", info.path)
+    })
+
+    // 新建文件（仅文件夹有这个操作）
+    const onNewFile = useMemoizedFn(async (path: string) => {
+        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+        if (!hasMapFolderDetail(path)) {
+            await loadFolderDetail(path)
+        }
         emiter.emit("onNewFileInFileTree", path)
     })
 
     // 新建文件夹
-    const onNewFolder = useMemoizedFn((path: string) => {
+    const onNewFolder = useMemoizedFn(async (path: string) => {
+        // 判断文件夹内文件是否加载 如若未加载则需要先行加载
+        if (!hasMapFolderDetail(path)) {
+            await loadFolderDetail(path)
+        }
         emiter.emit("onNewFolderInFileTree", path)
     })
 
@@ -689,6 +681,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     // [styles["node-selected"]]: isSelected,
                     [styles["node-foucsed"]]: isFoucsed
                 })}
+                style={{paddingLeft: (info.depth - 1) * 16 + 8}}
                 onClick={handleClick}
                 onContextMenu={handleContextMenu}
             >

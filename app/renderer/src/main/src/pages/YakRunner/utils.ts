@@ -15,6 +15,8 @@ import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsTyp
 import {v4 as uuidv4} from "uuid"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
+import {setMapFileDetail} from "./FileTreeMap/FileMap"
+import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -56,7 +58,6 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("文件树", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, path)
             resolve(data)
         } catch (error) {
@@ -128,7 +129,11 @@ export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNode
 /**
  * @name 新建文件
  */
-export const grpcFetchCreateFile: (path: string, code?: string|null, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (path, code,parentPath) => {
+export const grpcFetchCreateFile: (
+    path: string,
+    code?: string | null,
+    parentPath?: string | null
+) => Promise<FileNodeMapProps[]> = (path, code, parentPath) => {
     return new Promise(async (resolve, reject) => {
         const params: any = {
             Method: "PUT",
@@ -155,7 +160,10 @@ export const grpcFetchCreateFile: (path: string, code?: string|null, parentPath?
 /**
  * @name 新建文件夹
  */
-export const grpcFetchCreateFolder: (path: string, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (path,parentPath) => {
+export const grpcFetchCreateFolder: (path: string, parentPath?: string | null) => Promise<FileNodeMapProps[]> = (
+    path,
+    parentPath
+) => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "PUT",
@@ -447,12 +455,13 @@ export const isResetActiveFile = (
     files: FileDetailInfo[] | FileNodeProps[],
     activeFile: FileDetailInfo | undefined
 ) => {
+    let newActiveFile = activeFile
     files.forEach((file) => {
         if (file.path === activeFile?.path) {
-            return undefined
+            newActiveFile = undefined
         }
     })
-    return activeFile
+    return newActiveFile
 }
 
 /**
@@ -534,12 +543,11 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
                 title: "请选择文件",
                 properties: ["openFile"]
             })
-            .then((data: {filePaths: string[]}) => {
+            .then(async (data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
                 if (filesLength === 1) {
                     const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                    const name: string = path.split(/[\\/]/).pop() || ""
-                    console.log("fileInfo---", path, name)
+                    const name: string = await getNameByPath(path)
                     resolve({
                         path,
                         name
@@ -556,12 +564,34 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
 }
 
 /**
+ * @name 最大限制10M
+ */
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
+/**
+ * @name 根据文件path获取其大小
+ */
+export const getCodeSizeByPath = (path: string): Promise<number> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("read-file-size", path)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch(() => {
+                failed("无法获取该文件大小，请检查后后重试！")
+                reject()
+            })
+    })
+}
+
+/**
  * @name 根据文件path获取其内容
  */
 export const getCodeByPath = (path: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("fetch-file-content", path)
+            .invoke("read-file-content", path)
             .then((res) => {
                 resolve(res)
             })
@@ -573,6 +603,7 @@ export const getCodeByPath = (path: string): Promise<string> => {
 }
 
 const YakRunnerOpenHistory = "YakRunnerOpenHistory"
+const YakRunnerLastFolderPath = "YakRunnerLastFolderPath"
 
 /**
  * @name 更改YakRunner历史记录
@@ -592,7 +623,10 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
             ].slice(0, 10)
             setRemoteValue(YakRunnerOpenHistory, JSON.stringify(newHistoryData))
             emiter.emit("onRefreshRunnerHistory", JSON.stringify(newHistoryData))
-        } catch (error) {}
+        } catch (error) {
+            failed(`历史记录异常，重置历史 ${error}`)
+            setRemoteValue(YakRunnerOpenHistory, JSON.stringify([]))
+        }
     })
 }
 
@@ -613,5 +647,113 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
                 resolve([])
             }
         })
+    })
+}
+
+/**
+ * @name 更改上次文件夹打开路径
+ */
+export const setYakRunnerLastFolderPath = (newPath: string) => {
+    setRemoteValue(YakRunnerLastFolderPath, newPath)
+}
+
+/**
+ * @name 获取上次文件夹打开路径
+ */
+export const getYakRunnerLastFolderPath = (): Promise<string | null> => {
+    return new Promise(async (resolve, reject) => {
+        getRemoteValue(YakRunnerLastFolderPath).then((data) => {
+            try {
+                if (!data) {
+                    resolve(null)
+                    return
+                }
+                const historyData: string = data
+                resolve(historyData)
+            } catch (error) {
+                resolve(null)
+            }
+        })
+    })
+}
+
+/**
+ * @name 路径拼接（兼容多系统）
+ */
+export const getPathJoin = (path: string, file: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("pathJoin", {
+                dir: path,
+                file
+            })
+            .then((currentPath: string) => {
+                resolve(currentPath)
+            })
+            .catch(() => {
+                resolve("")
+            })
+    })
+}
+
+/**
+ * @name 获取上一级的路径（兼容多系统）
+ */
+export const getPathParent = (filePath: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("pathParent", {
+                filePath
+            })
+            .then((currentPath: string) => {
+                resolve(currentPath)
+            })
+            .catch(() => {
+                resolve("")
+            })
+    })
+}
+
+/**
+ * @name 获取路径上的(文件/文件夹)名（兼容多系统）
+ */
+export const getNameByPath = (filePath: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("pathFileName", {
+                filePath
+            })
+            .then((currentName: string) => {
+                resolve(currentName)
+            })
+            .catch(() => {
+                resolve("")
+            })
+    })
+}
+
+/**
+ * @name 用于用户操作过快时文件夹内数据还未来得及加载,提前加载
+ */
+export const loadFolderDetail = (path) => {
+    return new Promise(async (resolve, reject) => {
+        grpcFetchFileTree(path)
+            .then((res) => {
+                if (res.length > 0) {
+                    let childArr: string[] = []
+                    // 文件Map
+                    res.forEach((item) => {
+                        // 注入文件结构Map
+                        childArr.push(item.path)
+                        // 文件Map
+                        setMapFileDetail(item.path, item)
+                    })
+                    setMapFolderDetail(path, childArr)
+                }
+                resolve(null)
+            })
+            .catch((error) => {
+                resolve(null)
+            })
     })
 }

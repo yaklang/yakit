@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {} from "antd"
 import {} from "@ant-design/icons"
-import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./BottomEditorDetails.module.scss"
@@ -9,7 +9,7 @@ import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoListProps, ShowItemType} from "./BottomEditorDetailsType"
 import {HelpInfoList} from "../CollapseList/CollapseList"
-import {OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SyntaxCheckList} from "./SyntaxCheckList/SyntaxCheckList"
 import useStore from "../hooks/useStore"
@@ -22,13 +22,25 @@ import ReactResizeDetector from "react-resize-detector"
 import {defaultXTermOptions} from "@/components/baseConsole/BaseConsole"
 import {XTerm} from "xterm-for-react"
 import {YakitSystem} from "@/yakitGVDefine"
+import {TerminalBox} from "./TerminalBox/TerminalBox"
+import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {setEditorDetails, showItem, setShowItem} = props
-    const {activeFile} = useStore()
+    const ref = useRef(null)
+    const [inViewport] = useInViewport(ref)
+
+    const systemRef = useRef<System | undefined>(SystemInfo.system)
+    useEffect(() => {
+        if (!systemRef.current) {
+            handleFetchSystem(() => (systemRef.current = SystemInfo.system))
+        }
+    }, [])
+
+    const {activeFile,fileTree} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
 
@@ -36,10 +48,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     useEffect(() => {
-        if (showItem) {
+        if (showItem && inViewport) {
+            if(showType.includes(showItem)) return
             setShowType((arr) => filterItem([...arr, showItem]))
         }
-    }, [showItem])
+    }, [showItem, inViewport])
 
     const syntaxCheckData = useMemo(() => {
         if (activeFile?.syntaxCheck) {
@@ -94,13 +107,24 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             ipcRenderer.removeAllListeners("client-yak-data")
         }
     }, [xtermRef])
+
+    // 终端path为文件树根路径
+    const folderPath = useMemo(() => {
+        if (fileTree.length > 0) {
+            return fileTree[0].path
+        } else {
+            return ""
+        }
+    }, [fileTree])
+
     return (
-        <div className={styles["bottom-editor-details"]}>
+        <div className={styles["bottom-editor-details"]} ref={ref}>
             <div className={styles["header"]}>
                 <div className={styles["select-box"]}>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "output"
+                            [styles["active-item"]]: showItem === "output",
+                            [styles["no-active-item"]]: showItem !== "output"
                         })}
                         onClick={() => setShowItem("output")}
                     >
@@ -108,7 +132,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "syntaxCheck"
+                            [styles["active-item"]]: showItem === "syntaxCheck",
+                            [styles["no-active-item"]]: showItem !== "syntaxCheck"
                         })}
                         onClick={() => setShowItem("syntaxCheck")}
                     >
@@ -117,7 +142,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "terminal"
+                            [styles["active-item"]]: showItem === "terminal",
+                            [styles["no-active-item"]]: showItem !== "terminal"
                         })}
                         onClick={() => setShowItem("terminal")}
                     >
@@ -125,7 +151,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "helpInfo"
+                            [styles["active-item"]]: showItem === "helpInfo",
+                            [styles["no-active-item"]]: showItem !== "helpInfo"
                         })}
                         onClick={() => setShowItem("helpInfo")}
                     >
@@ -133,6 +160,19 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                 </div>
                 <div className={styles["extra"]}>
+                    {showItem === "terminal" && (
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineTrashIcon />}
+                            onClick={() => {
+                                ipcRenderer.invoke("runner-terminal-cancel",folderPath).finally(() => {
+                                    setEditorDetails(false)
+                                    // 重新渲染
+                                    setShowType(showType.filter((item) => item !== "terminal"))
+                                })
+                            }}
+                        />
+                    )}
                     <YakitButton
                         type='text2'
                         icon={<OutlineXIcon />}
@@ -143,21 +183,55 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 </div>
             </div>
             <div className={styles["content"]}>
-                {showType.includes("output") && showItem === "output" && (
-                    <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef} />
+                {showType.includes("output") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "output"
+                        })}
+                    >
+                        <OutputInfoList outputCahceRef={outputCahceRef} xtermRef={xtermRef} />
+                    </div>
                 )}
-                {/* 帮助信息只有yak有 */}
-                {showType.includes("helpInfo") && showItem === "helpInfo" && (
-                    <HelpInfoList list={[{key: 1}, {key: 2}, {key: 3}, {key: 4}, {key: 5}]} />
-                )}
-                {showType.includes("syntaxCheck") && showItem === "syntaxCheck" && (
-                    <>
+
+                {showType.includes("syntaxCheck") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "syntaxCheck"
+                        })}
+                    >
                         {activeFile ? (
                             <SyntaxCheckList syntaxCheckData={syntaxCheckData} onJumpToEditor={onJumpToEditor} />
                         ) : (
                             <div className={styles["no-syntax-check"]}>请选中具体文件查看语法检查信息</div>
                         )}
-                    </>
+                    </div>
+                )}
+                {showType.includes("terminal") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "terminal"
+                        })}
+                    >
+                        {/* {systemRef.current === "Windows_NT" ? (
+                            <div className={styles["no-syntax-check"]}>终端监修中</div>
+                        ) : ( */}
+                        <TerminalBox isShow={showItem === "terminal"} folderPath={folderPath}/>
+                        {/* )} */}
+                    </div>
+                )}
+                {/* 帮助信息只有yak有 */}
+                {showType.includes("helpInfo") && (
+                    <div
+                        className={classNames(styles["render-hideen"], {
+                            [styles["render-show"]]: showItem === "helpInfo"
+                        })}
+                    >
+                        {activeFile?.language === "yak" ? (
+                            <HelpInfoList />
+                        ) : (
+                            <div className={styles["no-syntax-check"]}>请选中yak文件查看帮助信息</div>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
@@ -212,7 +286,42 @@ export const OutputInfoList: React.FC<OutputInfoListProps> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <XTerm ref={xtermRef} customKeyEventHandler={onCopy} options={defaultXTermOptions} />
+            <XTerm
+                ref={xtermRef}
+                customKeyEventHandler={onCopy}
+                options={{
+                    convertEol: true,
+                    theme: {
+                        foreground: "#536870",
+                        background: "#ffffff",
+                        cursor: "#536870",
+
+                        black: "#002831",
+                        brightBlack: "#001e27",
+
+                        red: "#d11c24",
+                        brightRed: "#bd3613",
+
+                        green: "#738a05",
+                        brightGreen: "#475b62",
+
+                        yellow: "#a57706",
+                        brightYellow: "#536870",
+
+                        blue: "#2176c7",
+                        brightBlue: "#708284",
+
+                        magenta: "#c61c6f",
+                        brightMagenta: "#5956ba",
+
+                        cyan: "#259286",
+                        brightCyan: "#819090",
+
+                        white: "#eae3cb",
+                        brightWhite: "#fcf4dc"
+                    }
+                }}
+            />
         </div>
     )
 }

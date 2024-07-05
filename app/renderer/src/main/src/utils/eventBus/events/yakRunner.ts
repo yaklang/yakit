@@ -13,6 +13,8 @@ export type YakRunnerEventProps = {
     onNewFileInFileTree: string
     // 新建文件夹
     onNewFolderInFileTree:string
+    // 删除文件/文件夹
+    onDeleteInFileTree: string
     // 定位文件树
     onScrollToFileTree: string
 }

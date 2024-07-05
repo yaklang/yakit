@@ -1,15 +1,19 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightSideBar} from "./RightSideBar/RightSideBar"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
+    getNameByPath,
+    getPathParent,
+    getYakRunnerLastFolderPath,
     grpcFetchCreateFile,
     grpcFetchFileTree,
     removeAreaFileInfo,
     setYakRunnerHistory,
+    setYakRunnerLastFolderPath,
     updateAreaFileInfo,
     updateFileTree
 } from "./utils"
@@ -52,7 +56,10 @@ import {
     getMapFileDetail,
     setMapFileDetail
 } from "./FileTreeMap/FileMap"
-import { clearMapFolderDetail, getMapFolderDetail, setMapFolderDetail } from "./FileTreeMap/ChildMap"
+import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
+import {sendDuplexConn} from "@/utils/duplex/duplex"
+import {StringToUint8Array} from "@/utils/str"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -176,9 +183,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
+        if (getMapFileDetail(path).isCreate) {
+            if (callback) callback([])
+            return
+        }
         grpcFetchFileTree(path)
             .then((res) => {
-                console.log("文件树", res)
+                // console.log("文件树", res)
 
                 if (callback) callback(res)
             })
@@ -195,7 +206,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 提前注入Map
     const insertFileMap = useMemoizedFn((path) => {
-        console.log("提前注入Map", path)
+        // console.log("提前注入Map", path)
         isFetchRef.current = true
         loadIndexRef.current += 1
         handleFetchFileList(path, (value) => {
@@ -212,7 +223,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         child:[path11,path12,...]
                     }]
                 */
-                let childArr:string[] = []
+                let childArr: string[] = []
                 // 文件Map
                 value.forEach((item) => {
                     // 注入文件结构Map
@@ -220,7 +231,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     // 文件Map
                     setMapFileDetail(item.path, item)
                 })
-                setMapFolderDetail(path,childArr)
+                setMapFolderDetail(path, childArr)
             }
         })
     })
@@ -237,9 +248,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             loadIndexRef.current += 1
             return
         }
-        // 校验其子项是否存在
-        const childKey = keys.filter((item) => item.startsWith(`${keys[index]}\\`))
-        if (childKey.length !== 0) {
+        // 校验其子项是否存在 存在则无需加载
+        const isLoadChild = hasMapFolderDetail(keys[index])
+        if (isLoadChild) {
             loadIndexRef.current += 1
             return
         }
@@ -261,11 +272,38 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.emit("onResetFileTree")
     })
 
+    const startMonitorFolder = useMemoizedFn((absolutePath) => {
+        // 先停止 再启用
+        const stopData = StringToUint8Array(
+            JSON.stringify({
+                operate: "stop"
+            })
+        )
+        sendDuplexConn({
+            Data: stopData,
+            MessageType: "file_monitor",
+            Timestamp: new Date().getTime()
+        })
+        const startData = StringToUint8Array(
+            JSON.stringify({
+                operate: "new",
+                path: absolutePath
+            })
+        )
+        sendDuplexConn({
+            Data: startData,
+            MessageType: "file_monitor",
+            Timestamp: new Date().getTime()
+        })
+    })
+
     // 加载文件列表(初次加载)
-    const onOpenFolderListFun = useMemoizedFn((absolutePath: string) => {
+    const onOpenFolderListFun = useMemoizedFn(async (absolutePath: string) => {
+        // 开启文件夹监听
+        startMonitorFolder(absolutePath)
         // console.log("onOpenFolderListFun", absolutePath)
-        const folders = absolutePath.split("\\") // 使用双反斜杠对路径进行分割
-        const lastFolder = folders[folders.length - 1] // 获取数组中的最后一个元素
+        const lastFolder = await getNameByPath(absolutePath)
+
         if (absolutePath.length > 0 && lastFolder.length > 0) {
             resetMap()
             const node: FileNodeMapProps = {
@@ -275,29 +313,28 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 isFolder: true,
                 icon: FolderDefault
             }
-            
-            
-            handleFetchFileList(absolutePath, (list) => {
-                    // 如若打开空文件夹 则不可展开 
-                    if(list.length === 0){
-                        node.isLeaf = true
-                    }
-                    setMapFileDetail(absolutePath, node)
-                    const children: FileTreeListProps[] = []
-                    
-                    let childArr:string[] = []
-                    list.forEach((item) => {
-                        // 注入文件结构Map
-                        childArr.push(item.path)
-                        // 文件Map
-                        setMapFileDetail(item.path, item)
-                        // 注入tree结构
-                        children.push({path: item.path})
-                    })
-                    // 文件结构Map
-                    setMapFolderDetail(absolutePath,childArr)
 
-                    if (list) setFileTree([{path: absolutePath}])
+            handleFetchFileList(absolutePath, (list) => {
+                // 如若打开空文件夹 则不可展开
+                if (list.length === 0) {
+                    node.isLeaf = true
+                }
+                setMapFileDetail(absolutePath, node)
+                const children: FileTreeListProps[] = []
+
+                let childArr: string[] = []
+                list.forEach((item) => {
+                    // 注入文件结构Map
+                    childArr.push(item.path)
+                    // 文件Map
+                    setMapFileDetail(item.path, item)
+                    // 注入tree结构
+                    children.push({path: item.path})
+                })
+                // 文件结构Map
+                setMapFolderDetail(absolutePath, childArr)
+
+                if (list) setFileTree([{path: absolutePath}])
             })
 
             // 打开文件夹时接入历史记录
@@ -323,22 +360,22 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             // 校验其子项是否存在
             const childArr = getMapFolderDetail(path)
             if (childArr.length > 0) {
-                console.log("缓存加载");
+                console.log("缓存加载")
                 emiter.emit("onRefreshFileTree")
                 resolve("")
             } else {
                 handleFetchFileList(path, (value) => {
                     if (value.length > 0) {
-                        let childArr:string[] = []
+                        let childArr: string[] = []
                         value.forEach((item) => {
                             // 注入文件结构Map
                             childArr.push(item.path)
                             // 文件Map
                             setMapFileDetail(item.path, item)
                         })
-                        setMapFolderDetail(path,childArr)
+                        setMapFolderDetail(path, childArr)
                         setTimeout(() => {
-                            console.log("接口加载");
+                            console.log("接口加载")
                             emiter.emit("onRefreshFileTree")
                             resolve("")
                         }, 300)
@@ -350,15 +387,29 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
     })
     /** ---------- 文件树 End ---------- */
+    const [isUnShow, setUnShow] = useState<boolean>(true)
 
-    /** ---------- 选中文件 Start ---------- */
-    /** 新建文件 */
-    const handleNewFile = useMemoizedFn(() => {})
-    /** 打开文件 */
-    const handleOpenFile = useMemoizedFn(() => {})
-    /** 打开文件夹 */
-    const handleOpenFolder = useMemoizedFn(() => {})
-    /** ---------- 选中文件 End ---------- */
+    // 根据历史读取上次打开的文件夹
+    const onSetUnShowFun = async () => {
+        const absolutePath = await getYakRunnerLastFolderPath()
+        if (absolutePath) {
+            onOpenFolderListFun(absolutePath)
+            setUnShow(false)
+        }
+    }
+
+    useEffect(() => {
+        onSetUnShowFun()
+    }, [])
+
+    useUpdateEffect(() => {
+        if (fileTree.length > 0) {
+            setYakRunnerLastFolderPath(fileTree[0].path)
+            setUnShow(false)
+        } else {
+            setYakRunnerLastFolderPath("")
+        }
+    }, [fileTree])
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
@@ -382,27 +433,30 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const keyDownRef = useRef<HTMLDivElement>(null)
     const unTitleCountRef = useRef<number>(1)
 
-    const addFileTab = useMemoizedFn(() => {
-        // 新建临时文件
-        console.log("ctrl_n")
-        const scratchFile: FileDetailInfo = {
-            name: `Untitle-${unTitleCountRef.current}.yak`,
-            code: "# input your yak code\nprintln(`Hello Yak World!`)",
-            icon: "_f_yak",
-            isActive: true,
-            openTimestamp: moment().unix(),
-            // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
-            path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
-            parent: null,
-            language: "yak",
-            isUnSave: true
-        }
-        unTitleCountRef.current += 1
-        const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
+    const addFileTab = useThrottleFn(
+        () => {
+            // 新建临时文件
+            console.log("ctrl_n")
+            const scratchFile: FileDetailInfo = {
+                name: `Untitle-${unTitleCountRef.current}.yak`,
+                code: "# input your yak code\nprintln(`Hello Yak World!`)",
+                icon: "_f_yak",
+                isActive: true,
+                openTimestamp: moment().unix(),
+                // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
+                path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
+                parent: null,
+                language: "yak",
+                isUnSave: true
+            }
+            unTitleCountRef.current += 1
+            const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
 
-        setAreaInfo(newAreaInfo)
-        setActiveFile(newActiveFile)
-    })
+            setAreaInfo(newAreaInfo)
+            setActiveFile(newActiveFile)
+        },
+        {wait: 300}
+    ).run
 
     const [codePath, setCodePath] = useState<string>("")
     // 默认保存路径
@@ -418,16 +472,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 })
         })
     }, [])
+
+    // 存储文件
     const ctrl_s = useMemoizedFn(() => {
-        // 存储文件
         try {
             // 如若未保存 则
             if (activeFile && activeFile.isUnSave && activeFile.code.length > 0) {
                 ipcRenderer
                     .invoke("show-save-dialog", `${codePath}${codePath ? "/" : ""}${activeFile.name}`)
                     .then(async (res) => {
-                        console.log("res---", res)
-
                         const path = res.filePath
                         const name = res.name
                         if (path.length > 0) {
@@ -439,7 +492,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 isUnSave: false,
                                 language: suffix === "yak" ? suffix : "http"
                             }
-                            await grpcFetchCreateFile(file.path,file.code)
+                            const parentPath = await getPathParent(file.path)
+                            const parentDetail = getMapFileDetail(parentPath)
+                            await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? "" : parentPath)
                             success(`${activeFile?.name} 保存成功`)
                             const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
                             const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
@@ -461,10 +516,20 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
+    // 关闭文件
+    const ctrl_w = useMemoizedFn(() => {
+        console.log("ctrl_w")
+        if (activeFile) {
+            const newAreaInfo = removeAreaFileInfo(areaInfo, activeFile)
+            setAreaInfo(newAreaInfo)
+        }
+    })
+
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
+        setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
     })
 
     useEffect(() => {
@@ -474,7 +539,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     const handleKeyPress = (event) => {
         // 在这里处理全局键盘事件
-        // console.log("Key keydown:",event)
+        // console.log("Key keydown:", event)
         // 此处在使用key时发现字母竟区分大小写-故使用which替换
         const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
         let activeKey: number[] = []
@@ -667,8 +732,22 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 <SplitView
                                     isLastHidden={areaInfo.length > 1 && areaInfo[1].elements.length === 1}
                                     elements={[
-                                        {element: <RunnerTabs tabsId={getTabsId(1, 0)} />},
-                                        {element: <RunnerTabs tabsId={getTabsId(1, 1)} />}
+                                        {
+                                            element: (
+                                                <RunnerTabs
+                                                    wrapperClassName={styles["runner-tabs-top"]}
+                                                    tabsId={getTabsId(1, 0)}
+                                                />
+                                            )
+                                        },
+                                        {
+                                            element: (
+                                                <RunnerTabs
+                                                    wrapperClassName={styles["runner-tabs-top"]}
+                                                    tabsId={getTabsId(1, 1)}
+                                                />
+                                            )
+                                        }
                                     ]}
                                 />
                             )
@@ -692,12 +771,26 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0}>
                 <div className={styles["yak-runner-body"]}>
-                    <LeftSideBar addFileTab={addFileTab}/>
-                    <div className={styles["yak-runner-code"]}>
-                        <div className={styles["code-container"]}>
-                            {onFixedEditorDetails(onChangeArea())}
-                        </div>
-                    </div>
+                    <YakitResizeBox
+                        freeze={!isUnShow}
+                        firstRatio={isUnShow ? "25px" : "300px"}
+                        firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
+                        lineDirection='left'
+                        // isShowDefaultLineStyle={false}
+                        firstMinSize={isUnShow ? 25 : 200}
+                        secondMinSize={400}
+                        firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
+                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset"}}
+                        secondNode={
+                            <div
+                                className={classNames(styles["yak-runner-code"], {
+                                    [styles["yak-runner-code-offset"]]: !isUnShow
+                                })}
+                            >
+                                <div className={styles["code-container"]}>{onFixedEditorDetails(onChangeArea())}</div>
+                            </div>
+                        }
+                    />
                     <RightSideBar />
                 </div>
 
