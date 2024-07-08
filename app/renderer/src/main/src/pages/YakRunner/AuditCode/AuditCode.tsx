@@ -8,7 +8,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     useEffect(() => {
-        console.log("我是audit-code")
+        // console.log("我是audit-code")
     }, [])
     return <div className={styles["audit-code"]}>我是audit-code</div>
 }

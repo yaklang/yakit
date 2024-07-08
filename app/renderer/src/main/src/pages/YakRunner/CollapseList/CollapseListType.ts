@@ -14,6 +14,7 @@ export interface CollapseListProp<T> {
     titleRender: (info: T) => ReactNode
     renderItem: (info: T) => ReactNode
     collapseProps?: CollapseProps
+    isShowBottom?: boolean
 }
 
 export interface HelpInfoListProps {}

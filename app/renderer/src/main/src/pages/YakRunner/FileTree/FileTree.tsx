@@ -148,8 +148,6 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
             // 打开扩展项
             scrollExpandedKeysFun(path)
             setExpandedKeys(filter([...expandedKeys, ...scrollExpandedKeys.current]))
-            console.log("niuniu---", filter([...expandedKeys, ...scrollExpandedKeys.current]))
-
             setFoucsedKey(path)
             // 调用 scrollTo 方法滚动到指定节点
             setTimeout(() => {
@@ -323,10 +321,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         if (info.isLeaf) {
             handleSelect()
         } else {
-            console.log("isDownCtrlCmd", isDownCtrlCmd)
             if (isDownCtrlCmd) handleSelect()
             else handleExpand()
         }
+    })
+
+    // 在终端中打开
+    const openTernimalFun = useMemoizedFn((path)=>{
+        emiter.emit("onOpenTernimal",path)
     })
 
     // 复制
@@ -387,8 +389,6 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             if (value.length !== 0 && value !== info.name) {
                 // 重命名 调用接口成功后更新tree
                 const result = await grpcFetchRenameFileTree(info.path, value, info.parent)
-                console.log("更新", result)
-
                 if (result.length === 0) return
                 const {path, name, icon} = result[0]
                 // 文件夹重命名
@@ -640,7 +640,6 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             type: "grey",
             data: [...menuData],
             onClick: ({key, keyPath}) => {
-                console.log("handleContextMenu", key, keyPath)
                 switch (key) {
                     case "closeFolder":
                         closeFolder()
@@ -652,9 +651,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         onNewFolder(info.path)
                         break
                     case "openFileSystem":
-                        console.log("文件夹中显示", info.path)
                         openABSFileLocated(info.path)
                         break
+                        case "openTernimal":
+                            openTernimalFun(info.path)
+                            break
                     case "copy":
                         onCopy()
                         break
@@ -679,6 +680,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     }, [info.isFolder])
 
     const iconImage = useMemo(() => {
+        if (info.isBottom) {
+            return ""
+        }
         if (isFolder) {
             if (isExpanded) {
                 return KeyToIcon[FolderDefaultExpanded].iconPath
@@ -688,56 +692,60 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         } else {
             return KeyToIcon[info.icon].iconPath
         }
-    }, [info.icon, isFolder, isExpanded])
+    }, [info.icon, isFolder, isExpanded, info.isBottom])
 
     return (
         <>
-            <div
-                className={classNames(styles["file-tree-node"], {
-                    // [styles["node-selected"]]: isSelected,
-                    [styles["node-foucsed"]]: isFoucsed
-                })}
-                style={{paddingLeft: (info.depth - 1) * 16 + 8}}
-                onClick={handleClick}
-                onContextMenu={handleContextMenu}
-            >
-                {!info.isLeaf && (
-                    <div className={classNames(styles["node-switcher"], {[styles["expanded"]]: isExpanded})}>
-                        <OutlineChevronrightIcon />
-                    </div>
-                )}
+            {info.isBottom ? (
+                <div className={styles["tree-bottom"]}>{info.name}</div>
+            ) : (
+                <div
+                    className={classNames(styles["file-tree-node"], {
+                        // [styles["node-selected"]]: isSelected,
+                        [styles["node-foucsed"]]: isFoucsed
+                    })}
+                    style={{paddingLeft: (info.depth - 1) * 16 + 8}}
+                    onClick={handleClick}
+                    onContextMenu={handleContextMenu}
+                >
+                    {!info.isLeaf && (
+                        <div className={classNames(styles["node-switcher"], {[styles["expanded"]]: isExpanded})}>
+                            <OutlineChevronrightIcon />
+                        </div>
+                    )}
 
-                <div className={styles["node-loading"]}>
-                    <LoadingOutlined />
-                </div>
+                    <div className={styles["node-loading"]}>
+                        <LoadingOutlined />
+                    </div>
 
-                <div className={styles["node-content"]}>
-                    <div className={styles["content-icon"]}>
-                        <img src={iconImage} />
-                    </div>
-                    <div
-                        className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}
-                        title={info.name}
-                    >
-                        {isEdit ? (
-                            <YakitInput
-                                wrapperClassName={styles["file-tree-input-wrapper"]}
-                                className={styles["file-tree-input"]}
-                                value={value}
-                                onChange={(e) => {
-                                    setValue(e.target.value)
-                                }}
-                                autoFocus
-                                onBlur={onSave}
-                                onPressEnter={onSave}
-                                size='small'
-                            />
-                        ) : (
-                            info.name
-                        )}
+                    <div className={styles["node-content"]}>
+                        <div className={styles["content-icon"]}>
+                            <img src={iconImage} />
+                        </div>
+                        <div
+                            className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}
+                            title={info.name}
+                        >
+                            {isEdit ? (
+                                <YakitInput
+                                    wrapperClassName={styles["file-tree-input-wrapper"]}
+                                    className={styles["file-tree-input"]}
+                                    value={value}
+                                    onChange={(e) => {
+                                        setValue(e.target.value)
+                                    }}
+                                    autoFocus
+                                    onBlur={onSave}
+                                    onPressEnter={onSave}
+                                    size='small'
+                                />
+                            ) : (
+                                info.name
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
             <YakitHint
                 visible={removeCheckVisible}
                 title={`是否要删除${info.name}`}
