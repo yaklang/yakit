@@ -63,7 +63,7 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
     }, [])
 
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
-    const [exportHtmlLoading, setExportHtmlLoading] = useState<boolean>(false)
+    const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [query, setQuery] = useState<QueryRisksRequest>({
         ...defQueryRisksRequest,
         SeverityList: initPageInfo().SeverityList || []
@@ -82,7 +82,7 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
         setRemoteValue(RemoteGV.RiskQueryShow, `${val}`)
     })
     return (
-        <YakitSpin spinning={exportHtmlLoading}>
+        <YakitSpin spinning={riskLoading}>
             <div className={styles["risk-page"]} ref={riskBodyRef}>
                 <RiskQuery
                     inViewport={inViewport}
@@ -96,7 +96,7 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
                     setQuery={setQuery}
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={onSetQueryShow}
-                    setExportHtmlLoading={setExportHtmlLoading}
+                    setRiskLoading={setRiskLoading}
                 />
             </div>
         </YakitSpin>

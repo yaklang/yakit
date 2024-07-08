@@ -215,7 +215,7 @@ const yakitRiskCellStyle = {
     }
 }
 export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) => {
-    const {advancedQuery, setAdvancedQuery, setExportHtmlLoading} = props
+    const {advancedQuery, setAdvancedQuery, setRiskLoading} = props
     const [loading, setLoading] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -492,10 +492,17 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 Ids: ids
             }
         }
-        apiDeleteRisk(removeQuery).then(() => {
-            onResetRefresh()
-            emiter.emit("onRefRiskFieldGroup")
-        })
+        setRiskLoading(true)
+        apiDeleteRisk(removeQuery)
+            .then(() => {
+                onResetRefresh()
+                emiter.emit("onRefRiskFieldGroup")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setRiskLoading(false)
+                }, 200)
+            )
     })
     const onExportMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
@@ -627,7 +634,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onExportHTML = useMemoizedFn(async () => {
         if (+response.Total === 0) return
-        setExportHtmlLoading(true)
+        setRiskLoading(true)
         let risks: Risk[] = []
         if (allCheck || selectList.length === 0) {
             const exportQuery: QueryRisksRequest = {
@@ -658,7 +665,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             yakitNotify("error", `导出html失败:${error}`)
         })
         setTimeout(() => {
-            setExportHtmlLoading(false)
+            setRiskLoading(false)
         }, 200)
     })
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
@@ -845,10 +852,17 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 Network: rowData?.IP
             }
         }
-        apiDeleteRisk(newParams).then(() => {
-            onResetRefresh()
-            emiter.emit("onRefRiskFieldGroup")
-        })
+        setRiskLoading(true)
+        apiDeleteRisk(newParams)
+            .then(() => {
+                onResetRefresh()
+                emiter.emit("onRefRiskFieldGroup")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setRiskLoading(false)
+                }, 200)
+            )
     })
     const ResizeBoxProps = useCreation(() => {
         let p = {
