@@ -693,7 +693,7 @@ const Home: React.FC<HomeProp> = (props) => {
     const [watchWidth, setWatchWidth] = useState<number>(0)
     const adjustHeight = (container, wRadio: number, hRadio: number, minHeight: number, maxHeight: number) => {
         if (!container) return
-        const width = container.clientWidth
+        const width = container.getBoundingClientRect().width
         const height = (width * hRadio) / wRadio
         if (height > maxHeight) {
             container.style.height = maxHeight + "px"
@@ -706,25 +706,25 @@ const Home: React.FC<HomeProp> = (props) => {
         container.style.height = height + "px"
     }
     const calcMitmAndwebFuzzerMinHeight = () => {
-        const screenWidth = window.innerWidth
+        const screenWidth = document.body.getBoundingClientRect().width
         if (screenWidth <= 1220) return 315
         if (screenWidth <= 1920) return 400
         return 500
     }
     const calcMitmAndwebFuzzerMaxHeight = () => {
-        const screenWidth = window.innerWidth
+        const screenWidth = document.body.getBoundingClientRect().width
         if (screenWidth <= 1220) return 400
         if (screenWidth <= 1920) return 600
         return 650
     }
     const calcSignlejumpAndVulnerabilityMinHeight = () => {
-        const screenWidth = window.innerWidth
+        const screenWidth = document.body.getBoundingClientRect().width
         if (screenWidth <= 1220) return 215
         if (screenWidth <= 1920) return 275
         return 300
     }
     const calcSignlejumpAndVulnerabilityMaxHeight = () => {
-        const screenWidth = window.innerWidth
+        const screenWidth = document.body.getBoundingClientRect().width
         if (screenWidth <= 1220) return 220
         if (screenWidth <= 1920) return 290
         return 450
