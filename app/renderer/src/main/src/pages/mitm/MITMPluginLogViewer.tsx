@@ -9,7 +9,6 @@ import moment from "moment"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 
 import "./MITMPluginLogViewer.css"
-import {RiskStatsTag} from "../../utils/RiskStatsTag"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 export interface MITMPluginLogViewerProp {
