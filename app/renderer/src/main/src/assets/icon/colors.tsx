@@ -687,3 +687,23 @@ const IconSolidAIWhite = () => (
         </defs>
     </svg>
 )
+
+const SolidDocumenttext = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M4.7998 4.7999C4.7998 3.47442 5.87432 2.3999 7.1998 2.3999H12.7027C13.3393 2.3999 13.9497 2.65276 14.3998 3.10285L18.4969 7.1999C18.9469 7.64999 19.1998 8.26044 19.1998 8.89696V19.1999C19.1998 20.5254 18.1253 21.5999 16.7998 21.5999H7.1998C5.87432 21.5999 4.7998 20.5254 4.7998 19.1999V4.7999Z'
+            fill='currentColor'
+            strokeLinejoin='round'
+        />
+        <rect x='7.5' y='11.25' width='9' height='1.5' rx='0.75' fill='white' />
+        <rect x='7.5' y='15.75' width='9' height='1.5' rx='0.75' fill='white' />
+    </svg>
+)
+/**
+ * @description  Icon/Solid/document-text
+ */
+export const SolidBorderDocumentTextIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidDocumenttext} {...props} />
+}

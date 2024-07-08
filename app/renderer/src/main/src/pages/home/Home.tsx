@@ -37,7 +37,7 @@ import {
     PublicWebFuzzerIcon
 } from "@/routes/publicIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {SolidCheckIcon, SolidDocumenttextIcon, SolidExclamationIcon, SolidPlayIcon} from "@/assets/icon/solid"
+import {SolidCheckIcon, SolidExclamationIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {BlastingAnimationAemonstration} from "../fuzzer/HTTPFuzzerPage"
 import {
@@ -83,6 +83,7 @@ import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import ReactResizeDetector from "react-resize-detector"
+import {SolidBorderDocumentTextIcon} from "@/assets/icon/colors"
 const {ipcRenderer} = window.require("electron")
 
 interface ToolInfo {
@@ -1203,7 +1204,7 @@ const Home: React.FC<HomeProp> = (props) => {
                         </div>
                         <div className={styles["data-preview-wrapper"]}>
                             <div className={styles["data-preview-title"]}>
-                                <SolidDocumenttextIcon className={styles["data-preview-title-icon"]} />
+                                <SolidBorderDocumentTextIcon className={styles["data-preview-title-icon"]} />
                                 <span className={styles["data-preview-title-text"]}>{projectName}</span>
                             </div>
                             <div className={styles["data-preview-item"]}>
