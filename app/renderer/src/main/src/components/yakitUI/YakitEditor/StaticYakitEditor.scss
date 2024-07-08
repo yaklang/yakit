@@ -1,6 +1,6 @@
 .yakit-editor-code {
     .content-length::after {
-        content: 'auto';
+        content: "auto";
         margin-left: 2px;
         padding: 1px 4px;
         background-color: #808080; /* 灰色背景 */
@@ -21,7 +21,7 @@
     }
 
     .host::after {
-        content: '?';
+        content: "?";
         margin-left: 2px;
         padding: 1px 4px;
         background-color: #808080; /* 灰色背景 */
@@ -47,18 +47,18 @@
 
     .unicode-decode::after {
         content: " ";
-        background-color: #F0F2F5;
+        background-color: #f0f2f5;
     }
 
     .unicode-decode-after {
-        color: #ffffff; 
+        color: #ffffff;
         background-color: #808080;
         padding-left: 2px;
         border-radius: 3px;
         opacity: 0.3;
         font-weight: bold;
         cursor: none;
-        user-select: none; 
+        user-select: none;
     }
 
     .crlf::before {
@@ -73,12 +73,16 @@
 
     .lf::before {
         content: "↓";
-      background-color: rgba(255, 255, 255, 0.5);
+        background-color: rgba(255, 255, 255, 0.5);
         margin: 4px;
         padding: 1px 4px; /* 根据需要添加内边距 */
         border-radius: 3px; /* 添加圆角以使样式更好看 */
         color: #000000; /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
         opacity: 0.2;
+    }
+    .hight-light-bg-color {
+        background-color: #c6ebd9;
+        z-index: -1;
     }
 }
 .yakit-editor-wrap-style {

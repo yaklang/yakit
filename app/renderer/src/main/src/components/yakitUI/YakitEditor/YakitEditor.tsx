@@ -71,7 +71,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {HighLightText} from "@/components/HTTPFlowDetail"
 import {useStore} from "@/store/editorState"
 import {CloudDownloadIcon} from "@/assets/newIcon"
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
+import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 
 export interface CodecTypeProps {
     key?: string
@@ -350,7 +350,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     : [
                           {
                               key: "Get*plug-in",
-                              label: <><CloudDownloadIcon style={{marginRight:4}}/>获取插件</>,
+                              label: (
+                                  <>
+                                      <CloudDownloadIcon style={{marginRight: 4}} />
+                                      获取插件
+                                  </>
+                              ),
                               isGetPlugin: true
                           } as EditorMenuItemProps
                       ]
@@ -370,7 +375,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     : [
                           {
                               key: "aiplugin-Get*plug-in",
-                              label: <><CloudDownloadIcon style={{marginRight:4}}/>获取插件</>,
+                              label: (
+                                  <>
+                                      <CloudDownloadIcon style={{marginRight: 4}} />
+                                      获取插件
+                                  </>
+                              ),
                               isGetPlugin: true
                           } as EditorMenuItemProps
                       ]
@@ -1050,7 +1060,19 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 editor && insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
             }
         }
+        const toOpenAiChat = (scriptName: string) => {
+            if (scriptName === "aiplugin-Get*plug-in") {
+                emiter.emit("onOpenFuzzerModal", JSON.stringify({scriptName, isAiPlugin: "isGetPlugin"}))
+                closeFizzRangeWidget()
+                return
+            }
 
+            if (editor) {
+                const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || value
+                emiter.emit("onOpenFuzzerModal", JSON.stringify({text: selectedText, scriptName, isAiPlugin: true}))
+                closeFizzRangeWidget()
+            }
+        }
         // 编辑器点击显示的菜单
         const fizzSelectWidget = {
             isOpen: false,
@@ -1070,6 +1092,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             editorInfo={editorInfo.current}
                             close={() => closeFizzSelectWidget()}
                             fizzSelectTimeoutId={fizzSelectTimeoutId}
+                            toOpenAiChat={toOpenAiChat}
                             insert={(v: QueryFuzzerLabelResponseProps) => {
                                 insertLabelFun(v)
                                 closeFizzSelectWidget()
@@ -1159,26 +1182,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                           closeFizzRangeWidget()
                                       }
                                   }}
-                                  toOpenAiChat={(scriptName: string) => {
-                                      if (scriptName === "aiplugin-Get*plug-in") {
-                                          emiter.emit(
-                                              "onOpenFuzzerModal",
-                                              JSON.stringify({scriptName, isAiPlugin: "isGetPlugin"})
-                                          )
-                                          closeFizzRangeWidget()
-                                          return
-                                      }
-
-                                      if (editor) {
-                                          const selectedText =
-                                              editor.getModel()?.getValueInRange(editor.getSelection() as any) || ""
-                                          emiter.emit(
-                                              "onOpenFuzzerModal",
-                                              JSON.stringify({text: selectedText, scriptName, isAiPlugin: true})
-                                          )
-                                          closeFizzRangeWidget()
-                                      }
-                                  }}
+                                  toOpenAiChat={toOpenAiChat}
                                   rangeValue={
                                       (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
                                   }
