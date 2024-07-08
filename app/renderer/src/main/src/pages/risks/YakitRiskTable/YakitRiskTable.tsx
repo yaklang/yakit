@@ -68,6 +68,7 @@ import {FieldName} from "../RiskTable"
 import {defQueryRisksRequest} from "./constants"
 import emiter from "@/utils/eventBus/eventBus"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -817,6 +818,38 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onExpend = useMemoizedFn(() => {
         setAdvancedQuery(true)
     })
+    const onRowContextMenu = useMemoizedFn((rowData: Risk) => {
+        if (!rowData) return
+        showByRightContext({
+            width: 180,
+            data: [{key: "delete-repeat-title", label: "删除重复标题数据"}],
+            onClick: ({key}) => onRightMenuSelect(key, rowData)
+        })
+    })
+    const onRightMenuSelect = useMemoizedFn((key: string, rowData: Risk) => {
+        switch (key) {
+            case "delete-repeat-title":
+                onDeleteRepeatTitle(rowData)
+                break
+            default:
+                break
+        }
+    })
+    const onDeleteRepeatTitle = useMemoizedFn((rowData: Risk) => {
+        const newParams = {
+            DeleteRepetition: true,
+            Id: rowData.Id,
+            Filter: {
+                ...defQueryRisksRequest,
+                Title: rowData?.TitleVerbose || rowData.Title,
+                Network: rowData?.IP
+            }
+        }
+        apiDeleteRisk(newParams).then(() => {
+            onResetRefresh()
+            emiter.emit("onRefRiskFieldGroup")
+        })
+    })
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "70%",
@@ -991,6 +1024,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         enableDrag={true}
                         useUpAndDown
                         onChange={onTableChange}
+                        onRowContextMenu={onRowContextMenu}
                     />
                 }
                 secondNode={
