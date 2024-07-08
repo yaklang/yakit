@@ -75,8 +75,11 @@ import {shallow} from "zustand/shallow"
 import {RemoteGV} from "@/yakitGV"
 import {
     AddYakitScriptPageInfoProps,
+    HTTPHackerPageInfoProps,
     PageNodeItemProps,
     PageProps,
+    PluginHubPageInfoProps,
+    RiskPageInfoProps,
     defPage,
     saveFuzzerCache,
     usePageInfo
@@ -421,6 +424,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.ModifyYakitScript:
                 modifyYakScript(params)
                 break
+            case YakitRoute.Plugin_Hub:
+                pluginHub(params)
+                break
             case YakitRoute.Plugin_Local:
                 pluginLocal(params)
                 break
@@ -451,9 +457,83 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.SimpleDetect:
                 addSimpleDetect(params)
                 break
+            case YakitRoute.DB_Risk:
+                addRiskPage(params)
+                break
+            case YakitRoute.HTTPHacker:
+                addHTTPHackerPage(params)
+                break
             default:
                 break
         }
+    })
+    const addHTTPHackerPage = useMemoizedFn((data: HTTPHackerPageInfoProps) => {
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.HTTPHacker,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.HTTPHacker,
+                    pageName: YakitRouteToPageInfo[YakitRoute.HTTPHacker]?.label || "",
+                    pageParamsInfo: {
+                        hTTPHackerPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.HTTPHacker,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.HTTPHacker, pageNodeInfo)
+        openMenuPage(
+            {route: YakitRoute.HTTPHacker},
+            {
+                pageParams: {
+                    hTTPHackerPageInfoProps: {
+                        ...data
+                    }
+                }
+            }
+        )
+    })
+    const addRiskPage = useMemoizedFn((data: RiskPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.DB_Risk).length
+        if (isExist) {
+            if (data.SeverityList) {
+                emiter.emit("specifyVulnerabilityLevel", JSON.stringify(data.SeverityList))
+            }
+        }
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.DB_Risk,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.DB_Risk,
+                    pageName: YakitRouteToPageInfo[YakitRoute.DB_Risk]?.label || "",
+                    pageParamsInfo: {
+                        riskPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.DB_Risk,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.DB_Risk, pageNodeInfo)
+        openMenuPage(
+            {route: YakitRoute.DB_Risk},
+            {
+                pageParams: {
+                    riskPageInfoProps: {
+                        ...data
+                    }
+                }
+            }
+        )
     })
     const addSimpleDetect = useMemoizedFn((data) => {
         openMenuPage(
@@ -536,6 +616,44 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             cuPluginEditorStorage(source, true)
         }
         openMenuPage({route: YakitRoute.ModifyYakitScript}, {pageParams: {editPluginId: id}})
+    })
+    /**
+     * @name 插件仓库
+     */
+    const pluginHub = useMemoizedFn((data: PluginHubPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.Plugin_Hub).length
+        if (isExist) {
+            emiter.emit("refreshPluginHubTabActive", data.tabActive)
+        }
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.Plugin_Hub,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.Plugin_Hub,
+                    pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Hub]?.label || "",
+                    pageParamsInfo: {
+                        pluginHubPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.Plugin_Hub,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.Plugin_Hub, pageNodeInfo)
+        openMenuPage(
+            {route: YakitRoute.Plugin_Hub},
+            {
+                pageParams: {
+                    pluginHubPageInfoProps: {
+                        ...data
+                    }
+                }
+            }
+        )
     })
     /**
      * @name 本地插件

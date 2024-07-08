@@ -1233,11 +1233,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     >
                                         {performanceSamplingInfo.log.map((item, index) => (
                                             <div className={classNames(styles["sampling-info"])} key={index}>
-                                                <Tooltip title='点击打开所在目录' placement="top" align={{offset: [40, 0]}}>
+                                                <Tooltip
+                                                    title='点击打开所在目录'
+                                                    placement='top'
+                                                    align={{targetOffset: [-10, -15]}}
+                                                >
                                                     <span
-                                                        className={classNames(
-                                                            styles["sampling-info-item"]
-                                                        )}
+                                                        className={classNames(styles["sampling-info-item"])}
                                                         onClick={() => {
                                                             ipcRenderer
                                                                 .invoke("is-file-exists", item.path)
@@ -1251,7 +1253,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                                 .catch(() => {})
                                                         }}
                                                     >
-                                                        {item.path.substring(item.path.lastIndexOf("\\") + 1)}
+                                                        {item.path.substring(
+                                                            Math.max(
+                                                                item.path.lastIndexOf("/"),
+                                                                item.path.lastIndexOf("\\")
+                                                            ) + 1
+                                                        )}
                                                     </span>
                                                 </Tooltip>
                                                 <CopyComponents copyText={item.path} />
@@ -1288,18 +1295,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     if (!visible) setIsShowSamplingInfo(false)
                                 }}
                             >
-                                <YakitButton
-                                    type='primary'
-                                    colors='success'
-                                    className={styles["stop-screen-recorder"]}
-                                    size='middle'
-                                    onClick={() => setIsShowSamplingInfo(true)}
-                                >
-                                    <div className={styles["stop-icon"]}>
-                                        <SolidCheckCircleIcon />
-                                    </div>
-                                    <span className={styles["stop-text"]}>采样完成</span>
-                                </YakitButton>
+                                <Tooltip title='采样完成' placement='bottom'>
+                                    <YakitButton
+                                        type='primary'
+                                        colors='success'
+                                        className={styles["stop-screen-recorder"]}
+                                        size='middle'
+                                        onClick={() => setIsShowSamplingInfo(true)}
+                                    >
+                                        <div className={styles["stop-icon"]}>
+                                            <SolidCheckCircleIcon />
+                                        </div>
+                                        <span className={styles["stop-text"]}>采样完成</span>
+                                    </YakitButton>
+                                </Tooltip>
                             </YakitPopover>
                         ) : (
                             <></>

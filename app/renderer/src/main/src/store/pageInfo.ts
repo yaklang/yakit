@@ -10,6 +10,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {createWithEqualityFn} from "zustand/traditional"
 import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import {PluginSourceType} from "@/pages/pluginHub/type"
 
 /**
  * @description 页面暂存数据
@@ -60,6 +61,11 @@ interface PageParamsInfoProps {
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
+    /**新建插件仓库页面 */
+    pluginHubPageInfo?: PluginHubPageInfoProps
+    /**新建漏洞与风险统计页面 */
+    riskPageInfo?: RiskPageInfoProps
+    hTTPHackerPageInfo?: HTTPHackerPageInfoProps
 }
 
 export interface AddYakitScriptPageInfoProps {
@@ -133,6 +139,24 @@ export interface BrutePageInfoProps {
 export interface ScanPortPageInfoProps {
     /**输入目标 */
     targets: string
+}
+
+export interface PluginHubPageInfoProps {
+    /**切换到插件仓库指定tab */
+    tabActive: PluginSourceType
+}
+
+export interface RiskPageInfoProps {
+    /**漏洞危险等级 */
+    SeverityList?: string[]
+}
+interface ImmediatelyLaunchedInfo {
+    host: string
+    port: string
+    enableInitialPlugin: boolean
+}
+export interface HTTPHackerPageInfoProps {
+    immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
 interface PageInfoStoreProps {

@@ -112,8 +112,11 @@ import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBat
 import {
     AddYakitScriptPageInfoProps,
     BrutePageInfoProps,
+    HTTPHackerPageInfoProps,
     PluginBatchExecutorPageInfoProps,
+    PluginHubPageInfoProps,
     PocPageInfoProps,
+    RiskPageInfoProps,
     ScanPortPageInfoProps,
     SimpleDetectPageInfoProps,
     SpaceEnginePageInfoProps
@@ -133,7 +136,7 @@ import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
-const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
+const Home = React.lazy(() => import("@/pages/home/Home"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
 
@@ -381,6 +384,12 @@ export interface ComponentParams {
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
+    /**插件仓库页面 */
+    pluginHubPageInfoProps?: PluginHubPageInfoProps
+    /**漏洞与风险统计页面 */
+    riskPageInfoProps?: RiskPageInfoProps
+    /**MITM劫持页面 */
+    hTTPHackerPageInfoProps?: HTTPHackerPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -409,7 +418,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <NewHome />
+            return <Home />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>

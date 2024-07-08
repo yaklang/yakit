@@ -25,6 +25,10 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {CacheDropDownGV} from "@/yakitGV"
+import emiter from "@/utils/eventBus/eventBus"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/enums/yakitRoute"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -60,6 +64,22 @@ export interface ClientCertificate {
 const defHost = "127.0.0.1"
 const defPort = "8083"
 export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo((props) => {
+    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            removePagesDataCacheById: s.removePagesDataCacheById
+        }),
+        shallow
+    )
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.HTTPHacker,
+            YakitRoute.HTTPHacker
+        )
+        if (currentItem && currentItem.pageParamsInfo.hTTPHackerPageInfo) {
+            return currentItem.pageParamsInfo.hTTPHackerPageInfo
+        }
+    })
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
@@ -199,6 +219,31 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
     })
+    const beforeExecStartMITM = (values) => {
+        if (props.status === "idle") {
+            try {
+                const valObj = JSON.parse(values) || {}
+                form.setFieldsValue({...valObj})
+            } catch (error) {}
+            execStartMITM(form.getFieldsValue())
+        }
+    }
+    useEffect(() => {
+        emiter.on("onExecStartMITM", beforeExecStartMITM)
+        return () => {
+            emiter.off("onExecStartMITM", beforeExecStartMITM)
+        }
+    }, [])
+
+    useEffect(() => {
+        const info = initPageInfo()?.immediatelyLaunchedInfo
+        if (info && props.status === "idle") {
+            removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
+            form.setFieldsValue({host: info.host, port: info.port, enableInitialPlugin: info.enableInitialPlugin})
+            execStartMITM(form.getFieldsValue())
+        }
+    }, [initPageInfo()?.immediatelyLaunchedInfo, props.status])
+
     const [width, setWidth] = useState<number>(0)
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)

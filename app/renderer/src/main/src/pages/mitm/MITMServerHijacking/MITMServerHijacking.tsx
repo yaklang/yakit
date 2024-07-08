@@ -1,4 +1,4 @@
-import React, {Ref, useEffect, useRef, useState} from "react"
+import React, {Ref, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {Divider, Form, Modal, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
@@ -24,6 +24,9 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {AgentConfigModal} from "../MITMServerStartForm/MITMServerStartForm"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -57,6 +60,23 @@ const MITMCertificateDownloadModal = React.lazy(() => import("../MITMServerStart
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
     const {host, port, addr, status, setStatus, setVisible, logs, statusCards, tip, onSetTip} = props
 
+    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            removePagesDataCacheById: s.removePagesDataCacheById
+        }),
+        shallow
+    )
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.HTTPHacker,
+            YakitRoute.HTTPHacker
+        )
+        if (currentItem && currentItem.pageParamsInfo.hTTPHackerPageInfo) {
+            return currentItem.pageParamsInfo.hTTPHackerPageInfo
+        }
+    })
+
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
@@ -69,19 +89,42 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
 
+    useEffect(() => {
+        const info = initPageInfo()?.immediatelyLaunchedInfo
+        if (info && status !== "idle") {
+            removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
+            stop().then(() => {
+                setTimeout(() => {
+                    emiter.emit(
+                        "onExecStartMITM",
+                        JSON.stringify({
+                            host: info.host,
+                            port: info.port,
+                            enableInitialPlugin: info.enableInitialPlugin
+                        })
+                    )
+                }, 300)
+            })
+        }
+    }, [initPageInfo()?.immediatelyLaunchedInfo, status])
+
     const stop = useMemoizedFn(() => {
         // setLoading(true)
-        ipcRenderer
-            .invoke("mitm-stop-call")
-            .then(() => {
-                setStatus("idle")
-            })
-            .catch((e: any) => {
-                notification["error"]({message: `停止中间人劫持失败：${e}`})
-            })
-            .finally(() => {
-                // setLoading(false)
-            })
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("mitm-stop-call")
+                .then(() => {
+                    setStatus("idle")
+                    resolve("ok")
+                })
+                .catch((e: any) => {
+                    reject(e)
+                    notification["error"]({message: `停止中间人劫持失败：${e}`})
+                })
+                .finally(() => {
+                    // setLoading(false)
+                })
+        })
     })
 
     useEffect(() => {

@@ -28,11 +28,46 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {shallow} from "zustand/shallow"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {defaultRiskPageInfo} from "@/defaultConstants/RiskPage"
 
 export const RiskPage: React.FC<RiskPageProp> = (props) => {
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.DB_Risk, YakitRoute.DB_Risk)
+        if (currentItem && currentItem.pageParamsInfo.riskPageInfo) {
+            return currentItem.pageParamsInfo.riskPageInfo
+        } else {
+            return {...defaultRiskPageInfo}
+        }
+    })
+
+    useEffect(() => {
+        const specifyVulnerabilityLevel = (params: string) => {
+            try {
+                const SeverityList = JSON.parse(params) || []
+                setQuery((query) => ({...query, SeverityList}))
+            } catch (error) {}
+        }
+        emiter.on("specifyVulnerabilityLevel", specifyVulnerabilityLevel)
+        return () => {
+            emiter.off("specifyVulnerabilityLevel", specifyVulnerabilityLevel)
+        }
+    }, [])
+
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [exportHtmlLoading, setExportHtmlLoading] = useState<boolean>(false)
-    const [query, setQuery] = useState<QueryRisksRequest>(cloneDeep(defQueryRisksRequest))
+    const [query, setQuery] = useState<QueryRisksRequest>({
+        ...defQueryRisksRequest,
+        SeverityList: initPageInfo().SeverityList || []
+    })
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
 
