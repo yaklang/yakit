@@ -266,7 +266,7 @@ $keyColor: map-keys($colors);
             height: 32px;
             background-color: var(--yakit-card-background-color);
 
-            max-width: calc(100% - 32px);
+            max-width: calc(100% - 64px);
             overflow-y: hidden;
             overflow-x: auto;
             scroll-behavior: smooth;
@@ -344,6 +344,9 @@ $keyColor: map-keys($colors);
         .tab-menu-sub-width {
             max-width: 100%;
         }
+        .tab-menu-sub-expand {
+            max-width: calc(100% - 32px);
+        }
 
         .render-sub-page {
             position: relative;
@@ -355,20 +358,29 @@ $keyColor: map-keys($colors);
         }
     }
 
-    .outline-plus-icon {
-        @extend .base-operate-icon;
-        width: 32px;
-        height: 32px;
-        flex-shrink: 0;
-        border-radius: 0;
-        user-select: none;
+    .extra-operate {
+        display: flex;
+        align-items: center;
+        .extra-operate-icon {
+            @extend .base-operate-icon;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border-radius: 0;
+            user-select: none;
 
-        svg {
-            width: 16px;
-            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+            path {
+                stroke-width: 1.5;
+            }
         }
     }
-
+    .extra-operate-expand {
+        flex-direction: column-reverse;
+    }
     .outline-chevron-double-left {
         @extend .base-operate-icon;
         background-color: var(--yakit-card-background-color);
@@ -404,7 +416,7 @@ $keyColor: map-keys($colors);
         user-select: none;
 
         position: absolute;
-        right: 32px;
+        right: 64px;
         z-index: 11;
 
         svg {

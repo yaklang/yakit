@@ -186,7 +186,8 @@ export interface SubTabItemProps {
     onRemoveSub: (m: MultipleNodeInfo) => void
     onContextMenu: (e: React.MouseEvent, subItem: MultipleNodeInfo) => void
     combineColor?: string
-    dropType: string
+    /**是否可以拖拽 */
+    isDragDisabled:boolean
 }
 /**
  * @description 组
@@ -196,6 +197,7 @@ export interface SubTabItemProps {
  * @function subPage
  */
 export interface SubTabGroupItemProps extends SubTabItemProps {
+    dropType: string
     onUnfoldAndCollapse: (subItem: MultipleNodeInfo) => void
     onGroupContextMenu: (e: React.MouseEvent, index: number) => void
     selectMenuGroupId: string

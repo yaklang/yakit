@@ -42,7 +42,7 @@ import {
 import classNames from "classnames"
 import _ from "lodash"
 import {KeyConvertRoute, routeConvertKey} from "../publicMenu/utils"
-import {CheckIcon, OutlinePlusIcon, RemoveIcon, SolidDocumentTextIcon} from "@/assets/newIcon"
+import {CheckIcon, RemoveIcon, SolidDocumentTextIcon} from "@/assets/newIcon"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -63,7 +63,13 @@ import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "@/components/yak
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondoubleleftIcon,
+    OutlineChevrondoublerightIcon,
+    OutlinePlusIcon,
+    OutlineSortascendingIcon,
+    OutlineSortdescendingIcon
+} from "@/assets/icon/outline"
 
 import {FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
@@ -2511,6 +2517,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const [dropType, setDropType] = useState<string>(droppable)
         const [subDropType, setSubDropType] = useState<string>(droppableGroup)
 
+        const [isExpand, setIsExpand] = useState<boolean>(false) //是否可以拖拽
+
         const [scroll, setScroll] = useState<ScrollProps>({
             scrollLeft: 0,
             scrollBottom: 0,
@@ -3875,7 +3883,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             <div className={styles["tab-menu-sub-body"]}>
                                 <div
                                     className={classNames(styles["outline-chevron-double-left"], {
-                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollLeft <= 0
+                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollLeft <= 0||isExpand
                                     })}
                                     ref={scrollLeftIconRef}
                                 >
@@ -3883,7 +3891,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 </div>
                                 <div
                                     className={classNames(styles["tab-menu-sub"], {
-                                        [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true
+                                        [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true,
+                                        [styles["tab-menu-sub-expand"]]: isExpand
                                     })}
                                     id={`tab-menu-sub-${pageItem.route}`}
                                     ref={provided.innerRef}
@@ -3905,6 +3914,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                         onUnfoldAndCollapse={onUnfoldAndCollapse}
                                                         onGroupContextMenu={onGroupRightClickOperation}
                                                         dropType={subDropType}
+                                                        isDragDisabled={isExpand}
                                                     />
                                                 </React.Fragment>
                                             )
@@ -3914,13 +3924,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                             <React.Fragment key={item.id}>
                                                 <SubTabItem
                                                     subItem={item}
-                                                    dropType={dropType}
                                                     index={indexSub}
                                                     selectSubMenu={selectSubMenu}
                                                     setSelectSubMenu={setSelectSubMenu}
                                                     onRemoveSub={onRemoveSubPage}
                                                     onContextMenu={onRightClickOperation}
                                                     combineColor={isCombine ? combineColorRef.current : ""}
+                                                    isDragDisabled={isExpand}
                                                 />
                                             </React.Fragment>
                                         )
@@ -3929,17 +3939,34 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 </div>
                                 <div
                                     className={classNames(styles["outline-chevron-double-right"], {
-                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollRight <= 0
+                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollRight <= 0||isExpand
                                     })}
                                     ref={scrollRightIconRef}
                                 >
                                     <OutlineChevrondoublerightIcon />
                                 </div>
                                 {pageItem.hideAdd !== true && (
-                                    <OutlinePlusIcon
-                                        className={styles["outline-plus-icon"]}
-                                        onClick={() => onAddSubPage()}
-                                    />
+                                    <div
+                                        className={classNames(styles["extra-operate"], {
+                                            [styles["extra-operate-expand"]]: isExpand
+                                        })}
+                                    >
+                                        {isExpand ? (
+                                            <OutlineSortascendingIcon
+                                                className={styles["extra-operate-icon"]}
+                                                onClick={() => setIsExpand(false)}
+                                            />
+                                        ) : (
+                                            <OutlineSortdescendingIcon
+                                                className={styles["extra-operate-icon"]}
+                                                onClick={() => setIsExpand(true)}
+                                            />
+                                        )}
+                                        <OutlinePlusIcon
+                                            className={styles["extra-operate-icon"]}
+                                            onClick={() => onAddSubPage()}
+                                        />
+                                    </div>
                                 )}
                             </div>
                         )
@@ -3956,7 +3983,8 @@ export interface SimpleTabInterface {
 }
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
-    const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
+    const {subItem, isDragDisabled, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} =
+        props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
     const [tabStatus, setTabStatus] = useState<ExpandAndRetractExcessiveState>()
     useEffect(() => {
@@ -3973,7 +4001,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
         }
     })
     return (
-        <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
+        <Draggable key={subItem.id} draggableId={subItem.id} index={index} isDragDisabled={isDragDisabled}>
             {(provided, snapshot) => {
                 const itemStyle = getItemStyle(snapshot.isDragging, provided.draggableProps.style)
                 return (
@@ -4065,7 +4093,8 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
         onContextMenu,
         onUnfoldAndCollapse,
         onGroupContextMenu,
-        dropType
+        dropType,
+        isDragDisabled
     } = props
     const color = useMemo(() => subItem.color || "purple", [subItem.color])
 
@@ -4176,13 +4205,13 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                             <React.Fragment key={groupItem.id}>
                                                 <SubTabItem
                                                     subItem={groupItem}
-                                                    dropType={dropType}
                                                     index={index}
                                                     selectSubMenu={selectSubMenu}
                                                     setSelectSubMenu={setSelectSubMenu}
                                                     onRemoveSub={onRemoveSub}
                                                     onContextMenu={onContextMenu}
                                                     combineColor={color}
+                                                    isDragDisabled={isDragDisabled}
                                                 />
                                             </React.Fragment>
                                         ))}
