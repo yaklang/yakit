@@ -48,6 +48,9 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         [styles["left-side-bar-item-advanced-config-unShow"]]: active === "file-tree" && isUnShow
                     })}
                     onClick={() => {
+                        if (active !== "file-tree") {
+                            setUnShow(false)
+                        }
                         if (active === "file-tree") {
                             setUnShow(!isUnShow)
                         }
@@ -63,7 +66,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         [styles["left-side-bar-item-advanced-config-unShow"]]: active === "help-doc" && isUnShow
                     })}
                     onClick={() => {
-                        if(active === "file-tree"){
+                        if (active !== "help-doc") {
                             setUnShow(false)
                         }
                         if (active === "help-doc") {
@@ -79,19 +82,19 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
 
             {/* 侧边栏对应展示内容 */}
             <div className={styles["left-side-bar-content"]}>
-                {rendered.current.has("file-tree") && !isUnShow && (
+                {rendered.current.has("file-tree") && (
                     <div
                         className={classNames(styles["content-wrapper"], {
-                            [styles["hidden-content"]]: active !== "file-tree"
+                            [styles["hidden-content"]]: active !== "file-tree" || isUnShow
                         })}
                     >
                         <RunnerFileTree addFileTab={addFileTab} />
                     </div>
                 )}
-                {rendered.current.has("help-doc") && !isUnShow && (
+                {rendered.current.has("help-doc") && (
                     <div
                         className={classNames(styles["content-wrapper"], {
-                            [styles["hidden-content"]]: active !== "help-doc"
+                            [styles["hidden-content"]]: active !== "help-doc" || isUnShow
                         })}
                     >
                         <YakHelpDoc />

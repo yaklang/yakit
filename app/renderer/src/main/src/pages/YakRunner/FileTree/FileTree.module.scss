@@ -49,6 +49,15 @@
     }
 }
 
+.tree-bottom{
+    position: relative;
+    height: 22px;
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    line-height: 22px;
+}
+
 /* ---------- FileTreeNode ----------*/
 .file-tree-node {
     padding: 3px 12px 3px 8px;

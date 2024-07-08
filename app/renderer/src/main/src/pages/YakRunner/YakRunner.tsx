@@ -360,7 +360,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             // 校验其子项是否存在
             const childArr = getMapFolderDetail(path)
             if (childArr.length > 0) {
-                console.log("缓存加载")
                 emiter.emit("onRefreshFileTree")
                 resolve("")
             } else {
@@ -375,7 +374,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         })
                         setMapFolderDetail(path, childArr)
                         setTimeout(() => {
-                            console.log("接口加载")
                             emiter.emit("onRefreshFileTree")
                             resolve("")
                         }, 300)
@@ -436,7 +434,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const addFileTab = useThrottleFn(
         () => {
             // 新建临时文件
-            console.log("ctrl_n")
             const scratchFile: FileDetailInfo = {
                 name: `Untitle-${unTitleCountRef.current}.yak`,
                 code: "# input your yak code\nprintln(`Hello Yak World!`)",
@@ -518,7 +515,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 关闭文件
     const ctrl_w = useMemoizedFn(() => {
-        console.log("ctrl_w")
         if (activeFile) {
             emiter.emit("onCloseFile", activeFile.path)
         }
@@ -692,7 +688,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     newAreaInfo[indexArr[0]].elements[indexArr[1]].files.splice(destination.index, 0, element)
                 }
             }
-            console.log("onDragEnd-0_0", newAreaInfo)
             setAreaInfo(newAreaInfo)
         } catch (error) {}
     })

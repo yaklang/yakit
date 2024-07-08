@@ -24,12 +24,15 @@ import {XTerm} from "xterm-for-react"
 import {YakitSystem} from "@/yakitGVDefine"
 import {TerminalBox} from "./TerminalBox/TerminalBox"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {SolidCheckIcon} from "@/assets/icon/solid"
+import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
-    const {isShowEditorDetails,setEditorDetails, showItem, setShowItem} = props
+    const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
 
     const systemRef = useRef<System | undefined>(SystemInfo.system)
     useEffect(() => {
@@ -38,16 +41,20 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [])
 
-    const {activeFile,fileTree} = useStore()
+    const {activeFile, fileTree} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
+
+    // 终端编码
+    const [codeKey, setCodeKey] = useState<string>("")
+    const [codeShow, setCodeShow] = useState<boolean>(false)
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     useEffect(() => {
         if (showItem && isShowEditorDetails) {
-            if(showType.includes(showItem)) return
+            if (showType.includes(showItem)) return
             setShowType((arr) => filterItem([...arr, showItem]))
         }
     }, [showItem, isShowEditorDetails])
@@ -74,7 +81,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         try {
             const {type}: {type: ShowItemType} = JSON.parse(v)
             // 执行时需要清空输出
-            if(type === "output"){
+            if (type === "output") {
                 xtermClear(xtermRef)
             }
             setEditorDetails(true)
@@ -110,14 +117,30 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [xtermRef])
 
-    // 终端path为文件树根路径
-    const folderPath = useMemo(() => {
+    // 终端路径
+    const [folderPath, setFolderPath] = useState<string>("")
+
+    useEffect(() => {
         if (fileTree.length > 0) {
-            return fileTree[0].path
+            setFolderPath(fileTree[0].path)
         } else {
-            return ""
+            setFolderPath("")
         }
     }, [fileTree])
+
+    const onOpenTernimalFun = useMemoizedFn((path) => {
+        setEditorDetails(true)
+        setShowItem("terminal")
+        setFolderPath(path)
+    })
+
+    // 监听终端更改
+    useEffect(() => {
+        emiter.on("onOpenTernimal", onOpenTernimalFun)
+        return () => {
+            emiter.off("onOpenTernimal", onOpenTernimalFun)
+        }
+    }, [])
 
     return (
         <div className={styles["bottom-editor-details"]}>
@@ -163,11 +186,61 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 </div>
                 <div className={styles["extra"]}>
                     {showItem === "terminal" && (
+                        <YakitPopover
+                            trigger='click'
+                            overlayClassName={styles["codec-menu-popover"]}
+                            overlayStyle={{paddingTop: 2}}
+                            placement='bottomLeft'
+                            content={
+                                <div className={styles["codec-menu-cont-wrapper"]}>
+                                    {[
+                                        {label: "gb18030", codeKey: "gb18030"},
+                                        {label: "windows-1252", codeKey: "windows-1252"},
+                                        {label: "iso-8859-1", codeKey: "iso-8859-1"},
+                                        {label: "big5", codeKey: "big5"},
+                                        {label: "utf-16", codeKey: "utf-16"}
+                                    ].map((item) => (
+                                        <div
+                                            key={item.codeKey}
+                                            className={classNames(styles["codec-menu-item"], {
+                                                [styles["active"]]: codeKey === item.codeKey
+                                            })}
+                                            onClick={() => {
+                                                // handleClickCoding(item.codeKey)
+                                                if (codeKey === item.codeKey) {
+                                                    setCodeKey("")
+                                                } else {
+                                                    setCodeKey(item.codeKey)
+                                                }
+                                            }}
+                                        >
+                                            {item.label}
+                                            {codeKey === item.codeKey && (
+                                                <SolidCheckIcon className={styles["check-icon"]} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            }
+                            visible={codeShow}
+                            onVisibleChange={(visible) => setCodeShow(visible)}
+                        >
+                            <YakitButton
+                                size='small'
+                                type={codeKey !== "" ? "primary" : "outline2"}
+                                onClick={(e) => e.preventDefault()}
+                            >
+                                编码
+                                {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                            </YakitButton>
+                        </YakitPopover>
+                    )}
+                    {showItem === "terminal" && (
                         <YakitButton
                             type='text2'
                             icon={<OutlineTrashIcon />}
                             onClick={() => {
-                                ipcRenderer.invoke("runner-terminal-cancel",folderPath).finally(() => {
+                                ipcRenderer.invoke("runner-terminal-cancel", folderPath).finally(() => {
                                     setEditorDetails(false)
                                     // 重新渲染
                                     setShowType(showType.filter((item) => item !== "terminal"))
@@ -217,7 +290,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         {/* {systemRef.current === "Windows_NT" ? (
                             <div className={styles["no-syntax-check"]}>终端监修中</div>
                         ) : ( */}
-                        <TerminalBox folderPath={folderPath} isShowEditorDetails={isShowEditorDetails}/>
+                        <TerminalBox
+                            folderPath={folderPath}
+                            isShowEditorDetails={isShowEditorDetails}
+                            codeKey={codeKey}
+                        />
                         {/* )} */}
                     </div>
                 )}

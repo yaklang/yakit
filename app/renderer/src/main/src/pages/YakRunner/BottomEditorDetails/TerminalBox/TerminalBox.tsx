@@ -12,16 +12,18 @@ import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
 import {TERMINAL_INPUT_KEY, YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 import useStore from "../../hooks/useStore"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {number} from "echarts"
 
 const {ipcRenderer} = window.require("electron")
 
 export interface TerminalBoxProps {
     isShowEditorDetails: boolean
     folderPath: string
+    codeKey: string
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {isShowEditorDetails,folderPath} = props
+    const {isShowEditorDetails, folderPath, codeKey} = props
     const xtermRef = useRef<any>(null)
     // 是否允许输入及不允许输入的原因
     const [allowInput, setAllowInput] = useState<boolean>(true)
@@ -34,6 +36,56 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         ipcRenderer.invoke("runner-terminal-input", folderPath, cmd)
     })
 
+    // 行列变化
+    const onChangeSize = useMemoizedFn((height, width) => {
+        if (height && width && folderPath) {
+            ipcRenderer.invoke("runner-terminal-size", folderPath, {
+                height,
+                width
+            })
+        }
+    })
+
+    const fetchNewCodec = useMemoizedFn((data: Uint8Array, codeKey: string) => {
+        const newCodecParams = {
+            InputBytes: data,
+            WorkFlow: [
+                {
+                    CodecType: "CharsetToUTF8",
+                    Params: [
+                        {
+                            Key: "charset",
+                            Value: codeKey
+                        }
+                    ]
+                }
+            ]
+        }
+        ipcRenderer
+            .invoke("NewCodec", newCodecParams)
+            .then((data: {Result: string; RawResult: Uint8Array}) => {
+                let outPut = Uint8ArrayToString(data.RawResult)
+                writeXTerm(xtermRef, outPut)
+                // onSetCodeValue(data.RawResult)
+            })
+            .catch((e) => {
+                let outPut = Uint8ArrayToString(data)
+                writeXTerm(xtermRef, outPut)
+                failed(e)
+            })
+            .finally(() => {})
+    })
+
+    // 输出
+    const onWriteXTerm = useMemoizedFn((data: Uint8Array) => {
+        let outPut = Uint8ArrayToString(data)
+        if (codeKey) {
+            fetchNewCodec(data, codeKey)
+        } else {
+            writeXTerm(xtermRef, outPut)
+        }
+    })
+
     // 终端启用路径
     const startTerminalPath = useRef<string>()
 
@@ -41,8 +93,8 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         if (!xtermRef) {
             return
         }
-        if(startTerminalPath.current){
-            ipcRenderer.invoke("runner-terminal-cancel",startTerminalPath.current)
+        if (startTerminalPath.current) {
+            ipcRenderer.invoke("runner-terminal-cancel", startTerminalPath.current)
             startTerminalPath.current = undefined
         }
         setAllowInput(true)
@@ -53,7 +105,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             })
             .then(() => {
                 startTerminalPath.current = folderPath
-                isShowEditorDetails&&success(`终端${folderPath}监听成功`)
+                isShowEditorDetails && success(`终端${folderPath}监听成功`)
             })
             .catch((e: any) => {
                 failed(`ERROR: ${JSON.stringify(e)}`)
@@ -68,10 +120,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             }
 
             if (data?.raw && xtermRef?.current && xtermRef.current?.terminal) {
-                // let str = String.fromCharCode.apply(null, data.raw);
-                let str = Uint8ArrayToString(data.raw)
-                
-                writeXTerm(xtermRef, str)
+                onWriteXTerm(data.raw)
             }
         })
 
@@ -83,10 +132,10 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         // grpc通知关闭
         const errorKey = "client-listening-terminal-end"
         ipcRenderer.on(errorKey, (e: any, data: any) => {
-            if(startTerminalPath.current === data){
+            if (startTerminalPath.current === data) {
                 setAllowInput(false)
             }
-            isShowEditorDetails&&warn(`终端${data}被关闭`)
+            isShowEditorDetails && warn(`终端${data}被关闭`)
         })
         return () => {
             // 移除
@@ -108,6 +157,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                     if (!width || !height) return
                     const row = Math.floor(height / 18.5)
                     const col = Math.floor(width / 10)
+                    onChangeSize(row, col)
                     if (xtermRef) xtermFit(xtermRef, col, row)
                 }}
                 handleWidth={true}

@@ -41,6 +41,8 @@ export interface FileNodeProps {
     isCreate?: boolean
     // 层级
     depth: number
+    // 底部占位
+    isBottom?: boolean
     isLeaf?: boolean
     children?: FileNodeProps[]
 }

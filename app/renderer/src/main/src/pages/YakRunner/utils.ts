@@ -91,7 +91,7 @@ export const grpcFetchRenameFileTree: (
         }
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("文件树重命名", params, list)
+            // console.log("文件树重命名", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
             resolve(data)
         } catch (error) {
@@ -117,7 +117,7 @@ export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNode
         }
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("文件保存", params, list)
+            // console.log("文件保存", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, path)
             resolve(data)
         } catch (error) {
@@ -148,7 +148,7 @@ export const grpcFetchCreateFile: (
         }
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("新建文件", params, list)
+            // console.log("新建文件", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
             resolve(data)
         } catch (error) {
@@ -175,7 +175,7 @@ export const grpcFetchCreateFolder: (path: string, parentPath?: string | null) =
         }
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("新建文件夹", params, list)
+            // console.log("新建文件夹", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
             resolve(data)
         } catch (error) {
@@ -198,7 +198,7 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
         }
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("删除文件", params, list)
+            // console.log("删除文件", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, path)
             resolve(data)
         } catch (error) {

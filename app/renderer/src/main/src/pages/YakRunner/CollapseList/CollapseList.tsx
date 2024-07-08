@@ -23,7 +23,7 @@ const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 
 export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
-    const {type = "sideBar", onlyKey, list, titleRender, renderItem,collapseProps} = props
+    const {type = "sideBar", onlyKey, list, titleRender, renderItem, collapseProps, isShowBottom} = props
 
     const wrapperClassName = useMemo(() => {
         if (type === "sideBar") return styles["collapse-list-side-bar"]
@@ -60,6 +60,7 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
                         </Panel>
                     )
                 })}
+                {isShowBottom && <div className={styles["to-end"]}>已经到底啦～</div>}
             </Collapse>
         </div>
     )
@@ -77,8 +78,6 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
 
     // 选中光标位置
     const onJumpEditorDetailFun = useMemoizedFn((range) => {
-        console.log("range", range)
-
         try {
             if (helpEditor && helpMonaco) {
                 helpEditor.setSelection(range)
@@ -236,7 +235,6 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
                                 )
                             }
                         })
-                        console.log("Definition-xxx", newDefinitionList)
                         setDefinitionList(newDefinitionList)
                     })
             }

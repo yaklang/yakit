@@ -19,4 +19,6 @@ export type YakRunnerEventProps = {
     onCloseFile: string
     // 定位文件树
     onScrollToFileTree: string
+    // 终端中打开
+    onOpenTernimal: string
 }

@@ -9,6 +9,15 @@
     overflow: hidden auto;
 }
 
+.to-end {
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    line-height: 14px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+}
+
 .collapse-list-base {
     :global {
         .ant-collapse-item > .ant-collapse-header {
