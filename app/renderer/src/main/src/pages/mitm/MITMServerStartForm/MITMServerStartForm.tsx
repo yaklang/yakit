@@ -29,6 +29,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -219,20 +220,21 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
     })
-    const beforeExecStartMITM = (values) => {
-        if (props.status === "idle") {
-            try {
-                const valObj = JSON.parse(values) || {}
-                form.setFieldsValue({...valObj})
-            } catch (error) {}
-            execStartMITM(form.getFieldsValue())
-        }
-    }
     useEffect(() => {
-        emiter.on("onExecStartMITM", beforeExecStartMITM)
-        return () => {
-            emiter.off("onExecStartMITM", beforeExecStartMITM)
+        const onUpdateHostListAndPort = (values) => {
+            try {
+                const obj = JSON.parse(values) || {}
+                setRemoteValue(MITMConsts.MITMDefaultPort, `${obj.port}`)
+                onSetRemoteValuesBase({
+                    cacheHistoryDataKey: CacheDropDownGV.MITMDefaultHostHistoryList,
+                    newValue: obj.host,
+                    isCacheDefaultValue: true
+                })
+                setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, obj.enableInitialPlugin ? "true" : "")
+                form.setFieldsValue({host: obj.host, port: obj.port, enableInitialPlugin: obj.enableInitialPlugin})
+            } catch (error) {}
         }
+        emiter.on("onUpdateHostListAndPort", onUpdateHostListAndPort)
     }, [])
 
     useEffect(() => {

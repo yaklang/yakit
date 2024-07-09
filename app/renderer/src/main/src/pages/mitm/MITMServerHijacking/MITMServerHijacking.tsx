@@ -2,7 +2,7 @@ import React, {Ref, useEffect, useImperativeHandle, useRef, useState} from "reac
 import {Divider, Form, Modal, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
-import {failed, info} from "@/utils/notification"
+import {failed, info, yakitNotify} from "@/utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useGetState, useLatest, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
@@ -93,18 +93,19 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         const info = initPageInfo()?.immediatelyLaunchedInfo
         if (info && status !== "idle") {
             removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
-            stop().then(() => {
-                setTimeout(() => {
-                    emiter.emit(
-                        "onExecStartMITM",
-                        JSON.stringify({
-                            host: info.host,
-                            port: info.port,
-                            enableInitialPlugin: info.enableInitialPlugin
-                        })
-                    )
-                }, 300)
+            ipcRenderer.invoke("IsChromeLaunched").then((e) => {
+                if (e) {
+                    ipcRenderer.invoke("mitm-host-port", info.host, info.port)
+                }
             })
+            emiter.emit(
+                "onChangeAddrAndEnableInitialPlugin",
+                JSON.stringify({
+                    host: info.host,
+                    port: info.port,
+                    enableInitialPlugin: info.enableInitialPlugin
+                })
+            )
         }
     }, [initPageInfo()?.immediatelyLaunchedInfo, status])
 

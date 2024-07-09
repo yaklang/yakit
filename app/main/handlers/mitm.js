@@ -221,6 +221,16 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // host port
+    ipcMain.handle("mitm-host-port", (e, host, port) => {
+        if (stream) {
+            stream.write({
+                host,
+                port,
+            })
+        }
+    })
+
     // 开始调用 MITM，设置 stream
     let isFirstData = true
     ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive,certificates, extra) => {
