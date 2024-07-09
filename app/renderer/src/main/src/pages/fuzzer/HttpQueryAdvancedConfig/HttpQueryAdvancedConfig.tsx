@@ -443,7 +443,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label='响应数据限制' name='resNumlimit' style={{marginBottom: 12}}>
+                            <Form.Item label='响应数量限制' name='resNumlimit' style={{marginBottom: 12}}>
                                 <YakitInputNumber
                                     type='horizontal'
                                     size='small'
@@ -451,6 +451,16 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     max={DefFuzzerTableMaxData}
                                     disabled={!isbuttonIsSendReqStatus}
                                 />
+                            </Form.Item>
+                            <Form.Item
+                                label='响应体长度限制'
+                                name='maxBodySize'
+                                style={{marginBottom: 12}}
+                                normalize={(value) => {
+                                    return value.replace(/\D/g, "")
+                                }}
+                            >
+                                <YakitInput suffix='M' size='small' className={styles['fuzzer-maxBodySize-input']} />
                             </Form.Item>
                         </div>
                         <YakitCollapse

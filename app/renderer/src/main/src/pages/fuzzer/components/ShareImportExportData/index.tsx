@@ -36,6 +36,7 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         isHttps: value.IsHTTPS,
         isGmTLS: value.IsGmTLS,
         actualHost: value.ActualAddr,
+        maxBodySize: value.MaxBodySize,
         proxy: value.Proxy ? value.Proxy.split(",") : [],
         noSystemProxy: value.NoSystemProxy,
         resNumlimit: DefFuzzerTableMaxData,

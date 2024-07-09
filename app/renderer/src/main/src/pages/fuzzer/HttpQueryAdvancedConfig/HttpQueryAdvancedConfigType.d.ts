@@ -60,7 +60,7 @@ export interface AdvancedConfigValueProps {
     // /**@name 转换后转给后端的的响应大小最大值 */
     // minBodySize: number
     // /**@name 转换后转给后端的的响应大小最小值 */
-    // maxBodySize: number
+    maxBodySize: number
 
     // dns config
     dnsServers: string[]
