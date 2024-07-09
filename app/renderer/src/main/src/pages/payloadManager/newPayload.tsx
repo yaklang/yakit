@@ -768,6 +768,8 @@ export interface NewPayloadListProps {
     setSelectItem: (v: string) => void
     checkedItem?: string[]
     onCheckedItem?: (id: string[]) => void
+    floderChecked?: string[]
+    onSetFloderChecked?: (id: string[]) => void
 }
 
 export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
@@ -785,7 +787,9 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         selectItem,
         setSelectItem,
         checkedItem = [],
-        onCheckedItem = () => {}
+        onCheckedItem = () => {},
+        floderChecked = [],
+        onSetFloderChecked = () => {}
     } = props
 
     const [dropType, setDropType] = useState<string>(droppable)
@@ -1328,6 +1332,8 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                         onlyInsert={onlyInsert}
                                         checkedItem={checkedItem}
                                         onCheckedItem={onCheckedItem}
+                                        floderChecked={floderChecked}
+                                        onSetFloderChecked={onSetFloderChecked}
                                     />
                                 ) : (
                                     // 渲染文件组件
@@ -1520,6 +1526,8 @@ interface FolderComponentProps {
     isDragging?: boolean
     checkedItem?: string[]
     onCheckedItem?: (id: string[]) => void
+    floderChecked?: string[]
+    onSetFloderChecked?: (id: string[]) => void
 }
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const {
@@ -1539,7 +1547,9 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         onlyInsert,
         isDragging,
         checkedItem = [],
-        onCheckedItem = () => {}
+        onCheckedItem = () => {},
+        floderChecked = [],
+        onSetFloderChecked = () => {}
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
@@ -1672,148 +1682,173 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                     />
                 </div>
             ) : (
-                <div
-                    className={classNames(styles["folder"], {
-                        [styles["folder-active"]]: folder.id === selectItem,
-                        [styles["folder-no-active"]]: folder.id !== selectItem,
-                        [styles["folder-menu"]]: menuOpen,
-                        [styles["folder-combine"]]: isCombine,
-                        [styles["folder-no-combine"]]: !isCombine,
-                        [styles["folder-border"]]:
-                            !isCombine && !menuOpen && !isDragging && notExpandArr.includes(folder.id)
-                    })}
-                    onClick={() => {
-                        if (onlyInsert) {
-                            setSelectItem(folder.id)
-                        }
-                        if (notExpandArr.includes(folder.id)) {
-                            setNotExpandArr(notExpandArr.filter((item) => item !== folder.id))
-                        } else {
-                            setNotExpandArr([...notExpandArr, folder.id])
-                        }
-                    }}
-                    onContextMenu={handleRightClick}
-                >
-                    <div className={styles["folder-header"]}>
-                        <div className={styles["is-fold-icon"]}>
-                            {!notExpandArr.includes(folder.id) ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />}
-                        </div>
-                        <div className={styles["folder-icon"]}>
-                            <SolidFolderopenIcon />
-                        </div>
-                        <div className={classNames(styles["folder-name"], "yakit-content-single-ellipsis")}>
-                            {inputName}
-                        </div>
-                    </div>
-                    <div
-                        className={classNames(styles["extra"], {
-                            [styles["extra-dot"]]: !onlyInsert && menuOpen,
-                            [styles["extra-hover"]]: !onlyInsert && !menuOpen
-                        })}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className={styles["file-count"]}>{folder?.node ? folder.node.length : 0}</div>
-                        {!onlyInsert && (
-                            <YakitDropdownMenu
-                                menu={{
-                                    data: [
-                                        {
-                                            key: "copyFuzztag",
-                                            label: (
-                                                <div className={styles["extra-menu"]}>
-                                                    <OutlineDocumentduplicateIcon />
-                                                    <div className={styles["menu-name"]}>复制 Fuzztag</div>
-                                                </div>
-                                            )
-                                        },
-                                        {
-                                            key: "addChildPayload",
-                                            label: (
-                                                <div className={styles["extra-menu"]}>
-                                                    <OutlineAddPayloadIcon />
-                                                    <div className={styles["menu-name"]}>新增子集字典</div>
-                                                </div>
-                                            )
-                                        },
-                                        {
-                                            key: "rename",
-                                            label: (
-                                                <div className={styles["extra-menu"]}>
-                                                    <OutlinePencilaltIcon />
-                                                    <div className={styles["menu-name"]}>重命名</div>
-                                                </div>
-                                            )
-                                        },
-                                        {
-                                            type: "divider"
-                                        },
-                                        {
-                                            key: "delete",
-                                            label: (
-                                                <div className={styles["extra-menu"]}>
-                                                    <OutlineTrashIcon />
-                                                    <div className={styles["menu-name"]}>删除</div>
-                                                </div>
-                                            ),
-                                            type: "danger"
-                                        }
-                                    ],
-                                    onClick: ({key}) => {
-                                        setMenuOpen(false)
-                                        switch (key) {
-                                            case "copyFuzztag":
-                                                callCopyToClipboard(`{{payload(${inputName}/*)}}`)
-                                                break
-                                            case "addChildPayload":
-                                                // 注: 此处需注意文件夹
-                                                const m = showYakitModal({
-                                                    getContainer:
-                                                        document.getElementById("new-payload") || document.body,
-                                                    title: null,
-                                                    footer: null,
-                                                    width: 520,
-                                                    type: "white",
-                                                    closable: false,
-                                                    maskClosable: false,
-                                                    hiddenHeader: true,
-                                                    content: (
-                                                        <CreateDictionaries
-                                                            title='新建子集字典'
-                                                            type='dictionaries'
-                                                            onQueryGroup={onQueryGroup}
-                                                            folder={folder.name}
-                                                            onClose={() => {
-                                                                m.destroy()
-                                                            }}
-                                                        />
-                                                    )
-                                                })
-                                                break
-                                            case "rename":
-                                                setEditInput(true)
-                                                break
-                                            case "delete":
-                                                setDeleteVisible(true)
-                                                break
-                                            default:
-                                                break
-                                        }
+                <div style={{display: "flex", alignItems: "center"}}>
+                    {onlyInsert && (
+                        <div style={{marginRight: 5}}>
+                            <YakitCheckbox
+                                onChange={(e) => {
+                                    const str = folder.id.split("-")[1]
+                                    if (e.target.checked) {
+                                        const arr = [...floderChecked]
+                                        arr.push(str)
+                                        const newfloderChecked = [...new Set(arr)]
+                                        onSetFloderChecked(newfloderChecked)
+                                    } else {
+                                        const arr = floderChecked.filter((i) => i !== str)
+                                        onSetFloderChecked([...arr])
                                     }
                                 }}
-                                dropdown={{
-                                    trigger: ["click"],
-                                    placement: "bottomRight",
-                                    onVisibleChange: (v) => {
-                                        setMenuOpen(v)
-                                    },
-                                    visible: menuOpen
-                                }}
-                            >
-                                <div className={styles["extra-icon"]}>
-                                    <SolidDotsverticalIcon />
-                                </div>
-                            </YakitDropdownMenu>
-                        )}
+                            ></YakitCheckbox>
+                        </div>
+                    )}
+                    <div
+                        style={{flex: 1}}
+                        className={classNames(styles["folder"], {
+                            [styles["folder-active"]]: folder.id === selectItem,
+                            [styles["folder-no-active"]]: folder.id !== selectItem,
+                            [styles["folder-menu"]]: menuOpen,
+                            [styles["folder-combine"]]: isCombine,
+                            [styles["folder-no-combine"]]: !isCombine,
+                            [styles["folder-border"]]:
+                                !isCombine && !menuOpen && !isDragging && notExpandArr.includes(folder.id)
+                        })}
+                        onClick={() => {
+                            if (onlyInsert) {
+                                setSelectItem(folder.id)
+                            }
+                            if (notExpandArr.includes(folder.id)) {
+                                setNotExpandArr(notExpandArr.filter((item) => item !== folder.id))
+                            } else {
+                                setNotExpandArr([...notExpandArr, folder.id])
+                            }
+                        }}
+                        onContextMenu={handleRightClick}
+                    >
+                        <div className={styles["folder-header"]}>
+                            <div className={styles["is-fold-icon"]}>
+                                {!notExpandArr.includes(folder.id) ? (
+                                    <SolidChevrondownIcon />
+                                ) : (
+                                    <SolidChevronrightIcon />
+                                )}
+                            </div>
+                            <div className={styles["folder-icon"]}>
+                                <SolidFolderopenIcon />
+                            </div>
+                            <div className={classNames(styles["folder-name"], "yakit-content-single-ellipsis")}>
+                                {inputName}
+                            </div>
+                        </div>
+                        <div
+                            className={classNames(styles["extra"], {
+                                [styles["extra-dot"]]: !onlyInsert && menuOpen,
+                                [styles["extra-hover"]]: !onlyInsert && !menuOpen
+                            })}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className={styles["file-count"]}>{folder?.node ? folder.node.length : 0}</div>
+                            {!onlyInsert && (
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: [
+                                            {
+                                                key: "copyFuzztag",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlineDocumentduplicateIcon />
+                                                        <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                key: "addChildPayload",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlineAddPayloadIcon />
+                                                        <div className={styles["menu-name"]}>新增子集字典</div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                key: "rename",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlinePencilaltIcon />
+                                                        <div className={styles["menu-name"]}>重命名</div>
+                                                    </div>
+                                                )
+                                            },
+                                            {
+                                                type: "divider"
+                                            },
+                                            {
+                                                key: "delete",
+                                                label: (
+                                                    <div className={styles["extra-menu"]}>
+                                                        <OutlineTrashIcon />
+                                                        <div className={styles["menu-name"]}>删除</div>
+                                                    </div>
+                                                ),
+                                                type: "danger"
+                                            }
+                                        ],
+                                        onClick: ({key}) => {
+                                            setMenuOpen(false)
+                                            switch (key) {
+                                                case "copyFuzztag":
+                                                    callCopyToClipboard(`{{payload(${inputName}/*)}}`)
+                                                    break
+                                                case "addChildPayload":
+                                                    // 注: 此处需注意文件夹
+                                                    const m = showYakitModal({
+                                                        getContainer:
+                                                            document.getElementById("new-payload") || document.body,
+                                                        title: null,
+                                                        footer: null,
+                                                        width: 520,
+                                                        type: "white",
+                                                        closable: false,
+                                                        maskClosable: false,
+                                                        hiddenHeader: true,
+                                                        content: (
+                                                            <CreateDictionaries
+                                                                title='新建子集字典'
+                                                                type='dictionaries'
+                                                                onQueryGroup={onQueryGroup}
+                                                                folder={folder.name}
+                                                                onClose={() => {
+                                                                    m.destroy()
+                                                                }}
+                                                            />
+                                                        )
+                                                    })
+                                                    break
+                                                case "rename":
+                                                    setEditInput(true)
+                                                    break
+                                                case "delete":
+                                                    setDeleteVisible(true)
+                                                    break
+                                                default:
+                                                    break
+                                            }
+                                        }
+                                    }}
+                                    dropdown={{
+                                        trigger: ["click"],
+                                        placement: "bottomRight",
+                                        onVisibleChange: (v) => {
+                                            setMenuOpen(v)
+                                        },
+                                        visible: menuOpen
+                                    }}
+                                >
+                                    <div className={styles["extra-icon"]}>
+                                        <SolidDotsverticalIcon />
+                                    </div>
+                                </YakitDropdownMenu>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -3635,6 +3670,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
     // table/editor 筛选条件
     const [selectItem, setSelectItem] = useState<string>()
     const [checkedItem, setCheckedItem] = useState<string[]>([])
+    const [floderChecked, setFloderChecked] = useState<string[]>([])
     const [group, setGroup] = useState<string>("")
     const [folder, setFolder] = useState<string>("")
 
@@ -3689,11 +3725,17 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                     setSelectItem={setSelectItem}
                     checkedItem={checkedItem}
                     onCheckedItem={setCheckedItem}
+                    floderChecked={floderChecked}
+                    onSetFloderChecked={setFloderChecked}
                 />
                 <div className={styles["payload-list-bottom"]}>
                     <div className={styles["show"]}>
                         <div className={styles["text"]}>已选中：</div>
-                        {checkedItem.length > 0 ? <YakitTag color='info'>{checkedItem.length}个</YakitTag> : <></>}
+                        {checkedItem.length + floderChecked.length > 0 ? (
+                            <YakitTag color='info'>{checkedItem.length + floderChecked.length}个</YakitTag>
+                        ) : (
+                            <></>
+                        )}
                     </div>
                     <div className={styles["option"]}>
                         <YakitButton
@@ -3705,12 +3747,16 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                             取消
                         </YakitButton>
                         <YakitButton
-                            disabled={checkedItem.length === 0}
+                            disabled={checkedItem.length + floderChecked.length === 0}
                             onClick={() => {
+                                let str = ""
                                 if (checkedItem.length > 0) {
-                                    selectorHandle(`{{payload(${checkedItem.join(",")})}}`)
-                                    return
+                                    str = `{{payload(${checkedItem.join(",")})}}`
                                 }
+                                if (floderChecked.length > 0) {
+                                    str += `{{payload(${floderChecked.map((i) => i + "/*").join(",")})}}`
+                                }
+                                selectorHandle(str)
                             }}
                         >
                             插入
