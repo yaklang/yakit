@@ -54,6 +54,7 @@ const directionStyle = (editorInfo, isOtherGroup = false, isGroupShow = false) =
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
+        console.log(direction.x)
         if (direction.y === "bottom") {
             obj.bottom = "32px"
         } else if (direction.y === "top") {
@@ -523,7 +524,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                 : 105
                             : undefined,
                         right: ["right", "middle"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
-                        width: 200,
+                        width: 200
                     }}
                     className={classNames(styles["http-fuzzer-click-editor-menu"])}
                 >
@@ -674,7 +675,7 @@ export const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
             {decodeData.current.map((item) => {
                 return (
                     <div key={item.title} className={styles["encode-item"]} onClick={() => insert(item.encode)}>
-                        <Avatar size={16} style={{color: "rgba(49, 52, 63, 1)", backgroundColor: item.color}}>
+                        <Avatar size={16} style={{color: "rgba(49, 52, 63, 1)", backgroundColor: item.color, flexShrink: 0}}>
                             {item.avatar}
                         </Avatar>
                         <div className={styles["title"]}>{item.title}</div>
@@ -950,8 +951,18 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                     <div
                         style={{
                             ...directionStyle(editorInfo, true),
-                            left: ["left"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
-                            right: ["middle", "right"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
+                            left:
+                                right - left < 750
+                                    ? undefined
+                                    : ["left"].includes(editorInfo?.direction.x || "")
+                                    ? 0
+                                    : undefined,
+                            right:
+                                right - left < 750
+                                    ? 0
+                                    : ["middle", "right"].includes(editorInfo?.direction.x || "")
+                                    ? 0
+                                    : undefined,
                             width: menuWidth ? menuWidth : 360,
                             maxHeight: menuHeight ? menuHeight : undefined
                         }}
