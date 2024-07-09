@@ -1732,7 +1732,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     onClick={() => {
                                         setLoading(true)
                                         const redirectRequestProps: RedirectRequestParams = {
-                                            Request: requestRef.current,
+                                            Request: new Buffer(httpResponse.RequestRaw).toString("utf8"),
                                             Response: new Buffer(httpResponse.ResponseRaw).toString("utf8"),
                                             IsHttps: advancedConfigValue.isHttps,
                                             IsGmTLS: advancedConfigValue.isGmTLS,
