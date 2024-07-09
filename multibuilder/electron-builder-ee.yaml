@@ -77,8 +77,6 @@ win:
       to: "bins/flag.windows.txt"
     - from: "bins/yak_windows_amd64.zip"
       to: "bins/yak.zip"
-    - from: "report/template.zip"
-      to: "report/template.zip"
   # requestedExecutionLevel: requireAdministrator
   target:
     - target: nsis
