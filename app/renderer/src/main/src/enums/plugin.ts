@@ -7,5 +7,10 @@ export enum RemotePluginGV {
     /** @name 插件回收站-删除插件的二次确认弹框 */
     RecyclePluginRemoveCheck = "recycle_plugin_remove_check",
     /** @name 本地插件-删除插件的二次确认弹框 */
-    LocalPluginRemoveCheck = "local_plugin_remove_check"
+    LocalPluginRemoveCheck = "local_plugin_remove_check",
+
+    /** 商店|我的插件列表-批量下载提示本地存在同名则覆盖的二次确认弹框 */
+    BatchDownloadPluginSameNameOverlay = "batch_download_plugin_same_name_overlay",
+    /** 商店|我的插件列表-单个下载提示本地存在同名则覆盖的二次确认弹框 */
+    SingleDownloadPluginSameNameOverlay = "single_download_plugin_same_name_overlay"
 }

@@ -1476,10 +1476,10 @@ const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
 interface PluginSyncAndCopyModalProps {
     isCopy: boolean
     visible: boolean
-    setVisible: (isCallback: boolean, param?: {type?: string; name?: string}) => any
+    setVisible: (isCallback: boolean, param?: {type: string; name: string}) => any
 }
 /** @name 插件同步&复制云端 */
-const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((props) => {
+export const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((props) => {
     const {isCopy, visible, setVisible} = props
 
     const [type, setType] = useState<"private" | "public">("private")
@@ -1490,7 +1490,14 @@ const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((prop
             yakitNotify("error", "请输入复制插件的名称")
             return
         }
-        setVisible(true, {type: isCopy ? undefined : type, name: isCopy ? name : undefined})
+        if (name.length > 100) {
+            yakitNotify("error", "插件名最长100位")
+            return
+        }
+        setVisible(true, {type: isCopy ? "" : type, name: isCopy ? name : ""})
+    })
+    const onCancel = useMemoizedFn(() => {
+        setVisible(false)
     })
 
     return (
@@ -1502,7 +1509,7 @@ const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((prop
             maskClosable={false}
             closable={true}
             visible={visible}
-            onCancel={() => setVisible(false)}
+            onCancel={onCancel}
             onOk={onSubmit}
             bodyStyle={{padding: 0}}
         >
@@ -1590,7 +1597,7 @@ interface ModifyPluginReasonProps {
     onCancel: (isSubmit: boolean, content?: string) => any
 }
 /** @name 描述修改内容 */
-const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
+export const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
     const {visible, onCancel} = props
 
     const [content, setContent] = useState<string>("")
@@ -1601,6 +1608,9 @@ const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
             return
         }
         onCancel(true, content)
+    })
+    const onClose = useMemoizedFn(() => {
+        onCancel(false)
     })
 
     useEffect(() => {
@@ -1616,7 +1626,7 @@ const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
             maskClosable={false}
             closable={true}
             visible={visible}
-            onCancel={() => onCancel(false)}
+            onCancel={onClose}
             onOk={onSubmit}
             bodyStyle={{padding: 0}}
         >

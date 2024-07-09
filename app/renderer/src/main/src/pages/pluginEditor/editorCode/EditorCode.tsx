@@ -71,7 +71,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
         const [activeTab, setActiveTab] = useState<string>("code")
 
         /** ---------- 代码和参数数据的更新 Start ---------- */
-        const [content, setContent, getContent] = useGetSetState<string>(code)
+        const [content, setContent, getContent] = useGetSetState<string>("")
         const [params, setParams] = useState<YakParamProps[]>([])
 
         useImperativeHandle(
@@ -79,17 +79,12 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             () => ({
                 onSubmit: () => getContent()
             }),
-            [content]
+            []
         )
 
         useEffect(() => {
-            if (!isEdit) setContent(pluginTypeToName[type]?.content || "")
-            if (type === "yak") {
-                handleFetchParams()
-            } else {
-                setParams([])
-            }
-        }, [type])
+            setContent(code)
+        }, [code])
 
         const getType = useMemoizedFn(() => {
             return type
@@ -116,12 +111,10 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
         // 获取参数
         const handleFetchParams = useDebounceFn(
             useMemoizedFn(async (hiddenError?: boolean) => {
-                console.log("handleFetchParams")
                 if (getFetchParamsLoading()) return
 
                 setFetchParamsLoading(true)
                 const codeInfo = await onCodeToInfo({type: type, code: getContent() || ""}, hiddenError)
-                console.log("handleFetchParams", codeInfo)
                 if (codeInfo) {
                     setParams([...codeInfo.CliParameter])
                 }
@@ -287,7 +280,6 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             if (form) {
                 form.validateFields()
                     .then(async (value: any) => {
-                        // console.log("插件执行时的表单值", value)
                         // 保存参数-请求路径的选项
                         if (pathRef && pathRef.current) {
                             pathRef.current.onSetRemoteValues(value?.Path || [])

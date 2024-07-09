@@ -21,7 +21,7 @@ import {Tooltip} from "antd"
 import {SolidPluscircleIcon, SolidThumbupIcon} from "@/assets/icon/solid"
 import {HubExtraOperate, HubExtraOperateRef} from "../hubExtraOperate/HubExtraOperate"
 import {v4 as uuidv4} from "uuid"
-import {grpcDownloadOnlinePlugin} from "../utils/grpc"
+import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginToDetailInfo} from "../type"
 import {thousandthConversion} from "@/pages/plugins/pluginReducer"
@@ -35,6 +35,8 @@ import {HubDetailHeader} from "../hubExtraOperate/funcTemplate"
 import {FooterExtraBtn} from "../pluginHubList/funcTemplate"
 import {PluginComment} from "@/pages/plugins/baseComment"
 import {LocalPluginExecute} from "@/pages/plugins/local/LocalPluginExecute"
+import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
+import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -54,12 +56,13 @@ export interface PluginHubDetailRefProps {
 
 interface PluginHubDetailProps {
     ref?: ForwardedRef<PluginHubDetailRefProps>
+    rootElementId?: string
     onBack: () => void
 }
 
 export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
     forwardRef((props, ref) => {
-        const {onBack} = props
+        const {rootElementId, onBack} = props
 
         const userinfo = useStore((s) => s.userInfo)
         const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -434,6 +437,43 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
 
         /** ---------- 插件操作逻辑 End ---------- */
 
+        /** ---------- 编辑插件 Start ---------- */
+        const [editHint, setEditHint] = useState<boolean>(false)
+        const handleOpenEditHint = useMemoizedFn(() => {
+            if (editHint) return
+            if (!localPlugin) return
+            setEditHint(true)
+        })
+        const handleEditHintCallback = useMemoizedFn(async (isSuccess: boolean, data?: ModifyPluginCallback) => {
+            if (isSuccess && data) {
+                const {opType, info} = data
+
+                if (opType === "save" || opType === "saveAndExit") {
+                    const plugin: YakScript = await grpcFetchLocalPluginDetail({
+                        Name: info.name,
+                        UUID: info.uuid || undefined
+                    })
+                    setLocalPlugin({...plugin})
+                }
+                if (opType === "upload" || opType === "submit") {
+                    if (currentRequest.current) {
+                        currentRequest.current = {...currentRequest.current, name: info.name, uuid: info.uuid}
+                        onFetchPlugin()
+                    }
+                }
+                if (opType === "copy") {
+                }
+
+                // 关闭编辑插件弹窗
+                if (opType !== "save") {
+                    setEditHint(false)
+                }
+            } else {
+                setEditHint(false)
+            }
+        })
+        /** ---------- 编辑插件 End ---------- */
+
         const bar = (props: any, TabBarDefault: any) => {
             return (
                 <TabBarDefault
@@ -480,6 +520,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     online={onlinePlugin}
                     local={localPlugin}
                     onDownload={onDownload}
+                    onEdit={handleOpenEditHint}
                     onCallback={operateCallback}
                 />
             )
@@ -617,12 +658,12 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                             infoExtra={infoExtraNode}
                                         />
                                         <div className={styles["detail-content"]}>
-                                        <div className={styles["editer-body"]}>
-                                            <YakitEditor
-                                                type={localPlugin?.Type || "yak"}
-                                                value={localPlugin?.Content || ""}
-                                                readOnly={true}
-                                            />
+                                            <div className={styles["editer-body"]}>
+                                                <YakitEditor
+                                                    type={localPlugin?.Type || "yak"}
+                                                    value={localPlugin?.Content || ""}
+                                                    readOnly={true}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -697,6 +738,15 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         </div>
                     </YakitSpin>
                 </div>
+
+                {localPlugin && editHint && (
+                    <ModifyYakitPlugin
+                        getContainer={document.getElementById(rootElementId || "") || document.body}
+                        plugin={localPlugin}
+                        visible={editHint}
+                        onCallback={handleEditHintCallback}
+                    />
+                )}
             </div>
         )
     })

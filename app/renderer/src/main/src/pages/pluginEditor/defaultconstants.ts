@@ -1,4 +1,6 @@
+import {API} from "@/services/swagger/resposeType"
 import {YakitPluginInfo} from "./base"
+import {localYakInfo} from "../plugins/pluginsType"
 
 /**
  * @name 插件编辑页-内置的 tags 标签
@@ -76,5 +78,15 @@ export const DefaultYakitPluginInfo: YakitPluginInfo = {
     Type: "",
     ScriptName: "",
     Tags: [],
+    Content: ""
+}
+/** @name API.PluginsRequest定义的默认值 */
+export const DefaultAPIPluginsRequest: API.PluginsRequest = {
+    script_name: ""
+}
+/** @name localYakInfo定义的默认值 */
+export const DefaultGRPCSavePluginRequest: localYakInfo = {
+    Type: "",
+    ScriptName: "",
     Content: ""
 }

@@ -1263,6 +1263,7 @@ export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo(
 interface LocalOptFooterExtraProps {
     isLogin: boolean
     info: YakScript
+    onEdit: (data: YakScript) => void
     /** 当前正在执行上传的插件队列 */
     execUploadInfo?: YakScript[]
     onUpload: (data: YakScript) => void
@@ -1273,7 +1274,7 @@ interface LocalOptFooterExtraProps {
 }
 /** @name 本地插件单项-上传|编辑|导出|删除本地 */
 export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((props) => {
-    const {isLogin, info, execUploadInfo = [], onUpload, onExport, execDelInfo = [], onDel} = props
+    const {isLogin, info, onEdit, execUploadInfo = [], onUpload, onExport, execDelInfo = [], onDel} = props
 
     const isShowUpload = useMemo(() => {
         if (!!info.IsCorePlugin) return false
@@ -1300,13 +1301,13 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         onUpload(info)
     })
     // 编辑
-    const onEdit = useMemoizedFn((e) => {
+    const handleEdit = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!info.ScriptName) {
             yakitNotify("error", "插件信息错误，请刷新列表后重试")
             return
         }
-        onToEditPlugin(info, YakitRoute.Plugin_Hub)
+        onEdit(info)
     })
 
     const onMenus = useMemoizedFn(({key}) => {
@@ -1377,7 +1378,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
             )}
 
             <Tooltip title='编辑'>
-                <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+                <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={handleEdit} />
             </Tooltip>
 
             <div className={styles["divider-style"]}></div>

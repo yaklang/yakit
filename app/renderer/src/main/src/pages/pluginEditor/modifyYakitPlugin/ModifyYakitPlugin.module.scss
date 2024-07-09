@@ -1,0 +1,44 @@
+.plugin-debug-drawer {
+    &:global(.ant-drawer-bottom.ant-drawer-open.no-mask) {
+        transform: unset;
+    }
+    :global {
+        .ant-drawer-body {
+            padding: 0;
+            overflow: hidden;
+        }
+    }
+}
+
+.unsaved-hint {
+    position: absolute;
+}
+
+.unsaved-hint-body {
+    width: 100%;
+    display: flex;
+    padding: 0 24px 24px 24px;
+    .icon-wrapper {
+        margin-right: 16px;
+        .icon-style {
+            svg {
+                color: var(--yakit-warning-5);
+                width: 22px;
+                height: 22px;
+            }
+        }
+    }
+    .content {
+        flex: 1;
+        overflow: hidden;
+        color: var(--yakit-header-color);
+        .title-style {
+            display: block;
+            overflow: hidden;
+            color: var(--yakit-header-color);
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+    }
+}

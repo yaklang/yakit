@@ -1,6 +1,10 @@
 .plugin-editor {
     width: 100%;
     height: 100%;
+}
+.plugin-editor-wrapper {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
@@ -46,6 +50,14 @@
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+}
+.plugin-editor-modify-header {
+    background-color: var(--yakit-card-background-color);
+    padding: 8px 16px;
+    .header-title {
+        font-size: 14px;
+        line-height: 20px;
     }
 }
 

@@ -1,5 +1,12 @@
 import {YakParamProps, YakRiskInfoProps} from "../plugins/pluginsType"
 
+/** @name 获取插件信息的关键参数(前端逻辑专属) */
+export interface KeyParamsFetchPluginDetail {
+    id: number
+    uuid: string
+    name: string
+}
+
 /** @name 插件基础信息(前端逻辑专属) */
 export interface YakitPluginBaseInfo {
     /** 插件类型 */

@@ -6,16 +6,51 @@ const {ipcRenderer} = window.require("electron")
 
 interface DownloadOnlinePluginByUUID {
     uuid: string
-    token?: string
 }
 /** @name 通过UUID下载插件到本地并返回本地信息 */
 export const grpcDownloadOnlinePlugin: APIFunc<DownloadOnlinePluginByUUID, YakScript> = (params, hiddenError) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        let token: string = ""
+        try {
+            const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
+            if (userInfo.isLogin) {
+                token = userInfo.token
+            }
+        } catch (error) {}
+
         ipcRenderer
-            .invoke("DownloadOnlinePluginByUUID", {UUID: params.uuid, Token: params.token || undefined})
-            .then(resolve)
+            .invoke("DownloadOnlinePluginByUUID", {UUID: params.uuid, Token: token || undefined})
+            .then((res) => {
+                // 刷新插件菜单
+                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+                resolve(res)
+            })
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "下载插件失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+interface FetchLocalPluginDetail {
+    Name: string
+    UUID?: string
+}
+/** @name 通过名字(必填)和UUID(选填)查询本地插件详情信息 */
+export const grpcFetchLocalPluginDetail: APIFunc<FetchLocalPluginDetail, YakScript> = (params, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        const {Name, UUID} = params
+        if (!Name) {
+            if (!hiddenError) yakitNotify("error", "查询插件名不能为空")
+            reject("查询插件名不能为空")
+            return
+        }
+
+        ipcRenderer
+            .invoke("GetYakScriptByName", {UUID: UUID || undefined, Name: Name})
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询本地插件详情失败:" + e)
                 reject(e)
             })
     })
