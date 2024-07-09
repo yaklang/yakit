@@ -3707,17 +3707,8 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                         <YakitButton
                             disabled={checkedItem.length === 0}
                             onClick={() => {
-                                if (checkedItem.length === 1) {
-                                    selectorHandle(`{{payload(${checkedItem[0]})}}`)
-                                    return
-                                }
-                                if (checkedItem.length > 1) {
-                                    let arr: string[] = []
-                                    checkedItem.forEach((i) => {
-                                        arr.push(`{{x(${i})}}`)
-                                    })
-                                    const str = arr.join("|")
-                                    selectorHandle(`{{list(${str})}}`)
+                                if (checkedItem.length > 0) {
+                                    selectorHandle(`{{payload(${checkedItem.join(",")})}}`)
                                     return
                                 }
                             }}
