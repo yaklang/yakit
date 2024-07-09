@@ -799,8 +799,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     // 用于记录不展开的文件夹(默认展开)
     const [notExpandArr, setNotExpandArr] = useState<string[]>([])
 
-    const [moreCheckFlag, setMoreCheckFlag] = useState<boolean>(false) // 多选
-
     useUpdateEffect(() => {
         onUpdateAllPayloadGroup(data)
     }, [JSON.stringify(data)])
@@ -1211,9 +1209,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                 <div className={styles["extra"]}>
                     {onlyInsert ? (
                         <>
-                            <YakitCheckableTag checked={moreCheckFlag} onChange={setMoreCheckFlag}>
-                                多选
-                            </YakitCheckableTag>
                             <Tooltip title={"前往 Payload 字典管理"}>
                                 <YakitButton
                                     type='text2'
@@ -1331,7 +1326,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                         onQueryGroup={onQueryGroup}
                                         setContentType={setContentType}
                                         onlyInsert={onlyInsert}
-                                        moreCheckFlag={moreCheckFlag}
                                         checkedItem={checkedItem}
                                         onCheckedItem={onCheckedItem}
                                     />
@@ -1350,7 +1344,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                         onQueryGroup={onQueryGroup}
                                         setContentType={setContentType}
                                         onlyInsert={onlyInsert}
-                                        moreCheckFlag={moreCheckFlag}
                                         checkedItem={checkedItem}
                                         onCheckedItem={onCheckedItem}
                                     />
@@ -1525,7 +1518,6 @@ interface FolderComponentProps {
     onlyInsert?: boolean
     // 是否拖拽中
     isDragging?: boolean
-    moreCheckFlag?: boolean
     checkedItem?: string[]
     onCheckedItem?: (id: string[]) => void
 }
@@ -1546,7 +1538,6 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         setContentType,
         onlyInsert,
         isDragging,
-        moreCheckFlag,
         checkedItem = [],
         onCheckedItem = () => {}
     } = props
@@ -1846,7 +1837,6 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                 setContentType={setContentType}
                                 onlyInsert={onlyInsert}
                                 endBorder={(folder.node?.length || 0) - 1 === index}
-                                moreCheckFlag={moreCheckFlag}
                                 checkedItem={checkedItem}
                                 onCheckedItem={onCheckedItem}
                             />
@@ -2011,8 +2001,6 @@ interface FileComponentProps {
     isDragging?: boolean
     // 是否在其底部显示border
     endBorder?: boolean
-    // 是否多选
-    moreCheckFlag?: boolean
     checkedItem?: string[]
     onCheckedItem?: (id: string[]) => void
 }
@@ -2033,7 +2021,6 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         onlyInsert,
         isDragging,
         endBorder,
-        moreCheckFlag,
         checkedItem = [],
         onCheckedItem = () => {}
     } = props
@@ -2376,17 +2363,19 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 </div>
             ) : (
                 <div style={{display: "flex", alignItems: "center"}}>
-                    {moreCheckFlag && (
+                    {onlyInsert && (
                         <div style={{marginRight: 5}}>
                             <YakitCheckbox
                                 onChange={(e) => {
+                                    const str = file.id.split("-")[1]
                                     if (e.target.checked) {
                                         const arr = [...checkedItem]
-                                        arr.push(file.id)
-                                        onCheckedItem([...new Set(arr)])
+                                        arr.push(str)
+                                        const newCgheckedItem = [...new Set(arr)]
+                                        onCheckedItem(newCgheckedItem)
                                     } else {
-                                        const arr = checkedItem.filter((i) => i !== file.id)
-                                        onCheckedItem(arr)
+                                        const arr = checkedItem.filter((i) => i !== str)
+                                        onCheckedItem([...arr])
                                     }
                                 }}
                             ></YakitCheckbox>
@@ -3704,13 +3693,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                 <div className={styles["payload-list-bottom"]}>
                     <div className={styles["show"]}>
                         <div className={styles["text"]}>已选中：</div>
-                        {checkedItem.length > 0 ? (
-                            <YakitTag color='info'>{checkedItem.length}个</YakitTag>
-                        ) : selectInfo.length > 0 ? (
-                            <YakitTag color='info'>{selectInfo}</YakitTag>
-                        ) : (
-                            <></>
-                        )}
+                        {checkedItem.length > 0 ? <YakitTag color='info'>{checkedItem.length}个</YakitTag> : <></>}
                     </div>
                     <div className={styles["option"]}>
                         <YakitButton
@@ -3722,25 +3705,19 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                             取消
                         </YakitButton>
                         <YakitButton
-                            disabled={group.length === 0 && folder.length === 0 && checkedItem.length === 0}
+                            disabled={checkedItem.length === 0}
                             onClick={() => {
-                                if (checkedItem.length > 0) {
+                                if (checkedItem.length === 1) {
+                                    selectorHandle(`{{payload(${checkedItem[0]})}}`)
+                                    return
+                                }
+                                if (checkedItem.length > 1) {
                                     let arr: string[] = []
                                     checkedItem.forEach((i) => {
                                         arr.push(`{{x(${i})}}`)
                                     })
                                     const str = arr.join("|")
                                     selectorHandle(`{{list(${str})}}`)
-                                    return
-                                }
-
-                                if (group.length > 0) {
-                                    selectorHandle(`{{list({{x(${group})}})}}`)
-                                    return
-                                }
-
-                                if (folder.length > 0) {
-                                    selectorHandle(`{{payload(${folder}/*)}}`)
                                     return
                                 }
                             }}
