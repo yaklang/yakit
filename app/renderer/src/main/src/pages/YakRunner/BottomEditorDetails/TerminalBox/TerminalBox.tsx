@@ -9,22 +9,20 @@ import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import ReactResizeDetector from "react-resize-detector"
 import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
-import {TERMINAL_INPUT_KEY, YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
-import useStore from "../../hooks/useStore"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {number} from "echarts"
+import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
 export interface TerminalBoxProps {
     isShowEditorDetails: boolean
     folderPath: string
-    codeKey: string
+    terminaFont: string
+    xtermRef: React.MutableRefObject<any>
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {isShowEditorDetails, folderPath, codeKey} = props
-    const xtermRef = useRef<any>(null)
+    const {isShowEditorDetails, folderPath, terminaFont,xtermRef} = props
+
     // 是否允许输入及不允许输入的原因
     const [allowInput, setAllowInput] = useState<boolean>(true)
 
@@ -46,44 +44,10 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         }
     })
 
-    const fetchNewCodec = useMemoizedFn((data: Uint8Array, codeKey: string) => {
-        const newCodecParams = {
-            InputBytes: data,
-            WorkFlow: [
-                {
-                    CodecType: "CharsetToUTF8",
-                    Params: [
-                        {
-                            Key: "charset",
-                            Value: codeKey
-                        }
-                    ]
-                }
-            ]
-        }
-        ipcRenderer
-            .invoke("NewCodec", newCodecParams)
-            .then((data: {Result: string; RawResult: Uint8Array}) => {
-                let outPut = Uint8ArrayToString(data.RawResult)
-                writeXTerm(xtermRef, outPut)
-                // onSetCodeValue(data.RawResult)
-            })
-            .catch((e) => {
-                let outPut = Uint8ArrayToString(data)
-                writeXTerm(xtermRef, outPut)
-                failed(e)
-            })
-            .finally(() => {})
-    })
-
     // 输出
     const onWriteXTerm = useMemoizedFn((data: Uint8Array) => {
         let outPut = Uint8ArrayToString(data)
-        if (codeKey) {
-            fetchNewCodec(data, codeKey)
-        } else {
-            writeXTerm(xtermRef, outPut)
-        }
+        writeXTerm(xtermRef, outPut)
     })
 
     // 终端启用路径
@@ -147,9 +111,6 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         }
     }, [xtermRef, folderPath])
 
-    // xtermClear(xtermRef)
-    // writeXTerm(xtermRef, defaultXterm)
-
     return (
         <div className={styles["terminal-box"]}>
             <ReactResizeDetector
@@ -169,6 +130,8 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 maxHeight={0}
                 ref={xtermRef}
                 options={{
+                    // fontFamily: '"Courier New", Courier, monospace',
+                    fontFamily: terminaFont,
                     convertEol: true,
                     theme: {
                         foreground: "#e5c7a9",

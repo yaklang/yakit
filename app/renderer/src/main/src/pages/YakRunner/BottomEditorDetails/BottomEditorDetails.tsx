@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {} from "antd"
-import {} from "@ant-design/icons"
-import {useDebounceFn, useGetState, useInViewport, useMemoizedFn} from "ahooks"
+import {Popover, Tooltip} from "antd"
+import {SettingOutlined} from "@ant-design/icons"
+import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./BottomEditorDetails.module.scss"
@@ -9,7 +9,7 @@ import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoProps, ShowItemType} from "./BottomEditorDetailsType"
 import {HelpInfoList} from "../CollapseList/CollapseList"
-import {OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineCogIcon, OutlineExitIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SyntaxCheckList} from "./SyntaxCheckList/SyntaxCheckList"
 import useStore from "../hooks/useStore"
@@ -26,7 +26,9 @@ import {TerminalBox} from "./TerminalBox/TerminalBox"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidCheckIcon} from "@/assets/icon/solid"
-import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
+import {ChevronDownIcon, ChevronUpIcon, InformationCircleIcon} from "@/assets/newIcon"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -45,9 +47,22 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
 
-    // 终端编码
-    const [codeKey, setCodeKey] = useState<string>("")
-    const [codeShow, setCodeShow] = useState<boolean>(false)
+    const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
+    const defaultTerminaFont = "Consolas, 'Courier New', monospace"
+    const [terminaFont, setTerminaFont] = useState<string>(defaultTerminaFont)
+
+    const SetYakRunnerTerminaFont = "SetYakRunnerTerminaFont"
+    // 缓存字体设置
+    useUpdateEffect(() => {
+        setRemoteValue(SetYakRunnerTerminaFont, terminaFont)
+    }, [terminaFont])
+    // 更改默认值
+    useEffect(() => {
+        getRemoteValue(SetYakRunnerTerminaFont).then((font) => {
+            if (!font) return
+            setTerminaFont(font)
+        })
+    }, [])
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -89,12 +104,54 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         } catch (error) {}
     })
 
+    const terminalRef = useRef<any>(null)
+    const terminalFocusRef = useRef<boolean>(false)
+    const onOpenTerminaDetailFun = useMemoizedFn(() => {
+        // 已打开
+        if (isShowEditorDetails) {
+            // 有焦点则关闭
+            if (terminalFocusRef.current) {
+                terminalRef.current.terminal.blur()
+                terminalFocusRef.current = false
+                setEditorDetails(false)
+                const main = document.getElementById("yakit-runnner-main-box-id")
+                if(main){
+                    main.focus()
+                }
+            } else {
+                // 终端焦点聚焦
+                if (terminalRef.current) {
+                    terminalFocusRef.current = true
+                    terminalRef.current.terminal.focus()
+                }
+            }
+        }
+        // 未打开
+        else {
+            setEditorDetails(true)
+            setShowItem("terminal")
+        }
+    })
+
     useEffect(() => {
         emiter.on("onOpenBottomDetail", onOpenBottomDetailFun)
+        emiter.on("onOpenTerminaDetail", onOpenTerminaDetailFun)
         return () => {
             emiter.off("onOpenBottomDetail", onOpenBottomDetailFun)
+            emiter.off("onOpenTerminaDetail", onOpenTerminaDetailFun)
         }
     }, [])
+
+    useEffect(() => {
+        if (terminalRef.current) {
+            terminalRef.current.terminal.textarea.addEventListener("blur", () => {
+                terminalFocusRef.current = false
+            })
+            terminalRef.current.terminal.textarea.addEventListener("focus", () => {
+                terminalFocusRef.current = true
+            })
+        }
+    }, [terminalRef])
 
     // 输出缓存
     const outputCahceRef = useRef<string>("")
@@ -185,60 +242,63 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     </div>
                 </div>
                 <div className={styles["extra"]}>
-                    {showItem === "terminal" && (
+                    {
                         <YakitPopover
+                            placement='left'
                             trigger='click'
-                            overlayClassName={styles["codec-menu-popover"]}
-                            overlayStyle={{paddingTop: 2}}
-                            placement='bottomLeft'
-                            content={
-                                <div className={styles["codec-menu-cont-wrapper"]}>
-                                    {[
-                                        {label: "gb18030", codeKey: "gb18030"},
-                                        {label: "windows-1252", codeKey: "windows-1252"},
-                                        {label: "iso-8859-1", codeKey: "iso-8859-1"},
-                                        {label: "big5", codeKey: "big5"},
-                                        {label: "utf-16", codeKey: "utf-16"}
-                                    ].map((item) => (
-                                        <div
-                                            key={item.codeKey}
-                                            className={classNames(styles["codec-menu-item"], {
-                                                [styles["active"]]: codeKey === item.codeKey
-                                            })}
-                                            onClick={() => {
-                                                // handleClickCoding(item.codeKey)
-                                                if (codeKey === item.codeKey) {
-                                                    setCodeKey("")
-                                                } else {
-                                                    setCodeKey(item.codeKey)
-                                                }
-                                            }}
-                                        >
-                                            {item.label}
-                                            {codeKey === item.codeKey && (
-                                                <SolidCheckIcon className={styles["check-icon"]} />
-                                            )}
-                                        </div>
-                                    ))}
+                            overlayClassName={styles["yak-runner-menu-popover"]}
+                            title={
+                                <div style={{display: "flex"}}>
+                                    终端字体配置
+                                    <Tooltip title='字体设置后需重启终端生效'>
+                                        <InformationCircleIcon className={styles["info-icon"]} />
+                                    </Tooltip>
                                 </div>
                             }
-                            visible={codeShow}
-                            onVisibleChange={(visible) => setCodeShow(visible)}
+                            content={
+                                <>
+                                    <div className={styles["title-font"]}>
+                                        控制终端的字体系列，默认为{" "}
+                                        <span
+                                            className={styles["default-font"]}
+                                            onClick={() => {
+                                                setTerminaFont(defaultTerminaFont)
+                                            }}
+                                        >
+                                            Termina: Font Family
+                                        </span>{" "}
+                                        的值。
+                                    </div>
+                                    <YakitInput
+                                        size='small'
+                                        value={terminaFont}
+                                        onChange={(e) => {
+                                            setTerminaFont(e.target.value)
+                                        }}
+                                        placeholder='请输入字体'
+                                    />
+                                </>
+                            }
+                            onVisibleChange={(v) => {
+                                if (!v) {
+                                    if (terminalRef.current) {
+                                        // terminalRef.current.terminal.clearTextureAtlas()
+                                    }
+                                }
+                                setPopoverVisible(v)
+                            }}
+                            overlayInnerStyle={{width: 340}}
+                            visible={popoverVisible}
                         >
-                            <YakitButton
-                                size='small'
-                                type={codeKey !== "" ? "primary" : "outline2"}
-                                onClick={(e) => e.preventDefault()}
-                            >
-                                编码
-                                {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                            </YakitButton>
+                            <YakitButton icon={<OutlineCogIcon />} type={popoverVisible ? "text" : "text2"} />
                         </YakitPopover>
-                    )}
+                    }
                     {showItem === "terminal" && (
                         <YakitButton
                             type='text2'
-                            icon={<OutlineTrashIcon />}
+                            // danger
+                            icon={<OutlineExitIcon />}
+                            className={styles["yak-runner-terminal-close"]}
                             onClick={() => {
                                 ipcRenderer.invoke("runner-terminal-cancel", folderPath).finally(() => {
                                     setEditorDetails(false)
@@ -293,7 +353,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         <TerminalBox
                             folderPath={folderPath}
                             isShowEditorDetails={isShowEditorDetails}
-                            codeKey={codeKey}
+                            terminaFont={terminaFont}
+                            xtermRef={terminalRef}
                         />
                         {/* )} */}
                     </div>

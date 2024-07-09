@@ -520,11 +520,17 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
+    // 终端
+    const onOpenTermina = useMemoizedFn(()=>{
+        emiter.emit("onOpenTerminaDetail")
+    })
+
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
         setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
+        setKeyboard("17-192", {onlyid: uuidv4(), callback: onOpenTermina})
     })
 
     useEffect(() => {
@@ -764,7 +770,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0}>
+            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id="yakit-runnner-main-box-id">
                 <div className={styles["yak-runner-body"]}>
                     <YakitResizeBox
                         freeze={!isUnShow}
