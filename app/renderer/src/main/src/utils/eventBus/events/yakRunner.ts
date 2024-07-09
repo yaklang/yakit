@@ -1,6 +1,7 @@
 export type YakRunnerEventProps = {
     onJumpEditorDetail: string
     onOpenBottomDetail: string
+    onOpenTerminaDetail?: string
     onRefreshRunnerHistory: string
     onOpenFolderList: string
     // 刷新文件树
