@@ -31,7 +31,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
 
     const editorRef = useRef<PluginEditorRefProps>(null)
     useEffect(() => {
-        if (visible && plugin) {
+        if (visible && edit) {
             if (editorRef.current) {
                 editorRef.current.setEditPlugin({
                     id: Number(plugin.Id || 0) || 0,
@@ -42,6 +42,9 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
         }
     }, [visible, edit])
 
+    const onModifyCallback = useMemoizedFn((data: ModifyPluginCallback) => {
+        onCallback(true, data)
+    })
     // 关闭
     const onCancel = useMemoizedFn(async () => {
         if (editorRef.current) {
@@ -62,7 +65,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
     })
     const unsavedHintCallback = useMemoizedFn((val: boolean) => {
         if (val) {
-            if (editorRef.current) {
+            if (!!editorRef.current) {
                 setUnsavedLoading(true)
                 editorRef.current.onSaveAndExit((val) => {
                     if (val) {
@@ -70,18 +73,15 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
                     }
                     cancelUnsavedHint()
                 })
+                return
             }
-        } else {
-            onCallback(false)
         }
+        onCallback(false)
+        cancelUnsavedHint()
     })
     const cancelUnsavedHint = useMemoizedFn(() => {
         setUnsavedLoading(false)
         setUnSavedHint(false)
-    })
-
-    const onModifyCallback = useMemoizedFn((data: ModifyPluginCallback) => {
-        onCallback(true, data)
     })
 
     return (
@@ -125,7 +125,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
                             <ExclamationCircleOutlined className={styles["icon-style"]} />
                         </div>
                         <div className={styles["content"]}>
-                            <div className={styles["title-style"]}>插件未保存</div>
+                            <div className={styles["title-style"]}>关闭检测: 插件未保存</div>
                             <div>是否要将插件保存到本地?</div>
                         </div>
                     </div>

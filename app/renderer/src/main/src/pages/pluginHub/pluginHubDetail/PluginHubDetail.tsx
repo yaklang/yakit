@@ -205,7 +205,10 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             })
         })
 
-        const onFetchPlugin = useMemoizedFn(() => {
+        /**
+         * @param banUpdateActiveTab 禁止更新变量activeKey
+         */
+        const onFetchPlugin = useMemoizedFn((banUpdateActiveTab?: boolean) => {
             if (!currentRequest.current) {
                 onError(true, false, "插件请求信息异常，请重新选择插件!")
                 return
@@ -250,7 +253,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     }
 
                     if (activeTab) {
-                        setActiveKey(activeTab)
+                        if (!banUpdateActiveTab) setActiveKey(activeTab)
                         onError(false)
                     } else {
                         onError(true, true, "未获取到插件信息，请刷新重试!")
@@ -458,7 +461,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 if (opType === "upload" || opType === "submit") {
                     if (currentRequest.current) {
                         currentRequest.current = {...currentRequest.current, name: info.name, uuid: info.uuid}
-                        onFetchPlugin()
+                        onFetchPlugin(true)
                     }
                 }
                 if (opType === "copy") {

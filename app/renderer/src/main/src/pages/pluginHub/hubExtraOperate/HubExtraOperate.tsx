@@ -568,7 +568,10 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             type='text2'
                             name={"编辑"}
                             className={classNames({[styles["share-disabled-btn"]]: !local})}
-                            onClick={() => handleOperates("edit")}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                handleOperates("edit")
+                            }}
                         />
                         <div className={styles["divider-style"]}></div>
                         <HubButton
@@ -580,7 +583,8 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             className={classNames({[styles["share-disabled-btn"]]: !online})}
                             disabled={!online}
                             hint={!online ? PluginOperateHint["banOnlineOP"] : ""}
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation()
                                 if (!online) return
                                 handleOperates("share")
                             }}
@@ -594,7 +598,10 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         icon={<OutlineClouduploadIcon />}
                         type='outline2'
                         name={"上传"}
-                        onClick={() => handleOperates("upload")}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleOperates("upload")
+                        }}
                     />
                 )}
                 {!isCorePlugin && (
@@ -606,7 +613,8 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         className={classNames({[styles["download-disabled-btn"]]: !online})}
                         disabled={!online}
                         hint={!online ? PluginOperateHint["banOnlineOP"] : ""}
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation()
                             if (!online) return
                             handleOperates("download")
                         }}

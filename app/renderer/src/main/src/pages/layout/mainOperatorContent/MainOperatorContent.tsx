@@ -44,7 +44,7 @@ import _ from "lodash"
 import {KeyConvertRoute, routeConvertKey} from "../publicMenu/utils"
 import {CheckIcon, OutlinePlusIcon, RemoveIcon, SolidDocumentTextIcon} from "@/assets/newIcon"
 import {RouteToPageProps} from "../publicMenu/PublicMenu"
-import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
+import {SubscribeCloseType, YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscribe"
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultUserInfo} from "@/pages/MainOperator"
 import {useStore} from "@/store"
@@ -583,7 +583,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const isExist = pageCache.filter((item) => item.route === YakitRoute.AddYakitScript).length
         if (isExist) {
             const modalProps = getSubscribeClose(YakitRoute.AddYakitScript)
-            if (modalProps) onModalSecondaryConfirm(modalProps["reset"])
+            if (modalProps) {
+                judgeDataIsFuncOrSettingForConfirm(
+                    modalProps["reset"],
+                    (setting) => {
+                        onModalSecondaryConfirm(setting)
+                    },
+                    () => {}
+                )
+            }
             cuPluginEditorStorage(source, false)
         } else {
             cuPluginEditorStorage(source, false)
@@ -610,7 +618,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (isExist) {
             emiter.emit("sendEditPluginId", `${id}`)
             const modalProps = getSubscribeClose(YakitRoute.ModifyYakitScript)
-            if (modalProps) onModalSecondaryConfirm(modalProps["reset"])
+            if (modalProps) {
+                judgeDataIsFuncOrSettingForConfirm(
+                    modalProps["reset"],
+                    (setting) => {
+                        onModalSecondaryConfirm(setting)
+                    },
+                    () => {}
+                )
+            }
             cuPluginEditorStorage(source, true)
         } else {
             cuPluginEditorStorage(source, true)
@@ -1410,7 +1426,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.ModifyYakitScript:
             case YakitRoute.HTTPFuzzer:
                 const modalProps = getSubscribeClose(data.route)
-                if (modalProps) onModalSecondaryConfirm(modalProps["close"])
+                if (modalProps) {
+                    judgeDataIsFuncOrSettingForConfirm(
+                        modalProps["close"],
+                        (setting) => {
+                            onModalSecondaryConfirm(setting)
+                        },
+                        () => {
+                            removeMenuPage(data)
+                        }
+                    )
+                }
                 break
 
             default:
@@ -4359,6 +4385,26 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
         </div>
     )
 })
+
+/**
+ * @name 判断页面关闭时的确认弹框是方法还是配置对象
+ */
+const judgeDataIsFuncOrSettingForConfirm = async (
+    data: SubscribeCloseType,
+    showHint: (info: YakitSecondaryConfirmProps) => void,
+    hiddenHint: () => void
+) => {
+    if (typeof data === "function") {
+        const setting = await data()
+        if (setting) {
+            showHint(setting)
+        } else {
+            hiddenHint()
+        }
+    } else {
+        showHint(data)
+    }
+}
 
 // 多开页面的一级页面关闭的确认弹窗
 const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
