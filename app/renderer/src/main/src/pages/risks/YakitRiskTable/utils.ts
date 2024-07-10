@@ -60,7 +60,7 @@ export interface ExportHtmlProps {
     fileName: string
     data: Risk[]
 }
-/** DeleteRisk */
+/** export-risk-html */
 export const apiExportHtml: (params: ExportHtmlProps) => Promise<string> = (params) => {
     return new Promise((resolve, reject) => {
         ipcRenderer

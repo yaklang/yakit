@@ -68,6 +68,7 @@ import {FieldName} from "../RiskTable"
 import {defQueryRisksRequest} from "./constants"
 import emiter from "@/utils/eventBus/eventBus"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -214,7 +215,7 @@ const yakitRiskCellStyle = {
     }
 }
 export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) => {
-    const {advancedQuery, setAdvancedQuery, setExportHtmlLoading} = props
+    const {advancedQuery, setAdvancedQuery, setRiskLoading} = props
     const [loading, setLoading] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -491,10 +492,17 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 Ids: ids
             }
         }
-        apiDeleteRisk(removeQuery).then(() => {
-            onResetRefresh()
-            emiter.emit("onRefRiskFieldGroup")
-        })
+        setRiskLoading(true)
+        apiDeleteRisk(removeQuery)
+            .then(() => {
+                onResetRefresh()
+                emiter.emit("onRefRiskFieldGroup")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setRiskLoading(false)
+                }, 200)
+            )
     })
     const onExportMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
@@ -626,7 +634,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onExportHTML = useMemoizedFn(async () => {
         if (+response.Total === 0) return
-        setExportHtmlLoading(true)
+        setRiskLoading(true)
         let risks: Risk[] = []
         if (allCheck || selectList.length === 0) {
             const exportQuery: QueryRisksRequest = {
@@ -657,7 +665,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             yakitNotify("error", `导出html失败:${error}`)
         })
         setTimeout(() => {
-            setExportHtmlLoading(false)
+            setRiskLoading(false)
         }, 200)
     })
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
@@ -816,6 +824,45 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onExpend = useMemoizedFn(() => {
         setAdvancedQuery(true)
+    })
+    const onRowContextMenu = useMemoizedFn((rowData: Risk) => {
+        if (!rowData) return
+        showByRightContext({
+            width: 180,
+            data: [{key: "delete-repeat-title", label: "删除重复标题数据"}],
+            onClick: ({key}) => onRightMenuSelect(key, rowData)
+        })
+    })
+    const onRightMenuSelect = useMemoizedFn((key: string, rowData: Risk) => {
+        switch (key) {
+            case "delete-repeat-title":
+                onDeleteRepeatTitle(rowData)
+                break
+            default:
+                break
+        }
+    })
+    const onDeleteRepeatTitle = useMemoizedFn((rowData: Risk) => {
+        const newParams = {
+            DeleteRepetition: true,
+            Id: rowData.Id,
+            Filter: {
+                ...defQueryRisksRequest,
+                Title: rowData?.TitleVerbose || rowData.Title,
+                Network: rowData?.IP
+            }
+        }
+        setRiskLoading(true)
+        apiDeleteRisk(newParams)
+            .then(() => {
+                onResetRefresh()
+                emiter.emit("onRefRiskFieldGroup")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setRiskLoading(false)
+                }, 200)
+            )
     })
     const ResizeBoxProps = useCreation(() => {
         let p = {
@@ -991,6 +1038,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         enableDrag={true}
                         useUpAndDown
                         onChange={onTableChange}
+                        onRowContextMenu={onRowContextMenu}
                     />
                 }
                 secondNode={

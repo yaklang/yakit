@@ -459,7 +459,11 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                     <Descriptions.Item span={2} label='CPE'>
                         <Space direction={"vertical"}>
                             {port.CPE.map((e) => {
-                                return <YakitCopyText key={e} showText={e} />
+                                return (
+                                    <React.Fragment key={e}>
+                                        <YakitCopyText showText={e} />
+                                    </React.Fragment>
+                                )
                             })}
                         </Space>
                     </Descriptions.Item>
@@ -467,7 +471,7 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                 {port.Fingerprint && (
                     <Descriptions.Item span={2} label='指纹信息'>
                         <div style={{height: 200}}>
-                            <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} />
+                            <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} readOnly />
                         </div>
                     </Descriptions.Item>
                 )}
