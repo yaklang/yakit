@@ -71,7 +71,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const [isShowFileHint,setShowFileHint] = useState<boolean>(false)
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
-
     // 选中的文件或文件夹
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
@@ -91,7 +90,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
     const onRefreshFileTreeFun = useMemoizedFn(() => {
-        console.log("刷新文件树", fileTree)
         setRefreshTree(!refreshTree)
     })
 
@@ -104,7 +102,19 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const fileDetailTree = useMemo(() => {
-        return initFileTree(fileTree, 1)
+        const initTree = initFileTree(fileTree, 1)
+        if(initTree.length>0){
+            initTree.push({
+                parent:null,
+                name:"已经到底啦~",
+                path:"",
+                isFolder:false,
+                icon:"",
+                depth:1,
+                isBottom:true
+            })
+        }
+        return initTree
     }, [fileTree, refreshTree])
 
     const getHistoryList = useMemoizedFn(async (data?: string) => {
@@ -129,8 +139,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const onLoadData = useMemoizedFn((node: FileNodeProps) => {
-        console.log("onLoadData", node)
-
         // 删除最外层文件夹时无需加载
         if (node.parent === null) return Promise.reject()
         if (handleFileLoadData) return handleFileLoadData(node.path)
@@ -276,13 +284,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     setActiveFile && setActiveFile(undefined)
                 }
                 const newAreaInfo = removeAreaFilesInfo(areaInfo, removePath)
-                console.log("移除的newAreaInfo", newAreaInfo)
                 setAreaInfo && setAreaInfo(newAreaInfo)
             }
             // 文件删除
             else {
-                console.log("info---", info)
-
                 if (info.parent) {
                     const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
                     // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
@@ -771,6 +776,9 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
                         list={[[...getOpenFileList]]}
                         titleRender={titleRender}
                         renderItem={renderItem}
+                        collapseProps={{
+                            defaultActiveKey:['collapse-list-0']
+                        }}
                     />
                 </div>
             ) : (

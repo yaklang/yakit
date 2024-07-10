@@ -360,7 +360,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             // 校验其子项是否存在
             const childArr = getMapFolderDetail(path)
             if (childArr.length > 0) {
-                console.log("缓存加载")
                 emiter.emit("onRefreshFileTree")
                 resolve("")
             } else {
@@ -375,7 +374,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         })
                         setMapFolderDetail(path, childArr)
                         setTimeout(() => {
-                            console.log("接口加载")
                             emiter.emit("onRefreshFileTree")
                             resolve("")
                         }, 300)
@@ -436,7 +434,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const addFileTab = useThrottleFn(
         () => {
             // 新建临时文件
-            console.log("ctrl_n")
             const scratchFile: FileDetailInfo = {
                 name: `Untitle-${unTitleCountRef.current}.yak`,
                 code: "# input your yak code\nprintln(`Hello Yak World!`)",
@@ -518,11 +515,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 关闭文件
     const ctrl_w = useMemoizedFn(() => {
-        console.log("ctrl_w")
         if (activeFile) {
-            const newAreaInfo = removeAreaFileInfo(areaInfo, activeFile)
-            setAreaInfo(newAreaInfo)
+            emiter.emit("onCloseFile", activeFile.path)
         }
+    })
+
+    // 终端
+    const onOpenTermina = useMemoizedFn(()=>{
+        emiter.emit("onOpenTerminaDetail")
     })
 
     // 注入默认键盘事件
@@ -530,6 +530,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
         setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
+        setKeyboard("17-192", {onlyid: uuidv4(), callback: onOpenTermina})
     })
 
     useEffect(() => {
@@ -586,6 +587,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             <BottomEditorDetails
                                 showItem={showItem}
                                 setShowItem={setShowItem}
+                                isShowEditorDetails={isShowEditorDetails}
                                 setEditorDetails={setEditorDetails}
                             />
                         )
@@ -692,7 +694,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     newAreaInfo[indexArr[0]].elements[indexArr[1]].files.splice(destination.index, 0, element)
                 }
             }
-            console.log("onDragEnd-0_0", newAreaInfo)
             setAreaInfo(newAreaInfo)
         } catch (error) {}
     })
@@ -769,18 +770,20 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0}>
+            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id="yakit-runnner-main-box-id">
                 <div className={styles["yak-runner-body"]}>
                     <YakitResizeBox
                         freeze={!isUnShow}
                         firstRatio={isUnShow ? "25px" : "300px"}
                         firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
-                        lineDirection='left'
+                        lineDirection='right'
                         // isShowDefaultLineStyle={false}
                         firstMinSize={isUnShow ? 25 : 200}
+                        // lineInStyle={{backgroundColor:"#eaecf3"}}
+                        lineStyle={{width:4}}
                         secondMinSize={400}
                         firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
-                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset"}}
+                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset",padding:0}}
                         secondNode={
                             <div
                                 className={classNames(styles["yak-runner-code"], {

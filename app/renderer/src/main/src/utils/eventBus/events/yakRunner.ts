@@ -1,6 +1,7 @@
 export type YakRunnerEventProps = {
     onJumpEditorDetail: string
     onOpenBottomDetail: string
+    onOpenTerminaDetail?: string
     onRefreshRunnerHistory: string
     onOpenFolderList: string
     // 刷新文件树
@@ -15,6 +16,10 @@ export type YakRunnerEventProps = {
     onNewFolderInFileTree:string
     // 删除文件/文件夹
     onDeleteInFileTree: string
+    // 关闭打开的文件
+    onCloseFile: string
     // 定位文件树
     onScrollToFileTree: string
+    // 终端中打开
+    onOpenTernimal: string
 }

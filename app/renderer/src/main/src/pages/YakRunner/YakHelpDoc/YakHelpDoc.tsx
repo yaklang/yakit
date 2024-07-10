@@ -100,7 +100,6 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
 
     const update = useMemoizedFn(() => {
         loadFromYakURLRaw(`yakdocument://${searchRef.current}`, (rsp) => {
-            console.log("rsp", rsp)
             setData(
                 rsp.Resources.map((i, index) => ({
                     title: i.VerboseName,
@@ -152,6 +151,7 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
                     list={data}
                     titleRender={titleRender}
                     renderItem={renderItem}
+                    isShowBottom={true}
                 />
             </div>
         </div>

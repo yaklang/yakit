@@ -9,25 +9,24 @@ import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import ReactResizeDetector from "react-resize-detector"
 import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
-import {TERMINAL_INPUT_KEY, YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
-import useStore from "../../hooks/useStore"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
+import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
+import {Uint8ArrayToString} from "@/utils/str"
+import {getMapAllTerminalKey, getTerminalMap, removeTerminalMap, setTerminalMap} from "./TerminalMap"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {callCopyToClipboard} from "@/utils/basic"
+import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
 
 const {ipcRenderer} = window.require("electron")
-
 export interface TerminalBoxProps {
+    isShowEditorDetails: boolean
     folderPath: string
-    isShow: boolean
+    terminaFont: string
+    xtermRef: React.MutableRefObject<any>
+    onExitTernimal: (path: string) => void
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {folderPath,isShow} = props
-    const {fileTree} = useStore()
-    const xtermRef = useRef<any>(null)
-    const [inputValue, setInputValue] = useState<string>("")
-    const [defaultXterm, setDefaultXterm] = useState<string>("")
-    // 是否允许输入及不允许输入的原因
-    const [allowInput, setAllowInput] = useState<boolean>(true)
+    const {isShowEditorDetails, folderPath, terminaFont, xtermRef, onExitTernimal} = props
 
     // 写入
     const commandExec = useMemoizedFn((cmd) => {
@@ -37,31 +36,47 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         ipcRenderer.invoke("runner-terminal-input", folderPath, cmd)
     })
 
-    // 终端启用路径
-    const startTerminalPath = useRef<string>()
+    // 行列变化
+    const onChangeSize = useMemoizedFn((height, width) => {
+        if (height && width && folderPath) {
+            ipcRenderer.invoke("runner-terminal-size", folderPath, {
+                height,
+                width
+            })
+        }
+    })
+
+    // 输出
+    const onWriteXTerm = useMemoizedFn((data: Uint8Array) => {
+        let outPut = Uint8ArrayToString(data)
+        // 缓存
+        setTerminalMap(folderPath, getTerminalMap(folderPath) + outPut)
+        writeXTerm(xtermRef, outPut)
+    })
 
     useEffect(() => {
         if (!xtermRef) {
             return
         }
-        if(startTerminalPath.current){
-            ipcRenderer.invoke("runner-terminal-cancel",startTerminalPath.current)
-            startTerminalPath.current = undefined
+
+        // 校验map存储缓存
+        const terminalCache = getTerminalMap(folderPath)
+        if (terminalCache) {
+            writeXTerm(xtermRef, terminalCache)
+        } else {
+            // 启动
+            ipcRenderer
+                .invoke("runner-terminal", {
+                    path: folderPath
+                })
+                .then(() => {
+                    isShowEditorDetails && success(`终端${folderPath}监听成功`)
+                })
+                .catch((e: any) => {
+                    failed(`ERROR: ${JSON.stringify(e)}`)
+                })
+                .finally(() => {})
         }
-        setAllowInput(true)
-        // 启动
-        ipcRenderer
-            .invoke("runner-terminal", {
-                path: folderPath
-            })
-            .then(() => {
-                startTerminalPath.current = folderPath
-                success(`终端${folderPath}监听成功`)
-            })
-            .catch((e: any) => {
-                failed(`ERROR: ${JSON.stringify(e)}`)
-            })
-            .finally(() => {})
 
         // 接收
         const key = `client-listening-terminal-data-${folderPath}`
@@ -70,12 +85,8 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 return
             }
 
-            if (data?.raw && xtermRef?.current && xtermRef.current?.terminal) {
-                // let str = String.fromCharCode.apply(null, data.raw);
-                let str = Uint8ArrayToString(data.raw)
-                
-                writeXTerm(xtermRef, str)
-                setDefaultXterm(str)
+            if (data?.raw) {
+                onWriteXTerm(data.raw)
             }
         })
 
@@ -87,10 +98,10 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         // grpc通知关闭
         const errorKey = "client-listening-terminal-end"
         ipcRenderer.on(errorKey, (e: any, data: any) => {
-            if(startTerminalPath.current === data){
-                setAllowInput(false)
+            if (getMapAllTerminalKey().includes(data)) {
+                onExitTernimal(data)
+                isShowEditorDetails && warn(`终端${data}被关闭`)
             }
-            warn(`终端${data}被关闭`)
         })
         return () => {
             // 移除
@@ -102,16 +113,68 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         }
     }, [xtermRef, folderPath])
 
-    // xtermClear(xtermRef)
-    // writeXTerm(xtermRef, defaultXterm)
+    const onCopy = useMemoizedFn(() => {
+        const selectedText: string = (xtermRef.current && xtermRef.current.terminal.getSelection()) || ""
+        if (selectedText.length === 0) {
+            warn("暂无复制内容")
+            return
+        }
+        callCopyToClipboard(selectedText, false)
+    })
+
+    const onPaste = useMemoizedFn(() => {
+        if (xtermRef.current) {
+            ipcRenderer
+                .invoke("get-copy-clipboard")
+                .then((str: string) => {
+                    xtermRef.current.terminal.paste(str)
+                    xtermRef.current.terminal.focus()
+                })
+                .catch(() => {})
+        }
+    })
+
+    const menuData: YakitMenuItemType[] = useMemo(() => {
+        return [
+            {
+                label: "复制",
+                key: "copy"
+            },
+            {
+                label: "粘贴",
+                key: "paste"
+            }
+        ] as YakitMenuItemType[]
+    }, [])
+
+    const handleContextMenu = useMemoizedFn(() => {
+        showByRightContext({
+            width: 180,
+            type: "grey",
+            data: [...menuData],
+            onClick: ({key, keyPath}) => {
+                switch (key) {
+                    case "copy":
+                        onCopy()
+                        break
+                    case "paste":
+                        onPaste()
+                        break
+                    default:
+                        break
+                }
+            }
+        })
+    })
 
     return (
-        <div className={styles["terminal-box"]}>
+        <div className={styles["terminal-box"]} onContextMenu={handleContextMenu}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
                     const row = Math.floor(height / 18.5)
                     const col = Math.floor(width / 10)
+                    onChangeSize(row, col)
                     if (xtermRef) xtermFit(xtermRef, col, row)
                 }}
                 handleWidth={true}
@@ -119,10 +182,11 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <YakitCVXterm
-                maxHeight={0}
+            <YakitXterm
                 ref={xtermRef}
                 options={{
+                    // fontFamily: '"Courier New", Courier, monospace',
+                    fontFamily: terminaFont,
                     convertEol: true,
                     theme: {
                         foreground: "#e5c7a9",
@@ -156,10 +220,6 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 }}
                 // isWrite={false}
                 onData={(data) => {
-                    if (!allowInput) {
-                        warn(`终端 ${startTerminalPath.current} 被关闭`)
-                        return
-                    }
                     commandExec(data)
                 }}
                 onKey={(e) => {

@@ -1,3 +1,4 @@
+import { CollapseProps } from "antd"
 import {ReactNode} from "react"
 import { monaco } from "react-monaco-editor"
 
@@ -12,6 +13,8 @@ export interface CollapseListProp<T> {
     list: T[]
     titleRender: (info: T) => ReactNode
     renderItem: (info: T) => ReactNode
+    collapseProps?: CollapseProps
+    isShowBottom?: boolean
 }
 
 export interface HelpInfoListProps {}

@@ -55,6 +55,7 @@
         .extra {
             margin-right: 8px;
             display: flex;
+            align-items: center;
             gap: 8px;
         }
     }
@@ -81,5 +82,25 @@
             width: 100%;
             background: #ffffff;
         }
+    }
+}
+
+.yak-runner-menu-popover {
+    .title-font {
+        font-size: 12px;
+        margin-bottom: 4px;
+        .default-font {
+            color: var(--yakit-primary-5);
+            cursor: pointer;
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+.yak-runner-terminal-close {
+    svg{
+        color: var(--yakit-danger-4) !important;
     }
 }

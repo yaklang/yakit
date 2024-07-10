@@ -24,6 +24,14 @@ module.exports = (win, getClient) => {
             })
         }
     })
+    ipcMain.handle("runner-terminal-size", async (e, path, size) => {
+        const stream = getStreamByPort(path)
+        if (stream) {
+            stream.write({
+                ...size
+            })
+        }
+    })
     ipcMain.handle("runner-terminal-cancel", async (e, path) => {
         removeStreamPort(path)
     })
