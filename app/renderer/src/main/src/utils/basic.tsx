@@ -33,9 +33,9 @@ export interface YakVersionProp {
 
 const {ipcRenderer} = window.require("electron");
 
-export const callCopyToClipboard = (str: string) => {
+export const callCopyToClipboard = (str: string,isShow = true) => {
     ipcRenderer.invoke("copy-clipboard", str).then(() => {
-        info("Copy Finished")
+        isShow && info("Copy Finished")
     })
 }
 

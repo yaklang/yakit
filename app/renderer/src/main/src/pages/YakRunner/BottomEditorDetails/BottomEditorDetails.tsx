@@ -364,16 +364,12 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "terminal"
                         })}
                     >
-                        {/* {systemRef.current === "Windows_NT" ? (
-                            <div className={styles["no-syntax-check"]}>终端监修中</div>
-                        ) : ( */}
                         <TerminalBox
                             folderPath={folderPath}
                             isShowEditorDetails={isShowEditorDetails}
                             terminaFont={terminaFont}
                             xtermRef={terminalRef}
                         />
-                        {/* )} */}
                     </div>
                 )}
                 {/* 帮助信息只有yak有 */}

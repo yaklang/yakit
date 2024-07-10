@@ -15,6 +15,7 @@ import {getMapAllTerminalKey, getTerminalMap, removeTerminalMap, setTerminalMap}
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {callCopyToClipboard} from "@/utils/basic"
+import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
 
 const {ipcRenderer} = window.require("electron")
 export interface TerminalBoxProps {
@@ -123,17 +124,8 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             warn("暂无复制内容")
             return
         }
-        callCopyToClipboard(selectedText)
+        callCopyToClipboard(selectedText,false)
     })
-
-    // useEffect(()=>{
-    //     if(xtermRef.current){
-    //         xtermRef.current.terminal.onSelectionChange((event,data)=>{
-    //             console.log("event",event,data,xtermRef.current.terminal.getSelection());
-
-    //         })
-    //     }
-    // },[])
 
     const onPaste = useMemoizedFn(() => {
         if (xtermRef.current) {
@@ -195,8 +187,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <YakitCVXterm
-                maxHeight={0}
+            <YakitXterm
                 ref={xtermRef}
                 options={{
                     // fontFamily: '"Courier New", Courier, monospace',
