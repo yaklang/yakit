@@ -21,12 +21,8 @@ export interface YakitEditorProps {
     /** @name 自带的菜单组可选项(多选) */
     menuType?: YakitEditorExtraRightMenuType[]
 
-    /** @name 内容类型是否为字节码 */
-    isBytes?: boolean
     /** @name 编辑器内容(string类型) */
     value?: string
-    /** @name 编辑器内容(字节码类型) */
-    valueBytes?: Uint8Array
     /** @name 修改编辑器内容事件回调 */
     setValue?: (content: string) => any
 
