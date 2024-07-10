@@ -29,6 +29,7 @@ import {SolidCheckIcon} from "@/assets/icon/solid"
 import {ChevronDownIcon, ChevronUpIcon, InformationCircleIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import { removeTerminalMap } from "./TerminalBox/TerminalMap"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -115,7 +116,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 terminalFocusRef.current = false
                 setEditorDetails(false)
                 const main = document.getElementById("yakit-runnner-main-box-id")
-                if(main){
+                if (main) {
                     main.focus()
                 }
             } else {
@@ -130,6 +131,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         else {
             setEditorDetails(true)
             setShowItem("terminal")
+            // 终端焦点聚焦
+            if (terminalRef.current) {
+                terminalFocusRef.current = true
+                terminalRef.current.terminal.focus()
+            }
         }
     })
 
@@ -142,16 +148,26 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [])
 
+    const onBlur = useMemoizedFn(() => {
+        terminalFocusRef.current = false
+    })
+
+    const onFocus = useMemoizedFn(() => {
+        terminalFocusRef.current = true
+    })
+
     useEffect(() => {
         if (terminalRef.current) {
-            terminalRef.current.terminal.textarea.addEventListener("blur", () => {
-                terminalFocusRef.current = false
-            })
-            terminalRef.current.terminal.textarea.addEventListener("focus", () => {
-                terminalFocusRef.current = true
-            })
+            terminalRef.current.terminal.textarea.addEventListener("blur", onBlur)
+            terminalRef.current.terminal.textarea.addEventListener("focus", onFocus)
         }
-    }, [terminalRef])
+        return () => {
+            if (terminalRef.current) {
+                terminalRef.current.terminal.textarea.removeEventListener("blur", onBlur)
+                terminalRef.current.terminal.textarea.removeEventListener("focus", onFocus)
+            }
+        }
+    }, [terminalRef.current])
 
     // 输出缓存
     const outputCahceRef = useRef<string>("")
@@ -301,6 +317,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             className={styles["yak-runner-terminal-close"]}
                             onClick={() => {
                                 ipcRenderer.invoke("runner-terminal-cancel", folderPath).finally(() => {
+                                    removeTerminalMap(folderPath)
                                     setEditorDetails(false)
                                     // 重新渲染
                                     setShowType(showType.filter((item) => item !== "terminal"))

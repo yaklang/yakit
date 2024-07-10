@@ -11,9 +11,9 @@ import ReactResizeDetector from "react-resize-detector"
 import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
 import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 import {Uint8ArrayToString} from "@/utils/str"
+import {getMapAllTerminalKey, getTerminalMap, removeTerminalMap, setTerminalMap} from "./TerminalMap"
 
 const {ipcRenderer} = window.require("electron")
-
 export interface TerminalBoxProps {
     isShowEditorDetails: boolean
     folderPath: string
@@ -21,10 +21,10 @@ export interface TerminalBoxProps {
     xtermRef: React.MutableRefObject<any>
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {isShowEditorDetails, folderPath, terminaFont,xtermRef} = props
+    const {isShowEditorDetails, folderPath, terminaFont, xtermRef} = props
 
     // 是否允许输入及不允许输入的原因
-    const [allowInput, setAllowInput] = useState<boolean>(true)
+    const [allowInput, setAllowInput] = useState<string>("")
 
     // 写入
     const commandExec = useMemoizedFn((cmd) => {
@@ -47,34 +47,37 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
     // 输出
     const onWriteXTerm = useMemoizedFn((data: Uint8Array) => {
         let outPut = Uint8ArrayToString(data)
+        // 缓存
+        setTerminalMap(folderPath, getTerminalMap(folderPath) + outPut)
         writeXTerm(xtermRef, outPut)
     })
-
-    // 终端启用路径
-    const startTerminalPath = useRef<string>()
 
     useEffect(() => {
         if (!xtermRef) {
             return
         }
-        if (startTerminalPath.current) {
-            ipcRenderer.invoke("runner-terminal-cancel", startTerminalPath.current)
-            startTerminalPath.current = undefined
+
+        setAllowInput("")
+
+        // 校验map存储缓存
+        const terminalCache = getTerminalMap(folderPath)
+        if (terminalCache) {
+            writeXTerm(xtermRef, terminalCache)
+        } else {
+            console.log("启动---", folderPath)
+            // 启动
+            ipcRenderer
+                .invoke("runner-terminal", {
+                    path: folderPath
+                })
+                .then(() => {
+                    isShowEditorDetails && success(`终端${folderPath}监听成功`)
+                })
+                .catch((e: any) => {
+                    failed(`ERROR: ${JSON.stringify(e)}`)
+                })
+                .finally(() => {})
         }
-        setAllowInput(true)
-        // 启动
-        ipcRenderer
-            .invoke("runner-terminal", {
-                path: folderPath
-            })
-            .then(() => {
-                startTerminalPath.current = folderPath
-                isShowEditorDetails && success(`终端${folderPath}监听成功`)
-            })
-            .catch((e: any) => {
-                failed(`ERROR: ${JSON.stringify(e)}`)
-            })
-            .finally(() => {})
 
         // 接收
         const key = `client-listening-terminal-data-${folderPath}`
@@ -96,10 +99,11 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         // grpc通知关闭
         const errorKey = "client-listening-terminal-end"
         ipcRenderer.on(errorKey, (e: any, data: any) => {
-            if (startTerminalPath.current === data) {
-                setAllowInput(false)
+            if (getMapAllTerminalKey().includes(data)) {
+                removeTerminalMap(data)
+                setAllowInput(data)
+                isShowEditorDetails && warn(`终端${data}被关闭`)
             }
-            isShowEditorDetails && warn(`终端${data}被关闭`)
         })
         return () => {
             // 移除
@@ -165,8 +169,8 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 }}
                 // isWrite={false}
                 onData={(data) => {
-                    if (!allowInput) {
-                        warn(`终端 ${startTerminalPath.current} 被关闭`)
+                    if (allowInput) {
+                        warn(`终端 ${allowInput} 被关闭`)
                         return
                     }
                     commandExec(data)
