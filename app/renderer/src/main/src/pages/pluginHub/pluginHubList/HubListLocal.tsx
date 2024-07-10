@@ -46,7 +46,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {RemotePluginGV} from "@/enums/plugin"
-import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import {SolidCloudpluginIcon, SolidPrivatepluginIcon, SolidYakOfficialPluginColorIcon} from "@/assets/icon/colors"
 import {randomString} from "@/utils/randomUtil"
 import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "@/pages/plugins/pluginUploadHooks"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -744,6 +744,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 单项副标题
     const optSubTitle = useMemoizedFn((data: YakScript) => {
         if (data.isLocalPlugin) return null
+        if (data.OnlineOfficial) {
+            return <SolidYakOfficialPluginColorIcon />
+        }
         if (data.OnlineIsPrivate) {
             return <SolidPrivatepluginIcon />
         } else {
