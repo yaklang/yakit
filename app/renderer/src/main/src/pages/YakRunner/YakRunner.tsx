@@ -776,12 +776,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         freeze={!isUnShow}
                         firstRatio={isUnShow ? "25px" : "300px"}
                         firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
-                        lineDirection='left'
+                        lineDirection='right'
                         // isShowDefaultLineStyle={false}
                         firstMinSize={isUnShow ? 25 : 200}
+                        // lineInStyle={{backgroundColor:"#eaecf3"}}
+                        lineStyle={{width:4}}
                         secondMinSize={400}
                         firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
-                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset"}}
+                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset",padding:0}}
                         secondNode={
                             <div
                                 className={classNames(styles["yak-runner-code"], {

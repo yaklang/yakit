@@ -12,8 +12,8 @@
 
     .open-file {
         min-height: 32px;
-        width: 100%;
         padding: 4px 0;
+        margin-left: 4px;
         border-bottom: 1px solid #eaecf3;
     }
 
@@ -58,7 +58,6 @@
     user-select: none;
 }
 .opened-file-body {
-    padding: 0px 4px;
     @media screen and (min-height: 950px) {
         max-height: 220px;
     }
