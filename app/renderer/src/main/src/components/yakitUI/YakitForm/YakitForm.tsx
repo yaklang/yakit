@@ -10,7 +10,7 @@ import {
 import styles from "./YakitForm.module.scss"
 import classNames from "classnames"
 import {YakitInput} from "../YakitInput/YakitInput"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {failed, yakitNotify} from "@/utils/notification"
 import {OutlineUploadIcon} from "@/assets/icon/outline"
 import {YakitAutoComplete} from "../YakitAutoComplete/YakitAutoComplete"
@@ -87,11 +87,17 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         disabled,
         isShowPathNumber = true,
         multiple = true,
-        showFailedFlag = true,
         fileExtensionIsExist = true
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
-    const [name, setName] = useState<string>("")
+    const [name, setName] = useState<string>(fileName || "")
+    useDebounceEffect(
+        () => {
+            setName(fileName || "")
+        },
+        [fileName],
+        {wait: 300}
+    )
     /**文件处理 */
     const getContent = useMemoizedFn((path: string, fileType: string) => {
         if (!path) {
@@ -100,15 +106,18 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         }
         const index = path.lastIndexOf(".")
 
-        if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-            failed("请输入正确的路径")
-            return
+        if (fileExtensionIsExist) {
+            if (selectType === "file" && index === -1) {
+                failed("请输入正确的路径")
+                return
+            }
+
+            if (props.accept && !props.accept.split(",").includes(fileType)) {
+                failed(`仅支持${props.accept}格式的文件`)
+                return
+            }
         }
 
-        if (props.accept && !props.accept.split(",").includes(fileType)) {
-            failed(`仅支持${props.accept}格式的文件`)
-            return
-        }
         // 设置名字
         if (setFileName) {
             setFileName(path)
@@ -133,7 +142,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "textarea":
                 return (
                     <YakitInput.TextArea
-                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
+                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
                         value={fileName || name}
                         disabled={disabled}
                         {...textareaProps}
@@ -147,7 +156,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -171,7 +180,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -187,7 +196,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "autoComplete":
                 return (
                     <YakitAutoComplete
-                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
+                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
                         value={fileName || name}
                         disabled={disabled}
                         {...autoCompleteProps}
@@ -201,7 +210,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                 e.stopPropagation()
                                 const index = name.lastIndexOf(".")
                                 if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                    showFailedFlag && failed("请输入正确的路径")
+                                    failed("请输入正确的路径")
                                     return
                                 }
                                 if (fileNumber > 1 && multiple === false) {
@@ -225,7 +234,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -241,7 +250,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             default:
                 return (
                     <YakitInput
-                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
+                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
                         size={size}
                         value={fileName || name}
                         disabled={disabled}
@@ -256,7 +265,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -280,7 +289,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -348,6 +357,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             })
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
+                let acceptFlag = true
                 if (filesLength) {
                     const absolutePath: string[] = []
                     data.filePaths.forEach((p) => {
@@ -355,11 +365,18 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         if (fileExtensionIsExist) {
                             if (isAcceptEligible(path, props.accept || ".*")) {
                                 absolutePath.push(path)
+                            } else {
+                                acceptFlag = false
                             }
                         } else {
                             absolutePath.push(path)
                         }
                     })
+
+                    if (props.accept && !acceptFlag) {
+                        failed(`仅支持${props.accept}格式的文件`)
+                    }
+
                     // 设置名字
                     if (setFileName) setFileName(absolutePath.join(","))
                 }
