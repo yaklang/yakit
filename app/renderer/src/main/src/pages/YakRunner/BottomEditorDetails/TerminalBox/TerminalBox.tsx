@@ -12,6 +12,9 @@ import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
 import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 import {Uint8ArrayToString} from "@/utils/str"
 import {getMapAllTerminalKey, getTerminalMap, removeTerminalMap, setTerminalMap} from "./TerminalMap"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {callCopyToClipboard} from "@/utils/basic"
 
 const {ipcRenderer} = window.require("electron")
 export interface TerminalBoxProps {
@@ -64,7 +67,6 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         if (terminalCache) {
             writeXTerm(xtermRef, terminalCache)
         } else {
-            console.log("启动---", folderPath)
             // 启动
             ipcRenderer
                 .invoke("runner-terminal", {
@@ -86,7 +88,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 return
             }
 
-            if (data?.raw && xtermRef?.current && xtermRef.current?.terminal) {
+            if (data?.raw) {
                 onWriteXTerm(data.raw)
             }
         })
@@ -115,8 +117,71 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         }
     }, [xtermRef, folderPath])
 
+    const onCopy = useMemoizedFn(() => {
+        const selectedText: string = (xtermRef.current && xtermRef.current.terminal.getSelection()) || ""
+        if (selectedText.length === 0) {
+            warn("暂无复制内容")
+            return
+        }
+        callCopyToClipboard(selectedText)
+    })
+
+    // useEffect(()=>{
+    //     if(xtermRef.current){
+    //         xtermRef.current.terminal.onSelectionChange((event,data)=>{
+    //             console.log("event",event,data,xtermRef.current.terminal.getSelection());
+
+    //         })
+    //     }
+    // },[])
+
+    const onPaste = useMemoizedFn(() => {
+        if (xtermRef.current) {
+            ipcRenderer
+                .invoke("get-copy-clipboard")
+                .then((str: string) => {
+                    xtermRef.current.terminal.paste(str)
+                    xtermRef.current.terminal.focus()
+                })
+                .catch(() => {})
+        }
+    })
+
+    const menuData: YakitMenuItemType[] = useMemo(() => {
+        return [
+            {
+                label: "复制",
+                key: "copy"
+            },
+            {
+                label: "粘贴",
+                key: "paste"
+            }
+        ] as YakitMenuItemType[]
+    }, [])
+
+    const handleContextMenu = useMemoizedFn(() => {
+        showByRightContext({
+            width: 180,
+            type: "grey",
+            data: [...menuData],
+            onClick: ({key, keyPath}) => {
+                switch (key) {
+                    case "copy":
+                        onCopy()
+                        break
+                    case "paste":
+                        onPaste()
+                        break
+                    default:
+                        break
+                }
+            }
+        })
+    })
+
     return (
-        <div className={styles["terminal-box"]}>
+        <div className={styles["terminal-box"]} onContextMenu={handleContextMenu}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
