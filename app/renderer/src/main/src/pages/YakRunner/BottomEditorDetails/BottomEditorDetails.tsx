@@ -29,7 +29,7 @@ import {SolidCheckIcon} from "@/assets/icon/solid"
 import {ChevronDownIcon, ChevronUpIcon, InformationCircleIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import { removeTerminalMap } from "./TerminalBox/TerminalMap"
+import {removeTerminalMap} from "./TerminalBox/TerminalMap"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -215,6 +215,17 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [])
 
+    const onExitTernimal = useMemoizedFn((path: string) => {
+        removeTerminalMap(path)
+        setEditorDetails(false)
+        // 重新渲染
+        setShowType(showType.filter((item) => item !== "terminal"))
+        const main = document.getElementById("yakit-runnner-main-box-id")
+        if (main) {
+            main.focus()
+        }
+    })
+
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -317,10 +328,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             className={styles["yak-runner-terminal-close"]}
                             onClick={() => {
                                 ipcRenderer.invoke("runner-terminal-cancel", folderPath).finally(() => {
-                                    removeTerminalMap(folderPath)
-                                    setEditorDetails(false)
-                                    // 重新渲染
-                                    setShowType(showType.filter((item) => item !== "terminal"))
+                                    onExitTernimal(folderPath)
                                 })
                             }}
                         />
@@ -369,6 +377,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             isShowEditorDetails={isShowEditorDetails}
                             terminaFont={terminaFont}
                             xtermRef={terminalRef}
+                            onExitTernimal={onExitTernimal}
                         />
                     </div>
                 )}

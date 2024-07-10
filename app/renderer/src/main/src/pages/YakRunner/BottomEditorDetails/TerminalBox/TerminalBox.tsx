@@ -23,12 +23,10 @@ export interface TerminalBoxProps {
     folderPath: string
     terminaFont: string
     xtermRef: React.MutableRefObject<any>
+    onExitTernimal: (path: string) => void
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {isShowEditorDetails, folderPath, terminaFont, xtermRef} = props
-
-    // 是否允许输入及不允许输入的原因
-    const [allowInput, setAllowInput] = useState<string>("")
+    const {isShowEditorDetails, folderPath, terminaFont, xtermRef, onExitTernimal} = props
 
     // 写入
     const commandExec = useMemoizedFn((cmd) => {
@@ -60,8 +58,6 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         if (!xtermRef) {
             return
         }
-
-        setAllowInput("")
 
         // 校验map存储缓存
         const terminalCache = getTerminalMap(folderPath)
@@ -103,8 +99,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         const errorKey = "client-listening-terminal-end"
         ipcRenderer.on(errorKey, (e: any, data: any) => {
             if (getMapAllTerminalKey().includes(data)) {
-                removeTerminalMap(data)
-                setAllowInput(data)
+                onExitTernimal(data)
                 isShowEditorDetails && warn(`终端${data}被关闭`)
             }
         })
@@ -124,7 +119,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             warn("暂无复制内容")
             return
         }
-        callCopyToClipboard(selectedText,false)
+        callCopyToClipboard(selectedText, false)
     })
 
     const onPaste = useMemoizedFn(() => {
@@ -225,10 +220,6 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 }}
                 // isWrite={false}
                 onData={(data) => {
-                    if (allowInput) {
-                        warn(`终端 ${allowInput} 被关闭`)
-                        return
-                    }
                     commandExec(data)
                 }}
                 onKey={(e) => {
