@@ -266,7 +266,7 @@ $keyColor: map-keys($colors);
             height: 32px;
             background-color: var(--yakit-card-background-color);
 
-            max-width: calc(100% - 64px);
+            max-width: calc(100% - 32px);
             overflow-y: hidden;
             overflow-x: auto;
             scroll-behavior: smooth;
@@ -327,6 +327,7 @@ $keyColor: map-keys($colors);
 
                 .tab-menu-sub-group-children-hidden {
                     width: 0;
+                    height: 32px;
 
                     .tab-menu-sub-item {
                         min-width: initial;
@@ -339,13 +340,28 @@ $keyColor: map-keys($colors);
                     }
                 }
             }
+            .tab-menu-sub-group-disable-drag {
+                cursor:auto;
+                .tab-menu-sub-group-name {
+                    height: auto;
+                    cursor:auto;
+                }
+                .tab-menu-sub-group-children {
+                    flex-wrap: wrap;
+                }
+            }
         }
 
         .tab-menu-sub-width {
             max-width: 100%;
         }
+        .tab-menu-sub-maxWidth-64{
+            max-width: calc(100% - 64px);
+        }
         .tab-menu-sub-expand {
             max-width: calc(100% - 32px);
+            flex-wrap: wrap;
+            height: fit-content;
         }
 
         .render-sub-page {
@@ -360,7 +376,7 @@ $keyColor: map-keys($colors);
 
     .extra-operate {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         .extra-operate-icon {
             @extend .base-operate-icon;
             width: 32px;
@@ -380,6 +396,7 @@ $keyColor: map-keys($colors);
     }
     .extra-operate-expand {
         flex-direction: column-reverse;
+        justify-content: space-between;
     }
     .outline-chevron-double-left {
         @extend .base-operate-icon;
@@ -535,6 +552,7 @@ $keyColor: map-keys($colors);
 .tab-menu-sub-item-active {
     background-color: #fff;
     color: var(--yakit-primary-5);
+    flex-shrink: 0;
 
     .document-text-icon {
         color: var(--yakit-primary-5);
@@ -550,6 +568,10 @@ $keyColor: map-keys($colors);
         background-color: #fff;
         z-index: 1;
     }
+}
+
+.tab-menu-sub-item-disable-drag{
+    flex: 0 1 auto;
 }
 
 .tab-menu-sub-item-dragging {
@@ -578,7 +600,6 @@ $keyColor: map-keys($colors);
     overflow-y: overlay;
     overflow-x: hidden;
 }
-
 
 .toolTip-overlay {
     padding-bottom: 4px;

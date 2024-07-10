@@ -28,7 +28,15 @@ import {
     LogOutCloseRoutes
 } from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useCreation,
+    useGetState,
+    useInViewport,
+    useLongPress,
+    useMemoizedFn,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import {
     DragDropContext,
     Droppable,
@@ -2541,7 +2549,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             removePagesDataCacheById,
             setPageNodeInfoByPageGroupId,
             addPagesDataCache,
-            setCurrentSelectPageId
+            setCurrentSelectPageId,
+            updateGroupExpandOrRetract
         } = usePageInfo(
             (s) => ({
                 setPagesData: s.setPagesData,
@@ -2553,7 +2562,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 removePagesDataCacheById: s.removePagesDataCacheById,
                 setPageNodeInfoByPageGroupId: s.setPageNodeInfoByPageGroupId,
                 addPagesDataCache: s.addPagesDataCache,
-                setCurrentSelectPageId: s.setCurrentSelectPageId
+                setCurrentSelectPageId: s.setCurrentSelectPageId,
+                updateGroupExpandOrRetract: s.updateGroupExpandOrRetract
             }),
             shallow
         )
@@ -3863,6 +3873,30 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const selectMenuGroupId = useMemo(() => {
             return selectSubMenu.groupId
         }, [selectSubMenu.groupId])
+        const onRetract = useMemoizedFn(() => {
+            setIsExpand(false)
+            setTimeout(() => {
+                // 组的key绑定的groupId，id只会在页面的节点上
+                const data = `[data-rfd-draggable-id="${selectSubMenu.id}"]`
+                const selectElement = document.querySelector(data)
+                const position = !!selectElement?.getClientRects().length ? selectElement?.getClientRects()[0] : null
+                if (!!position) {
+                    tabMenuSubRef.current.scrollLeft = position.left - 60
+                }
+            }, 20)
+        })
+        const onExpand = useMemoizedFn(() => {
+            const newSubPage = subPage.map((ele) => (ele.id.endsWith("group") ? {...ele, expand: true} : ele))
+            onUpdatePageCache(newSubPage)
+            updateGroupExpandOrRetract(currentTabKey, true)
+            setTimeout(() => {
+                setIsExpand(true)
+            }, 20)
+        })
+        /**当滚动条出现的时候才显示展开收起icon */
+        const isShowExpandIcon = useCreation(() => {
+            return scroll.scrollLeft > 0 || scroll.scrollRight > 0
+        }, [scroll.scrollLeft, scroll.scrollRight])
         return (
             <DragDropContext
                 onDragEnd={onSubMenuDragEnd}
@@ -3883,7 +3917,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             <div className={styles["tab-menu-sub-body"]}>
                                 <div
                                     className={classNames(styles["outline-chevron-double-left"], {
-                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollLeft <= 0||isExpand
+                                        [styles["outline-chevron-double-display-none"]]:
+                                            scroll.scrollLeft <= 0 || isExpand
                                     })}
                                     ref={scrollLeftIconRef}
                                 >
@@ -3892,6 +3927,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 <div
                                     className={classNames(styles["tab-menu-sub"], {
                                         [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true,
+                                        [styles["tab-menu-sub-maxWidth-64"]]: isShowExpandIcon,
                                         [styles["tab-menu-sub-expand"]]: isExpand
                                     })}
                                     id={`tab-menu-sub-${pageItem.route}`}
@@ -3939,35 +3975,38 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 </div>
                                 <div
                                     className={classNames(styles["outline-chevron-double-right"], {
-                                        [styles["outline-chevron-double-display-none"]]: scroll.scrollRight <= 0||isExpand
+                                        [styles["outline-chevron-double-display-none"]]:
+                                            scroll.scrollRight <= 0 || isExpand
                                     })}
                                     ref={scrollRightIconRef}
                                 >
                                     <OutlineChevrondoublerightIcon />
                                 </div>
-                                {pageItem.hideAdd !== true && (
-                                    <div
-                                        className={classNames(styles["extra-operate"], {
-                                            [styles["extra-operate-expand"]]: isExpand
-                                        })}
-                                    >
-                                        {isExpand ? (
-                                            <OutlineSortascendingIcon
-                                                className={styles["extra-operate-icon"]}
-                                                onClick={() => setIsExpand(false)}
-                                            />
-                                        ) : (
+                                <div
+                                    className={classNames(styles["extra-operate"], {
+                                        [styles["extra-operate-expand"]]: isExpand
+                                    })}
+                                >
+                                    {isExpand ? (
+                                        <OutlineSortascendingIcon
+                                            className={styles["extra-operate-icon"]}
+                                            onClick={onRetract}
+                                        />
+                                    ) : (
+                                        isShowExpandIcon && (
                                             <OutlineSortdescendingIcon
                                                 className={styles["extra-operate-icon"]}
-                                                onClick={() => setIsExpand(true)}
+                                                onClick={onExpand}
                                             />
-                                        )}
+                                        )
+                                    )}
+                                    {pageItem.hideAdd !== true && (
                                         <OutlinePlusIcon
                                             className={styles["extra-operate-icon"]}
                                             onClick={() => onAddSubPage()}
                                         />
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         )
                     }}
@@ -4016,7 +4055,8 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                             [styles["tab-menu-sub-item-active"]]: isActive,
                             [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
                             [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor,
-                            [styles[`tab-menu-sub-item-${tabStatus}`]]: !!tabStatus
+                            [styles[`tab-menu-sub-item-${tabStatus}`]]: !!tabStatus,
+                            [styles[`tab-menu-sub-item-disable-drag`]]: !!isDragDisabled
                         })}
                         onClick={() => {
                             setSelectSubMenu({...subItem})
@@ -4112,8 +4152,26 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const groupChildrenList = useMemo(() => {
         return subItem.groupChildren || []
     }, [subItem.groupChildren])
+    const onGroupClick = useMemoizedFn((e) => {
+        if (isDragDisabled) return
+        const clickedElement = e.target as any
+        // // 获取点击元素的下一个兄弟元素
+        const nextSiblingElement = clickedElement.nextElementSibling
+        if (nextSiblingElement) {
+            const width = nextSiblingElement.clientWidth
+            if (subItem.expand) {
+                subItem.childrenWidth = width
+                // 收
+                nextSiblingElement.style = "width:0px;"
+            } else {
+                // 展开
+                nextSiblingElement.style = `width:${subItem.childrenWidth}px;`
+            }
+        }
+        onUnfoldAndCollapse(subItem)
+    })
     return (
-        <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
+        <Draggable key={subItem.id} draggableId={subItem.id} index={index} isDragDisabled={isDragDisabled}>
             {(providedGroup, snapshotGroup) => {
                 const groupStyle = getGroupItemStyle(snapshotGroup, providedGroup.draggableProps.style)
                 return (
@@ -4122,7 +4180,8 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                         {...providedGroup.draggableProps}
                         style={{...groupStyle}}
                         className={classNames(styles["tab-menu-sub-group"], styles["tab-menu-sub-group-hidden"], {
-                            [styles[`tab-menu-sub-group-${color}`]]: subItem.expand
+                            [styles[`tab-menu-sub-group-${color}`]]: subItem.expand,
+                            [styles[`tab-menu-sub-group-disable-drag`]]: isDragDisabled
                         })}
                     >
                         <div
@@ -4134,23 +4193,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                     [styles["tab-menu-sub-group-name-retract"]]: !subItem.expand
                                 }
                             )}
-                            onClick={(e) => {
-                                const clickedElement = e.target as any
-                                // // 获取点击元素的下一个兄弟元素
-                                const nextSiblingElement = clickedElement.nextElementSibling
-                                if (nextSiblingElement) {
-                                    const width = nextSiblingElement.clientWidth
-                                    if (subItem.expand) {
-                                        subItem.childrenWidth = width
-                                        // 收
-                                        nextSiblingElement.style = "width:0px;"
-                                    } else {
-                                        // 展开
-                                        nextSiblingElement.style = `width:${subItem.childrenWidth}px;`
-                                    }
-                                }
-                                onUnfoldAndCollapse(subItem)
-                            }}
+                            onClick={onGroupClick}
                             onContextMenu={(e) => onGroupContextMenu(e, index)}
                         >
                             {subItem.verbose || ""}
