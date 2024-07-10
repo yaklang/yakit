@@ -46,6 +46,8 @@ export interface YakitDraggerProps extends FileDraggerProps {
 
     /**接受的文件类型 */
     accept?: string
+    /**是否给请输入正确的路径错误提示 */
+    showFailedFlag?: boolean
     /**文件类型是否后缀一定存在 */
     fileExtensionIsExist?: boolean
 }
