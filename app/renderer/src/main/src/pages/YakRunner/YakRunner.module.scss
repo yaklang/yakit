@@ -1,0 +1,33 @@
+.yak-runner {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    &-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &-code {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        .code-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            .runner-tabs-top{
+                border-top: 1px solid #ffffff;
+            }
+        }
+    }
+    // &-code-offset{
+    //     width: calc(100% + 9px);
+    //     position: relative;
+    //     left: -9px;
+    // }
+}

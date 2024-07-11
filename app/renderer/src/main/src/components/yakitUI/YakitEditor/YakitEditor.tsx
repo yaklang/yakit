@@ -1,7 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import ReactDOM from "react-dom"
 import {
-    useDebounceEffect,
     useDebounceFn,
     useGetState,
     useKeyPress,
@@ -26,7 +24,6 @@ import {
     KeyboardToFuncProps,
     YakitIModelDecoration,
     OperationRecord,
-    OperationRecordRes,
     OtherMenuListProps
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
@@ -1429,6 +1426,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             // console.log('当前光标位置：', position);
         })
     }
+
     return (
         <div
             ref={ref}
@@ -1467,7 +1465,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     value={isBytes ? new Buffer((valueBytes || []) as Uint8Array).toString() : value}
                     onChange={setValue}
                     language={language}
-                    editorDidMount={(editor: YakitIMonacoEditor, monaco: any) => {
+                    editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
                         setEditor(editor)
                         /** 编辑器关光标，设置坐标0的初始位置 */
                         editor.setSelection({
@@ -1488,7 +1486,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             }
                         }
 
-                        if (editorDidMount) editorDidMount(editor)
+                        if (editorDidMount) editorDidMount(editor,monaco)
                     }}
                     options={{
                         readOnly: readOnly,

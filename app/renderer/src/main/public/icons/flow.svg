@@ -1,0 +1,14 @@
+<svg class="flow-logo" xmlns="http://www.w3.org/2000/svg" viewBox="-29 0 300 300">
+  <title>Flow logo</title>
+  <g class="flow-logo-mark">
+    <path fill="#1F55FF" opacity=".7" d="M224.74 156.64l-84.11-84.1h84.11z"/>
+    <path fill="#1F55FF" opacity=".7" d="M81.72 0l84.11 84.1H81.72z"/>
+    <path fill="#3968FF" opacity=".9" d="M84.45 131.79L.34 47.67h101.13v84.11zm73.89 84.1L242.45 300h-84.11z"/>
+    <path fill="#90AAFF" opacity=".7" d="M101.47 215.9l-84.1-84.12h84.11v84.11zm90.58-42.57L125 106.24h67.08zm7.84 118.84l-76.28-76.27h76.28z"/>
+    <path fill="#7CBCFC" opacity=".9" d="M101.47 114.63l-84-84h84z"/>
+    <path fill="#4099F9" opacity=".8" d="M123.95 215.89L208.06 300h-84.11v-84.11z"/>
+    <path fill="#4099F9" opacity=".7" d="M209.08 249.47l-84-84h84z"/>
+    <path fill="#3968FF" opacity=".9" d="M125 106.24l83.09 83.09H125v-83.09z"/>
+    <path fill="#376FFF" opacity=".7" d="M101.47 299.67L0 198.18h101.47v101.48z"/>
+  </g>
+</svg>

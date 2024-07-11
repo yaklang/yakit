@@ -36,7 +36,7 @@ export interface YakitEditorProps {
     theme?: string
 
     /** @name 编辑器加载完成后的回调 */
-    editorDidMount?: (editor: YakitIMonacoEditor) => any
+    editorDidMount?: (editor: YakitIMonacoEditor,monaco: any) => any
 
     /** @name 自定义额外的右键菜单组 */
     contextMenu?: OtherMenuListProps
