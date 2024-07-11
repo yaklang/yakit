@@ -44,5 +44,8 @@ export const EnterpriseDeprecatedSecondMenu: string[] = [
     "插件执行结果",
     "api提取",
     "空间引擎集成版本",
-    "网站树"
+    "网站树",
+    "插件商店",
+    "我的插件",
+    "本地插件"
 ]
