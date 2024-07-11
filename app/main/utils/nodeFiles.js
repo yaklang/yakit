@@ -1,6 +1,5 @@
 const { app, ipcMain, dialog } = require("electron");
 const FS = require("fs");
-const { async } = require("node-stream-zip");
 const path = require("path")
 
 module.exports = (win, getClient) => {

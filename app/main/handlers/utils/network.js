@@ -5,7 +5,6 @@ const url = require("url");
 const process = require("process");
 const { requestWithProgress } = require("./requestWithProgress");
 const events = require("events");
-const { async } = require("node-stream-zip");
 
 const ossDomains = ["aliyun-oss.yaklang.com", "yaklang.oss-cn-beijing.aliyuncs.com", "yaklang.oss-accelerate.aliyuncs.com"];
 
