@@ -8,7 +8,7 @@ import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {pluginTypeToName} from "@/pages/plugins/builtInData"
-import {Divider, Form} from "antd"
+import {Divider, Form, Tooltip} from "antd"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {
     ParamsToGroupByGroupName,
@@ -62,9 +62,11 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     forwardRef((props, ref) => {
         const {expand, onExpand, isEdit = false, type, name, code} = props
 
+        const [visible, setVisible] = useState<boolean>(false)
         const handleExpand = useMemoizedFn((e) => {
             e.stopPropagation()
             if (expand) return
+            setVisible(false)
             onExpand(true)
         })
 
@@ -353,9 +355,17 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 <div className={styles["editor-code-header"]}>
                     <div className={styles["header-tab-bar"]}>
                         {!expand && (
-                            <div className={styles["expand-btn"]} onClick={handleExpand}>
-                                <OutlineOpenIcon />
-                            </div>
+                            <Tooltip
+                                placement='topLeft'
+                                title='展开基础信息'
+                                overlayClassName='plugins-tooltip'
+                                visible={visible}
+                                onVisibleChange={(show) => setVisible(show)}
+                            >
+                                <div className={styles["expand-btn"]} onClick={handleExpand}>
+                                    <OutlineOpenIcon />
+                                </div>
+                            </Tooltip>
                         )}
                         <YakitRadioButtons
                             buttonStyle='solid'

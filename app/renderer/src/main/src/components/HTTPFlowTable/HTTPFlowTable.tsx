@@ -3087,7 +3087,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const searchNode = useMemoizedFn(() => {
         return (
             <YakitInput.Search
-                size='small'
+                // size='small'
                 placeholder='请输入关键词搜索'
                 value={params.Keyword}
                 onChange={(e) => {

@@ -414,6 +414,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             }
             const base = await baseInfoRef.current.onSubmit()
             if (!base) {
+                setExpand(true)
                 return
             } else {
                 data.Type = base.Type

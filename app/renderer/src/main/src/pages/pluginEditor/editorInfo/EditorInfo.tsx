@@ -1,7 +1,7 @@
 import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {OutlineCloseIcon, OutlineIdentificationIcon, OutlineTagIcon} from "@/assets/icon/outline"
-import {Form} from "antd"
+import {Form, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -43,8 +43,10 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
     forwardRef((props, ref) => {
         const {expand, onExpand, ...rest} = props
 
+        const [visible, setVisible] = useState<boolean>(false)
         const handleFold = useMemoizedFn(() => {
             if (!expand) return
+            setVisible(false)
             onExpand(false)
         })
 
@@ -82,9 +84,16 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
             >
                 <div className={styles["editor-info-header"]}>
                     基础信息
-                    <div className={styles["expand-btn"]} onClick={handleFold}>
-                        <OutlineCloseIcon />
-                    </div>
+                    <Tooltip
+                        title='收起基础信息'
+                        overlayClassName='plugins-tooltip'
+                        visible={visible}
+                        onVisibleChange={(show) => setVisible(show)}
+                    >
+                        <div className={styles["expand-btn"]} onClick={handleFold}>
+                            <OutlineCloseIcon />
+                        </div>
+                    </Tooltip>
                 </div>
 
                 <div className={styles["editor-info-body"]}>
@@ -299,7 +308,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 
                     <Form.Item label='描述 :' name='Help'>
                         <YakitInput.TextArea
-                            autoSize={{minRows: 2, maxRows: 2}}
+                            rows={2}
                             placeholder='请输入...'
                             onKeyDown={(e) => {
                                 const keyCode = e.keyCode ? e.keyCode : e.key
