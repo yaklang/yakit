@@ -15,6 +15,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {Uint8ArrayToString} from "@/utils/str"
+import {isEmptyObject} from "@/utils/tool"
 
 const DefaultType: {label: string; value: string}[] = [
     {value: "rmi", label: "RMI连接"},
@@ -263,7 +264,14 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                     </div>
                 }
                 secondNode={
-                    <YakitEditor readOnly={true} value={Uint8ArrayToString(selectRow?.raw || new Uint8Array())} />
+                    <YakitEditor
+                        readOnly={true}
+                        value={
+                            selectRow?.raw && isEmptyObject(selectRow?.raw)
+                                ? ""
+                                : Uint8ArrayToString(selectRow?.raw || new Uint8Array())
+                        }
+                    />
                 }
             ></YakitResizeBox>
             {/* <YakitSelect
