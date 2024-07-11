@@ -54,7 +54,6 @@ const directionStyle = (editorInfo, isOtherGroup = false, isGroupShow = false) =
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
-        console.log(direction.x)
         if (direction.y === "bottom") {
             obj.bottom = "32px"
         } else if (direction.y === "top") {
