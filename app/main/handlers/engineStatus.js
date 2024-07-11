@@ -157,7 +157,6 @@ module.exports = (win, callback, getClient, newClient) => {
         const {port, isEnpriTraceAgent} = params
         return new Promise((resolve, reject) => {
             try {
-                console.log('process.env',JSON.stringify(process.env))
                 toLog("已启动本地引擎进程")
                 const log = out ? out : "ignore"
 

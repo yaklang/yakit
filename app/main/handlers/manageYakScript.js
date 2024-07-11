@@ -364,7 +364,6 @@ module.exports = (win, getClient) => {
 
     // 读取本地文件内容(同时校验其文件大小是否读取本地文件10M，大于则不读取)
     ipcMain.handle("read-file-content", async (e,params) => {
-        console.log("read-file-content",params);
         return new Promise((resolve, reject) => {
             fs.readFile(params, 'utf-8', function (err, data) {
                 if (err) {

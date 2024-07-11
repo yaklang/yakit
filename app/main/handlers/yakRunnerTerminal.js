@@ -2,14 +2,21 @@ const {ipcMain, clipboard} = require("electron")
 
 module.exports = (win, getClient) => {
     let streams = {}
-    const getStreamByPort = (path) => {
+    const getStreamByRunner = (path) => {
         return streams[path]
     }
-    const removeStreamPort = (path) => {
+    const removeStreamRunner = (path) => {
         const stream = streams[path]
         if (stream) {
             stream.cancel()
             delete streams[path]
+        }
+    }
+    const clearStreamRunner = () => {
+        if(Object.keys(streams)!==0){
+            for (let key of Object.keys(streams)) {
+                removeStreamRunner(key)
+            }
         }
     }
 
@@ -17,7 +24,7 @@ module.exports = (win, getClient) => {
         return Object.keys(streams).map((i) => `${i}`)
     })
     ipcMain.handle("runner-terminal-input", async (e, path, data) => {
-        const stream = getStreamByPort(path)
+        const stream = getStreamByRunner(path)
         if (stream) {
             stream.write({
                 raw: Buffer.from(data, "utf8")
@@ -25,7 +32,7 @@ module.exports = (win, getClient) => {
         }
     })
     ipcMain.handle("runner-terminal-size", async (e, path, size) => {
-        const stream = getStreamByPort(path)
+        const stream = getStreamByRunner(path)
         if (stream) {
             stream.write({
                 ...size
@@ -33,17 +40,20 @@ module.exports = (win, getClient) => {
         }
     })
     ipcMain.handle("runner-terminal-cancel", async (e, path) => {
-        removeStreamPort(path)
+        removeStreamRunner(path)
+    })
+    ipcMain.handle("runner-terminal-clear", async (e, path) => {
+        clearStreamRunner()
     })
     ipcMain.handle("runner-terminal", async (e, params) => {
         const {path} = params
-        if (getStreamByPort(path)) {
+        if (getStreamByRunner(path)) {
             throw Error("listened terminal")
         }
         stream = getClient().YaklangTerminal()
         // 如果有问题，重置
         stream.on("error", (e) => {
-            removeStreamPort(path)
+            removeStreamRunner(path)
         })
 
         // 发送回数据
@@ -53,7 +63,7 @@ module.exports = (win, getClient) => {
                     win.webContents.send(`client-listening-terminal-success-${path}`)
                 }
                 if (win && data.closed) {
-                    removeStreamPort(path)
+                    removeStreamRunner(path)
                 }
                 return
             }
@@ -63,7 +73,7 @@ module.exports = (win, getClient) => {
             }
         })
         stream.on("end", () => {
-            removeStreamPort(path)
+            removeStreamRunner(path)
             if (win) {
                 win.webContents.send("client-listening-terminal-end", path)
             }

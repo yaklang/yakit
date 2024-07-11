@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {MacUIOp} from "./MacUIOp"
 import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
 import {FuncDomain} from "./FuncDomain"
@@ -71,6 +71,7 @@ import {OutlineExitIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
 import {Tooltip} from "antd"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import { clearTerminalMap, getMapAllTerminalKey } from "@/pages/YakRunner/BottomEditorDetails/TerminalBox/TerminalMap"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -156,6 +157,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     // 是否持续监听引擎进程的连接状态
     const [keepalive, setKeepalive] = useState<boolean>(false)
     /** ---------- 软件状态相关属性 End ---------- */
+
+    // 引擎状态断开时清空yakrunner
+    useUpdateEffect(()=>{
+        if(getMapAllTerminalKey().length>0 && !engineLink){
+            clearTerminalMap()
+            ipcRenderer.invoke("runner-terminal-clear")
+        }
+    },[engineLink])
 
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */

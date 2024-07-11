@@ -28,6 +28,7 @@ export interface TerminalBoxProps {
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
     const {isShowEditorDetails, folderPath, terminaFont, xtermRef, onExitTernimal} = props
 
+    const terminalSizeRef = useRef<any>()
     // 写入
     const commandExec = useMemoizedFn((cmd) => {
         if (!xtermRef || !xtermRef.current) {
@@ -54,11 +55,9 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         writeXTerm(xtermRef, outPut)
     })
 
-    useEffect(() => {
-        if (!xtermRef) {
-            return
-        }
-
+    const run = useMemoizedFn((size)=>{
+        if (!xtermRef) return
+        if (!size) return
         // 校验map存储缓存
         const terminalCache = getTerminalMap(folderPath)
         if (terminalCache) {
@@ -67,7 +66,8 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             // 启动
             ipcRenderer
                 .invoke("runner-terminal", {
-                    path: folderPath
+                    path: folderPath,
+                    ...size
                 })
                 .then(() => {
                     isShowEditorDetails && success(`终端${folderPath}监听成功`)
@@ -77,6 +77,12 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 })
                 .finally(() => {})
         }
+    })
+
+    useEffect(() => {
+        if (!xtermRef) return
+        
+        run(terminalSizeRef.current)
 
         // 接收
         const key = `client-listening-terminal-data-${folderPath}`
@@ -174,6 +180,15 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                     if (!width || !height) return
                     const row = Math.floor(height / 18.5)
                     const col = Math.floor(width / 10)
+                    const size = {
+                        row,
+                        col
+                    }
+                    // 第一次执行 带入row、col
+                    if(!terminalSizeRef.current){
+                        run(size)
+                    }
+                    terminalSizeRef.current = size
                     onChangeSize(row, col)
                     if (xtermRef) xtermFit(xtermRef, col, row)
                 }}
