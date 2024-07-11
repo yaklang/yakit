@@ -66,12 +66,6 @@ const FolderMenu: YakitMenuItemProps[] = [
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey} = props
 
-    const systemRef = useRef<System | undefined>(SystemInfo.system)
-    useEffect(() => {
-        if (!systemRef.current) {
-            handleFetchSystem(() => (systemRef.current = SystemInfo.system))
-        }
-    }, [])
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(wrapper)

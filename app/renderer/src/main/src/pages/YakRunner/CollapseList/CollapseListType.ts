@@ -1,6 +1,6 @@
 import { CollapseProps } from "antd"
 import {ReactNode} from "react"
-import { monaco } from "react-monaco-editor"
+import { Selection } from "../RunnerTabs/RunnerTabsType";
 
 export interface CollapseListProp<T> {
     /**
@@ -21,5 +21,5 @@ export interface HelpInfoListProps {}
 
 export interface DefinitionListProps {
     lineContent: string
-    range: monaco.Range
+    range: Selection
 }

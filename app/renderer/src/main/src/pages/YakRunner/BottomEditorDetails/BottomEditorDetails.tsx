@@ -37,13 +37,6 @@ const {ipcRenderer} = window.require("electron")
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
 
-    const systemRef = useRef<System | undefined>(SystemInfo.system)
-    useEffect(() => {
-        if (!systemRef.current) {
-            handleFetchSystem(() => (systemRef.current = SystemInfo.system))
-        }
-    }, [])
-
     const {activeFile, fileTree} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
@@ -409,12 +402,11 @@ export const OutputInfo: React.FC<OutputInfoProps> = (props) => {
         }
     }, [])
 
-    const systemRef = useRef<YakitSystem>("Darwin")
+    const systemRef = useRef<System | undefined>(SystemInfo.system)
     useEffect(() => {
-        ipcRenderer
-            .invoke("fetch-system-name")
-            .then((res) => (systemRef.current = res))
-            .catch(() => {})
+        if (!systemRef.current) {
+            handleFetchSystem(() => (systemRef.current = SystemInfo.system))
+        }
     }, [])
 
     const setCopy = useDebounceFn(
