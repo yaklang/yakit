@@ -265,7 +265,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     )
 }
 
-export interface QueryExecResultsParams {}
+export interface QueryRoleAdminParams {}
 
 interface QueryProps {}
 interface RemoveProps {
@@ -276,7 +276,7 @@ export interface RoleAdminPageProps {}
 const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [roleFormShow, setRoleFormShow] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({})
+    const [params, setParams, getParams] = useGetState<QueryRoleAdminParams>({})
     const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: 20,

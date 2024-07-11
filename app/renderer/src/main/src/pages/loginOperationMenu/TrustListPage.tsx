@@ -200,7 +200,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
 
 export interface TrustListPageProp {}
 
-export interface QueryExecResultsParams {
+export interface QueryTrustListFilterParams {
     keywords: string
 }
 
@@ -208,7 +208,7 @@ interface QueryProps {}
 export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [createUserShow, setCreateUserShow] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
+    const [params, setParams, getParams] = useGetState<QueryTrustListFilterParams>({
         keywords: ""
     })
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])

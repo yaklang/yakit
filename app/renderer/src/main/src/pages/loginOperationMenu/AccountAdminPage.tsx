@@ -1014,7 +1014,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
 
 export interface AccountAdminPageProps {}
 
-export interface QueryExecResultsParams {
+export interface QueryAccountAdminParams {
     keywords: string
 }
 
@@ -1042,7 +1042,7 @@ interface SelectTitleProps {
 const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [userInfoForm, setUserInfoForm] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
+    const [params, setParams, getParams] = useGetState<QueryAccountAdminParams>({
         keywords: ""
     })
     const [selectedRows, setSelectedRows] = useState<API.UrmUserList[]>([])

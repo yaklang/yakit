@@ -377,7 +377,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
 
 export interface LicenseAdminPageProps {}
 
-export interface QueryExecResultsParams {
+export interface QueryLicenseAdminParams {
     keywords: string
     status: number
 }
@@ -388,7 +388,7 @@ interface RemoveProps {
 }
 const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<QueryExecResultsParams>({
+    const [params, setParams, getParams] = useGetState<QueryLicenseAdminParams>({
         keywords: "",
         status: 0
     })
