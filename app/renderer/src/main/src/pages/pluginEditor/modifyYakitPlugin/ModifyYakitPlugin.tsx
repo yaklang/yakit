@@ -125,7 +125,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
                             <ExclamationCircleOutlined className={styles["icon-style"]} />
                         </div>
                         <div className={styles["content"]}>
-                            <div className={styles["title-style"]}>关闭检测: 插件未保存</div>
+                            <div className={styles["title-style"]}>插件未保存</div>
                             <div>是否要将插件保存到本地?</div>
                         </div>
                     </div>

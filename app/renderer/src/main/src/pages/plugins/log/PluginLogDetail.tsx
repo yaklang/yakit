@@ -282,6 +282,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
     const onCallbackScore = useMemoizedFn((pass: boolean) => {
         if (!pass) {
             setScore(1)
+            setModifyLoading(false)
             return
         }
         setModifyLoading(true)
@@ -419,7 +420,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
             >
                 <CodeScoreModule
                     type={pluginType || "yak"}
-                    code={"yakit.AutoInitYakit()\n\n# Input your code!\n\n"}
+                    code={prInfo?.content || ""}
                     isStart={pass}
                     successWait={10}
                     successHint='表现良好，检测通过，开始合并修改'

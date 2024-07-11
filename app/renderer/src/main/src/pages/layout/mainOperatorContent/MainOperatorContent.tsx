@@ -770,6 +770,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const {route} = data
         switch (route) {
             case YakitRoute.AddYakitScript:
+                // 判断页面是由谁触发打开的
+                const addTargetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
+                let addNext: YakitRoute | undefined = undefined
+                if (addTargetCache?.pageParamsInfo && addTargetCache.pageParamsInfo?.addYakitScriptPageInfo) {
+                    addNext = addTargetCache.pageParamsInfo.addYakitScriptPageInfo?.source
+                }
+                removeMenuPage({route: route, menuName: ""}, addNext ? {route: addNext, menuName: ""} : undefined)
+                break
             case YakitRoute.ModifyYakitScript:
                 // 判断页面是由谁触发打开的
                 const targetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
