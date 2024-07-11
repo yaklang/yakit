@@ -23,7 +23,7 @@ const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     defaultHttps?: boolean
-    originValue: Uint8Array
+    originValue: string
     noPacketModifier?: boolean
     extraEditorProps?: YakitEditorProps | any
     isWebSocket?: boolean
@@ -66,6 +66,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     }, [noPacketModifier])
 
     const rightContextMenu: OtherMenuListProps = useMemo(() => {
+        const originValueBytes = StringToUint8Array(originValue)
         const menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
             copyCSRF: {
@@ -83,7 +84,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             info("数据包为空")
                             return
                         }
-                        generateCSRFPocByRequest(StringToUint8Array(text, "utf8"),defaultHttps, (code) => {
+                        generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
                             callCopyToClipboard(code)
                         })
                     } catch (e) {
@@ -100,8 +101,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     try {
-                        if (readOnly && originValue) {
-                            showResponseViaResponseRaw(originValue)
+                        if (readOnly && originValueBytes) {
+                            showResponseViaResponseRaw(originValueBytes)
                             return
                         }
                         const text = editor.getModel()?.getValue()
@@ -109,7 +110,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             failed("无法获取数据包内容")
                             return
                         }
-                        showResponseViaResponseRaw(originValue)
+                        showResponseViaResponseRaw(originValueBytes)
                     } catch (e) {
                         failed("editor exec show in browser failed")
                     }
@@ -124,9 +125,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     try {
-                        if (readOnly && originValue) {
+                        if (readOnly && originValueBytes) {
                             ipcRenderer
-                                .invoke("GetHTTPPacketBody", {PacketRaw: originValue})
+                                .invoke("GetHTTPPacketBody", {PacketRaw: originValueBytes})
                                 .then((bytes: {Raw: Uint8Array}) => {
                                     saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                 })
@@ -207,9 +208,19 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             return
                         }
                         if (key === "发送并跳转") {
-                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text), true, StringToUint8Array(webSocketToServer || ""))
+                            newWebsocketFuzzerTab(
+                                defaultHttps || false,
+                                StringToUint8Array(text),
+                                true,
+                                StringToUint8Array(webSocketToServer || "")
+                            )
                         } else if (key === "仅发送") {
-                            newWebsocketFuzzerTab(defaultHttps || false, StringToUint8Array(text), false, StringToUint8Array(webSocketToServer || ""))
+                            newWebsocketFuzzerTab(
+                                defaultHttps || false,
+                                StringToUint8Array(text),
+                                false,
+                                StringToUint8Array(webSocketToServer || "")
+                            )
                         }
                     } catch (e) {
                         failed("editor exec new-open-fuzzer failed")
@@ -263,7 +274,17 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }
         }
         return menuItems
-    }, [defaultHttps, system, originValue, contextMenu, readOnly, isWebSocket, webSocketValue, webFuzzerValue, webSocketToServer])
+    }, [
+        defaultHttps,
+        system,
+        originValue,
+        contextMenu,
+        readOnly,
+        isWebSocket,
+        webSocketValue,
+        webFuzzerValue,
+        webSocketToServer
+    ])
 
     return (
         <YakitEditor

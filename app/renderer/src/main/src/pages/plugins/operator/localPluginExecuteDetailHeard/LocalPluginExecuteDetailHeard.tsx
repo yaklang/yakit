@@ -521,7 +521,6 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
     const {item, extraSetting, codeType, disabled, pluginType} = props
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
-    const [code, setCode] = useState<Buffer>(Buffer.from(item.DefaultValue || "", "utf8"))
     const formProps = {
         rules: [{required: item.Required}],
         label: item.FieldVerbose || item.Field,
@@ -613,7 +612,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <HTTPPacketYakitEditor originValue={code} value={item.DefaultValue || ""} readOnly={disabled} />
+                    <HTTPPacketYakitEditor originValue={item.DefaultValue} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
             )
         case "yak":
