@@ -56,22 +56,18 @@
 
     .unicode-decode::after {
         content: " ";
-        background-color: #F0F2F5;
+        background-color: #f0f2f5;
     }
 
     .unicode-decode-after {
-        color: #ffffff; 
+        color: #ffffff;
         background-color: #808080;
         padding-left: 2px;
         border-radius: 3px;
         opacity: 0.3;
         font-weight: bold;
         cursor: none;
-        user-select: none; 
-    }
-
-    .hight-light-bg-color {
-        background-color: #F3C96A;
+        user-select: none;
     }
 }
 .new-http-packet-editor {
@@ -102,10 +98,10 @@
         }
     }
 }
-.type-options-checkable-tag{
+.type-options-checkable-tag {
     display: flex;
     :global {
-        .ant-tag{
+        .ant-tag {
             margin-right: 2px;
         }
     }

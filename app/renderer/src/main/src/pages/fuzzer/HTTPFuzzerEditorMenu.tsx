@@ -14,7 +14,7 @@ import {
     IconSolidSparklesIcon,
     IconSolidTagIcon,
     IconOutlinePencilAltIcon,
-    TrashIcon,
+    TrashIcon
 } from "@/assets/newIcon"
 import {DragDropContext, Droppable, Draggable, DraggingStyle} from "@hello-pangea/dnd"
 import {AutoDecodeResult} from "@/utils/encodec"
@@ -23,12 +23,12 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
-import { SolidTerminalIcon } from "@/assets/icon/solid"
-import { queryYakScriptList } from "../yakitStore/network"
-import { PluginGV } from "../plugins/builtInData"
-import { YakScript } from "../invoker/schema"
-import { IconSolidAIIcon } from "@/assets/icon/colors"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {SolidTerminalIcon} from "@/assets/icon/solid"
+import {queryYakScriptList} from "../yakitStore/network"
+import {PluginGV} from "../plugins/builtInData"
+import {YakScript} from "../invoker/schema"
+import {IconSolidAIIcon} from "@/assets/icon/colors"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")
 
@@ -48,23 +48,16 @@ export interface EditorDetailInfoProps {
     lineHeight: number
     scrollTop: number
 }
-// isOtherGroup是否为 编码/解码/AI工具
+// isOtherGroup是否为 编码/解码
 // isGroupShow插入标签是否相邻其他元素
-const directionStyle = (editorInfo, isOtherGroup = false , isGroupShow = false) => {
+const directionStyle = (editorInfo, isOtherGroup = false, isGroupShow = false) => {
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
-        if (direction.x === "middle" && isOtherGroup) {
-            obj.transform = "translate(-104px, 0px)"
-        }
-        if (direction.x === "right" && !isGroupShow) {
-            obj.right = 0
-        }
-        if (direction.x === "right" && isGroupShow && isOtherGroup) {
-            obj.right = "-240px"
-        }
         if (direction.y === "bottom") {
             obj.bottom = "32px"
+        } else if (direction.y === "top") {
+            obj.top = "28px"
         }
     }
     return obj
@@ -97,11 +90,12 @@ export interface HTTPFuzzerClickEditorMenuProps {
     insert: (v: QueryFuzzerLabelResponseProps) => void
     addLabel: () => void
     className?: string
-    // 是否为组合展示
-    isGroupShow?: boolean
+    segmentedTypeReset?: boolean
     // 是否开启关闭倒计时
     fizzSelectTimeoutId?: any
     closeTimeout?: boolean
+    toOpenAiChat?: (v: string) => void
+    onClickSegmentedType?: (v: "insert-tag" | "aiplugin" | undefined) => void
 }
 
 export interface LabelDataProps {
@@ -113,13 +107,23 @@ export interface LabelDataProps {
 export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
-    const {close, editorInfo, insert, addLabel, isGroupShow,fizzSelectTimeoutId, closeTimeout = true} = props
+    const {
+        close,
+        editorInfo,
+        insert,
+        addLabel,
+        fizzSelectTimeoutId,
+        closeTimeout = true,
+        toOpenAiChat,
+        segmentedTypeReset,
+        onClickSegmentedType
+    } = props
 
     const {direction, top = 0, left = 0, bottom = 0, right = 0, scrollTop = 0} = editorInfo || {}
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
     const [selectLabel, setSelectLabel] = useState<string>()
     const [inputValue, setInputValue] = useState<string>()
-    const [isEnterSimple, setEnterSimple] = useState<boolean>(false)
+    const [segmentedType, setSegmentedType] = useState<"insert-tag" | "aiplugin">()
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable-editor")
     // 是否中文输入中
     const isComposition = useRef<boolean>(false)
@@ -145,11 +149,11 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     }
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 0.5秒后显示
+    // 0.3秒后显示
     useEffect(() => {
         setTimeout(() => {
             setBoxHidden(false)
-        }, 500)
+        }, 300)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
@@ -161,7 +165,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     })
     useEffect(() => {
         if (closeTimeout && fizzSelectTimeoutId) {
-            if (isMainEnter.current || isSimpleEnter.current) {
+            if (isMainEnter.current) {
                 fizzSelectTimeoutId.current && clearTimeout(fizzSelectTimeoutId.current)
             } else {
                 fizzSelectTimeoutId.current = undefined
@@ -169,6 +173,16 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             }
         }
     }, [isMainEnter.current, isSimpleEnter.current])
+
+    useEffect(() => {
+        if (segmentedTypeReset) {
+            setSegmentedType(undefined)
+        }
+    }, [segmentedTypeReset])
+
+    useEffect(() => {
+        onClickSegmentedType && onClickSegmentedType(segmentedType)
+    }, [segmentedType])
 
     useEffect(() => {
         if (right - left < 720) {
@@ -251,48 +265,59 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             className={classNames(styles["http-fuzzer-click-editor"], {
                 [styles["box-hidden"]]: boxHidden
             })}
+            onMouseEnter={() => {
+                isMainEnter.current = true
+            }}
             onMouseLeave={() => {
                 isMainEnter.current = false
-                setTimeout(() => {
-                    if (!isSimpleEnter.current && !isDragging.current && !isComposition.current) {
-                        setEnterSimple(false)
-                    }
-                }, 100)
             }}
         >
             <div className={classNames(styles["http-fuzzer-click-editor-simple"], props.className || "")}>
-                <div
-                    className={styles["show-box"]}
-                    onMouseEnter={() => {
-                        isMainEnter.current = true
-                    }}
-                    onClick={()=>{
-                        setEnterSimple(true)
-                    }}
-                >
-                    <IconSolidTagIcon className={styles["tag"]} />
-                    <div className={styles["content"]}>插入标签</div>
-                    {isEnterSimple ? (
-                        <ChevronUpIcon className={styles["up"]} />
-                    ) : (
-                        <ChevronDownIcon className={styles["down"]} />
-                    )}
+                <div className={styles["show-box"]}>
+                    <div
+                        className={styles["insert-box"]}
+                        style={{width: right - left < 500 ? undefined : 104}}
+                        onClick={() => {
+                            if (segmentedType === "insert-tag") {
+                                setSegmentedType(undefined)
+                            } else {
+                                setSegmentedType("insert-tag")
+                            }
+                        }}
+                    >
+                        <IconSolidTagIcon className={styles["tag"]} />
+                        {right - left < 500 ? <></> : <div className={styles["content"]}>插入标签</div>}
+                        {segmentedType === "insert-tag" ? (
+                            <ChevronUpIcon className={styles["up"]} />
+                        ) : (
+                            <ChevronDownIcon className={styles["down"]} />
+                        )}
+                    </div>
+                    <div className={styles["line"]}></div>
+                    <div
+                        className={styles["aiplugin-box"]}
+                        style={{width: right - left < 500 ? undefined : 95}}
+                        onClick={() => {
+                            if (segmentedType === "aiplugin") {
+                                setSegmentedType(undefined)
+                            } else {
+                                setSegmentedType("aiplugin")
+                            }
+                        }}
+                    >
+                        <IconSolidAIIcon className={styles["tag"]} />
+                        {right - left < 500 ? <></> : <div className={styles["content"]}>AI工具</div>}
+                        {segmentedType === "aiplugin" ? (
+                            <ChevronUpIcon className={styles["up"]} />
+                        ) : (
+                            <ChevronDownIcon className={styles["down"]} />
+                        )}
+                    </div>
                 </div>
             </div>
-            {isEnterSimple && (
+            {segmentedType === "insert-tag" && (
                 <div
                     className={classNames(styles["http-fuzzer-click-editor-menu"])}
-                    // 此处会引起拖拽卡死
-                    onMouseLeave={() => {
-                        isSimpleEnter.current = false
-                        setTimeout(() => {
-                            if (!isDragging.current && !isMainEnter.current && !isComposition.current)
-                                setEnterSimple(false)
-                        }, 100)
-                    }}
-                    onMouseEnter={() => {
-                        isSimpleEnter.current = true
-                    }}
                     onCompositionStart={() => {
                         isComposition.current = true
                     }}
@@ -300,9 +325,11 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                         isComposition.current = false
                     }}
                     style={{
-                        ...directionStyle(editorInfo,false,isGroupShow),
-                        maxHeight: menuHeight ? menuHeight : 350,
-                        width: menuWidth ? menuWidth : 360
+                        ...directionStyle(editorInfo),
+                        left: ["left"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
+                        right: ["right", "middle"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
+                        width: menuWidth ? menuWidth : 360,
+                        maxHeight: menuHeight ? menuHeight : undefined
                     }}
                 >
                     <div className={styles["menu-header"]}>
@@ -486,23 +513,42 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     </div>
                 </div>
             )}
+            {segmentedType === "aiplugin" && (
+                <div
+                    style={{
+                        ...directionStyle(editorInfo),
+                        left: ["left"].includes(editorInfo?.direction.x || "")
+                            ? right - left < 500
+                                ? 50
+                                : 105
+                            : undefined,
+                        right: ["right", "middle"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
+                        width: 200
+                    }}
+                    className={classNames(styles["http-fuzzer-click-editor-menu"])}
+                >
+                    <div className={styles["menu-content"]}>
+                        {segmentedType === "aiplugin" && <AIPluginComponent toOpenAiChat={toOpenAiChat} />}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
 
-export interface AIPluginComponentProps{
+export interface AIPluginComponentProps {
     toOpenAiChat?: (v: string) => void
 }
 
 export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
     const {toOpenAiChat} = props
-    const [loading,setLoading] = useState<boolean>(false)
-    const [dataSource,setDataSource] = useState<{key:string;value:string}[]>([])
-    useEffect(()=>{
+    const [loading, setLoading] = useState<boolean>(false)
+    const [dataSource, setDataSource] = useState<{key: string; value: string}[]>([])
+    useEffect(() => {
         getData()
-    },[])
+    }, [])
 
-    const getData = useMemoizedFn(()=>{
+    const getData = useMemoizedFn(() => {
         setLoading(true)
         queryYakScriptList(
             "codec",
@@ -510,20 +556,30 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
                 if (!total || total === 0) {
                     return
                 }
-                
-                const data = i.filter((script)=>script.Tags.includes("AI工具")).map((script) => {
+
+                const data = i
+                    .filter((script) => script.Tags.includes("AI工具"))
+                    .map((script) => {
                         return {
                             key: script.ScriptName,
-                            value: script.ScriptName,
+                            value: script.ScriptName
                         }
                     })
-                    
-                setDataSource(data.length>0?data:[{
-                    key:"aiplugin-Get*plug-in",
-                    value:"获取插件",
-                }]) 
+
+                setDataSource(
+                    data.length > 0
+                        ? data
+                        : [
+                              {
+                                  key: "aiplugin-Get*plug-in",
+                                  value: "获取插件"
+                              }
+                          ]
+                )
             },
-            ()=>{setLoading(false)},
+            () => {
+                setLoading(false)
+            },
             10,
             undefined,
             undefined,
@@ -533,17 +589,19 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
         )
     })
 
-    return(
-        <YakitSpin size="small" spinning={loading} wrapperClassName={styles['ai-plugin-list-spin']}>
-        <div className={styles['ai-plugin-box']}>
-            {
-                dataSource.map((item)=>(
-                <div className={styles['ai-plugin-item']} key={item.key} onClick={() => toOpenAiChat&&toOpenAiChat(item.key)}>
-                <div className={styles["title"]}>{item.value}</div>
+    return (
+        <YakitSpin size='small' spinning={loading} wrapperClassName={styles["ai-plugin-list-spin"]}>
+            <div className={styles["ai-plugin-box"]}>
+                {dataSource.map((item) => (
+                    <div
+                        className={styles["ai-plugin-item"]}
+                        key={item.key}
+                        onClick={() => toOpenAiChat && toOpenAiChat(item.key)}
+                    >
+                        <div className={styles["title"]}>{item.value}</div>
+                    </div>
+                ))}
             </div>
-            ))
-            }
-        </div>
         </YakitSpin>
     )
 }
@@ -616,7 +674,7 @@ export const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
             {decodeData.current.map((item) => {
                 return (
                     <div key={item.title} className={styles["encode-item"]} onClick={() => insert(item.encode)}>
-                        <Avatar size={16} style={{color: "rgba(49, 52, 63, 1)", backgroundColor: item.color}}>
+                        <Avatar size={16} style={{color: "rgba(49, 52, 63, 1)", backgroundColor: item.color, flexShrink: 0}}>
                             {item.avatar}
                         </Avatar>
                         <div className={styles["title"]}>{item.title}</div>
@@ -772,7 +830,16 @@ export interface HTTPFuzzerRangeEditorMenuProps {
     toOpenAiChat?: (v: string) => void
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
-    const {close, editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps, fizzRangeTimeoutId,toOpenAiChat} = props
+    const {
+        close,
+        editorInfo,
+        insert,
+        rangeValue,
+        replace,
+        hTTPFuzzerClickEditorMenuProps,
+        fizzRangeTimeoutId,
+        toOpenAiChat
+    } = props
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     // 菜单显示宽度
     const [menuWidth, setMenuWidth] = useState<number>()
@@ -788,20 +855,17 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             setMenuHeight(height)
         }
     }, [])
-    const [segmentedType, setSegmentedType] = useState<"decode" | "encode" | "aiplugin">()
-    // 鼠标是否进入main
-    const isMainEnter = useRef<boolean>(false)
-    // 鼠标是否进入simple
-    const isSimpleEnter = useRef<boolean>(false)
+    const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
+    const [clickSegmentedType, setClickSegmentedType] = useState<"insert-tag" | "aiplugin">()
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 0.5秒后显示
+    // 0.3秒后显示
     useEffect(() => {
         fizzRangeTimeoutId.current = undefined
         fizzRangeTimeoutId.current = closeTimeoutFun()
         setTimeout(() => {
             setBoxHidden(false)
-        }, 500)
+        }, 300)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
@@ -811,6 +875,12 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
         // 返回timeoutId，以便稍后取消
         return closeTimeoutId
     })
+
+    useEffect(() => {
+        if (clickSegmentedType) {
+            setSegmentedType(undefined)
+        }
+    }, [clickSegmentedType])
 
     return (
         <div
@@ -829,7 +899,9 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                 <HTTPFuzzerClickEditorMenu
                     className={styles["range-click-editor-menu"]}
                     closeTimeout={false}
-                    isGroupShow={true}
+                    toOpenAiChat={toOpenAiChat}
+                    segmentedTypeReset={!!segmentedType}
+                    onClickSegmentedType={setClickSegmentedType}
                     {...hTTPFuzzerClickEditorMenuProps}
                 />
             )}
@@ -840,23 +912,17 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                         <div className={styles["line"]}></div>
                         <div
                             className={styles["encode-box"]}
-                            onMouseEnter={() => {
-                                isMainEnter.current = true
-                            }}
-                            onClick={()=>{
-                                setSegmentedType("encode")
-                            }}
-                            onMouseLeave={() => {
-                                isMainEnter.current = false
-                                setTimeout(() => {
-                                    if (!isSimpleEnter.current) {
-                                        setSegmentedType(undefined)
-                                    }
-                                }, 100)
+                            style={{width: right - left < 500 ? undefined : 80}}
+                            onClick={() => {
+                                if (segmentedType === "encode") {
+                                    setSegmentedType(undefined)
+                                } else {
+                                    setSegmentedType("encode")
+                                }
                             }}
                         >
                             <IconSolidCodeIcon className={styles["tag"]} />
-                            <div className={styles["content"]}>编码</div>
+                            {right - left < 500 ? <></> : <div className={styles["content"]}>编码</div>}
                             {segmentedType === "encode" ? (
                                 <ChevronUpIcon className={styles["up"]} />
                             ) : (
@@ -866,50 +932,46 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                         <div className={styles["line"]}></div>
                         <div
                             className={styles["decode-box"]}
+                            style={{width: right - left < 500 ? undefined : 80}}
                             onClick={() => {
-                                setSegmentedType("decode")
+                                if (segmentedType === "decode") {
+                                    setSegmentedType(undefined)
+                                } else {
+                                    setSegmentedType("decode")
+                                }
                             }}
                         >
                             <IconSolidSparklesIcon className={styles[""]} />
-                            <div className={styles["content"]}>解码</div>
-                        </div>
-                        <div
-                        className={styles["aiplugin-box"]}
-                        onClick={() => {
-                            setSegmentedType("aiplugin")
-                        }}>
-                            <IconSolidAIIcon className={styles["tag"]} />
-                            <div className={styles["content"]}>AI工具</div>
-                            {segmentedType === "aiplugin" ? (
-                                <ChevronUpIcon className={styles["up"]} />
-                            ) : (
-                                <ChevronDownIcon className={styles["down"]} />
-                            )}
+                            {right - left < 500 ? <></> : <div className={styles["content"]}>解码</div>}
                         </div>
                     </div>
                 </div>
                 {segmentedType && (
                     <div
                         style={{
-                            ...directionStyle(editorInfo,true),
-                            maxHeight: menuHeight ? menuHeight : 360,
-                            width: menuWidth ? menuWidth : 360
+                            ...directionStyle(editorInfo, true),
+                            left:
+                                right - left < 750
+                                    ? undefined
+                                    : ["left"].includes(editorInfo?.direction.x || "")
+                                    ? 0
+                                    : undefined,
+                            right:
+                                right - left < 750
+                                    ? 0
+                                    : ["middle", "right"].includes(editorInfo?.direction.x || "")
+                                    ? 0
+                                    : undefined,
+                            width: menuWidth ? menuWidth : 360,
+                            maxHeight: menuHeight ? menuHeight : undefined
                         }}
                         className={classNames(styles["http-fuzzer-range-editor-menu"])}
-                        onMouseLeave={() => {
-                            isSimpleEnter.current = false
-                            setTimeout(() => {
-                                if (!isMainEnter.current) setSegmentedType(undefined)
-                            }, 100)
-                        }}
-                        onMouseEnter={() => {
-                            isSimpleEnter.current = true
-                        }}
                     >
                         <div className={styles["menu-content"]}>
                             {segmentedType === "encode" && <EncodeComponent insert={insert} />}
-                            {segmentedType === "decode" && <DecodeComponent rangeValue={rangeValue} replace={replace} />}
-                            {segmentedType === "aiplugin" && <AIPluginComponent toOpenAiChat={toOpenAiChat}/>}
+                            {segmentedType === "decode" && (
+                                <DecodeComponent rangeValue={rangeValue} replace={replace} />
+                            )}
                         </div>
                     </div>
                 )}
@@ -935,13 +997,13 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
     const [menuHeight, setMenuHeight] = useState<number>()
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 0.5秒后显示
+    // 0.3秒后显示
     useEffect(() => {
         fizzRangeTimeoutId.current = undefined
         fizzRangeTimeoutId.current = closeTimeoutFun()
         setTimeout(() => {
             setBoxHidden(false)
-        }, 500)
+        }, 300)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
@@ -986,9 +1048,11 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
             {segmentedType && (
                 <div
                     style={{
-                        ...directionStyle(editorInfo),
-                        maxHeight: menuHeight ? menuHeight : 250,
-                        width: menuWidth ? menuWidth : 360
+                        ...directionStyle(editorInfo, true),
+                        left: ["left"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
+                        right: ["middle", "right"].includes(editorInfo?.direction.x || "") ? 0 : undefined,
+                        width: menuWidth ? menuWidth : 360,
+                        maxHeight: menuHeight ? menuHeight : undefined
                     }}
                     className={classNames(styles["http-fuzzer-range-read-only-editor-menu"])}
                     onMouseLeave={() => setSegmentedType(undefined)}
