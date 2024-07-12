@@ -251,58 +251,58 @@ jobs:
         with:
           node-version: 18.18.2
 
-      # 提取版本
-      - name: Extract Version
-        id: extract_version
-        uses: Saionaro/extract-package-version@v1.1.1
-      - name: Echo Yakit Package Version
-        run: echo ${{ steps.extract_version.outputs.version }}
+    #   # 提取版本
+    #   - name: Extract Version
+    #     id: extract_version
+    #     uses: Saionaro/extract-package-version@v1.1.1
+    #   - name: Echo Yakit Package Version
+    #     run: echo ${{ steps.extract_version.outputs.version }}
 
-      # Download From Artifacts
-      - name: Download Yakit (Darwin Amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-      - name: Download Yakit (Windows amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-      - name: Download Yakit (Darwin arm64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-      - name: Download Yakit (Linux amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-      - name: Download Yakit (Linux arm64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
-      - run: ls
-        name: Ls Published Artifacts...
+    #   # Download From Artifacts
+    #   - name: Download Yakit (Darwin Amd64)
+    #     uses: actions/download-artifact@v2
+    #     with:
+    #       name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+    #   - name: Download Yakit (Windows amd64)
+    #     uses: actions/download-artifact@v2
+    #     with:
+    #       name: EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+    #   - name: Download Yakit (Darwin arm64)
+    #     uses: actions/download-artifact@v2
+    #     with:
+    #       name: EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+    #   - name: Download Yakit (Linux amd64)
+    #     uses: actions/download-artifact@v2
+    #     with:
+    #       name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+    #   - name: Download Yakit (Linux arm64)
+    #     uses: actions/download-artifact@v2
+    #     with:
+    #       name: EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+    #   - run: ls
+    #     name: Ls Published Artifacts...
 
-      - name: Update OSS latest file
-        run: echo ${{ steps.extract_version.outputs.version }} > ./yakit-ee-version.txt
+    #   - name: Update OSS latest file
+    #     run: echo ${{ steps.extract_version.outputs.version }} > ./yakit-ee-version.txt
 
-      - name: Upload Yakit to oss(windows)
-        uses: tvrcgo/upload-to-oss@master
-        with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
-          region: oss-accelerate
-          bucket: yaklang
-          assets: |
-            ./yakit-ee-version.txt:/yak/latest/yakit-ee-version.txt
-            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-            Yakit-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+    #   - name: Upload Yakit to oss(windows)
+    #     uses: tvrcgo/upload-to-oss@master
+    #     with:
+    #       key-id: ${{ secrets.OSS_KEY_ID }}
+    #       key-secret: ${{ secrets.OSS_KEY_SECRET }}
+    #       region: oss-accelerate
+    #       bucket: yaklang
+    #       assets: |
+    #         ./yakit-ee-version.txt:/yak/latest/yakit-ee-version.txt
+    #         Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+    #         Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+    #         Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+    #         Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+    #         Yakit-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTrace-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
   # special edition
   publish_yakit_se_to_oss:
     if: ${{ startsWith(github.ref, 'refs/heads/ci/yakit-se') && !endsWith(github.ref, '/no-release') }}
-    # 这个部分指定了此工作流需要依赖于另一个工作流"build_yakit"，即"publish_yakit_ee_to_oss"工作流将在"build_yakit"工作流完成后运行。
+    # 这个部分指定了此工作流需要依赖于另一个工作流"build_yakit"，即"publish_yakit_se_to_oss"工作流将在"build_yakit"工作流完成后运行。
     needs:
       - build_yakit
     runs-on: ubuntu-latest
@@ -312,49 +312,49 @@ jobs:
         with:
           node-version: 18.18.2
 
-      # 提取版本
-      - name: Extract Version
-        id: extract_version
-        uses: Saionaro/extract-package-version@v1.1.1
-      - name: Echo Yakit Package Version
-        run: echo ${{ steps.extract_version.outputs.version }}
+      # # 提取版本
+      # - name: Extract Version
+      #   id: extract_version
+      #   uses: Saionaro/extract-package-version@v1.1.1
+      # - name: Echo Yakit Package Version
+      #   run: echo ${{ steps.extract_version.outputs.version }}
 
-      # Download From Artifacts
-      - name: Download Yakit (Darwin Amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-      - name: Download Yakit (Windows amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-      - name: Download Yakit (Darwin arm64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-      - name: Download Yakit (Linux amd64)
-        uses: actions/download-artifact@v2
-        with:
-          name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
-      - run: ls
-        name: Ls Published Artifacts...
+      # # Download From Artifacts
+      # - name: Download Yakit (Darwin Amd64)
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+      # - name: Download Yakit (Windows amd64)
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      # - name: Download Yakit (Darwin arm64)
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+      # - name: Download Yakit (Linux amd64)
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      # - run: ls
+      #   name: Ls Published Artifacts...
 
-      - name: Update OSS latest file
-        run: echo ${{ steps.extract_version.outputs.version }} > ./yakit-se-version.txt
+      # - name: Update OSS latest file
+      #   run: echo ${{ steps.extract_version.outputs.version }} > ./yakit-se-version.txt
 
-      - name: Upload Yakit to oss(windows)
-        uses: tvrcgo/upload-to-oss@master
-        with:
-          key-id: ${{ secrets.OSS_KEY_ID }}
-          key-secret: ${{ secrets.OSS_KEY_SECRET }}
-          region: oss-accelerate
-          bucket: yaklang
-          assets: |
-            ./yakit-se-version.txt:/yak/latest/yakit-se-version.txt
-            Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
-            Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+      # - name: Upload Yakit to oss(windows)
+      #   uses: tvrcgo/upload-to-oss@master
+      #   with:
+      #     key-id: ${{ secrets.OSS_KEY_ID }}
+      #     key-secret: ${{ secrets.OSS_KEY_SECRET }}
+      #     region: oss-accelerate
+      #     bucket: yaklang
+      #     assets: |
+      #       ./yakit-se-version.txt:/yak/latest/yakit-se-version.txt
+      #       Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+      #       Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+      #       Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+      #       Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage:/yak/${{ steps.extract_version.outputs.version }}/EnpriTraceAgent-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
   download_artifacts_and_release:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:
