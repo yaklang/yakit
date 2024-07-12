@@ -389,11 +389,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 refreshTrigger={refreshCode}
                                 noHeader={true}
                                 noPacketModifier={true}
-                                originValue={Buffer.from(script.Content, "utf8")}
+                                originValue={script.Content}
                                 onChange={(e) =>
                                     setScript({
                                         ...script,
-                                        Content: e.toString("utf8")
+                                        Content: e
                                     })
                                 }
                                 language={"mitm"}

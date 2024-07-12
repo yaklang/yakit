@@ -21,7 +21,6 @@ import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {defaultFilter, defaultSearch, pluginTypeToName} from "./builtInData"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {
     HybridScanControlAfterRequest,
@@ -34,6 +33,7 @@ import {PluginGroupList} from "./local/PluginsLocalType"
 import {HTTPRequestParameters} from "@/types/http-api"
 import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
 import {APIFunc, APIOptionalFunc} from "../pluginHub/utils/apiType"
+import {KVPair} from "@/models/kv"
 
 const {ipcRenderer} = window.require("electron")
 
