@@ -11,7 +11,7 @@ export const httpUploadPluginToOnline: APIFunc<API.PluginsEditRequest, API.PostP
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        console.log("method:post|api:plugins", JSON.stringify(info))
+        // console.log("method:post|api:plugins", JSON.stringify(info))
         NetWorkApi<API.PluginsEditRequest, API.PostPluginsResponse>({
             method: "post",
             url: "plugins",
@@ -30,7 +30,7 @@ export const httpUploadPluginToOnline: APIFunc<API.PluginsEditRequest, API.PostP
  */
 export const httpCopyPluginToOnline: APIFunc<API.CopyPluginsRequest, API.PluginsResponse> = (info, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("method:post|api:copy/plugins", JSON.stringify(info))
+        // console.log("method:post|api:copy/plugins", JSON.stringify(info))
         NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
             method: "post",
             url: "copy/plugins",

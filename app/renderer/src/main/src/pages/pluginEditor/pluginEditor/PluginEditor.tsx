@@ -463,7 +463,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     return
                 }
 
-                console.log("grpc:SaveNewYakScript", JSON.stringify(data))
                 ipcRenderer
                     .invoke("SaveNewYakScript", data)
                     .then((res: YakScript) => {
