@@ -425,10 +425,6 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             if (riskShow) setRiskShow(false)
         })
 
-        const replaceTagName = useMemoizedFn((key: string) => {
-            return {key, label: onPluginTagsToName(key)}
-        })
-
         useEffect(() => {
             if (data) {
                 form.resetFields()
@@ -436,7 +432,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                 if (Array.isArray(data.Tags) && data.Tags.length > 0) {
                     newTags = []
                     data.Tags.forEach((item) => {
-                        newTags.push(replaceTagName(item))
+                        newTags.push(onPluginTagsToName(item))
                     })
                 }
                 data.Tags = newTags
