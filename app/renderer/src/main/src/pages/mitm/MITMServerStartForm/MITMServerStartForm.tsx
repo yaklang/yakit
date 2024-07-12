@@ -220,22 +220,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
     })
-    useEffect(() => {
-        const onUpdateHostListAndPort = (values) => {
-            try {
-                const obj = JSON.parse(values) || {}
-                setRemoteValue(MITMConsts.MITMDefaultPort, `${obj.port}`)
-                onSetRemoteValuesBase({
-                    cacheHistoryDataKey: CacheDropDownGV.MITMDefaultHostHistoryList,
-                    newValue: obj.host,
-                    isCacheDefaultValue: true
-                })
-                setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, obj.enableInitialPlugin ? "true" : "")
-                form.setFieldsValue({host: obj.host, port: obj.port, enableInitialPlugin: obj.enableInitialPlugin})
-            } catch (error) {}
-        }
-        emiter.on("onUpdateHostListAndPort", onUpdateHostListAndPort)
-    }, [])
 
     useEffect(() => {
         const info = initPageInfo()?.immediatelyLaunchedInfo

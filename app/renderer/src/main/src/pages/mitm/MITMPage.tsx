@@ -38,6 +38,8 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
 import {setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "./MITMConsts"
+import { onSetRemoteValuesBase } from "@/components/yakitUI/utils"
+import { CacheDropDownGV } from "@/yakitGV"
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
@@ -363,14 +365,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 if (!valObj.enableInitialPlugin) {
                     emiter.emit("onClearMITMHackPlugin")
                 }
-                emiter.emit(
-                    "onUpdateHostListAndPort",
-                    JSON.stringify({
-                        host: valObj.host,
-                        port: valObj.port,
-                        enableInitialPlugin: valObj.enableInitialPlugin
-                    })
-                )
+                setRemoteValue(MITMConsts.MITMDefaultPort, `${valObj.port}`)
+                onSetRemoteValuesBase({
+                    cacheHistoryDataKey: CacheDropDownGV.MITMDefaultHostHistoryList,
+                    newValue: valObj.host,
+                    isCacheDefaultValue: true
+                })
+                setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, valObj.enableInitialPlugin ? "true" : "")
             } catch (error) {}
         }
         emiter.on("onChangeAddrAndEnableInitialPlugin", onChangeAddrAndEnableInitialPlugin)

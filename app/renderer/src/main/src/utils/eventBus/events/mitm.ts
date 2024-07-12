@@ -7,6 +7,5 @@ export type MitmEventProps = {
     /** 是否开启替换规则 */
     onOpenRepRuleEvent: string
     onChangeAddrAndEnableInitialPlugin: string
-    onUpdateHostListAndPort: string
     onClearMITMHackPlugin?: string
 }
