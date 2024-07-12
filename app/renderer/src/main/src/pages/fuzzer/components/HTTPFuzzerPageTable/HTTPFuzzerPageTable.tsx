@@ -790,7 +790,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         // 编辑器编码
         const [codeKey, setCodeKey] = useState<string>("")
         const [codeLoading, setCodeLoading] = useState<boolean>(false)
-        const [codeValue, setCodeValue] = useState<Uint8Array>(new Uint8Array())
+        const [codeValue, setCodeValue] = useState<string>('')
         useEffect(() => {
             if (currentSelectItem) {
                 getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then((res) => {
@@ -811,11 +811,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }, [currentSelectItem, currentSelectShowType])
 
         const originReqOrResValue = useMemo(() => {
-            return (
-                (currentSelectShowType === "request"
-                    ? currentSelectItem?.RequestRaw
-                    : currentSelectItem?.ResponseRaw) || new Buffer([])
-            )
+            const value =
+                currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
+            return (value && Uint8ArrayToString(value)) || ""
         }, [currentSelectShowType, currentSelectItem])
 
         return (
@@ -937,7 +935,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
-                            webFuzzerValue={currentSelectItem?.RequestRaw || new Buffer([])}
+                            webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw||new Uint8Array())}
                             extraEditorProps={{
                                 isShowSelectRangeMenu: true
                             }}

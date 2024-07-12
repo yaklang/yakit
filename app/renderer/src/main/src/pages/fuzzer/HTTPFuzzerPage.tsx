@@ -71,7 +71,6 @@ import {HttpQueryAdvancedConfig} from "./HttpQueryAdvancedConfig/HttpQueryAdvanc
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps,
-    KVPair,
     FuzzTagMode
 } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -140,6 +139,7 @@ import {
     WEB_FUZZ_PROXY,
     defaultLabel
 } from "@/defaultConstants/HTTPFuzzerPage"
+import {KVPair} from "@/models/kv"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -1867,7 +1867,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                 extractors: extractor.extractorList
                                             })
                                         }}
-                                        webFuzzerValue={StringToUint8Array(requestRef.current)}
+                                        webFuzzerValue={requestRef.current}
                                         showResponseInfoSecondEditor={showResponseInfoSecondEditor}
                                         setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                                         secondNodeTitle={secondNodeTitle}
@@ -2782,7 +2782,7 @@ interface ResponseViewerProps {
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
-    webFuzzerValue?: Uint8Array
+    webFuzzerValue?: string
     isHttps?: boolean
 
     showResponseInfoSecondEditor: boolean
@@ -2912,7 +2912,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         // 编辑器编码
         const [codeKey, setCodeKey] = useState<string>("")
         const [codeLoading, setCodeLoading] = useState<boolean>(false)
-        const [codeValue, setCodeValue] = useState<Uint8Array>(new Uint8Array())
+        const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
             if (fuzzerResponse.ResponseRaw) {
                 getRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
@@ -2932,6 +2932,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
         }, [fuzzerResponse])
 
+        const responseRawString = useCreation(() => {
+            return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
+        }, [fuzzerResponse.ResponseRaw])
+
         return (
             <>
                 <YakitResizeBox
@@ -2945,7 +2949,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
-                            originValue={codeKey === "" ? fuzzerResponse.ResponseRaw : codeValue}
+                            originValue={codeKey === "" ? responseRawString : codeValue}
+                            readOnly={true}
                             hideSearch={true}
                             isResponse={true}
                             noHex={true}
@@ -2956,7 +2961,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             codingBtn={
                                 <CodingPopover
                                     key='coding'
-                                    originValue={fuzzerResponse.ResponseRaw}
+                                    originValue={responseRawString}
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
                                     onSetCodeKey={(codeKey) => {
@@ -3003,7 +3008,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     </Result>
                                 )
                             }
-                            readOnly={true}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}

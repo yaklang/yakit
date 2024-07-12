@@ -94,8 +94,8 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
                             refreshTrigger={refreshTrigger}
                             bordered={false}
                             noHeader={true}
-                            originValue={StringToUint8Array(codeValue)}
-                            onChange={(e) => setCodeValue(Uint8ArrayToString(e))}
+                            originValue={codeValue}
+                            onChange={setCodeValue}
                         />
                     </div>
                 }
