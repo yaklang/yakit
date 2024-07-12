@@ -4,7 +4,6 @@ import {
     CodeToInfoResponseProps,
     PluginDataProps,
     YakParamProps,
-    YakRiskInfoProps,
     localYakInfo
 } from "../pluginsType"
 import {API} from "@/services/swagger/resposeType"
@@ -16,88 +15,12 @@ import {apiDownloadPluginMine} from "../utils"
 import {YakExtraParamProps} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {Uint8ArrayToString} from "@/utils/str"
+import {APIFunc} from "@/pages/pluginHub/utils/apiType"
+import {pluginParamsConvertLocalToOnline, riskDetailConvertLocalToOnline} from "@/pages/pluginEditor/utils/convert"
 
 const {ipcRenderer} = window.require("electron")
 
 /** -------------------- 数据结构转换 Start -------------------- */
-/**
- * @name 本地插件风险数据(YakRiskInfoProps)-转换成-线上插件风险数据(API.PluginsRiskDetail)
- */
-export const convertLocalToRemoteRisks = (risks?: YakRiskInfoProps[]) => {
-    const arr: API.PluginsRiskDetail[] = []
-    const local = risks || []
-    for (let item of local) {
-        if (item.Level && item.CVE && item.TypeVerbose) {
-            arr.push({
-                level: item.Level,
-                cve: item.CVE,
-                typeVerbose: item.TypeVerbose,
-                description: item.Description,
-                solution: item.Solution
-            })
-        }
-    }
-    return arr
-}
-/**
- * @name 线上插件风险数据(API.PluginsRiskDetail)-转换成-本地插件风险数据(YakRiskInfoProps)
- */
-export const convertRemoteToLocalRisks = (risks?: API.PluginsRiskDetail[]) => {
-    const arr: YakRiskInfoProps[] = []
-    const local = risks || []
-    for (let item of local) {
-        if (item.level && item.cve && item.typeVerbose) {
-            arr.push({
-                Level: item.level,
-                CVE: item.cve,
-                TypeVerbose: item.typeVerbose,
-                Description: item.description,
-                Solution: item.solution
-            })
-        }
-    }
-    return arr
-}
-
-/**
- * @name 本地插件参数数据(YakParamProps)-转换成-线上插件参数数据(API.YakitPluginParam)
- */
-export const convertLocalToRemoteParams = (local: YakParamProps[]) => {
-    return local.map((item) => {
-        const obj: API.YakitPluginParam = {
-            field: item.Field,
-            field_verbose: item.FieldVerbose,
-            required: item.Required,
-            type_verbose: item.TypeVerbose,
-            default_value: item.DefaultValue,
-            extra_setting: item.ExtraSetting,
-            help: item.Help,
-            group: item.Group,
-            method_type: item.MethodType || ""
-        }
-        return obj
-    })
-}
-/**
- * @name 线上插件参数数据(API.YakitPluginParam)-转换成-本地插件参数数据(YakParamProps)
- */
-export const convertRemoteToLocalParams = (online: API.YakitPluginParam[]) => {
-    return online.map((item) => {
-        const obj: YakParamProps = {
-            Field: item.field,
-            FieldVerbose: item.field_verbose,
-            Required: item.required,
-            TypeVerbose: item.type_verbose,
-            DefaultValue: item.default_value,
-            ExtraSetting: item.extra_setting,
-            Help: item.help,
-            Group: item.group,
-            MethodType: item.method_type || ""
-        }
-        return obj
-    })
-}
-
 /**
  * @name 本地插件数据结构(YakScript)-转换成-本地进行保存的插件数据结构(localYakInfo)
  * @param idModify 是否为编辑状态
@@ -177,9 +100,9 @@ export const convertLocalToRemoteInfo = (
             type: info.Type,
             script_name: info.ScriptName,
             help: info.Help,
-            riskInfo: convertLocalToRemoteRisks(info.RiskInfo),
+            riskInfo: riskDetailConvertLocalToOnline(info.RiskInfo),
             tags: (info.Tags || "").split(",") || [],
-            params: convertLocalToRemoteParams(info.Params || []),
+            params: pluginParamsConvertLocalToOnline(info.Params || []),
             enable_plugin_selector: info.EnablePluginSelector,
             plugin_selector_types: info.PluginSelectorTypes,
             content: info.Content,
@@ -195,9 +118,9 @@ export const convertLocalToRemoteInfo = (
     request.script_name = modify.ScriptName
     request.type = modify.Type
     request.help = modify.Help
-    request.riskInfo = convertLocalToRemoteRisks(modify.RiskDetail)
+    request.riskInfo = riskDetailConvertLocalToOnline(modify.RiskDetail)
     request.tags = modify.Tags?.split(",") || []
-    request.params = modify.Params ? convertLocalToRemoteParams(modify.Params) : undefined
+    request.params = modify.Params ? pluginParamsConvertLocalToOnline(modify.Params) : undefined
     request.enable_plugin_selector = modify.EnablePluginSelector
     request.plugin_selector_types = modify.PluginSelectorTypes
     request.content = modify.Content
@@ -233,9 +156,9 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: Plug
         request.script_name = modify.ScriptName
         request.type = modify.Type
         request.help = modify.Help
-        request.riskInfo = convertLocalToRemoteRisks(modify.RiskDetail)
+        request.riskInfo = riskDetailConvertLocalToOnline(modify.RiskDetail)
         request.tags = modify.Tags?.split(",") || []
-        request.params = modify.Params ? convertLocalToRemoteParams(modify.Params) : undefined
+        request.params = modify.Params ? pluginParamsConvertLocalToOnline(modify.Params) : undefined
         request.enable_plugin_selector = modify.EnablePluginSelector
         request.plugin_selector_types = modify.PluginSelectorTypes
         request.content = modify.Content
@@ -465,16 +388,18 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
         })
 }
 
-/**
- * @name 获取源码中的参数和风险信息
- * @param type 插件类型
- * @param code 插件源码
- */
-export const onCodeToInfo: (type: string, code: string) => Promise<CodeToInfoResponseProps | null> = (type, code) => {
+interface PluginCodeToInfoRequest {
+    /** 插件类型 */
+    type: string
+    /** 插件源码 */
+    code: string
+}
+/** @name 获取源码中的参数和风险信息 */
+export const onCodeToInfo: APIFunc<PluginCodeToInfoRequest, CodeToInfoResponseProps | null> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         const request: CodeToInfoRequestProps = {
-            YakScriptType: type,
-            YakScriptCode: code
+            YakScriptType: params.type,
+            YakScriptCode: params.code
         }
         // console.log("onCodeToInfo-request", JSON.stringify(request))
         ipcRenderer
@@ -489,7 +414,7 @@ export const onCodeToInfo: (type: string, code: string) => Promise<CodeToInfoRes
                 })
             })
             .catch((e: any) => {
-                yakitNotify("error", "源码提取参数及风险信息失败: " + e)
+                if (!hiddenError) yakitNotify("error", "通过源码获取参数、漏洞与风险信息以及 tag 信息失败")
                 resolve(null)
             })
     })

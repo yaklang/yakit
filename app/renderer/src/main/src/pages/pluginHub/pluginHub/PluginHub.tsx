@@ -55,7 +55,7 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
 
             {isDetail && (
                 <div className={classNames(styles["detail"], {[styles["hidden"]]: hiddenDetail})}>
-                    <PluginHubDetail ref={detailRef} onBack={onBack} />
+                    <PluginHubDetail ref={detailRef} rootElementId={wrapperId} onBack={onBack} />
                 </div>
             )}
         </div>

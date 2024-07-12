@@ -5,15 +5,20 @@ export interface YakitSecondaryConfirmProps extends Omit<YakitModalConfirmProps,
 }
 
 /**
+ * @description 出现这个定义的原因，某些页面在关闭时，需要控制关闭确认是否提示，所以需要一个方法进行输出判断
+ */
+export type SubscribeCloseType = YakitSecondaryConfirmProps | (() => Promise<YakitSecondaryConfirmProps | undefined>)
+
+/**
  * @name 存放一级菜单各种操作时===二次确认提示的配置信息
  * @description Map结构存放的是各种情况的二次确认提示的配置信息(比如close，reset等等)
  */
 
 interface SubscribeCloseProps {
-    events: Map<string, Record<string, YakitSecondaryConfirmProps>>
+    events: Map<string, Record<string, SubscribeCloseType>>
 
-    getSubscribeClose: (key: string) => Record<string, YakitSecondaryConfirmProps> | undefined
-    setSubscribeClose: (key: string, p: Record<string, YakitSecondaryConfirmProps>) => void
+    getSubscribeClose: (key: string) => Record<string, SubscribeCloseType> | undefined
+    setSubscribeClose: (key: string, p: Record<string, SubscribeCloseType>) => void
     removeSubscribeClose: (key: string) => void
 
     clearSubscribeClose: () => void

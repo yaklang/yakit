@@ -15,13 +15,14 @@ import {PluginDebugBody} from "../pluginDebug/PluginDebug"
 import classNames from "classnames"
 import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
 import {API} from "@/services/swagger/resposeType"
-import {convertRemoteToLocalRisks, convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
+import {convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Form} from "antd"
 import {CodeScoreModule} from "../funcTemplate"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert"
 
 import styles from "./PluginLogDetail.module.scss"
 
@@ -119,7 +120,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                     let infoData: PluginBaseParamProps = {
                         ScriptName: res.script_name,
                         Help: res.help,
-                        RiskDetail: convertRemoteToLocalRisks(res.riskInfo),
+                        RiskDetail: riskDetailConvertOnlineToLocal(res.riskInfo),
                         Tags: []
                     }
                     try {
@@ -135,7 +136,9 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                     settingInfo.current = {...settingData}
                     //获取参数信息
                     const paramsList =
-                        res.type === "yak" ? await onCodeToInfo(res.type, res.content) : {CliParameter: []}
+                        res.type === "yak"
+                            ? await onCodeToInfo({type: res.type, code: res.content})
+                            : {CliParameter: []}
                     setPlugin({
                         ScriptName: res.script_name,
                         Type: res.type,
@@ -190,7 +193,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 }
                 // yak类型-进行源码分析出参数和风险
                 if (data.Type === "yak") {
-                    const codeInfo = await onCodeToInfo(data.Type, data.Content)
+                    const codeInfo = await onCodeToInfo({type: data.Type, code: data.Content})
                     if (codeInfo) {
                         data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
                         data.Params = codeInfo.CliParameter
@@ -279,6 +282,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
     const onCallbackScore = useMemoizedFn((pass: boolean) => {
         if (!pass) {
             setScore(1)
+            setModifyLoading(false)
             return
         }
         setModifyLoading(true)
@@ -416,7 +420,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
             >
                 <CodeScoreModule
                     type={pluginType || "yak"}
-                    code={"yakit.AutoInitYakit()\n\n# Input your code!\n\n"}
+                    code={newCode || ""}
                     isStart={pass}
                     successWait={10}
                     successHint='表现良好，检测通过，开始合并修改'

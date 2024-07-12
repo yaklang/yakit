@@ -116,8 +116,6 @@ export enum CodeGV {
     PublicMenuModeValue = "public",
     /** @name 菜单状态缓存 */
     MenuExpand = "menu-expand",
-    /** @name 插件参数-帮助文档地址 */
-    PluginParamsHelp = "https://yaklang.com/products/Plugin-repository/plugins/plugin_create"
 }
 
 /**YakitAutoComplate + YakitSelect缓存下拉和默认值变量 */

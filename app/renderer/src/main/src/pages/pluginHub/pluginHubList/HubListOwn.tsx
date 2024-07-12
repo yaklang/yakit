@@ -289,7 +289,33 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             })
     })
 
+    useEffect(() => {
+        // 批量下载的同名覆盖二次确认框缓存
+        getRemoteValue(RemotePluginGV.BatchDownloadPluginSameNameOverlay)
+            .then((res) => {
+                sameNameCache.current = res === "true"
+            })
+            .catch((err) => {})
+    }, [])
+    const sameNameCache = useRef<boolean>(false)
+    const [sameNameHint, setSameNameHint] = useState<boolean>(false)
+    const handleSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+        if (isOK) {
+            sameNameCache.current = cache
+            handleBatchDownloadPlugin()
+        }
+        setSameNameHint(false)
+    })
+
     const onHeaderExtraDownload = useMemoizedFn(() => {
+        if (!sameNameCache.current) {
+            if (sameNameHint) return
+            setSameNameHint(true)
+            return
+        }
+        handleBatchDownloadPlugin()
+    })
+    const handleBatchDownloadPlugin = useMemoizedFn(() => {
         if (selectedNum > 0) {
             handleBatchDownload()
         } else {
@@ -782,6 +808,15 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                     listType='mine'
                 />
             )}
+
+            {/* 批量下载同名覆盖提示 */}
+            <NoPromptHint
+                visible={sameNameHint}
+                title='同名覆盖提示'
+                content='如果本地存在同名插件会直接进行覆盖'
+                cacheKey={RemotePluginGV.BatchDownloadPluginSameNameOverlay}
+                onCallback={handleSameNameHint}
+            />
         </div>
     )
 })

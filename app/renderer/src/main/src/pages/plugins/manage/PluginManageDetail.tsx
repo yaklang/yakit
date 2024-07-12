@@ -29,17 +29,18 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
-import {convertRemoteToLocalRisks, convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
+import {convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {PluginDebug} from "../pluginDebug/PluginDebug"
 import {GetPluginLanguage} from "../builtInData"
+import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {useStore} from "@/store"
+import {riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
-import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {useStore} from "@/store"
 
 const {TabPane} = PluginTabs
 
@@ -180,7 +181,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         let infoData: PluginBaseParamProps = {
                             ScriptName: res.script_name,
                             Help: res.help,
-                            RiskDetail: convertRemoteToLocalRisks(res.riskInfo),
+                            RiskDetail: riskDetailConvertOnlineToLocal(res.riskInfo),
                             Tags: []
                         }
                         let tags: string[] = []
@@ -188,7 +189,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             tags = (res.tags || "").split(",") || []
                         } catch (error) {}
                         const codeInfo =
-                            GetPluginLanguage(res.type) === "yak" ? await onCodeToInfo(res.type, res.content) : null
+                            GetPluginLanguage(res.type) === "yak"
+                                ? await onCodeToInfo({type: res.type, code: res.content})
+                                : null
                         if (codeInfo && codeInfo.Tags.length > 0) {
                             // 去重
                             tags = filter([...tags, ...codeInfo.Tags])
@@ -387,7 +390,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             data.Content = content
 
-            const codeInfo = GetPluginLanguage(data.Type) === "yak" ? await onCodeToInfo(data.Type, data.Content) : null
+            const codeInfo =
+                GetPluginLanguage(data.Type) === "yak"
+                    ? await onCodeToInfo({type: data.Type, code: data.Content})
+                    : null
             let tags: string = data.Tags || ""
             if (codeInfo && codeInfo.Tags.length > 0) {
                 tags += `,${codeInfo.Tags.join(",")}`
@@ -551,7 +557,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
                     const paramsList =
                         GetPluginLanguage(plugin.type) === "yak"
-                            ? await onCodeToInfo(plugin.type, content)
+                            ? await onCodeToInfo({type: plugin.type, code: content})
                             : {CliParameter: []}
                     if (!paramsList) {
                         resolve("false")

@@ -252,7 +252,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
         }
 
         setFetchParamsLoading(true)
-        const codeInfo = await onCodeToInfo(plugin.Type, newCode || "")
+        const codeInfo = await onCodeToInfo({type: plugin.Type, code: newCode || ""})
         if (codeInfo) {
             setParams(codeInfo.CliParameter)
         }
@@ -486,7 +486,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     setRuntimeId("")
                     setActiveTab("execResult")
                     if (pluginType === "codec") {
-                        const codecInfo = await onCodeToInfo(pluginType, newCode || "")
+                        const codecInfo = await onCodeToInfo({type: pluginType, code: newCode || ""})
                         if ((codecInfo?.Tags || []).includes("AI工具")) {
                             emiter.emit(
                                 "onOpenFuzzerModal",

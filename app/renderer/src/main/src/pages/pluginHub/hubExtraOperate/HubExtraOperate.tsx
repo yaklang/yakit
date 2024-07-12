@@ -26,8 +26,7 @@ import {
     apiDeletePluginMine,
     apiDeleteYakScriptByIds,
     apiUpdatePluginPrivateMine,
-    convertLocalPluginsRequestParams,
-    onToEditPlugin
+    convertLocalPluginsRequestParams
 } from "@/pages/plugins/utils"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {useStore} from "@/store"
@@ -40,7 +39,6 @@ import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {ExportYakScriptStreamRequest} from "@/pages/plugins/local/PluginsLocalType"
 import {defaultSearch} from "@/pages/plugins/builtInData"
 import cloneDeep from "lodash/cloneDeep"
-import {YakitRoute} from "@/enums/yakitRoute"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
@@ -61,13 +59,15 @@ export interface HubExtraOperateProps {
     downloadLoading?: boolean
     /** 激活下载 */
     onDownload: () => void
+    /** 编辑事件 */
+    onEdit?: () => void
     /** 插件操作完成后的回调事件 */
     onCallback?: (type: string) => void
 }
 
 export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
     forwardRef((props, ref) => {
-        const {getContainer, online, local, downloadLoading, onDownload, onCallback} = props
+        const {getContainer, online, local, downloadLoading, onDownload, onEdit, onCallback} = props
 
         useImperativeHandle(
             ref,
@@ -341,7 +341,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         const handleEdit = useMemoizedFn(() => {
             activeOperate.current = ""
             if (!local) return
-            onToEditPlugin(local, YakitRoute.Plugin_Hub)
+            if (onEdit) onEdit()
         })
         // 插件分享
         const handleShare = useMemoizedFn(() => {
@@ -568,7 +568,10 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             type='text2'
                             name={"编辑"}
                             className={classNames({[styles["share-disabled-btn"]]: !local})}
-                            onClick={() => handleOperates("edit")}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                handleOperates("edit")
+                            }}
                         />
                         <div className={styles["divider-style"]}></div>
                         <HubButton
@@ -580,7 +583,8 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             className={classNames({[styles["share-disabled-btn"]]: !online})}
                             disabled={!online}
                             hint={!online ? PluginOperateHint["banOnlineOP"] : ""}
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation()
                                 if (!online) return
                                 handleOperates("share")
                             }}
@@ -594,7 +598,10 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         icon={<OutlineClouduploadIcon />}
                         type='outline2'
                         name={"上传"}
-                        onClick={() => handleOperates("upload")}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            handleOperates("upload")
+                        }}
                     />
                 )}
                 {!isCorePlugin && (
@@ -606,7 +613,8 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         className={classNames({[styles["download-disabled-btn"]]: !online})}
                         disabled={!online}
                         hint={!online ? PluginOperateHint["banOnlineOP"] : ""}
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation()
                             if (!online) return
                             handleOperates("download")
                         }}

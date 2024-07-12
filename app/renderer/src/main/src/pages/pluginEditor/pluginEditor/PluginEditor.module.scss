@@ -1,0 +1,78 @@
+.plugin-editor {
+    width: 100%;
+    height: 100%;
+}
+.plugin-editor-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.plugin-editor-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eaecf3;
+    .header-title {
+        display: flex;
+        align-items: center;
+
+        color: #31343f;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+    }
+    .header-subtitle {
+        margin-left: 16px;
+        display: flex;
+        align-items: center;
+        color: #b4bbca;
+        line-height: 20px;
+        cursor: pointer;
+        .subtitle-style {
+            font-size: 12px;
+            font-weight: 400;
+            text-decoration-line: underline;
+        }
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        &:hover {
+            color: var(--yakit-primary-5);
+        }
+    }
+
+    .header-btn-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+.plugin-editor-modify-header {
+    background-color: var(--yakit-card-background-color);
+    padding: 8px 16px;
+    .header-title {
+        font-size: 14px;
+        line-height: 20px;
+    }
+}
+
+.plugin-editor-body {
+    flex: 1;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    .editor-code-container {
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+    }
+}
+
+.old-data-hint-wrapper {
+    top: 25%;
+}

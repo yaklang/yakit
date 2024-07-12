@@ -7,14 +7,14 @@ import {HubListLocal} from "./HubListLocal"
 import {Tooltip} from "antd"
 import {HubSideBarList} from "../defaultConstant"
 import {HubListOnline} from "./HubListOnline"
-
-import classNames from "classnames"
-import styles from "./PluginHubList.module.scss"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultPluginHubPageInfo} from "@/defaultConstants/PluginHubPage"
 import emiter from "@/utils/eventBus/eventBus"
+
+import classNames from "classnames"
+import styles from "./PluginHubList.module.scss"
 
 interface PluginHubListProps {
     /** 根元素的id */
@@ -97,6 +97,29 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     })
     /** ---------- 进入插件详情逻辑 End ---------- */
 
+    /** ---------- 通信监听 Start ---------- */
+    /**
+     * 新建插件保存成功后列表定位到本地，然后更新数据，存在两种情况：
+     * 1、本地列表已存在 ，则通信更新数据
+     * 2、本地列表不存在，打开本地列表会自动请求最新数据
+     */
+    const handleUpdatePluginInfo = useMemoizedFn((content: string) => {
+        if (rendered.current.has("local")) {
+            if (active !== "local") onSetActive("local")
+            emiter.emit("editorLocalSaveToLocalList", content)
+        } else {
+            onSetActive("local")
+        }
+    })
+
+    useEffect(() => {
+        emiter.on("editorLocalNewToLocalList", handleUpdatePluginInfo)
+        return () => {
+            emiter.off("editorLocalNewToLocalList", handleUpdatePluginInfo)
+        }
+    }, [])
+    /** ---------- 通信监听 Start ---------- */
+
     const barHint = useMemoizedFn((key: string, isActive: boolean) => {
         if (isActive) {
             if (key === "recycle") return ""
@@ -112,7 +135,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     })
 
     return (
-        <div id={rootElementId || undefined} className={styles["plugin-hub-list"]}>
+        <div className={styles["plugin-hub-list"]}>
             <div className={styles["side-bar-list"]}>
                 {HubSideBarList.map((item, index) => {
                     const isActive = item.key === active

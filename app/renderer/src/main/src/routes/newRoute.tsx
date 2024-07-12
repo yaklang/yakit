@@ -135,6 +135,7 @@ import {
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
 import { YakRunner } from "@/pages/YakRunner/YakRunner"
+import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -519,7 +520,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.ControlAdminPage:
             return <ControlAdminPage />
         case YakitRoute.AddYakitScript:
-            return <PluginEditDetails />
+            return <AddYakitPlugin />
+            // return <PluginEditDetails />
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.SimpleDetect:

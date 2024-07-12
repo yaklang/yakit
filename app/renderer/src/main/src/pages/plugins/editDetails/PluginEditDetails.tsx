@@ -46,11 +46,11 @@ import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {DefaultTypeList, GetPluginLanguage, PluginGV, pluginTypeToName} from "../builtInData"
+import {DefaultTypeList, GetPluginLanguage, pluginTypeToName} from "../builtInData"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {getRemoteValue} from "@/utils/kv"
-import {CodeGV, RemoteGV} from "@/yakitGV"
+import {RemoteGV} from "@/yakitGV"
 import {SolidEyeIcon, SolidEyeoffIcon, SolidStoreIcon} from "@/assets/icon/solid"
 import {PluginDebug} from "../pluginDebug/PluginDebug"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -62,11 +62,13 @@ import {
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CustomPluginExecuteFormValue} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
+import {WebsiteGV} from "@/enums/website"
+import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
 import classNames from "classnames"
-import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 const {Link} = Anchor
 const {YakitPanel} = YakitCollapse
@@ -162,7 +164,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 setPluginType(res.Type || "yak")
                 const codeInfo =
                     GetPluginLanguage(res.Type || "yak") === "yak"
-                        ? await onCodeToInfo(res.Type || "yak", res.Content)
+                        ? await onCodeToInfo({type: res.Type || "yak", code: res.Content})
                         : null
                 if (codeInfo && codeInfo.Tags.length > 0) {
                     // 去重
@@ -321,7 +323,9 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         infoData = {
             ...infoData,
             Tags: infoData.Tags?.filter((item) => {
-                return item !== PluginGV.PluginYakDNSLogSwitch && item !== PluginGV.PluginCodecHttpSwitch
+                return (
+                    item !== PluginSwitchToTag.PluginYakDNSLogSwitch && item !== PluginSwitchToTag.PluginCodecHttpSwitch
+                )
             })
         }
 
@@ -399,7 +403,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         () => {
             if (!getPreviewParamsShow()) return
             else {
-                onCodeToInfo(fetchPluginType(), code)
+                onCodeToInfo({type: fetchPluginType(), code: code})
                     .then((value) => {
                         if (value) setPreviewParams(value.CliParameter)
                     })
@@ -410,7 +414,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         {wait: 500}
     )
     const onOpenPreviewParams = useMemoizedFn(async () => {
-        const info = await onCodeToInfo(fetchPluginType(), code)
+        const info = await onCodeToInfo({type: fetchPluginType(), code: code})
         if (!info) return
         setPreviewParams(info.CliParameter)
         if (!previewParamsShow) setPreviewParamsShow(true)
@@ -497,7 +501,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             data.PluginSelectorTypes = setting?.PluginSelectorTypes
         }
 
-        const codeInfo = GetPluginLanguage(data.Type) === "yak" ? await onCodeToInfo(data.Type, data.Content) : null
+        const codeInfo =
+            GetPluginLanguage(data.Type) === "yak" ? await onCodeToInfo({type: data.Type, code: data.Content}) : null
         let newTags = data.Tags || ""
         if (codeInfo && codeInfo.Tags.length > 0) {
             newTags += `,${codeInfo.Tags.join(",")}`
@@ -574,7 +579,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         return new Promise(async (resolve, reject) => {
             setDebugPlugin(undefined)
             try {
-                const paramsList = pluginType === "yak" ? await onCodeToInfo(pluginType, code) : {CliParameter: []}
+                const paramsList =
+                    pluginType === "yak" ? await onCodeToInfo({type: pluginType, code: code}) : {CliParameter: []}
                 if (!paramsList) {
                     resolve("false")
                     return
@@ -1231,7 +1237,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                 <div
                                     className={styles["subtitle-help-wrapper"]}
                                     onClick={() => {
-                                        ipcRenderer.invoke("open-url", CodeGV.PluginParamsHelp)
+                                        ipcRenderer.invoke("open-url", WebsiteGV.PluginParamsHelp)
                                     }}
                                 >
                                     <span className={styles["text-style"]}>帮助文档</span>
@@ -1373,7 +1379,7 @@ const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
         () => {
             if (!previewShow) return
             else {
-                onCodeToInfo(fetchPluginType(), content)
+                onCodeToInfo({type: fetchPluginType(), code: content})
                     .then((value) => {
                         if (value) setPreviewParams(value.CliParameter)
                     })
@@ -1384,7 +1390,7 @@ const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
         {wait: 500}
     )
     const onOpenPreviewParams = useMemoizedFn(async () => {
-        const info = await onCodeToInfo(fetchPluginType(), content)
+        const info = await onCodeToInfo({type: fetchPluginType(), code: content})
         if (!info) return
         setPreviewParams(info.CliParameter)
         if (!previewShow) setPreviewShow(true)
@@ -1470,10 +1476,10 @@ const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
 interface PluginSyncAndCopyModalProps {
     isCopy: boolean
     visible: boolean
-    setVisible: (isCallback: boolean, param?: {type?: string; name?: string}) => any
+    setVisible: (isCallback: boolean, param?: {type: string; name: string}) => any
 }
 /** @name 插件同步&复制云端 */
-const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((props) => {
+export const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((props) => {
     const {isCopy, visible, setVisible} = props
 
     const [type, setType] = useState<"private" | "public">("private")
@@ -1484,7 +1490,14 @@ const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((prop
             yakitNotify("error", "请输入复制插件的名称")
             return
         }
-        setVisible(true, {type: isCopy ? undefined : type, name: isCopy ? name : undefined})
+        if (name.length > 100) {
+            yakitNotify("error", "插件名最长100位")
+            return
+        }
+        setVisible(true, {type: isCopy ? "" : type, name: isCopy ? name : ""})
+    })
+    const onCancel = useMemoizedFn(() => {
+        setVisible(false)
     })
 
     return (
@@ -1496,7 +1509,7 @@ const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((prop
             maskClosable={false}
             closable={true}
             visible={visible}
-            onCancel={() => setVisible(false)}
+            onCancel={onCancel}
             onOk={onSubmit}
             bodyStyle={{padding: 0}}
         >
@@ -1584,7 +1597,7 @@ interface ModifyPluginReasonProps {
     onCancel: (isSubmit: boolean, content?: string) => any
 }
 /** @name 描述修改内容 */
-const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
+export const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
     const {visible, onCancel} = props
 
     const [content, setContent] = useState<string>("")
@@ -1595,6 +1608,9 @@ const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
             return
         }
         onCancel(true, content)
+    })
+    const onClose = useMemoizedFn(() => {
+        onCancel(false)
     })
 
     useEffect(() => {
@@ -1610,7 +1626,7 @@ const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
             maskClosable={false}
             closable={true}
             visible={visible}
-            onCancel={() => onCancel(false)}
+            onCancel={onClose}
             onOk={onSubmit}
             bodyStyle={{padding: 0}}
         >

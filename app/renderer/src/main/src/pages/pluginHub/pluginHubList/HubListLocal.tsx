@@ -57,6 +57,10 @@ import useGetSetState from "../hooks/useGetSetState"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {Tooltip} from "antd"
 import {SavePluginInfoSignalProps} from "@/pages/plugins/editDetails/PluginEditDetails"
+import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
+import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
+import {grpcFetchLocalPluginDetail} from "../utils/grpc"
+import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -122,7 +126,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
-    //编辑插件保存后的刷新列表数据
+    // 编辑插件保存后的刷新列表数据
     const handleEditedToRefreshList = useMemoizedFn((info: string) => {
         try {
             const plugin: SavePluginInfoSignalProps = JSON.parse(info)
@@ -672,6 +676,29 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
     /** ---------- 导出插件 End ---------- */
 
+    /** ---------- 编辑插件 Start ---------- */
+    const editPlugin = useRef<YakScript>()
+    const [editHint, setEditHint] = useState<boolean>(false)
+    const handleOpenEditHint = useMemoizedFn((info: YakScript) => {
+        if (editHint) return
+        editPlugin.current = cloneDeep(info)
+        setEditHint(true)
+    })
+    const handleEditHintCallback = useMemoizedFn(async (isSuccess: boolean, data?: ModifyPluginCallback) => {
+        if (isSuccess && data) {
+            const {opType, info} = data
+            // 关闭编辑插件弹窗
+            if (opType !== "save") {
+                editPlugin.current = undefined
+                setEditHint(false)
+            }
+        } else {
+            editPlugin.current = undefined
+            setEditHint(false)
+        }
+    })
+    /** ---------- 编辑插件 End ---------- */
+
     // 新建插件
     const onNewPlugin = useMemoizedFn(() => {
         emiter.emit(
@@ -683,6 +710,44 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const onOpenPluginGroup = useMemoizedFn(() => {
         emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
     })
+
+    /** ---------- 通信监听 Start ---------- */
+    // 触发详情列表的局部更新
+    const [recalculation, setRecalculation] = useState<boolean>(false)
+    // 更新本地插件信息，存在则进行局部更新，不存在则刷新列表
+    const handleUpdatePluginInfo = useMemoizedFn(async (content: string) => {
+        try {
+            const info: KeyParamsFetchPluginDetail = JSON.parse(content)
+            if (!info.name) return
+            const plugin: YakScript = await grpcFetchLocalPluginDetail({Name: info.name, UUID: info.uuid || undefined})
+            plugin.isLocalPlugin = privateDomain.current !== plugin.OnlineBaseUrl
+
+            const index = response.Data.findIndex((ele) => ele.ScriptName === plugin.ScriptName || ele.Id === plugin.Id)
+            if (index === -1) {
+                fetchInitTotal()
+                fetchFilterGroup()
+                fetchList(true)
+            } else {
+                dispatch({
+                    type: "replace",
+                    payload: {
+                        item: {...plugin}
+                    }
+                })
+                if (isDetailList) {
+                    setRecalculation((val) => !val)
+                }
+            }
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("editorLocalSaveToLocalList", handleUpdatePluginInfo)
+        return () => {
+            emiter.off("editorLocalSaveToLocalList", handleUpdatePluginInfo)
+        }
+    }, [])
+    /** ---------- 通信监听 Start ---------- */
 
     /** ---------- 详情列表操作 Start ---------- */
     // 进入插件详情
@@ -756,6 +821,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             <LocalOptFooterExtra
                 isLogin={isLogin}
                 info={info}
+                onEdit={handleOpenEditHint}
                 execUploadInfo={singleUpload}
                 onUpload={onFooterExtraUpload}
                 onExport={onFooterExtraExport}
@@ -981,6 +1047,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             data: response.Data || [],
                             loadMoreData: onUpdateList,
                             classNameRow: styles["hub-detail-list-opt"],
+                            recalculation: recalculation,
                             renderRow: (info, i) => {
                                 const check =
                                     allChecked ||
@@ -1028,6 +1095,15 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 exportLocalParams={exportParams.current}
                 onClose={closeExportModal}
             />
+
+            {editPlugin.current && (
+                <ModifyYakitPlugin
+                    getContainer={document.getElementById(rootElementId || "") || document.body}
+                    plugin={editPlugin.current}
+                    visible={editHint}
+                    onCallback={handleEditHintCallback}
+                />
+            )}
         </div>
     )
 })
