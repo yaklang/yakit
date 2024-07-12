@@ -407,9 +407,6 @@ const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
 export interface ControlAdminPageProps {}
 export interface AccountAdminPageProp {}
 
-export interface QueryExecResultsParams {
-    keywords: string
-}
 interface QueryProps {}
 
 const defaultPagination = {

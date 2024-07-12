@@ -1140,9 +1140,6 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
         page: undefined,
         label: "插件",
         children: routeToChildren([
-            YakitRoute.Plugin_Store,
-            YakitRoute.Plugin_Owner,
-            YakitRoute.Plugin_Local,
             YakitRoute.Plugin_Hub,
             YakitRoute.BatchExecutorPage
         ])
@@ -1224,9 +1221,6 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
         page: undefined,
         label: "插件",
         children: routeToChildren([
-            YakitRoute.Plugin_Store,
-            YakitRoute.Plugin_Owner,
-            YakitRoute.Plugin_Local,
             YakitRoute.Plugin_Hub,
             YakitRoute.BatchExecutorPage
         ])
@@ -1271,24 +1265,6 @@ export const PrivateSimpleRouteMenu: PrivateRouteMenuProps[] = [
         page: undefined,
         label: "插件",
         children: [
-            {
-                page: YakitRoute.Plugin_Store,
-                icon: <PrivateOutlinePluginStoreIcon />,
-                hoverIcon: <PrivateSolidPluginStoreIcon />,
-                ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
-            },
-            {
-                page: YakitRoute.Plugin_Owner,
-                icon: <PrivateOutlinePluginOwnerIcon />,
-                hoverIcon: <PrivateSolidPluginOwnerIcon />,
-                ...YakitRouteToPageInfo[YakitRoute.Plugin_Owner]
-            },
-            {
-                page: YakitRoute.Plugin_Local,
-                icon: <PrivateOutlinePluginLocalIcon />,
-                hoverIcon: <PrivateSolidPluginLocalIcon />,
-                ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
-            },
             {
                 page: YakitRoute.Plugin_Hub,
                 icon: <PrivateOutlinePluginStoreIcon />,

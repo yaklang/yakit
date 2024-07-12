@@ -56,6 +56,7 @@ import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+import { SolidYakOfficialPluginColorIcon } from "@/assets/icon/colors"
 
 interface HubListOnlineProps extends HubListBaseProps {}
 /** @name 插件商店 */
@@ -452,6 +453,13 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         return <OnlineOptFooterExtra isLogin={isLogin} info={info} callback={optCallback} />
     }
 
+    // 单项副标题
+    const optSubTitle = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        if (info?.official) {
+            return <SolidYakOfficialPluginColorIcon />
+        }
+        return null
+    })
     return (
         <div ref={divRef} className={styles["plugin-hub-tab-list"]}>
             {/* CE版不需要登录，EE和SE版需要登录后才可使用 */}
@@ -515,6 +523,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                                     official={!!data.official}
                                                     extraFooter={extraFooter}
                                                     onClick={onOptClick}
+                                                    subTitle={optSubTitle}
                                                 />
                                             )
                                         }}
