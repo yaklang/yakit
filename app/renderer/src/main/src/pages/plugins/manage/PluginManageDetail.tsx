@@ -166,11 +166,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 .then(async (res) => {
                     if (res) {
                         // console.log("插件管理的单个插件详情", res)
-                        setPlugin({...res})
                         setOldContent("")
                         // 源码
                         setContent(res.content)
-                        if (+res.status !== 0) return
                         // 设置修改人
                         setApply({
                             name: res.apply_user_name || "",
@@ -207,7 +205,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             Content: res.content || ""
                         }
                         setSettingParams({...settingData})
-
+                        setPlugin({...res})
                         if (res.merge_before_plugins) setOldContent(res.merge_before_plugins.content || "")
                     }
                 })

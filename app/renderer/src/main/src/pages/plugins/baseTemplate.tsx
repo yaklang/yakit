@@ -50,7 +50,7 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {PluginSwitchTagToContent, PluginSwitchToTag} from "../pluginEditor/defaultconstants"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-
+import cloneDeep from "lodash/cloneDeep"
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
@@ -432,16 +432,17 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
         useEffect(() => {
             if (data) {
                 form.resetFields()
-                let newTags:any = data.Tags
-                if(Array.isArray(data.Tags) && data.Tags.length>0){
+                const copyData = cloneDeep(data)
+                let newTags:any = copyData.Tags
+                if(Array.isArray(copyData.Tags) && copyData.Tags.length>0){
                     newTags = []
-                    data.Tags.forEach((item)=>{
+                    copyData.Tags.forEach((item)=>{
                         newTags.push(replaceTagName(item)) 
                     })
                 }
-                data.Tags = newTags
-                form.setFieldsValue({...data})
-                setBugInfo(data?.RiskDetail || [])
+                copyData.Tags = newTags
+                form.setFieldsValue({...copyData})
+                setBugInfo(copyData?.RiskDetail || [])
             }
         }, [data])
 
