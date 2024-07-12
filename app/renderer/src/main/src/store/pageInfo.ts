@@ -201,6 +201,8 @@ interface PageInfoStoreProps {
     getCurrentSelectPageId: (routeKey: string) => string
     /** 通过 RuntimeId 获取页面数据 【批量执行/安全检测(简易版)】 */
     getPageInfoByRuntimeId: (routeKey: string, pageId: string) => PageNodeItemProps | undefined
+    /**展开或者收起所有的组 isExpand:true展开/false收起*/
+    updateGroupExpandOrRetract: (routeKey: string, isExpand: boolean) => void
 }
 export const defPage: PageProps = {
     pageList: [],
@@ -386,6 +388,27 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                     const {pages} = get()
                     const current = pages.get(key) || cloneDeep(defPage)
                     return current.currentSelectPageId
+                },
+                updateGroupExpandOrRetract: (key, isExpand) => {
+                    const newPages = get().pages
+                    const currentPage = newPages.get(key) || cloneDeep(defPage)
+                    const newPageList = currentPage.pageList.map((ele) => {
+                        if (ele.pageId.endsWith("group")) {
+                            return {
+                                ...ele,
+                                expand: true
+                            }
+                        }
+                        return ele
+                    })
+                    newPages.set(key, {
+                        ...currentPage,
+                        pageList: newPageList
+                    })
+                    set({
+                        ...get(),
+                        pages: newPages
+                    })
                 }
             }),
             {
