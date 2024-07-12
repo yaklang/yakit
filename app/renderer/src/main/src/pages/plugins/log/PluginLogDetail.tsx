@@ -420,7 +420,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
             >
                 <CodeScoreModule
                     type={pluginType || "yak"}
-                    code={prInfo?.content || ""}
+                    code={newCode || ""}
                     isStart={pass}
                     successWait={10}
                     successHint='表现良好，检测通过，开始合并修改'

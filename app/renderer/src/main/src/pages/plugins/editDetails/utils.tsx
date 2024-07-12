@@ -414,7 +414,7 @@ export const onCodeToInfo: APIFunc<PluginCodeToInfoRequest, CodeToInfoResponsePr
                 })
             })
             .catch((e: any) => {
-                if (!hiddenError) yakitNotify("error", "源码提取参数及风险信息失败: " + e)
+                if (!hiddenError) yakitNotify("error", "通过源码获取参数、漏洞与风险信息以及 tag 信息失败")
                 resolve(null)
             })
     })

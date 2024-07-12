@@ -125,7 +125,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             []
         )
 
-        const [activeKey, setActiveKey] = useState<string>("online")
+        const [activeKey, setActiveKey] = useState<string>("")
         const onTabChange = useMemoizedFn((key: string) => {
             setActiveKey(key)
         })
@@ -243,7 +243,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     }
 
                     if (local.status === "fulfilled") {
-                        if (!activeTab) activeTab = "exectue"
+                        activeTab = "exectue"
                         setLocalPlugin({...local.value})
                     }
                     if (local.status === "rejected") {

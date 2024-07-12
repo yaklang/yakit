@@ -133,7 +133,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
         // 设置非(yak|lua)类型的插件参数初始值
         const onSettingDefault = useMemoizedFn(() => {
-            let defaultValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
+            let defaultValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue, requestType: "input"}
             form.setFieldsValue(cloneDeep(defaultValue))
         })
 
