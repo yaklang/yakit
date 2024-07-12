@@ -265,6 +265,7 @@ export interface FuzzerRequestProps {
     MutateMethods: MutateMethod[]
     Concurrent: number
     IsHTTPS: boolean
+    MaxBodySize: number
     FuzzTagMode: FuzzTagMode
     FuzzTagSyncIndex: boolean
     Proxy: string
@@ -365,6 +366,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         FuzzTagSyncIndex: value.fuzzTagSyncIndex,
         IsHTTPS: value.isHttps,
         IsGmTLS: value.isGmTLS,
+        MaxBodySize: value.maxBodySize * 1024 * 1024,
         Concurrent: value.concurrent,
         PerRequestTimeoutSeconds: value.timeout,
         BatchTarget: value.batchTarget || new Uint8Array(),

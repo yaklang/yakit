@@ -38,6 +38,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     isGmTLS: false,
     noFixContentLength: false,
     noSystemProxy: false,
+    maxBodySize: 5,
     resNumlimit: DefFuzzerTableMaxData,
     actualHost: "",
     timeout: 30.0,
