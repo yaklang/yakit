@@ -593,7 +593,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     } = props
     const [mode, setMode] = useState("text")
     const [strValue, setStrValue] = useState(originValue)
-    // const [hexValue, setHexValue] = useState<Uint8Array>(StringToUint8Array(originValue))
+    const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array()) // 只有切换到hex时才会用这个值，目前切换得时候会把最新得编辑器中得值赋值到该变量里面
     const [searchValue, setSearchValue] = useState("")
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
     const [fontSize, setFontSize] = useState<undefined | number>(12)
@@ -685,14 +685,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     // hex editor
     const [nonce, setNonce] = useState(0)
     // The callback facilitates updates to the source data.
-    // const handleSetValue = React.useCallback(
-    //     (offset, value) => {
-    //         hexValue[offset] = value
-    //         setNonce((v) => v + 1)
-    //         setHexValue(value)
-    //     },
-    //     [hexValue]
-    // )
+    const handleSetValue = React.useCallback(
+        (offset, value) => {
+            hexValue[offset] = value
+            setNonce((v) => v + 1)
+            setHexValue(value)
+        },
+        [hexValue]
+    )
 
     const openCompareModal = useMemoizedFn((dataCompare: DataCompareProps) => {
         setCompareLoading(true)
@@ -726,8 +726,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
 
         setStrValue(props.defaultStringValue || "")
-        // setHexValue(StringToUint8Array(props.defaultStringValue || ""))
-    }, [props.defaultStringValue])
+        if (mode === "hex") setHexValue(StringToUint8Array(props.defaultStringValue || ""))
+    }, [props.defaultStringValue, mode])
 
     useEffect(() => {
         if (monacoEditor) {
@@ -746,14 +746,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     useEffect(() => {
         if (props.readOnly) {
             setStrValue(showValue)
-            // setHexValue(StringToUint8Array(showValue))
+            if (mode === "hex") setHexValue(StringToUint8Array(showValue))
         }
         if (props.readOnly && monacoEditor) {
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
         }
     }, [
         showValue,
-        props.readOnly
+        props.readOnly,
+        mode
         // monacoEditor,
     ])
 
@@ -762,16 +763,16 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             return
         }
         setStrValue(originValue)
-        // setHexValue(StringToUint8Array(originValue))
-    }, [props.refreshTrigger])
+        if (mode === "hex") setHexValue(StringToUint8Array(originValue))
+    }, [props.refreshTrigger, mode])
 
     useEffect(() => {
         props.onChange && props.onChange(strValue)
     }, [strValue])
 
-    // useEffect(() => {
-    //     props.onChange && props.onChange(hexValue)
-    // }, [hexValue])
+    useEffect(() => {
+        props.onChange && props.onChange(Uint8ArrayToString(hexValue))
+    }, [hexValue])
 
     const empty = !!props.emptyOr && originValue.length == 0
 
@@ -942,30 +943,29 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 ))}
                             {!props.simpleMode
                                 ? !props.noHex && (
-                                    //   <SelectOne
-                                    //       label={" "}
-                                    //       colon={false}
-                                    //       value={mode}
-                                    //       setValue={(e) => {
-                                    //           if (mode === "text" && e === "hex") {
-                                    //               console.info("切换到 HEX 模式")
-                                    //               setHexValue(StringToUint8Array(strValue))
-                                    //           }
+                                      <SelectOne
+                                          label={" "}
+                                          colon={false}
+                                          value={mode}
+                                          setValue={(e) => {
+                                              if (mode === "text" && e === "hex") {
+                                                  console.info("切换到 HEX 模式")
+                                                  setHexValue(StringToUint8Array(strValue))
+                                              }
 
-                                    //           if (mode === "hex" && e === "text") {
-                                    //               console.info("切换到 TEXT 模式")
-                                    //               setStrValue(Uint8ArrayToString(hexValue))
-                                    //           }
-                                    //           setMode(e)
-                                    //       }}
-                                    //       data={[
-                                    //           {text: "TEXT", value: "text"},
-                                    //           {text: "HEX", value: "hex"}
-                                    //       ]}
-                                    //       size={"small"}
-                                    //       formItemStyle={{marginBottom: 0}}
-                                    //   />
-                                    <></>
+                                              if (mode === "hex" && e === "text") {
+                                                  console.info("切换到 TEXT 模式")
+                                                  setStrValue(Uint8ArrayToString(hexValue))
+                                              }
+                                              setMode(e)
+                                          }}
+                                          data={[
+                                              {text: "TEXT", value: "text"},
+                                              {text: "HEX", value: "hex"}
+                                          ]}
+                                          size={"small"}
+                                          formItemStyle={{marginBottom: 0}}
+                                      />
                                   )
                                 : !props.noModeTag && (
                                       <Form.Item style={{marginBottom: 0}}>
@@ -1182,7 +1182,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             {...props.extraEditorProps}
                         />
                     )}
-                    {/* {mode === "hex" && !empty && !renderHtml && (
+                    {mode === "hex" && !empty && !renderHtml && (
                         <HexEditor
                             className={classNames({[styles["hex-editor-style"]]: props.system === "Windows_NT"})}
                             showAscii={true}
@@ -1192,7 +1192,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             nonce={nonce}
                             onSetValue={props.readOnly ? undefined : handleSetValue}
                         />
-                    )} */}
+                    )}
                 </div>
             </Card>
         </div>
