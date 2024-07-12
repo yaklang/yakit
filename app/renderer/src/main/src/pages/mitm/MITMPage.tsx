@@ -36,6 +36,10 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
+import {setRemoteValue} from "@/utils/kv"
+import {MITMConsts} from "./MITMConsts"
+import { onSetRemoteValuesBase } from "@/components/yakitUI/utils"
+import { CacheDropDownGV } from "@/yakitGV"
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
@@ -350,6 +354,32 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     //         .catch((e) => yakitFailed("获取规则列表失败:" + e))
     // })
 
+    useEffect(() => {
+        const onChangeAddrAndEnableInitialPlugin = (values) => {
+            try {
+                const valObj = JSON.parse(values) || {}
+                setAddr(`http://${valObj.host}:${valObj.port} 或 socks5://${valObj.host}:${valObj.port}`)
+                setHost(valObj.host)
+                setPort(valObj.port)
+                setEnableInitialMITMPlugin(valObj.enableInitialPlugin)
+                if (!valObj.enableInitialPlugin) {
+                    emiter.emit("onClearMITMHackPlugin")
+                }
+                setRemoteValue(MITMConsts.MITMDefaultPort, `${valObj.port}`)
+                onSetRemoteValuesBase({
+                    cacheHistoryDataKey: CacheDropDownGV.MITMDefaultHostHistoryList,
+                    newValue: valObj.host,
+                    isCacheDefaultValue: true
+                })
+                setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, valObj.enableInitialPlugin ? "true" : "")
+            } catch (error) {}
+        }
+        emiter.on("onChangeAddrAndEnableInitialPlugin", onChangeAddrAndEnableInitialPlugin)
+        return () => {
+            emiter.off("onChangeAddrAndEnableInitialPlugin", onChangeAddrAndEnableInitialPlugin)
+        }
+    }, [])
+
     return (
         <>
             <div
@@ -515,6 +545,16 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 })
         }
     })
+
+    useEffect(() => {
+        const onClearMITMHackPlugin = () => {
+            onSelectAllHijacking(false)
+        }
+        emiter.on("onClearMITMHackPlugin", onClearMITMHackPlugin)
+        return () => {
+            emiter.off("onClearMITMHackPlugin", onClearMITMHackPlugin)
+        }
+    }, [])
 
     const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
         enableMITMPluginMode(listNames)

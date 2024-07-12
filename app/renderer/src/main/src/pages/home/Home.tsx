@@ -84,6 +84,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import ReactResizeDetector from "react-resize-detector"
 import {SolidBorderDocumentTextIcon} from "@/assets/icon/colors"
+import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../mitm/MITMPage"
 const {ipcRenderer} = window.require("electron")
 
 interface ToolInfo {
@@ -379,6 +380,9 @@ const Home: React.FC<HomeProp> = (props) => {
                 } else {
                     form.setFieldsValue({port: "8083"})
                 }
+            })
+            getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((a) => {
+                form.setFieldsValue({enableInitialPlugin: !!a})
             })
 
             updateProjectDbSize()

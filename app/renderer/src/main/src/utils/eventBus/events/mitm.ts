@@ -6,5 +6,6 @@ export type MitmEventProps = {
     onSetFilterWhiteListEvent: string
     /** 是否开启替换规则 */
     onOpenRepRuleEvent: string
-    onExecStartMITM: string
+    onChangeAddrAndEnableInitialPlugin: string
+    onClearMITMHackPlugin?: string
 }

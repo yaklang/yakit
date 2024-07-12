@@ -5343,7 +5343,7 @@ const OutlineModScanPortData = () => (
                 d='M13.5 6H14.5C15.6046 6 16.5 6.89543 16.5 8V13C16.5 14.1046 15.6046 15 14.5 15H3.5C2.39543 15 1.5 14.1046 1.5 13V8C1.5 6.89543 2.39543 6 3.5 6H4.5'
                 stroke='currentColor'
                 strokeLinecap='round'
-                stroke-linejoin='round'
+                strokeLinejoin='round'
             />
             <path
                 d='M13.5 6V4.75C13.5 4.19772 13.0523 3.75 12.5 3.75H12M4.5 6V4.75C4.5 4.19772 4.94772 3.75 5.5 3.75H6'
