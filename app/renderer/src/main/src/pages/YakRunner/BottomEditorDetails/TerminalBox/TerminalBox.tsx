@@ -7,16 +7,29 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {getMapAllTerminalKey, getTerminalMap, setTerminalMap} from "./TerminalMap"
 import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
 
+export const defaultTerminaFont = "Consolas, 'Courier New', monospace"
+
 const {ipcRenderer} = window.require("electron")
+
+export const defaultTerminalFont = {
+    fontFamily: "Consolas, 'Courier New', monospace",
+    fontSize: 14
+} 
+
+export interface DefaultTerminaSettingProps {
+    fontFamily: string
+    fontSize: number
+}
+
 export interface TerminalBoxProps {
     isShowEditorDetails: boolean
     folderPath: string
-    terminaFont: string
+    defaultTerminalSetting?: DefaultTerminaSettingProps
     xtermRef: React.MutableRefObject<any>
     onExitTernimal: (path: string) => void
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {isShowEditorDetails, folderPath, terminaFont, xtermRef, onExitTernimal} = props
+    const {isShowEditorDetails, folderPath, defaultTerminalSetting = defaultTerminalFont, xtermRef, onExitTernimal} = props
 
     const terminalSizeRef = useRef<any>()
     // 写入
