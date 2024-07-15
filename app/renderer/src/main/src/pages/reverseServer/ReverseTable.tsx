@@ -266,11 +266,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                 secondNode={
                     <YakitEditor
                         readOnly={true}
-                        value={
-                            selectRow?.raw && isEmptyObject(selectRow?.raw)
-                                ? ""
-                                : Uint8ArrayToString(selectRow?.raw || new Uint8Array())
-                        }
+                        value={Uint8ArrayToString(selectRow?.raw || new Uint8Array())}
                     />
                 }
             ></YakitResizeBox>

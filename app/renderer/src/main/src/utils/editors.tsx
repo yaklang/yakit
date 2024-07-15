@@ -816,7 +816,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             const mb = bytes.length / 1024 / 1024
             // 0.5mb 及以下内容才可美化
             if (isResponse) {
-                /*TODO - 注意*/
                 formatPacketRender(StringToUint8Array(originValue), (packet) => {
                     if (packet) {
                         if (mb > 0.5) {
@@ -898,7 +897,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             wait: 300
         }
     ).run
-    /*TODO - */
     const renderCode = useDebounceFn(
         useMemoizedFn(async () => {
             if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === "render") === -1) return
