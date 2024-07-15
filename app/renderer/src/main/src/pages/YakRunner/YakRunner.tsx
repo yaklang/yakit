@@ -394,20 +394,43 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             }
                             const parentPath = await getPathParent(file.path)
                             const parentDetail = getMapFileDetail(parentPath)
-                            await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? "" : parentPath)
-                            success(`${activeFile?.name} 保存成功`)
-                            const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
-                            const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
-                            setAreaInfo && setAreaInfo(newAreaInfo)
-                            setActiveFile && setActiveFile(file)
-
-                            // 创建文件时接入历史记录
-                            const history: YakRunnerHistoryProps = {
-                                isFile: true,
-                                name,
-                                path
+                            const result = await grpcFetchCreateFile(
+                                file.path,
+                                file.code,
+                                parentDetail.isReadFail ? "" : parentPath
+                            )
+                            // 如若保存路径为文件列表中则需要更新文件树
+                            if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
+                                const data = await grpcFetchFileTree(parentPath)
+                                if (data.length > 0) {
+                                    let childArr: string[] = []
+                                    // 文件Map
+                                    data.forEach((item) => {
+                                        // 注入文件结构Map
+                                        childArr.push(item.path)
+                                        // 文件Map
+                                        setMapFileDetail(item.path, item)
+                                    })
+                                    setMapFolderDetail(parentPath, childArr)
+                                }
+                                emiter.emit("onRefreshFileTree", parentPath)
                             }
-                            setYakRunnerHistory(history)
+                            if (result.length > 0) {
+                                file.name = result[0].name
+                                success(`${result[0].name} 保存成功`)
+                                const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
+                                setAreaInfo && setAreaInfo(newAreaInfo)
+                                setActiveFile && setActiveFile(file)
+
+                                // 创建文件时接入历史记录
+                                const history: YakRunnerHistoryProps = {
+                                    isFile: true,
+                                    name,
+                                    path
+                                }
+                                setYakRunnerHistory(history)
+                            }
                         }
                     })
             }
@@ -424,7 +447,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 终端
-    const onOpenTermina = useMemoizedFn(()=>{
+    const onOpenTermina = useMemoizedFn(() => {
         emiter.emit("onOpenTerminaDetail")
     })
 
@@ -673,7 +696,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id="yakit-runnner-main-box-id">
+            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
                 <div className={styles["yak-runner-body"]}>
                     <YakitResizeBox
                         freeze={!isUnShow}
@@ -683,10 +706,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         // isShowDefaultLineStyle={false}
                         firstMinSize={isUnShow ? 25 : 200}
                         // lineInStyle={{backgroundColor:"#eaecf3"}}
-                        lineStyle={{width:4}}
+                        lineStyle={{width: 4}}
                         secondMinSize={400}
                         firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
-                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset",padding:0}}
+                        secondNodeStyle={
+                            isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
+                        }
                         secondNode={
                             <div
                                 className={classNames(styles["yak-runner-code"], {
