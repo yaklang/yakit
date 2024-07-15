@@ -25,6 +25,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {
     getCodeByPath,
     getPathJoin,
+    getRelativePath,
     grpcFetchCreateFile,
     grpcFetchCreateFolder,
     grpcFetchDeleteFile,
@@ -53,6 +54,7 @@ import {failed, success} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
 import {FileMonitorProps} from "@/utils/duplex/duplex"
+import {callCopyToClipboard} from "@/utils/basic"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -322,10 +324,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
     // 在终端中打开
     const openTernimalFun = useMemoizedFn(() => {
-        if (!info.isFolder && info.parent){
+        if (!info.isFolder && info.parent) {
             emiter.emit("onOpenTernimal", info.parent)
-        }
-        else {
+        } else {
             emiter.emit("onOpenTernimal", info.path)
         }
     })
@@ -333,6 +334,22 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 复制
     const onCopy = useMemoizedFn(() => {
         setCopyPath(info.path)
+    })
+
+    // 复制绝对路径
+    const onCopyAbsolutePath = useMemoizedFn(() => {
+        callCopyToClipboard(info.path)
+    })
+
+    // 复制相对路径
+    const onCopyRelativePath = useMemoizedFn(async () => {
+        if (fileTree.length === 0) {
+            failed(`复制相对路径失败`)
+            return
+        }
+        const basePath = fileTree[0].path
+        const relativePath = await getRelativePath(basePath, info.path)
+        callCopyToClipboard(relativePath)
     })
 
     // 粘贴
@@ -615,6 +632,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 {type: "divider"},
                 // {label: "复制", key: "copy"},
                 {label: "粘贴", key: "paste", disabled: copyPath.length === 0},
+                {label: "复制路径", key: "copyAbsolutePath"},
+                {label: "复制相对路径", key: "copyRelativePath"},
                 {type: "divider"},
                 ...base
             ]
@@ -624,6 +643,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 {label: "在终端打开", key: "openTernimal"},
                 {type: "divider"},
                 {label: "复制", key: "copy"},
+                {label: "复制路径", key: "copyAbsolutePath"},
+                {label: "复制相对路径", key: "copyRelativePath"},
                 {type: "divider"},
                 ...base
             ]
@@ -658,6 +679,12 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         break
                     case "copy":
                         onCopy()
+                        break
+                    case "copyAbsolutePath":
+                        onCopyAbsolutePath()
+                        break
+                    case "copyRelativePath":
+                        onCopyRelativePath()
                         break
                     case "paste":
                         onPaste()

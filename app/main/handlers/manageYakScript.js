@@ -350,28 +350,28 @@ module.exports = (win, getClient) => {
     })
 
     // 读取本地文件大小
-    ipcMain.handle("read-file-size", async (e,filePath) => {
+    ipcMain.handle("read-file-size", async (e, filePath) => {
         return new Promise((resolve, reject) => {
             fs.stat(filePath, (err, stats) => {
                 if (err) {
-                    reject(err);
+                    reject(err)
                 } else {
-                    resolve(stats.size); // 文件大小以字节为单位
+                    resolve(stats.size) // 文件大小以字节为单位
                 }
-            });
+            })
         })
     })
 
     // 读取本地文件内容(同时校验其文件大小是否读取本地文件10M，大于则不读取)
-    ipcMain.handle("read-file-content", async (e,params) => {
+    ipcMain.handle("read-file-content", async (e, params) => {
         return new Promise((resolve, reject) => {
-            fs.readFile(params, 'utf-8', function (err, data) {
+            fs.readFile(params, "utf-8", function (err, data) {
                 if (err) {
                     reject(err)
                 } else {
                     resolve(data)
                 }
-            });
+            })
         })
     })
 
@@ -395,6 +395,13 @@ module.exports = (win, getClient) => {
         } else {
             return path.basename(filePath, path.extname(filePath))
         }
+    })
+
+    // 获取相对路径
+    ipcMain.handle("relativePathByBase", async (e, params) => {
+        const {basePath, filePath} = params
+        const relativePath = path.relative(basePath, filePath)
+        return relativePath
     })
 
     // asyncQueryYakScriptExecResult wrapper

@@ -18,7 +18,12 @@ import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {ExecResult} from "@/pages/invoker/schema"
 import {writeExecResultXTerm, writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
 import ReactResizeDetector from "react-resize-detector"
-import {TerminalBox} from "./TerminalBox/TerminalBox"
+import {
+    defaultTerminaFont,
+    defaultTerminalFont,
+    DefaultTerminaSettingProps,
+    TerminalBox
+} from "./TerminalBox/TerminalBox"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidCheckIcon} from "@/assets/icon/solid"
@@ -27,6 +32,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {removeTerminalMap} from "./TerminalBox/TerminalMap"
 import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
+import {RemoteGV} from "@/yakitGV"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -39,19 +46,22 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const [showType, setShowType] = useState<ShowItemType[]>([])
 
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
-    const defaultTerminaFont = "Consolas, 'Courier New', monospace"
-    const [terminaFont, setTerminaFont] = useState<string>(defaultTerminaFont)
 
-    const SetYakRunnerTerminaFont = "SetYakRunnerTerminaFont"
+    const [terminaFont, setTerminaFont] = useState<DefaultTerminaSettingProps>(defaultTerminalFont)
+
     // 缓存字体设置
     useUpdateEffect(() => {
-        setRemoteValue(SetYakRunnerTerminaFont, terminaFont)
+        setRemoteValue(RemoteGV.YakitXtermSetting, JSON.stringify(terminaFont))
     }, [terminaFont])
+
     // 更改默认值
     useEffect(() => {
-        getRemoteValue(SetYakRunnerTerminaFont).then((font) => {
-            if (!font) return
-            setTerminaFont(font)
+        getRemoteValue(RemoteGV.YakitXtermSetting).then((value) => {
+            if (!value) return
+            try {
+                const terminaFont = JSON.parse(value) as DefaultTerminaSettingProps
+                setTerminaFont(terminaFont)
+            } catch (error) {}
         })
     }, [])
 
@@ -267,11 +277,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             placement='left'
                             trigger='click'
                             overlayClassName={styles["yak-runner-menu-popover"]}
-                            title={
-                                <div style={{display: "flex"}}>
-                                    终端字体配置
-                                </div>
-                            }
+                            title={<div style={{display: "flex"}}>终端字体配置</div>}
                             content={
                                 <>
                                     <div className={styles["title-font"]}>
@@ -279,7 +285,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                         <span
                                             className={styles["default-font"]}
                                             onClick={() => {
-                                                setTerminaFont(defaultTerminaFont)
+                                                setTerminaFont({...terminaFont, fontFamily: defaultTerminaFont})
                                             }}
                                         >
                                             Termina: Font Family
@@ -288,18 +294,43 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                     </div>
                                     <YakitInput
                                         size='small'
-                                        value={terminaFont}
+                                        value={terminaFont.fontFamily}
                                         onChange={(e) => {
-                                            setTerminaFont(e.target.value)
+                                            const str = e.target.value
+                                            if (str.length > 0) {
+                                                setTerminaFont({...terminaFont, fontFamily: str})
+                                            }
                                         }}
                                         placeholder='请输入字体'
+                                    />
+                                    <div className={styles["title-font"]} style={{marginTop: 4}}>
+                                        控制终端的字体大小，默认为{" "}
+                                        <span
+                                            className={styles["default-font"]}
+                                            onClick={() => {
+                                                setTerminaFont({...terminaFont, fontSize: 14})
+                                            }}
+                                        >
+                                            14
+                                        </span>{" "}
+                                        。
+                                    </div>
+                                    <YakitInputNumber
+                                        style={{width: "100%"}}
+                                        size='small'
+                                        min={1}
+                                        value={terminaFont.fontSize}
+                                        onChange={(v) => {
+                                            setTerminaFont({...terminaFont, fontSize: v as number})
+                                        }}
                                     />
                                 </>
                             }
                             onVisibleChange={(v) => {
                                 if (!v) {
                                     if (terminalRef.current) {
-                                        terminalRef.current.terminal.options.fontFamily = terminaFont
+                                        terminalRef.current.terminal.options.fontFamily = terminaFont.fontFamily
+                                        terminalRef.current.terminal.options.fontSize = terminaFont.fontSize
                                     }
                                 }
                                 setPopoverVisible(v)
@@ -365,7 +396,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         <TerminalBox
                             folderPath={folderPath}
                             isShowEditorDetails={isShowEditorDetails}
-                            terminaFont={terminaFont}
+                            defaultTerminalSetting={terminaFont}
                             xtermRef={terminalRef}
                             onExitTernimal={onExitTernimal}
                         />

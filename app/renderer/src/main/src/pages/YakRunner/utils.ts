@@ -733,6 +733,25 @@ export const getNameByPath = (filePath: string): Promise<string> => {
 }
 
 /**
+ * @name 获取相对路径（兼容多系统）
+ */
+export const getRelativePath = (basePath: string, filePath: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("relativePathByBase", {
+                basePath,
+                filePath
+            })
+            .then((relativePath: string) => {
+                resolve(relativePath)
+            })
+            .catch(() => {
+                resolve("")
+            })
+    })
+}
+
+/**
  * @name 用于用户操作过快时文件夹内数据还未来得及加载,提前加载
  */
 export const loadFolderDetail = (path) => {
