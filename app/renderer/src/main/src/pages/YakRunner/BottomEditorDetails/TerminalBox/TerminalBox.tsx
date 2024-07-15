@@ -200,7 +200,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
             <YakitXterm
                 ref={xtermRef}
                 options={{
-                    // fontFamily: '"Courier New", Courier, monospace',
+                    // fontFamily: '"Courier New", Courier, monospace', //"Menlo"
                     fontFamily: terminaFont,
                     convertEol: true,
                     theme: {

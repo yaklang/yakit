@@ -15,13 +15,9 @@ import {SyntaxCheckList} from "./SyntaxCheckList/SyntaxCheckList"
 import useStore from "../hooks/useStore"
 import emiter from "@/utils/eventBus/eventBus"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
-import {CVXterm} from "@/components/CVXterm"
 import {ExecResult} from "@/pages/invoker/schema"
 import {writeExecResultXTerm, writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
 import ReactResizeDetector from "react-resize-detector"
-import {defaultXTermOptions} from "@/components/baseConsole/BaseConsole"
-import {XTerm} from "xterm-for-react"
-import {YakitSystem} from "@/yakitGVDefine"
 import {TerminalBox} from "./TerminalBox/TerminalBox"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -30,6 +26,7 @@ import {ChevronDownIcon, ChevronUpIcon, InformationCircleIcon} from "@/assets/ne
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {removeTerminalMap} from "./TerminalBox/TerminalMap"
+import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -103,8 +100,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const onOpenTerminaDetailFun = useMemoizedFn(() => {
         // 已打开
         if (isShowEditorDetails) {
+            if (showItem !== "terminal") {
+                setShowItem("terminal")
+            }
             // 有焦点则关闭
-            if (terminalFocusRef.current) {
+            else if (terminalFocusRef.current) {
                 terminalRef.current.terminal.blur()
                 terminalFocusRef.current = false
                 setEditorDetails(false)
@@ -270,9 +270,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             title={
                                 <div style={{display: "flex"}}>
                                     终端字体配置
-                                    <Tooltip title='字体设置后需重启终端生效'>
-                                        <InformationCircleIcon className={styles["info-icon"]} />
-                                    </Tooltip>
                                 </div>
                             }
                             content={
@@ -302,7 +299,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             onVisibleChange={(v) => {
                                 if (!v) {
                                     if (terminalRef.current) {
-                                        // terminalRef.current.terminal.clearTextureAtlas()
+                                        terminalRef.current.terminal.options.fontFamily = terminaFont
                                     }
                                 }
                                 setPopoverVisible(v)
@@ -440,39 +437,39 @@ export const OutputInfo: React.FC<OutputInfoProps> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <XTerm
+            <YakitXterm
                 ref={xtermRef}
                 customKeyEventHandler={onCopy}
                 options={{
                     convertEol: true,
                     theme: {
-                        foreground: "#536870",
-                        background: "#ffffff",
-                        cursor: "#536870",
+                        foreground: "#e5c7a9",
+                        background: "#31343F",
+                        cursor: "#f6f7ec",
 
-                        black: "#002831",
-                        brightBlack: "#001e27",
+                        black: "#121418",
+                        brightBlack: "#675f54",
 
-                        red: "#d11c24",
-                        brightRed: "#bd3613",
+                        red: "#c94234",
+                        brightRed: "#ff645a",
 
-                        green: "#738a05",
-                        brightGreen: "#475b62",
+                        green: "#85c54c",
+                        brightGreen: "#98e036",
 
-                        yellow: "#a57706",
-                        brightYellow: "#536870",
+                        yellow: "#f5ae2e",
+                        brightYellow: "#e0d561",
 
-                        blue: "#2176c7",
-                        brightBlue: "#708284",
+                        blue: "#1398b9",
+                        brightBlue: "#5fdaff",
 
-                        magenta: "#c61c6f",
-                        brightMagenta: "#5956ba",
+                        magenta: "#d0633d",
+                        brightMagenta: "#ff9269",
 
-                        cyan: "#259286",
-                        brightCyan: "#819090",
+                        cyan: "#509552",
+                        brightCyan: "#84f088",
 
-                        white: "#eae3cb",
-                        brightWhite: "#fcf4dc"
+                        white: "#e5c6aa",
+                        brightWhite: "#f6f7ec"
                     }
                 }}
             />
