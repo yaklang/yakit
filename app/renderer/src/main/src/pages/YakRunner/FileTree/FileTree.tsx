@@ -321,8 +321,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     // 在终端中打开
-    const openTernimalFun = useMemoizedFn((path)=>{
-        emiter.emit("onOpenTernimal",path)
+    const openTernimalFun = useMemoizedFn(() => {
+        if (!info.isFolder && info.parent){
+            emiter.emit("onOpenTernimal", info.parent)
+        }
+        else {
+            emiter.emit("onOpenTernimal", info.path)
+        }
     })
 
     // 复制
@@ -616,6 +621,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         } else {
             return [
                 {label: "在文件夹中显示", key: "openFileSystem"},
+                {label: "在终端打开", key: "openTernimal"},
                 {type: "divider"},
                 {label: "复制", key: "copy"},
                 {type: "divider"},
@@ -647,9 +653,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     case "openFileSystem":
                         openABSFileLocated(info.path)
                         break
-                        case "openTernimal":
-                            openTernimalFun(info.path)
-                            break
+                    case "openTernimal":
+                        openTernimalFun()
+                        break
                     case "copy":
                         onCopy()
                         break
