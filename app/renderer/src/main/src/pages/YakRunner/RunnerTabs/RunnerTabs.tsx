@@ -53,6 +53,7 @@ import {
     getPathParent,
     getYakRunnerHistory,
     grpcFetchCreateFile,
+    grpcFetchFileTree,
     grpcFetchRenameFileTree,
     grpcFetchSaveFile,
     isResetActiveFile,
@@ -772,8 +773,8 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
         }
     })
 
-    const ref = useRef(null);
-    const size = useSize(ref);
+    const ref = useRef(null)
+    const size = useSize(ref)
     const onScrollTabMenu = useThrottleFn(
         (e) => {
             if (tabMenuSubRef.current) {
@@ -791,7 +792,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
 
     useUpdateEffect(() => {
         onScrollTabMenu()
-    }, [tabsList,size?.width])
+    }, [tabsList, size?.width])
 
     return (
         <div className={classNames(styles["runner-tab-bar"])} ref={ref}>
@@ -983,7 +984,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         if (editorInfo) {
             const newEditorInfo = {...editorInfo, code: content}
             // 未保存文件不用自动保存
-            if(!editorInfo?.isUnSave){
+            if (!editorInfo?.isUnSave) {
                 autoSaveCurrentFile.run(newEditorInfo)
             }
             setEditorInfo(newEditorInfo)
@@ -1312,7 +1313,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         setWaitRemoveAll
     } = props
     const {setActiveFile, setAreaInfo} = useDispatcher()
-    const {areaInfo} = useStore()
+    const {fileTree, areaInfo} = useStore()
 
     const [codePath, setCodePath] = useState<string>("")
 
@@ -1365,26 +1366,49 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                 }
                 const parentPath = await getPathParent(file.path)
                 const parentDetail = getMapFileDetail(parentPath)
-                await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? "" : parentPath)
-                success(`${file.name} 保存成功`)
-                // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
-                const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
-                const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile(file)
-
-                if (waitSaveList.length > 0) {
-                    // 减少保存队列
-                    setWaitSaveList(waitSaveList.slice(0, -1))
+                const result = await grpcFetchCreateFile(
+                    file.path,
+                    file.code,
+                    parentDetail.isReadFail ? "" : parentPath
+                )
+                // 如若保存路径为文件列表中则需要更新文件树
+                if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
+                    const data = await grpcFetchFileTree(parentPath)
+                    if (data.length > 0) {
+                        let childArr: string[] = []
+                        // 文件Map
+                        data.forEach((item) => {
+                            // 注入文件结构Map
+                            childArr.push(item.path)
+                            // 文件Map
+                            setMapFileDetail(item.path, item)
+                        })
+                        setMapFolderDetail(parentPath, childArr)
+                    }
+                    emiter.emit("onRefreshFileTree", parentPath)
                 }
+                if (result.length > 0) {
+                    file.name = result[0].name
+                    success(`${file.name} 保存成功`)
+                    // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
+                    const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
+                    const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
+                    setAreaInfo && setAreaInfo(newAreaInfo)
+                    setActiveFile && setActiveFile(file)
 
-                // 创建文件时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                    isFile: true,
-                    name,
-                    path
+                    if (waitSaveList.length > 0) {
+                        // 减少保存队列
+                        setWaitSaveList(waitSaveList.slice(0, -1))
+                    }
+
+                    // 创建文件时接入历史记录
+                    const history: YakRunnerHistoryProps = {
+                        isFile: true,
+                        name,
+                        path
+                    }
+                    setYakRunnerHistory(history)
                 }
-                setYakRunnerHistory(history)
             } else {
                 warn("未获取保存路径，取消保存")
                 onCancle()
