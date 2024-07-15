@@ -1,27 +1,26 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Divider, Form, Popconfirm, Tag, Tooltip} from "antd"
+import {Form, Tag, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn, useVirtualList} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import {useGetState, useInterval, useMemoizedFn, useVirtualList} from "ahooks"
 import styles from "./shellReceiver.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed, success} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {DocumentDuplicateSvgIcon, RemoveIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
+import {RemoveIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {OutlineExitIcon, OutlineSearchIcon, OutlineStorageIcon} from "@/assets/icon/outline"
+import {OutlineExitIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidDocumentduplicateIcon} from "@/assets/icon/solid"
-import {CVXterm} from "@/components/CVXterm"
 import {TERMINAL_INPUT_KEY} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {InputInteger, InputItem} from "@/utils/inputUtil"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {RemoteGV} from "@/yakitGV"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {apiCancelListeningPort} from "./utils"
 const {ipcRenderer} = window.require("electron")
 
 export interface ShellReceiverLeftListProps {
@@ -31,10 +30,10 @@ export interface ShellReceiverLeftListProps {
     setType: (v: "Reverse" | "MSFVenom") => void
     setShowDetail: (v: boolean) => void
 }
-
+type SystemType = "Linux" | "Windows" | "Mac" | "All"
 export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (props) => {
     const {fold, setFold, type, setType, setShowDetail} = props
-    const [systemType, setSystemType] = useState<"Linux" | "Windows" | "Mac">("Windows")
+    const [systemType, setSystemType] = useState<SystemType>("Windows")
     const [originalList, setOriginalList] = useState<any[]>(["1", "2", "3"])
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
@@ -54,7 +53,6 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                 <div className={styles["title-select-box"]}>
                     <div className={styles["title"]}>代码生成器</div>
                     <YakitRadioButtons
-                        // size='small'
                         value={type}
                         onChange={(e) => {
                             setType(e.target.value)
@@ -93,6 +91,7 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                         }}
                         placeholder='请选择...'
                     >
+                        <YakitSelect value='All'>All</YakitSelect>
                         <YakitSelect value='Linux'>Linux</YakitSelect>
                         <YakitSelect value='Windows'>Windows</YakitSelect>
                         <YakitSelect value='Mac'>Mac</YakitSelect>
@@ -100,11 +99,7 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                 </div>
                 <div className={styles["input-box"]}>
                     <YakitInput
-                        prefix={
-                            <div className={styles["prefix"]}>
-                                <OutlineSearchIcon />
-                            </div>
-                        }
+                        prefix={<OutlineSearchIcon className={styles["prefix"]} />}
                         placeholder='请输入关键词搜索'
                     />
                 </div>
@@ -168,7 +163,6 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                         <div className={styles["title"]}>Shell</div>
                         <YakitSelect
                             wrapperStyle={{width: 164}}
-                            value={""}
                             onSelect={(val) => {
                                 // setSystemType(val)
                             }}
@@ -181,7 +175,6 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                         <div className={styles["title"]}>Encoding</div>
                         <YakitSelect
                             wrapperStyle={{width: 164}}
-                            value={""}
                             onSelect={(val) => {
                                 // setSystemType(val)
                             }}
@@ -203,11 +196,12 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
 export interface ShellReceiverRightRunProps {
     fold: boolean
     setFold: (v: boolean) => void
+    onCancelMonitor: () => void
 }
 
 export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (props) => {
-    const {fold, setFold} = props
-    const [echoBack, setEchoBack, getEchoBack] = useGetState(true)
+    const {fold, setFold, onCancelMonitor} = props
+    const [echoBack, setEchoBack, getEchoBack] = useGetState(false)
     const xtermRef = React.useRef<any>(null)
     const write = useMemoizedFn((s) => {
         if (!xtermRef || !xtermRef.current) {
@@ -245,7 +239,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                     <YakitPopconfirm
                         title={"确定关闭该端口吗？"}
                         onConfirm={() => {
-                            // removeListenPort(addr)
+                            onCancelMonitor()
                         }}
                     >
                         <YakitButton danger={true} type={"primary"}>
@@ -281,35 +275,66 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
     const [isShowDetail, setShowDetail] = useState<boolean>(false)
     const [isShowStart, setShowStart] = useState<boolean>(true)
 
-    const [addrs, setAddrs] = useState<string[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [addrList, setAddrList] = useState<string[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const [interval, setInterval] = useState<number | undefined>(1000)
 
     const [form] = Form.useForm()
 
+    const hostRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
+    const currentAddRef = useRef<string>("")
+
+    useInterval(() => {
+        ipcRenderer.invoke("listening-port-query-addrs").then((r) => {
+            setAddrList(r)
+        })
+    }, interval)
+
+    useEffect(() => {
+        return () => {
+            onCancelMonitor()
+        }
+    }, [])
+
+    const onCancelMonitor = useMemoizedFn(() => {
+        apiCancelListeningPort(currentAddRef.current).then(()=>{
+            setShowStart(true)
+        })
+    })
+
     const onStartMonitor = useMemoizedFn((value: MonitorFormProps) => {
-        const {host,port} = value
-        const addr = `${host}:${port}`;
+        const {host, port} = value
+        const addr = `${host}:${port}`
         if (!addr.includes(":")) {
             failed(`无法启动端口监听程序，端口格式不合理: [${addr}]`)
             return
         }
         if (!host || !port) {
             failed(`无法解析主机/端口`)
-            return;
+            return
         }
-        if (addrs.includes(addr)) {
+        if (addrList.includes(addr)) {
             failed("该地址已经被占用: " + addr)
-            return;
+            return
+        }
+        if (host) {
+            hostRef.current.onSetRemoteValues(host)
         }
         setLoading(true)
-        ipcRenderer.invoke("listening-port", host, port).then(() => {
-            success("监听端口成功")
-        }).catch((e: any) => {
-            failed(`ERROR: ${JSON.stringify(e)}`)
-        }).finally(() => {
-            // waitingSyncAddr()
-            setTimeout(() => setLoading(false), 300)
-        })
+        ipcRenderer
+            .invoke("listening-port", host, port)
+            .then(() => {
+                success("监听端口成功")
+                setInterval(undefined)
+                setShowStart(false)
+                currentAddRef.current = addr
+            })
+            .finally(() => {
+                setTimeout(() => setLoading(false), 300)
+            })
         console.log("onStartMonitor---", value)
     })
     return (
@@ -335,16 +360,23 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
                                 name={"host"}
                             >
                                 <YakitAutoComplete
+                                    ref={hostRef}
+                                    cacheHistoryDataKey={RemoteGV.ReverseShellReceiverHostList}
                                     placeholder={"请输入监听的主机"}
                                     options={["0.0.0.0", "127.0.0.1", "192.168.1.235"].map((i) => {
                                         return {value: i, label: i}
                                     })}
                                 />
                             </Form.Item>
-                            <Form.Item rules={[{required: true, message: "该项为必填"}]} label={"端口"} name={"port"}>
+                            <Form.Item
+                                rules={[{required: true, message: "该项为必填"}]}
+                                label={"端口"}
+                                name={"port"}
+                                initialValue={8085}
+                            >
                                 <YakitInputNumber min={1} max={65535} placeholder='请输入端口' />
                             </Form.Item>
-                            <Form.Item label=" " colon={false}>
+                            <Form.Item label=' ' colon={false}>
                                 <YakitButton htmlType='submit' size='large'>
                                     启动监听
                                 </YakitButton>
@@ -366,7 +398,7 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
                             {isShowDetail && <ShellReceiverMiddleItem setShowDetail={setShowDetail} />}
                         </>
                     )}
-                    <ShellReceiverRightRun fold={fold} setFold={setFold} />
+                    <ShellReceiverRightRun fold={fold} setFold={setFold} onCancelMonitor={onCancelMonitor} />
                 </div>
             )}
         </>
