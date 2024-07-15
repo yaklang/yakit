@@ -589,8 +589,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
     // 单个上传成功后
     const handleSingleUploadAfter = useMemoizedFn((info: YakScript) => {
-        ipcRenderer
-            .invoke("GetYakScriptByName", {Name: info.ScriptName})
+        grpcFetchLocalPluginDetail({Name: info.ScriptName}, true)
             .then((i: YakScript) => {
                 const newItem = {...i, isLocalPlugin: privateDomain.current !== i.OnlineBaseUrl}
                 dispatch({

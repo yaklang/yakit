@@ -1,13 +1,7 @@
 import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-import {
-    PluginStarsRequest,
-    apiFetchLocalPluginInfo,
-    apiFetchOnlinePluginInfo,
-    apiGetYakScriptById,
-    apiPluginStars
-} from "@/pages/plugins/utils"
+import {PluginStarsRequest, apiFetchOnlinePluginInfo, apiGetYakScriptById, apiPluginStars} from "@/pages/plugins/utils"
 import {API} from "@/services/swagger/resposeType"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -37,6 +31,8 @@ import {PluginComment} from "@/pages/plugins/baseComment"
 import {LocalPluginExecute} from "@/pages/plugins/local/LocalPluginExecute"
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
+import {RemotePluginGV} from "@/enums/plugin"
+import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -76,6 +72,24 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             )
         })
 
+        useUpdateEffect(() => {
+            if (isLogin) {
+                setOnlinePlugin((val) => {
+                    if (!val) return undefined
+                    else {
+                        return {...val, isAuthor: userinfo.user_id === val.user_id}
+                    }
+                })
+            } else {
+                setOnlinePlugin((val) => {
+                    if (!val) return undefined
+                    else {
+                        return {...val, isAuthor: false}
+                    }
+                })
+            }
+        }, [isLogin])
+
         // 私有域
         const privateDomain = useRef<string>("")
         const fetchPrivateDomain = useMemoizedFn(() => {
@@ -87,11 +101,38 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             privateDomain.current = value.BaseUrl
                         } catch (error) {}
                     }
+                    if (["online", "comment", "log"].includes(activeKey)) setLoading(true)
+                    apiFetchOnlinePluginInfo({uuid: currentRequest.current?.uuid}, true)
+                        .then((res) => {
+                            setOnlinePlugin({
+                                ...res,
+                                starsCountString: thousandthConversion(res.stars),
+                                commentCountString: thousandthConversion(res.comment_num),
+                                downloadedTotalString: thousandthConversion(res.downloaded_total)
+                            })
+                        })
+                        .catch(() => {
+                            onError(true, false, "请从左侧列表重新选择插件")
+                        })
+                        .finally(() => {
+                            setTimeout(() => {
+                                setLoading(false)
+                            }, 300)
+                        })
                 })
                 .catch(() => {})
         })
         useEffect(() => {
-            fetchPrivateDomain()
+            getRemoteValue(RemoteGV.HttpSetting)
+                .then((res) => {
+                    if (res) {
+                        try {
+                            const value = JSON.parse(res)
+                            privateDomain.current = value.BaseUrl
+                        } catch (error) {}
+                    }
+                })
+                .catch(() => {})
             emiter.on("onSwitchPrivateDomain", fetchPrivateDomain)
             emiter.on("editorLocalSaveToDetail", handleUpdateLocalPlugin)
             return () => {
@@ -201,7 +242,12 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const fetchLocalPlugin: () => Promise<YakScript> = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
                 if (!currentRequest.current || !currentRequest.current.name) return reject("false")
-                apiFetchLocalPluginInfo(currentRequest.current.name, true).then(resolve).catch(reject)
+                grpcFetchLocalPluginDetail(
+                    {Name: currentRequest.current.name, UUID: currentRequest.current?.uuid || undefined},
+                    true
+                )
+                    .then(resolve)
+                    .catch(reject)
             })
         })
 
@@ -225,10 +271,14 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 .then((res) => {
                     if (name !== currentRequest.current?.name) return
                     const [online, local] = res
-                    let activeTab = ""
+                    let onlineTab: boolean = false
+                    let localTab: boolean = false
+                    // 用于判断线上和线下插件是否为一个作者，可能存在同名但线下没有 uuid 的情况
+                    let onlineInfoUUID: string = ""
 
                     if (online.status === "fulfilled") {
-                        activeTab = "online"
+                        onlineTab = true
+                        onlineInfoUUID = online.value?.uuid
                         setOnlinePlugin({
                             ...online.value,
                             starsCountString: thousandthConversion(online.value.stars),
@@ -238,22 +288,32 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     }
                     if (online.status === "rejected") {
                         setOnlinePlugin(undefined)
-                        // const {reason} = online as PromiseRejectedResult
-                        // if (reason !== "false") yakitNotify("error", `获取线上插件错误: ${reason}`)
                     }
 
                     if (local.status === "fulfilled") {
-                        activeTab = "exectue"
-                        setLocalPlugin({...local.value})
+                        if ((!local.value.UUID && onlineInfoUUID) || onlineInfoUUID !== local.value?.UUID) {
+                            setLocalPlugin(undefined)
+                        } else {
+                            localTab = true
+                            setLocalPlugin({...local.value})
+                        }
                     }
                     if (local.status === "rejected") {
                         setLocalPlugin(undefined)
-                        // const {reason} = local as PromiseRejectedResult
-                        // if (reason !== "false") yakitNotify("error", `获取本地插件错误: ${reason}`)
                     }
 
-                    if (activeTab) {
-                        if (!banUpdateActiveTab) setActiveKey(activeTab)
+                    if (onlineTab || localTab) {
+                        if (!banUpdateActiveTab) {
+                            let tab = localTab ? "exectue" : onlineTab ? "online" : ""
+                            setActiveKey(tab)
+                        } else {
+                            if (["exectue", "local"].includes(activeKey) && onlineTab && !localTab) {
+                                setActiveKey("online")
+                            }
+                            if (["online", "comment", "log"].includes(activeKey) && !onlineTab && localTab) {
+                                setActiveKey("exectue")
+                            }
+                        }
                         onError(false)
                     } else {
                         onError(true, true, "未获取到插件信息，请刷新重试!")
@@ -272,22 +332,41 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         /** ---------- 获取插件信息逻辑 End ---------- */
 
         /** ---------- 插件操作逻辑 Start ---------- */
+        useEffect(() => {
+            // 单个下载的同名覆盖二次确认框缓存
+            getRemoteValue(RemotePluginGV.SingleDownloadPluginSameNameOverlay)
+                .then((res) => {
+                    singleSameNameCache.current = res === "true"
+                })
+                .catch((err) => {})
+        }, [])
+        const singleSameNameCache = useRef<boolean>(false)
+        const [singleSameNameHint, setSingleSameNameHint] = useState<boolean>(false)
+        const handleSingleSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+            if (isOK) {
+                singleSameNameCache.current = cache
+                const data = onlinePlugin?.uuid
+                if (data) onDownload(data)
+                else {
+                    if (operateRef && operateRef.current) operateRef.current.downloadedNext(false)
+                    setDownloadLoading(false)
+                }
+            } else {
+                if (operateRef && operateRef.current) operateRef.current.downloadedNext(false)
+                setDownloadLoading(false)
+            }
+            setSingleSameNameHint(false)
+        })
+
         const operateRef = useRef<HubExtraOperateRef>(null)
         const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
         // 下载插件
-        const onDownload = useMemoizedFn(() => {
-            if (!onlinePlugin) {
-                if (operateRef && operateRef.current) operateRef.current.downloadedNext(false)
-                return
-            }
-            if (downloadLoading) return
-            setDownloadLoading(true)
-
+        const onDownload = useMemoizedFn((uuid: string) => {
+            yakitNotify("info", "开始下载插件")
             let flag: boolean = false
-            const currentUUID = onlinePlugin.uuid
-            grpcDownloadOnlinePlugin({uuid: onlinePlugin.uuid})
+            grpcDownloadOnlinePlugin({uuid: uuid})
                 .then((res) => {
-                    if (onlinePlugin.uuid !== currentUUID) return
+                    if (onlinePlugin?.uuid !== uuid) return
                     setLocalPlugin({...res})
                     flag = true
                     setOnlinePlugin((plugin) => {
@@ -301,16 +380,40 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     yakitNotify("success", "下载插件成功")
                 })
                 .catch((err) => {
-                    if (onlinePlugin.uuid !== currentUUID) return
+                    if (onlinePlugin?.uuid !== uuid) return
                     yakitNotify("error", `下载插件失败: ${err}`)
                     flag = false
                 })
                 .finally(() => {
-                    if (onlinePlugin.uuid !== currentUUID) return
+                    if (onlinePlugin?.uuid !== uuid) return
                     setTimeout(() => {
                         if (operateRef && operateRef.current) operateRef.current.downloadedNext(flag)
                         setDownloadLoading(false)
                     }, 200)
+                })
+        })
+        const handleDownload = useMemoizedFn(() => {
+            if (!onlinePlugin || !onlinePlugin?.uuid) {
+                if (operateRef && operateRef.current) operateRef.current.downloadedNext(false)
+                return
+            }
+            if (downloadLoading) return
+            setDownloadLoading(true)
+
+            grpcFetchLocalPluginDetail({Name: onlinePlugin.script_name, UUID: onlinePlugin.uuid}, true)
+                .then((res) => {
+                    const {ScriptName, UUID} = res
+                    if (ScriptName === onlinePlugin.script_name && UUID !== onlinePlugin.uuid) {
+                        if (!singleSameNameCache.current) {
+                            if (singleSameNameHint) return
+                            setSingleSameNameHint(true)
+                            return
+                        }
+                    }
+                    onDownload(onlinePlugin.uuid)
+                })
+                .catch((err) => {
+                    onDownload(onlinePlugin.uuid)
                 })
         })
 
@@ -343,8 +446,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             if (type === "upload") {
                 if (!localPlugin) return
                 // 获取最新的本地信息
-                ipcRenderer
-                    .invoke("GetYakScriptByName", {Name: localPlugin.ScriptName})
+                grpcFetchLocalPluginDetail({Name: localPlugin.ScriptName}, true)
                     .then((i: YakScript) => {
                         setLocalPlugin({...i, isLocalPlugin: privateDomain.current !== i.OnlineBaseUrl})
                         // 刷新本地列表
@@ -522,7 +624,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     getContainer={wrapperId}
                     online={onlinePlugin}
                     local={localPlugin}
-                    onDownload={onDownload}
+                    onDownload={handleDownload}
                     onEdit={handleOpenEditHint}
                     onCallback={operateCallback}
                 />
@@ -549,7 +651,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         loading={downloadLoading}
                         icon={<OutlineClouddownloadIcon />}
                         title={onlinePlugin.downloadedTotalString || ""}
-                        onClick={onDownload}
+                        onClick={handleDownload}
                     />
                 </div>
             )
@@ -750,6 +852,15 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         onCallback={handleEditHintCallback}
                     />
                 )}
+
+                {/* 单个下载同名覆盖提示 */}
+                <NoPromptHint
+                    visible={singleSameNameHint}
+                    title='同名覆盖提示'
+                    content='本地有插件同名，下载将会覆盖，是否下载'
+                    cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
+                    onCallback={handleSingleSameNameHint}
+                />
             </div>
         )
     })

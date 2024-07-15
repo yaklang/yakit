@@ -924,11 +924,14 @@ export const FooterExtraBtn: React.FC<FooterExtraBtnProps> = memo((props) => {
 interface OnlineOptFooterExtraProps {
     isLogin: boolean
     info: YakitPluginOnlineDetail
+    /** 当前正在执行下载的插件UUID队列 */
+    execDownloadInfo?: YakitPluginOnlineDetail[]
+    onDownload: (data: YakitPluginOnlineDetail) => void
     callback: (type: string, info: YakitPluginOnlineDetail) => any
 }
 /** @name 插件商店单项-点赞|下载 */
 export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((props) => {
-    const {isLogin, info, callback} = props
+    const {isLogin, info, execDownloadInfo = [], onDownload, callback} = props
 
     const [starLoading, setStarLoading] = useState<boolean>(false)
     const onStar = useMemoizedFn((e) => {
@@ -960,29 +963,20 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
             )
     })
 
-    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-    const onDownload = useMemoizedFn((e) => {
+    const downloadLoading = useMemo(() => {
+        if (!execDownloadInfo || execDownloadInfo.length === 0) return false
+        const findIndex = execDownloadInfo.findIndex((ele) => ele.uuid === info.uuid)
+        if (findIndex > -1) return true
+        return false
+    }, [info, execDownloadInfo])
+    const handleDownload = useMemoizedFn((e) => {
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
             yakitNotify("error", "插件信息错误，无法进行下载操作")
             return
         }
-
-        setDownloadLoading(true)
-        let request: DownloadOnlinePluginsRequest = {
-            UUID: [info.uuid]
-        }
-        apiDownloadPluginOnline(request)
-            .then(() => {
-                callback("download", info)
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setDownloadLoading(false)
-                }, 200)
-            })
+        onDownload(info)
     })
 
     return (
@@ -998,7 +992,7 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
                 loading={downloadLoading}
                 icon={<OutlineClouddownloadIcon />}
                 title={info.downloadedTotalString || ""}
-                onClick={onDownload}
+                onClick={handleDownload}
             />
         </div>
     )
@@ -1007,6 +1001,9 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
 interface OwnOptFooterExtraProps {
     isLogin: boolean
     info: YakitPluginOnlineDetail
+    /** 当前正在执行下载的插件UUID队列 */
+    execDownloadInfo?: YakitPluginOnlineDetail[]
+    onDownload: (data: YakitPluginOnlineDetail) => void
     /** 当前正在执行删除的插件UUID队列 */
     execDelInfo?: YakitPluginOnlineDetail[]
     onDel: (data: YakitPluginOnlineDetail) => void
@@ -1014,35 +1011,26 @@ interface OwnOptFooterExtraProps {
 }
 /** @name 我的插件单项-下载|分享|更多(改公开|删除) */
 export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) => {
-    const {isLogin, info, execDelInfo = [], onDel, callback} = props
+    const {isLogin, info, execDownloadInfo = [], onDownload, execDelInfo = [], onDel, callback} = props
 
     const userinfo = useStore((s) => s.userInfo)
 
-    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-    // 下载
-    const onDownload = useMemoizedFn((e) => {
+    const downloadLoading = useMemo(() => {
+        if (!execDownloadInfo || execDownloadInfo.length === 0) return false
+        const findIndex = execDownloadInfo.findIndex((ele) => ele.uuid === info.uuid)
+        if (findIndex > -1) return true
+        return false
+    }, [info, execDownloadInfo])
+    const handleDownload = useMemoizedFn((e) => {
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "异常错误，未获取到插件信息")
+            yakitNotify("error", "插件信息错误，无法进行下载操作")
             return
         }
-
-        setDownloadLoading(true)
-        let request: DownloadOnlinePluginsRequest = {
-            UUID: [info.uuid]
-        }
-        apiDownloadPluginMine(request)
-            .then(() => {
-                callback("download", info)
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setDownloadLoading(false)
-                }, 200)
-            })
+        onDownload(info)
     })
+
     // 分享
     const onShare = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -1162,7 +1150,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
                 type='text2'
                 icon={<OutlineClouddownloadIcon />}
                 loading={downloadLoading}
-                onClick={onDownload}
+                onClick={handleDownload}
             />
             <div className={styles["divider-style"]}></div>
             <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={onShare} />

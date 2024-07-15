@@ -307,7 +307,6 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             yakitNotify("info", "插件下载中，请稍后")
                             return
                         }
-                        yakitNotify("info", "开始下载插件")
                         onDownload()
                     } else {
                         handleAutoDownload()
@@ -329,7 +328,6 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             // 下载
             if (type === "download") {
                 if (isOnline) {
-                    yakitNotify("info", "开始下载插件")
                     handleDownload()
                 } else {
                     yakitNotify("error", "无法下载/更新，该插件是纯本地插件")

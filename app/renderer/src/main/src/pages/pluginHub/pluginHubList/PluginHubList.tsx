@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {HubListRecycle} from "./HubListRecycle"
@@ -12,6 +12,7 @@ import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultPluginHubPageInfo} from "@/defaultConstants/PluginHubPage"
 import emiter from "@/utils/eventBus/eventBus"
+import {useStore} from "@/store"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
@@ -28,6 +29,10 @@ interface PluginHubListProps {
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage} = props
+
+    const userinfo = useStore((s) => s.userInfo)
+    const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
+
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -67,6 +72,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         setHintShow((val) => {
             for (let key of Object.keys(val)) {
                 if (type === "recycle") val[key] = false
+                else if (type === "own" && !isLogin) val[key] = false
                 else if (key === type) val[key] = true
                 else val[key] = false
             }
@@ -123,6 +129,8 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const barHint = useMemoizedFn((key: string, isActive: boolean) => {
         if (isActive) {
             if (key === "recycle") return ""
+            if (key === "own" && !isLogin) return ""
+
             if (isDetail) {
                 return hiddenDetail ? "展开详情列表" : "收起详情列表"
             } else {
@@ -145,8 +153,9 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                     const visible = !!hintShow[item.key]
                     return (
                         <Tooltip
+                            key={item.key}
                             overlayClassName='plugins-tooltip'
-                            title={isActive ? hint : `点击进入${item.title}列表`}
+                            title={hint}
                             placement='right'
                             visible={visible}
                             onVisibleChange={(visible) =>
@@ -157,6 +166,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                             }
                         >
                             <div
+                                key={item.key}
                                 className={classNames(styles["side-bar-list-item"], {
                                     [styles["side-bar-list-item-active"]]: isActive,
                                     [styles["side-bar-list-item-selected"]]: selected

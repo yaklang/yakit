@@ -11,6 +11,6 @@ export enum RemotePluginGV {
 
     /** 商店|我的插件列表-批量下载提示本地存在同名则覆盖的二次确认弹框 */
     BatchDownloadPluginSameNameOverlay = "batch_download_plugin_same_name_overlay",
-    /** 商店|我的插件列表-单个下载提示本地存在同名则覆盖的二次确认弹框 */
+    /** 商店|我的插件列表|插件详情-单个下载提示本地存在同名则覆盖的二次确认弹框 */
     SingleDownloadPluginSameNameOverlay = "single_download_plugin_same_name_overlay"
 }

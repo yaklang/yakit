@@ -11,6 +11,7 @@ import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
 import classNames from "classnames"
 import {LightningBoltIcon} from "@/assets/newIcon"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -63,18 +64,20 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     })
     const getScriptInfo = useMemoizedFn((s: YakScript, isSendToPatch?: boolean) => {
         if (!s.ScriptName) return
-        ipcRenderer.invoke("GetYakScriptByName", {Name: s.ScriptName}).then((res: YakScript) => {
-            setI({
-                ...res,
-                HeadImg: "",
-                OnlineOfficial: false,
-                OnlineIsPrivate: false,
-                UUID: ""
+        grpcFetchLocalPluginDetail({Name: s.ScriptName}, true)
+            .then((res: YakScript) => {
+                setI({
+                    ...res,
+                    HeadImg: "",
+                    OnlineOfficial: false,
+                    OnlineIsPrivate: false,
+                    UUID: ""
+                })
+                if (isSendToPatch) {
+                    p.onSendToPatch && p.onSendToPatch(res)
+                }
             })
-            if (isSendToPatch) {
-                p.onSendToPatch && p.onSendToPatch(res)
-            }
-        })
+            .catch(() => {})
     })
     return (
         <div className={style["mitm-plugin-local-item"]}>

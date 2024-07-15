@@ -36,12 +36,13 @@ import {CodeGV, RemoteGV} from "@/yakitGV"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 
 import classNames from "classnames"
 import styles from "./PublicMenu.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
-import { usePluginToId } from "@/store/publicMenu"
+import {usePluginToId} from "@/store/publicMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -299,8 +300,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             return
         }
 
-        ipcRenderer
-            .invoke("GetYakScriptByName", {Name: info.pluginName})
+        grpcFetchLocalPluginDetail({Name: info.pluginName}, true)
             .then((i: YakScript) => {
                 const lastId = +i.Id || 0
                 // 插件不存在于本地数据库中
