@@ -71,4 +71,34 @@ module.exports = (win, getClient) => {
     ipcMain.handle("copy-clipboard", (e, text) => {
         clipboard.writeText(text);
     });
+
+    const asyncGetReverseShellProgramList = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetReverseShellProgramList(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetReverseShellProgramList", async (e, params) => {
+        return await asyncGetReverseShellProgramList(params)
+    })
+
+    const asyncGenerateReverseShellCommand = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateReverseShellCommand(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateReverseShellCommand", async (e, params) => {
+        return await asyncGenerateReverseShellCommand(params)
+    })
 }

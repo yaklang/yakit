@@ -102,7 +102,7 @@ export enum RemoteGV {
     RiskQueryShow = "risk-query-show",
     /**@name Home开始扫描 */
     HomeStartScanning="home_start_scanning",
-      /**@name 端口监听器缓存的监听主机 */
+    /**@name 端口监听器缓存的监听主机 */
     ReverseShellReceiverHostList="reverse-shell-receiver-host-list",
 }
 
