@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {AutoCard} from "../../components/AutoCard";
-import {FitAddon} from "xterm-addon-fit";
+import {FitAddon} from "@xterm/addon-fit";
 import {SearchAddon} from "xterm-addon-search";
 import {SearchBarAddon} from 'xterm-addon-search-bar';
 import {Unicode11Addon} from "xterm-addon-unicode11";
@@ -12,6 +12,7 @@ import { CVXterm } from "../../components/CVXterm";
 
 const {ipcRenderer} = window.require("electron");
 
+/**@deprecated */
 export const Terminal = React.memo(() => {
     // https://github.com/77Z/electron-local-terminal-prototype
     const xtermRef = useRef(null);
@@ -36,7 +37,7 @@ export const Terminal = React.memo(() => {
 
         const searchAddon = new SearchAddon();
         const searchAddonBar = new SearchBarAddon({searchAddon});
-        term.loadAddon(new FitAddon());
+        // term.loadAddon(new FitAddon());
         term.loadAddon(searchAddon);
         term.loadAddon(searchAddonBar);
         term.loadAddon(new Unicode11Addon());
