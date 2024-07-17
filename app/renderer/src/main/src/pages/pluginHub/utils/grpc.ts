@@ -55,3 +55,22 @@ export const grpcFetchLocalPluginDetail: APIFunc<FetchLocalPluginDetail, YakScri
             })
     })
 }
+
+/** @name 通过插件ID查询本地插件详情信息 */
+export const grpcFetchLocalPluginDetailByID: APIFunc<string | number, YakScript> = (id, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        if (!id) {
+            if (!hiddenError) yakitNotify("error", "查询插件的ID不能为空")
+            reject("查询插件的ID不能为空")
+            return
+        }
+
+        ipcRenderer
+            .invoke("GetYakScriptById", {Id: id})
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询本地插件详情失败:" + e)
+                reject(e)
+            })
+    })
+}

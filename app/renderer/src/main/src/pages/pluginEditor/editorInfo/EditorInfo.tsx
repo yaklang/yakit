@@ -202,7 +202,6 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 setEnablePluginSelector(false)
                 updateFormData({Tags: cloneDeep(newTags), PluginSelectorTypes: []})
             }
-            setType(type)
         }, [type])
         /** ---------- 插件类型变化时的数据更新 End ---------- */
 
@@ -277,7 +276,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         name='Type'
                         rules={[{required: true, message: "脚本类型必填"}]}
                     >
-                        <PluginTypeSelect size='large' disabled={!!isEdit} />
+                        <PluginTypeSelect size='large' disabled={!!isEdit} onChange={(value) => setType(value)} />
                     </Form.Item>
 
                     <Form.Item

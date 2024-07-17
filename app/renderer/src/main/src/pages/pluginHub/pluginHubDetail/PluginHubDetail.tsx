@@ -1,7 +1,7 @@
 import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-import {PluginStarsRequest, apiFetchOnlinePluginInfo, apiGetYakScriptById, apiPluginStars} from "@/pages/plugins/utils"
+import {PluginStarsRequest, apiFetchOnlinePluginInfo, apiPluginStars} from "@/pages/plugins/utils"
 import {API} from "@/services/swagger/resposeType"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -15,7 +15,7 @@ import {Tooltip} from "antd"
 import {SolidPluscircleIcon, SolidThumbupIcon} from "@/assets/icon/solid"
 import {HubExtraOperate, HubExtraOperateRef} from "../hubExtraOperate/HubExtraOperate"
 import {v4 as uuidv4} from "uuid"
-import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
+import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail, grpcFetchLocalPluginDetailByID} from "../utils/grpc"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginToDetailInfo} from "../type"
 import {thousandthConversion} from "@/pages/plugins/pluginReducer"
@@ -37,7 +37,6 @@ import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
 
-const {ipcRenderer} = window.require("electron")
 const {TabPane} = PluginTabs
 
 /**
@@ -101,6 +100,9 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             privateDomain.current = value.BaseUrl
                         } catch (error) {}
                     }
+
+                    if (isCorePlugin) return
+
                     if (["online", "comment", "log"].includes(activeKey)) setLoading(true)
                     apiFetchOnlinePluginInfo({uuid: currentRequest.current?.uuid}, true)
                         .then((res) => {
@@ -112,7 +114,13 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             })
                         })
                         .catch(() => {
-                            onError(true, false, "请从左侧列表重新选择插件")
+                            setOnlinePlugin(undefined)
+                            if (hasLocal) {
+                                if (["exectue", "local"].includes(activeKey)) return
+                                setActiveKey("exectue")
+                            } else {
+                                onError(true, false, "请从左侧列表重新选择插件")
+                            }
                         })
                         .finally(() => {
                             setTimeout(() => {
@@ -147,7 +155,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             const ID = Number(id) || 0
             if (!ID) return
             if (Number(localPlugin.Id) === ID) {
-                apiGetYakScriptById(ID, true)
+                grpcFetchLocalPluginDetailByID(ID, true)
                     .then((res) => {
                         setLocalPlugin({...res})
                     })
@@ -291,7 +299,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     }
 
                     if (local.status === "fulfilled") {
-                        if ((!local.value.UUID && onlineInfoUUID) || onlineInfoUUID !== local.value?.UUID) {
+                        if (onlineInfoUUID && (!local.value.UUID || onlineInfoUUID !== local.value?.UUID)) {
                             setLocalPlugin(undefined)
                         } else {
                             localTab = true

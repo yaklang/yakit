@@ -59,7 +59,7 @@ export interface OutputFormComponentsByTypeProps {
 
 export interface FormExtraSettingProps {
     double: boolean
-    data: {label: string; value: string}[]
+    data: {key: string; label: string; value: string}[]
 }
 
 export interface PluginExecuteProgressProps {

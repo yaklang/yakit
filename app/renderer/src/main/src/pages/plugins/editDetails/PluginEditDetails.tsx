@@ -65,6 +65,7 @@ import {CustomPluginExecuteFormValue} from "../operator/localPluginExecuteDetail
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {WebsiteGV} from "@/enums/website"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
+import {grpcFetchLocalPluginDetailByID} from "@/pages/pluginHub/utils/grpc"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -154,8 +155,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
     /** 通过ID获取插件旧数据 */
     const fetchPluginInfo = useMemoizedFn((id: number) => {
-        ipcRenderer
-            .invoke("GetYakScriptById", {Id: id})
+        grpcFetchLocalPluginDetailByID(id, true)
             .then(async (res: YakScript) => {
                 // console.log("编辑插件-获取插件信息", res)
                 if (res.Type === "yak") fetchOldData(res.ScriptName)

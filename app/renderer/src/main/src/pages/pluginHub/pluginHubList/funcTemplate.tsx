@@ -379,12 +379,28 @@ export const HubGridList: <T>(props: HubGridListProps<T>) => any = memo((props) 
 
     const listRef = useRef<HTMLDivElement>(null)
     const listSize = useSize(listRef)
+    /**
+     * @name 记录列表的列数
+     * @description 主要用于防止隐藏到显示时，列数重置为2时引起的滚动定位计算错误问题
+     */
+    const oldGridCol = useRef<number>(2)
     /** 每行的列数 */
     const gridCol = useMemo(() => {
+        if (listSize?.width === 0) return oldGridCol.current
         const width = listSize?.width || 600
-        if (width >= 900 && width < 1200) return 3
-        if (width >= 1200 && width < 1500) return 4
-        if (width >= 1500) return 5
+        if (width >= 900 && width < 1200) {
+            oldGridCol.current = 3
+            return 3
+        }
+        if (width >= 1200 && width < 1500) {
+            oldGridCol.current = 4
+            return 4
+        }
+        if (width >= 1500) {
+            oldGridCol.current = 5
+            return 5
+        }
+        oldGridCol.current = 2
         return 2
     }, [listSize])
 
@@ -426,7 +442,7 @@ export const HubGridList: <T>(props: HubGridListProps<T>) => any = memo((props) 
     useEffect(() => {
         // 滚动定位
         if (!previousInView.current && inView) {
-            scrollTo(Math.floor((showIndex || 0) / gridCol))
+            scrollTo(Math.floor((showIndex || 0) / oldGridCol.current))
         }
         // 数据重置或刷新
         if (previousInView.current && inView && showIndex === 0) {

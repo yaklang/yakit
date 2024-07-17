@@ -6,7 +6,6 @@ import {YakScript} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePencilaltIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {
-    apiGetYakScriptById,
     apiGetYakScriptByOnlineID,
     convertLocalPluginsRequestParams,
     onToEditPlugin
@@ -20,6 +19,7 @@ import {Tooltip} from "antd"
 import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginLocalListDetails"
 import {defaultFilter, defaultSearch, pluginTypeToName} from "../builtInData"
 import emiter from "@/utils/eventBus/eventBus"
+import {grpcFetchLocalPluginDetailByID} from "@/pages/pluginHub/utils/grpc"
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
     // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -80,7 +80,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     /**获取插件详情，设置插件联动类型，查询私有域,刷新插件列表 */
     const getPluginById = useMemoizedFn(() => {
         setPluginLoading(true)
-        apiGetYakScriptById(yakScriptId)
+        grpcFetchLocalPluginDetailByID(yakScriptId, true)
             .then((res) => {
                 const {PluginSelectorTypes = ""} = res
                 setPlugin(res)

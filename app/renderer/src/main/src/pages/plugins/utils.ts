@@ -1515,21 +1515,6 @@ export const onToEditPlugin = (plugin: YakScript, route?: YakitRoute) => {
     }
 }
 
-/**
- * @description 获取插件详情，通过插件id
- */
-export const apiGetYakScriptById: APIFunc<string | number, YakScript> = (Id, hiddenError) => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("GetYakScriptById", {Id})
-            .then(resolve)
-            .catch((error) => {
-                if (!hiddenError) yakitNotify("error", `插件本地插件详情失败：${error}`)
-                reject(error)
-            })
-    })
-}
-
 /**本地获取插件组数据 */
 export const apiFetchQueryYakScriptGroupLocal: (All?: boolean, ExcludeType?: string[]) => Promise<GroupCount[]> = (
     All = true,

@@ -450,6 +450,15 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
             double: false,
             data: []
         }
+        if (extraSetting && extraSetting.data) {
+            extraSetting.data = extraSetting.data.map((item) => {
+                return {
+                    key: item?.key,
+                    label: item?.label || item?.key || item?.value,
+                    value: item?.value
+                }
+            })
+        }
     } catch (error) {
         failed("获取参数配置数据错误，请重新打开该页面")
     }
