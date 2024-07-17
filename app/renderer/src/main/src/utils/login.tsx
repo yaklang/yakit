@@ -1,7 +1,7 @@
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {getLocalValue,getRemoteValue, setRemoteValue} from "./kv"
+import {getLocalValue, getRemoteValue, setRemoteValue} from "./kv"
 import {GetReleaseEdition, isCommunityEdition, globalUserLogout, isEnpriTraceAgent, isEnpriTrace} from "@/utils/envfile"
 import {RemoteGV} from "@/yakitGV"
 import {NowProjectDescription} from "@/pages/globalVariable"
@@ -83,10 +83,10 @@ export const aboutLoginUpload = (Token: string) => {
 // 企业/简易版 登录前时调用同步
 export const loginHTTPFlowsToOnline = (Token: string) => {
     if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
-        const {ProjectName} = NowProjectDescription
+        const {ProjectName, Description} = NowProjectDescription
         return new Promise((resolve, reject) => {
             ipcRenderer
-                .invoke("HTTPFlowsToOnline", {Token, ProjectName})
+                .invoke("HTTPFlowsToOnline", {Token, ProjectName, ProjectDescription: Description})
                 .then((res) => {})
                 .finally(() => {})
         })

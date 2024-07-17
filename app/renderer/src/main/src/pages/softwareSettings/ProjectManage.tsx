@@ -310,7 +310,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         })
                         return str
                     } catch (error) {
-                        return ""
+                        return data.Description
                     }
                 }},
             {
