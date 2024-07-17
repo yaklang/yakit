@@ -6,6 +6,8 @@ import {writeXTerm, xtermClear} from "@/utils/xtermUtils"
 import {Uint8ArrayToString} from "@/utils/str"
 import {getMapAllTerminalKey, getTerminalMap, setTerminalMap} from "./TerminalMap"
 import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
+import {OutlineTerminalIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export const defaultTerminaFont = "Consolas, 'Courier New', monospace"
 
@@ -14,7 +16,7 @@ const {ipcRenderer} = window.require("electron")
 export const defaultTerminalFont = {
     fontFamily: "Consolas, 'Courier New', monospace",
     fontSize: 14
-} 
+}
 
 export interface DefaultTerminaSettingProps {
     fontFamily: string
@@ -22,14 +24,13 @@ export interface DefaultTerminaSettingProps {
 }
 
 export interface TerminalBoxProps {
-    isShowEditorDetails: boolean
-    folderPath: string
-    defaultTerminalSetting?: DefaultTerminaSettingProps
     xtermRef: React.MutableRefObject<any>
-    onExitTernimal: (path: string) => void
+    commandExec?: (v: string) => void
+    onChangeSize?: (v: {row: number; col: number}) => void
+    defaultTerminalSetting?: DefaultTerminaSettingProps
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {isShowEditorDetails, folderPath, defaultTerminalSetting = defaultTerminalFont, xtermRef, onExitTernimal} = props
+    const {xtermRef, commandExec, onChangeSize, defaultTerminalSetting = defaultTerminalFont} = props
 
     const terminalSizeRef = useRef<any>()
     // 写入
@@ -265,5 +266,59 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 onChangeSize(rows, cols)
             }}
         />
+    )
+}
+
+interface TerminalListBoxProps {
+    initTerminalListData: TerminalDetailsProps[]
+    terminalRunnerId: string
+    onSelectTerminalItem: (v: string) => void
+    onDeleteTerminalItem: (v: string) => void
+}
+
+/* 终端列表 */
+export const TerminalListBox: React.FC<TerminalListBoxProps> = (props) => {
+    const {initTerminalListData, terminalRunnerId, onSelectTerminalItem, onDeleteTerminalItem} = props
+    const containerRef = useRef(null)
+    const wrapperRef = useRef(null)
+
+    const [list] = useVirtualList(initTerminalListData, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 22,
+        overscan: 10
+    })
+
+    return (
+        <div className={styles["terminal-list-box"]} ref={containerRef}>
+            <div ref={wrapperRef}>
+                {list.map((ele) => (
+                    <div
+                        key={ele.index}
+                        className={classNames(styles["list-item"], {
+                            [styles["list-item-active"]]: ele.data.id === terminalRunnerId,
+                            [styles["list-item-no-active"]]: ele.data.id !== terminalRunnerId
+                        })}
+                        onClick={() => onSelectTerminalItem(ele.data.id)}
+                    >
+                        <div className={styles["content"]}>
+                            <OutlineTerminalIcon />
+                            <div className={classNames(styles["title"], "yakit-content-single-ellipsis")}>
+                                {ele.data.title}
+                            </div>
+                        </div>
+                        <div className={styles["extra"]}>
+                            <OutlineTrashIcon
+                                className={styles["delete"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onDeleteTerminalItem(ele.data.id)
+                                }}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     )
 }

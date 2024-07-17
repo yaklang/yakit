@@ -214,6 +214,7 @@ export interface YakitResizeBoxProps {
     style?: React.CSSProperties
     /** 不允许拖动时 拖拽线样式 */
     lineStyle?: React.CSSProperties
+    lineInStyle?: React.CSSProperties
     /** 鼠标抬起时的回调 */
     onMouseUp?: (firstSize:number,secondSizeNum:number) => void
 }
@@ -236,6 +237,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         secondNodeStyle,
         style,
         lineStyle,
+        lineInStyle,
         onMouseUp
     } = props
 
@@ -440,6 +442,9 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                     })}
                 >
                     <div
+                        style={{
+                            ...lineInStyle
+                        }}
                         className={classNames({
                             [styles["resize-split-line-in"]]: isShowDefaultLineStyle,
                             [styles["resize-split-line-in-hide"]]: !isShowDefaultLineStyle,
