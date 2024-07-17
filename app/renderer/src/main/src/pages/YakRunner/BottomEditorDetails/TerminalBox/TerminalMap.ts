@@ -1,12 +1,19 @@
-export const terminalMap:Map<string, string> = new Map()
-
-export const setTerminalMap = (path: string, info: string) => {
-    terminalMap.set(path, info)
+export interface TerminalDetailsProps {
+    id: string
+    path:string
+    content: string
+    title: string
 }
 
-export const getTerminalMap = (path: string) => {
+export const terminalMap:Map<string, string> = new Map()
+
+export const setTerminalMap = (id: string, info: string) => {
+    terminalMap.set(id, info)
+}
+
+export const getTerminalMap = (id: string) => {
     return (
-        terminalMap.get(path) || ""
+        terminalMap.get(id) || ""
     )
 }
 
@@ -22,7 +29,7 @@ export const clearTerminalMap = () => {
     terminalMap.clear()
 }
 
-export const removeTerminalMap = (path: string) => {
-    terminalMap.delete(path)
+export const removeTerminalMap = (id: string) => {
+    terminalMap.delete(id)
 }
 

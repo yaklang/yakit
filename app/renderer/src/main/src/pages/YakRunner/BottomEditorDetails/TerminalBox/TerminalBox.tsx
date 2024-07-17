@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Modal} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn, useVirtualList} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./TerminalBox.module.scss"
@@ -9,13 +9,13 @@ import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import ReactResizeDetector from "react-resize-detector"
 import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
-import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
-import {Uint8ArrayToString} from "@/utils/str"
-import {getMapAllTerminalKey, getTerminalMap, removeTerminalMap, setTerminalMap} from "./TerminalMap"
+import {TerminalDetailsProps} from "./TerminalMap"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {callCopyToClipboard} from "@/utils/basic"
 import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
+import {OutlineTerminalIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 export const defaultTerminaFont = "Consolas, 'Courier New', monospace"
 
@@ -24,7 +24,7 @@ const {ipcRenderer} = window.require("electron")
 export const defaultTerminalFont = {
     fontFamily: "Consolas, 'Courier New', monospace",
     fontSize: 14
-} 
+}
 
 export interface DefaultTerminaSettingProps {
     fontFamily: string
@@ -32,105 +32,13 @@ export interface DefaultTerminaSettingProps {
 }
 
 export interface TerminalBoxProps {
-    isShowEditorDetails: boolean
-    folderPath: string
-    defaultTerminalSetting?: DefaultTerminaSettingProps
     xtermRef: React.MutableRefObject<any>
-    onExitTernimal: (path: string) => void
+    commandExec?: (v: string) => void
+    onChangeSize?: (v: {row: number; col: number}) => void
+    defaultTerminalSetting?: DefaultTerminaSettingProps
 }
 export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
-    const {isShowEditorDetails, folderPath, defaultTerminalSetting = defaultTerminalFont, xtermRef, onExitTernimal} = props
-
-    const terminalSizeRef = useRef<any>()
-    // 写入
-    const commandExec = useMemoizedFn((cmd) => {
-        if (!xtermRef || !xtermRef.current) {
-            return
-        }
-        ipcRenderer.invoke("runner-terminal-input", folderPath, cmd)
-    })
-
-    // 行列变化
-    const onChangeSize = useMemoizedFn((height, width) => {
-        if (height && width && folderPath) {
-            ipcRenderer.invoke("runner-terminal-size", folderPath, {
-                height,
-                width
-            })
-        }
-    })
-
-    // 输出
-    const onWriteXTerm = useMemoizedFn((data: Uint8Array) => {
-        let outPut = Uint8ArrayToString(data)
-        // 缓存
-        setTerminalMap(folderPath, getTerminalMap(folderPath) + outPut)
-        writeXTerm(xtermRef, outPut)
-    })
-
-    const run = useMemoizedFn((size)=>{
-        if (!xtermRef) return
-        if (!size) return
-        // 校验map存储缓存
-        const terminalCache = getTerminalMap(folderPath)
-        if (terminalCache) {
-            writeXTerm(xtermRef, terminalCache)
-        } else {
-            // 启动
-            ipcRenderer
-                .invoke("runner-terminal", {
-                    path: folderPath,
-                    ...size
-                })
-                .then(() => {
-                    isShowEditorDetails && success(`终端${folderPath}监听成功`)
-                })
-                .catch((e: any) => {
-                    failed(`ERROR: ${JSON.stringify(e)}`)
-                })
-                .finally(() => {})
-        }
-    })
-
-    useEffect(() => {
-        if (!xtermRef) return
-        
-        run(terminalSizeRef.current)
-
-        // 接收
-        const key = `client-listening-terminal-data-${folderPath}`
-        ipcRenderer.on(key, (e, data) => {
-            if (data.control) {
-                return
-            }
-
-            if (data?.raw) {
-                onWriteXTerm(data.raw)
-            }
-        })
-
-        const successKey = `client-listening-terminal-success-${folderPath}`
-        ipcRenderer.on(successKey, (e: any) => {
-            // console.log("client-listening-terminal-success---")
-        })
-
-        // grpc通知关闭
-        const errorKey = "client-listening-terminal-end"
-        ipcRenderer.on(errorKey, (e: any, data: any) => {
-            if (getMapAllTerminalKey().includes(data)) {
-                onExitTernimal(data)
-                isShowEditorDetails && warn(`终端${data}被关闭`)
-            }
-        })
-        return () => {
-            // 移除
-            ipcRenderer.removeAllListeners(key)
-            ipcRenderer.removeAllListeners(successKey)
-            ipcRenderer.removeAllListeners(errorKey)
-            // 清空
-            xtermClear(xtermRef)
-        }
-    }, [xtermRef, folderPath])
+    const {xtermRef, commandExec, onChangeSize, defaultTerminalSetting = defaultTerminalFont} = props
 
     const onCopy = useMemoizedFn(() => {
         const selectedText: string = (xtermRef.current && xtermRef.current.terminal.getSelection()) || ""
@@ -197,12 +105,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                         row,
                         col
                     }
-                    // 第一次执行 带入row、col
-                    if(!terminalSizeRef.current){
-                        run(size)
-                    }
-                    terminalSizeRef.current = size
-                    onChangeSize(row, col)
+                    onChangeSize && onChangeSize(size)
                     if (xtermRef) xtermFit(xtermRef, col, row)
                 }}
                 handleWidth={true}
@@ -248,12 +151,66 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
                 }}
                 // isWrite={false}
                 onData={(data) => {
-                    commandExec(data)
+                    commandExec && commandExec(data)
                 }}
                 onKey={(e) => {
                     return
                 }}
             />
+        </div>
+    )
+}
+
+interface TerminalListBoxProps {
+    initTerminalListData: TerminalDetailsProps[]
+    terminalRunnerId: string
+    onSelectTerminalItem: (v: string) => void
+    onDeleteTerminalItem: (v: string) => void
+}
+
+/* 终端列表 */
+export const TerminalListBox: React.FC<TerminalListBoxProps> = (props) => {
+    const {initTerminalListData, terminalRunnerId, onSelectTerminalItem, onDeleteTerminalItem} = props
+    const containerRef = useRef(null)
+    const wrapperRef = useRef(null)
+
+    const [list] = useVirtualList(initTerminalListData, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 22,
+        overscan: 10
+    })
+
+    return (
+        <div className={styles["terminal-list-box"]} ref={containerRef}>
+            <div ref={wrapperRef}>
+                {list.map((ele) => (
+                    <div
+                        key={ele.index}
+                        className={classNames(styles["list-item"], {
+                            [styles["list-item-active"]]: ele.data.id === terminalRunnerId,
+                            [styles["list-item-no-active"]]: ele.data.id !== terminalRunnerId
+                        })}
+                        onClick={() => onSelectTerminalItem(ele.data.id)}
+                    >
+                        <div className={styles["content"]}>
+                            <OutlineTerminalIcon />
+                            <div className={classNames(styles["title"], "yakit-content-single-ellipsis")}>
+                                {ele.data.title}
+                            </div>
+                        </div>
+                        <div className={styles["extra"]}>
+                            <OutlineTrashIcon
+                                className={styles["delete"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onDeleteTerminalItem(ele.data.id)
+                                }}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }
