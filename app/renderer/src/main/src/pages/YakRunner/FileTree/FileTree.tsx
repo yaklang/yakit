@@ -546,7 +546,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 let fileName = value
                 let lastDotIndex = value.lastIndexOf(".")
                 // 文件路径中没有点号，即没有后缀
-                if (lastDotIndex === -1) {
+                if (lastDotIndex === -1 && !info.isFolder) {
                     // let ext = value.substring(lastDotIndex);
                     fileName = `${value}.yak`
                 }
