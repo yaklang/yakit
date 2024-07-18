@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useInViewport, useMemoizedFn, useSize} from "ahooks"
+import {useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps} from "./FileTreeType"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {Tree} from "antd"
@@ -36,6 +36,7 @@ import {
     loadFolderDetail,
     removeAreaFileInfo,
     removeAreaFilesInfo,
+    setYakRunnerLastFolderExpanded,
     updateActiveFile,
     updateAreaFileInfo,
     updateAreaFilesPathInfo
@@ -66,7 +67,7 @@ const FolderMenu: YakitMenuItemProps[] = [
 ]
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
-    const {data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey} = props
+    const {folderPath,data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} = props
 
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
@@ -122,7 +123,6 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const selectedKeys = useMemo(() => {
         return selectedNodes.map((node) => node.path)
     }, [selectedNodes])
-    const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
 
     const scrollExpandedKeys = useRef<string[]>([])
     const scrollExpandedKeysFun = useMemoizedFn((path) => {
@@ -135,6 +135,14 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         }
     })
 
+    // 缓存tree展开项 用于关闭后打开
+    const onSaveYakRunnerLastExpanded = useMemoizedFn((value:string[])=>{
+        setYakRunnerLastFolderExpanded({
+            folderPath,
+            expandedKeys:value
+        })
+    })
+
     const onScrollToFileTreeFun = useMemoizedFn((path) => {
         scrollExpandedKeys.current = []
         // 获取 Tree 组件的实例
@@ -143,7 +151,9 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         if (treeInstance && treeInstance.scrollTo) {
             // 打开扩展项
             scrollExpandedKeysFun(path)
-            setExpandedKeys(filter([...expandedKeys, ...scrollExpandedKeys.current]))
+            const newExpandedKeys = filter([...expandedKeys, ...scrollExpandedKeys.current])
+            setExpandedKeys(newExpandedKeys)
+            onSaveYakRunnerLastExpanded(newExpandedKeys)
             setFoucsedKey(path)
             // 调用 scrollTo 方法滚动到指定节点
             setTimeout(() => {
@@ -163,12 +173,14 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
             const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
             const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
             setSelectedNodes(newSelectedNodes)
+            onSaveYakRunnerLastExpanded(newExpandedKeys)
             setExpandedKeys(newExpandedKeys)
         } else {
             // 全部清空
             setCopyPath("")
             setFoucsedKey("")
             setSelectedNodes([])
+            onSaveYakRunnerLastExpanded([])
             setExpandedKeys([])
         }
     })
@@ -185,7 +197,9 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     const onExpandedFileTreeFun = useMemoizedFn((path) => {
-        setExpandedKeys(filter([...expandedKeys, path]))
+        const newExpandedKeys = filter([...expandedKeys, path])
+        onSaveYakRunnerLastExpanded(newExpandedKeys)
+        setExpandedKeys(newExpandedKeys)
     })
 
     useEffect(() => {
@@ -229,6 +243,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         }
         if (selectedNodes.length > 0) setSelectedNodes([selectedNodes[selectedNodes.length - 1]])
         setFoucsedKey(node.path)
+        onSaveYakRunnerLastExpanded([...arr])
         setExpandedKeys([...arr])
         if (onExpand) {
             onExpand(arr, {expanded: !expanded, node})

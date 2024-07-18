@@ -8,12 +8,12 @@ import {
     addAreaFileInfo,
     getNameByPath,
     getPathParent,
-    getYakRunnerLastFolderPath,
+    getYakRunnerLastFolderExpanded,
     grpcFetchCreateFile,
     grpcFetchFileTree,
     removeAreaFileInfo,
     setYakRunnerHistory,
-    setYakRunnerLastFolderPath,
+    setYakRunnerLastFolderExpanded,
     updateAreaFileInfo,
     updateFileTree
 } from "./utils"
@@ -166,8 +166,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         return () => clearInterval(id)
     }, [])
 
+    const isFirstLoadRef = useRef<boolean>(true)
     // 重置Map与轮询
-    const resetMap = useMemoizedFn(() => {
+    const resetMap = useMemoizedFn((absolutePath) => {
+        // 初始加载时 无需重置（当切换时 重置）
+        if (isFirstLoadRef) {
+            isFirstLoadRef.current = false
+            return
+        }
         loadIndexRef.current = 0
         clearMapFileDetail()
         clearMapFolderDetail()
@@ -208,7 +214,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         const lastFolder = await getNameByPath(absolutePath)
 
         if (absolutePath.length > 0 && lastFolder.length > 0) {
-            resetMap()
+            resetMap(absolutePath)
             const node: FileNodeMapProps = {
                 parent: null,
                 name: lastFolder,
@@ -291,26 +297,51 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [isUnShow, setUnShow] = useState<boolean>(true)
 
     // 根据历史读取上次打开的文件夹
-    const onSetUnShowFun = async () => {
-        const absolutePath = await getYakRunnerLastFolderPath()
-        if (absolutePath) {
-            onOpenFolderListFun(absolutePath)
+    const onSetUnShowFun = useMemoizedFn(async () => {
+        const historyData = await getYakRunnerLastFolderExpanded()
+        if (historyData?.folderPath) {
+            onOpenFolderListFun(historyData.folderPath)
             setUnShow(false)
         }
-    }
+        emiter.emit("onDefaultExpanded", JSON.stringify(historyData?.expandedKeys || []))
+    })
+
+    const onSaveYakRunnerLastFolder = useMemoizedFn(async (newPath) => {
+        const historyData = await getYakRunnerLastFolderExpanded()
+        const folderPath = historyData?.folderPath || ""
+        if (folderPath.length === 0) {
+            setYakRunnerLastFolderExpanded({
+                folderPath: newPath,
+                expandedKeys: []
+            })
+        }
+
+        if (folderPath.length > 0 && folderPath !== newPath) {
+            setYakRunnerLastFolderExpanded({
+                folderPath: newPath,
+                expandedKeys: []
+            })
+            // FileTree缓存清除
+            emiter.emit("onResetFileTree")
+        }
+        console.log("1111111", historyData, newPath)
+    })
+
+    useUpdateEffect(() => {
+        if (fileTree.length > 0) {
+            onSaveYakRunnerLastFolder(fileTree[0].path)
+            setUnShow(false)
+        } else {
+            setYakRunnerLastFolderExpanded({
+                folderPath: "",
+                expandedKeys: []
+            })
+        }
+    }, [fileTree])
 
     useEffect(() => {
         onSetUnShowFun()
     }, [])
-
-    useUpdateEffect(() => {
-        if (fileTree.length > 0) {
-            setYakRunnerLastFolderPath(fileTree[0].path)
-            setUnShow(false)
-        } else {
-            setYakRunnerLastFolderPath("")
-        }
-    }, [fileTree])
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
@@ -343,7 +374,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 icon: "_f_yak",
                 isActive: true,
                 openTimestamp: moment().unix(),
-                isPlainText:true ,
+                isPlainText: true,
                 // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                 path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
                 parent: null,

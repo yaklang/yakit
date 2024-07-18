@@ -642,7 +642,7 @@ export const getCodeByPath = (path: string): Promise<string> => {
 }
 
 const YakRunnerOpenHistory = "YakRunnerOpenHistory"
-const YakRunnerLastFolderPath = "YakRunnerLastFolderPath"
+const YakRunnerLastFolderExpanded = "YakRunnerLastFolderExpanded"
 
 /**
  * @name 更改YakRunner历史记录
@@ -689,25 +689,31 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
     })
 }
 
-/**
- * @name 更改上次文件夹打开路径
- */
-export const setYakRunnerLastFolderPath = (newPath: string) => {
-    setRemoteValue(YakRunnerLastFolderPath, newPath)
+interface YakRunnerLastFolderExpandedProps {
+    folderPath: string,
+    expandedKeys:string[]
 }
 
 /**
- * @name 获取上次文件夹打开路径
+ * @name 更改打开的文件夹及其展开项
  */
-export const getYakRunnerLastFolderPath = (): Promise<string | null> => {
+export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpandedProps) => {
+    const newCache = JSON.stringify(cache)
+    setRemoteValue(YakRunnerLastFolderExpanded, newCache)
+}
+
+/**
+ * @name 获取上次打开的文件夹及其展开项
+ */
+export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExpandedProps | null> => {
     return new Promise(async (resolve, reject) => {
-        getRemoteValue(YakRunnerLastFolderPath).then((data) => {
+        getRemoteValue(YakRunnerLastFolderExpanded).then((data) => {
             try {
                 if (!data) {
                     resolve(null)
                     return
                 }
-                const historyData: string = data
+                const historyData: YakRunnerLastFolderExpandedProps = JSON.parse(data)
                 resolve(historyData)
             } catch (error) {
                 resolve(null)
