@@ -3,7 +3,7 @@ import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
-import {StringToUint8Array} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     ConvertYakStaticAnalyzeErrorToMarker,
     IMonacoEditorMarker,
@@ -17,6 +17,8 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
+import {randomString} from "@/utils/randomUtil"
+import { useRef } from "react"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -569,19 +571,34 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 /**
- * @name 根据文件path获取其大小
+ * @name 根据文件path获取其大小并判断其是否为文本
  */
-export const getCodeSizeByPath = (path: string): Promise<number> => {
+export const getCodeSizeByPath = (path: string): Promise<{size: number; isPlainText: boolean}> => {
     return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("read-file-size", path)
-            .then((res) => {
-                resolve(res)
+        const params = {
+            Method: "GET",
+            Url: {
+                Schema: "file",
+                Path: path,
+                Query: [{Key: "detectPlainText", Value: "true"}]
+            }
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            const size = parseInt(list.Resources[0].Size + "")
+            let isPlainText: boolean = true
+            list.Resources[0].Extra.forEach((item) => {
+                if (item.Key === "IsPlainText" && item.Value === "false") {
+                    isPlainText = false
+                }
             })
-            .catch(() => {
-                failed("无法获取该文件大小，请检查后后重试！")
-                reject()
+            resolve({
+                size,
+                isPlainText
             })
+        } catch (error) {
+            reject(error)
+        }
     })
 }
 
@@ -590,15 +607,37 @@ export const getCodeSizeByPath = (path: string): Promise<number> => {
  */
 export const getCodeByPath = (path: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("read-file-content", path)
-            .then((res) => {
-                resolve(res)
-            })
-            .catch(() => {
-                failed("无法获取该文件内容，请检查后后重试！")
-                reject()
-            })
+        let content:string = ""
+        const token = randomString(60)
+        ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
+        ipcRenderer.on(`${token}-data`, (e, result:{Data:Uint8Array,EOF:boolean}) => {
+            content += Uint8ArrayToString(result.Data)
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            failed(`[Traceroute] error:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e, data) => {
+            resolve(content)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        })
+
+        ipcRenderer.on(`${token}-data`, (e, data) => {})
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
+            reject()
+        })
+
+        // ipcRenderer
+        //     .invoke("read-file-content", path)
+        //     .then((res) => {
+        //         resolve(res)
+        //     })
+        //     .catch(() => {
+        //         failed("无法获取该文件内容，请检查后后重试！")
+        //         reject()
+        //     })
     })
 }
 

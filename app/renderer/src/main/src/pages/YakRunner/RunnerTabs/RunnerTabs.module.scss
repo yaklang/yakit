@@ -368,6 +368,13 @@
 .runner-tab-pane {
     height: 100%;
     background-color: #f0f1f3;
+    .warning-editor {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 /* ---------- YakRunnerWelcomePage ----------*/

@@ -28,6 +28,8 @@ export interface FileDetailInfo {
     language: string
     /** 打开文件的时间戳（用于打开编辑器列表排序） */
     openTimestamp: number
+    /** 文件是否为文本文件 */
+    isPlainText: boolean
     /** 文件是否有未保存的更改 */
     isDirty?: boolean
     /** 文件是否是当前活动的文件 */

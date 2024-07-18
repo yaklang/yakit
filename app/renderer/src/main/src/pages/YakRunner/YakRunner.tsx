@@ -343,6 +343,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 icon: "_f_yak",
                 isActive: true,
                 openTimestamp: moment().unix(),
+                isPlainText:true ,
                 // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                 path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
                 parent: null,
@@ -390,7 +391,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 ...activeFile,
                                 path,
                                 isUnSave: false,
-                                language: suffix === "yak" ? suffix : "http"
+                                language: suffix === "yak" ? suffix : "text"
                             }
                             const parentPath = await getPathParent(file.path)
                             const parentDetail = getMapFileDetail(parentPath)
