@@ -151,15 +151,15 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         getPrivateDomainAndRefList()
     }, [])
     useEffect(() => {
-        emiter.on("onRefLocalPluginList", onRefLocalPluginList)
+        emiter.on("onRefreshLocalPluginList", onRefLocalPluginList)
         emiter.on("savePluginInfoSignal", onRefPlugin)
         emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
-        emiter.on("onImportRefLocalPluginList", onImportRefLocalPluginList)
+        emiter.on("onImportRefreshLocalPluginList", onImportRefLocalPluginList)
         return () => {
-            emiter.off("onRefLocalPluginList", onRefLocalPluginList)
+            emiter.off("onRefreshLocalPluginList", onRefLocalPluginList)
             emiter.off("savePluginInfoSignal", onRefPlugin)
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
-            emiter.off("onImportRefLocalPluginList", onImportRefLocalPluginList)
+            emiter.off("onImportRefreshLocalPluginList", onImportRefLocalPluginList)
         }
     }, [])
     useEffect(() => {

@@ -38,15 +38,11 @@ import {formatDate} from "@/utils/timeUtil"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {yakitNotify} from "@/utils/notification"
 import {
-    DownloadOnlinePluginsRequest,
     PluginStarsRequest,
     PluginsRecycleRequest,
-    apiDownloadPluginMine,
-    apiDownloadPluginOnline,
     apiPluginStars,
     apiReductionRecyclePlugin,
-    apiUpdatePluginPrivateMine,
-    onToEditPlugin
+    apiUpdatePluginPrivateMine
 } from "@/pages/plugins/utils"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {useStore} from "@/store"
@@ -56,7 +52,6 @@ import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {SolidThumbupIcon} from "@/assets/icon/solid"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {YakitRoute} from "@/enums/yakitRoute"
 
 import YakitLogo from "@/assets/yakitLogo.png"
 import UnLogin from "@/assets/unLogin.png"

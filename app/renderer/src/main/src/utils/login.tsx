@@ -47,7 +47,7 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
                 })
                 .finally(() => {
                     ipcRenderer.send("user-sign-out")
-                    emiter.emit("onRefLocalPluginList", "")
+                    emiter.emit("onRefreshLocalPluginList")
                 })
         } else {
             ipcRenderer.send("user-sign-out")

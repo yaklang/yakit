@@ -653,7 +653,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const pluginHub = useMemoizedFn((data: PluginHubPageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.Plugin_Hub).length
         if (isExist) {
-            emiter.emit("refreshPluginHubTabActive", data.tabActive)
+            emiter.emit("openPluginHubListAndDetail", JSON.stringify(data || ""))
         }
         const pageNodeInfo: PageProps = {
             ...cloneDeep(defPage),
@@ -674,16 +674,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             singleNode: true
         }
         setPagesData(YakitRoute.Plugin_Hub, pageNodeInfo)
-        openMenuPage(
-            {route: YakitRoute.Plugin_Hub},
-            {
-                pageParams: {
-                    pluginHubPageInfoProps: {
-                        ...data
-                    }
-                }
-            }
-        )
+        openMenuPage({route: YakitRoute.Plugin_Hub})
     })
     /**
      * @name 本地插件
@@ -716,7 +707,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             setPagesData(YakitRoute.Plugin_Local, pages)
         }
-        emiter.emit("onRefLocalPluginList", "")
+        emiter.emit("onRefreshLocalPluginList")
         openMenuPage({route: YakitRoute.Plugin_Local})
     })
     /**

@@ -21,7 +21,7 @@ import {
 } from "@/pages/plugins/utils"
 import {getRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
@@ -101,16 +101,23 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
+    // 刷新搜索条件数据和无条件列表总数
+    const onRefreshFilterAndTotal = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchInitTotal()
+            fetchFilterGroup()
+        }),
+        {wait: 300}
+    ).run
+
     useEffect(() => {
         if (isLogin) {
-            fetchFilterGroup()
-            fetchList(true)
+            handleRefreshList(true)
         }
     }, [isLogin])
     useUpdateEffect(() => {
         if (inViewPort && fetchIsLogin()) {
-            fetchInitTotal()
-            fetchFilterGroup()
+            onRefreshFilterAndTotal()
         }
     }, [inViewPort])
     /** 搜索条件 */
@@ -118,22 +125,6 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         if (!fetchIsLogin()) return
         fetchList(true)
     }, [filters])
-
-    useEffect(() => {
-        const onRefreshList = () => {
-            if (!fetchIsLogin()) return
-            setTimeout(() => {
-                fetchList(true)
-            }, 200)
-        }
-
-        emiter.on("onRefUserPluginList", onRefreshList)
-        emiter.on("recycleRestoreToOwnList", onRefreshList)
-        return () => {
-            emiter.off("onRefUserPluginList", onRefreshList)
-            emiter.off("recycleRestoreToOwnList", onRefreshList)
-        }
-    }, [])
 
     // 选中搜索条件可能在搜索数据组中不存在时进行清除
     useEffect(() => {
@@ -149,7 +140,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             .catch(() => {})
     })
 
-    // 搜搜条件分组数据
+    // 搜索条件分组数据
     const fetchFilterGroup = useMemoizedFn(() => {
         apiFetchGroupStatisticsMine()
             .then((res) => {
@@ -206,7 +197,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     })
     /** 刷新 */
     const onRefresh = useMemoizedFn(() => {
-        fetchList(true)
+        handleRefreshList(true)
     })
 
     /** 单项勾选 */
@@ -241,6 +232,77 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         {wait: 300, leading: true}
     ).run
     /** ---------- 列表相关方法 End ---------- */
+
+    /** ---------- 通信监听 Start ---------- */
+    // 刷新列表(是否刷新高级筛选数据)
+    const handleRefreshList = useDebounceFn(
+        useMemoizedFn((updateFilterGroup?: boolean) => {
+            if (!fetchIsLogin()) return
+            if (updateFilterGroup) fetchFilterGroup()
+            fetchList(true)
+        }),
+        {wait: 200}
+    ).run
+
+    // 详情删除线上插件触发列表的局部更新
+    const handleDetailDeleteToOnline = useMemoizedFn((info: string) => {
+        if (!info) return
+        try {
+            const plugin: {name: string; uuid: string} = JSON.parse(info)
+            if (!plugin.name && !plugin.uuid) return
+            const index = selectList.findIndex((ele) => ele.uuid === plugin.uuid)
+            const data: YakitPluginOnlineDetail = {
+                ...DefaultOnlinePlugin,
+                uuid: plugin.uuid || "",
+                script_name: plugin.name || ""
+            }
+            if (index !== -1) {
+                optCheck(data, false)
+            }
+            onRefreshFilterAndTotal()
+            emiter.emit("ownDeleteToRecycleList")
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [data]
+                }
+            })
+        } catch (error) {}
+    })
+
+    // 详情里改公开|私密后更新列表里的插件信息
+    const handleChangeStatus = useMemoizedFn((content: string) => {
+        if (!content) return
+        try {
+            const plugin: {name: string; uuid: string; is_private: boolean; status: number} = JSON.parse(content)
+            if (!plugin.name && !plugin.uuid) return
+            const el = response.data.find((ele) => ele.uuid === plugin.uuid)
+            if (!el) return
+            const data: YakitPluginOnlineDetail = {
+                ...el,
+                is_private: plugin.is_private,
+                status: plugin.status
+            }
+            dispatch({
+                type: "update",
+                payload: {
+                    item: data
+                }
+            })
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onRefreshOwnPluginList", handleRefreshList)
+        emiter.on("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
+        emiter.on("detailChangeStatusOwnPlugin", handleChangeStatus)
+        return () => {
+            emiter.off("onRefreshOwnPluginList", handleRefreshList)
+            emiter.off("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
+            emiter.off("detailChangeStatusOwnPlugin", handleChangeStatus)
+        }
+    }, [])
+    /** ---------- 通信监听 Start ---------- */
 
     const listLength = useMemo(() => {
         return Number(response.pagemeta.total) || 0
@@ -311,7 +373,16 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     // 单个插件下载
     const handleSingleDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
         grpcDownloadOnlinePlugin({uuid: info.uuid})
-            .then(() => {})
+            .then((res) => {
+                emiter.emit(
+                    "editorLocalSaveToLocalList",
+                    JSON.stringify({
+                        id: Number(res.Id) || 0,
+                        name: res.ScriptName,
+                        uuid: res.UUID || ""
+                    })
+                )
+            })
             .catch(() => {})
             .finally(() => {
                 setTimeout(() => {
@@ -349,7 +420,9 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
 
         setBatchDownloadLoading(true)
         apiDownloadPluginMine(request)
-            .then(() => {})
+            .then(() => {
+                emiter.emit("onRefreshLocalPluginList", true)
+            })
             .catch(() => {})
             .finally(() => {
                 setTimeout(() => {
@@ -394,40 +467,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 delHintCache.current = res === "true"
             })
             .catch((err) => {})
-
-        emiter.on("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
-        emiter.on("detailChangeStatusOwnPlugin", handleChangeStatus)
-        return () => {
-            emiter.off("detailChangeStatusOwnPlugin", handleChangeStatus)
-            emiter.off("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
-        }
     }, [])
-    // 详情删除线上插件触发列表的局部更新
-    const handleDetailDeleteToOnline = useMemoizedFn((info: string) => {
-        if (!info) return
-        try {
-            const plugin: {name: string; uuid: string} = JSON.parse(info)
-            if (!plugin.name && !plugin.uuid) return
-            const index = selectList.findIndex((ele) => ele.uuid === plugin.uuid)
-            const data: YakitPluginOnlineDetail = {
-                ...DefaultOnlinePlugin,
-                uuid: plugin.uuid || "",
-                script_name: plugin.name || ""
-            }
-            if (index !== -1) {
-                optCheck(data, false)
-            }
-            fetchInitTotal()
-            fetchFilterGroup()
-            emiter.emit("ownDeleteToRecycleList")
-            dispatch({
-                type: "remove",
-                payload: {
-                    itemList: [data]
-                }
-            })
-        } catch (error) {}
-    })
 
     // 是否出现二次确认框
     const delHintCache = useRef<boolean>(false)
@@ -518,8 +558,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 if (index !== -1) {
                     optCheck(info, false)
                 }
-                fetchInitTotal()
-                fetchFilterGroup()
+                onRefreshFilterAndTotal()
                 emiter.emit("ownDeleteToRecycleList")
                 dispatch({
                     type: "remove",
@@ -538,27 +577,6 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     /** ---------- 删除插件 End ---------- */
 
     /** ---------- 单个操作(下载|改为公开/私密)的回调 Start ---------- */
-    const handleChangeStatus = useMemoizedFn((content: string) => {
-        if (!content) return
-        try {
-            const plugin: {name: string; uuid: string; is_private: boolean; status: number} = JSON.parse(content)
-            if (!plugin.name && !plugin.uuid) return
-            const el = response.data.find((ele) => ele.uuid === plugin.uuid)
-            if (!el) return
-            const data: YakitPluginOnlineDetail = {
-                ...el,
-                is_private: plugin.is_private,
-                status: plugin.status
-            }
-            dispatch({
-                type: "update",
-                payload: {
-                    item: data
-                }
-            })
-        } catch (error) {}
-    })
-
     const optCallback = useMemoizedFn((type: string, info: YakitPluginOnlineDetail) => {
         if (type === "state") {
             dispatch({

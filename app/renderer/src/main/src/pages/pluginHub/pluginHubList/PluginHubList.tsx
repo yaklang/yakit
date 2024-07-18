@@ -7,10 +7,9 @@ import {HubListLocal} from "./HubListLocal"
 import {Tooltip} from "antd"
 import {HubSideBarList} from "../defaultConstant"
 import {HubListOnline} from "./HubListOnline"
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, PluginHubPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {defaultPluginHubPageInfo} from "@/defaultConstants/PluginHubPage"
 import emiter from "@/utils/eventBus/eventBus"
 import {useStore} from "@/store"
 
@@ -33,9 +32,10 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
 
-    const {queryPagesDataById} = usePageInfo(
+    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
-            queryPagesDataById: s.queryPagesDataById
+            queryPagesDataById: s.queryPagesDataById,
+            removePagesDataCacheById: s.removePagesDataCacheById
         }),
         shallow
     )
@@ -46,26 +46,31 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         )
         if (currentItem && currentItem.pageParamsInfo.pluginHubPageInfo) {
             return currentItem.pageParamsInfo.pluginHubPageInfo
-        } else {
-            return {...defaultPluginHubPageInfo}
         }
+        return undefined
     })
+
+    useEffect(() => {
+        const data = initPageInfo()
+        if (data) {
+            removePagesDataCacheById(YakitRoute.Plugin_Hub, YakitRoute.Plugin_Hub)
+            const {tabActive, detailInfo} = data
+            onSetActive(tabActive || "online")
+            if (detailInfo) {
+                setTimeout(() => {
+                    onClickPlugin({type: tabActive, ...detailInfo})
+                }, 200)
+            }
+        } else {
+            onSetActive("online")
+        }
+    }, [])
 
     /** ---------- Tabs组件逻辑 Start ---------- */
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
-    const rendered = useRef<Set<string>>(new Set([initPageInfo().tabActive || "online"]))
+    const rendered = useRef<Set<string>>(new Set())
 
-    const [active, setActive] = useState<PluginSourceType>(initPageInfo().tabActive || "online")
-
-    useEffect(() => {
-        const refreshPluginHubTabActive = (tabActive: PluginSourceType) => {
-            onSetActive(tabActive)
-        }
-        emiter.on("refreshPluginHubTabActive", refreshPluginHubTabActive)
-        return () => {
-            emiter.off("refreshPluginHubTabActive", refreshPluginHubTabActive)
-        }
-    }, [])
+    const [active, setActive] = useState<PluginSourceType>()
 
     const [activeHidden, setActiveHidden] = useState<boolean>(false)
     const onSetActive = useMemoizedFn((type: PluginSourceType) => {
@@ -105,6 +110,21 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
 
     /** ---------- 通信监听 Start ---------- */
     /**
+     * 打开指定插件列表，并可能打开指定插件的详情
+     */
+    const handleOpenHubListAndDetail = useMemoizedFn((info: string) => {
+        try {
+            const {tabActive, detailInfo} = JSON.parse(info) as unknown as PluginHubPageInfoProps
+            if (tabActive) {
+                onSetActive(tabActive)
+            }
+            if (detailInfo) {
+                onClickPlugin({type: tabActive, ...detailInfo})
+            }
+        } catch (error) {}
+    })
+
+    /**
      * 新建插件保存成功后列表定位到本地，然后更新数据，存在两种情况：
      * 1、本地列表已存在 ，则通信更新数据
      * 2、本地列表不存在，打开本地列表会自动请求最新数据
@@ -119,8 +139,10 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     })
 
     useEffect(() => {
+        emiter.on("openPluginHubListAndDetail", handleOpenHubListAndDetail)
         emiter.on("editorLocalNewToLocalList", handleUpdatePluginInfo)
         return () => {
+            emiter.off("openPluginHubListAndDetail", handleOpenHubListAndDetail)
             emiter.off("editorLocalNewToLocalList", handleUpdatePluginInfo)
         }
     }, [])

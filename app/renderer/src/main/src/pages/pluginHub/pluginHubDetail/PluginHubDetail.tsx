@@ -142,28 +142,11 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 })
                 .catch(() => {})
             emiter.on("onSwitchPrivateDomain", fetchPrivateDomain)
-            emiter.on("editorLocalSaveToDetail", handleUpdateLocalPlugin)
             return () => {
                 emiter.off("onSwitchPrivateDomain", fetchPrivateDomain)
-                emiter.off("editorLocalSaveToDetail", handleUpdateLocalPlugin)
             }
         }, [])
 
-        // 通过本地 ID 更新本地插件信息
-        const handleUpdateLocalPlugin = useMemoizedFn((id: string) => {
-            if (!localPlugin) return
-            const ID = Number(id) || 0
-            if (!ID) return
-            if (Number(localPlugin.Id) === ID) {
-                grpcFetchLocalPluginDetailByID(ID, true)
-                    .then((res) => {
-                        setLocalPlugin({...res})
-                    })
-                    .catch((err) => {
-                        yakitNotify("error", "更新本地插件信息失败: " + err)
-                    })
-            }
-        })
         /** ---------- 基础全局功能 End ---------- */
 
         useImperativeHandle(
@@ -458,7 +441,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     .then((i: YakScript) => {
                         setLocalPlugin({...i, isLocalPlugin: privateDomain.current !== i.OnlineBaseUrl})
                         // 刷新本地列表
-                        emiter.emit("onRefLocalPluginList", "")
+                        emiter.emit("onRefreshLocalPluginList")
                     })
                     .catch((e) => {
                         yakitNotify("error", "查询插件最新数据失败: " + e)
@@ -473,7 +456,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             downloadedTotalString: thousandthConversion(res.downloaded_total)
                         })
                         // 刷新我的列表
-                        emiter.emit("onRefUserPluginList", "")
+                        emiter.emit("onRefreshOwnPluginList")
                     })
                     .catch((err) => {})
             }
@@ -567,6 +550,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         UUID: info.uuid || undefined
                     })
                     setLocalPlugin({...plugin})
+                    if (!plugin.UUID && !!onlinePlugin) setOnlinePlugin(undefined)
                 }
                 if (opType === "upload" || opType === "submit") {
                     if (currentRequest.current) {

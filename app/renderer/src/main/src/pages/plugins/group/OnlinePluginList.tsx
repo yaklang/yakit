@@ -301,7 +301,7 @@ export const OnlinePluginList: React.FC<PluginOnlineGroupsListProps> = React.mem
             if (activeGroup.id !== "全部") {
                 refreshOnlinePluginList()
             }
-            emiter.emit("onRefLocalPluginList", "") // 刷新线上插件列表
+            emiter.emit("onRefreshLocalPluginList") // 刷新线上插件列表
             emiter.emit("onRefPluginGroupMagOnlineQueryYakScriptGroup", "")
         })
     }

@@ -18,7 +18,7 @@ import {
     excludeNoExistfilter
 } from "@/pages/plugins/utils"
 import {yakitNotify} from "@/utils/notification"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
 import {
@@ -99,24 +99,19 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
-    // 刷新搜索条件数据和列表数据
-    const onRefreshFilterAndList = useMemoizedFn(() => {
-        fetchFilterGroup()
-        fetchList(true)
-    })
     // 刷新搜索条件数据和无条件列表总数
-    const onRefreshFilterAndTotal = useMemoizedFn(() => {
-        fetchInitTotal()
-        fetchFilterGroup()
-    })
+    const onRefreshFilterAndTotal = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchInitTotal()
+            fetchFilterGroup()
+        }),
+        {wait: 300}
+    ).run
 
     useEffect(() => {
-        onRefreshFilterAndList()
+        handleRefreshList(true)
     }, [])
 
-    useUpdateEffect(() => {
-        onRefreshFilterAndList()
-    }, [isLogin])
     useUpdateEffect(() => {
         if (inViewPort) {
             onRefreshFilterAndTotal()
@@ -126,21 +121,6 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     useUpdateEffect(() => {
         fetchList(true)
     }, [filters])
-
-    useEffect(() => {
-        const onRefreshList = () => {
-            setTimeout(() => {
-                fetchList(true)
-            }, 200)
-        }
-
-        emiter.on("onSwitchPrivateDomain", onRefreshFilterAndList)
-        emiter.on("onRefOnlinePluginList", onRefreshList)
-        return () => {
-            emiter.off("onSwitchPrivateDomain", onRefreshFilterAndList)
-            emiter.off("onRefOnlinePluginList", onRefreshList)
-        }
-    }, [])
 
     // 选中搜索条件可能在搜索数据组中不存在时进行清除
     useEffect(() => {
@@ -217,7 +197,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
     /** 刷新 */
     const onRefresh = useMemoizedFn(() => {
-        onRefreshFilterAndList()
+        handleRefreshList(true)
     })
 
     /** 单项勾选 */
@@ -252,6 +232,29 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         {wait: 300, leading: true}
     ).run
     /** ---------- 列表相关方法 End ---------- */
+
+    /** ---------- 通信监听 Start ---------- */
+    // 刷新列表(是否刷新高级筛选数据)
+    const handleRefreshList = useDebounceFn(
+        useMemoizedFn((updateFilterGroup?: boolean) => {
+            if (updateFilterGroup) fetchFilterGroup()
+            fetchList(true)
+        }),
+        {wait: 200}
+    ).run
+    const handleSwitchPrivateDomain = useMemoizedFn(() => {
+        handleRefreshList(true)
+    })
+
+    useEffect(() => {
+        emiter.on("onSwitchPrivateDomain", handleSwitchPrivateDomain)
+        emiter.on("onRefreshOnlinePluginList", handleRefreshList)
+        return () => {
+            emiter.off("onSwitchPrivateDomain", handleSwitchPrivateDomain)
+            emiter.off("onRefreshOnlinePluginList", handleRefreshList)
+        }
+    }, [])
+    /** ---------- 通信监听 Start ---------- */
 
     const listLength = useMemo(() => {
         return Number(response.pagemeta.total) || 0
@@ -322,13 +325,21 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     // 单个插件下载
     const handleSingleDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
         grpcDownloadOnlinePlugin({uuid: info.uuid})
-            .then(() => {
+            .then((res) => {
                 dispatch({
                     type: "download",
                     payload: {
                         item: {...info}
                     }
                 })
+                emiter.emit(
+                    "editorLocalSaveToLocalList",
+                    JSON.stringify({
+                        id: Number(res.Id) || 0,
+                        name: res.ScriptName,
+                        uuid: res.UUID || ""
+                    })
+                )
             })
             .catch(() => {})
             .finally(() => {
@@ -366,7 +377,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
         setBatchDownloadLoading(true)
         apiDownloadPluginOnline(request)
-            .then(() => {})
+            .then(() => {
+                emiter.emit("onRefreshLocalPluginList", true)
+            })
             .catch(() => {})
             .finally(() => {
                 setTimeout(() => {

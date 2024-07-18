@@ -114,7 +114,6 @@ import {
     BrutePageInfoProps,
     HTTPHackerPageInfoProps,
     PluginBatchExecutorPageInfoProps,
-    PluginHubPageInfoProps,
     PocPageInfoProps,
     RiskPageInfoProps,
     ScanPortPageInfoProps,
@@ -386,8 +385,6 @@ export interface ComponentParams {
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
-    /**插件仓库页面 */
-    pluginHubPageInfoProps?: PluginHubPageInfoProps
     /**漏洞与风险统计页面 */
     riskPageInfoProps?: RiskPageInfoProps
     /**MITM劫持页面 */

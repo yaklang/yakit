@@ -438,7 +438,7 @@ export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Pr
                 if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
                 else ipcRenderer.invoke("change-main-menu")
                 // 插件商店、我的插件、插件管理页面 下载插件后需要更新 本地插件列表
-                emiter.emit("onRefLocalPluginList", "")
+                emiter.emit("onRefreshLocalPluginList")
                 resolve(res)
             })
             .catch((e) => {

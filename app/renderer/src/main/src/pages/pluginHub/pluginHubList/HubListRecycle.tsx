@@ -18,7 +18,7 @@ import {
 } from "@/pages/plugins/utils"
 import {getRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
@@ -73,6 +73,14 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
+    // 刷新搜索条件数据和无条件列表总数
+    const onRefreshFilterAndTotal = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchInitTotal()
+        }),
+        {wait: 300}
+    ).run
+
     useEffect(() => {
         if (isLogin) {
             fetchList(true)
@@ -80,7 +88,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     }, [isLogin])
     useUpdateEffect(() => {
         if (inViewPort && fetchIsLogin()) {
-            fetchInitTotal()
+            onRefreshFilterAndTotal()
         }
     }, [inViewPort])
 
@@ -346,12 +354,12 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
             optCheck(info, false)
         }
         fetchInitTotal()
-        if (type === "restore") emiter.emit("recycleRestoreToOwnList")
+        if (type === "restore") emiter.emit("onRefreshOwnPluginList", true)
     })
     // 批量删除和还原后对别的逻辑的影响处理
     const onBatchDelOrRestoreAfter = useMemoizedFn((type?: string) => {
         onCheck(false)
-        if (type === "restore") emiter.emit("recycleRestoreToOwnList")
+        if (type === "restore") emiter.emit("onRefreshOwnPluginList", true)
         setLoading(false)
         fetchList(true)
     })

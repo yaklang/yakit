@@ -883,7 +883,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         if (sendPluginLocal) {
             // emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
         }
-        emiter.emit("onImportRefLocalPluginList", "")
+        emiter.emit("onImportRefreshLocalPluginList")
     }
 
     const getRenderByLoadMode = useMemoizedFn((type: string) => {
@@ -1039,7 +1039,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             }).then(() => {
                 setVisible(false)
                 // 刷新本地列表
-                emiter.emit("onImportRefLocalPluginList", "")
+                emiter.emit("onImportRefreshLocalPluginList")
                 success("插件导入成功")
             })
         }
