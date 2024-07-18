@@ -324,7 +324,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             // FileTree缓存清除
             emiter.emit("onResetFileTree")
         }
-        console.log("1111111", historyData, newPath)
     })
 
     useUpdateEffect(() => {

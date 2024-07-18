@@ -18,7 +18,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
-import { useRef } from "react"
+import {useRef} from "react"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -602,42 +602,50 @@ export const getCodeSizeByPath = (path: string): Promise<{size: number; isPlainT
     })
 }
 
+const getCodeByNode = (path: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("read-file-content", path)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch(() => {
+                failed("无法获取该文件内容，请检查后后重试！")
+                reject()
+            })
+    })
+}
+
 /**
  * @name 根据文件path获取其内容
  */
 export const getCodeByPath = (path: string): Promise<string> => {
     return new Promise(async (resolve, reject) => {
-        let content:string = ""
-        const token = randomString(60)
-        ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
-        ipcRenderer.on(`${token}-data`, (e, result:{Data:Uint8Array,EOF:boolean}) => {
-            content += Uint8ArrayToString(result.Data)
-        })
-        ipcRenderer.on(`${token}-error`, (e, error) => {
-            failed(`[Traceroute] error:  ${error}`)
-        })
-        ipcRenderer.on(`${token}-end`, (e, data) => {
-            resolve(content)
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-        })
-
-        ipcRenderer.on(`${token}-data`, (e, data) => {})
-        ipcRenderer.on(`${token}-error`, (e, error) => {
-            failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
-            reject()
-        })
-
-        // ipcRenderer
-        //     .invoke("read-file-content", path)
-        //     .then((res) => {
-        //         resolve(res)
-        //     })
-        //     .catch(() => {
-        //         failed("无法获取该文件内容，请检查后后重试！")
-        //         reject()
-        //     })
+        try {
+            let content: string = ""
+            const token = randomString(60)
+            ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
+            ipcRenderer.on(`${token}-data`, (e, result: {Data: Uint8Array; EOF: boolean}) => {
+                content += Uint8ArrayToString(result.Data)
+                if(result.EOF){
+                    resolve(content)
+                }
+            })
+            ipcRenderer.on(`${token}-error`, async (e, error) => {
+                try {
+                    let newContent = await getCodeByNode(path)
+                    resolve(newContent)
+                } catch (error) {
+                    failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
+                    reject()
+                }
+            })
+            ipcRenderer.on(`${token}-end`, (e, data) => {
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            })
+        } catch (error) {}
     })
 }
 
@@ -690,8 +698,8 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
 }
 
 interface YakRunnerLastFolderExpandedProps {
-    folderPath: string,
-    expandedKeys:string[]
+    folderPath: string
+    expandedKeys: string[]
 }
 
 /**

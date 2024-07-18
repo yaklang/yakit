@@ -98,7 +98,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const onDefaultExpanded = useMemoizedFn(async (data: string) => {
         try {
             const defaultExpanded: string[] = JSON.parse(data)
-            console.log("默认展开项", defaultExpanded)
             setExpandedKeys(defaultExpanded)
         } catch (error) {}
     })

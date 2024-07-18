@@ -30,6 +30,7 @@ import {
     OutlineChevrondoubleleftIcon,
     OutlineChevrondoublerightIcon,
     OutlineImportIcon,
+    OutlinePauseIcon,
     OutlinePlayIcon,
     OutlinePlusIcon,
     OutlineSplitScreenIcon,
@@ -159,6 +160,10 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 RunnerParamRaw: ""
             })
         }
+    })
+
+    const onStopYak = useMemoizedFn(async()=>{
+        ipcRenderer.invoke("cancel-exec-yak")
     })
 
     // 方向转名称
@@ -658,6 +663,16 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 </>
                 {isShowExtra && (
                     <>
+                    {
+                        runnerTabsId === tabsId?
+                        <YakitButton
+                            colors='danger'
+                            icon={<OutlinePauseIcon />}
+                            onClick={onStopYak}
+                        >
+                            停止
+                        </YakitButton>
+                        :
                         <YakitButton
                             icon={<OutlinePlayIcon />}
                             loading={runnerTabsId === tabsId}
@@ -666,6 +681,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         >
                             执行
                         </YakitButton>
+                    }
+                        
                     </>
                 )}
             </div>
