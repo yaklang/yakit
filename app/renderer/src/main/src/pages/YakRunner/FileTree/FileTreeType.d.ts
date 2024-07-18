@@ -48,10 +48,14 @@ export interface FileNodeProps {
 }
 
 export interface FileTreeProps {
+    // 根文件夹路径
+    folderPath: string
     data: FileNodeProps[]
     onLoadData: (node: FileNodeProps) => Promise<any>
     foucsedKey: string
     setFoucsedKey: (v:string) => void
+    expandedKeys: string[]
+    setExpandedKeys: (v:string[]) => void
     onSelect?: (
         selectedKeys: string[],
         e: {selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps}

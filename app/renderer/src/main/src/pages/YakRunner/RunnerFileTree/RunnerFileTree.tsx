@@ -1,5 +1,5 @@
-import React, {memo, useEffect, useMemo, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePluscircleIcon, OutlineXIcon} from "@/assets/icon/outline"
@@ -27,7 +27,6 @@ import {
     getPathParent,
     getYakRunnerHistory,
     grpcFetchDeleteFile,
-    grpcFetchFileTree,
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
     loadFolderDetail,
@@ -60,7 +59,7 @@ import {v4 as uuidv4} from "uuid"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, success} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
-import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -68,7 +67,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {addFileTab} = props
     const {fileTree, areaInfo, activeFile} = useStore()
     const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
-    const [isShowFileHint,setShowFileHint] = useState<boolean>(false)
+    const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
     // 选中的文件或文件夹
@@ -93,6 +92,24 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         setRefreshTree(!refreshTree)
     })
 
+    const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
+
+    // 默认展开项
+    const onDefaultExpanded = useMemoizedFn(async (data: string) => {
+        try {
+            const defaultExpanded: string[] = JSON.parse(data)
+            console.log("默认展开项", defaultExpanded)
+            setExpandedKeys(defaultExpanded)
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onDefaultExpanded", onDefaultExpanded)
+        return () => {
+            emiter.off("onDefaultExpanded", onDefaultExpanded)
+        }
+    }, [])
+
     useEffect(() => {
         // 刷新文件树
         emiter.on("onRefreshFileTree", onRefreshFileTreeFun)
@@ -103,15 +120,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
     const fileDetailTree = useMemo(() => {
         const initTree = initFileTree(fileTree, 1)
-        if(initTree.length>0){
+        if (initTree.length > 0) {
             initTree.push({
-                parent:null,
-                name:"已经到底啦~",
-                path:"",
-                isFolder:false,
-                icon:"",
-                depth:1,
-                isBottom:true
+                parent: null,
+                name: "已经到底啦~",
+                path: "",
+                isFolder: false,
+                icon: "",
+                depth: 1,
+                isBottom: true
             })
         }
         return initTree
@@ -461,7 +478,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         setFileTree && setFileTree([])
     })
 
-    const createFile = useMemoizedFn(async() => {
+    const createFile = useMemoizedFn(async () => {
         // 未打开文件夹时 创建临时文件
         if (fileTree.length === 0) {
             addFileTab()
@@ -486,7 +503,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     })
 
-    const createFolder = useMemoizedFn(async() => {
+    const createFolder = useMemoizedFn(async () => {
         const newFoucsedKey = foucsedKey || fileTree[0].path
         const fileDetail = getMapFileDetail(newFoucsedKey)
         // 文件夹直接创建
@@ -515,8 +532,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(file)
             } else {
-                const {size,isPlainText} = await getCodeSizeByPath(path)
-                if(size > MAX_FILE_SIZE_BYTES){
+                const {size, isPlainText} = await getCodeSizeByPath(path)
+                if (size > MAX_FILE_SIZE_BYTES) {
                     setShowFileHint(true)
                     return
                 }
@@ -661,11 +678,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         <div className={styles["file-tree-tree"]}>
                             <div className={styles["tree-body"]}>
                                 <FileTree
+                                    folderPath={fileTree.length>0?fileTree[0].path:""}
                                     data={fileDetailTree}
                                     onLoadData={onLoadData}
                                     onSelect={onSelectFileTree}
                                     foucsedKey={foucsedKey}
                                     setFoucsedKey={setFoucsedKey}
+                                    expandedKeys={expandedKeys}
+                                    setExpandedKeys={setExpandedKeys}
                                 />
                             </div>
                         </div>
@@ -677,7 +697,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 visible={isShowFileHint}
                 title='文件警告'
                 content='文件过大，无法使用YakRunner进行操作'
-                cancelButtonProps={{style: {display:  "none" }}}
+                cancelButtonProps={{style: {display: "none"}}}
                 onOk={() => {
                     setShowFileHint(false)
                 }}
@@ -778,7 +798,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
                         titleRender={titleRender}
                         renderItem={renderItem}
                         collapseProps={{
-                            defaultActiveKey:['collapse-list-0']
+                            defaultActiveKey: ["collapse-list-0"]
                         }}
                     />
                 </div>

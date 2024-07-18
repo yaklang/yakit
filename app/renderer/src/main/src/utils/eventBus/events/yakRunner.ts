@@ -22,4 +22,6 @@ export type YakRunnerEventProps = {
     onScrollToFileTree: string
     // 终端中打开
     onOpenTernimal: string
+    // 默认展开文件树
+    onDefaultExpanded: string
 }
