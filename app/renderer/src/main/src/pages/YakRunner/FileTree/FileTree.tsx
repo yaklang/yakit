@@ -490,7 +490,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         setMapFolderDetail(info.parent, newFolderMap)
                     }
                     const suffix = name.split(".").pop()
-                    const language = suffix === "yak" ? suffix : "http"
+                    const language = suffix === "yak" ? suffix : "text"
                     // 修改分栏数据
                     const newAreaInfo = updateAreaFileInfo(cacheAreaInfo, {name, path, icon, language}, info.path)
                     // 更名后重置激活元素

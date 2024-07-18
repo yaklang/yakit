@@ -66,7 +66,7 @@ import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, warn, success} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
-import {Divider, Upload} from "antd"
+import {Divider, Result, Upload} from "antd"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {v4 as uuidv4} from "uuid"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
@@ -945,7 +945,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-
+    // 是否允许展示二进制
+    const [allowBinary,setAllowBinary] = useState<boolean>(false)
     useEffect(() => {
         areaInfo.forEach((item) => {
             item.elements.forEach((itemIn) => {
@@ -955,6 +956,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                         if (file.isActive && (!editorInfo || (editorInfo && editorInfo.path !== file.path))) {
                             // 更新编辑器展示项
                             setEditorInfo(file)
+                            setAllowBinary(false)
                         }
                     })
                 }
@@ -1125,18 +1127,43 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
     }, [])
 
+    // 打开二进制文件
+    const onOpenBinary = useMemoizedFn(() => {
+        if(!editorInfo) return
+        setAllowBinary(true)
+        const newAreaInfo = updateAreaFileInfo(areaInfo, {...editorInfo,isPlainText:true}, editorInfo.path)
+        setAreaInfo && setAreaInfo(newAreaInfo)
+    })
     return (
         <div className={styles["runner-tab-pane"]}>
-            <YakitEditor
-                editorDidMount={(editor) => {
-                    setReqEditor(editor)
-                }}
-                type={editorInfo?.language || "yak"}
-                value={editorInfo?.code || ""}
-                setValue={(content: string) => {
-                    updateAreaInputInfo(content)
-                }}
-            />
+            {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
+                <div className={styles["warning-editor"]}>
+                    <Result
+                        status={"warning"}
+                        // title={"此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"}
+                        subTitle={
+                            "此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"
+                        }
+                        extra={[
+                            <YakitButton size='max' type='primary' onClick={onOpenBinary}>
+                                仍然打开
+                            </YakitButton>
+                        ]}
+                    />
+                </div>
+            ) : (
+                <YakitEditor
+                    editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
+                    editorDidMount={(editor) => {
+                        setReqEditor(editor)
+                    }}
+                    type={editorInfo?.language || "yak"}
+                    value={editorInfo?.code || ""}
+                    setValue={(content: string) => {
+                        updateAreaInputInfo(content)
+                    }}
+                />
+            )}
         </div>
     )
 })
@@ -1162,7 +1189,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     // 通过路径打开文件
     const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
         // 由于此处的打开文件 不存在已打开文件 故无需校验
-        const size = await getCodeSizeByPath(path)
+        const {size, isPlainText} = await getCodeSizeByPath(path)
         if (size > MAX_FILE_SIZE_BYTES) {
             setShowFileHint(true)
             return
@@ -1175,10 +1202,11 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
             isActive: true,
             openTimestamp: moment().unix(),
+            isPlainText,
             // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
             path,
             parent: null,
-            language: name.split(".").pop() === "yak" ? "yak" : "http"
+            language: name.split(".").pop() === "yak" ? "yak" : "text"
         }
         // 注入语法检测
         const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
@@ -1362,7 +1390,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     ...info,
                     path,
                     isUnSave: false,
-                    language: suffix === "yak" ? suffix : "http"
+                    language: suffix === "yak" ? suffix : "text"
                 }
                 const parentPath = await getPathParent(file.path)
                 const parentDetail = getMapFileDetail(parentPath)

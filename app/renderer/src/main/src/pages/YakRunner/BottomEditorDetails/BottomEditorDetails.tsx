@@ -225,14 +225,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 listData.push(listItem)
             } catch (error) {}
         })
-        console.log("init---", listData)
-
         return listData
     }, [terminalIds, refreshList])
 
     useUpdateEffect(() => {
         if (isShowEditorDetails && showItem === "terminal" && isReloadTerminal) {
-            console.log("xxx-重新加载--------------------")
             setReloadTerminal(false)
             initTerminal()
         }
@@ -292,8 +289,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             // 校验map存储缓存
             const terminalCache = getMapAllTerminalKey()
             if (terminalCache.length > 0) {
-                console.log("启动缓存", terminalCache)
-
                 // 默认展开第一项
                 let runnerId: string = terminalCache[0]
 
@@ -314,11 +309,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         if (!terminalSizeRef.current) return
 
         const runnnerId = uuidv4()
-        console.log("启动", {
-            id: runnnerId,
-            path: folderPathRef.current,
-            ...terminalSizeRef.current
-        })
 
         // 启动
         ipcRenderer
@@ -352,7 +342,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         if (!terminalRef || !terminalRef.current) {
             return
         }
-        console.log("正常写入", terminalRunnerId, cmd)
 
         ipcRenderer.invoke("runner-terminal-input", terminalRunnerId, cmd)
     })
@@ -387,13 +376,10 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     content: obj.content + outPut,
                     title: "powershell"
                 }
-                console.log("更新输出", cache)
 
                 // 更新缓存
                 setTerminalMap(id, JSON.stringify(cache))
                 if (id === terminalRunnerId) {
-                    console.log("输出-内容", outPut)
-
                     writeXTerm(terminalRef, outPut)
                 }
             }
@@ -410,13 +396,9 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             isShowEditorDetails && warn(`终端${path}被关闭`)
             // 列表关闭
             if (terminalIds.length > 1) {
-                console.log("关闭", id, terminalIds)
-
                 if (terminalRunnerId === id) {
                     let itemIndex = terminalIds.indexOf(id)
                     let index = itemIndex === terminalIds.length - 1 ? itemIndex - 1 : itemIndex + 1
-                    console.log("iiippp", index)
-
                     onSelectTerminalItem(terminalIds[index])
                 }
                 removeTerminalMap(id)
@@ -464,7 +446,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     }, [terminalRef])
 
     const onSelectTerminalItem = useMemoizedFn((id) => {
-        console.log("i切换--", id)
         if (terminalRunnerId === id) return
         setTerminalRunnerId(id)
         const terminalCache = getTerminalMap(id)

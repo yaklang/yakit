@@ -515,7 +515,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(file)
             } else {
-                const size = await getCodeSizeByPath(path)
+                const {size,isPlainText} = await getCodeSizeByPath(path)
                 if(size > MAX_FILE_SIZE_BYTES){
                     setShowFileHint(true)
                     return
@@ -528,10 +528,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
                     isActive: true,
                     openTimestamp: moment().unix(),
+                    isPlainText,
                     // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                     path,
                     parent: parent || null,
-                    language: name.split(".").pop() === "yak" ? "yak" : "http"
+                    language: name.split(".").pop() === "yak" ? "yak" : "text"
                 }
                 // 注入语法检测
                 const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}

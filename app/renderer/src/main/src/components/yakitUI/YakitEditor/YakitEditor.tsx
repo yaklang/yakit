@@ -24,7 +24,8 @@ import {
     KeyboardToFuncProps,
     YakitIModelDecoration,
     OperationRecord,
-    OtherMenuListProps
+    OtherMenuListProps,
+    OperationRecordRes
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -470,7 +471,23 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             return
         }),
         {wait: 300}
-    )
+    ) 
+
+    useEffect(() => {
+        if (editorOperationRecord) {
+            getRemoteValue(editorOperationRecord).then((data) => {
+                if (!data) return
+                let obj: OperationRecordRes = JSON.parse(data)
+                if (obj?.fontSize) {
+                    setNowFontsize(obj?.fontSize)
+                }
+                if (typeof obj?.showBreak === "boolean") {
+                    setShowBreak(obj?.showBreak)
+                }
+            })
+        }
+    }, [])
+
     /** 操作记录存储 */
     const onOperationRecord = (type: "fontSize" | "showBreak", value: number | boolean) => {
         if (editorOperationRecord) {
