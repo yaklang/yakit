@@ -29,6 +29,7 @@ import {
     grpcFetchCreateFile,
     grpcFetchCreateFolder,
     grpcFetchDeleteFile,
+    grpcFetchPasteFile,
     grpcFetchRenameFileTree,
     isResetActiveFile,
     judgeAreaExistFilePath,
@@ -375,7 +376,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             const code = await getCodeByPath(copyPath)
             const currentPath = await getPathJoin(info.path, fileDetail.name)
             if (currentPath.length === 0) return
-            const result = await grpcFetchCreateFile(currentPath, code, info.path)
+            const result = await grpcFetchPasteFile(currentPath, code, info.path)
             if (result.length === 0) return
             const {path, name, parent} = result[0]
             setMapFileDetail(path, result[0])
@@ -400,7 +401,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             emiter.emit("onRefreshFileTree")
         } catch (error) {
             setCopyPath("")
-            failed(`粘贴失败${error}`)
+            failed(`粘贴失败 ${error}`)
         }
     })
 
@@ -417,11 +418,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     const onOperationFileTreeFun = useMemoizedFn((type: string) => {
-        if(!isFoucsed) return
+        if (!isFoucsed) return
         switch (type) {
             case "rename":
                 onRenameFun()
-                    setEdit(true)
+                setEdit(true)
                 break
             case "delete":
                 setRemoveCheckVisible(true)
@@ -589,6 +590,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         return item
                     })
                     setMapFolderDetail(parent, newFolderDetail)
+                    // 如果为新建文件则新建后需要打开此文件
+                    if (!info.isFolder) {
+                        setFoucsedKey(path)
+                        emiter.emit("onOpenFileByPath", JSON.stringify({path, name, parent}))
+                    }
                 }
                 emiter.emit("onRefreshFileTree")
             } catch (error) {
