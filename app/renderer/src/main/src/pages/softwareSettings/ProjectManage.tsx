@@ -1,8 +1,8 @@
-import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryGeneralRequest} from "../invoker/schema"
-import {failed, info, yakitFailed} from "@/utils/notification"
+import {failed, info, yakitFailed,warn} from "@/utils/notification"
 import {
     ChevronDownIcon,
     ChevronRightIcon,
@@ -10,7 +10,10 @@ import {
     DotsVerticalSvgIcon,
     ImportSvgIcon,
     OutlinePlusIcon,
-    PlusBoldSvgIcon
+    PlusBoldSvgIcon,
+    PlusIcon,
+    ResizerIcon,
+    TrashIcon
 } from "@/assets/newIcon"
 import {
     DocumentAddSvgIcon,
@@ -27,7 +30,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {Cascader, Dropdown, DropdownProps, Form, Progress, Upload} from "antd"
+import {Cascader, Divider, Dropdown, DropdownProps, Form, Progress, Upload} from "antd"
 import {YakitMenu, YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -49,8 +52,11 @@ import classNames from "classnames"
 import styles from "./ProjectManage.module.scss"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import { AutoTextarea } from "../fuzzer/components/AutoTextarea/AutoTextarea"
 
 const {ipcRenderer} = window.require("electron")
+const {YakitPanel} = YakitCollapse
 
 export interface ProjectManageProp {
     engineMode: YaklangEngineMode
@@ -291,7 +297,22 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )
                 }
             },
-            {key: "Description", name: "备注", width: "30%"},
+            {   
+                key: "Description", 
+                name: "备注", 
+                width: "30%",
+                render:(data)=>{
+                    try {
+                        const arr:{Key:string,Value:string}[] = JSON.parse(data.Description)
+                        let str = ""
+                        arr.forEach((item)=>{
+                            str += `${item.Key}：${item.Value}; `
+                        })
+                        return str
+                    } catch (error) {
+                        return data.Description
+                    }
+                }},
             {
                 key: "DatabasePath",
                 name: "存储路径",
@@ -1605,6 +1626,23 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             fetchFirstList()
         }
         if (visible && isNew && project) {
+            try {
+                const firstDescribe = JSON.parse(project.Description)
+                if(Array.isArray(firstDescribe)){
+                    onReset({
+                        Description: firstDescribe
+                    })
+                }
+                else{
+                    onReset({
+                        Description: [{Key: '系统', Value: ''}]
+                    })
+                }
+            } catch (error) {
+                onReset({
+                    Description: [{Key: '系统', Value: ''}]
+                })
+            }
             setInfo({
                 Id: +project.Id,
                 oldName: project.ProjectName,
@@ -1692,7 +1730,18 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         visible: false
     })
 
+    const validateArray = useMemoizedFn((arr)=>{
+        return arr.every(item => item.Key.trim() !== '' && item.Value.trim() !== '');
+    })
+
     const onSubmit = useMemoizedFn(() => {
+        const v = form.getFieldsValue()
+        const isHasDescription = Array.isArray(v?.Description) && v.Description.length > 0
+            
+        if(isHasDescription && !validateArray(v.Description)){
+            warn("请将备注信息填写完整")
+            return
+        }
         if (!isCheck) setIsCheck(true)
         setLoading(true)
         if (isNew) {
@@ -1722,6 +1771,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 }
             }
             const type = isFolder ? "isNewFolder" : "isNewProject"
+
+            data.Description = isHasDescription?JSON.stringify(v?.Description):""
+            
             onModalSubmit(type, {...data})
         }
         if (isExport) {
@@ -1826,11 +1878,64 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     }
 
     const onClose = useMemoizedFn(() => {
+        form.resetFields()
         setVisible(false)
         handleExportTemporaryProject()
     })
 
     const [dropShow, setDropShow] = useState<boolean>(false)
+
+    const [form] = Form.useForm()
+    const describeRef = useRef<any>()
+    const onReset = useMemoizedFn((restValue) => {
+        setInfo({
+            ...info,
+            ...restValue
+        })
+        form.setFieldsValue({...restValue})
+    })
+    // 重置
+    const handleReset = (
+        e: React.MouseEvent<HTMLElement, MouseEvent>,
+        field: string,
+        ref: React.MutableRefObject<any>
+    ) => {
+        e.stopPropagation()
+        onReset({
+            [field]: [{Key: '系统', Value: ''}]
+        })
+        ref.current.setVariableActiveKey(["0"])
+    }
+
+    // 添加
+    const handleAdd = (
+        e: React.MouseEvent<HTMLElement, MouseEvent>,
+        field: string,
+        ref: React.MutableRefObject<any>
+    ) => {
+        e.stopPropagation()
+        const v = form.getFieldsValue()
+        const variables = v[field] || []
+        const index = variables.findIndex((ele: {Key: string; Value: string}) => !ele || (!ele.Key && !ele.Value))
+        if (index === -1) {
+            onReset({
+                [field]: [...variables, {Key: "", Value: ""}]
+            })
+            ref.current.setVariableActiveKey([...(ref.current.variableActiveKey || []), `${variables?.length || 0}`])
+        } else {
+            yakitFailed(`请将已添加【备注${index}】设置完成后再进行添加`)
+        }
+    }
+
+    // 删除
+    const handleRemove = (i: number, field: string) => {
+        const v = form.getFieldsValue()
+        const variables = v[field] || []
+        variables.splice(i, 1)
+        onReset({
+            [field]: [...variables]
+        })
+    }
 
     return (
         <YakitModal
@@ -1846,6 +1951,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             bodyStyle={{padding: 0}}
         >
             <Form
+                form={form}
                 style={transferShow.visible ? {display: "none"} : {}}
                 className={styles["new-project-and-folder-wrapper"]}
                 layout='vertical'
@@ -1909,7 +2015,38 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 />
                             </Form.Item>
                         )}
-                        <Form.Item label={"备注 :"}>
+                        <div className={styles['remark-header']}>
+                        <div className={styles['title']}>备注 :</div>
+                            {/* 添加额外的元素 */}
+                            <span className={styles['']}>
+                            <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) =>{
+                                                handleReset(e, "Description", describeRef)
+                                            }}
+                                            size='small'
+                                        >
+                                            重置
+                                        </YakitButton>
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <YakitButton
+                                            type='text'
+                                            onClick={(e) =>{
+                                                handleAdd(e, "Description", describeRef)
+                                            }}
+                                            className={styles["btn-padding-right-0"]}
+                                            size='small'
+                                        >
+                                            添加
+                                            <PlusIcon />
+                                        </YakitButton>
+                            </span>
+                        </div>
+                        <VariableProjectList ref={describeRef} field="Description" onDel={(i) => {
+                            handleRemove(i, "Description")
+                        }}/>
+                        {/* <Form.Item>
                             <YakitInput.TextArea
                                 autoSize={{minRows: 3, maxRows: 5}}
                                 showCount
@@ -1918,7 +2055,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 value={info.Description}
                                 onChange={(e) => setInfo({...info, Description: e.target.value})}
                             />
-                        </Form.Item>
+                        </Form.Item> */}
                     </>
                 )}
                 {isExport && (
@@ -2265,5 +2402,118 @@ const DropdownMenu: React.FC<DropdownMenuProps> = memo((props) => {
         <Dropdown {...dropdown} overlay={overlay}>
             {children}
         </Dropdown>
+    )
+})
+
+interface SetVariableProjectItemProps {
+    name: number
+}
+
+const SetVariableProjectItem: React.FC<SetVariableProjectItemProps> = React.memo((props) => {
+    const {name} = props
+
+    return (
+        <div className={styles["variable-project-item"]}>
+            <Form.Item name={[name, "Key"]} noStyle wrapperCol={{span: 24}}>
+                <input placeholder='备注名称' className={styles["variable-item-input"]} />
+            </Form.Item>
+
+            <div className={styles["variable-item-textarea-body"]}>
+                <Form.Item name={[name, "Value"]} noStyle wrapperCol={{span: 24}}>
+                    <AutoTextarea className={styles["variable-item-textarea"]} placeholder='备注内容' />
+                </Form.Item>
+                <ResizerIcon className={styles["resizer-icon"]} />
+            </div>
+        </div>
+    )
+})
+
+interface VariableProjectListProps {
+    field: string
+    onDel?: (i: number) => any
+    collapseWrapperClassName?: string
+    extra?: (i: number, info: {key; name}) => React.ReactNode
+    ref: React.Ref<any>
+}
+
+/**
+ * 目前只有Project备注使用
+ */
+const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef((props,ref) => {
+    const {field,onDel,collapseWrapperClassName,extra} = props
+    const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            variableActiveKey,
+            setVariableActiveKey: onSetActiveKey
+        }),
+        [variableActiveKey]
+    )
+
+    const onSetActiveKey = useMemoizedFn((key: string[] | string) => {
+        setVariableActiveKey(key as string[])
+    })
+
+    return(
+        <div className={styles['variable-project-list']}>
+            <Form.List name={field}>
+                {(fields, {add}) => {
+                    return (
+                        <>
+                            <YakitCollapse
+                                destroyInactivePanel={true}
+                                defaultActiveKey={variableActiveKey}
+                                activeKey={variableActiveKey}
+                                onChange={onSetActiveKey}
+                                className={classNames(styles["variable-list"], collapseWrapperClassName)}
+                                bordered={false}
+                            >
+                                {fields.map(({key, name}, i) => (
+                                    <YakitPanel
+                                        key={`${key + ""}`}
+                                        header={`备注 ${name}`}
+                                        className={styles["variable-list-panel"]}
+                                        extra={
+                                            <div className={styles["extra-wrapper"]}>
+                                                <TrashIcon
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        if (onDel) onDel(i)
+                                                    }}
+                                                    className={styles["variable-list-remove"]}
+                                                />
+                                                {extra ? extra(i, {key, name}) : null}
+                                            </div>
+                                        }
+                                    >
+                                        <SetVariableProjectItem name={name} />
+                                    </YakitPanel>
+                                ))}
+                            </YakitCollapse>
+                            {fields?.length === 0 && (
+                                <>
+                                    <YakitButton
+                                        type='outline2'
+                                        onClick={() => {
+                                            add({Key: "", Value: "", Type: "raw"})
+                                            onSetActiveKey([
+                                                ...(variableActiveKey || []),
+                                                `${variableActiveKey?.length}`
+                                            ])
+                                        }}
+                                        icon={<PlusIcon />}
+                                        block
+                                    >
+                                        添加
+                                    </YakitButton>
+                                </>
+                            )}
+                        </>
+                    )
+                }}
+            </Form.List>
+        </div>
     )
 })

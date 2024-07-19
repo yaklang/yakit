@@ -137,8 +137,6 @@ service Yak {
 
   // 开启端口
   rpc OpenPort(stream Input) returns (stream Output);
-  // editor terminal 交互
-  rpc YaklangTerminal(stream Input) returns (stream Output);
 
   // Exec
   rpc Exec(ExecRequest) returns (stream ExecResult);
@@ -322,6 +320,8 @@ service Yak {
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
   // 进行数据迁移使用
   rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
+  // editor terminal 交互
+  rpc YaklangTerminal(stream Input) returns (stream Output);
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
@@ -650,7 +650,11 @@ service Yak {
   rpc ResetGlobalNetworkConfig(ResetGlobalNetworkConfigRequest) returns (Empty);
   rpc ValidP12PassWord(ValidP12PassWordRequest) returns (ValidP12PassWordResponse);
 
+  // YAKURL
   rpc RequestYakURL(RequestYakURLParams) returns (RequestYakURLResponse);
+
+  // 文件IO
+  rpc ReadFile(ReadFileRequest) returns (stream ReadFileResponse);
 
   // Wireshark
   rpc GetPcapMetadata(PcapMetadataRequest) returns (PcapMetadata);
@@ -660,6 +664,7 @@ service Yak {
   rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
   rpc ParseTraffic(ParseTrafficRequest) returns (ParseTrafficResponse);
 
+  // 与前端交互的双工长连接，用于通知某些消息
   rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
 
 
@@ -688,6 +693,10 @@ service Yak {
   rpc GetFingerprint(GetFingerprintRequest) returns (GetFingerprintResponse);
   rpc AddFingerprint(AddFingerprintRequest) returns (AddFingerprintResponse);
   rpc ModifyFingerprint(ModifyFingerprintRequest) returns (ModifyFingerprintResponse);
+
+  // 反弹shell命令生成
+  rpc GetReverseShellProgramList(GetReverseShellProgramListRequest) returns (GetReverseShellProgramListResponse);
+  rpc GenerateReverseShellCommand(GenerateReverseShellCommandRequest) returns (GenerateReverseShellCommandResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -2897,6 +2906,8 @@ message Risk {
   string Details = 12;
 
   string FromYakScript = 13;
+  string YakScriptUUID = 29;
+
   bool WaitingVerified = 14;
   string ReverseToken = 15;
 
@@ -4563,6 +4574,7 @@ message QueryHTTPFlowRequest {
 message HTTPFlowsToOnlineRequest {
   string Token = 1;
   string ProjectName = 2;
+  string ProjectDescription = 3;
 }
 
 message ExportHTTPFlowsRequest {
@@ -5206,4 +5218,38 @@ message ModifyFingerprintRequest{
 
 message ModifyFingerprintResponse{
 
+}
+
+message ReadFileRequest {
+  string FilePath = 1;
+  int64 BufSize = 2;
+}
+
+message ReadFileResponse {
+  bytes Data = 1;
+  bool EOF = 2;
+}
+
+message GetReverseShellProgramListRequest{
+  string System = 1;
+  string CmdType = 2;
+}
+
+message GetReverseShellProgramListResponse{
+  repeated string ProgramList = 1;
+  repeated string ShellList = 2;
+}
+message GenerateReverseShellCommandRequest{
+  string System = 1;
+  string CmdType = 2;
+  string ShellType = 4;
+  string Encode = 5;
+  string Program = 6;
+  string IP = 7;
+  int32 port = 8;
+}
+
+message GenerateReverseShellCommandResponse{
+    GeneralResponse Status = 1;
+    string Result =2;
 }
