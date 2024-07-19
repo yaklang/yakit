@@ -353,6 +353,28 @@ export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFile
 }
 
 /**
+ * @name 更新分栏数据里某些节点file数据为被删除待保存状态
+ */
+export const updateAreaFileInfoToDelete = (areaInfo: AreaInfoProps[], path?: string) => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, index) => {
+        item.elements.forEach((itemIn, indexIn) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (path && (file.path === path || file.path.startsWith(path))) {
+                    newAreaInfo[index].elements[indexIn].files[fileIndex] = {
+                        ...newAreaInfo[index].elements[indexIn].files[fileIndex],
+                        isDelete: true,
+                        isUnSave: true,
+                        path: `${uuidv4()}-Delete`
+                    }
+                }
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
  * @name 更新分栏数据里所选节点的path与parent信息(重命名文件夹导致其内部文件path与parent发生变化)
  */
 export const updateAreaFilesPathInfo = (

@@ -448,6 +448,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             }
                             if (result.length > 0) {
                                 file.name = result[0].name
+                                file.isDelete = false
                                 success(`${result[0].name} 保存成功`)
                                 const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
                                 const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
