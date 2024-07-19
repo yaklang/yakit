@@ -482,12 +482,24 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.emit("onOpenTerminaDetail")
     })
 
+    // 文件树重命名（快捷键）
+    const onTreeRename = useMemoizedFn(()=>{
+        emiter.emit("onOperationFileTree", "rename")
+    })
+
+    // 文件树删除（快捷键）
+    const onTreeDelete = useMemoizedFn(()=>{
+        emiter.emit("onOperationFileTree", "delete")
+    })
+
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
         setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
         setKeyboard("17-192", {onlyid: uuidv4(), callback: onOpenTermina})
+        setKeyboard("113",{onlyid: uuidv4(), callback: onTreeRename})
+        setKeyboard("46",{onlyid: uuidv4(), callback: onTreeDelete})
     })
 
     useEffect(() => {

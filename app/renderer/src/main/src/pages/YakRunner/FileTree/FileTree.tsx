@@ -67,7 +67,8 @@ const FolderMenu: YakitMenuItemProps[] = [
 ]
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
-    const {folderPath,data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} = props
+    const {folderPath, data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} =
+        props
 
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
@@ -136,10 +137,10 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     })
 
     // 缓存tree展开项 用于关闭后打开
-    const onSaveYakRunnerLastExpanded = useMemoizedFn((value:string[])=>{
+    const onSaveYakRunnerLastExpanded = useMemoizedFn((value: string[]) => {
         setYakRunnerLastFolderExpanded({
             folderPath,
-            expandedKeys:value
+            expandedKeys: value
         })
     })
 
@@ -415,6 +416,27 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         setEdit(false)
     })
 
+    const onOperationFileTreeFun = useMemoizedFn((type: string) => {
+        if(!isFoucsed) return
+        switch (type) {
+            case "rename":
+                onRenameFun()
+                    setEdit(true)
+                break
+            case "delete":
+                setRemoveCheckVisible(true)
+                break
+        }
+    })
+
+    // 操作文件树（快捷键）
+    useEffect(() => {
+        emiter.on("onOperationFileTree", onOperationFileTreeFun)
+        return () => {
+            emiter.off("onOperationFileTree", onOperationFileTreeFun)
+        }
+    }, [])
+
     const onRenameFun = useMemoizedFn(async () => {
         try {
             if (value.length !== 0 && value !== info.name) {
@@ -449,6 +471,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                             (item) => item.path
                         )
                         const newAreaInfo = updateAreaFilesPathInfo(areaInfo, updatePath, info.path, path)
+                        setEdit(false)
                         // 更新当前激活展示文件
                         if (activeFile?.path.startsWith(info.path)) {
                             const newActiveFile = updateActiveFile(activeFile, {
@@ -510,13 +533,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     const newAreaInfo = updateAreaFileInfo(cacheAreaInfo, {name, path, icon, language}, info.path)
                     // 更名后重置激活元素
                     const newActiveFile = isResetActiveFile([info], activeFile)
+                    setEdit(false)
                     setActiveFile && setActiveFile(newActiveFile)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
                 emiter.emit("onResetFileTree", info.path)
                 emiter.emit("onRefreshFileTree")
             }
-            setEdit(false)
         } catch (error) {
             resetRename()
             failed(`保存失败 ${error}`)
