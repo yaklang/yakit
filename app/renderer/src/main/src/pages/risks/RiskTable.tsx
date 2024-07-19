@@ -22,6 +22,7 @@ import {onRemoveToolFC} from "../../utils/deleteTool"
 import {showByContextMenu} from "../../components/functionTemplate/showByContext"
 
 import "./RiskTable.css"
+import {Uint8ArrayToString} from "@/utils/str"
 
 export interface RiskTableProp {
     severity?: string
@@ -80,7 +81,7 @@ export const cellColorFontSetting = {
             color: {rgb: "000000"}
         }
     },
-    "信息": {
+    信息: {
         font: {
             color: {rgb: "8c8c8c"}
         }
@@ -831,7 +832,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                 ) : (
                                     <NewHTTPPacketEditor
                                         defaultHttps={isHttps}
-                                        originValue={new TextEncoder().encode(details[requestKeys[i]])}
+                                        originValue={details[requestKeys[i]] || ""}
                                         readOnly={true}
                                         noHeader={true}
                                         webFuzzerCallBack={() => {
@@ -852,7 +853,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                 ) : (
                                     <NewHTTPPacketEditor
                                         defaultHttps={isHttps}
-                                        originValue={new TextEncoder().encode(details[responseKeys[i]])}
+                                        originValue={details[responseKeys[i]] || ""}
                                         readOnly={true}
                                         noHeader={true}
                                         webFuzzerCallBack={() => {
@@ -875,7 +876,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                             ) : (
                                 <NewHTTPPacketEditor
                                     defaultHttps={isHttps}
-                                    originValue={info?.Request || new Uint8Array()}
+                                    originValue={Uint8ArrayToString(info?.Request || new Uint8Array())}
                                     readOnly={true}
                                     noHeader={true}
                                     webFuzzerCallBack={() => {
@@ -896,8 +897,8 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                             ) : (
                                 <NewHTTPPacketEditor
                                     defaultHttps={isHttps}
-                                    webFuzzerValue={info?.Request || new Uint8Array()}
-                                    originValue={info?.Response || new Uint8Array()}
+                                    webFuzzerValue={Uint8ArrayToString(info?.Request || new Uint8Array())}
+                                    originValue={Uint8ArrayToString(info?.Response || new Uint8Array())}
                                     readOnly={true}
                                     noHeader={true}
                                     webFuzzerCallBack={() => {

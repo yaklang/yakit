@@ -9,16 +9,7 @@ import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {
-    useClickAway,
-    useDebounceEffect,
-    useDebounceFn,
-    useGetState,
-    useMemoizedFn,
-    useThrottleEffect,
-    useUpdateEffect,
-    useVirtualList
-} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../../utils/basic"
 import {
@@ -54,7 +45,7 @@ import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "../yakitUI/YakitTag/YakitCheckableTag"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitMenu, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -79,9 +70,10 @@ import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
+import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -162,6 +154,18 @@ export interface HTTPFlow {
     TooLargeResponseHeaderFile: string
     TooLargeResponseBodyFile: string
     DisableRenderStyles: boolean
+
+    /**前端 Uint8Array对应的string */
+    RequestString: string
+    ResponseString: string
+}
+/**获取请求包Request和响应包Response  string */
+export const getHTTPFlowReqAndResToString = (flow: HTTPFlow) => {
+    return {
+        ...flow,
+        RequestString: !!flow?.Request?.length ? Uint8ArrayToString(flow.Request) : "",
+        ResponseString: !!flow?.Response?.length ? Uint8ArrayToString(flow.Response) : ""
+    }
 }
 
 export interface FuzzableParams {
@@ -1479,7 +1483,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
     const onSetCurrentRow = useDebounceFn(
         (rowDate: HTTPFlow) => {
-            onRowClick(rowDate)
+            onRowClick(getHTTPFlowReqAndResToString(rowDate))
         },
         {wait: 200, leading: true}
     ).run

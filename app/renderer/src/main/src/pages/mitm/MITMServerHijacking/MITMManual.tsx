@@ -214,7 +214,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                         alignSelf: "center",
                         maxWidth: 100,
                         cursor: "pointer",
-                        padding: '0 4px'
+                        padding: "0 4px"
                     }}
                     size='small'
                 >
@@ -229,8 +229,8 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
 interface MITMManualEditorProps {
     isHttp: boolean
     currentIsWebsocket: boolean
-    currentPacket: Uint8Array
-    setModifiedPacket: (u: Uint8Array) => void
+    currentPacket: string
+    setModifiedPacket: (u: string) => void
     forResponse: boolean
     currentPacketId: number
     handleAutoForward: (v: "manual" | "log" | "passive") => void
@@ -240,7 +240,7 @@ interface MITMManualEditorProps {
     status: MITMStatus
     onSetHijackResponseType: (s: string) => void
     currentIsForResponse: boolean
-    requestPacket: Uint8Array
+    requestPacket: string
     beautifyOpen: boolean
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
@@ -387,14 +387,12 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             defaultHttps={isHttp}
             originValue={currentPacket}
             noHeader={true}
-            isResponse={new Buffer(currentPacket.subarray(0, 5)).toString("utf8").startsWith("HTTP/")}
+            isResponse={currentPacket.substring(0, 5).startsWith("HTTP/")}
             bordered={false}
             onChange={setModifiedPacket}
             noPacketModifier={true}
             readOnly={status === "hijacking"}
-            refreshTrigger={
-                (forResponse ? `rsp` : `req`) + `${currentPacketId}${Uint8ArrayToString(currentPacket)}${beautifyOpen}`
-            }
+            refreshTrigger={(forResponse ? `rsp` : `req`) + `${currentPacketId}${currentPacket}${beautifyOpen}`}
             contextMenu={mitmManualRightMenu}
             editorOperationRecord='MITM_Manual_EDITOR_RECORF'
             isWebSocket={currentIsWebsocket && status !== "hijacking"}

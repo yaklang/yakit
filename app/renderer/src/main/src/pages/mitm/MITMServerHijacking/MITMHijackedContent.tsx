@@ -1,30 +1,24 @@
-import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {failed, info, yakitFailed} from "@/utils/notification"
-import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import {info, yakitFailed} from "@/utils/notification"
+import {useCreation, useGetState, useMemoizedFn} from "ahooks"
+import React, {useEffect, useMemo, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
 import {MITMLogHeardExtra} from "./MITMLog"
-import {HTTP_FLOW_TABLE_SHIELD_DATA, ShieldData} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import ReactResizeDetector from "react-resize-detector"
-import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useStore} from "@/store/mitmState"
 import {HTTPHistory} from "@/components/HTTPHistory"
-import {RemoteGV} from "@/yakitGV"
-import {Alert} from "antd"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
-import {Uint8ArrayToString} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 
 const {ipcRenderer} = window.require("electron")
@@ -57,16 +51,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     // 存储修改前和修改后的包！
     const [currentPacketInfo, setCurrentPacketInfo] = useState<{
-        requestPacket: Uint8Array
-        currentPacket: Uint8Array
+        requestPacket: string
+        currentPacket: string
         currentPacketId: number
         isHttp: boolean
         isResponse: boolean
         traceInfo: TraceInfo
     }>({
-        requestPacket: new Buffer([]),
+        requestPacket: "",
         currentPacketId: 0,
-        currentPacket: new Buffer([]),
+        currentPacket: "",
         isHttp: true,
         isResponse: false,
         traceInfo: {
@@ -79,7 +73,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
     const {currentPacket, currentPacketId, isHttp, requestPacket, isResponse, traceInfo} = currentPacketInfo
 
-    const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]))
+    const [modifiedPacket, setModifiedPacket] = useState<string>("")
 
     const [width, setWidth] = useState<number>(0)
 
@@ -92,7 +86,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [alertVisible, setAlertVisible] = useState<boolean>(false)
 
     const [beautifyOpen, setBeautifyOpen] = useState<boolean>(false)
-    const [currentBeautifyPacket, setCurrentBeautifyPacket] = useState<Uint8Array>(new Buffer([]))
+    const [currentBeautifyPacket, setCurrentBeautifyPacket] = useState<string>("")
 
     const getMITMFilter = useMemoizedFn(() => {
         ipcRenderer
@@ -201,10 +195,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 setForResponse(true)
                 setStatus("hijacked")
                 setCurrentPacketInfo({
-                    currentPacket: !!msg?.isWebsocket ? msg.Payload : msg.response,
+                    currentPacket: !!msg?.isWebsocket
+                        ? Uint8ArrayToString(msg.Payload)
+                        : Uint8ArrayToString(msg.response),
                     currentPacketId: msg.responseId,
                     isHttp: msg.isHttps,
-                    requestPacket: msg.request,
+                    requestPacket: Uint8ArrayToString(msg.request),
                     isResponse: true,
                     traceInfo: msg.traceInfo || {
                         AvailableDNSServers: [],
@@ -229,10 +225,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     // setCurrentPacket(msg.request)
                     // setCurrentPacketId(msg.id)
                     setCurrentPacketInfo({
-                        currentPacket: !!msg?.isWebsocket ? msg.Payload : msg.request,
+                        currentPacket: !!msg?.isWebsocket
+                            ? Uint8ArrayToString(msg.Payload)
+                            : Uint8ArrayToString(msg.request),
                         currentPacketId: msg.id,
                         isHttp: msg.isHttps,
-                        requestPacket: msg.request,
+                        requestPacket: Uint8ArrayToString(msg.request),
                         isResponse: true,
                         traceInfo: msg.traceInfo || {
                             AvailableDNSServers: [],
@@ -253,8 +251,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const clearCurrentPacket = () => {
         setCurrentPacketInfo({
             currentPacketId: 0,
-            currentPacket: new Buffer([]),
-            requestPacket: new Buffer([]),
+            currentPacket: "",
+            requestPacket: "",
             isHttp: true,
             isResponse: false,
             traceInfo: {
@@ -294,14 +292,15 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             setHijackResponseType("never")
         }
         setForResponse(false)
+        const modifiedPacketBytes = StringToUint8Array(modifiedPacket)
         if (forResponse) {
-            ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacket, currentPacketId).finally(() => {
+            ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacketBytes, currentPacketId).finally(() => {
                 clearCurrentPacket()
                 // setTimeout(() => setLoading(false))
             })
         } else {
             ipcRenderer
-                .invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId, [calloutColor])
+                .invoke("mitm-forward-modified-request", modifiedPacketBytes, currentPacketId, [calloutColor])
                 .finally(() => {
                     clearCurrentPacket()
                     setCalloutColor("")
@@ -371,26 +370,25 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
      * 美化
      */
     useEffect(() => {
-        const currentPacketStr = Uint8ArrayToString(currentPacket)
-        if (currentPacketStr === "") {
+        if (currentPacket === "") {
             setCurrentBeautifyPacket(currentPacket)
             return
         }
         const encoder = new TextEncoder()
-        const bytes = encoder.encode(currentPacketStr)
+        const bytes = encoder.encode(currentPacket)
         const mb = bytes.length / 1024 / 1024
         if (mb > 0.5) {
             setCurrentBeautifyPacket(currentPacket)
         } else {
-            prettifyPacketCode(currentPacketStr)
+            prettifyPacketCode(currentPacket)
                 .then((res) => {
-                    setCurrentBeautifyPacket(res as Uint8Array)
+                    if (!!res) setCurrentBeautifyPacket(Uint8ArrayToString(res as Uint8Array))
                 })
                 .catch(() => {
                     setCurrentBeautifyPacket(currentPacket)
                 })
         }
-    }, [Uint8ArrayToString(currentPacket)])
+    }, [currentPacket])
     const onSetBeautifyOpen = (flag: boolean) => {
         setBeautifyOpen(flag)
     }

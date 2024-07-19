@@ -1,8 +1,9 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
+const { Uint8ArrayToString } = require("../toolsFunc")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("delete-http-flows-all", async (e, params) => {
-        getClient().DeleteHTTPFlows({DeleteAll: true, ...params}, (err, data) => {})
+        getClient().DeleteHTTPFlows({ DeleteAll: true, ...params }, (err, data) => { })
     })
 
     // asyncDeleteHTTPFlows wrapper
@@ -90,7 +91,11 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-                resolve(data)
+                resolve({
+                    ...data,
+                    RequestString: !!data?.Request?.length ? Uint8ArrayToString(data.Request) : '',
+                    ResponseString: !!data?.Response?.length ? Uint8ArrayToString(data.Response) : ''
+                })
             })
         })
     }

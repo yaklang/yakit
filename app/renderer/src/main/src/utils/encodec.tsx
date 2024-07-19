@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {} from "react"
 import {showModal} from "./showModal"
 import {Button, Space} from "antd"
 import {IMonacoActionDescriptor, IMonacoCodeEditor, YakEditor} from "./editors"
@@ -6,8 +6,8 @@ import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../page
 import {failed} from "./notification"
 import {AutoCard} from "../components/AutoCard"
 import {Buffer} from "buffer"
-import {useGetState, useMemoizedFn} from "ahooks"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {useGetState} from "ahooks"
+import {StringToUint8Array} from "@/utils/str"
 
 export type CodecType =
     | "fuzz"

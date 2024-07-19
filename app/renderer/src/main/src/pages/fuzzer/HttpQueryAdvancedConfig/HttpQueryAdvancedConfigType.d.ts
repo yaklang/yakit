@@ -1,3 +1,4 @@
+import {KVPair} from "@/models/kv"
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 
@@ -110,9 +111,4 @@ export interface HttpQueryAdvancedConfigProps {
     showFormContentType: WebFuzzerType
     proxyListRef: React.Ref
     isbuttonIsSendReqStatus: boolean
-}
-
-export interface KVPair {
-    Key: string
-    Value: string
 }

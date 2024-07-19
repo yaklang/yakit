@@ -380,14 +380,14 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
                                         {flow.IsWebsocket ? (
-                                            <WebSocketEditor flow={flow} value={Uint8ArrayToString(flow.Request)} />
+                                            <WebSocketEditor flow={flow} value={flow.RequestString} />
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
                                                 hideSearch={true}
                                                 noHex={true}
                                                 noHeader={true}
-                                                originValue={new Buffer(flow.Request)}
+                                                originValue={flow.RequestString}
                                                 defaultHttps={flow?.IsHTTPS}
                                                 // actions={[...actionFuzzer]}
                                                 extraEditorProps={{
@@ -406,17 +406,17 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
                                         {flow.IsWebsocket ? (
-                                            <WebSocketEditor flow={flow} value={Uint8ArrayToString(flow.Response)} />
+                                            <WebSocketEditor flow={flow} value={flow.ResponseString} />
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
                                                 hideSearch={true}
                                                 noHex={true}
                                                 noHeader={true}
-                                                originValue={new Buffer(flow.Response)}
+                                                originValue={flow.ResponseString}
                                                 defaultHttps={flow?.IsHTTPS}
                                                 // actions={[...actionFuzzer]}
-                                                webFuzzerValue={new Buffer(flow.Request)}
+                                                webFuzzerValue={flow.RequestString || ""}
                                                 extraEditorProps={{
                                                     isShowSelectRangeMenu: true
                                                 }}
@@ -552,8 +552,6 @@ export interface HighLightText {
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const {id, selectedFlow, refresh, defaultFold = true} = props
     const [flow, setFlow] = useState<HTTPFlow>()
-    const [flowRequest, setFlowRequest] = useState<Uint8Array>()
-    const [flowResponse, setFlowResponse] = useState<Uint8Array>()
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [isSelect, setIsSelect] = useState<boolean>(false)
@@ -595,21 +593,17 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setFlowRequestLoad(false)
         setFlowResponseLoad(false)
         setFlow(selectedFlow)
-        setFlowRequest(undefined)
-        setFlowResponse(undefined)
 
         // 是否获取Request
         let isGetRequest: boolean = true
         let isGetResponse: boolean = true
 
         // 请求不为空直接使用
-        if (Uint8ArrayToString(selectedFlow?.Request as Uint8Array) && !isSkip) {
+        if (selectedFlow?.RequestString && !isSkip) {
             isGetRequest = false
-            setFlowRequest(selectedFlow?.Request)
         }
-        if (Uint8ArrayToString(selectedFlow?.Response as Uint8Array) && !isSkip) {
+        if (selectedFlow?.ResponseString && !isSkip) {
             isGetResponse = false
-            setFlowResponse(selectedFlow?.Response)
         }
         if (!isGetRequest && !isGetResponse && !isSkip) {
             queryMITMRuleExtractedData(selectedFlow as HTTPFlow)
@@ -622,12 +616,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 .invoke("GetHTTPFlowById", {Id: id})
                 .then((i: HTTPFlow) => {
                     if (+i.Id == lastIdRef.current) {
-                        if (isGetRequest) {
-                            setFlowRequest(i?.Request)
-                        }
-                        if (isGetResponse) {
-                            setFlowResponse(i?.Response)
-                        }
                         setFlow(i)
                         queryMITMRuleExtractedData(i)
                     }
@@ -717,8 +705,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     {flow && (
                         <HTTPFlowDetailRequestAndResponse
                             flow={flow}
-                            flowRequest={flowRequest}
-                            flowResponse={flowResponse}
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
                             highLightText={highLightText}
@@ -772,16 +758,16 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             originValue={(() => {
                                 switch (infoType) {
                                     case "domains":
-                                        return StringToUint8Array(
+                                        return (
                                             "# 根域 (Root-Domains)\r\n" +
-                                                (flow?.RootDomains || []).join("\r\n") +
-                                                "\r\n\r\n# 域名 (Domain) \r\n" +
-                                                (flow?.Domains || []).join("\r\n")
+                                            (flow?.RootDomains || []).join("\r\n") +
+                                            "\r\n\r\n# 域名 (Domain) \r\n" +
+                                            (flow?.Domains || []).join("\r\n")
                                         )
                                     case "json":
-                                        return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
+                                        return (flow?.JsonObjects || []).join("\r\n")
                                     default:
-                                        return new Uint8Array()
+                                        return ""
                                 }
                             })()}
                             editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
@@ -872,8 +858,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
 interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flow?: HTTPFlow
-    flowRequest?: Uint8Array
-    flowResponse?: Uint8Array
     flowRequestLoad?: boolean
     flowResponseLoad?: boolean
     pageType?: HTTPHistorySourcePageType
@@ -1018,24 +1002,21 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 响应/原始响应
     const [rspType, setRspType] = useState<"current" | "response">("current")
     // 编辑器展示originValue
-    const [originResValue, setOriginResValue] = useState<Uint8Array>(new Uint8Array())
-    const [originRspValue, setOriginRspValue] = useState<Uint8Array>(new Uint8Array())
+    const [originResValue, setOriginResValue] = useState<string>("")
+    const [originRspValue, setOriginRspValue] = useState<string>("")
     // 原始数据
-    const [beforeResValue, setBeforeResValue] = useState<Uint8Array>(new Uint8Array())
-    const [beforeRspValue, setBeforeRspValue] = useState<Uint8Array>(new Uint8Array())
+    const [beforeResValue, setBeforeResValue] = useState<string>("")
+    const [beforeRspValue, setBeforeRspValue] = useState<string>("")
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
     useUpdateEffect(() => {
-        setOriginResValue(fetchSsafeHTTPRequest() || new Uint8Array())
+        setOriginResValue(fetchSsafeHTTPRequest() || "")
     }, [flowRequestLoad])
 
     // 获取request内容
     const fetchSsafeHTTPRequest = useMemoizedFn(() => {
-        return (
-            (flow && (flow.InvalidForUTF8Request ? new Buffer(flow.SafeHTTPRequest!) : flow.Request)) ||
-            new Uint8Array()
-        )
+        return (flow && (flow.InvalidForUTF8Request ? flow.SafeHTTPRequest! : flow.RequestString)) || ""
     })
 
     useEffect(() => {
@@ -1043,7 +1024,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         setResType("current")
         setRspType("current")
         setOriginResValue(fetchSsafeHTTPRequest())
-        setOriginRspValue(flow?.Response || new Uint8Array())
+        setOriginRspValue(flow?.ResponseString || "")
         // 编辑器滚轮回到顶部
         reqEditor?.setScrollTop(0)
         resEditor?.setScrollTop(0)
@@ -1054,8 +1035,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             handleGetHTTPFlowBare("response")
         } else {
             setShowBeforeData(false)
-            setBeforeResValue(new Uint8Array())
-            setBeforeRspValue(new Uint8Array())
+            setBeforeResValue("")
+            setBeforeRspValue("")
         }
     }, [id])
 
@@ -1063,23 +1044,23 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         if (resType === "request") {
             setOriginResValue(beforeResValue)
         } else {
-            setOriginResValue(fetchSsafeHTTPRequest() || new Uint8Array())
+            setOriginResValue(fetchSsafeHTTPRequest())
         }
     }, [resType, flow?.Request])
     useEffect(() => {
         if (rspType === "response") {
             setOriginRspValue(beforeRspValue)
         } else {
-            setOriginRspValue(flow?.Response || new Uint8Array())
+            setOriginRspValue(flow?.ResponseString || "")
         }
     }, [rspType, flow?.Response])
 
     const onInitBeforeValue = useMemoizedFn((data: "request" | "response") => {
         if (data === "request") {
-            setBeforeResValue(new Uint8Array())
+            setBeforeResValue("")
         }
         if (data === "response") {
-            setBeforeRspValue(new Uint8Array())
+            setBeforeRspValue("")
         }
     })
     const handleGetHTTPFlowBare = useMemoizedFn((data: "request" | "response") => {
@@ -1091,10 +1072,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             .then((res: HTTPFlowBareProps) => {
                 if (res.Data && res.Data.length > 0) {
                     if (data === "request") {
-                        setBeforeResValue(res.Data)
+                        setBeforeResValue(Uint8ArrayToString(res.Data))
                     }
                     if (data === "response") {
-                        setBeforeRspValue(res.Data)
+                        setBeforeRspValue(Uint8ArrayToString(res.Data))
                     }
                 } else {
                     onInitBeforeValue(data)
@@ -1138,7 +1119,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 编辑器编码
     const [codeKey, setCodeKey] = useState<string>("")
     const [codeLoading, setCodeLoading] = useState<boolean>(false)
-    const [codeValue, setCodeValue] = useState<Uint8Array>(new Uint8Array())
+    const [codeValue, setCodeValue] = useState<string>("")
     useEffect(() => {
         if (flow) {
             getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
@@ -1335,7 +1316,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={{
                             rightCode: beforeResValue,
-                            leftCode: resType === "request" ? flow?.Request || new Uint8Array() : undefined,
+                            leftCode: resType === "request" ? flow?.RequestString || "" : undefined,
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
@@ -1449,14 +1430,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         hideSearch={true}
                         defaultSearchKeyword={props.search}
                         defaultHttps={props.defaultHttps}
-                        webFuzzerValue={flow?.Request || new Uint8Array()}
+                        webFuzzerValue={flow?.RequestString || ""}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
                         extraEditorProps={{
                             isShowSelectRangeMenu: true
                         }}
                         dataCompare={{
                             rightCode: beforeRspValue,
-                            leftCode: rspType === "response" ? flow?.Response || new Uint8Array() : undefined,
+                            leftCode: rspType === "response" ? flow?.ResponseString || "" : undefined,
                             leftTitle: "响应",
                             rightTitle: "原始响应"
                         }}
@@ -1475,11 +1456,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 })
 
 interface CodingPopoverProps {
-    originValue: Uint8Array
+    originValue: string
     codeKey: string
     onSetCodeLoading: (loading: boolean) => void
     onSetCodeKey: (codeKey: string) => void
-    onSetCodeValue: (codeValue: Uint8Array) => void
+    onSetCodeValue: (codeValue: string) => void
 }
 export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
     const {originValue, codeKey, onSetCodeKey, onSetCodeValue, onSetCodeLoading} = props
@@ -1507,7 +1488,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
 
     const fetchNewCodec = (codeVal: string) => {
         const newCodecParams = {
-            InputBytes: originValue,
+            InputBytes: StringToUint8Array(originValue),
             WorkFlow: [
                 {
                     CodecType: "CharsetToUTF8",
@@ -1524,7 +1505,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
         ipcRenderer
             .invoke("NewCodec", newCodecParams)
             .then((data: {Result: string; RawResult: Uint8Array}) => {
-                onSetCodeValue(data.RawResult)
+                onSetCodeValue(Uint8ArrayToString(data.RawResult))
                 onSetCodeKey(codeVal)
             })
             .catch((e) => {

@@ -901,9 +901,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         <div style={{height: 400}}>
                             <YakCodeEditor
                                 refreshTrigger={refreshTrigger}
-                                originValue={StringToUint8Array(menuDataString, "utf8")}
+                                originValue={menuDataString}
                                 language={"json"}
-                                onChange={(r) => setMenuDataString(Uint8ArrayToString(r, "utf8"))}
+                                onChange={setMenuDataString}
                             />
                         </div>
                     </Form.Item>

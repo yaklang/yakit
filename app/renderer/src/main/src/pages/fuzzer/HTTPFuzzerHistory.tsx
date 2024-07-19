@@ -1,15 +1,13 @@
 import React, {useEffect, useMemo, useState} from "react"
-import {Button, Card, Divider, Form, List, Popconfirm, Popover, Space, Tag, Tooltip} from "antd"
+import {Card, Divider, List, Space} from "antd"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined, DeleteOutlined} from "@ant-design/icons"
 import {useMemoizedFn} from "ahooks"
 import {info} from "../../utils/notification"
 import {PaginationSchema} from "@/pages/invoker/schema"
 import {HistoryHTTPFuzzerTask} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {HTTPPacketEditor, YakEditor} from "@/utils/editors"
-import {InputItem} from "@/utils/inputUtil"
-import {QuestionOutlined, SearchOutlined} from "@ant-design/icons/lib"
+import {Uint8ArrayToString} from "@/utils/str"
+import {NewHTTPPacketEditor} from "@/utils/editors"
 import {CheckIcon} from "@/assets/newIcon"
 import styles from "./HTTPFuzzerHistory.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -208,8 +206,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                                 placement={"rightBottom"}
                                 content={
                                     <div style={{width: 600, height: 300}}>
-                                        <HTTPPacketEditor
-                                            originValue={StringToUint8Array(verbose || "")}
+                                        <NewHTTPPacketEditor
+                                            originValue={verbose}
                                             readOnly={true}
                                             noMinimap={true}
                                             noHeader={true}

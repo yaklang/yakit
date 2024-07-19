@@ -119,9 +119,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const {
         forceRenderMenu = false,
         menuType = [],
-        isBytes = false,
         value,
-        valueBytes,
         setValue,
         type,
         theme = "kurior",
@@ -1463,7 +1461,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 <MonacoEditor
                     // height={100}
                     theme={theme || "kurior"}
-                    value={isBytes ? new Buffer((valueBytes || []) as Uint8Array).toString() : value}
+                    value={value}
                     onChange={setValue}
                     language={language}
                     editorDidMount={(editor: YakitIMonacoEditor, monaco) => {

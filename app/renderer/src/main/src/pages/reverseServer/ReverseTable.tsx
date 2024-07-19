@@ -13,7 +13,9 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import { YakitCopyText } from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {Uint8ArrayToString} from "@/utils/str"
+import {isEmptyObject} from "@/utils/tool"
 
 const DefaultType: {label: string; value: string}[] = [
     {value: "rmi", label: "RMI连接"},
@@ -261,7 +263,12 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                         />
                     </div>
                 }
-                secondNode={<YakitEditor readOnly={true} valueBytes={selectRow?.raw} isBytes={true} />}
+                secondNode={
+                    <YakitEditor
+                        readOnly={true}
+                        value={Uint8ArrayToString(selectRow?.raw || new Uint8Array())}
+                    />
+                }
             ></YakitResizeBox>
             {/* <YakitSelect
                 mode='multiple'

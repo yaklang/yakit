@@ -16,14 +16,7 @@ import {yakitFailed, yakitNotify} from "../../../utils/notification"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport/DataExport"
-import {
-    useDebounceEffect,
-    useDebounceFn,
-    useMemoizedFn,
-    useUpdateEffect,
-    useGetState,
-    useCreation,
-} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useGetState, useCreation} from "ahooks"
 import {Risk} from "@/pages/risks/schema"
 import {RiskDetails} from "@/pages/risks/RiskTable"
 import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
@@ -169,7 +162,17 @@ const renderCard = (infoList, type) => {
 }
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
-    const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType,consoleHeight} = props
+    const {
+        loading,
+        results,
+        featureType = [],
+        feature = [],
+        progress,
+        script,
+        statusCards,
+        cardStyleType,
+        consoleHeight
+    } = props
     const [active, setActive] = useState(() => {
         if (props.defaultActive) {
             return props.defaultActive
@@ -239,7 +242,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         return statusCards
     }, [statusCards])
     return (
-        <div className={'plugin-result-ui'} style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}>
+        <div
+            className={"plugin-result-ui"}
+            style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}
+        >
             {props.debugMode && props.onXtermRef && (
                 <>
                     <div style={{width: "100%", height: "100%"}}>
@@ -298,9 +304,9 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             <YakitTabs
                 type='card'
                 style={{flex: 1, overflow: "hidden", minHeight: "55%"}}
-                tabBarStyle={{display:"flex",overflow:"hidden"}}
+                tabBarStyle={{display: "flex", overflow: "hidden"}}
                 className={"main-content-tabs no-theme-tabs"}
-                boxStyle={{flex:1,overflow:"hidden"}}
+                boxStyle={{flex: 1, overflow: "hidden"}}
                 activeKey={active}
                 onChange={(activeKey) => {
                     setActive(activeKey)
@@ -401,7 +407,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     </YakitTabs.YakitTabPane>
                 )}
                 <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>
-                    <div style={{width: "100%", height: consoleHeight?consoleHeight:"100%"}}>
+                    <div style={{width: "100%", height: consoleHeight ? consoleHeight : "100%"}}>
                         <EngineConsole isMini={true} />
                     </div>
                 </YakitTabs.YakitTabPane>
@@ -432,8 +438,8 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
 
 interface CurrentHttpFlowProp {
     runtimeId: string
-    httpHistoryTableTitleStyle?:CSSProperties
-    containerClassName?:string
+    httpHistoryTableTitleStyle?: CSSProperties
+    containerClassName?: string
 
     /** 指定搜索url */
     searchURL?: string
@@ -448,7 +454,7 @@ interface CurrentHttpFlowProp {
     /** 表格的应用类型(history|MITM) */
     pageType?: HTTPHistorySourcePageType
 
-    /** 
+    /**
      * 流量表筛选条件回调
      * @param queryParams 流量表筛选条件JSON
      */
@@ -477,19 +483,15 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     } = props
     const [highlightSearch, setHighlightSearch] = useState("")
     const lasetIdRef = useRef<number>()
-    const [flowRequest, setFlowRequest] = useState<Uint8Array>()
-    const [flowResponse, setFlowResponse] = useState<Uint8Array>()
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [flow, setFlow] = useState<HTTPFlow>()
     const [historyId, setHistoryId] = useState<string>(uuidv4())
-    
+
     const getHTTPFlowById = (id: number, rowDate: HTTPFlow) => {
         setFlowRequestLoad(false)
         setFlowResponseLoad(false)
         setFlow(rowDate)
-        setFlowRequest(undefined)
-        setFlowResponse(undefined)
         onIsOnlyTable(false)
 
         // 是否获取Request
@@ -497,13 +499,11 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
         let isGetResponse: boolean = true
 
         // 请求不为空直接使用
-        if (Uint8ArrayToString(rowDate.Request)) {
+        if (rowDate.RequestString) {
             isGetRequest = false
-            setFlowRequest(rowDate.Request)
         }
-        if (Uint8ArrayToString(rowDate.Response)) {
+        if (rowDate.ResponseString) {
             isGetResponse = false
-            setFlowResponse(rowDate.Response)
         }
         // 请求或响应只要有一个为0就走接口拿取数据
         if (isGetRequest || isGetResponse) {
@@ -513,12 +513,6 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 .invoke("GetHTTPFlowById", {Id: id})
                 .then((i: HTTPFlow) => {
                     if (i.Id == lasetIdRef.current) {
-                        if (isGetRequest) {
-                            setFlowRequest(i?.Request)
-                        }
-                        if (isGetResponse) {
-                            setFlowResponse(i?.Response)
-                        }
                         setFlow(i)
                     }
                 })
@@ -574,7 +568,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                             borderLeft: "1px solid var(--yakit-border-color)",
                             borderRight: "1px solid var(--yakit-border-color)",
                             paddingTop: 12,
-                            ...(httpHistoryTableTitleStyle||{}),
+                            ...(httpHistoryTableTitleStyle || {})
                         }}
                         onlyShowSearch={true}
                         showBatchActions={showBatchActions}
@@ -596,8 +590,6 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                             Tags={flow.Tags}
                             noHeader={true}
                             search={highlightSearch}
-                            flowRequest={flowRequest}
-                            flowResponse={flowResponse}
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
                             sendToWebFuzzer={true}
@@ -647,7 +639,7 @@ export const compareAsc = (value1: object, value2: object, text: string, isNumbe
             // 按照ASCII码排序
             const b = value2[text] + ""
             const a = value1[text] + ""
-            return a.localeCompare(b, undefined, {sensitivity: 'base'})
+            return a.localeCompare(b, undefined, {sensitivity: "base"})
         }
     } catch (error) {
         return 0
@@ -669,9 +661,8 @@ export const compareDesc = (value1: object, value2: object, text: string, isNumb
             // 按照ASCII码排序
             const b = value2[text] + ""
             const a = value1[text] + ""
-            return b.localeCompare(a, undefined, {sensitivity: 'base'})
+            return b.localeCompare(a, undefined, {sensitivity: "base"})
         }
-        
     } catch (error) {
         return 0
     }

@@ -69,6 +69,7 @@ import {defQueryRisksRequest} from "./constants"
 import emiter from "@/utils/eventBus/eventBus"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -1178,7 +1179,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                         ) : (
                             <NewHTTPPacketEditor
                                 defaultHttps={isHttps}
-                                originValue={info?.Request || new Uint8Array()}
+                                originValue={Uint8ArrayToString(info?.Request || new Uint8Array())}
                                 readOnly={true}
                                 noHeader={true}
                                 webFuzzerCallBack={() => {
@@ -1199,8 +1200,8 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                         ) : (
                             <NewHTTPPacketEditor
                                 defaultHttps={isHttps}
-                                webFuzzerValue={info?.Request || new Uint8Array()}
-                                originValue={info?.Response || new Uint8Array()}
+                                webFuzzerValue={Uint8ArrayToString(info?.Request || new Uint8Array())}
+                                originValue={Uint8ArrayToString(info?.Response || new Uint8Array())}
                                 readOnly={true}
                                 noHeader={true}
                                 webFuzzerCallBack={() => {

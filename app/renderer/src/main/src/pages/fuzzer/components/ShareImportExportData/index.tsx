@@ -406,7 +406,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
 
     const editorContChange = useDebounceFn(
         (count) => {
-            emiter.emit("onImportYamlEditorChange", Uint8ArrayToString(count))
+            emiter.emit("onImportYamlEditorChange", count)
         },
         {wait: 100}
     ).run
@@ -415,7 +415,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
         <div className={styles.multimodeImportYaml} ref={multimodeImportYamlRef}>
             <NewHTTPPacketEditor
                 key={yamlContent}
-                originValue={StringToUint8Array(yamlContent)}
+                originValue={yamlContent}
                 noHeader={true}
                 onChange={editorContChange}
             ></NewHTTPPacketEditor>

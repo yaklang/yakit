@@ -64,4 +64,12 @@ const getNowTime = () => {
     return `${year}-${month}-${today}-${hour}-${minute}-${second}`
 }
 
-module.exports = {clearFolder, getNowTime}
+const Uint8ArrayToString=(fileData, encoding)=> {
+    try {
+        return Buffer.from(fileData).toString(encoding ? encoding : "utf8");
+    } catch (e) {
+        return `${fileData}`
+    }
+}
+
+module.exports = {clearFolder, getNowTime,Uint8ArrayToString}
