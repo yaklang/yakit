@@ -374,8 +374,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         try {
             const fileDetail = getMapFileDetail(copyPath)
             const code = await getCodeByPath(copyPath)
-            const currentPath = await getPathJoin(info.path, fileDetail.name)
-            if (currentPath.length === 0) return
+            const rootPath = info.isFolder ? info.path : info.parent
+            if (!rootPath) return
+            const currentPath = await getPathJoin(rootPath, fileDetail.name)
+            if (!currentPath) return
             const result = await grpcFetchPasteFile(currentPath, code, info.path)
             if (result.length === 0) return
             const {path, name, parent} = result[0]
@@ -687,6 +689,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 {label: "在终端打开", key: "openTernimal"},
                 {type: "divider"},
                 {label: "复制", key: "copy"},
+                {label: "粘贴", key: "paste", disabled: copyPath.length === 0},
                 {label: "复制路径", key: "copyAbsolutePath"},
                 {label: "复制相对路径", key: "copyRelativePath"},
                 {type: "divider"},

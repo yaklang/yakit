@@ -162,7 +162,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         }
     })
 
-    const onStopYak = useMemoizedFn(async()=>{
+    const onStopYak = useMemoizedFn(async () => {
         ipcRenderer.invoke("cancel-exec-yak")
     })
 
@@ -567,11 +567,6 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         openABSFileLocated(info.path)
     })
 
-    // 在文件列表显示
-    const onOpenFileList = useMemoizedFn((info: FileDetailInfo) => {
-        emiter.emit("onScrollToFileTree", info.path)
-    })
-
     const menuData = useMemoizedFn((info: FileDetailInfo) => {
         const inFileTree = getMapFileDetail(info.path)
         const base: YakitMenuItemType[] = [
@@ -596,11 +591,6 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 label: "在文件夹中显示",
                 key: "openFolder",
                 disabled: info.isUnSave
-            },
-            {
-                label: "在文件列表显示",
-                key: "openFileList",
-                disabled: info.isUnSave || inFileTree.parent === null
             }
         ]
         if (splitDirection.length > 0) {
@@ -638,9 +628,6 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                     case "openFolder":
                         onOpenFolder(info)
                         return
-                    case "openFileList":
-                        onOpenFileList(info)
-                        return
                     case "top":
                     case "right":
                     case "bottom":
@@ -663,26 +650,20 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                 </>
                 {isShowExtra && (
                     <>
-                    {
-                        runnerTabsId === tabsId?
-                        <YakitButton
-                            colors='danger'
-                            icon={<OutlinePauseIcon />}
-                            onClick={onStopYak}
-                        >
-                            停止
-                        </YakitButton>
-                        :
-                        <YakitButton
-                            icon={<OutlinePlayIcon />}
-                            loading={runnerTabsId === tabsId}
-                            disabled={!!runnerTabsId && runnerTabsId !== tabsId}
-                            onClick={onRunYak}
-                        >
-                            执行
-                        </YakitButton>
-                    }
-                        
+                        {runnerTabsId === tabsId ? (
+                            <YakitButton colors='danger' icon={<OutlinePauseIcon />} onClick={onStopYak}>
+                                停止
+                            </YakitButton>
+                        ) : (
+                            <YakitButton
+                                icon={<OutlinePlayIcon />}
+                                loading={runnerTabsId === tabsId}
+                                disabled={!!runnerTabsId && runnerTabsId !== tabsId}
+                                onClick={onRunYak}
+                            >
+                                执行
+                            </YakitButton>
+                        )}
                     </>
                 )}
             </div>
@@ -896,6 +877,9 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
             if (info.path !== activeFile?.path) {
                 const newActiveFile = await getDefaultActiveFile(info)
                 setActiveFile && setActiveFile(newActiveFile)
+                if (info.parent) {
+                    emiter.emit("onScrollToFileTree", info.path)
+                }
             }
             setAreaInfo && setAreaInfo(newAreaInfo)
         } catch (error) {}
@@ -963,7 +947,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     // 是否允许展示二进制
-    const [allowBinary,setAllowBinary] = useState<boolean>(false)
+    const [allowBinary, setAllowBinary] = useState<boolean>(false)
     useEffect(() => {
         areaInfo.forEach((item) => {
             item.elements.forEach((itemIn) => {
@@ -1146,9 +1130,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 打开二进制文件
     const onOpenBinary = useMemoizedFn(() => {
-        if(!editorInfo) return
+        if (!editorInfo) return
         setAllowBinary(true)
-        const newAreaInfo = updateAreaFileInfo(areaInfo, {...editorInfo,isPlainText:true}, editorInfo.path)
+        const newAreaInfo = updateAreaFileInfo(areaInfo, {...editorInfo, isPlainText: true}, editorInfo.path)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
     return (
@@ -1158,9 +1142,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     <Result
                         status={"warning"}
                         // title={"此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"}
-                        subTitle={
-                            "此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"
-                        }
+                        subTitle={"此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"}
                         extra={[
                             <YakitButton size='max' type='primary' onClick={onOpenBinary}>
                                 仍然打开
