@@ -37,6 +37,9 @@ module.exports = (win, getClient) => {
         // 如果有问题，重置
         stream.on("error", (e) => {
             removeStreamPort(addr)
+            if (win) {
+                win.webContents.send("client-listening-port-error", addr);
+            }
         })
 
         // 发送回数据
