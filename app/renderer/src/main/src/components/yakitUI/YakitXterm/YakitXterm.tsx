@@ -258,12 +258,7 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
                     return false
                 }
                 if (e.key === TERMINAL_KEYBOARD_Map.Backspace.key) {
-                    if (isWrite) {
-                        //Backspace
-                        onData("\x1b[D \x1b[D")
-                    } else {
-                        onData(" \x1b[D")
-                    }
+                    onData("\x1b[D \x1b[D")
                     e.preventDefault()
                     return false
                 }
@@ -284,7 +279,7 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
         if (props.onCursorMove) props.onCursorMove()
     }
     const onData = (data: string) => {
-        if (props.onData) props.onData(data)
+        if (isWrite && props.onData) props.onData(data)
     }
     const onKey = (event: {key: string; domEvent: KeyboardEvent}) => {
         if (props.onKey) props.onKey(event)
@@ -322,16 +317,20 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
 
     const onPaste = useThrottleFn(
         useMemoizedFn(() => {
-            loading.current = true
-            getCallCopyToClipboard()
-                .then((str: string) => {
-                    if (terminalRef.current) {
-                        terminalRef.current.paste(str)
-                        terminalRef.current.focus()
-                    }
-                })
-                .catch(() => {})
-                .finally(() => (loading.current = false))
+            if (isWrite) {
+                loading.current = true
+                getCallCopyToClipboard()
+                    .then((str: string) => {
+                        if (terminalRef.current) {
+                            terminalRef.current.paste(str)
+                            terminalRef.current.focus()
+                        }
+                    })
+                    .catch(() => {})
+                    .finally(() => (loading.current = false))
+            } else {
+                warn("不允许编辑")
+            }
         }),
         {wait: 200}
     ).run
