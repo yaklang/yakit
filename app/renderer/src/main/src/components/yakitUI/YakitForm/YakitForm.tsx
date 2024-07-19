@@ -10,10 +10,16 @@ import {
 import styles from "./YakitForm.module.scss"
 import classNames from "classnames"
 import {YakitInput} from "../YakitInput/YakitInput"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
 import {failed, yakitNotify} from "@/utils/notification"
 import {OutlineUploadIcon} from "@/assets/icon/outline"
 import {YakitAutoComplete} from "../YakitAutoComplete/YakitAutoComplete"
+import {UISettingSvgIcon} from "@/components/layout/icons"
+import {YakitButton} from "../YakitButton/YakitButton"
+import {YakitPopover} from "../YakitPopover/YakitPopover"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {YakitSpin} from "../YakitSpin/YakitSpin"
 
 const {Dragger} = Upload
 
@@ -570,15 +576,17 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         onChange,
         help,
         showDefHelp,
-        fileLimit = 1024,
         valueSeparator = ",",
         ...restProps
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
-    const fileRef = useRef<HTMLInputElement>(null)
+    const [fileLimit, setFileLimit] = useState<string>()
+    const fileRef = useRef<HTMLDivElement>(null)
+    const [form] = Form.useForm()
+    const [inViewport] = useInViewport(fileRef)
     const renderContent = useMemoizedFn((helpNode: ReactNode) => {
         return (
-            <Spin spinning={uploadLoading}>
+            <YakitSpin spinning={uploadLoading}>
                 <YakitInput.TextArea
                     placeholder='路径支持手动输入,输入多个请用逗号分隔'
                     value={value}
@@ -614,14 +622,36 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                 >
                     {helpNode}
                 </div>
-            </Spin>
+            </YakitSpin>
         )
     })
+    useDebounceEffect(
+        () => {
+            getRemoteValue(RemoteGV.YakitDraggerContentFileLimit).then((e) => {
+                try {
+                    if (!e) {
+                        setFileLimit("1")
+                    } else {
+                        const obj = JSON.parse(e)
+                        if (obj.init === false) {
+                            setFileLimit(obj.fileLimit)
+                        }
+                    }
+                } catch (error) {
+                    setFileLimit("1")
+                }
+            })
+        },
+        [inViewport],
+        {wait: 300}
+    )
     /**符合条件的文件，读取文件内容 */
     const onHandlerFile = useMemoizedFn((item: {size: number; path: string}) => {
-        if (item.size / 1024 > fileLimit) {
-            yakitNotify("error", `文件大小不能超过${fileLimit}KB`)
-            return
+        if (!(fileLimit === undefined || fileLimit === "")) {
+            if (item.size / 1024 > +fileLimit * 1024) {
+                yakitNotify("error", `文件大小不能超过${fileLimit}M`)
+                return
+            }
         }
         const path = item.path.replace(/\\/g, "\\")
         if (isAcceptEligible(path, props.accept || ".*")) {
@@ -711,7 +741,10 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                 }}
             >
                 {renderContent(
-                    <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
+                    <div
+                        className={classNames(styles["form-item-help"], styles["form-item-content-help"])}
+                        ref={fileRef}
+                    >
                         <label>
                             {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
                             <span
@@ -724,6 +757,56 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                             </span>
                             上传
                         </label>
+                        <div className={styles['divider-line']}></div>
+                        <YakitPopover
+                            overlayClassName={styles["form-item-setting-dropdown"]}
+                            placement='bottomLeft'
+                            content={
+                                <div onClick={(e) => e.stopPropagation()} style={{padding: "0 8px"}}>
+                                    <Form form={form} layout={"horizontal"}>
+                                        <Form.Item
+                                            label={"文件大小限制"}
+                                            name={"fileLimit"}
+                                            normalize={(value) => {
+                                                return value.replace(/\D/g, "")
+                                            }}
+                                        >
+                                            <YakitInput suffix='M' />
+                                        </Form.Item>
+                                    </Form>
+                                </div>
+                            }
+                            trigger={"click"}
+                            onVisibleChange={(visible) => {
+                                if (visible) {
+                                    getRemoteValue(RemoteGV.YakitDraggerContentFileLimit).then((e) => {
+                                        try {
+                                            if (!e) {
+                                                form.setFieldsValue({fileLimit: "1"})
+                                            } else {
+                                                const obj = JSON.parse(e)
+                                                if (obj.init === false) {
+                                                    form.setFieldsValue({fileLimit: obj.fileLimit})
+                                                }
+                                            }
+                                        } catch (error) {
+                                            form.setFieldsValue({fileLimit: "1"})
+                                        }
+                                    })
+                                } else {
+                                    setRemoteValue(
+                                        RemoteGV.YakitDraggerContentFileLimit,
+                                        JSON.stringify({fileLimit: form.getFieldValue("fileLimit"), init: false})
+                                    )
+                                    setFileLimit(form.getFieldValue("fileLimit"))
+                                }
+                            }}
+                        >
+                            <div className={styles["form-item-setting"]} onClick={(e) => e.stopPropagation()}>
+                                <UISettingSvgIcon className={styles["form-item-setting-icon"]} />
+                                设置
+                            </div>
+                        </YakitPopover>
                     </div>
                 )}
             </Dragger>

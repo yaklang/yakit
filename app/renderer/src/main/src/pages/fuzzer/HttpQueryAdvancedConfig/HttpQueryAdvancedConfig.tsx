@@ -1174,7 +1174,6 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
                         }}
                         help='可将TXT、Excel文件拖入框内或'
                         valueSeparator={"\r\n"}
-                        fileLimit={1024}
                     />
                 </Form>
             </div>

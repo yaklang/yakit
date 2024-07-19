@@ -106,6 +106,8 @@ export enum RemoteGV {
     HomeStartScanning="home_start_scanning",
     /**@name 端口监听器缓存的监听主机 */
     ReverseShellReceiverHostList="reverse-shell-receiver-host-list",
+    /**@name YakitDraggerContent组件限制文件大小 */
+    YakitDraggerContentFileLimit = "yakit_dragger_content_file_limit"
 }
 
 /** 项目逻辑全局变量 */
@@ -119,7 +121,7 @@ export enum CodeGV {
     /** @name public版本菜单模式 */
     PublicMenuModeValue = "public",
     /** @name 菜单状态缓存 */
-    MenuExpand = "menu-expand",
+    MenuExpand = "menu-expand"
 }
 
 /**YakitAutoComplate + YakitSelect缓存下拉和默认值变量 */

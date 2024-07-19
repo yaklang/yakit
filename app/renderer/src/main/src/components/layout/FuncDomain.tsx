@@ -82,6 +82,12 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import {PerformanceSamplingLog, usePerformanceSampling} from "@/store/performanceSampling"
 import {YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {SolidPlayIcon} from "@/assets/icon/solid"
+import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
+import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {getValueByType} from "@/pages/plugins/editDetails/utils"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2407,6 +2413,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
     })
 
     // 性能采样
+    const performanceParamsRef = useRef<{timeout: string}>({timeout: "10"})
     const {performanceSamplingInfo, setPerformanceSamplingLog, setSampling} = usePerformanceSampling()
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "debug-plugin",
@@ -2438,58 +2445,97 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             setPerformanceSamplingLog([])
         }
     }, [streamInfo])
+
     const handlePerformanceSampling = () => {
         if (performanceSamplingInfo.isPerformanceSampling) return
-        const params = {
-            Pagination: {
-                Limit: 20,
-                Page: 1,
-                OrderBy: "updated_at",
-                Order: "desc"
-            },
-            Keyword: "核心引擎性能采样",
-            Type: "yak"
-        }
-        apiQueryYakScript(params)
+        grpcFetchLocalPluginDetail({Name: "核心引擎性能采样"}, true)
             .then((res) => {
-                if (!res.Data) res.Data = []
-                if (!res.Data.length) {
-                    yakitNotify("info", "找不到Yak 原生插件：核心引擎性能采样")
-                } else {
-                    const samplingPlugin = res.Data[0]
-                    const yakExecutorParams: YakExecutorParam[] = []
-                    samplingPlugin.Params.forEach((item) => {
-                        yakExecutorParams.push({
-                            Key: item.Field,
-                            Value: item.TypeVerbose === "boolean" ? item.DefaultValue === "true" : item.DefaultValue
-                        })
-                    })
-                    const executeParams: DebugPluginRequest = {
-                        Code: "",
-                        PluginType: samplingPlugin.Type,
-                        Input: "",
-                        HTTPRequestTemplate: {
-                            ...defPluginExecuteFormValue
-                        },
-                        ExecParams: yakExecutorParams,
-                        PluginName: samplingPlugin.ScriptName
+                const samplingPlugin = res
+                const requiredParams = samplingPlugin.Params.filter(
+                    (item) => item.Required && item.Field === "timeout"
+                ).map((item) => {
+                    item.TypeVerbose = "uint"
+                    return item
+                })
+                let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
+                requiredParams.forEach((ele) => {
+                    const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+                    initRequiredFormValue = {
+                        ...initRequiredFormValue,
+                        [ele.Field]: value
                     }
-                    setPerformanceSamplingLog([])
-                    debugPluginStreamEvent.reset()
-                    apiDebugPlugin(executeParams, performanceSamplingInfo.token).then(() => {
-                        debugPluginStreamEvent.start()
-                        setSampling(true)
-                    })
-                }
+                })
+                let m = showYakitModal({
+                    title: "性能采样",
+                    width: 400,
+                    closable: true,
+                    centered: true,
+                    maskClosable: false,
+                    content: (
+                        <PerformanceSampleForm
+                            onPerformanceParams={(params) => {
+                                performanceParamsRef.current = params
+                            }}
+                            initRequiredFormValue={initRequiredFormValue}
+                            requiredParams={requiredParams}
+                        ></PerformanceSampleForm>
+                    ),
+                    okButtonProps: {icon: <SolidPlayIcon />},
+                    onOkText: "开始检测",
+                    onOk: () => {
+                        const yakExecutorParams: YakExecutorParam[] = []
+                        samplingPlugin.Params.forEach((item) => {
+                            if (item.Field === "timeout") {
+                                yakExecutorParams.push({
+                                    Key: item.Field,
+                                    Value: performanceParamsRef.current.timeout || item.DefaultValue
+                                })
+                            } else {
+                                yakExecutorParams.push({
+                                    Key: item.Field,
+                                    Value:
+                                        item.TypeVerbose === "boolean"
+                                            ? item.DefaultValue === "true"
+                                            : item.DefaultValue
+                                })
+                            }
+                        })
+                        const executeParams: DebugPluginRequest = {
+                            Code: "",
+                            PluginType: samplingPlugin.Type,
+                            Input: "",
+                            HTTPRequestTemplate: {
+                                ...defPluginExecuteFormValue
+                            },
+                            ExecParams: yakExecutorParams,
+                            PluginName: samplingPlugin.ScriptName
+                        }
+                        setPerformanceSamplingLog([])
+                        debugPluginStreamEvent.reset()
+                        apiDebugPlugin(executeParams, performanceSamplingInfo.token).then(() => {
+                            debugPluginStreamEvent.start()
+                            setSampling(true)
+                            m.destroy()
+                        })
+                    },
+                    onCancel: () => {
+                        m.destroy()
+                    }
+                })
             })
-            .catch((err) => {
-                yakitNotify("error", err)
+            .catch(() => {
+                yakitNotify("info", "找不到Yak 原生插件：核心引擎性能采样")
             })
+    }
+    const cancelPerformanceSampling = () => {
+        debugPluginStreamEvent.cancel()
+        debugPluginStreamEvent.reset()
     }
     useEffect(() => {
         emiter.on("performanceSampling", handlePerformanceSampling)
+        emiter.on("cancelPerformanceSampling", cancelPerformanceSampling)
         return () => {
-            emiter.off("performanceSampling", handlePerformanceSampling)
+            emiter.off("cancelPerformanceSampling", cancelPerformanceSampling)
         }
     }, [])
 
@@ -2526,3 +2572,29 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         </>
     )
 })
+
+interface PerformanceSampleFormProp {
+    onPerformanceParams: (params: {timeout: string}) => void
+    initRequiredFormValue: CustomPluginExecuteFormValue
+    requiredParams: YakParamProps[]
+}
+const PerformanceSampleForm: React.FC<PerformanceSampleFormProp> = (props) => {
+    const {onPerformanceParams, initRequiredFormValue, requiredParams} = props
+    const [form] = Form.useForm()
+
+    return (
+        <Form
+            form={form}
+            layout={"horizontal"}
+            labelCol={{span: 8}}
+            wrapperCol={{span: 15}}
+            style={{marginTop: 10}}
+            initialValues={initRequiredFormValue}
+            onValuesChange={(changedValues, allValues) => {
+                onPerformanceParams({...allValues})
+            }}
+        >
+            <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"yak"} isExecuting={false} />
+        </Form>
+    )
+}

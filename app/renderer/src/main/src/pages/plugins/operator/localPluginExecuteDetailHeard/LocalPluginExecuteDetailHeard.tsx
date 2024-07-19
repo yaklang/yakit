@@ -563,7 +563,12 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             )
         case "uint":
             return (
-                <Form.Item {...formProps}>
+                <Form.Item
+                    {...formProps}
+                    normalize={(value) => {
+                        return String(value).replace(/\D/g, "")
+                    }}
+                >
                     <YakitInputNumber precision={0} min={0} disabled={disabled} />
                 </Form.Item>
             )
@@ -621,7 +626,11 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <HTTPPacketYakitEditor originValue={item.DefaultValue} value={item.DefaultValue || ""} readOnly={disabled} />
+                    <HTTPPacketYakitEditor
+                        originValue={item.DefaultValue}
+                        value={item.DefaultValue || ""}
+                        readOnly={disabled}
+                    />
                 </Form.Item>
             )
         case "yak":
