@@ -4,7 +4,7 @@ import YakitXterm, {YakitXtermRefProps} from "@/components/yakitUI/YakitXterm/Ya
 import {callCopyToClipboard, getCallCopyToClipboard} from "@/utils/basic"
 import {writeXTerm} from "@/utils/xtermUtils"
 import {TERMINAL_INPUT_KEY} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
-import { Uint8ArrayToString } from "@/utils/str"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 export interface ReverseShellTerminalProps {
@@ -36,9 +36,14 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
                 writeXTerm(xtermRef, data.raw)
             }
         })
-
+        const errorKey = "client-listening-port-error"
+        ipcRenderer.on(errorKey, (e: any, data: any) => {})
+        const endKey = "client-listening-port-end"
+        ipcRenderer.on(endKey, (e: any, data: any) => {})
         return () => {
             ipcRenderer.removeAllListeners(key)
+            ipcRenderer.removeAllListeners(errorKey)
+            ipcRenderer.removeAllListeners(endKey)
         }
     }, [])
 
@@ -52,7 +57,6 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
     return (
         <YakitXterm
             ref={xtermRef}
-            isWrite={false}
             onData={(data) => {
                 commandExec(data)
             }}
