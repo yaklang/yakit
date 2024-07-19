@@ -34,7 +34,8 @@ import {
     removeAreaFilesInfo,
     setAreaFileActive,
     setYakRunnerHistory,
-    updateAreaFileInfo
+    updateAreaFileInfo,
+    updateAreaFileInfoToDelete
 } from "../utils"
 import moment from "moment"
 import {YakRunnerHistoryProps} from "../YakRunnerType"
@@ -357,6 +358,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                                 removeMapFolderDetail(item)
                             })
                         }
+                        const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
+                        setAreaInfo && setAreaInfo(newAreaInfo)
                         emiter.emit("onResetFileTree", info.path)
                         emiter.emit("onRefreshFileTree")
                         break
@@ -399,6 +402,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                             setMapFolderDetail(info.parent, newFolderDetail)
                         }
                         removeMapFileDetail(info.path)
+                        const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
+                        setAreaInfo && setAreaInfo(newAreaInfo)
                         emiter.emit("onResetFileTree", info.path)
                         emiter.emit("onRefreshFileTree")
                         break

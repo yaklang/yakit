@@ -914,7 +914,13 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                             onContextMenu={() => handleContextMenu(info)}
                         >
                             <img src={KeyToIcon[info.icon].iconPath} />
-                            <div className={styles["text-style"]}>{info.name}</div>
+                            <div
+                                className={classNames(styles["text-style"], {
+                                    [styles["text-style-delete"]]: info.isDelete
+                                })}
+                            >
+                                {info.name}
+                            </div>
                             <div
                                 className={classNames(styles["extra-icon"], {
                                     [styles["extra-icon-dot"]]: info.isUnSave && info.code.length > 0
@@ -1416,6 +1422,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                 }
                 if (result.length > 0) {
                     file.name = result[0].name
+                    file.isDelete = false
                     success(`${file.name} 保存成功`)
                     // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
                     const removeAreaInfo = removeAreaFileInfo(areaInfo, file)

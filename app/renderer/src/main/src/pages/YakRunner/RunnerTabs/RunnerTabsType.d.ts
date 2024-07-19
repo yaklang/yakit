@@ -40,6 +40,8 @@ export interface FileDetailInfo {
     selections?: Selection
     /** 是否未保存（用于临时文件创建） */
     isUnSave?: boolean
+    /** 是否已被外部删除（文件树监控-删除） */
+    isDelete?: boolean
     /** 语法检查（代码打开时执行） */
     syntaxCheck?: IMonacoEditorMarker[]
     /** 帮助信息（代码坐标获取时执行） */
