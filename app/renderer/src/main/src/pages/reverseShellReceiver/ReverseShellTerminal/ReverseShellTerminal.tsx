@@ -12,16 +12,18 @@ export interface ReverseShellTerminalProps {
     addr: string
     setLocal: (local: string) => void
     setRemote: (remote: string) => void
+    onCancelMonitor: () => void
 }
 export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props) => {
-    const {addr, echoBack, setLocal, setRemote} = props
+    const {addr, echoBack, setLocal, setRemote, onCancelMonitor} = props
 
     const xtermRef = useRef<YakitXtermRefProps>()
 
     useEffect(() => {
         const key = `client-listening-port-data-${addr}`
         ipcRenderer.on(key, (e, data) => {
-            if (data.control) {
+            if (data.closed) {
+                onCancelMonitor()
                 return
             }
 
@@ -36,10 +38,14 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
                 writeXTerm(xtermRef, data.raw)
             }
         })
-        const errorKey = "client-listening-port-error"
-        ipcRenderer.on(errorKey, (e: any, data: any) => {})
-        const endKey = "client-listening-port-end"
-        ipcRenderer.on(endKey, (e: any, data: any) => {})
+        const errorKey = `client-listening-port-error-${addr}`
+        ipcRenderer.on(errorKey, (e: any, data: any) => {
+            onCancelMonitor()
+        })
+        const endKey = `client-listening-port-end-${addr}`
+        ipcRenderer.on(endKey, (e: any, data: any) => {
+            onCancelMonitor()
+        })
         return () => {
             ipcRenderer.removeAllListeners(key)
             ipcRenderer.removeAllListeners(errorKey)
