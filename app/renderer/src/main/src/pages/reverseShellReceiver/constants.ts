@@ -7,5 +7,5 @@ export const defaultGenerateReverseShellCommand: GenerateReverseShellCommandRequ
     Encode: "None",
     Program: "",
     IP: "",
-    port: 0
+    port: 8085
 }

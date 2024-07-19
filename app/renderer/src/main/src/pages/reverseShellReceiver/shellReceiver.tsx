@@ -1,9 +1,9 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Form, Result, Tag, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useDebounceFn, useInterval, useMemoizedFn, useVirtualList} from "ahooks"
+import {useDebounceFn, useInterval, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import styles from "./shellReceiver.module.scss"
-import {failed, success, yakitNotify} from "@/utils/notification"
+import {failed, success} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RemoveIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
@@ -12,7 +12,6 @@ import {OutlineExitIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidDocumentduplicateIcon} from "@/assets/icon/solid"
-import {TERMINAL_INPUT_KEY} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
@@ -29,9 +28,10 @@ import {
     apiGenerateReverseShellCommand,
     apiGetReverseShellProgramList
 } from "./utils"
-import {TerminalBox} from "../YakRunner/BottomEditorDetails/TerminalBox/TerminalBox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultGenerateReverseShellCommand} from "./constants"
+import {ReverseShellTerminal} from "./ReverseShellTerminal/ReverseShellTerminal"
+import {callCopyToClipboard} from "@/utils/basic"
 const {ipcRenderer} = window.require("electron")
 
 export interface ShellReceiverLeftListProps {
@@ -202,9 +202,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
         })
     })
     const onCopy = useMemoizedFn(() => {
-        ipcRenderer.invoke("set-copy-clipboard", reverseShellCommand?.Result).then(() => {
-            yakitNotify("success", "复制成功")
-        })
+        if (reverseShellCommand?.Result) callCopyToClipboard(reverseShellCommand?.Result)
     })
     return (
         <div className={styles["shell-receiver-middle-item"]}>
@@ -291,48 +289,10 @@ export interface ShellReceiverRightRunProps {
 
 export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (props) => {
     const {loading, addr, fold, setFold, onCancelMonitor} = props
-    const [echoBack, setEchoBack] = useState<boolean>(false)
+    const [echoBack, setEchoBack] = useState<boolean>(true)
     const [local, setLocal] = useState<string>("")
     const [remote, setRemote] = useState<string>("")
 
-    const terminalRef = useRef<any>(null)
-    const xtermRef = React.useRef<any>(null)
-
-    useEffect(() => {
-        const key = `client-listening-port-data-${props.addr}`
-        ipcRenderer.on(key, (e, data) => {
-            if (data.control) {
-                return
-            }
-
-            if (data.localAddr) {
-                setLocal(data.localAddr)
-            }
-            if (data.remoteAddr) {
-                setRemote(data.remoteAddr)
-            }
-
-            if (data?.raw && xtermRef?.current && xtermRef.current?.terminal) {
-                // let str = String.fromCharCode.apply(null, data.raw);
-                xtermRef.current.terminal.write(data.raw)
-            }
-        })
-
-        return () => {
-            ipcRenderer.removeAllListeners(key)
-        }
-    }, [])
-
-    const write = useMemoizedFn((s) => {
-        if (!xtermRef || !xtermRef.current) {
-            return
-        }
-        const str = s.charCodeAt(0) === TERMINAL_INPUT_KEY.ENTER ? String.fromCharCode(10) : s
-        if (echoBack) {
-            xtermRef.current.terminal.write(str)
-        }
-    })
-    const onExitTernimal = useMemoizedFn(() => {})
     return (
         <div className={styles["shell-receiver-right-run"]}>
             <div className={styles["header"]}>
@@ -349,7 +309,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                     )}
                     <div className={styles["text"]}>正在监听:</div>
                     <Tag style={{borderRadius: 4}} color='blue'>
-                        本地端口:{addr} &lt;== 远程端口:192.168.3.115.28735
+                        本地端口:{local || addr || "-"} &lt;== 远程端口:{remote || "-"}
                     </Tag>
                 </div>
                 <div className={styles["extra"]}>
@@ -372,13 +332,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
             </div>
             <div className={styles["terminal-content"]}>
                 <YakitSpin spinning={loading}>
-                    <TerminalBox
-                        folderPath='C:\'
-                        isShowEditorDetails={true}
-                        terminaFont={`Consolas, 'Courier New', monospace`}
-                        xtermRef={terminalRef}
-                        onExitTernimal={onExitTernimal}
-                    />
+                    <ReverseShellTerminal echoBack={echoBack} addr={addr} setLocal={setLocal} setRemote={setRemote} />
                 </YakitSpin>
             </div>
         </div>
@@ -428,7 +382,7 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
         }
     }, [])
 
-    useEffect(() => {
+    useUpdateEffect(() => {
         onGenerateReverseShellCommand()
     }, [receiverDetail])
 
@@ -450,6 +404,7 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
     const onCancelMonitor = useMemoizedFn(() => {
         apiCancelListeningPort(`${currentHostRef.current}:${currentPortRef.current}`).then(() => {
             setShowStart(true)
+            setInterval(1000)
         })
     })
 

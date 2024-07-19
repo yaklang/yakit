@@ -2,7 +2,8 @@ import React, {useEffect, useMemo, useState} from "react";
 import {Button, PageHeader, Popconfirm, Space, Spin, Switch, Tag} from "antd";
 import {useGetState, useMemoizedFn} from "ahooks";
 import {AutoSpin} from "../../components/AutoSpin";
-import {CVXterm, TERMINAL_INPUT_KEY} from "../../components/CVXterm";
+import {CVXterm} from "../../components/CVXterm";
+import {TERMINAL_INPUT_KEY} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
 
 const {ipcRenderer} = window.require("electron");
 
