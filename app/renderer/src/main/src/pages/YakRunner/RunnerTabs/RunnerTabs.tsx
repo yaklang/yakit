@@ -12,19 +12,13 @@ import {
     YakitRunnerSaveModalProps
 } from "./RunnerTabsType"
 import {
-    DragDropContext,
     Droppable,
     Draggable,
-    DragUpdate,
-    ResponderProvided,
-    DragStart,
-    BeforeCapture,
-    DropResult
 } from "@hello-pangea/dnd"
 
 import classNames from "classnames"
 import styles from "./RunnerTabs.module.scss"
-import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
+import {KeyToIcon} from "../FileTree/icon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineChevrondoubleleftIcon,
@@ -42,13 +36,9 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
-import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
+import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
 import {IMonacoEditor} from "@/utils/editors"
 import {
-    MAX_FILE_SIZE_BYTES,
-    addAreaFileInfo,
-    getCodeByPath,
-    getCodeSizeByPath,
     getDefaultActiveFile,
     getOpenFileInfo,
     getPathParent,
@@ -63,7 +53,6 @@ import {
     setYakRunnerHistory,
     updateAreaFileInfo
 } from "../utils"
-import {IMonacoEditorMarker} from "@/utils/editorMarkers"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, warn, success} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
@@ -77,18 +66,11 @@ import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeTyp
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
-import moment from "moment"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
 import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 const {ipcRenderer} = window.require("electron")
-
-const layoutToString = (v: number[]) => {
-    return JSON.stringify(v)
-}
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId, wrapperClassName} = props
@@ -1179,8 +1161,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
 
-    const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
-
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
     const getHistoryList = useMemoizedFn(async () => {
@@ -1191,50 +1171,20 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
         getHistoryList()
     }, [])
 
-    // 通过路径打开文件
-    const openFileByPath = useMemoizedFn(async (path: string, name: string) => {
-        // 由于此处的打开文件 不存在已打开文件 故无需校验
-        const {size, isPlainText} = await getCodeSizeByPath(path)
-        if (size > MAX_FILE_SIZE_BYTES) {
-            setShowFileHint(true)
-            return
-        }
-        const code = await getCodeByPath(path)
-        const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
-        const scratchFile: FileDetailInfo = {
-            name,
-            code,
-            icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-            isActive: true,
-            openTimestamp: moment().unix(),
-            isPlainText,
-            // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
-            path,
-            parent: null,
-            language: name.split(".").pop() === "yak" ? "yak" : "text"
-        }
-        // 注入语法检测
-        const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
-        const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, syntaxActiveFile, activeFile)
-        setAreaInfo && setAreaInfo(newAreaInfo)
-        setActiveFile && setActiveFile(newActiveFile)
-
-        // 创建文件时接入历史记录
-        const history: YakRunnerHistoryProps = {
-            isFile: true,
-            name,
-            path
-        }
-        setYakRunnerHistory(history)
-    })
-
     // 打开文件
     const openFile = useMemoizedFn(async () => {
         try {
             const openFileInfo = await getOpenFileInfo()
             if (openFileInfo) {
                 const {path, name} = openFileInfo
-                openFileByPath(path, name)
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path,
+                        name
+                    },
+                    isHistory: true
+                }
+                emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
         } catch (error) {}
     })
@@ -1303,7 +1253,14 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                     className={styles["list-opt"]}
                                     onClick={() => {
                                         if (item.isFile) {
-                                            openFileByPath(item.path, item.name)
+                                            const OpenFileByPathParams: OpenFileByPathProps = {
+                                                params: {
+                                                    path:item.path,
+                                                    name:item.name
+                                                },
+                                                isHistory: true
+                                            }
+                                            emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                                         } else {
                                             emiter.emit("onOpenFolderList", item.path)
                                         }
@@ -1319,17 +1276,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                     </div>
                 </div>
             </div>
-            {/* 文件过大提示框 */}
-            <YakitHint
-                visible={isShowFileHint}
-                title='文件警告'
-                content='文件过大，无法使用YakRunner进行操作'
-                cancelButtonProps={{style: {display: "none"}}}
-                onOk={() => {
-                    setShowFileHint(false)
-                }}
-                okButtonText={"知道了"}
-            />
         </div>
     )
 })

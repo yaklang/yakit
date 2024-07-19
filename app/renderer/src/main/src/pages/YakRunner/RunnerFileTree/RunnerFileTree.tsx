@@ -16,10 +16,6 @@ import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDro
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {
-    MAX_FILE_SIZE_BYTES,
-    addAreaFileInfo,
-    getCodeByPath,
-    getCodeSizeByPath,
     getDefaultActiveFile,
     getNameByPath,
     getOpenFileInfo,
@@ -37,13 +33,11 @@ import {
     updateAreaFileInfo,
     updateAreaFileInfoToDelete
 } from "../utils"
-import moment from "moment"
-import {YakRunnerHistoryProps} from "../YakRunnerType"
+import {OpenFileByPathProps, YakRunnerHistoryProps} from "../YakRunnerType"
 import emiter from "@/utils/eventBus/eventBus"
 import {
     clearMapFileDetail,
     getMapAllFileKey,
-    getMapAllFileValue,
     getMapFileDetail,
     removeMapFileDetail,
     setMapFileDetail
@@ -60,7 +54,6 @@ import {v4 as uuidv4} from "uuid"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, success} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -68,7 +61,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {addFileTab} = props
     const {fileTree, areaInfo, activeFile} = useStore()
     const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
-    const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
     // 选中的文件或文件夹
@@ -526,73 +518,20 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     })
 
-    // 通过路径打开文件
-    const openFileByPath = useMemoizedFn(async (path: string, name: string, parent?: string | null) => {
-        try {
-            // 校验是否已存在 如若存在则不创建只定位
-            const file = await judgeAreaExistFilePath(areaInfo, path)
-            if (file) {
-                const newAreaInfo = setAreaFileActive(areaInfo, path)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile(file)
-            } else {
-                const {size, isPlainText} = await getCodeSizeByPath(path)
-                if (size > MAX_FILE_SIZE_BYTES) {
-                    setShowFileHint(true)
-                    return
-                }
-                const code = await getCodeByPath(path)
-                const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
-                const scratchFile: FileDetailInfo = {
-                    name,
-                    code,
-                    icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-                    isActive: true,
-                    openTimestamp: moment().unix(),
-                    isPlainText,
-                    // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
-                    path,
-                    parent: parent || null,
-                    language: name.split(".").pop() === "yak" ? "yak" : "text"
-                }
-                // 注入语法检测
-                const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
-                const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, syntaxActiveFile, activeFile)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile(newActiveFile)
-            }
-        } catch (error) {}
-    })
-
-    const onOpenFileByPathFun = useMemoizedFn((data) => {
-        try {
-            const {path, name, parent} = JSON.parse(data)
-            openFileByPath(path, name, parent)
-        } catch (error) {}
-    })
-
-    useEffect(() => {
-        // 通过路径打开文件
-        emiter.on("onOpenFileByPath", onOpenFileByPathFun)
-        return () => {
-            emiter.off("onOpenFileByPath", onOpenFileByPathFun)
-        }
-    })
-
     // 打开文件
     const openFile = useMemoizedFn(async () => {
         try {
             const openFileInfo = await getOpenFileInfo()
             if (openFileInfo) {
                 const {path, name} = openFileInfo
-                openFileByPath(path, name)
-                // 打开文件时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                    isFile: true,
-                    name,
-                    path
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path,
+                        name
+                    },
+                    isHistory: true
                 }
-                setYakRunnerHistory(history)
+                emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
         } catch (error) {}
     })
@@ -619,14 +558,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             const item = filterArr[0]
             // 打开文件
             if (item.isFile) {
-                openFileByPath(item.path, item.name)
-                // 打开文件时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                    isFile: true,
-                    name: item.name,
-                    path: item.path
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path:item.path,
+                        name:item.name
+                    },
+                    isHistory: true
                 }
-                setYakRunnerHistory(history)
+                emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
             // 打开文件夹
             else {
@@ -665,7 +604,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             if (e.selected) {
                 const {path, name, parent, isFolder} = e.node
                 if (!isFolder) {
-                    openFileByPath(path, name, parent)
+                    const OpenFileByPathParams: OpenFileByPathProps = {
+                        params: {
+                            path,
+                            name,
+                            parent
+                        }
+                    }
+                    emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                 }
             }
         }
@@ -711,17 +657,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     </div>
                 </div>
             </div>
-            {/* 文件过大提示框 */}
-            <YakitHint
-                visible={isShowFileHint}
-                title='文件警告'
-                content='文件过大，无法使用YakRunner进行操作'
-                cancelButtonProps={{style: {display: "none"}}}
-                onOk={() => {
-                    setShowFileHint(false)
-                }}
-                okButtonText={"知道了"}
-            />
         </div>
     )
 }

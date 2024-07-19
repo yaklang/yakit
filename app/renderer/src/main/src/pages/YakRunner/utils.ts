@@ -244,6 +244,90 @@ export const grpcFetchPasteFile: (
 }
 
 /**
+ * @name 最大限制10M
+ */
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
+/**
+ * @name 根据文件path获取其大小并判断其是否为文本
+ */
+export const getCodeSizeByPath = (path: string): Promise<{size: number; isPlainText: boolean}> => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "GET",
+            Url: {
+                Schema: "file",
+                Path: path,
+                Query: [{Key: "detectPlainText", Value: "true"}]
+            }
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            const size = parseInt(list.Resources[0].Size + "")
+            let isPlainText: boolean = true
+            list.Resources[0].Extra.forEach((item) => {
+                if (item.Key === "IsPlainText" && item.Value === "false") {
+                    isPlainText = false
+                }
+            })
+            resolve({
+                size,
+                isPlainText
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const getCodeByNode = (path: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("read-file-content", path)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch(() => {
+                failed("无法获取该文件内容，请检查后后重试！")
+                reject()
+            })
+    })
+}
+
+/**
+ * @name 根据文件path获取其内容
+ */
+export const getCodeByPath = (path: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let content: string = ""
+            const token = randomString(60)
+            ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
+            ipcRenderer.on(`${token}-data`, (e, result: {Data: Uint8Array; EOF: boolean}) => {
+                content += Uint8ArrayToString(result.Data)
+                if (result.EOF) {
+                    resolve(content)
+                }
+            })
+            ipcRenderer.on(`${token}-error`, async (e, error) => {
+                try {
+                    let newContent = await getCodeByNode(path)
+                    resolve(newContent)
+                } catch (error) {
+                    failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
+                    reject()
+                }
+            })
+            ipcRenderer.on(`${token}-end`, (e, data) => {
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            })
+        } catch (error) {}
+    })
+}
+
+/**
  * @name 更新树数据里某个节点的children数据
  */
 export const updateFileTree: (
@@ -618,90 +702,6 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
             .catch(() => {
                 reject()
             })
-    })
-}
-
-/**
- * @name 最大限制10M
- */
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
-
-/**
- * @name 根据文件path获取其大小并判断其是否为文本
- */
-export const getCodeSizeByPath = (path: string): Promise<{size: number; isPlainText: boolean}> => {
-    return new Promise(async (resolve, reject) => {
-        const params = {
-            Method: "GET",
-            Url: {
-                Schema: "file",
-                Path: path,
-                Query: [{Key: "detectPlainText", Value: "true"}]
-            }
-        }
-        try {
-            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            const size = parseInt(list.Resources[0].Size + "")
-            let isPlainText: boolean = true
-            list.Resources[0].Extra.forEach((item) => {
-                if (item.Key === "IsPlainText" && item.Value === "false") {
-                    isPlainText = false
-                }
-            })
-            resolve({
-                size,
-                isPlainText
-            })
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-
-const getCodeByNode = (path: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("read-file-content", path)
-            .then((res) => {
-                resolve(res)
-            })
-            .catch(() => {
-                failed("无法获取该文件内容，请检查后后重试！")
-                reject()
-            })
-    })
-}
-
-/**
- * @name 根据文件path获取其内容
- */
-export const getCodeByPath = (path: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            let content: string = ""
-            const token = randomString(60)
-            ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
-            ipcRenderer.on(`${token}-data`, (e, result: {Data: Uint8Array; EOF: boolean}) => {
-                content += Uint8ArrayToString(result.Data)
-                if (result.EOF) {
-                    resolve(content)
-                }
-            })
-            ipcRenderer.on(`${token}-error`, async (e, error) => {
-                try {
-                    let newContent = await getCodeByNode(path)
-                    resolve(newContent)
-                } catch (error) {
-                    failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
-                    reject()
-                }
-            })
-            ipcRenderer.on(`${token}-end`, (e, data) => {
-                ipcRenderer.removeAllListeners(`${token}-data`)
-                ipcRenderer.removeAllListeners(`${token}-error`)
-                ipcRenderer.removeAllListeners(`${token}-end`)
-            })
-        } catch (error) {}
     })
 }
 
