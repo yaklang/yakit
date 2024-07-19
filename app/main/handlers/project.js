@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const { ipcMain } = require("electron");
 
 module.exports = (win, getClient) => {
     // asyncSetCurrentProject wrapper
@@ -63,6 +63,22 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("NewProject", async (e, params) => {
         return await asyncNewProject(params)
+    })
+
+    // asyncUpdateProject wrapper
+    const asyncUpdateProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateProject", async (e, params) => {
+        return await asyncUpdateProject(params)
     })
 
     // asyncIsProjectNameValid wrapper

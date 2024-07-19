@@ -456,10 +456,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             }
         })
     }, [])
-    const suffixFun = (file_name: string) => {
-        let file_index = file_name.lastIndexOf(".")
-        return file_name.slice(file_index, file_name.length)
-    }
     const onSetChromePath = useMemoizedFn((value?: string) => {
         setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(value || chromePath))
     })
@@ -771,17 +767,11 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         onChange={(e) => setChromePath(e.target.value)}
                                     />
                                     <Upload
-                                        accept={".exe"}
                                         multiple={false}
                                         maxCount={1}
                                         showUploadList={false}
                                         beforeUpload={(f) => {
                                             const file_name = f.name
-                                            const suffix = suffixFun(file_name)
-                                            if (![".exe"].includes(suffix)) {
-                                                warn("上传文件格式错误，请重新上传")
-                                                return false
-                                            }
                                             // @ts-ignore
                                             const path: string = f?.path || ""
                                             if (path.length > 0) {
