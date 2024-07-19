@@ -210,6 +210,40 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
 }
 
 /**
+ * @name 粘贴文件
+ */
+export const grpcFetchPasteFile: (
+    path: string,
+    code?: string | null,
+    parentPath?: string | null
+) => Promise<FileNodeMapProps[]> = (path, code, parentPath) => {
+    return new Promise(async (resolve, reject) => {
+        const params: any = {
+            Method: "PUT",
+            Url: {
+                Schema: "file",
+                Query: [
+                    {Key: "type", Value: "file"},
+                    {Key: "paste", Value: "true"}
+                ],
+                Path: path
+            }
+        }
+        if (code && code.length > 0) {
+            params.Body = StringToUint8Array(code)
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            // console.log("新建文件", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
+            resolve(data)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
  * @name 更新树数据里某个节点的children数据
  */
 export const updateFileTree: (
@@ -627,7 +661,7 @@ export const getCodeByPath = (path: string): Promise<string> => {
             ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
             ipcRenderer.on(`${token}-data`, (e, result: {Data: Uint8Array; EOF: boolean}) => {
                 content += Uint8ArrayToString(result.Data)
-                if(result.EOF){
+                if (result.EOF) {
                     resolve(content)
                 }
             })

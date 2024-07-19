@@ -26,4 +26,6 @@ export type YakRunnerEventProps = {
     onDefaultExpanded: string
     // 操作文件树（快捷键）
     onOperationFileTree: string
+    // 通过路径打开文件
+    onOpenFileByPath: string
 }

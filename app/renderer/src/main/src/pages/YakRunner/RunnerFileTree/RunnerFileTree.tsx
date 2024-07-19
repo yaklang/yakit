@@ -559,6 +559,21 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         } catch (error) {}
     })
 
+    const onOpenFileByPathFun = useMemoizedFn((data) => {
+        try {
+            const {path, name, parent} = JSON.parse(data)
+            openFileByPath(path, name, parent)
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        // 通过路径打开文件
+        emiter.on("onOpenFileByPath", onOpenFileByPathFun)
+        return () => {
+            emiter.off("onOpenFileByPath", onOpenFileByPathFun)
+        }
+    })
+
     // 打开文件
     const openFile = useMemoizedFn(async () => {
         try {
@@ -677,7 +692,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         <div className={styles["file-tree-tree"]}>
                             <div className={styles["tree-body"]}>
                                 <FileTree
-                                    folderPath={fileTree.length>0?fileTree[0].path:""}
+                                    folderPath={fileTree.length > 0 ? fileTree[0].path : ""}
                                     data={fileDetailTree}
                                     onLoadData={onLoadData}
                                     onSelect={onSelectFileTree}
