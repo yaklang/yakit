@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps} from "./FileTreeType"
-import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
+import {SystemInfo} from "@/constants/hardware"
 import {Tree} from "antd"
 import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
@@ -13,14 +13,7 @@ import classNames from "classnames"
 import styles from "./FileTree.module.scss"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {
-    clearMapFileDetail,
-    getMapAllFileKey,
-    getMapAllFileValue,
-    getMapFileDetail,
-    removeMapFileDetail,
-    setMapFileDetail
-} from "../FileTreeMap/FileMap"
+import {getMapAllFileKey, getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
 import emiter from "@/utils/eventBus/eventBus"
 import {
     getCodeByPath,
@@ -28,7 +21,6 @@ import {
     getRelativePath,
     grpcFetchCreateFile,
     grpcFetchCreateFolder,
-    grpcFetchDeleteFile,
     grpcFetchPasteFile,
     grpcFetchRenameFileTree,
     isResetActiveFile,
@@ -36,7 +28,6 @@ import {
     judgeAreaExistFilesPath,
     loadFolderDetail,
     removeAreaFileInfo,
-    removeAreaFilesInfo,
     setYakRunnerLastFolderExpanded,
     updateActiveFile,
     updateAreaFileInfo,
@@ -45,7 +36,6 @@ import {
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {
-    clearMapFolderDetail,
     getMapAllFolderKey,
     getMapFolderDetail,
     hasMapFolderDetail,
@@ -55,8 +45,8 @@ import {
 import {failed, success} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
-import {FileMonitorProps} from "@/utils/duplex/duplex"
 import {callCopyToClipboard} from "@/utils/basic"
+import {OpenFileByPathProps} from "../YakRunnerType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -595,7 +585,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     // 如果为新建文件则新建后需要打开此文件
                     if (!info.isFolder) {
                         setFoucsedKey(path)
-                        emiter.emit("onOpenFileByPath", JSON.stringify({path, name, parent}))
+                        const OpenFileByPathParams: OpenFileByPathProps = {
+                            params: {
+                                path,
+                                name,
+                                parent
+                            }
+                        }
+                        emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                     }
                 }
                 emiter.emit("onRefreshFileTree")

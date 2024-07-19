@@ -40,3 +40,14 @@ export interface TabFileProps {
 export interface AreaInfoProps {
     elements: TabFileProps[]
 }
+
+// 打开文件信息
+export interface OpenFileByPathProps {
+    params: {
+        path: string
+        name: string
+        parent?: string | null
+    }
+    // 是否记录历史
+    isHistory?: boolean
+}
