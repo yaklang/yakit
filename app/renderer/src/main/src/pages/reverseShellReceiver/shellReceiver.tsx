@@ -364,6 +364,7 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
     const [isShowStart, setShowStart] = useState<boolean>(true)
 
     const [addrList, setAddrList] = useState<string[]>([])
+    const [addrLoading, setAddrLoading] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingCommand, setLoadingCommand] = useState<boolean>(false)
 
@@ -384,9 +385,16 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
     const currentPortRef = useRef<number>(8085)
 
     useInterval(() => {
-        ipcRenderer.invoke("listening-port-query-addrs").then((r) => {
-            setAddrList(r)
-        })
+        ipcRenderer
+            .invoke("listening-port-query-addrs")
+            .then((r) => {
+                setAddrList(r)
+            })
+            .finally(() => {
+                if (addrLoading) {
+                    setAddrLoading(false)
+                }
+            })
     }, interval)
 
     useEffect(() => {
@@ -474,40 +482,42 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
                         </div>
                     </div>
                     <div className={styles["main"]}>
-                        <Form
-                            form={form}
-                            onFinish={onStartMonitor}
-                            labelCol={{span: 8}}
-                            wrapperCol={{span: 8}} //这样设置是为了让输入框居中
-                        >
-                            <Form.Item
-                                rules={[{required: true, message: "该项为必填"}]}
-                                label={"监听的主机"}
-                                name={"host"}
+                        <YakitSpin spinning={addrLoading}>
+                            <Form
+                                form={form}
+                                onFinish={onStartMonitor}
+                                labelCol={{span: 8}}
+                                wrapperCol={{span: 8}} //这样设置是为了让输入框居中
                             >
-                                <YakitAutoComplete
-                                    ref={hostRef}
-                                    cacheHistoryDataKey={RemoteGV.ReverseShellReceiverHostList}
-                                    placeholder={"请输入监听的主机"}
-                                    options={["0.0.0.0", "127.0.0.1", "192.168.1.235"].map((i) => {
-                                        return {value: i, label: i}
-                                    })}
-                                />
-                            </Form.Item>
-                            <Form.Item
-                                rules={[{required: true, message: "该项为必填"}]}
-                                label={"端口"}
-                                name={"port"}
-                                initialValue={8085}
-                            >
-                                <YakitInputNumber min={1} max={65535} placeholder='请输入端口' />
-                            </Form.Item>
-                            <Form.Item label=' ' colon={false}>
-                                <YakitButton htmlType='submit' size='large'>
-                                    启动监听
-                                </YakitButton>
-                            </Form.Item>
-                        </Form>
+                                <Form.Item
+                                    rules={[{required: true, message: "该项为必填"}]}
+                                    label={"监听的主机"}
+                                    name={"host"}
+                                >
+                                    <YakitAutoComplete
+                                        ref={hostRef}
+                                        cacheHistoryDataKey={RemoteGV.ReverseShellReceiverHostList}
+                                        placeholder={"请输入监听的主机"}
+                                        options={["0.0.0.0", "127.0.0.1", "192.168.1.235"].map((i) => {
+                                            return {value: i, label: i}
+                                        })}
+                                    />
+                                </Form.Item>
+                                <Form.Item
+                                    rules={[{required: true, message: "该项为必填"}]}
+                                    label={"端口"}
+                                    name={"port"}
+                                    initialValue={8085}
+                                >
+                                    <YakitInputNumber min={1} max={65535} placeholder='请输入端口' />
+                                </Form.Item>
+                                <Form.Item label=' ' colon={false}>
+                                    <YakitButton htmlType='submit' size='large'>
+                                        启动监听
+                                    </YakitButton>
+                                </Form.Item>
+                            </Form>
+                        </YakitSpin>
                     </div>
                 </div>
             ) : (

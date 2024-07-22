@@ -22,6 +22,10 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
     useEffect(() => {
         const key = `client-listening-port-data-${addr}`
         ipcRenderer.on(key, (e, data) => {
+            // console.log("listening-port-data", data)
+            if (data.control) {
+                return
+            }
             if (data.closed) {
                 onCancelMonitor()
                 return
@@ -33,17 +37,18 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
             if (data.remoteAddr) {
                 setRemote(data.remoteAddr)
             }
-
             if (data?.raw && xtermRef?.current && xtermRef.current?.terminal) {
                 writeXTerm(xtermRef, data.raw)
             }
         })
         const errorKey = `client-listening-port-error-${addr}`
         ipcRenderer.on(errorKey, (e: any, data: any) => {
+            // console.log("listening-port-error", data)
             onCancelMonitor()
         })
         const endKey = `client-listening-port-end-${addr}`
         ipcRenderer.on(endKey, (e: any, data: any) => {
+            // console.log("listening-port-end", data)
             onCancelMonitor()
         })
         return () => {
@@ -51,7 +56,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
             ipcRenderer.removeAllListeners(errorKey)
             ipcRenderer.removeAllListeners(endKey)
         }
-    }, [])
+    }, [addr])
 
     // 写入
     const commandExec = useMemoizedFn((str) => {
