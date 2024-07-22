@@ -201,10 +201,20 @@
                 flex-direction: row;
                 gap: 8px;
                 align-items: center;
+                overflow: hidden;
                 .text {
                     font-size: 16px;
                     font-weight: 600;
                     line-height: 24px;
+                    flex-shrink: 0;
+                }
+                .tag-port {
+                    display: inline-block;
+                    line-height: 14px;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    word-break: break-all;
                 }
             }
             .extra {
@@ -212,6 +222,7 @@
                 flex-direction: row;
                 gap: 16px;
                 align-items: center;
+                flex-shrink: 0;
                 .extra-show {
                     display: flex;
                     align-items: center;

@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Form, Result, Tag, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useDebounceFn, useInterval, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
+import {useCreation, useDebounceFn, useInterval, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import styles from "./shellReceiver.module.scss"
 import {failed, success} from "@/utils/notification"
 import classNames from "classnames"
@@ -32,6 +32,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultGenerateReverseShellCommand} from "./constants"
 import {ReverseShellTerminal} from "./ReverseShellTerminal/ReverseShellTerminal"
 import {callCopyToClipboard} from "@/utils/basic"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 const {ipcRenderer} = window.require("electron")
 
 export interface ShellReceiverLeftListProps {
@@ -293,6 +294,10 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
     const [local, setLocal] = useState<string>("")
     const [remote, setRemote] = useState<string>("")
 
+    const tagString = useCreation(() => {
+        return `本地端口:${local || addr || "-"} <== 远程端口:${remote || "-"}`
+    }, [local, addr, remote])
+
     return (
         <div className={styles["shell-receiver-right-run"]}>
             <div className={styles["header"]}>
@@ -308,9 +313,11 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                         </Tooltip>
                     )}
                     <div className={styles["text"]}>正在监听:</div>
-                    <Tag style={{borderRadius: 4}} color='blue'>
-                        本地端口:{local || addr || "-"} &lt;== 远程端口:{remote || "-"}
-                    </Tag>
+                    <Tooltip title={tagString}>
+                        <YakitTag color='blue' className={styles["tag-port"]}>
+                            {tagString}
+                        </YakitTag>
+                    </Tooltip>
                 </div>
                 <div className={styles["extra"]}>
                     <div className={styles["extra-show"]}>
@@ -332,7 +339,13 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
             </div>
             <div className={styles["terminal-content"]}>
                 <YakitSpin spinning={loading}>
-                    <ReverseShellTerminal echoBack={echoBack} addr={addr} setLocal={setLocal} setRemote={setRemote} />
+                    <ReverseShellTerminal
+                        echoBack={echoBack}
+                        addr={addr}
+                        setLocal={setLocal}
+                        setRemote={setRemote}
+                        onCancelMonitor={onCancelMonitor}
+                    />
                 </YakitSpin>
             </div>
         </div>
