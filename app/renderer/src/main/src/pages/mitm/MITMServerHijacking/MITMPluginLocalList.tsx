@@ -720,6 +720,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                         closePluginGroupList={() => setVisible(false)}
                     />
                 }
+                visible={visible}
                 onVisibleChange={setVisible}
                 overlayStyle={{borderRadius: 4, width: 200}}
             >
