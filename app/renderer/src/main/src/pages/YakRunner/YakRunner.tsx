@@ -271,6 +271,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
+    // 是否正在读取中
+    const isReadingRef = useRef<boolean>(false)
     const onOpenFileByPathFun = useMemoizedFn(async (data) => {
         try {
             const {params, isHistory} = JSON.parse(data) as OpenFileByPathProps
@@ -288,7 +290,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     setShowFileHint(true)
                     return
                 }
+                // 取消上一次请求
+                if(isReadingRef.current){
+                    ipcRenderer.invoke("cancel-ReadFile")
+                }
+                isReadingRef.current = true
                 const code = await getCodeByPath(path)
+                isReadingRef.current = false
                 const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
                 const scratchFile: FileDetailInfo = {
                     name,
