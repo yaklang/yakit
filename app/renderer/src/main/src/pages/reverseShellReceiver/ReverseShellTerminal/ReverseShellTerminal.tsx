@@ -23,11 +23,11 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
         const key = `client-listening-port-data-${addr}`
         ipcRenderer.on(key, (e, data) => {
             console.log("listening-port-data", data)
-            if (data.control) {
-                return
-            }
             if (data.closed) {
                 onCancelMonitor()
+                return
+            }
+            if (data.control) {
                 return
             }
 
