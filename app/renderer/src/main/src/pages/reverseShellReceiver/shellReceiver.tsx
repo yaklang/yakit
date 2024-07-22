@@ -155,6 +155,7 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                         }}
                         onSearch={onSearch}
                         onPasteCapture={onSearch}
+                        size='large'
                     />
                 </div>
             </div>
