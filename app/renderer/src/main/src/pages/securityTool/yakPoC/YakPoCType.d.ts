@@ -13,6 +13,7 @@ export interface PluginListByGroupProps {
     total: number
     setTotal: (s: number) => void
     hidden: boolean
+    type: "keyword" | "group"
 }
 export interface PluginGroupByKeyWordProps {
     pageId: string
@@ -44,6 +45,7 @@ export interface YakPoCExecuteContentProps {
     pageId: string
     pageInfo: PocPageInfoProps
     onInitInputValueAfter?: (value: HybridScanControlAfterRequest) => void
+    type: "keyword" | "group"
 }
 
 export interface PluginGroupGridItemProps {

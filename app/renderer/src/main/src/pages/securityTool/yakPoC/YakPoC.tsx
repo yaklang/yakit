@@ -260,13 +260,14 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 pageId={pageId}
                 pageInfo={pageInfo}
                 onInitInputValueAfter={onInitInputValueAfter}
+                type={type}
             />
         </div>
     )
 })
 
 const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) => {
-    const {selectGroupList, setTotal, hidden} = props
+    const {selectGroupList, setTotal, hidden, type} = props
     const isLoadingRef = useRef<boolean>(true)
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -331,8 +332,13 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
                     Page: params?.page || 1,
                     OrderBy: "updated_at",
                     Order: "desc"
-                },
-                Group: {UnSetGroup: false, Group: selectGroupList, IsPocBuiltIn: "true"}
+                }
+            }
+            if (type === "group") {
+                query.Type = batchPluginType
+                query.Group = {UnSetGroup: false, Group: selectGroupList}
+            } else {
+                query.Group = {UnSetGroup: false, Group: selectGroupList, IsPocBuiltIn: "true"}
             }
             try {
                 const res = await apiQueryYakScript(query)
@@ -876,7 +882,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-    const {selectGroupList, onClearAll, pageId, pageInfo, onInitInputValueAfter} = props
+    const {selectGroupList, onClearAll, pageId, pageInfo, onInitInputValueAfter, type} = props
     const pluginBatchExecuteContentRef = useRef<HybridScanExecuteContentRefProps>(null)
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -1037,6 +1043,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                     </div>
                     <PluginListByGroup
                         hidden={showType !== "plugin"}
+                        type={type}
                         selectGroupList={selectGroupList}
                         total={total}
                         setTotal={setTotal}
