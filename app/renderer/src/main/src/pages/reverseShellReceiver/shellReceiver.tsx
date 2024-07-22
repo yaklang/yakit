@@ -415,6 +415,16 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
                 .then((res) => {
                     setReverseShellCommand(res)
                 })
+                .catch((error) => {
+                    const errorRes: GenerateReverseShellCommandResponse = {
+                        Status: {
+                            Ok: false,
+                            Reason: `${error}`
+                        },
+                        Result: ""
+                    }
+                    setReverseShellCommand(errorRes)
+                })
                 .finally(() =>
                     setTimeout(() => {
                         setLoadingCommand(false)

@@ -1,10 +1,8 @@
 import React, {useEffect, useRef} from "react"
 import {useMemoizedFn} from "ahooks"
 import YakitXterm, {YakitXtermRefProps} from "@/components/yakitUI/YakitXterm/YakitXterm"
-import {callCopyToClipboard, getCallCopyToClipboard} from "@/utils/basic"
 import {writeXTerm} from "@/utils/xtermUtils"
-import {TERMINAL_INPUT_KEY} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
-import {Uint8ArrayToString} from "@/utils/str"
+import { yakitNotify } from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 export interface ReverseShellTerminalProps {
@@ -44,6 +42,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
         const errorKey = `client-listening-port-error-${addr}`
         ipcRenderer.on(errorKey, (e: any, data: any) => {
             console.log("listening-port-error", data)
+            yakitNotify('error', `监听报错:${data}`)
             onCancelMonitor()
         })
         const endKey = `client-listening-port-end-${addr}`

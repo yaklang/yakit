@@ -37,7 +37,7 @@ module.exports = (win, getClient) => {
         // 如果有问题，重置
         stream.on("error", (e) => {
             if (win) {
-                win.webContents.send(`client-listening-port-error-${addr}`, addr);
+                win.webContents.send(`client-listening-port-error-${addr}`, e);
             }
         })
 

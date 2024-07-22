@@ -136,6 +136,7 @@
         }
         .content {
             flex: 1;
+            overflow: auto;
             .content-text {
                 background-color: var(--yakit-card-background-color);
                 padding: 8px 12px;
@@ -149,6 +150,9 @@
                             width: 48px;
                             height: 48px;
                         }
+                    }
+                    .ant-result-title {
+                        word-break: break-all;
                     }
                 }
             }
