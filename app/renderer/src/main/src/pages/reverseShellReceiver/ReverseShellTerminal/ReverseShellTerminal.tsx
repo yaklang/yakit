@@ -22,7 +22,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
     useEffect(() => {
         const key = `client-listening-port-data-${addr}`
         ipcRenderer.on(key, (e, data) => {
-            // console.log("listening-port-data", data)
+            console.log("listening-port-data", data)
             if (data.control) {
                 return
             }
@@ -43,12 +43,12 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
         })
         const errorKey = `client-listening-port-error-${addr}`
         ipcRenderer.on(errorKey, (e: any, data: any) => {
-            // console.log("listening-port-error", data)
+            console.log("listening-port-error", data)
             onCancelMonitor()
         })
         const endKey = `client-listening-port-end-${addr}`
         ipcRenderer.on(endKey, (e: any, data: any) => {
-            // console.log("listening-port-end", data)
+            console.log("listening-port-end", data)
             onCancelMonitor()
         })
         return () => {
