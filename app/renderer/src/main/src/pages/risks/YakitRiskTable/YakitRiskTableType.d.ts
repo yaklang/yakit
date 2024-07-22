@@ -40,12 +40,14 @@ export interface QueryRisksRequest {
 export type QueryRisksResponse = QueryGeneralResponse<Risk>
 
 export interface YakitRiskDetailsProps {
+    className?:string
     info: Risk
     isShowTime?: boolean
     shrink?: boolean
     quotedRequest?: string
     quotedResponse?: string
     onClose?: () => void
+    onClickIP?:(info: Risk)=>void
 }
 
 export interface YakitRiskSelectTagProps {

@@ -225,7 +225,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         Pagination: {...genDefaultPagination(20)},
         Total: 0
     })
-
+    const [scrollToIndex, setScrollToIndex] = useState<number>()
     const [keywords, setKeywords] = useState<string>("")
     const [type, setType] = useState<"all" | "unread">("all")
     const [allCheck, setAllCheck] = useState<boolean>(false)
@@ -877,6 +877,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const selectedRowKeys = useCreation(() => {
         return selectList.map((ele) => ele.Id) || []
     }, [selectList])
+    const onClickIP = useMemoizedFn((info: Risk) => {
+        const index = response?.Data.findIndex((item) => item.Id === info.Id)
+        if (index !== -1) setScrollToIndex(index)
+    })
     return (
         <div className={styles["yakit-risk-table"]} ref={riskTableRef}>
             <YakitResizeBox
@@ -891,6 +895,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }}
                 firstNode={
                     <TableVirtualResize<Risk>
+                        scrollToIndex={scrollToIndex}
                         query={{...query}}
                         loading={loading}
                         isRefresh={isRefresh}
@@ -1041,17 +1046,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
                 secondNode={
                     currentSelectItem && (
-                        <div className={styles["yakit-risk-details"]}>
-                            <div className={styles["yakit-risk-details-title"]}>
-                                <span>详情</span>
-                                <YakitButton
-                                    type='text2'
-                                    icon={<OutlineXIcon />}
-                                    onClick={() => setCurrentSelectItem(undefined)}
-                                />
-                            </div>
-                            <YakitRiskDetails info={currentSelectItem} />
-                        </div>
+                        <YakitRiskDetails
+                            info={currentSelectItem}
+                            className={styles["yakit-risk-details"]}
+                            onClickIP={onClickIP}
+                        />
                     )
                 }
                 {...ResizeBoxProps}
@@ -1134,7 +1133,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose} = props
+    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose, className = ""} = props
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
@@ -1213,9 +1212,12 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 
         return itemList
     }, [info, quotedResponse])
+    const onClickIP = useMemoizedFn(() => {
+        if (props.onClickIP) props.onClickIP(info)
+    })
     return (
         <>
-            <div className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions")}>
+            <div className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", className)}>
                 <div className={styles["content-heard"]}>
                     <div className={styles["content-heard-severity"]}>
                         {severityInfo.icon}
@@ -1234,6 +1236,13 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                             {info.Title || "-"}
                         </div>
                         <div className={styles["content-heard-body-description"]}>
+                            <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
+                                ID:{info.Id}
+                            </YakitTag>
+                            <span>IP:{info.IP || "-"}</span>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["description-port"]}>端口:{info.Port || "-"}</span>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                             <span className={styles["url-info"]}>
                                 URL:
                                 <span className={classNames(styles["url"], "content-ellipsis")}>
@@ -1241,21 +1250,23 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                 </span>
                                 <CopyComponents copyText={info?.Url || "-"} />
                             </span>
-                            <Divider type='vertical' style={{height: 16, margin: "0 16px"}} />
                             {isShowTime && (
-                                <div className={styles["content-heard-body-time"]}>
-                                    <span>发现时间 {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}</span>
-                                </div>
+                                <>
+                                    <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                                    <span className={styles["content-heard-body-time"]}>
+                                        发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                                    </span>
+                                </>
                             )}
                         </div>
                     </div>
                 </div>
                 <Descriptions bordered size='small' column={3}>
-                    <Descriptions.Item label='IP' contentStyle={{minWidth: 120}}>
+                    {/* <Descriptions.Item label='IP' contentStyle={{minWidth: 120}}>
                         {info.IP || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label='ID'>{info.Id || "-"}</Descriptions.Item>
-                    <Descriptions.Item label='端口'>{info.Port || "-"}</Descriptions.Item>
+                    </Descriptions.Item> */}
+                    {/* <Descriptions.Item label='ID'>{info.Id || "-"}</Descriptions.Item> */}
+                    {/* <Descriptions.Item label='端口'>{info.Port || "-"}</Descriptions.Item> */}
                     <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
                     <Descriptions.Item label='类型'>
                         {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
