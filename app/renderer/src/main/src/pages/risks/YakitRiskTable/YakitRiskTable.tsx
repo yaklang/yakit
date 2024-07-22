@@ -225,7 +225,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         Pagination: {...genDefaultPagination(20)},
         Total: 0
     })
-    const [scrollToIndex, setScrollToIndex] = useState<number>()
 
     const [keywords, setKeywords] = useState<string>("")
     const [type, setType] = useState<"all" | "unread">("all")
@@ -798,7 +797,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         if (!currentSelectItem) {
             const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
-            setScrollToIndex(index)
         }
 
         if (!val.IsRead) {
@@ -893,7 +891,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }}
                 firstNode={
                     <TableVirtualResize<Risk>
-                        scrollToIndex={scrollToIndex}
                         query={{...query}}
                         loading={loading}
                         isRefresh={isRefresh}
