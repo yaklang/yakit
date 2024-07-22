@@ -1,7 +1,6 @@
 import React, {ReactNode, Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
-import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
-import {ShellReceiver} from "../pages/reverseShellReceiver/shellReceiver";
+import {ShellReceiver} from "../pages/reverseShellReceiver/shellReceiver"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory"
@@ -134,7 +133,7 @@ import {
 } from "./deprecatedMenu"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
-import { YakRunner } from "@/pages/YakRunner/YakRunner"
+import {YakRunner} from "@/pages/YakRunner/YakRunner"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
@@ -418,7 +417,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            // return <ShellReceiver/>
             return <Home />
         case YakitRoute.HTTPHacker:
             return (
@@ -488,7 +486,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.ReverseServer_New:
             return <NewReverseServerPage />
         case YakitRoute.ShellReceiver:
-            return <ShellReceiverPage />
+            return <ShellReceiver />
         case YakitRoute.DB_HTTPHistory:
             return <HTTPHistory pageType='History' />
         case YakitRoute.DB_Report:
@@ -502,8 +500,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_CVE:
             return <CVEViewer />
         case YakitRoute.YakScript:
-            return <YakRunner/>
-            // return <YakExecutor />
+            return <YakRunner />
+        // return <YakExecutor />
         case YakitRoute.PayloadManager:
             return <NewPayload />
         case YakitRoute.AccountAdminPage:
@@ -520,7 +518,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ControlAdminPage />
         case YakitRoute.AddYakitScript:
             return <AddYakitPlugin />
-            // return <PluginEditDetails />
+        // return <PluginEditDetails />
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.SimpleDetect:
@@ -1138,10 +1136,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "插件",
-        children: routeToChildren([
-            YakitRoute.Plugin_Hub,
-            YakitRoute.BatchExecutorPage
-        ])
+        children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
     },
     {
         page: undefined,
@@ -1219,10 +1214,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "插件",
-        children: routeToChildren([
-            YakitRoute.Plugin_Hub,
-            YakitRoute.BatchExecutorPage
-        ])
+        children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
     },
     {
         page: undefined,
