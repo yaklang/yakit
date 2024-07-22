@@ -50,17 +50,38 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         return undefined
     })
 
+    // 处理指定页面和详情类型功能
+    const handleSpecifiedPageAndDetail = useMemoizedFn((data: PluginHubPageInfoProps) => {
+        const {tabActive, detailInfo, refeshList} = data
+        onSetActive(tabActive || "online")
+        if (detailInfo) {
+            setTimeout(() => {
+                onClickPlugin({type: tabActive, ...detailInfo})
+            }, 200)
+        }
+        if (refeshList !== undefined) {
+            switch (tabActive) {
+                case "online":
+                    emiter.emit("onRefreshOnlinePluginList", refeshList)
+                    break
+                case "own":
+                    emiter.emit("onRefreshOwnPluginList", refeshList)
+                    break
+                case "local":
+                    emiter.emit("onRefreshLocalPluginList", refeshList)
+                    break
+
+                default:
+                    break
+            }
+        }
+    })
+
     useEffect(() => {
         const data = initPageInfo()
         if (data) {
             removePagesDataCacheById(YakitRoute.Plugin_Hub, YakitRoute.Plugin_Hub)
-            const {tabActive, detailInfo} = data
-            onSetActive(tabActive || "online")
-            if (detailInfo) {
-                setTimeout(() => {
-                    onClickPlugin({type: tabActive, ...detailInfo})
-                }, 200)
-            }
+            handleSpecifiedPageAndDetail(data)
         } else {
             onSetActive("online")
         }
@@ -114,13 +135,9 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
      */
     const handleOpenHubListAndDetail = useMemoizedFn((info: string) => {
         try {
-            const {tabActive, detailInfo} = JSON.parse(info) as unknown as PluginHubPageInfoProps
-            if (tabActive) {
-                onSetActive(tabActive)
-            }
-            if (detailInfo) {
-                onClickPlugin({type: tabActive, ...detailInfo})
-            }
+            const data = JSON.parse(info) as unknown as PluginHubPageInfoProps
+            if (!data) return
+            handleSpecifiedPageAndDetail(data)
         } catch (error) {}
     })
 

@@ -147,6 +147,8 @@ export interface PluginHubPageInfoProps {
     tabActive: PluginSourceType
     /**打开插件的id、uuid和name */
     detailInfo?: KeyParamsFetchPluginDetail
+    /**是否刷新列表(传 true-刷新列表和高级筛选, false-刷新列表, 不传不刷新) */
+    refeshList?: boolean
 }
 
 export interface RiskPageInfoProps {
