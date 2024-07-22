@@ -865,8 +865,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const ResizeBoxProps = useCreation(() => {
         let p = {
-            firstRatio: "70%",
-            secondRatio: "30%"
+            firstRatio: "50%",
+            secondRatio: "50%"
         }
         if (!currentSelectItem?.Id) {
             p.secondRatio = "0%"
