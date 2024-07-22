@@ -1,20 +1,10 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Modal} from "antd"
+import React, {useEffect, useRef} from "react"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
-import styles from "./TerminalBox.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
-import classNames from "classnames"
-import ReactResizeDetector from "react-resize-detector"
-import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
-import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
+import {useMemoizedFn} from "ahooks"
+import {failed, success, warn} from "@/utils/notification"
+import {writeXTerm, xtermClear} from "@/utils/xtermUtils"
 import {Uint8ArrayToString} from "@/utils/str"
-import {getMapAllTerminalKey, getTerminalMap, removeTerminalMap, setTerminalMap} from "./TerminalMap"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {callCopyToClipboard} from "@/utils/basic"
+import {getMapAllTerminalKey, getTerminalMap, setTerminalMap} from "./TerminalMap"
 import YakitXterm from "@/components/yakitUI/YakitXterm/YakitXterm"
 
 const {ipcRenderer} = window.require("electron")
@@ -55,7 +45,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         writeXTerm(xtermRef, outPut)
     })
 
-    const run = useMemoizedFn((size)=>{
+    const run = useMemoizedFn((size) => {
         if (!xtermRef) return
         if (!size) return
         // 校验map存储缓存
@@ -81,7 +71,7 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
 
     useEffect(() => {
         if (!xtermRef) return
-        
+
         run(terminalSizeRef.current)
 
         // 接收
@@ -119,128 +109,148 @@ export const TerminalBox: React.FC<TerminalBoxProps> = (props) => {
         }
     }, [xtermRef, folderPath])
 
-    const onCopy = useMemoizedFn(() => {
-        const selectedText: string = (xtermRef.current && xtermRef.current.terminal.getSelection()) || ""
-        if (selectedText.length === 0) {
-            warn("暂无复制内容")
-            return
-        }
-        callCopyToClipboard(selectedText, false)
-    })
+    // const onCopy = useMemoizedFn(() => {
+    //     const selectedText: string = (xtermRef.current && xtermRef.current.terminal.getSelection()) || ""
+    //     if (selectedText.length === 0) {
+    //         warn("暂无复制内容")
+    //         return
+    //     }
+    //     callCopyToClipboard(selectedText, false)
+    // })
 
-    const onPaste = useMemoizedFn(() => {
-        if (xtermRef.current) {
-            ipcRenderer
-                .invoke("get-copy-clipboard")
-                .then((str: string) => {
-                    xtermRef.current.terminal.paste(str)
-                    xtermRef.current.terminal.focus()
-                })
-                .catch(() => {})
-        }
-    })
+    // const onPaste = useMemoizedFn(() => {
+    //     if (xtermRef.current) {
+    //         ipcRenderer
+    //             .invoke("get-copy-clipboard")
+    //             .then((str: string) => {
+    //                 xtermRef.current.terminal.paste(str)
+    //                 xtermRef.current.terminal.focus()
+    //             })
+    //             .catch(() => {})
+    //     }
+    // })
 
-    const menuData: YakitMenuItemType[] = useMemo(() => {
-        return [
-            {
-                label: "复制",
-                key: "copy"
-            },
-            {
-                label: "粘贴",
-                key: "paste"
-            }
-        ] as YakitMenuItemType[]
-    }, [])
+    // const menuData: YakitMenuItemType[] = useMemo(() => {
+    //     return [
+    //         {
+    //             label: "复制",
+    //             key: "copy"
+    //         },
+    //         {
+    //             label: "粘贴",
+    //             key: "paste"
+    //         }
+    //     ] as YakitMenuItemType[]
+    // }, [])
 
-    const handleContextMenu = useMemoizedFn(() => {
-        showByRightContext({
-            width: 180,
-            type: "grey",
-            data: [...menuData],
-            onClick: ({key, keyPath}) => {
-                switch (key) {
-                    case "copy":
-                        onCopy()
-                        break
-                    case "paste":
-                        onPaste()
-                        break
-                    default:
-                        break
-                }
-            }
-        })
-    })
+    // const handleContextMenu = useMemoizedFn(() => {
+    //     showByRightContext({
+    //         width: 180,
+    //         type: "grey",
+    //         data: [...menuData],
+    //         onClick: ({key, keyPath}) => {
+    //             switch (key) {
+    //                 case "copy":
+    //                     onCopy()
+    //                     break
+    //                 case "paste":
+    //                     onPaste()
+    //                     break
+    //                 default:
+    //                     break
+    //             }
+    //         }
+    //     })
+    // })
 
     return (
-        <div className={styles["terminal-box"]} onContextMenu={handleContextMenu}>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!width || !height) return
-                    const row = Math.floor(height / 18.5)
-                    const col = Math.floor(width / 10)
-                    const size = {
-                        row,
-                        col
-                    }
-                    // 第一次执行 带入row、col
-                    if(!terminalSizeRef.current){
-                        run(size)
-                    }
-                    terminalSizeRef.current = size
-                    onChangeSize(row, col)
-                    if (xtermRef) xtermFit(xtermRef, col, row)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
-            <YakitXterm
-                ref={xtermRef}
-                options={{
-                    // fontFamily: '"Courier New", Courier, monospace',
-                    fontFamily: terminaFont,
-                    convertEol: true,
-                    theme: {
-                        foreground: "#e5c7a9",
-                        background: "#31343F",
-                        cursor: "#f6f7ec",
+        // <div className={styles["terminal-box"]} onContextMenu={handleContextMenu}>
+        //     <ReactResizeDetector
+        //         onResize={(width, height) => {
+        //             if (!width || !height) return
+        //             const row = Math.floor(height / 18.5)
+        //             const col = Math.floor(width / 10)
+        //             const size = {
+        //                 row,
+        //                 col
+        //             }
+        //             // 第一次执行 带入row、col
+        //             if(!terminalSizeRef.current){
+        //                 run(size)
+        //             }
+        //             terminalSizeRef.current = size
+        //             onChangeSize(row, col)
+        //             if (xtermRef) xtermFit(xtermRef, col, row)
+        //         }}
+        //         handleWidth={true}
+        //         handleHeight={true}
+        //         refreshMode={"debounce"}
+        //         refreshRate={50}
+        //     />
+        //     <YakitXterm
+        //         ref={xtermRef}
+        //         options={{
+        //             // fontFamily: '"Courier New", Courier, monospace',
+        //             fontFamily: terminaFont,
+        //             convertEol: true,
+        //             theme: {
+        //                 foreground: "#e5c7a9",
+        //                 background: "#31343F",
+        //                 cursor: "#f6f7ec",
 
-                        black: "#121418",
-                        brightBlack: "#675f54",
+        //                 black: "#121418",
+        //                 brightBlack: "#675f54",
 
-                        red: "#c94234",
-                        brightRed: "#ff645a",
+        //                 red: "#c94234",
+        //                 brightRed: "#ff645a",
 
-                        green: "#85c54c",
-                        brightGreen: "#98e036",
+        //                 green: "#85c54c",
+        //                 brightGreen: "#98e036",
 
-                        yellow: "#f5ae2e",
-                        brightYellow: "#e0d561",
+        //                 yellow: "#f5ae2e",
+        //                 brightYellow: "#e0d561",
 
-                        blue: "#1398b9",
-                        brightBlue: "#5fdaff",
+        //                 blue: "#1398b9",
+        //                 brightBlue: "#5fdaff",
 
-                        magenta: "#d0633d",
-                        brightMagenta: "#ff9269",
+        //                 magenta: "#d0633d",
+        //                 brightMagenta: "#ff9269",
 
-                        cyan: "#509552",
-                        brightCyan: "#84f088",
+        //                 cyan: "#509552",
+        //                 brightCyan: "#84f088",
 
-                        white: "#e5c6aa",
-                        brightWhite: "#f6f7ec"
-                    }
-                }}
-                // isWrite={false}
-                onData={(data) => {
-                    commandExec(data)
-                }}
-                onKey={(e) => {
-                    return
-                }}
-            />
-        </div>
+        //                 white: "#e5c6aa",
+        //                 brightWhite: "#f6f7ec"
+        //             }
+        //         }}
+        //         // isWrite={false}
+        //         onData={(data) => {
+        //             commandExec(data)
+        //         }}
+        //         onKey={(e) => {
+        //             return
+        //         }}
+        //     />
+        // </div>
+        <YakitXterm
+            ref={xtermRef}
+            onData={(data) => {
+                commandExec(data)
+            }}
+            customKeyEventHandler={() => true}
+            onResize={(val) => {
+                const {rows, cols} = val
+                const size = {
+                    row: rows,
+                    col: cols
+                }
+                // 第一次执行 带入row、col
+                if (!terminalSizeRef.current) {
+                    run(size)
+                }
+                terminalSizeRef.current = size
+                onChangeSize(rows, cols)
+            }}
+        />
     )
 }
