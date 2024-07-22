@@ -195,7 +195,8 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
             Method: "DELETE",
             Url: {
                 Schema: "file",
-                Path: path
+                Path: path,
+                Query: [{Key: "trash", Value: "true"}],
             }
         }
         try {

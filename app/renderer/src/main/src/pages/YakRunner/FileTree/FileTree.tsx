@@ -293,9 +293,12 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     } = props
     const {areaInfo, activeFile, fileTree} = useStore()
     const {setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
-    // 是否为编辑模式
-    const [isEdit, setEdit] = useState<boolean>(false)
+    // 是否为输入模式
+    const [isInput, setInput] = useState<boolean>(false)
+    // 是否为编辑（用于默认选中文件名）
+    const isEditRef = useRef<boolean>(false)
     const [value, setValue] = useState<string>(info.name)
+    const inputRef = useRef<any>(null);
 
     const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
 
@@ -320,7 +323,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     const handleClick = useMemoizedFn(() => {
-        if (isEdit) return
+        if (isInput) return
         if (info.isLeaf) {
             handleSelect()
         } else {
@@ -398,23 +401,32 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     const onRename = useMemoizedFn(() => {
+        isEditRef.current = true
         setFoucsedKey(info.path)
-        setEdit(true)
+        setInput(true)
     })
 
     // 重置重命名
     const resetRename = useMemoizedFn(() => {
         setFoucsedKey("")
         setValue(info.name)
-        setEdit(false)
+        setInput(false)
     })
+
+    // 编辑模式时默认选中文件名(不含后缀)
+    useEffect(()=>{
+        if(inputRef.current && isInput && isEditRef.current){
+            isEditRef.current = false
+            inputRef.current.setSelectionRange(0, info.name.lastIndexOf("."))
+        }
+    },[isInput])
 
     const onOperationFileTreeFun = useMemoizedFn((type: string) => {
         if (!isFoucsed) return
         switch (type) {
             case "rename":
-                onRenameFun()
-                setEdit(true)
+                isEditRef.current = true
+                setInput(true)
                 break
             case "delete":
                 setRemoveCheckVisible(true)
@@ -464,7 +476,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                             (item) => item.path
                         )
                         const newAreaInfo = updateAreaFilesPathInfo(areaInfo, updatePath, info.path, path)
-                        setEdit(false)
+                        setInput(false)
                         // 更新当前激活展示文件
                         if (activeFile?.path.startsWith(info.path)) {
                             const newActiveFile = updateActiveFile(activeFile, {
@@ -526,12 +538,15 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     const newAreaInfo = updateAreaFileInfo(cacheAreaInfo, {name, path, icon, language}, info.path)
                     // 更名后重置激活元素
                     const newActiveFile = isResetActiveFile([info], activeFile)
-                    setEdit(false)
+                    setInput(false)
                     setActiveFile && setActiveFile(newActiveFile)
                     setAreaInfo && setAreaInfo(newAreaInfo)
                 }
                 emiter.emit("onResetFileTree", info.path)
                 emiter.emit("onRefreshFileTree")
+            }
+            else{
+                setInput(false)
             }
         } catch (error) {
             resetRename()
@@ -621,7 +636,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
     useEffect(() => {
         if (info.isCreate) {
-            setEdit(true)
+            setInput(true)
         }
     }, [])
 
@@ -797,8 +812,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                             className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}
                             title={info.name}
                         >
-                            {isEdit ? (
+                            {isInput ? (
                                 <YakitInput
+                                    ref={inputRef}
                                     wrapperClassName={styles["file-tree-input-wrapper"]}
                                     className={styles["file-tree-input"]}
                                     value={value}
@@ -820,7 +836,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             <YakitHint
                 visible={removeCheckVisible}
                 title={`是否要删除${info.name}`}
-                content='确认删除后将会彻底删除'
+                content={`确认删除后将会彻底删除（windows系统将会移入回收站）`}
                 onOk={onDelete}
                 onCancel={() => setRemoveCheckVisible(false)}
             />

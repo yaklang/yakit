@@ -11,10 +11,7 @@ import {
     SplitDirectionProps,
     YakitRunnerSaveModalProps
 } from "./RunnerTabsType"
-import {
-    Droppable,
-    Draggable,
-} from "@hello-pangea/dnd"
+import {Droppable, Draggable} from "@hello-pangea/dnd"
 
 import classNames from "classnames"
 import styles from "./RunnerTabs.module.scss"
@@ -463,17 +460,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         const m = showYakitModal({
             title: "重命名",
             content: (
-                <div style={{padding: 20}}>
-                    <YakitInput
-                        defaultValue={info.name}
-                        placeholder='请输入新名称'
-                        allowClear
-                        onChange={(e) => {
-                            const {value} = e.target
-                            newName = value
-                        }}
-                    />
-                </div>
+                <RenameYakitModalBox
+                    name={info.name}
+                    setName={(value) => {
+                        newName = value
+                    }}
+                />
             ),
             onCancel: () => {
                 m.destroy()
@@ -1255,8 +1247,8 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                         if (item.isFile) {
                                             const OpenFileByPathParams: OpenFileByPathProps = {
                                                 params: {
-                                                    path:item.path,
-                                                    name:item.name
+                                                    path: item.path,
+                                                    name: item.name
                                                 },
                                                 isHistory: true
                                             }
@@ -1417,5 +1409,34 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                 </div>
             }
         />
+    )
+}
+
+interface RenameYakitModalBoxProps {
+    name: string
+    setName: (v: string) => void
+}
+const RenameYakitModalBox: React.FC<RenameYakitModalBoxProps> = (props) => {
+    const {name, setName} = props
+    const inputRef = useRef<any>(null)
+    useEffect(() => {
+        if(inputRef.current){
+           inputRef.current.setSelectionRange(0, name.lastIndexOf(".")) 
+        }
+    }, [])
+    return (
+        <div style={{padding: 20}}>
+            <YakitInput
+                ref={inputRef}
+                defaultValue={name}
+                autoFocus
+                placeholder='请输入新名称'
+                allowClear
+                onChange={(e) => {
+                    const {value} = e.target
+                    setName(value)
+                }}
+            />
+        </div>
     )
 }
