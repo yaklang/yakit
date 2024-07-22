@@ -154,12 +154,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         emiter.on("onRefreshLocalPluginList", onRefLocalPluginList)
         emiter.on("savePluginInfoSignal", onRefPlugin)
         emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
-        emiter.on("onImportRefreshLocalPluginList", onImportRefLocalPluginList)
         return () => {
             emiter.off("onRefreshLocalPluginList", onRefLocalPluginList)
             emiter.off("savePluginInfoSignal", onRefPlugin)
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
-            emiter.off("onImportRefreshLocalPluginList", onImportRefLocalPluginList)
         }
     }, [])
     useEffect(() => {
@@ -319,15 +317,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             fetchList(true)
         }, 200)
     }
-    // 导入本地插件非详情页时刷新列表
-    const onImportRefLocalPluginList = useMemoizedFn(() => {
-        if (!plugin) {
-            resetAllQueryRefLocalList()
-        } else {
-            setImportInDetail(true)
-            yakitNotify("success", "成功导入本地插件")
-        }
-    })
 
     /**获取插件删除的提醒记录状态 */
     const getPluginRemoveCheck = useMemoizedFn(() => {

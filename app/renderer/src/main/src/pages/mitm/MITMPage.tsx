@@ -887,15 +887,21 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const handleImportLocalPluginFinish = () => {
         setVisible(false)
         sendMsgToLocalPlugin()
+        yakitNotify("success", "导入本地插件成功")
     }
 
     // 发送事件到本地
     const sendMsgToLocalPlugin = () => {
         // 页面路由变动，要调整
         if (sendPluginLocal) {
-            // emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.Plugin_Hub,
+                    params: {tabActive: "local", refeshList: true}
+                })
+            )
         }
-        emiter.emit("onImportRefreshLocalPluginList")
     }
 
     const getRenderByLoadMode = useMemoizedFn((type: string) => {
@@ -1050,8 +1056,13 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 UUID: [formValue.localId]
             }).then(() => {
                 setVisible(false)
-                // 刷新本地列表
-                emiter.emit("onImportRefreshLocalPluginList")
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.Plugin_Hub,
+                        params: {tabActive: "local", refeshList: true}
+                    })
+                )
                 success("插件导入成功")
             })
         }

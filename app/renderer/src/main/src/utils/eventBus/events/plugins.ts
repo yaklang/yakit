@@ -24,9 +24,6 @@ export type PluginsEventProps = {
     /** 刷新本地列表(传 true 则同步刷新高级筛选条件) */
     onRefreshLocalPluginList?: boolean
 
-    /** 导入插件后的刷新本地插件列表 */
-    onImportRefreshLocalPluginList?: string
-
     /** 我的插件(包括详情里的删除线上) 删除操作通知 回收站刷新列表 */
     ownDeleteToRecycleList?: string
 
