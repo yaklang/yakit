@@ -12,7 +12,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        width: calc(100% - 44px);
+        width: calc(100% - 62px);
         flex: 1;
         padding-left: 2px;
         .mitm-plugin-local-info {
@@ -24,7 +24,7 @@
             .mitm-plugin-local-info-left {
                 display: flex;
                 align-items: center;
-                width: calc(100% - 72px);
+                width: calc(100% - 100px);
                 cursor: pointer;
                 .plugin-local-headImg {
                     width: 28px;
@@ -48,6 +48,13 @@
                 width: 72px;
                 justify-content: flex-end;
             }
+        }
+    }
+    .mitm-params-edit-icon {
+        cursor: pointer;
+        svg {
+            width: 16px;
+            color: var(--yakit-helper-text-color);
         }
     }
     .lightning-bolt-icon {

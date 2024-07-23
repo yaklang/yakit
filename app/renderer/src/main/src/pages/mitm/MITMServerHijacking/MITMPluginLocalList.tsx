@@ -67,8 +67,8 @@ export interface MITMPluginListProp {
 }
 
 interface MITMPluginLocalListProps {
-    checkList: string[]
-    setCheckList: (s: string[]) => void
+    noParamsCheckList: string[]
+    setNoParamsCheckList: (s: string[]) => void
     onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
     status: "idle" | "hijacked" | "hijacking"
     tags: string[]
@@ -84,10 +84,12 @@ interface MITMPluginLocalListProps {
     total: number
     setTotal: (n: number) => void
     hooks: Map<string, boolean>
+    hooksID: Map<string, boolean>
     onSelectAll: (b: boolean) => void
     onSendToPatch?: (s: YakScript) => void
     groupNames: string[]
     setGroupNames: (s: string[]) => void
+    isHasParams: boolean
 }
 export interface YakFilterRemoteObj {
     name: string
@@ -97,8 +99,8 @@ export interface YakFilterRemoteObj {
 export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
     const {
         status,
-        checkList,
-        setCheckList,
+        noParamsCheckList,
+        setNoParamsCheckList,
         tags,
         searchKeyword,
         triggerSearch,
@@ -108,10 +110,12 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         total,
         setTotal,
         hooks,
+        hooksID,
         setIsSelectAll,
         onSendToPatch,
         groupNames,
-        setGroupNames
+        setGroupNames,
+        isHasParams
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -141,6 +145,9 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     useUpdateEffect(() => {
         setRefresh(!refresh)
     }, [tags, inViewport])
+    useUpdateEffect(() => {
+        setRefresh(!refresh)
+    }, [isHasParams])
     useEffect(() => {
         if (visibleOnline || inViewport) getAllSatisfyScript()
     }, [inViewport, visibleOnline])
@@ -155,9 +162,10 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             },
             Keyword: searchKeyword,
             IncludedScriptNames: [],
-            Type: "mitm,port-scan",
+            Type: isHasParams ? "mitm" : "mitm,port-scan",
             Tag: tags,
-            Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"}
+            Group: {UnSetGroup: false, Group: groupNames},
+            IsMITMParamPlugins: isHasParams ? 1 : 2
         }
 
         apiQueryYakScript(query).then((res) => {
@@ -223,10 +231,11 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                     emptyNode={onRenderEmptyNode()}
                     queryLocal={{
                         Tag: tags,
-                        Type: "mitm,port-scan",
+                        Type: isHasParams ? "mitm" : "mitm,port-scan",
                         Keyword: searchKeyword,
                         Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-                        Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"},
+                        Group: {UnSetGroup: false, Group: groupNames},
+                        IsMITMParamPlugins: isHasParams ? 1 : 2
                     }}
                     refresh={refresh}
                     itemHeight={44}
@@ -237,21 +246,24 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                     onYakScriptRender={(i: YakScript, maxWidth?: number) => {
                         return (
                             <MITMYakScriptLoader
+                                isHasParams={isHasParams}
                                 status={status}
                                 script={i}
                                 maxWidth={maxWidth}
                                 // 劫持启动后
                                 hooks={hooks}
+                                hooksID={hooksID}
                                 onSendToPatch={onSendToPatch}
                                 onSubmitYakScriptId={props.onSubmitYakScriptId}
-                                onRemoveHook={(name: string) => {
-                                    if (hooks.get(name)) {
+                                onRemoveHook={(name: string, id: string) => {
+                                    if (hooks.get(name) || hooksID.get(id)) {
                                         setIsSelectAll(false)
                                     }
                                 }}
+                                showEditor={isHasParams ? true : false}
                                 // 劫持启动前
-                                defaultPlugins={checkList}
-                                setDefaultPlugins={setCheckList}
+                                defaultPlugins={noParamsCheckList}
+                                setDefaultPlugins={setNoParamsCheckList}
                             />
                         )
                     }}
@@ -379,23 +391,26 @@ interface YakModuleListHeardProps {
     total: number
     length: number
     loading?: boolean
+    isHasParams: boolean
 }
 export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo((props) => {
-    const {isSelectAll, onSelectAll, setIsSelectAll, total, length, loading} = props
+    const {isSelectAll, onSelectAll, setIsSelectAll, total, length, loading, isHasParams} = props
     useEffect(() => {
-        if (length > 0) setIsSelectAll(length == total)
+        if (length > 0 && !isHasParams) setIsSelectAll(length == total)
     }, [total, length])
     return (
         <div className={style["mitm-plugin-list-heard"]}>
-            <div className={style["mitm-plugin-list-check"]}>
-                <YakitCheckbox
-                    checked={isSelectAll}
-                    indeterminate={!isSelectAll && length > 0}
-                    onChange={(e) => onSelectAll(e.target.checked)}
-                    disabled={loading}
-                />
-                <span className={style["mitm-plugin-list-check-text"]}>全选</span>
-            </div>
+            {!isHasParams && (
+                <div className={style["mitm-plugin-list-check"]}>
+                    <YakitCheckbox
+                        checked={isSelectAll}
+                        indeterminate={!isSelectAll && length > 0}
+                        onChange={(e) => onSelectAll(e.target.checked)}
+                        disabled={loading}
+                    />
+                    <span className={style["mitm-plugin-list-check-text"]}>全选</span>
+                </div>
+            )}
             <div className={style["mitm-plugin-list-tip"]}>
                 <div>
                     Total<span>&nbsp;{total}</span>
@@ -480,6 +495,7 @@ interface PluginGroupProps {
     wrapperClassName?: string
     isShowGroupMagBtn?: boolean
     excludeType?: string[]
+    isMITMParamPlugins?: number
     pluginListQuery?: (checkedPlugin: string[]) => any
     allChecked?: boolean
     total?: number
@@ -494,6 +510,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         isShowGroupMagBtn = true,
         isOnline = false,
         excludeType = [],
+        isMITMParamPlugins = 0,
         pluginListQuery,
         allChecked = false,
         total = 0,
@@ -521,7 +538,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                 getGroupList()
             }
         },
-        [inViewport, compareExcludeType],
+        [inViewport, compareExcludeType, isMITMParamPlugins],
         {wait: 500}
     )
 
@@ -539,7 +556,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                 filterSelectGroup(data)
             })
         } else {
-            apiFetchQueryYakScriptGroupLocal(false, excludeType).then((group: GroupCount[]) => {
+            apiFetchQueryYakScriptGroupLocal(false, excludeType, isMITMParamPlugins).then((group: GroupCount[]) => {
                 const copyGroup = structuredClone(group)
                 const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
                     name: item.Value,

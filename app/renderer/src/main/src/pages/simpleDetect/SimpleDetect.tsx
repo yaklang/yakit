@@ -842,7 +842,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
         return str
     }, [scanType])
     const getPluginGroup = useMemoizedFn(() => {
-        apiFetchQueryYakScriptGroupLocal(false).then((group: GroupCount[]) => {
+        apiFetchQueryYakScriptGroupLocal(false, [], 2).then((group: GroupCount[]) => {
             const newGroup: string[] = group
                 .map((item) => item.Value)
                 .filter((item) => item !== "基础扫描")

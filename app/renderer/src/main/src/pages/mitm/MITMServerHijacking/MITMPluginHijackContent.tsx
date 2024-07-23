@@ -25,6 +25,7 @@ import {enableMITMPluginMode} from "./MITMServerHijacking"
 import styles from "./MITMServerHijacking.module.scss"
 import classNames from "classnames"
 import {RemoteGV} from "@/yakitGV"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,8 +37,12 @@ interface TabsItem {
 }
 
 interface MITMPluginHijackContentProps {
-    checkList: string[]
-    setCheckList: (s: string[]) => void
+    isHasParams: boolean
+    onIsHasParams: (isHasParams: boolean) => void
+    noParamsCheckList: string[]
+    hasParamsCheckList: string[]
+    setHasParamsCheckList: (s: string[]) => void
+    setNoParamsCheckList: (s: string[]) => void
     onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
     status: "idle" | "hijacked" | "hijacking"
     isFullScreen: boolean
@@ -75,10 +80,14 @@ const HotLoadDefaultData: YakScript = {
 }
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (props) => {
     const {
+        isHasParams,
+        onIsHasParams,
         onSubmitYakScriptId,
         status,
-        checkList,
-        setCheckList,
+        noParamsCheckList,
+        hasParamsCheckList,
+        setHasParamsCheckList,
+        setNoParamsCheckList,
         isFullScreen,
         setIsFullScreen,
         onSelectAll,
@@ -125,7 +134,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     const [script, setScript] = useState<YakScript>(HotLoadDefaultData)
 
-    const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>())
+    const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件名
+    const [hooksID, handlersID] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件id
     const [loading, setLoading] = useState(false)
 
     // 是否允许获取默认勾选值
@@ -162,29 +172,58 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             .finally(() => {
                 isDefaultCheck.current = true
             })
+
         let cacheTmp: string[] = []
+        let noParamsCheckArr: string[] = []
+        let hasParamsCheckArr: string[] = []
         // 用于 MITM 的 查看当前 Hooks
         ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
             if (isDefaultCheck.current) {
                 const tmp = new Map<string, boolean>()
+                const tmpID = new Map<string, boolean>()
                 cacheTmp = []
                 data.forEach((i) => {
                     i.Hooks.forEach((hook) => {
+                        // 存的id其实没有用到
+                        // console.log(hook)
                         if (hook.YakScriptName) {
                             tmp.set(hook.YakScriptName, true)
+                            tmpID.set(hook.YakScriptId + "", true)
                             cacheTmp = [...cacheTmp, hook.YakScriptName]
                         }
                     })
                 })
                 handlers.setAll(tmp)
-                setCheckList([...new Set(cacheTmp)])
+                handlersID.setAll(tmpID)
+
+                const allCheckList = [...new Set(cacheTmp)]
+                setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? "true" : "")
+                noParamsCheckArr = []
+                hasParamsCheckArr = []
+                // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
+                let promises_1: (() => Promise<any>)[] = []
+                allCheckList.forEach((scriptName) => {
+                    promises_1.push(() => getRemoteValue("mitm_has_params_" + scriptName))
+                })
+                Promise.allSettled(promises_1.map((promiseFunc) => promiseFunc())).then((res) => {
+                    res.forEach((item, index) => {
+                        if (item.status === "fulfilled") {
+                            if (!item.value) {
+                                noParamsCheckArr.push(allCheckList[index])
+                            } else {
+                                hasParamsCheckArr.push(allCheckList[index])
+                            }
+                        }
+                    })
+                    setHasParamsCheckList([...hasParamsCheckArr])
+                    setNoParamsCheckList([...noParamsCheckArr])
+                })
             }
         })
         updateHooks()
         return () => {
-            // 组价销毁时进行本地缓存 用于后续页面进入默认选项
-            const localSaveData = [...new Set(cacheTmp)]
-            setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(localSaveData))
+            // 组件销毁时进行本地缓存 用于后续页面进入默认选项（只缓存普通插件，不缓存带参插件）
+            setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(noParamsCheckArr))
             ipcRenderer.removeAllListeners("client-mitm-hooks")
             ipcRenderer.removeAllListeners("client-mitm-loading")
         }
@@ -351,17 +390,19 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 )
             default:
                 return (
-                    <div className={styles["search-plugin-hijack-content"]}>
-                        <PluginSearch
-                            tag={tags}
-                            setTag={setTags}
-                            searchKeyword={searchKeyword}
-                            setSearchKeyword={setSearchKeyword}
-                            onSearch={onSearch}
-                            selectSize='small'
-                            inputSize='middle'
-                            selectModuleTypeSize='small'
-                        />
+                    <div style={{width: "100%"}}>
+                        <div className={styles["search-plugin-hijack-content"]}>
+                            <PluginSearch
+                                tag={tags}
+                                setTag={setTags}
+                                searchKeyword={searchKeyword}
+                                setSearchKeyword={setSearchKeyword}
+                                onSearch={onSearch}
+                                selectSize='small'
+                                inputSize='middle'
+                                selectModuleTypeSize='small'
+                            />
+                        </div>
                     </div>
                 )
         }
@@ -433,21 +474,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 defItemHeight={44}
                                 renderRow={(data: YakScript, index: number) => (
                                     <MITMYakScriptLoader
+                                        isHasParams={isHasParams}
                                         status={status}
                                         key={data.ScriptName}
                                         script={data}
                                         // 劫持启动后
                                         hooks={hooks}
+                                        hooksID={hooksID}
                                         onSendToPatch={onSendToPatch}
                                         onSubmitYakScriptId={props.onSubmitYakScriptId}
-                                        onRemoveHook={(name: string) => {
-                                            if (hooks.get(name)) {
+                                        onRemoveHook={(name: string, id: string) => {
+                                            if (hooks.get(name) || hooksID.get(id)) {
                                                 setIsSelectAll(false)
                                             }
                                         }}
-                                        // 劫持启动前
-                                        defaultPlugins={checkList}
-                                        setDefaultPlugins={setCheckList}
+                                        showEditor={false}
                                     />
                                 )}
                             />
@@ -468,30 +509,56 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     Type: "mitm,port-scan",
                                     Keyword: searchKeyword,
                                     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-                                    Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"},
-                                    IncludedScriptNames: isSelectAll ? [] : checkList
+                                    Group: {UnSetGroup: false, Group: groupNames},
+                                    IsMITMParamPlugins: isHasParams ? 1 : 2,
+                                    IncludedScriptNames: isHasParams
+                                        ? hasParamsCheckList
+                                        : isSelectAll
+                                        ? []
+                                        : noParamsCheckList
                                 }
                             }}
                             total={total}
-                            allChecked={isSelectAll}
-                            checkedPlugin={isSelectAll ? [] : checkList}
+                            allChecked={isHasParams ? false : isSelectAll}
+                            checkedPlugin={isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList}
                         />
-                        <YakModuleListHeard
-                            onSelectAll={onSelectAll}
-                            setIsSelectAll={setIsSelectAll}
-                            isSelectAll={isSelectAll}
-                            total={total}
-                            length={checkList.length}
-                            loading={loading}
-                        />
+                        <div style={{display: "flex", alignItems: "center", gap: '10px'}}>
+                            <YakitRadioButtons
+                                buttonStyle='solid'
+                                options={[
+                                    {
+                                        value: false,
+                                        label: "普通"
+                                    },
+                                    {
+                                        value: true,
+                                        label: "带参数"
+                                    }
+                                ]}
+                                size={"small"}
+                                value={isHasParams}
+                                onChange={(e) => {
+                                    onIsHasParams(e.target.value)
+                                }}
+                            />
+                            <YakModuleListHeard
+                                onSelectAll={onSelectAll}
+                                setIsSelectAll={setIsSelectAll}
+                                isSelectAll={isSelectAll}
+                                total={total}
+                                length={isHasParams ? hasParamsCheckList.length : noParamsCheckList.length}
+                                loading={loading}
+                                isHasParams={isHasParams}
+                            />
+                        </div>
                         <YakitSpin spinning={loading}>
                             <MITMPluginLocalList
-                                // height='calc(100% - 96px)'
+                                isHasParams={isHasParams}
                                 onSubmitYakScriptId={onSubmitYakScriptId}
                                 status={status}
-                                checkList={checkList}
-                                setCheckList={(list) => {
-                                    setCheckList(list)
+                                noParamsCheckList={noParamsCheckList}
+                                setNoParamsCheckList={(list) => {
+                                    setNoParamsCheckList(list)
                                 }}
                                 tags={tags}
                                 setTags={setTags}
@@ -504,6 +571,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 total={total}
                                 setTotal={setTotal}
                                 hooks={hooks}
+                                hooksID={hooksID}
                                 onSelectAll={onSelectAll}
                                 onSendToPatch={onSendToPatch}
                                 groupNames={groupNames}

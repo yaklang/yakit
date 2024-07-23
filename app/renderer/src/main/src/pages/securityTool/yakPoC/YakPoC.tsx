@@ -327,6 +327,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
                       limit: +response.Pagination.Limit || 20
                   }
             const query: QueryYakScriptRequest = {
+                IsMITMParamPlugins: 2,
                 Pagination: {
                     Limit: params?.limit || 10,
                     Page: params?.page || 1,
@@ -334,12 +335,8 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
                     Order: "desc"
                 }
             }
-            if (type === "group") {
-                query.Type = batchPluginType
-                query.Group = {UnSetGroup: false, Group: selectGroupList}
-            } else {
-                query.Group = {UnSetGroup: false, Group: selectGroupList, IsPocBuiltIn: "true"}
-            }
+            query.Group = {UnSetGroup: false, Group: selectGroupList}
+            query.Type = batchPluginType
             try {
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
@@ -689,7 +686,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
 
     const getQueryYakScriptGroup = useMemoizedFn(() => {
         setLoading(true)
-        apiFetchQueryYakScriptGroupLocal(false, ["yak", "codec", "lua"])
+        apiFetchQueryYakScriptGroupLocal(false, ["yak", "codec", "lua"], 2)
             .then((res) => {
                 initialResponseRef.current = res
                 if (selectGroupList.length > 0) {

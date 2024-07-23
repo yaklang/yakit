@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed, yakitNotify} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
-import {ExecResult, QueryYakScriptRequest} from "../invoker/schema"
+import {ExecResult, QueryYakScriptRequest, YakScriptHookItem} from "../invoker/schema"
 import {ExecResultLog} from "../invoker/batch/ExecMessageViewer"
 import {ExtractExecResultMessage} from "../../components/yakitLogSchema"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
@@ -75,7 +75,7 @@ export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 整体的劫持状态
     const [status, setStatus, getStatus] = useGetState<"idle" | "hijacked" | "hijacking">("idle")
-
+    const [isHasParams, setIsHasParams] = useState<boolean>(false) // mitm插件类型是否带参数
     // 通过启动表单的内容
     const [addr, setAddr] = useState("")
     const [host, setHost] = useState("127.0.0.1")
@@ -310,6 +310,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         logs={[]}
                         statusCards={[]}
                         downstreamProxyStr={downstreamProxyStr}
+                        isHasParams={isHasParams}
+                        onIsHasParams={setIsHasParams}
                     />
                 )
 
@@ -330,6 +332,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         onSetTip={setTip}
                         downstreamProxyStr={downstreamProxyStr}
                         setDownstreamProxyStr={setDownstreamProxyStr}
+                        isHasParams={isHasParams}
+                        onIsHasParams={setIsHasParams}
                     />
                 )
         }
@@ -438,15 +442,19 @@ interface MITMServerProps {
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
     downstreamProxyStr: string
+    isHasParams: boolean
+    onIsHasParams: (isHasParams: boolean) => void
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr} = props
+    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr, isHasParams, onIsHasParams} = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
+
     /**
      * @description 插件勾选
      */
-    const [checkList, setCheckList] = useState<string[]>([])
+    const [hasParamsCheckList, setHasParamsCheckList] = useState<string[]>([])
+    const [noParamsCheckList, setNoParamsCheckList] = useState<string[]>([])
     const [enableInitialPlugin, setEnableInitialPlugin] = useState<boolean>(false)
     const [isFullScreenSecondNode, setIsFullScreenSecondNode] = useState<boolean>(false)
     const [isFullScreenFirstNode, setIsFullScreenFirstNode] = useState<boolean>(false)
@@ -463,7 +471,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
      */
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
 
-    const [listNames, setListNames] = useState<string[]>([]) // 存储的全部本地插件
+    const [listNames, setListNames] = useState<string[]>([]) // 存储的 带参全部本地插件 或者 不带参本地插件 =》 由tab切换决定
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
@@ -486,7 +494,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     port,
                     downstreamProxy,
                     enableInitialPlugin,
-                    enableInitialPlugin ? checkList : [],
+                    enableInitialPlugin ? noParamsCheckList : [],
                     enableHttp2,
                     ForceDisableKeepAlive,
                     certs,
@@ -515,22 +523,22 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
      */
     const onSelectAllIdle = useMemoizedFn((checked: boolean) => {
         if (checked) {
-            setCheckList(listNames)
+            setNoParamsCheckList(listNames)
         } else {
-            setCheckList([])
+            setNoParamsCheckList([])
         }
         setIsSelectAll(checked)
         setEnableInitialPlugin(checked)
     })
     /**
-     * @description 劫持开启后的全选 启动插件
+     * @description 劫持开启后不带参数的全选 启动插件
      */
     const onSelectAllHijacking = useMemoizedFn((checked: boolean) => {
         if (checked) {
             ipcRenderer
                 .invoke("mitm-remove-hook", {
                     HookName: [],
-                    RemoveHookID: listNames.concat(checkList)
+                    RemoveHookID: listNames.concat(noParamsCheckList)
                 } as any)
                 .then(() => {
                     onEnableMITMPluginMode(checked)
@@ -543,7 +551,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             ipcRenderer
                 .invoke("mitm-remove-hook", {
                     HookName: [],
-                    RemoveHookID: listNames.concat(checkList)
+                    RemoveHookID: listNames.concat(noParamsCheckList)
                 } as any)
                 .then(() => {
                     setIsSelectAll(checked)
@@ -584,9 +592,10 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 Order: "desc"
             },
             Keyword: searchKeyword,
-            Type: "mitm,port-scan",
+            Type: isHasParams ? "mitm" : "mitm,port-scan",
             Tag: tags,
-            Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"}
+            Group: {UnSetGroup: false, Group: groupNames},
+            IsMITMParamPlugins: isHasParams ? 1 : 2
         }
         apiQueryYakScript(query).then((res) => {
             const data = res.Data || []
@@ -602,19 +611,21 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
                             excludeType={["yak", "codec", "lua", "nuclei"]}
+                            isMITMParamPlugins={2}
                             pluginListQuery={() => {
                                 return {
                                     Tag: tags,
                                     Type: "mitm,port-scan",
                                     Keyword: searchKeyword,
                                     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-                                    Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"},
-                                    IncludedScriptNames: isSelectAll ? [] : checkList
+                                    Group: {UnSetGroup: false, Group: groupNames},
+                                    IncludedScriptNames: isSelectAll ? [] : noParamsCheckList,
+                                    IsMITMParamPlugins: 2
                                 }
                             }}
                             total={total}
                             allChecked={isSelectAll}
-                            checkedPlugin={isSelectAll ? [] : checkList}
+                            checkedPlugin={isSelectAll ? [] : noParamsCheckList}
                         />
                         <div style={{paddingRight: 9}}>
                             <PluginSearch
@@ -633,31 +644,33 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 setIsSelectAll={setIsSelectAll}
                                 isSelectAll={isSelectAll}
                                 total={total}
-                                length={checkList.length}
+                                length={noParamsCheckList.length}
+                                isHasParams={false}
                             />
                             <YakitButton
                                 type='text'
                                 colors='danger'
                                 onClick={() => {
-                                    if (checkList.length > 0) onSelectAll(false)
+                                    if (noParamsCheckList.length > 0) onSelectAll(false)
                                 }}
-                                disabled={checkList.length === 0}
+                                disabled={noParamsCheckList.length === 0}
                                 className={style["empty-button"]}
                             >
                                 清空
                             </YakitButton>
                         </div>
                         <MITMPluginLocalList
+                            isHasParams={false}
                             onSubmitYakScriptId={onSubmitYakScriptId}
                             status={status}
-                            checkList={checkList}
-                            setCheckList={(list) => {
+                            noParamsCheckList={noParamsCheckList}
+                            setNoParamsCheckList={(list) => {
                                 if (list.length === 0) {
                                     setEnableInitialPlugin(false)
                                 } else {
                                     setEnableInitialPlugin(true)
                                 }
-                                setCheckList(list)
+                                setNoParamsCheckList(list)
                             }}
                             tags={tags}
                             setTags={setTags}
@@ -673,6 +686,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 getAllSatisfyScript(t)
                             }}
                             hooks={new Map<string, boolean>()}
+                            hooksID={new Map<string, boolean>()}
                             onSelectAll={onSelectAll}
                             groupNames={groupNames}
                             setGroupNames={setGroupNames}
@@ -683,21 +697,18 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             default:
                 return (
                     <MITMPluginHijackContent
+                        isHasParams={isHasParams}
+                        onIsHasParams={onIsHasParams}
                         setTags={setTags}
                         tags={tags}
                         searchKeyword={searchKeyword}
                         setSearchKeyword={setSearchKeyword}
                         onSubmitYakScriptId={onSubmitYakScriptId}
                         status={status}
-                        checkList={checkList}
-                        setCheckList={(list) => {
-                            if (list.length === 0) {
-                                setEnableInitialPlugin(false)
-                            } else {
-                                setEnableInitialPlugin(true)
-                            }
-                            setCheckList(list)
-                        }}
+                        hasParamsCheckList={hasParamsCheckList}
+                        noParamsCheckList={noParamsCheckList}
+                        setHasParamsCheckList={setHasParamsCheckList}
+                        setNoParamsCheckList={setNoParamsCheckList}
                         isFullScreen={isFullScreenFirstNode}
                         setIsFullScreen={setIsFullScreenFirstNode}
                         isSelectAll={isSelectAll}
@@ -729,7 +740,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         enableInitialPlugin={enableInitialPlugin}
                         setEnableInitialPlugin={(checked) => {
                             if (!checked) {
-                                setCheckList([])
+                                setNoParamsCheckList([])
                                 setIsSelectAll(false)
                             }
                             setEnableInitialPlugin(checked)

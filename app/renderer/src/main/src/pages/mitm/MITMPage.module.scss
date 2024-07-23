@@ -80,11 +80,11 @@
     align-items: center;
     height: 36px;
     width: 100%;
-    padding: 12px 0 8px 0;
 
     .mitm-plugin-list-check {
         display: flex;
         align-items: center;
+        margin-right: 16px;
         .mitm-plugin-list-check-text {
             margin-left: 4px;
             font-size: 12px;
@@ -98,7 +98,6 @@
         font-size: 12px;
         line-height: 16px;
         color: var(--yakit-helper-text-color);
-        margin-left: 16px;
         span {
             color: var(--yakit-primary-5);
         }

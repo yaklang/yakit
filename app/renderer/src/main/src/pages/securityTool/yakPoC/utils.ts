@@ -18,6 +18,8 @@ export const apiFetchQueryYakScriptGroupLocalByPoc: (params: QueryYakScriptGroup
         const queryParams = {
             All: false,
             IsPocBuiltIn: true,
+            IsMITMParamPlugins: 2,
+            ExcludeType: ['yak', 'codec', 'lua'],
             ...params
         }
         ipcRenderer
