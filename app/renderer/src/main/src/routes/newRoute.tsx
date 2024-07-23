@@ -1,6 +1,6 @@
 import React, {ReactNode, Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
-import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
+import {ShellReceiver} from "../pages/reverseShellReceiver/shellReceiver"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
 import {DataCompare} from "../pages/compare/DataCompare"
 import {HTTPHistory} from "../components/HTTPHistory"
@@ -132,7 +132,7 @@ import {
 } from "./deprecatedMenu"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
-import { YakRunner } from "@/pages/YakRunner/YakRunner"
+import {YakRunner} from "@/pages/YakRunner/YakRunner"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
@@ -233,7 +233,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
-    YakitRoute.ShellReceiver,
     YakitRoute.DB_HTTPHistory,
     YakitRoute.DB_Report,
     YakitRoute.DB_Risk,
@@ -292,7 +291,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Mod_ScanPort,
     YakitRoute.Mod_Brute,
     YakitRoute.SimpleDetect,
-    YakitRoute.DB_Risk
+    YakitRoute.DB_Risk,
+    YakitRoute.ShellReceiver
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -478,7 +478,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.ReverseServer_New:
             return <NewReverseServerPage />
         case YakitRoute.ShellReceiver:
-            return <ShellReceiverPage />
+            return <ShellReceiver />
         case YakitRoute.DB_HTTPHistory:
             return <HTTPHistory pageType='History' />
         case YakitRoute.DB_Report:
@@ -492,8 +492,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_CVE:
             return <CVEViewer />
         case YakitRoute.YakScript:
-            return <YakRunner/>
-            // return <YakExecutor />
+            return <YakRunner />
+        // return <YakExecutor />
         case YakitRoute.PayloadManager:
             return <NewPayload />
         case YakitRoute.AccountAdminPage:
@@ -510,7 +510,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ControlAdminPage />
         case YakitRoute.AddYakitScript:
             return <AddYakitPlugin />
-            // return <PluginEditDetails />
+        // return <PluginEditDetails />
         case YakitRoute.ModifyYakitScript:
             return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.SimpleDetect:
@@ -1128,10 +1128,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "插件",
-        children: routeToChildren([
-            YakitRoute.Plugin_Hub,
-            YakitRoute.BatchExecutorPage
-        ])
+        children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
     },
     {
         page: undefined,
@@ -1209,10 +1206,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "插件",
-        children: routeToChildren([
-            YakitRoute.Plugin_Hub,
-            YakitRoute.BatchExecutorPage
-        ])
+        children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
     },
     {
         page: undefined,

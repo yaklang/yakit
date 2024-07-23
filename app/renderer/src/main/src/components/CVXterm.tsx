@@ -3,6 +3,7 @@ import {IProps} from "xterm-for-react/dist/src/XTerm"
 import {XTerm} from "xterm-for-react"
 import ReactResizeDetector from "react-resize-detector"
 import {xtermFit} from "../utils/xtermUtils"
+import {TERMINAL_INPUT_KEY} from "./yakitUI/YakitCVXterm/YakitCVXterm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -10,16 +11,6 @@ export interface CVXtermProps extends IProps {
     isWrite?: boolean
     write?: (s: string) => any
     maxHeight?: number
-}
-
-export const TERMINAL_INPUT_KEY = {
-    BACK: 8, // 退格删除键
-    ENTER: 13, // 回车键
-    UP: 38, // 方向盘上键
-    DOWN: 40, // 方向盘键
-    LEFT: 37, // 方向盘左键
-    RIGHT: 39, // 方向盘右键
-    CHAR_C: 67 // 字符C
 }
 
 /**

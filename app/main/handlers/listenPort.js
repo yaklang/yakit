@@ -1,4 +1,4 @@
-const {ipcMain, clipboard} = require("electron");
+const { ipcMain, clipboard } = require("electron");
 
 module.exports = (win, getClient) => {
 
@@ -36,29 +36,20 @@ module.exports = (win, getClient) => {
         stream = getClient().OpenPort();
         // 如果有问题，重置
         stream.on("error", (e) => {
-            removeStreamPort(addr)
+            if (win) {
+                win.webContents.send(`client-listening-port-error-${addr}`, e);
+            }
         })
 
         // 发送回数据
         stream.on("data", data => {
-            if (data.control) {
-                if (win && data.waiting) {
-                    win.webContents.send(`client-listening-port-success-${addr}`)
-                }
-                if (win && data.closed) {
-                    removeStreamPort(addr)
-                }
-                return
-            }
-
             if (win) {
                 win.webContents.send(`client-listening-port-data-${addr}`, data)
             }
         })
         stream.on("end", () => {
-            removeStreamPort(addr)
             if (win) {
-                win.webContents.send("client-listening-port-end", addr);
+                win.webContents.send(`client-listening-port-end-${addr}`, addr);
             }
         })
         stream.write({
@@ -71,4 +62,34 @@ module.exports = (win, getClient) => {
     ipcMain.handle("copy-clipboard", (e, text) => {
         clipboard.writeText(text);
     });
+
+    const asyncGetReverseShellProgramList = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetReverseShellProgramList(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetReverseShellProgramList", async (e, params) => {
+        return await asyncGetReverseShellProgramList(params)
+    })
+
+    const asyncGenerateReverseShellCommand = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateReverseShellCommand(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateReverseShellCommand", async (e, params) => {
+        return await asyncGenerateReverseShellCommand(params)
+    })
 }
