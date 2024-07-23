@@ -652,8 +652,6 @@ service Yak {
 
   // YAKURL
   rpc RequestYakURL(RequestYakURLParams) returns (RequestYakURLResponse);
-  // 文件IO
-  rpc ReadFile(ReadFileRequest) returns (stream ReadFileResponse);
 
   // 文件IO
   rpc ReadFile(ReadFileRequest) returns (stream ReadFileResponse);
@@ -1047,11 +1045,6 @@ message RequestYakURLParams {
 
 }
 
-message ReadFileRequest {
-  string FilePath = 1;
-  int64 BufSize = 2;
-}
-
 message YakURL {
   // YakURL is abstract general fs loader system
   // URL means schema://user:pass@location(:port)/path?query
@@ -1095,11 +1088,6 @@ message RequestYakURLResponse {
   int64 PageSize = 2;
   int64 Total = 3;
   repeated YakURLResource Resources = 4;
-}
-
-message ReadFileResponse {
-  bytes Data = 1;
-  bool EOF = 2;
 }
 
 message PacketPrettifyHelperRequest {
