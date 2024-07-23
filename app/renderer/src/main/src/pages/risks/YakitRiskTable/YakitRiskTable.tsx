@@ -22,7 +22,8 @@ import {
     OutlineOpenIcon,
     OutlinePlayIcon,
     OutlineSearchIcon,
-    OutlineTrashIcon} from "@/assets/icon/outline"
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -420,14 +421,21 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             icon={<OutlineTrashIcon />}
                         />
                         <Divider type='vertical' />
-                        <YakitButton
-                            type='text'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onRetest(record)
-                            }}
-                            icon={<OutlinePlayIcon />}
-                        />
+                        <Tooltip
+                            title='复测'
+                            destroyTooltipOnHide={true}
+                            overlayStyle={{paddingBottom: 0}}
+                            placement='top'
+                        >
+                            <YakitButton
+                                type='text'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onRetest(record)
+                                }}
+                                icon={<OutlinePlayIcon />}
+                            />
+                        </Tooltip>
                     </>
                 )
             }
