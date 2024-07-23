@@ -291,7 +291,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     return
                 }
                 // 取消上一次请求
-                if(isReadingRef.current){
+                if (isReadingRef.current) {
                     ipcRenderer.invoke("cancel-ReadFile")
                 }
                 isReadingRef.current = true
@@ -571,14 +571,30 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.emit("onOperationFileTree", "delete")
     })
 
+    // 文件树复制（快捷键）
+    const onTreeCopy = useMemoizedFn(() => {
+        emiter.emit("onOperationFileTree", "copy")
+    })
+
+    // 文件树粘贴（快捷键）
+    const onTreePaste = useMemoizedFn(() => {
+        emiter.emit("onOperationFileTree", "paste")
+    })
+
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
         setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
         setKeyboard("17-192", {onlyid: uuidv4(), callback: onOpenTermina})
+        // 文件树重命名
         setKeyboard("113", {onlyid: uuidv4(), callback: onTreeRename})
+        // 文件树删除
         setKeyboard("46", {onlyid: uuidv4(), callback: onTreeDelete})
+        // 文件树复制
+        setKeyboard("17-67", {onlyid: uuidv4(), callback: onTreeCopy})
+        // 文件树粘贴
+        setKeyboard("17-86", {onlyid: uuidv4(), callback: onTreePaste})
     })
 
     useEffect(() => {
@@ -599,7 +615,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         activeKey.push(which)
         const newkey = keySortHandle(activeKey).join("-")
         let arr = getKeyboard(newkey)
-        // console.log("newkey---", newkey, arr)
+        console.log("newkey---", newkey, arr)
         if (!arr) return
         event.stopPropagation()
         arr.forEach((item) => {

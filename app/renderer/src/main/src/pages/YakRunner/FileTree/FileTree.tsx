@@ -298,7 +298,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 是否为编辑（用于默认选中文件名）
     const isEditRef = useRef<boolean>(false)
     const [value, setValue] = useState<string>(info.name)
-    const inputRef = useRef<any>(null);
+    const inputRef = useRef<any>(null)
 
     const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
 
@@ -366,6 +366,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const onPaste = useMemoizedFn(async () => {
         try {
             const fileDetail = getMapFileDetail(copyPath)
+            // 文件夹不粘贴
+            if(fileDetail.isFolder) return
             const code = await getCodeByPath(copyPath)
             const rootPath = info.isFolder ? info.path : info.parent
             if (!rootPath) return
@@ -414,12 +416,12 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     })
 
     // 编辑模式时默认选中文件名(不含后缀)
-    useEffect(()=>{
-        if(inputRef.current && isInput && isEditRef.current){
+    useEffect(() => {
+        if (inputRef.current && isInput && isEditRef.current) {
             isEditRef.current = false
             inputRef.current.setSelectionRange(0, info.name.lastIndexOf("."))
         }
-    },[isInput])
+    }, [isInput])
 
     const onOperationFileTreeFun = useMemoizedFn((type: string) => {
         if (!isFoucsed) return
@@ -430,6 +432,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 break
             case "delete":
                 setRemoveCheckVisible(true)
+                break
+            case "copy":
+                if (!!foucsedKey) {
+                    setCopyPath(foucsedKey)
+                }
+                break
+            case "paste":
+                onPaste()
                 break
         }
     })
@@ -544,8 +554,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 }
                 emiter.emit("onResetFileTree", info.path)
                 emiter.emit("onRefreshFileTree")
-            }
-            else{
+            } else {
                 setInput(false)
             }
         } catch (error) {
