@@ -1,6 +1,12 @@
 import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "react"
-import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport} from "ahooks"
-import {OutlineClouduploadIcon, OutlinePlusIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useDebounceEffect} from "ahooks"
+import {
+    OutlineClouduploadIcon,
+    OutlinePluscircleIcon,
+    OutlinePlusIcon,
+    OutlineRefreshIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {PluginSearchParams, PluginListPageMeta, PluginFilterParams} from "@/pages/plugins/baseTemplateType"
@@ -16,7 +22,10 @@ import {
     convertDeleteLocalPluginsByWhereRequestParams,
     apiDeleteLocalPluginsByWhere,
     apiQueryYakScriptTotal,
-    excludeNoExistfilter
+    excludeNoExistfilter,
+    apiQueryYakScriptByYakScriptName,
+    apiFetchGetYakScriptGroupLocal,
+    apiFetchSaveYakScriptGroupLocal
 } from "@/pages/plugins/utils"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
@@ -41,14 +50,14 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {FilterPopoverBtn, FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 import {ExportYakScriptStreamRequest, PluginGroupList} from "@/pages/plugins/local/PluginsLocalType"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {RemotePluginGV} from "@/enums/plugin"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon, SolidYakOfficialPluginColorIcon} from "@/assets/icon/colors"
 import {randomString} from "@/utils/randomUtil"
 import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "@/pages/plugins/pluginUploadHooks"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {PluginLocalUpload, PluginLocalUploadSingle} from "@/pages/plugins/local/PluginLocalUpload"
 import {PluginLocalExport, PluginLocalExportForm} from "@/pages/plugins/local/PluginLocalExportProps"
 import {DefaultExportRequest, DefaultLocalPlugin, PluginOperateHint} from "../defaultConstant"
@@ -63,6 +72,11 @@ import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+import {PluginGroupDrawer} from "../group/PluginGroupDrawer"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {UpdateGroupList, UpdateGroupListItem} from "../group/UpdateGroupList"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {ListDelGroupConfirmPop} from "../group/PluginOperationGroupList"
 
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
@@ -148,12 +162,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         fetchList(true)
     }, [filters])
 
-    // 选中搜索条件可能在搜索数据组中不存在时进行清除
-    useEffect(() => {
-        const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, filterGroup)
-        if (updateFilterFlag) setFilters(realFilter)
-    }, [filters, filterGroup])
-
     const fetchInitTotal = useMemoizedFn(() => {
         apiQueryYakScriptTotal(true)
             .then((res) => {
@@ -163,9 +171,21 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
 
     // 搜索条件分组数据
-    const fetchFilterGroup = useMemoizedFn(() => {
+    const fetchFilterGroup = useMemoizedFn((refFlagList: boolean = true) => {
         apiFetchGroupStatisticsLocal()
             .then((res: API.PluginsSearchResponse) => {
+                if (refFlagList) {
+                    const latestGroup = res.data.find((item) => item.groupKey === "plugin_group")?.data || []
+                    const oldGroup = filterGroup.find((item) => item.groupKey === "plugin_group")?.data || []
+                    const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, res.data)
+                    if (updateFilterFlag) {
+                        setFilters(realFilter)
+                    } else {
+                        if (JSON.stringify(latestGroup) != JSON.stringify(oldGroup)) {
+                            fetchList(true)
+                        }
+                    }
+                }
                 setFilterGroup(res.data)
             })
             .catch(() => {})
@@ -197,7 +217,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                     pageParams: params
                 })
             }
-            if (queryFilter.plugin_group?.length) query.ExcludeTypes = ["yak", "codec"]
 
             try {
                 const res = await apiQueryYakScript(query)
@@ -619,16 +638,216 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
         )
     })
-    // 管理分组
-    const onOpenPluginGroup = useMemoizedFn(() => {
-        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
+
+    /** ---------- 分组 Start ---------- */
+    // 组抽屉列表
+    const [pluginGroupMagDrawer, setPluginGroupMagDrawer] = useState<boolean>(false)
+    const onOpenPluginGroup = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setPluginGroupMagDrawer(true)
     })
+    const onPluginGroupMagDrawerClose = useMemoizedFn((changeGroupListFlag: boolean) => {
+        setPluginGroupMagDrawer(false)
+        if (changeGroupListFlag) {
+            fetchFilterGroup()
+        }
+    })
+
+    // 本地获取插件所在插件组和其他插件组
+    const scriptNameRef = useRef<string[]>([])
+    const updateGroupListRef = useRef<any>()
+    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
+    const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([]) // 组数据
+    const getYakScriptGroupLocal = (scriptName: string[]) => {
+        scriptNameRef.current = scriptName
+        const query = getGroupPluginListQuery(scriptName)
+        apiFetchGetYakScriptGroupLocal(query).then((res) => {
+            const copySetGroup = [...res.SetGroup]
+            const newSetGroup = copySetGroup.map((name) => ({
+                groupName: name,
+                checked: true
+            }))
+            let copyAllGroup = [...res.AllGroup]
+            const newAllGroup = copyAllGroup.map((name) => ({
+                groupName: name,
+                checked: false
+            }))
+            setGroupList([...newSetGroup, ...newAllGroup])
+        })
+    }
+
+    // 更新组数据
+    const updateGroupList = useMemoizedFn(() => {
+        const latestGroupList: UpdateGroupListItem[] = updateGroupListRef.current.latestGroupList
+
+        // 新
+        const checkedGroup = latestGroupList.filter((item) => item.checked).map((item) => item.groupName)
+        const unCheckedGroup = latestGroupList.filter((item) => !item.checked).map((item) => item.groupName)
+
+        // 旧
+        const originCheckedGroup = groupList.filter((item) => item.checked).map((item) => item.groupName)
+
+        let saveGroup: string[] = []
+        let removeGroup: string[] = []
+        checkedGroup.forEach((groupName: string) => {
+            saveGroup.push(groupName)
+        })
+        unCheckedGroup.forEach((groupName: string) => {
+            if (originCheckedGroup.includes(groupName)) {
+                removeGroup.push(groupName)
+            }
+        })
+        if (!saveGroup.length && !removeGroup.length) return
+        const query = getGroupPluginListQuery(scriptNameRef.current)
+        apiFetchSaveYakScriptGroupLocal({
+            Filter: query,
+            SaveGroup: saveGroup,
+            RemoveGroup: removeGroup
+        }).then(() => {
+            setAddGroupVisible(false)
+            if (removeGroup.length) {
+                yakitNotify(
+                    "success",
+                    `${allChecked ? response.Total : query.IncludedScriptNames?.length}个插件已从“${removeGroup.join(
+                        ","
+                    )}”组移除`
+                )
+            }
+            const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
+            if (addGroup.length) {
+                yakitNotify(
+                    "success",
+                    `${allChecked ? response.Total : query.IncludedScriptNames?.length}个插件已添加至“${addGroup.join(
+                        ","
+                    )}”组`
+                )
+            }
+            if (removeGroup.length || addGroup.length) {
+                fetchFilterGroup()
+            }
+        })
+    })
+
+    // 列表头部右侧组标签
+    const [groupTagShow, setGroupTagShow] = useState<boolean>(false)
+    const [listDelGroupConfirm, setListDelGroupConfirm] = useState<boolean>(false)
+    const listDelGroupConfirmPopRef = useRef<any>()
+    const removeSingleRef = useRef<boolean>(false)
+    const removeSingleGroupRef = useRef<string>("")
+    const removeOutGroupContRef = useRef<string>("")
+    useDebounceEffect(
+        () => {
+            if (selectList.length || allChecked) {
+                getYakScriptGroupLocal(selectList.map((item) => item.ScriptName))
+            } else {
+                setGroupList([])
+            }
+        },
+        [selectList, allChecked],
+        {wait: 200}
+    )
+    const showGroupList = useMemo(() => {
+        return groupList.filter((item) => item.checked).map((item) => item.groupName)
+    }, [groupList])
+    const onRemoveGroup = (group: string) => {
+        removeSingleRef.current = true
+        removeSingleGroupRef.current = group
+        getRemoteValue(RemoteGV.PluginListGroupDelNoPrompt).then((result: string) => {
+            const flag = result === "true"
+            if (flag) {
+                onRemoveOk()
+            } else {
+                removeOutGroupContRef.current = allChecked
+                    ? `是否从 “${removeSingleGroupRef.current}” 组移除${response.Total}个插件？`
+                    : `是否从 “${removeSingleGroupRef.current}” 组中移除插件 “${scriptNameRef.current}” ？`
+                setListDelGroupConfirm(true)
+            }
+        })
+    }
+    const onRemoveAllGroup = () => {
+        removeSingleRef.current = false
+        getRemoteValue(RemoteGV.PluginListGroupDelNoPrompt).then((result: string) => {
+            const flag = result === "true"
+            if (flag) {
+                onRemoveOk()
+            } else {
+                removeOutGroupContRef.current = allChecked
+                    ? `是否从 “${showGroupList.join(",")}” 组移除${response.Total}个插件？`
+                    : `是否从 “${showGroupList.join(",")}” 组中移除插件 “${scriptNameRef.current}” ？`
+                setListDelGroupConfirm(true)
+            }
+        })
+    }
+    const handleRemoveGroup = async (saveGroup: string[], removeGroup: string[]) => {
+        const query = getGroupPluginListQuery(scriptNameRef.current)
+        await apiFetchSaveYakScriptGroupLocal({
+            Filter: query,
+            SaveGroup: saveGroup,
+            RemoveGroup: removeGroup
+        })
+        if (removeGroup.length) {
+            yakitNotify(
+                "success",
+                `${allChecked ? response.Total : query.IncludedScriptNames?.length}个插件已从“${removeGroup.join(
+                    ","
+                )}”组移除`
+            )
+            fetchFilterGroup()
+        }
+    }
+    const onRemoveOk = useMemoizedFn(() => {
+        const okFun = () => {
+            setRemoteValue(
+                RemoteGV.PluginListGroupDelNoPrompt,
+                listDelGroupConfirmPopRef.current.delGroupConfirmNoPrompt + ""
+            )
+            onRemoveCancel()
+        }
+        if (removeSingleRef.current) {
+            const saveGroup = groupList
+                .filter((item) => item.checked && item.groupName !== removeSingleGroupRef.current)
+                .map((item) => item.groupName)
+            const removeGroup: string[] = [removeSingleGroupRef.current]
+            handleRemoveGroup(saveGroup, removeGroup).then(() => {
+                okFun()
+            })
+        } else {
+            handleRemoveGroup([], showGroupList).then(() => {
+                okFun()
+            })
+        }
+    })
+    const onRemoveCancel = useMemoizedFn(() => {
+        removeSingleGroupRef.current = ""
+        removeOutGroupContRef.current = ""
+        setListDelGroupConfirm(false)
+    })
+
+    const getGroupPluginListQuery = useMemoizedFn((includedScriptNames: string[]) => {
+        const page: PluginListPageMeta = {
+            page: +response.Pagination.Page,
+            limit: +response.Pagination.Limit || 20
+        }
+        const queryFilters = {...getFilters()}
+        const querySearch = {...getSearch()}
+        const query: QueryYakScriptRequest = {
+            ...convertLocalPluginsRequestParams({
+                filter: queryFilters,
+                search: querySearch,
+                pageParams: page
+            })
+        }
+        query.IncludedScriptNames = includedScriptNames
+        return query
+    })
+
+    /** ---------- 分组 End ---------- */
 
     /** ---------- 通信监听 Start ---------- */
     // 刷新列表(是否刷新高级筛选数据)
     const handleRefreshList = useDebounceFn(
         useMemoizedFn((updateFilterGroup?: boolean) => {
-            if (updateFilterGroup) fetchFilterGroup()
+            if (updateFilterGroup) fetchFilterGroup(false)
             fetchList(true)
         }),
         {wait: 200}
@@ -657,8 +876,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
             const index = response.Data.findIndex((ele) => ele.ScriptName === plugin.ScriptName || ele.Id === plugin.Id)
             if (index === -1) {
-                fetchFilterGroup()
-                fetchList(true)
+                handleRefreshList(true)
             } else {
                 dispatch({
                     type: "replace",
@@ -688,8 +906,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             if (index !== -1) {
                 optCheck(data, false)
             }
-            fetchInitTotal()
-            fetchFilterGroup()
+            onRefreshFilterAndTotal()
             dispatch({
                 type: "remove",
                 payload: {
@@ -807,7 +1024,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 wrapperClassName={isDetailList ? styles["hidden-view"] : ""}
                 spinning={loading && isInitLoading.current}
             >
-                <div className={styles["outer-list"]}>
+                <div className={styles["outer-list"]} ref={divRef}>
                     <div className={classNames(styles["list-filter"], {[styles["hidden-view"]]: hiddenFilter})}>
                         <HubListFilter
                             groupList={filterGroup}
@@ -818,7 +1035,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                     return (
                                         <>
                                             <YakitButton type='text' onClick={onOpenPluginGroup}>
-                                                管理分组
+                                                管理
                                             </YakitButton>
                                             <div className={styles["local-list-divider-style"]} />
                                         </>
@@ -880,6 +1097,117 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                         name='新建插件'
                                         onClick={onNewPlugin}
                                     />
+                                </div>
+                            }
+                            listHeaderRightExtra={
+                                <div className={styles["hub-list-header-right-extra"]}>
+                                    {showGroupList.length > 0 && (
+                                        <div className={styles["header-filter-tag"]}>
+                                            {showGroupList.length <= 2 ? (
+                                                showGroupList.map((group) => {
+                                                    return (
+                                                        <YakitTag
+                                                            key={group}
+                                                            color='info'
+                                                            closable
+                                                            onClose={() => onRemoveGroup(group)}
+                                                        >
+                                                            {group}
+                                                        </YakitTag>
+                                                    )
+                                                })
+                                            ) : (
+                                                <YakitPopover
+                                                    overlayClassName={styles["hub-outer-list-group-popover"]}
+                                                    content={
+                                                        <div className={styles["hub-outer-list-filter"]}>
+                                                            {showGroupList.map((group) => {
+                                                                return (
+                                                                    <Tooltip
+                                                                        title={group}
+                                                                        placement='top'
+                                                                        overlayClassName='plugins-tooltip'
+                                                                        key={group}
+                                                                    >
+                                                                        <YakitTag
+                                                                            closable
+                                                                            onClose={() => onRemoveGroup(group)}
+                                                                        >
+                                                                            {group}
+                                                                        </YakitTag>
+                                                                    </Tooltip>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    }
+                                                    trigger='hover'
+                                                    onVisibleChange={setGroupTagShow}
+                                                    placement='bottom'
+                                                >
+                                                    <div
+                                                        className={classNames(styles["tag-total"], {
+                                                            [styles["tag-total-active"]]: groupTagShow
+                                                        })}
+                                                    >
+                                                        <span>
+                                                            插件组{" "}
+                                                            <span className={styles["total-style"]}>
+                                                                {showGroupList.length}
+                                                            </span>
+                                                        </span>
+                                                        <OutlineXIcon onClick={() => onRemoveAllGroup()} />
+                                                    </div>
+                                                </YakitPopover>
+                                            )}
+                                        </div>
+                                    )}
+                                    <YakitPopover
+                                        visible={addGroupVisible}
+                                        overlayClassName={styles["add-group-popover"]}
+                                        placement='bottomRight'
+                                        trigger='click'
+                                        content={
+                                            <UpdateGroupList
+                                                ref={updateGroupListRef}
+                                                originGroupList={groupList}
+                                                onOk={updateGroupList}
+                                                onCanle={() => setAddGroupVisible(false)}
+                                            ></UpdateGroupList>
+                                        }
+                                        onVisibleChange={(visible) => {
+                                            setAddGroupVisible(visible)
+                                        }}
+                                    >
+                                        {showGroupList.length ? (
+                                            <div className={styles["ui-op-btn-wrapper"]}>
+                                                <div
+                                                    className={classNames(styles["op-btn-body"], {
+                                                        [styles["op-btn-body-hover"]]: addGroupVisible
+                                                    })}
+                                                >
+                                                    <OutlinePluscircleIcon
+                                                        className={classNames(
+                                                            addGroupVisible
+                                                                ? styles["icon-hover-style"]
+                                                                : styles["icon-style"],
+                                                            styles["plus-icon"]
+                                                        )}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <YakitButton
+                                                disabled={!selectList.length && !allChecked}
+                                                type={"text"}
+                                                icon={<OutlinePluscircleIcon />}
+                                                style={{
+                                                    color: addGroupVisible ? "var(--yakit-primary-5)" : "#31343F"
+                                                }}
+                                            >
+                                                添加分组
+                                            </YakitButton>
+                                        )}
+                                    </YakitPopover>
                                 </div>
                             }
                             allChecked={allChecked}
@@ -965,6 +1293,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                         onSearch={onSearch}
                         filterNode={
                             <PluginGroup
+                                pluginListQuery={getGroupPluginListQuery}
+                                checkedPlugin={selectList.map((item) => item.ScriptName)}
+                                allChecked={allChecked}
+                                total={response.Total}
                                 selectGroup={detailSelectedGroup}
                                 setSelectGroup={(group) =>
                                     onDetailFilter(convertGroupParam({...getFilters()}, {group}))
@@ -1074,6 +1406,18 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                     onCallback={handleEditHintCallback}
                 />
             )}
+            <PluginGroupDrawer
+                groupType='local'
+                visible={pluginGroupMagDrawer}
+                onClose={onPluginGroupMagDrawerClose}
+            ></PluginGroupDrawer>
+            <ListDelGroupConfirmPop
+                ref={listDelGroupConfirmPopRef}
+                visible={listDelGroupConfirm}
+                content={removeOutGroupContRef.current}
+                onCancel={onRemoveCancel}
+                onOk={onRemoveOk}
+            ></ListDelGroupConfirmPop>
         </div>
     )
 })

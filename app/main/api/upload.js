@@ -1,5 +1,5 @@
-const {service, httpApi} = require("../httpServer")
-const {ipcMain} = require("electron")
+const { service, httpApi } = require("../httpServer")
+const { ipcMain } = require("electron")
 const fs = require("fs")
 const customPath = require("path")
 const FormData = require("form-data")
@@ -7,7 +7,7 @@ const crypto = require("crypto")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("upload-img", async (event, params) => {
-        const {path, type} = params
+        const { path, type } = params
         // 创建数据流
         // console.log('time1',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
         const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
@@ -18,7 +18,7 @@ module.exports = (win, getClient) => {
             "post",
             "upload/img",
             formData,
-            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            { "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}` },
             false
         )
         // res.then(()=>{
@@ -28,30 +28,43 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("upload-group-data", async (event, params) => {
-        const {path} = params
+        const { path } = params
         // 创建数据流
-        // console.log('time1',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
-        const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
-        const formData = new FormData()
-        formData.append("file", readerStream)
-        const res = httpApi(
-            "post",
-            "update/plugins/group",
-            formData,
-            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-            false
-        )
-        return res
+        try {
+            const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
+            const formData = new FormData()
+            formData.append("file", readerStream)
+            const headers = {
+                "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
+            };
+            const res = httpApi(
+                "post",
+                "update/plugins/group",
+                formData,
+                headers,
+                false
+            )
+            return res
+        } catch (error) {
+            throw error
+        }
+
     })
 
+    ipcMain.handle('get-template-file', async (event, args) => {
+        const filePath = customPath.join(__dirname, '../../assets/导入模板.xlsx');
+        const fileData = fs.readFileSync(filePath);
+        return fileData.toString('base64');
+    });
+
     // 计算Hash（支持分片计算与整体计算）
-    const hashChunk = ({path, size, chunkSize, chunkIndex}) => {
+    const hashChunk = ({ path, size, chunkSize, chunkIndex }) => {
         return new Promise((resolve, reject) => {
             let options = {}
             if (size && chunkSize && chunkIndex) {
                 const start = chunkIndex * chunkSize
                 const end = Math.min(start + chunkSize, size)
-                options = {start, end}
+                options = { start, end }
             }
             // 创建当前分片的读取流
             const chunkStream = fs.createReadStream(path, options)
@@ -74,7 +87,7 @@ module.exports = (win, getClient) => {
 
     // 上传次数缓存
     let postPackageHistory = {}
-    const postProject = ({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token}) => {
+    const postProject = ({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token }) => {
         return new Promise((resolve, reject) => {
             postPackageHistory[hash] ? (postPackageHistory[hash] += 1) : (postPackageHistory[hash] = 1)
             const percent = (chunkIndex + 1) / totalChunks
@@ -89,7 +102,7 @@ module.exports = (win, getClient) => {
                 "post",
                 url,
                 formData,
-                {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+                { "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}` },
                 false,
                 (percent === 1 && totalChunks > 3) ? 60 * 1000 * 10 : 60 * 1000
             )
@@ -103,7 +116,7 @@ module.exports = (win, getClient) => {
                     if (res.code !== 200 && postPackageHistory[hash] <= 3) {
                         // console.log("重传", postPackageHistory[hash])
                         // 传输失败 重传3次
-                        await postProject({url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token})
+                        await postProject({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token })
                     } else if (postPackageHistory[hash] > 3) {
                         reject("重传三次失败")
                     }
@@ -116,7 +129,7 @@ module.exports = (win, getClient) => {
         })
     }
 
-    const postProjectFail = ({fileName, hash, fileIndex}) => {
+    const postProjectFail = ({ fileName, hash, fileIndex }) => {
         service({
             url: "import/project/fail",
             method: "post",
@@ -137,7 +150,7 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             // console.log("params---",params);
             // path为文件路径 token为切片进度回调 url为接口
-            const {url, path, token} = params
+            const { url, path, token } = params
             // 获取文件名
             const fileName = customPath.basename(path)
             // 文件大小（以字节为单位）
@@ -153,18 +166,18 @@ module.exports = (win, getClient) => {
             // 计算分片总数
             const totalChunks = Math.ceil(size / chunkSize)
             // 计算整个文件Hash
-            const fileHash = await hashChunk({path})
+            const fileHash = await hashChunk({ path })
             const fileHashTime = `${fileHash}-${Date.now()}`
             TaskStatus = true
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                 if (TaskStatus) {
                     try {
-                        const hash = await hashChunk({path, size, chunkSize, chunkIndex})
+                        const hash = await hashChunk({ path, size, chunkSize, chunkIndex })
                         let add = chunkIndex === 0 ? 0 : 1
                         const start = chunkIndex * chunkSize + add
                         const end = Math.min((chunkIndex + 1) * chunkSize, size)
                         // 创建当前分片的读取流
-                        const chunkStream = fs.createReadStream(path, {start, end})
+                        const chunkStream = fs.createReadStream(path, { start, end })
                         await postProject({
                             url,
                             chunkStream,
@@ -198,7 +211,7 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("get-folder-under-files", async (event, params) => {
-        const {folderPath} = params
+        const { folderPath } = params
         if (!folderPath) return 0
         fs.readdir(folderPath, (err, files) => {
             if (err) throw err

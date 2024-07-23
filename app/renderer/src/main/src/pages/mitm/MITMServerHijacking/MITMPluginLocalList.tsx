@@ -29,15 +29,30 @@ import {randomString} from "@/utils/randomUtil"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTraceAgent} from "@/utils/envfile"
 import {
     DownloadOnlinePluginsRequest,
+    PluginGroupDel,
+    PluginGroupRename,
+    apiFetchDeleteYakScriptGroupLocal,
+    apiFetchDeleteYakScriptGroupOnline,
+    apiFetchGetYakScriptGroupLocal,
+    apiFetchGetYakScriptGroupOnline,
     apiFetchQueryYakScriptGroupLocal,
     apiFetchQueryYakScriptGroupOnlineNotLoggedIn,
+    apiFetchRenameYakScriptGroupLocal,
+    apiFetchRenameYakScriptGroupOnline,
+    apiFetchSaveYakScriptGroupLocal,
+    apiFetchSaveYakScriptGroupOnline,
     apiQueryYakScript
 } from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
-import {PluginGV} from "@/pages/plugins/builtInData"
-import {YakitRoute} from "@/enums/yakitRoute"
 import {API} from "@/services/swagger/resposeType"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {OutlinePencilaltIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {UpdateGroupList, UpdateGroupListItem} from "@/pages/pluginHub/group/UpdateGroupList"
+import {DelGroupConfirmPop} from "@/pages/pluginHub/group/PluginOperationGroupList"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -142,7 +157,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             IncludedScriptNames: [],
             Type: "mitm,port-scan",
             Tag: tags,
-            Group: {UnSetGroup: false, Group: groupNames}
+            Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"}
         }
 
         apiQueryYakScript(query).then((res) => {
@@ -211,7 +226,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                         Type: "mitm,port-scan",
                         Keyword: searchKeyword,
                         Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
-                        Group: {UnSetGroup: false, Group: groupNames}
+                        Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"},
                     }}
                     refresh={refresh}
                     itemHeight={44}
@@ -270,13 +285,14 @@ export interface YakitGetOnlinePluginProps {
     visible: boolean
     setVisible: (b: boolean) => void
     onFinish?: () => void
+    isRereshLocalPluginList?: boolean
 }
 /**
  * 一键下载插件
  * @param listType 'online'默认首页 mine 个人, recycle 回收站 check 审核页面"
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
-    const {listType = "online", pluginType, visible, setVisible, onFinish} = props
+    const {listType = "online", pluginType, visible, setVisible, onFinish, isRereshLocalPluginList = true} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -311,7 +327,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         if (visible) {
             const addParams: DownloadOnlinePluginsRequest = {
                 ListType: listType === "online" ? "" : listType,
-                PluginType: pluginType? pluginType : []
+                PluginType: pluginType ? pluginType : []
             }
             ipcRenderer
                 .invoke("DownloadOnlinePlugins", addParams, taskToken)
@@ -464,6 +480,11 @@ interface PluginGroupProps {
     wrapperClassName?: string
     isShowGroupMagBtn?: boolean
     excludeType?: string[]
+    pluginListQuery?: (checkedPlugin: string[]) => any
+    allChecked?: boolean
+    total?: number
+    checkedPlugin?: string[]
+    onClickMagFun?: () => void
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     const {
@@ -472,7 +493,11 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         wrapperClassName,
         isShowGroupMagBtn = true,
         isOnline = false,
-        excludeType = ["yak", "codec"]
+        excludeType = [],
+        pluginListQuery,
+        allChecked = false,
+        total = 0,
+        checkedPlugin = []
     } = props
 
     const [visible, setVisible] = useState<boolean>(false)
@@ -483,68 +508,219 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
 
     const pluginGroupRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(pluginGroupRef)
-    const refreshSelectGroupRef = useRef<boolean>(false)
 
     const compareExcludeType = useCampare(excludeType)
+
+    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
+    const updateGroupListRef = useRef<any>()
+    const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([]) // 组数据
 
     useDebounceEffect(
         () => {
             if (inViewport) {
-                // 获取插件组
-                if (isOnline) {
-                    apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
-                        const copyGroup = structuredClone(res.data)
-                        const data: YakFilterRemoteObj[] = copyGroup
-                            .filter((item) => !item.default)
-                            .map((item) => ({
-                                name: item.value,
-                                total: item.total
-                            }))
-                        setPlugGroup(data)
-                        filterSelectGroup(data)
-                    })
-                } else {
-                    apiFetchQueryYakScriptGroupLocal(false, excludeType).then((group: GroupCount[]) => {
-                        const copyGroup = structuredClone(group)
-                        const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
-                            name: item.Value,
-                            total: item.Total
-                        }))
-                        setPlugGroup(data)
-                        filterSelectGroup(data)
-                    })
-                }
-            } else {
-                refreshSelectGroupRef.current = false
+                getGroupList()
             }
         },
         [inViewport, compareExcludeType],
         {wait: 500}
     )
 
-    const filterSelectGroup = (data: YakFilterRemoteObj[]) => {
-        if (!refreshSelectGroupRef.current) return
-        let groupNameSet = new Set(data.map((obj) => obj.name))
-        const newSelectGroup = selectGroup.filter((item) => groupNameSet.has(item.name))
-        setSelectGroup(newSelectGroup)
+    const getGroupList = () => {
+        if (isOnline) {
+            apiFetchQueryYakScriptGroupOnlineNotLoggedIn().then((res: API.GroupResponse) => {
+                const copyGroup = structuredClone(res.data || [])
+                const data: YakFilterRemoteObj[] = copyGroup
+                    .filter((item) => !item.default)
+                    .map((item) => ({
+                        name: item.value,
+                        total: item.total
+                    }))
+                setPlugGroup(data)
+                filterSelectGroup(data)
+            })
+        } else {
+            apiFetchQueryYakScriptGroupLocal(false, excludeType).then((group: GroupCount[]) => {
+                const copyGroup = structuredClone(group)
+                const data: YakFilterRemoteObj[] = copyGroup.map((item) => ({
+                    name: item.Value,
+                    total: item.Total
+                }))
+                setPlugGroup(data)
+                filterSelectGroup(data)
+            })
+        }
     }
 
-    useEffect(() => {
-        const onRefpluginGroupSelectGroup = (flag: string) => {
-            refreshSelectGroupRef.current = flag === "true"
+    const filterSelectGroup = (data: YakFilterRemoteObj[]) => {
+        const groupNameSet = new Set(data.map((obj) => obj.name))
+        // 当选中的组在所有插件组中不存在 更新选中组
+        const index = selectGroup.findIndex((item) => !groupNameSet.has(item.name))
+        if (index != -1) {
+            const newSelectGroup = selectGroup.filter((item) => groupNameSet.has(item.name))
+            setSelectGroup(newSelectGroup)
         }
-        emiter.on("onRefpluginGroupSelectGroup", onRefpluginGroupSelectGroup)
-        return () => {
-            emiter.off("onRefpluginGroupSelectGroup", onRefpluginGroupSelectGroup)
+    }
+
+    const getYakScriptGroup = () => {
+        if (pluginListQuery) {
+            if (!isOnline) {
+                apiFetchGetYakScriptGroupLocal(pluginListQuery(checkedPlugin)).then((res) => {
+                    const copySetGroup = [...res.SetGroup]
+                    const newSetGroup = copySetGroup.map((name) => ({
+                        groupName: name,
+                        checked: true
+                    }))
+                    let copyAllGroup = [...res.AllGroup]
+                    const newAllGroup = copyAllGroup.map((name) => ({
+                        groupName: name,
+                        checked: false
+                    }))
+                    setGroupList([...newSetGroup, ...newAllGroup])
+                })
+            } else {
+                apiFetchGetYakScriptGroupOnline(pluginListQuery(checkedPlugin)).then((res) => {
+                    const copySetGroup = Array.isArray(res.setGroup) ? [...res.setGroup] : []
+                    const newSetGroup = copySetGroup.map((name) => ({
+                        groupName: name,
+                        checked: true
+                    }))
+                    let copyAllGroup = Array.isArray(res.allGroup) ? [...res.allGroup] : []
+                    // 便携版 如果没有基础扫描 塞基础扫描
+                    if (isEnpriTraceAgent()) {
+                        const index = copySetGroup.findIndex((name) => name === "基础扫描")
+                        const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
+
+                        if (index === -1 && index2 === -1) {
+                            copyAllGroup = [...copyAllGroup, "基础扫描"]
+                        }
+                    }
+                    const newAllGroup = copyAllGroup.map((name) => ({
+                        groupName: name,
+                        checked: false
+                    }))
+                    setGroupList([...newSetGroup, ...newAllGroup])
+                })
+            }
         }
-    }, [])
+    }
+    const updateGroupList = useMemoizedFn(() => {
+        if (!pluginListQuery) return
+        const latestGroupList: UpdateGroupListItem[] = updateGroupListRef.current.latestGroupList
+
+        // 新
+        const checkedGroup = latestGroupList.filter((item) => item.checked).map((item) => item.groupName)
+        const unCheckedGroup = latestGroupList.filter((item) => !item.checked).map((item) => item.groupName)
+
+        // 旧
+        const originCheckedGroup = groupList.filter((item) => item.checked).map((item) => item.groupName)
+
+        let saveGroup: string[] = []
+        let removeGroup: string[] = []
+        checkedGroup.forEach((groupName: string) => {
+            saveGroup.push(groupName)
+        })
+        unCheckedGroup.forEach((groupName: string) => {
+            if (originCheckedGroup.includes(groupName)) {
+                removeGroup.push(groupName)
+            }
+        })
+        if (!saveGroup.length && !removeGroup.length) return
+        if (!isOnline) {
+            // 本地
+            const query = pluginListQuery(checkedPlugin)
+            apiFetchSaveYakScriptGroupLocal({
+                Filter: query,
+                SaveGroup: saveGroup,
+                RemoveGroup: removeGroup
+            }).then(() => {
+                setAddGroupVisible(false)
+                if (removeGroup.length) {
+                    yakitNotify(
+                        "success",
+                        `${allChecked ? total : query.IncludedScriptNames?.length}个插件已从“${removeGroup.join(
+                            ","
+                        )}”组移除`
+                    )
+                }
+                const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
+                if (addGroup.length) {
+                    yakitNotify(
+                        "success",
+                        `${allChecked ? total : query.IncludedScriptNames?.length}个插件已添加至“${addGroup.join(
+                            ","
+                        )}”组`
+                    )
+                }
+                if (removeGroup.length || addGroup.length) {
+                    getGroupList()
+                }
+            })
+        } else {
+            // 线上
+            const query = {...pluginListQuery(checkedPlugin), saveGroup, removeGroup}
+            apiFetchSaveYakScriptGroupOnline(query).then(() => {
+                setAddGroupVisible(false)
+                if (removeGroup.length) {
+                    yakitNotify(
+                        "success",
+                        `${allChecked ? total : query.uuid.length}个插件已从“${removeGroup.join(",")}”组移除`
+                    )
+                }
+                const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
+                if (addGroup.length) {
+                    yakitNotify(
+                        "success",
+                        `${allChecked ? total : query.uuid.length}个插件已添加至“${addGroup.join(",")}”组`
+                    )
+                }
+                if (removeGroup.length || addGroup.length) {
+                    getGroupList()
+                }
+            })
+        }
+    })
 
     return (
         <div className={classNames(style["mitm-plugin-group"], wrapperClassName)} ref={pluginGroupRef}>
             <Dropdown
                 overlay={
-                    <PluginGroupList pugGroup={pugGroup} selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
+                    <PluginGroupList
+                        pugGroup={pugGroup}
+                        isOnline={isOnline}
+                        showOptBtns={isShowGroupMagBtn}
+                        selectGroup={selectGroup}
+                        setSelectGroup={setSelectGroup}
+                        onEditInputBlur={(item, newName) => {
+                            if (!newName || newName === item.name) return
+                            if (!isOnline) {
+                                apiFetchRenameYakScriptGroupLocal(item.name, newName).then(() => {
+                                    getGroupList()
+                                })
+                            } else {
+                                const params: PluginGroupRename = {group: item.name, newGroup: newName}
+                                apiFetchRenameYakScriptGroupOnline(params).then(() => {
+                                    getGroupList()
+                                })
+                            }
+                        }}
+                        onDelGroup={(item, delOk) => {
+                            if (!isOnline) {
+                                apiFetchDeleteYakScriptGroupLocal(item.name).then(() => {
+                                    delOk()
+                                    getGroupList()
+                                })
+                            } else {
+                                const params: PluginGroupDel = {group: item.name}
+                                apiFetchDeleteYakScriptGroupOnline(params).then(() => {
+                                    delOk()
+                                    getGroupList()
+                                })
+                            }
+                        }}
+                        closePluginGroupList={() => setVisible(false)}
+                    />
                 }
+                visible={visible}
                 onVisibleChange={setVisible}
                 overlayStyle={{borderRadius: 4, width: 200}}
             >
@@ -562,14 +738,30 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                 </div>
             </Dropdown>
             {isShowGroupMagBtn && (
-                <YakitButton
-                    type='text'
-                    onClick={() => {
-                        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
+                <YakitPopover
+                    visible={addGroupVisible}
+                    overlayClassName={style["add-group-popover"]}
+                    placement='bottomRight'
+                    trigger='click'
+                    content={
+                        <UpdateGroupList
+                            ref={updateGroupListRef}
+                            originGroupList={groupList}
+                            onOk={updateGroupList}
+                            onCanle={() => setAddGroupVisible(false)}
+                        ></UpdateGroupList>
+                    }
+                    onVisibleChange={(visible) => {
+                        if (visible) {
+                            getYakScriptGroup()
+                        }
+                        setAddGroupVisible(visible)
                     }}
                 >
-                    管理分组
-                </YakitButton>
+                    <YakitButton type='text' disabled={!checkedPlugin.length && !allChecked}>
+                        添加分组
+                    </YakitButton>
+                </YakitPopover>
             )}
         </div>
     )
@@ -624,6 +816,7 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
                 }
                 setSearchType(o as "Tags" | "Keyword")
             }}
+            beforeOptionWidth={80}
             addonBeforeOption={[
                 {
                     label: "关键字",
@@ -687,11 +880,35 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
 
 interface PluginGroupListProps {
     pugGroup: YakFilterRemoteObj[]
+    isOnline: boolean
+    showOptBtns: boolean
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (p: YakFilterRemoteObj[]) => void
+    onEditInputBlur: (p: YakFilterRemoteObj, newName: string) => void
+    onDelGroup: (p: YakFilterRemoteObj, delOk: () => void) => void
+    closePluginGroupList: () => void
 }
 const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
-    const {pugGroup, selectGroup, setSelectGroup} = props
+    const {
+        pugGroup,
+        isOnline,
+        showOptBtns,
+        selectGroup,
+        setSelectGroup,
+        onEditInputBlur,
+        onDelGroup,
+        closePluginGroupList
+    } = props
+    const [newName, setNewName] = useState<string>("") // 插件组新名字
+    const [editGroup, setEditGroup] = useState<string>("")
+    const delGroupConfirmPopRef = useRef<any>()
+    const [delGroupConfirmPopVisible, setDelGroupConfirmPopVisible] = useState<boolean>(false)
+    const [delGroup, setDelGroup] = useState<YakFilterRemoteObj>() // 删除插件组
+
+    useEffect(() => {
+        setNewName(editGroup)
+    }, [editGroup])
+
     const onSelect = useMemoizedFn((selectItem: YakFilterRemoteObj) => {
         const checked = selectGroup.findIndex((l) => l.name === selectItem.name) === -1
         if (checked) {
@@ -702,6 +919,11 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
         }
     })
 
+    const showExtraOptBtns = (group: string) => {
+        // 线上 便携版 基础扫描不允许编辑删除操作
+        return showOptBtns && !(isOnline && isEnpriTraceAgent() && group === "基础扫描")
+    }
+
     return (
         <div className={style["plugin-group-list"]}>
             {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无数据' />}
@@ -710,19 +932,102 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                     className={classNames(style["plugin-group-item"], {
                         [style["plugin-group-item-select"]]: selectGroup.findIndex((l) => l.name === item.name) !== -1
                     })}
-                    onClick={() => {
-                        onSelect(item)
-                    }}
                     key={item.name}
                 >
-                    <div className={classNames(style["plugin-group-item-name"], "content-ellipsis")} title={item.name}>
-                        {item.name}
-                    </div>
-                    <div className={style["plugin-group-item-right"]}>
-                        <span className={style["plugin-group-item-length"]}>{item.total}</span>
-                    </div>
+                    {editGroup === item.name ? (
+                        <div className={style["plugin-group-item-input"]}>
+                            <YakitInput
+                                wrapperStyle={{height: "100%"}}
+                                style={{height: "100%"}}
+                                onBlur={() => {
+                                    onEditInputBlur(item, newName)
+                                    setEditGroup("")
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        onEditInputBlur(item, newName)
+                                        setEditGroup("")
+                                    }
+                                }}
+                                autoFocus={true}
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value.trim())}
+                            ></YakitInput>
+                        </div>
+                    ) : (
+                        <div
+                            className={classNames(style["plugin-group-item-cont"])}
+                            onClick={() => {
+                                onSelect(item)
+                            }}
+                        >
+                            <div
+                                className={classNames(style["plugin-group-item-name"], "content-ellipsis")}
+                                title={item.name}
+                            >
+                                {item.name}
+                            </div>
+                            <span
+                                className={classNames(style["plugin-group-item-length"], {
+                                    [style["plugin-number-unshow"]]: showExtraOptBtns(item.name)
+                                })}
+                            >
+                                {item.total}
+                            </span>
+                            {showExtraOptBtns(item.name) && (
+                                <div className={style["extra-opt-btns"]}>
+                                    <YakitButton
+                                        icon={<OutlinePencilaltIcon />}
+                                        type='text2'
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setEditGroup(item.name)
+                                        }}
+                                    ></YakitButton>
+                                    <YakitButton
+                                        icon={<OutlineTrashIcon />}
+                                        type='text'
+                                        colors='danger'
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
+                                                const flag = result === "true"
+                                                if (flag) {
+                                                    onDelGroup(item, () => {})
+                                                } else {
+                                                    closePluginGroupList()
+                                                    setDelGroup(item)
+                                                    setDelGroupConfirmPopVisible(true)
+                                                }
+                                            })
+                                        }}
+                                    ></YakitButton>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             ))}
+            <DelGroupConfirmPop
+                ref={delGroupConfirmPopRef}
+                visible={delGroupConfirmPopVisible}
+                onCancel={() => {
+                    setDelGroup(undefined)
+                    setDelGroupConfirmPopVisible(false)
+                }}
+                delGroupName={delGroup?.name || ""}
+                onOk={() => {
+                    if (!delGroup) return
+                    onDelGroup(delGroup, () => {
+                        setDelGroup(undefined)
+                        setRemoteValue(
+                            RemoteGV.PluginGroupDelNoPrompt,
+                            delGroupConfirmPopRef.current.delGroupConfirmNoPrompt + ""
+                        )
+                        setDelGroupConfirmPopVisible(false)
+                    })
+                }}
+            ></DelGroupConfirmPop>
         </div>
     )
 })

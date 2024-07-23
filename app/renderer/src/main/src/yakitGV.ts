@@ -68,6 +68,8 @@ export enum RemoteGV {
     TemporaryProjectNoPrompt = "temporary_project_no_prompt",
     /** @name 插件组删除是否记住不给提示 */
     PluginGroupDelNoPrompt = "plugin_group_del_no_prompt",
+    /** @name 插件列表插件组删除是否记住不给提示 */
+    PluginListGroupDelNoPrompt = "plugin_list_group_del_no_prompt",
     /** @name mitm劫持左侧tabs */
     MitmHijackedLeftTabs = "mitm_hijacked_left_tabs",
     /** @name history编辑器响应美化&渲染 */

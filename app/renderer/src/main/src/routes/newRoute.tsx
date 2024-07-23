@@ -102,7 +102,6 @@ import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/Mat
 import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {PluginEditDetails} from "@/pages/plugins/editDetails/PluginEditDetails"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
-import {PluginGroupType, PluginGroups} from "@/pages/plugins/group/PluginGroups"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
 import {NewPayload} from "@/pages/payloadManager/newPayload"
@@ -231,7 +230,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
-    YakitRoute.Plugin_Groups,
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
@@ -273,7 +271,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
-    YakitRoute.Plugin_Groups,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
     YakitRoute.DNSLog,
@@ -365,9 +362,6 @@ export interface ComponentParams {
 
     // 编辑插件
     editPluginId?: number
-
-    // 插件组类型
-    pluginGroupType?: PluginGroupType
 
     // webshell info
     webshellInfo?: WebShellDetail
@@ -471,8 +465,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                     <PluginHub />
                 </Suspense>
             )
-        case YakitRoute.Plugin_Groups:
-            return <PluginGroups pluginGroupType={params?.pluginGroupType} />
         case YakitRoute.BatchExecutorPage:
             return <PluginBatchExecutor id={params?.id || ""} />
         case YakitRoute.DNSLog:

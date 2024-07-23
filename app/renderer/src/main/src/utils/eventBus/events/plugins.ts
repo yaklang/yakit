@@ -11,19 +11,6 @@ export type PluginsEventProps = {
     onRefLocalDetailSelectPlugin: string
     /** 修改私有域成功后发送的信号 */
     onSwitchPrivateDomain: string
-
-    /** 刷新插件组管理本地插件组列表 */
-    onRefPluginGroupMagLocalQueryYakScriptGroup: string
-    /** 刷新插件组管理本地插件列表 */
-    onRefPluginGroupMagLocalPluginList: string
-    /** 刷新插件组管理线上插件组列表 */
-    onRefPluginGroupMagOnlineQueryYakScriptGroup: string
-    /** 刷新插件组管理线上插件列表 */
-    onRefPluginGroupMagOnlinePluginList: string
-    /** 刷新插件组中PluginGroup选中插件组 */
-    onRefpluginGroupSelectGroup: string
-    /** 刷新线上插件组管理列表 */
-    onRefpluginGroupList?: string
     /**刷新单个执行页面中的插件数据 */
     onRefSinglePluginExecution?: string
     /** 刷新Codec相关菜单 */

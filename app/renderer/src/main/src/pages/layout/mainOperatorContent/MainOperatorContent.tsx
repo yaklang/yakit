@@ -102,7 +102,6 @@ import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
-import {PluginGroupType} from "@/pages/plugins/group/PluginGroups"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {
@@ -447,9 +446,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Plugin_Store:
                 pluginStore(params)
                 break
-            case YakitRoute.Plugin_Groups:
-                pluginGroup(params)
-                break
             case YakitRoute.BatchExecutorPage:
                 addBatchExecutorPage(params)
                 break
@@ -744,18 +740,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             setPagesData(YakitRoute.Plugin_Store, pages)
         }
         openMenuPage({route: YakitRoute.Plugin_Store})
-    })
-
-    const pluginGroup = useMemoizedFn((data: {pluginGroupType: PluginGroupType}) => {
-        const {pluginGroupType = "local"} = data || {}
-        openMenuPage(
-            {route: YakitRoute.Plugin_Groups},
-            {
-                pageParams: {
-                    pluginGroupType
-                }
-            }
-        )
     })
 
     /** @name 渲染端通信-关闭一个指定页面 */
@@ -2008,9 +1992,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         help={
                             bugList.length === 0 && (
                                 <span className={styles["bug-test-help"]}>
-                                    点击管理分组新建分组
+                                    点击管理新建分组
                                     <span className={styles["bug-test-help-active"]} onClick={onToManageGroup}>
-                                        管理分组
+                                        管理
                                     </span>
                                 </span>
                             )

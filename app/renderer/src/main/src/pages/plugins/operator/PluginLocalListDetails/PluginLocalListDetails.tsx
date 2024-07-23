@@ -31,7 +31,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
             showFilter,
             fixFilterList,
             defaultFilters,
-            pluginGroupExcludeType = ["yak", "codec"]
+            pluginGroupExcludeType = []
         } = props
 
         const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
@@ -272,6 +272,27 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                             selectGroup={selectGroup}
                             setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
                             excludeType={pluginGroupExcludeType}
+                            pluginListQuery={() => {
+                                const params: PluginListPageMeta = {
+                                    page: +response.Pagination.Page,
+                                    limit: +response.Pagination.Limit
+                                }
+                                const query: QueryYakScriptRequest = {
+                                    ...convertLocalPluginsRequestParams({
+                                        filter: filters,
+                                        search,
+                                        pageParams: params,
+                                        defaultFilters
+                                    })
+                                }
+                                return {
+                                    ...query,
+                                    IncludedScriptNames: allCheck ? [] : selectList
+                                }
+                            }}
+                            total={response.Total}
+                            allChecked={allCheck}
+                            checkedPlugin={allCheck ? [] : selectList}
                         />
                     </>
                 }

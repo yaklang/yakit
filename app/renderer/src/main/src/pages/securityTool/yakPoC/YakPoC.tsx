@@ -74,7 +74,13 @@ const HybridScanTaskListDrawer = React.lazy(
 )
 
 export const onToManageGroup = () => {
-    emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Groups}))
+    emiter.emit(
+        "openPage",
+        JSON.stringify({
+            route: YakitRoute.Plugin_Hub,
+            params: {tabActive: "local"}
+        })
+    )
 }
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
@@ -254,13 +260,14 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 pageId={pageId}
                 pageInfo={pageInfo}
                 onInitInputValueAfter={onInitInputValueAfter}
+                type={type}
             />
         </div>
     )
 })
 
 const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) => {
-    const {selectGroupList, setTotal, hidden} = props
+    const {selectGroupList, setTotal, hidden, type} = props
     const isLoadingRef = useRef<boolean>(true)
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -325,9 +332,13 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
                     Page: params?.page || 1,
                     OrderBy: "updated_at",
                     Order: "desc"
-                },
-                Type: batchPluginType,
-                Group: {UnSetGroup: false, Group: selectGroupList}
+                }
+            }
+            if (type === "group") {
+                query.Type = batchPluginType
+                query.Group = {UnSetGroup: false, Group: selectGroupList}
+            } else {
+                query.Group = {UnSetGroup: false, Group: selectGroupList, IsPocBuiltIn: "true"}
             }
             try {
                 const res = await apiQueryYakScript(query)
@@ -678,7 +689,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
 
     const getQueryYakScriptGroup = useMemoizedFn(() => {
         setLoading(true)
-        apiFetchQueryYakScriptGroupLocal(false)
+        apiFetchQueryYakScriptGroupLocal(false, ["yak", "codec", "lua"])
             .then((res) => {
                 initialResponseRef.current = res
                 if (selectGroupList.length > 0) {
@@ -779,7 +790,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     </div>
                     <div className={styles["filter-body-right"]}>
                         <YakitButton type='text' onClick={onToManageGroup}>
-                            管理分组
+                            管理
                         </YakitButton>
                         <Divider type='vertical' style={{margin: "0 4px"}} />
                         <YakitButton type='text' danger onClick={onClearSelect}>
@@ -790,7 +801,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
             </div>
             {initialResponseRef.current.length === 0 ? (
                 <div className={styles["yak-poc-empty"]}>
-                    <YakitEmpty title='暂无数据' description='可一键获取默认分组与插件,或点击管理分组手动新建' />
+                    <YakitEmpty title='暂无数据' description='可一键获取默认分组与插件,或点击管理手动新建' />
                     <div className={styles["yak-poc-buttons"]}>
                         <YakitButton
                             type='outline1'
@@ -800,7 +811,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                             一键下载
                         </YakitButton>
                         <YakitButton icon={<OutlineCogIcon />} onClick={onToManageGroup}>
-                            管理分组
+                            管理
                         </YakitButton>
                     </div>
                 </div>
@@ -871,7 +882,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
     )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-    const {selectGroupList, onClearAll, pageId, pageInfo, onInitInputValueAfter} = props
+    const {selectGroupList, onClearAll, pageId, pageInfo, onInitInputValueAfter, type} = props
     const pluginBatchExecuteContentRef = useRef<HybridScanExecuteContentRefProps>(null)
 
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -1032,6 +1043,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                     </div>
                     <PluginListByGroup
                         hidden={showType !== "plugin"}
+                        type={type}
                         selectGroupList={selectGroupList}
                         total={total}
                         setTotal={setTotal}

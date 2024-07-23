@@ -460,8 +460,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                         <PluginGroup
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
-                            excludeType={['yak', 'codec', 'nuclei']}
+                            excludeType={["yak", "codec", "lua", "nuclei"]}
                             wrapperClassName={styles["plugin-group"]}
+                            pluginListQuery={() => {
+                                return {
+                                    Tag: tags,
+                                    Type: "mitm,port-scan",
+                                    Keyword: searchKeyword,
+                                    Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                                    Group: {UnSetGroup: false, Group: groupNames, IsPocBuiltIn: "false"},
+                                    IncludedScriptNames: isSelectAll ? [] : checkList
+                                }
+                            }}
+                            total={total}
+                            allChecked={isSelectAll}
+                            checkedPlugin={isSelectAll ? [] : checkList}
                         />
                         <YakModuleListHeard
                             onSelectAll={onSelectAll}

@@ -122,12 +122,6 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         fetchList(true)
     }, [filters])
 
-    // 选中搜索条件可能在搜索数据组中不存在时进行清除
-    useEffect(() => {
-        const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, filterGroup)
-        if (updateFilterFlag) setFilters(realFilter)
-    }, [filters, filterGroup])
-
     const fetchInitTotal = useMemoizedFn(() => {
         apiFetchOnlineList({page: 1, limit: 1}, true)
             .then((res) => {
@@ -137,9 +131,21 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
 
     // 搜索条件分组数据
-    const fetchFilterGroup = useMemoizedFn(() => {
+    const fetchFilterGroup = useMemoizedFn((refFlagList: boolean = true) => {
         apiFetchGroupStatisticsOnline()
             .then((res) => {
+                if (refFlagList) {
+                    const latestGroup = res.data.find((item) => item.groupKey === "plugin_group")?.data || []
+                    const oldGroup = filterGroup.find((item) => item.groupKey === "plugin_group")?.data || []
+                    const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, res.data)
+                    if (updateFilterFlag) {
+                        setFilters(realFilter)
+                    } else {
+                        if (JSON.stringify(latestGroup) != JSON.stringify(oldGroup)) {
+                            fetchList(true)
+                        }
+                    }
+                }
                 setFilterGroup(res.data)
             })
             .catch(() => {})
@@ -237,7 +243,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     // 刷新列表(是否刷新高级筛选数据)
     const handleRefreshList = useDebounceFn(
         useMemoizedFn((updateFilterGroup?: boolean) => {
-            if (updateFilterGroup) fetchFilterGroup()
+            if (updateFilterGroup) fetchFilterGroup(false)
             fetchList(true)
         }),
         {wait: 200}

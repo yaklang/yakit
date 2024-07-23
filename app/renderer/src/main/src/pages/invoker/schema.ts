@@ -138,7 +138,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     IgnoreGeneralModuleOrder?: boolean
     UUID?: string
     // 插件组
-    Group?: { UnSetGroup: boolean, Group: string[] }
+    Group?: { UnSetGroup: boolean, Group: string[], IsPocBuiltIn?: string }
     ExcludeTypes?: string[]
 }
 
