@@ -615,7 +615,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         activeKey.push(which)
         const newkey = keySortHandle(activeKey).join("-")
         let arr = getKeyboard(newkey)
-        console.log("newkey---", newkey, arr)
+        // console.log("newkey---", newkey, arr)
         if (!arr) return
         event.stopPropagation()
         arr.forEach((item) => {

@@ -538,9 +538,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                             value={terminaFont.fontFamily}
                                             onChange={(e) => {
                                                 const str = e.target.value
-                                                if (str.length > 0) {
-                                                    setTerminaFont({...terminaFont, fontFamily: str})
-                                                }
+                                                setTerminaFont({...terminaFont, fontFamily: str})
                                             }}
                                             placeholder='请输入字体'
                                         />
@@ -720,54 +718,9 @@ export const OutputInfo: React.FC<OutputInfoProps> = (props) => {
     })
     return (
         <div className={styles["output-info-list"]}>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!width || !height) return
-
-                    const row = Math.floor(height / 18.5)
-                    const col = Math.floor(width / 10)
-                    if (xtermRef) xtermFit(xtermRef, col, row)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
             <YakitXterm
                 ref={xtermRef}
                 customKeyEventHandler={onCopy}
-                options={{
-                    convertEol: true,
-                    theme: {
-                        foreground: "#e5c7a9",
-                        background: "#31343F",
-                        cursor: "#f6f7ec",
-
-                        black: "#121418",
-                        brightBlack: "#675f54",
-
-                        red: "#c94234",
-                        brightRed: "#ff645a",
-
-                        green: "#85c54c",
-                        brightGreen: "#98e036",
-
-                        yellow: "#f5ae2e",
-                        brightYellow: "#e0d561",
-
-                        blue: "#1398b9",
-                        brightBlue: "#5fdaff",
-
-                        magenta: "#d0633d",
-                        brightMagenta: "#ff9269",
-
-                        cyan: "#509552",
-                        brightCyan: "#84f088",
-
-                        white: "#e5c6aa",
-                        brightWhite: "#f6f7ec"
-                    }
-                }}
             />
         </div>
     )
