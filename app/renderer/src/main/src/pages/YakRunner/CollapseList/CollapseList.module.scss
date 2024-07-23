@@ -70,11 +70,7 @@
         }
         .ant-collapse-item > .ant-collapse-header .ant-collapse-header-text {
             overflow: hidden;
-            div {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
+
         }
     }
     .list-item {
@@ -127,6 +123,8 @@
         flex-direction: row;
         gap: 8px;
         .title {
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
             color: #31343f;
             font-size: 12px;

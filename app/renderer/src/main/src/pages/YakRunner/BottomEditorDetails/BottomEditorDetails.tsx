@@ -675,7 +675,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                     >
                         {activeFile?.language === "yak" ? (
-                            <HelpInfoList />
+                            <HelpInfoList  onJumpToEditor={onJumpToEditor}/>
                         ) : (
                             <div className={styles["no-syntax-check"]}>请选中yak文件查看帮助信息</div>
                         )}

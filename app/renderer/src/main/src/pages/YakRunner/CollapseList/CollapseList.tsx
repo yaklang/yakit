@@ -68,6 +68,7 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
 
 // 帮助信息
 export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
+    const {onJumpToEditor} = props
     const {activeFile} = useStore()
 
     // 编辑器实例
@@ -79,12 +80,43 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
     // 选中光标位置
     const onJumpEditorDetailFun = useMemoizedFn((range) => {
         try {
-            if (helpEditor && helpMonaco) {
+            if (helpEditor) {
                 helpEditor.setSelection(range)
                 helpEditor.revealLineInCenter(range.startLineNumber)
             }
         } catch (error) {}
     })
+
+    useEffect(() => {
+        let lastClickTime = 0
+        let clickTimer
+        if (helpEditor) {
+            // 监听编辑器的双击事件
+            helpEditor.onMouseDown(() => {
+                const currentTime = new Date().getTime()
+                const clickDelay = currentTime - lastClickTime
+                lastClickTime = currentTime
+                const selection = helpEditor.getSelection()
+                if (clickDelay < 300) {
+                    // 300ms 内算作双击
+                    clearTimeout(clickTimer)
+                    if (selection) {
+                        const {startColumn, startLineNumber, endColumn, endLineNumber} = selection
+                        onJumpToEditor({
+                            startLineNumber,
+                            startColumn,
+                            endLineNumber,
+                            endColumn
+                        })
+                    }
+                } else {
+                    clickTimer = setTimeout(() => {
+                        clearTimeout(clickTimer)
+                    }, 300)
+                }
+            })
+        }
+    }, [helpEditor])
 
     const fileInfo = useMemoizedFn((key: "references" | "definition") => {
         return (
@@ -273,6 +305,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
                     />
                 }
                 secondMinSize={300}
+                secondNodeStyle={{padding: 0}}
                 secondNode={
                     <YakitEditor
                         readOnly
