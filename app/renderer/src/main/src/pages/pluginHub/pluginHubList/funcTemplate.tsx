@@ -38,15 +38,11 @@ import {formatDate} from "@/utils/timeUtil"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {yakitNotify} from "@/utils/notification"
 import {
-    DownloadOnlinePluginsRequest,
     PluginStarsRequest,
     PluginsRecycleRequest,
-    apiDownloadPluginMine,
-    apiDownloadPluginOnline,
     apiPluginStars,
     apiReductionRecyclePlugin,
-    apiUpdatePluginPrivateMine,
-    onToEditPlugin
+    apiUpdatePluginPrivateMine
 } from "@/pages/plugins/utils"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {useStore} from "@/store"
@@ -56,7 +52,6 @@ import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {SolidThumbupIcon} from "@/assets/icon/solid"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {YakitRoute} from "@/enums/yakitRoute"
 
 import YakitLogo from "@/assets/yakitLogo.png"
 import UnLogin from "@/assets/unLogin.png"
@@ -379,12 +374,28 @@ export const HubGridList: <T>(props: HubGridListProps<T>) => any = memo((props) 
 
     const listRef = useRef<HTMLDivElement>(null)
     const listSize = useSize(listRef)
+    /**
+     * @name 记录列表的列数
+     * @description 主要用于防止隐藏到显示时，列数重置为2时引起的滚动定位计算错误问题
+     */
+    const oldGridCol = useRef<number>(2)
     /** 每行的列数 */
     const gridCol = useMemo(() => {
+        if (listSize?.width === 0) return oldGridCol.current
         const width = listSize?.width || 600
-        if (width >= 900 && width < 1200) return 3
-        if (width >= 1200 && width < 1500) return 4
-        if (width >= 1500) return 5
+        if (width >= 900 && width < 1200) {
+            oldGridCol.current = 3
+            return 3
+        }
+        if (width >= 1200 && width < 1500) {
+            oldGridCol.current = 4
+            return 4
+        }
+        if (width >= 1500) {
+            oldGridCol.current = 5
+            return 5
+        }
+        oldGridCol.current = 2
         return 2
     }, [listSize])
 
@@ -426,7 +437,7 @@ export const HubGridList: <T>(props: HubGridListProps<T>) => any = memo((props) 
     useEffect(() => {
         // 滚动定位
         if (!previousInView.current && inView) {
-            scrollTo(Math.floor((showIndex || 0) / gridCol))
+            scrollTo(Math.floor((showIndex || 0) / oldGridCol.current))
         }
         // 数据重置或刷新
         if (previousInView.current && inView && showIndex === 0) {
@@ -924,11 +935,14 @@ export const FooterExtraBtn: React.FC<FooterExtraBtnProps> = memo((props) => {
 interface OnlineOptFooterExtraProps {
     isLogin: boolean
     info: YakitPluginOnlineDetail
+    /** 当前正在执行下载的插件UUID队列 */
+    execDownloadInfo?: YakitPluginOnlineDetail[]
+    onDownload: (data: YakitPluginOnlineDetail) => void
     callback: (type: string, info: YakitPluginOnlineDetail) => any
 }
 /** @name 插件商店单项-点赞|下载 */
 export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((props) => {
-    const {isLogin, info, callback} = props
+    const {isLogin, info, execDownloadInfo = [], onDownload, callback} = props
 
     const [starLoading, setStarLoading] = useState<boolean>(false)
     const onStar = useMemoizedFn((e) => {
@@ -960,29 +974,20 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
             )
     })
 
-    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-    const onDownload = useMemoizedFn((e) => {
+    const downloadLoading = useMemo(() => {
+        if (!execDownloadInfo || execDownloadInfo.length === 0) return false
+        const findIndex = execDownloadInfo.findIndex((ele) => ele.uuid === info.uuid)
+        if (findIndex > -1) return true
+        return false
+    }, [info, execDownloadInfo])
+    const handleDownload = useMemoizedFn((e) => {
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
             yakitNotify("error", "插件信息错误，无法进行下载操作")
             return
         }
-
-        setDownloadLoading(true)
-        let request: DownloadOnlinePluginsRequest = {
-            UUID: [info.uuid]
-        }
-        apiDownloadPluginOnline(request)
-            .then(() => {
-                callback("download", info)
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setDownloadLoading(false)
-                }, 200)
-            })
+        onDownload(info)
     })
 
     return (
@@ -998,7 +1003,7 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
                 loading={downloadLoading}
                 icon={<OutlineClouddownloadIcon />}
                 title={info.downloadedTotalString || ""}
-                onClick={onDownload}
+                onClick={handleDownload}
             />
         </div>
     )
@@ -1007,6 +1012,9 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
 interface OwnOptFooterExtraProps {
     isLogin: boolean
     info: YakitPluginOnlineDetail
+    /** 当前正在执行下载的插件UUID队列 */
+    execDownloadInfo?: YakitPluginOnlineDetail[]
+    onDownload: (data: YakitPluginOnlineDetail) => void
     /** 当前正在执行删除的插件UUID队列 */
     execDelInfo?: YakitPluginOnlineDetail[]
     onDel: (data: YakitPluginOnlineDetail) => void
@@ -1014,35 +1022,26 @@ interface OwnOptFooterExtraProps {
 }
 /** @name 我的插件单项-下载|分享|更多(改公开|删除) */
 export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) => {
-    const {isLogin, info, execDelInfo = [], onDel, callback} = props
+    const {isLogin, info, execDownloadInfo = [], onDownload, execDelInfo = [], onDel, callback} = props
 
     const userinfo = useStore((s) => s.userInfo)
 
-    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-    // 下载
-    const onDownload = useMemoizedFn((e) => {
+    const downloadLoading = useMemo(() => {
+        if (!execDownloadInfo || execDownloadInfo.length === 0) return false
+        const findIndex = execDownloadInfo.findIndex((ele) => ele.uuid === info.uuid)
+        if (findIndex > -1) return true
+        return false
+    }, [info, execDownloadInfo])
+    const handleDownload = useMemoizedFn((e) => {
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "异常错误，未获取到插件信息")
+            yakitNotify("error", "插件信息错误，无法进行下载操作")
             return
         }
-
-        setDownloadLoading(true)
-        let request: DownloadOnlinePluginsRequest = {
-            UUID: [info.uuid]
-        }
-        apiDownloadPluginMine(request)
-            .then(() => {
-                callback("download", info)
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setDownloadLoading(false)
-                }, 200)
-            })
+        onDownload(info)
     })
+
     // 分享
     const onShare = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -1162,7 +1161,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
                 type='text2'
                 icon={<OutlineClouddownloadIcon />}
                 loading={downloadLoading}
-                onClick={onDownload}
+                onClick={handleDownload}
             />
             <div className={styles["divider-style"]}></div>
             <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={onShare} />

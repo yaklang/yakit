@@ -59,6 +59,7 @@ import {
     routeInfoToKey,
     routeToMenu
 } from "../publicMenu/utils"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 
 import classNames from "classnames"
 import style from "./HeardMenu.module.scss"
@@ -371,8 +372,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             return
         }
 
-        ipcRenderer
-            .invoke("GetYakScriptByName", {Name: info.pluginName})
+        grpcFetchLocalPluginDetail({Name: info.pluginName}, true)
             .then((i: YakScript) => {
                 const lastId = +i.Id || 0
                 // 插件不存在于本地数据库中

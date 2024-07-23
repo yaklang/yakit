@@ -85,6 +85,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import ReactResizeDetector from "react-resize-detector"
 import {SolidBorderDocumentTextIcon} from "@/assets/icon/colors"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../mitm/MITMPage"
+import {PluginHubPageInfoProps} from "@/store/pageInfo"
 const {ipcRenderer} = window.require("electron")
 
 interface ToolInfo {
@@ -1361,7 +1362,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                             onClick={() =>
                                                 onMenuParams({
                                                     route: YakitRoute.Plugin_Hub,
-                                                    params: {tabActive: "local"}
+                                                    params: {tabActive: "local"} as PluginHubPageInfoProps
                                                 })
                                             }
                                         >

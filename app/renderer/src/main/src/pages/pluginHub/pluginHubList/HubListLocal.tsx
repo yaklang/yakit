@@ -16,8 +16,7 @@ import {
     convertDeleteLocalPluginsByWhereRequestParams,
     apiDeleteLocalPluginsByWhere,
     apiQueryYakScriptTotal,
-    excludeNoExistfilter,
-    apiQueryYakScriptByYakScriptName
+    excludeNoExistfilter
 } from "@/pages/plugins/utils"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
@@ -56,7 +55,6 @@ import {DefaultExportRequest, DefaultLocalPlugin, PluginOperateHint} from "../de
 import useGetSetState from "../hooks/useGetSetState"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {Tooltip} from "antd"
-import {SavePluginInfoSignalProps} from "@/pages/plugins/editDetails/PluginEditDetails"
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
 import {grpcFetchLocalPluginDetail} from "../utils/grpc"
@@ -65,8 +63,6 @@ import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
-
-const {ipcRenderer} = window.require("electron")
 
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
@@ -126,80 +122,31 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
-    // 编辑插件保存后的刷新列表数据
-    const handleEditedToRefreshList = useMemoizedFn((info: string) => {
-        try {
-            const plugin: SavePluginInfoSignalProps = JSON.parse(info)
-            apiQueryYakScriptByYakScriptName({pluginName: plugin.pluginName})
-                .then((data: YakScript) => {
-                    const newItem = {...data, isLocalPlugin: privateDomain.current !== data.OnlineBaseUrl}
-                    // 本地列表是按更新时间排序的，如果当前列表没有该数据，刷新类别，数据会在第一页第一个
-                    const index = response.Data.findIndex((ele) => ele.ScriptName === data.ScriptName)
-                    if (index === -1) {
-                        fetchList(true)
-                    } else {
-                        dispatch({
-                            type: "update",
-                            payload: {
-                                item: {...newItem}
-                            }
-                        })
-                    }
-                })
-                .catch(() => {})
-        } catch (error) {}
-    })
-
-    //  重置后初始化搜索列表
-    const handleResetInitList = useMemoizedFn(() => {
-        setSearch(cloneDeep(defaultSearch))
-        setFilters(cloneDeep(defaultFilter))
-        fetchFilterGroup()
-        fetchList(true)
-    })
+    // 刷新搜索条件数据和无条件列表总数
+    const onRefreshFilterAndTotal = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchInitTotal()
+            fetchFilterGroup()
+        }),
+        {wait: 300}
+    ).run
 
     useEffect(() => {
         fetchPrivateDomain(() => {
-            fetchList(true)
+            handleRefreshList(true)
         })
-        fetchFilterGroup()
     }, [])
 
     useUpdateEffect(() => {
-        fetchFilterGroup()
         fetchList(true)
     }, [isLogin])
     useUpdateEffect(() => {
-        fetchFilterGroup()
+        if (inViewPort) onRefreshFilterAndTotal()
     }, [inViewPort])
     /** 搜索条件 */
     useUpdateEffect(() => {
         fetchList(true)
     }, [filters])
-
-    useEffect(() => {
-        const refreshPrivateDomain = () => {
-            fetchPrivateDomain(() => {
-                fetchList(true)
-            })
-        }
-        const refreshList = () => {
-            setTimeout(() => {
-                fetchList(true)
-            }, 200)
-        }
-        emiter.on("onSwitchPrivateDomain", refreshPrivateDomain)
-        emiter.on("onRefLocalPluginList", refreshList)
-        emiter.on("savePluginInfoSignal", handleEditedToRefreshList)
-        emiter.on("onImportRefLocalPluginList", handleResetInitList)
-
-        return () => {
-            emiter.off("onSwitchPrivateDomain", refreshPrivateDomain)
-            emiter.off("onRefLocalPluginList", refreshList)
-            emiter.off("savePluginInfoSignal", handleEditedToRefreshList)
-            emiter.off("onImportRefLocalPluginList", handleResetInitList)
-        }
-    }, [])
 
     // 选中搜索条件可能在搜索数据组中不存在时进行清除
     useEffect(() => {
@@ -288,8 +235,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
     /** 刷新 */
     const onRefresh = useMemoizedFn(() => {
-        fetchFilterGroup()
-        fetchList(true)
+        handleRefreshList(true)
     })
 
     /** 单项勾选 */
@@ -340,37 +286,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 delHintCache.current = res === "true"
             })
             .catch((err) => {})
-
-        emiter.on("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
-        return () => {
-            emiter.off("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
-        }
     }, [])
-    // 详情删除本地插件触发列表的局部更新
-    const handleDetailDeleteToLocal = useMemoizedFn((info: string) => {
-        if (!info) return
-        try {
-            const plugin: {name: string; id: string} = JSON.parse(info)
-            if (!plugin.name) return
-            const index = selectList.findIndex((ele) => ele.ScriptName === plugin.name)
-            const data: YakScript = {
-                ...DefaultLocalPlugin,
-                Id: Number(plugin.id) || 0,
-                ScriptName: plugin.name || ""
-            }
-            if (index !== -1) {
-                optCheck(data, false)
-            }
-            fetchInitTotal()
-            fetchFilterGroup()
-            dispatch({
-                type: "remove",
-                payload: {
-                    itemList: [data]
-                }
-            })
-        } catch (error) {}
-    })
 
     // 是否出现二次确认框
     const delHintCache = useRef<boolean>(false)
@@ -427,8 +343,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             }
         } catch (error) {}
         onCheck(false)
-        fetchFilterGroup()
-        fetchList(true)
+        handleRefreshList(true)
         setTimeout(() => {
             setBatchDelLoading(false)
         }, 200)
@@ -463,8 +378,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 if (index !== -1) {
                     optCheck(info, false)
                 }
-                fetchInitTotal()
-                fetchFilterGroup()
+                onRefreshFilterAndTotal()
                 dispatch({
                     type: "remove",
                     payload: {
@@ -530,7 +444,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                         m.destroy()
                         setTimeout(() => {
                             // 刷新我的列表
-                            emiter.emit("onRefUserPluginList", "")
+                            emiter.emit("onRefreshOwnPluginList", true)
                             fetchList(true)
                         }, 200)
                     }}
@@ -589,8 +503,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
     // 单个上传成功后
     const handleSingleUploadAfter = useMemoizedFn((info: YakScript) => {
-        ipcRenderer
-            .invoke("GetYakScriptByName", {Name: info.ScriptName})
+        grpcFetchLocalPluginDetail({Name: info.ScriptName}, true)
             .then((i: YakScript) => {
                 const newItem = {...i, isLocalPlugin: privateDomain.current !== i.OnlineBaseUrl}
                 dispatch({
@@ -712,6 +625,26 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
 
     /** ---------- 通信监听 Start ---------- */
+    // 刷新列表(是否刷新高级筛选数据)
+    const handleRefreshList = useDebounceFn(
+        useMemoizedFn((updateFilterGroup?: boolean) => {
+            if (updateFilterGroup) fetchFilterGroup()
+            fetchList(true)
+        }),
+        {wait: 200}
+    ).run
+
+    const handleSwitchPrivateDomain = useMemoizedFn(() => {
+        handleRefreshList()
+    })
+
+    // 重置所有搜索条件后的列表刷新
+    const handleInitFilterRefreshList = useMemoizedFn(() => {
+        setSearch(cloneDeep(defaultSearch))
+        setFilters(cloneDeep(defaultFilter))
+        handleRefreshList(true)
+    })
+
     // 触发详情列表的局部更新
     const [recalculation, setRecalculation] = useState<boolean>(false)
     // 更新本地插件信息，存在则进行局部更新，不存在则刷新列表
@@ -724,7 +657,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
             const index = response.Data.findIndex((ele) => ele.ScriptName === plugin.ScriptName || ele.Id === plugin.Id)
             if (index === -1) {
-                fetchInitTotal()
                 fetchFilterGroup()
                 fetchList(true)
             } else {
@@ -741,10 +673,45 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         } catch (error) {}
     })
 
+    // 详情删除本地插件触发列表的局部更新
+    const handleDetailDeleteToLocal = useMemoizedFn((info: string) => {
+        if (!info) return
+        try {
+            const plugin: {name: string; id: number} = JSON.parse(info)
+            if (!plugin.name) return
+            const index = selectList.findIndex((ele) => ele.ScriptName === plugin.name || ele.Id === Number(plugin.id))
+            const data: YakScript = {
+                ...DefaultLocalPlugin,
+                Id: Number(plugin.id) || 0,
+                ScriptName: plugin.name || ""
+            }
+            if (index !== -1) {
+                optCheck(data, false)
+            }
+            fetchInitTotal()
+            fetchFilterGroup()
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [data]
+                }
+            })
+        } catch (error) {}
+    })
+
     useEffect(() => {
+        emiter.on("onSwitchPrivateDomain", handleSwitchPrivateDomain)
+        emiter.on("onRefreshLocalPluginList", handleRefreshList)
+        emiter.on("onImportRefreshLocalPluginList", handleInitFilterRefreshList)
         emiter.on("editorLocalSaveToLocalList", handleUpdatePluginInfo)
+        emiter.on("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
+
         return () => {
+            emiter.off("onSwitchPrivateDomain", handleSwitchPrivateDomain)
+            emiter.off("onRefreshLocalPluginList", handleRefreshList)
+            emiter.off("onImportRefreshLocalPluginList", handleInitFilterRefreshList)
             emiter.off("editorLocalSaveToLocalList", handleUpdatePluginInfo)
+            emiter.off("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
         }
     }, [])
     /** ---------- 通信监听 Start ---------- */

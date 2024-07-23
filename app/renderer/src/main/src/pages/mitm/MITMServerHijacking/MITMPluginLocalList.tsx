@@ -327,9 +327,9 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             onRefLocalPluginList()
         })
     }
-    /**下载插件后需要更新 本地插件列表 */
+    /** 下载后需要刷新本地插件列表 */
     const onRefLocalPluginList = useMemoizedFn(() => {
-        emiter.emit("onRefLocalPluginList", "")
+        emiter.emit("onRefreshLocalPluginList", true)
     })
     return (
         <YakitHint

@@ -287,11 +287,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     useEffect(() => {
         emiter.on("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
-        emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
+        emiter.on("onRefreshOnlinePluginList", onRefOnlinePluginList)
         emiter.on("menuExpandSwitch", onMenuExpandSwitch)
         return () => {
             emiter.off("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
-            emiter.off("onRefOnlinePluginList", onRefOnlinePluginList)
+            emiter.off("onRefreshOnlinePluginList", onRefOnlinePluginList)
             emiter.off("menuExpandSwitch", onMenuExpandSwitch)
         }
     }, [])

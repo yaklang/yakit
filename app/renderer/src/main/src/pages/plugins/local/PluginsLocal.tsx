@@ -73,6 +73,7 @@ import {SavePluginInfoSignalProps} from "../editDetails/PluginEditDetails"
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
 import {PluginLocalExport, PluginLocalExportForm} from "./PluginLocalExportProps"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -150,15 +151,15 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         getPrivateDomainAndRefList()
     }, [])
     useEffect(() => {
-        emiter.on("onRefLocalPluginList", onRefLocalPluginList)
+        emiter.on("onRefreshLocalPluginList", onRefLocalPluginList)
         emiter.on("savePluginInfoSignal", onRefPlugin)
         emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
-        emiter.on("onImportRefLocalPluginList", onImportRefLocalPluginList)
+        emiter.on("onImportRefreshLocalPluginList", onImportRefLocalPluginList)
         return () => {
-            emiter.off("onRefLocalPluginList", onRefLocalPluginList)
+            emiter.off("onRefreshLocalPluginList", onRefLocalPluginList)
             emiter.off("savePluginInfoSignal", onRefPlugin)
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
-            emiter.off("onImportRefLocalPluginList", onImportRefLocalPluginList)
+            emiter.off("onImportRefreshLocalPluginList", onImportRefLocalPluginList)
         }
     }, [])
     useEffect(() => {
@@ -270,8 +271,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /**上传成功后需要修改列表中的数据 */
     const onUploadSuccess = useMemoizedFn(() => {
         if (uploadPluginRef.current) {
-            ipcRenderer
-                .invoke("GetYakScriptByName", {Name: uploadPluginRef.current.ScriptName})
+            grpcFetchLocalPluginDetail({Name: uploadPluginRef.current.ScriptName}, true)
                 .then((i: YakScript) => {
                     const newItem = {...i, isLocalPlugin: privateDomain !== i.OnlineBaseUrl}
                     dispatch({

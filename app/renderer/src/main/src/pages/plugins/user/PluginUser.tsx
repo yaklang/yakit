@@ -489,9 +489,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             [allCheck, selectList]
         )
         useEffect(() => {
-            emiter.on("onRefUserPluginList", onRefreshUserList)
+            emiter.on("onRefreshOwnPluginList", onRefreshUserList)
             return () => {
-                emiter.off("onRefUserPluginList", onRefreshUserList)
+                emiter.off("onRefreshOwnPluginList", onRefreshUserList)
             }
         }, [])
         // 获取筛选栏展示状态

@@ -294,7 +294,7 @@ export const LocalPluginList: React.FC<PluginLocalGroupsListProps> = React.memo(
             if (activeGroup.id !== "全部") {
                 refreshLocalPluginList()
             }
-            emiter.emit("onRefLocalPluginList", "") // 刷新本地插件列表
+            emiter.emit("onRefreshLocalPluginList") // 刷新本地插件列表
             emiter.emit("onRefPluginGroupMagLocalQueryYakScriptGroup", "")
         })
     }

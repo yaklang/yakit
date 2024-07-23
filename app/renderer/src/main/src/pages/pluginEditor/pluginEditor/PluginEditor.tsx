@@ -591,7 +591,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         }
                     }
                 })
-                .catch((err) => {})
+                .catch(() => {})
                 .finally(() => {
                     handleTimeLoadingToFalse(setLocalLoading)
                 })
@@ -716,6 +716,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             handleTimeLoadingToFalse(setModifyLoading)
                             return
                         }
+                        isNewOnline.current = false
                         setModifyReason(true)
                     } else {
                         if (pluginTest) {
@@ -779,7 +780,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 yakitNotify("success", "插件复制至云端成功, 并已下载至本地")
                                 if (isEdit) {
                                     // 刷新我的列表
-                                    emiter.emit("onRefUserPluginList", "")
+                                    emiter.emit("onRefreshOwnPluginList")
                                     const info: KeyParamsFetchPluginDetail = {
                                         id: Number(localRes.Id) || 0,
                                         name: localRes.ScriptName,
@@ -790,7 +791,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                         info: info
                                     })
                                     emiter.emit("editorLocalSaveToLocalList", JSON.stringify(info))
-                                    handleClosePage()
                                 }
                             })
                             .catch(() => {})
@@ -819,7 +819,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 .then((localRes) => {
                                     yakitNotify("success", "插件同步至云端成功, 并已下载至本地")
                                     // 刷新我的列表
-                                    emiter.emit("onRefUserPluginList", "")
+                                    emiter.emit("onRefreshOwnPluginList")
                                     const info: KeyParamsFetchPluginDetail = {
                                         id: Number(localRes.Id) || 0,
                                         name: localRes.ScriptName,
@@ -857,13 +857,20 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             }
 
             if (isNewOnline.current) {
+                if (!value) {
+                    setTimeout(() => {
+                        setPluginTest(false)
+                        setOnlineLoading(false)
+                    }, 200)
+                    return
+                }
                 httpUploadPluginToOnline(onlineOPPlugin.current)
                     .then((onlineRes) => {
                         grpcDownloadOnlinePlugin({uuid: onlineRes.uuid})
                             .then((localRes) => {
                                 yakitNotify("success", "插件同步至云端成功, 并已下载至本地")
                                 // 刷新我的列表
-                                emiter.emit("onRefUserPluginList", "")
+                                emiter.emit("onRefreshOwnPluginList")
                                 const info: KeyParamsFetchPluginDetail = {
                                     id: Number(localRes.Id) || 0,
                                     name: localRes.ScriptName,
@@ -904,7 +911,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             }
         })
 
-        //修改意见弹框
+        // 修改意见弹框
         const [modifyReason, setModifyReason] = useState<boolean>(false)
         const onModifyReason = useMemoizedFn((isSubmit: boolean, content?: string) => {
             if (!isSubmit) {
@@ -912,6 +919,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     setModifyReason(false)
                     setModifyLoading(false)
                 }, 200)
+                return
             }
 
             if (!onlineOPPlugin.current) {
@@ -919,7 +927,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     setModifyReason(false)
                     setModifyLoading(false)
                 }, 200)
-                yakitNotify("error", "操作未获取到插件信息，请重试!")
+                yakitNotify("error", "该插件无线上信息，无法提交修改")
                 return
             }
 
@@ -931,10 +939,32 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 })
                     .then((res) => {
                         // 提交操作只存在编辑页面，新建无该操作
-                        if (isEdit) {
+                        if (!isEdit) return
+
+                        const {isUpdate} = res
+                        // 编辑线上插件不存在，操作转为新建线上插件
+                        if (!isUpdate) {
+                            // 下载插件
+                            grpcDownloadOnlinePlugin({uuid: res.uuid})
+                                .then((localRes) => {
+                                    // 刷新我的列表
+                                    emiter.emit("onRefreshOwnPluginList")
+                                    const info: KeyParamsFetchPluginDetail = {
+                                        id: Number(localRes.Id) || 0,
+                                        name: localRes.ScriptName,
+                                        uuid: localRes.UUID || ""
+                                    }
+                                    handleEditSuccessCallback({
+                                        opType: "submit",
+                                        info: info
+                                    })
+                                    emiter.emit("editorLocalNewToLocalList", JSON.stringify(info))
+                                })
+                                .catch(() => {})
+                        } else {
                             if (isAuthors) {
                                 // 自己插件刷新我的插件列表
-                                emiter.emit("onRefUserPluginList", "")
+                                emiter.emit("onRefreshOwnPluginList")
                             }
                             handleEditSuccessCallback({
                                 opType: "submit",
@@ -944,10 +974,9 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                     uuid: res.uuid
                                 }
                             })
-                            handleClosePage()
                         }
                     })
-                    .catch((err) => {})
+                    .catch(() => {})
                     .finally(() => {
                         handleTimeLoadingToFalse(setModifyLoading)
                     })

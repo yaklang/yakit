@@ -18,7 +18,7 @@ import {
     excludeNoExistfilter
 } from "@/pages/plugins/utils"
 import {yakitNotify} from "@/utils/notification"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
 import {
@@ -52,11 +52,12 @@ import useGetSetState from "../hooks/useGetSetState"
 import {getRemoteValue} from "@/utils/kv"
 import {RemotePluginGV} from "@/enums/plugin"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
+import {SolidYakOfficialPluginColorIcon} from "@/assets/icon/colors"
+import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
-import { SolidYakOfficialPluginColorIcon } from "@/assets/icon/colors"
 
 interface HubListOnlineProps extends HubListBaseProps {}
 /** @name 插件商店 */
@@ -98,24 +99,19 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
-    // 刷新搜索条件数据和列表数据
-    const onRefreshFilterAndList = useMemoizedFn(() => {
-        fetchFilterGroup()
-        fetchList(true)
-    })
     // 刷新搜索条件数据和无条件列表总数
-    const onRefreshFilterAndTotal = useMemoizedFn(() => {
-        fetchInitTotal()
-        fetchFilterGroup()
-    })
+    const onRefreshFilterAndTotal = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchInitTotal()
+            fetchFilterGroup()
+        }),
+        {wait: 300}
+    ).run
 
     useEffect(() => {
-        onRefreshFilterAndList()
+        handleRefreshList(true)
     }, [])
 
-    useUpdateEffect(() => {
-        onRefreshFilterAndList()
-    }, [isLogin])
     useUpdateEffect(() => {
         if (inViewPort) {
             onRefreshFilterAndTotal()
@@ -125,21 +121,6 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     useUpdateEffect(() => {
         fetchList(true)
     }, [filters])
-
-    useEffect(() => {
-        const onRefreshList = () => {
-            setTimeout(() => {
-                fetchList(true)
-            }, 200)
-        }
-
-        emiter.on("onSwitchPrivateDomain", onRefreshFilterAndList)
-        emiter.on("onRefOnlinePluginList", onRefreshList)
-        return () => {
-            emiter.off("onSwitchPrivateDomain", onRefreshFilterAndList)
-            emiter.off("onRefOnlinePluginList", onRefreshList)
-        }
-    }, [])
 
     // 选中搜索条件可能在搜索数据组中不存在时进行清除
     useEffect(() => {
@@ -166,7 +147,11 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (loading) return
+            if (reset) {
+                if (isInitLoading.current) return
+            } else {
+                if (loading) return
+            }
             if (reset) {
                 fetchInitTotal()
                 isInitLoading.current = true
@@ -212,7 +197,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     })
     /** 刷新 */
     const onRefresh = useMemoizedFn(() => {
-        onRefreshFilterAndList()
+        handleRefreshList(true)
     })
 
     /** 单项勾选 */
@@ -248,6 +233,29 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     ).run
     /** ---------- 列表相关方法 End ---------- */
 
+    /** ---------- 通信监听 Start ---------- */
+    // 刷新列表(是否刷新高级筛选数据)
+    const handleRefreshList = useDebounceFn(
+        useMemoizedFn((updateFilterGroup?: boolean) => {
+            if (updateFilterGroup) fetchFilterGroup()
+            fetchList(true)
+        }),
+        {wait: 200}
+    ).run
+    const handleSwitchPrivateDomain = useMemoizedFn(() => {
+        handleRefreshList(true)
+    })
+
+    useEffect(() => {
+        emiter.on("onSwitchPrivateDomain", handleSwitchPrivateDomain)
+        emiter.on("onRefreshOnlinePluginList", handleRefreshList)
+        return () => {
+            emiter.off("onSwitchPrivateDomain", handleSwitchPrivateDomain)
+            emiter.off("onRefreshOnlinePluginList", handleRefreshList)
+        }
+    }, [])
+    /** ---------- 通信监听 Start ---------- */
+
     const listLength = useMemo(() => {
         return Number(response.pagemeta.total) || 0
     }, [response])
@@ -257,6 +265,90 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     }, [allChecked, selectList, response.pagemeta.total])
 
     /** ---------- 下载插件 Start ---------- */
+    useEffect(() => {
+        // 批量下载的同名覆盖二次确认框缓存
+        getRemoteValue(RemotePluginGV.BatchDownloadPluginSameNameOverlay)
+            .then((res) => {
+                batchSameNameCache.current = res === "true"
+            })
+            .catch((err) => {})
+        // 单个下载的同名覆盖二次确认框缓存
+        getRemoteValue(RemotePluginGV.SingleDownloadPluginSameNameOverlay)
+            .then((res) => {
+                singleSameNameCache.current = res === "true"
+            })
+            .catch((err) => {})
+    }, [])
+
+    // 单个下载
+    const singleSameNameCache = useRef<boolean>(false)
+    const [singleSameNameHint, setSingleSameNameHint] = useState<boolean>(false)
+    const handleSingleSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+        if (isOK) {
+            singleSameNameCache.current = cache
+            const data = singleDownload[singleDownload.length - 1]
+            if (data) handleSingleDownload(data)
+        } else {
+            setSingleDownload((arr) => arr.slice(0, arr.length - 1))
+        }
+        setSingleSameNameHint(false)
+    })
+    // 单个下载的插件信息队列
+    const [singleDownload, setSingleDownload] = useState<YakitPluginOnlineDetail[]>([])
+    const onFooterExtraDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        const findIndex = singleDownload.findIndex((item) => item.uuid === info.uuid)
+        if (findIndex > -1) {
+            yakitNotify("error", "该插件正在执行下载操作,请稍后再试")
+            return
+        }
+        setSingleDownload((arr) => {
+            arr.push(info)
+            return [...arr]
+        })
+
+        grpcFetchLocalPluginDetail({Name: info.script_name, UUID: info.uuid}, true)
+            .then((res) => {
+                const {ScriptName, UUID} = res
+                if (ScriptName === info.script_name && UUID !== info.uuid) {
+                    if (!singleSameNameCache.current) {
+                        if (singleSameNameHint) return
+                        setSingleSameNameHint(true)
+                        return
+                    }
+                }
+                handleSingleDownload(info)
+            })
+            .catch((err) => {
+                handleSingleDownload(info)
+            })
+    })
+    // 单个插件下载
+    const handleSingleDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        grpcDownloadOnlinePlugin({uuid: info.uuid})
+            .then((res) => {
+                dispatch({
+                    type: "download",
+                    payload: {
+                        item: {...info}
+                    }
+                })
+                emiter.emit(
+                    "editorLocalSaveToLocalList",
+                    JSON.stringify({
+                        id: Number(res.Id) || 0,
+                        name: res.ScriptName,
+                        uuid: res.UUID || ""
+                    })
+                )
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => {
+                    setSingleDownload((arr) => arr.filter((item) => item.uuid !== info.uuid))
+                }, 50)
+            })
+    })
+
     const [allDownloadHint, setAllDownloadHint] = useState<boolean>(false)
     // 全部下载
     const handleAllDownload = useMemoizedFn(() => {
@@ -285,7 +377,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
         setBatchDownloadLoading(true)
         apiDownloadPluginOnline(request)
-            .then(() => {})
+            .then(() => {
+                emiter.emit("onRefreshLocalPluginList", true)
+            })
             .catch(() => {})
             .finally(() => {
                 setTimeout(() => {
@@ -295,28 +389,20 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
             })
     })
 
-    useEffect(() => {
-        // 批量下载的同名覆盖二次确认框缓存
-        getRemoteValue(RemotePluginGV.BatchDownloadPluginSameNameOverlay)
-            .then((res) => {
-                sameNameCache.current = res === "true"
-            })
-            .catch((err) => {})
-    }, [])
-    const sameNameCache = useRef<boolean>(false)
-    const [sameNameHint, setSameNameHint] = useState<boolean>(false)
-    const handleSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+    const batchSameNameCache = useRef<boolean>(false)
+    const [batchSameNameHint, setBatchSameNameHint] = useState<boolean>(false)
+    const handleBatchSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
         if (isOK) {
-            sameNameCache.current = cache
+            batchSameNameCache.current = cache
             handleBatchDownloadPlugin()
         }
-        setSameNameHint(false)
+        setBatchSameNameHint(false)
     })
 
     const headerExtraDownload = useMemoizedFn(() => {
-        if (!sameNameCache.current) {
-            if (sameNameHint) return
-            setSameNameHint(true)
+        if (!batchSameNameCache.current) {
+            if (batchSameNameHint) return
+            setBatchSameNameHint(true)
             return
         }
         handleBatchDownloadPlugin()
@@ -450,7 +536,15 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     }
     // 单项的点赞|下载
     const extraFooter = (info: YakitPluginOnlineDetail) => {
-        return <OnlineOptFooterExtra isLogin={isLogin} info={info} callback={optCallback} />
+        return (
+            <OnlineOptFooterExtra
+                isLogin={isLogin}
+                info={info}
+                execDownloadInfo={singleDownload}
+                onDownload={onFooterExtraDownload}
+                callback={optCallback}
+            />
+        )
     }
 
     // 单项副标题
@@ -659,11 +753,20 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
             {/* 批量下载同名覆盖提示 */}
             <NoPromptHint
-                visible={sameNameHint}
+                visible={batchSameNameHint}
                 title='同名覆盖提示'
                 content='如果本地存在同名插件会直接进行覆盖'
                 cacheKey={RemotePluginGV.BatchDownloadPluginSameNameOverlay}
-                onCallback={handleSameNameHint}
+                onCallback={handleBatchSameNameHint}
+            />
+
+            {/* 单个下载同名覆盖提示 */}
+            <NoPromptHint
+                visible={singleSameNameHint}
+                title='同名覆盖提示'
+                content='本地有插件同名，下载将会覆盖，是否下载'
+                cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
+                onCallback={handleSingleSameNameHint}
             />
         </div>
     )

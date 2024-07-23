@@ -438,7 +438,7 @@ export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Pr
                 if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
                 else ipcRenderer.invoke("change-main-menu")
                 // 插件商店、我的插件、插件管理页面 下载插件后需要更新 本地插件列表
-                emiter.emit("onRefLocalPluginList", "")
+                emiter.emit("onRefreshLocalPluginList")
                 resolve(res)
             })
             .catch((e) => {
@@ -1016,21 +1016,6 @@ export const apiFetchOnlinePluginInfo: APIFunc<FetchOnlinePluginInfoRequest, API
     })
 }
 
-/**
- * @name 获取指定插件的详情(本地)
- */
-export const apiFetchLocalPluginInfo: APIFunc<string, YakScript> = (scriptName, hiddenError) => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("GetYakScriptByName", {Name: scriptName})
-            .then(resolve)
-            .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "查询本地插件错误:" + e)
-                reject(e)
-            })
-    })
-}
-
 export interface PluginLogsRequest extends HTTPRequestParameters, API.LogsRequest {}
 /**
  * @name 获取插件的日志
@@ -1528,21 +1513,6 @@ export const onToEditPlugin = (plugin: YakScript, route?: YakitRoute) => {
             })
         )
     }
-}
-
-/**
- * @description 获取插件详情，通过插件id
- */
-export const apiGetYakScriptById: APIFunc<string | number, YakScript> = (Id, hiddenError) => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("GetYakScriptById", {Id})
-            .then(resolve)
-            .catch((error) => {
-                if (!hiddenError) yakitNotify("error", `插件本地插件详情失败：${error}`)
-                reject(error)
-            })
-    })
 }
 
 /**本地获取插件组数据 */

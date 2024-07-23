@@ -21,7 +21,7 @@ import {
 } from "@/pages/plugins/utils"
 import {getRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import useListenWidth from "../hooks/useListenWidth"
 import {HubButton} from "../hubExtraOperate/funcTemplate"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
@@ -49,6 +49,7 @@ import {Tooltip} from "antd"
 import {SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {statusTag} from "@/pages/plugins/baseTemplate"
 import {DefaultOnlinePlugin, PluginOperateHint} from "../defaultConstant"
+import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -100,16 +101,23 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     /** ---------- 列表相关变量 End ---------- */
 
     /** ---------- 列表相关方法 Start ---------- */
+    // 刷新搜索条件数据和无条件列表总数
+    const onRefreshFilterAndTotal = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchInitTotal()
+            fetchFilterGroup()
+        }),
+        {wait: 300}
+    ).run
+
     useEffect(() => {
         if (isLogin) {
-            fetchFilterGroup()
-            fetchList(true)
+            handleRefreshList(true)
         }
     }, [isLogin])
     useUpdateEffect(() => {
         if (inViewPort && fetchIsLogin()) {
-            fetchInitTotal()
-            fetchFilterGroup()
+            onRefreshFilterAndTotal()
         }
     }, [inViewPort])
     /** 搜索条件 */
@@ -117,22 +125,6 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         if (!fetchIsLogin()) return
         fetchList(true)
     }, [filters])
-
-    useEffect(() => {
-        const onRefreshList = () => {
-            if (!fetchIsLogin()) return
-            setTimeout(() => {
-                fetchList(true)
-            }, 200)
-        }
-
-        emiter.on("onRefUserPluginList", onRefreshList)
-        emiter.on("recycleRestoreToOwnList", onRefreshList)
-        return () => {
-            emiter.off("onRefUserPluginList", onRefreshList)
-            emiter.off("recycleRestoreToOwnList", onRefreshList)
-        }
-    }, [])
 
     // 选中搜索条件可能在搜索数据组中不存在时进行清除
     useEffect(() => {
@@ -148,7 +140,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             .catch(() => {})
     })
 
-    // 搜搜条件分组数据
+    // 搜索条件分组数据
     const fetchFilterGroup = useMemoizedFn(() => {
         apiFetchGroupStatisticsMine()
             .then((res) => {
@@ -205,7 +197,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     })
     /** 刷新 */
     const onRefresh = useMemoizedFn(() => {
-        fetchList(true)
+        handleRefreshList(true)
     })
 
     /** 单项勾选 */
@@ -241,6 +233,77 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     ).run
     /** ---------- 列表相关方法 End ---------- */
 
+    /** ---------- 通信监听 Start ---------- */
+    // 刷新列表(是否刷新高级筛选数据)
+    const handleRefreshList = useDebounceFn(
+        useMemoizedFn((updateFilterGroup?: boolean) => {
+            if (!fetchIsLogin()) return
+            if (updateFilterGroup) fetchFilterGroup()
+            fetchList(true)
+        }),
+        {wait: 200}
+    ).run
+
+    // 详情删除线上插件触发列表的局部更新
+    const handleDetailDeleteToOnline = useMemoizedFn((info: string) => {
+        if (!info) return
+        try {
+            const plugin: {name: string; uuid: string} = JSON.parse(info)
+            if (!plugin.name && !plugin.uuid) return
+            const index = selectList.findIndex((ele) => ele.uuid === plugin.uuid)
+            const data: YakitPluginOnlineDetail = {
+                ...DefaultOnlinePlugin,
+                uuid: plugin.uuid || "",
+                script_name: plugin.name || ""
+            }
+            if (index !== -1) {
+                optCheck(data, false)
+            }
+            onRefreshFilterAndTotal()
+            emiter.emit("ownDeleteToRecycleList")
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [data]
+                }
+            })
+        } catch (error) {}
+    })
+
+    // 详情里改公开|私密后更新列表里的插件信息
+    const handleChangeStatus = useMemoizedFn((content: string) => {
+        if (!content) return
+        try {
+            const plugin: {name: string; uuid: string; is_private: boolean; status: number} = JSON.parse(content)
+            if (!plugin.name && !plugin.uuid) return
+            const el = response.data.find((ele) => ele.uuid === plugin.uuid)
+            if (!el) return
+            const data: YakitPluginOnlineDetail = {
+                ...el,
+                is_private: plugin.is_private,
+                status: plugin.status
+            }
+            dispatch({
+                type: "update",
+                payload: {
+                    item: data
+                }
+            })
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onRefreshOwnPluginList", handleRefreshList)
+        emiter.on("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
+        emiter.on("detailChangeStatusOwnPlugin", handleChangeStatus)
+        return () => {
+            emiter.off("onRefreshOwnPluginList", handleRefreshList)
+            emiter.off("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
+            emiter.off("detailChangeStatusOwnPlugin", handleChangeStatus)
+        }
+    }, [])
+    /** ---------- 通信监听 Start ---------- */
+
     const listLength = useMemo(() => {
         return Number(response.pagemeta.total) || 0
     }, [response])
@@ -250,6 +313,84 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     }, [allChecked, selectList, response.pagemeta.total])
 
     /** ---------- 下载插件 Start ---------- */
+    useEffect(() => {
+        // 批量下载的同名覆盖二次确认框缓存
+        getRemoteValue(RemotePluginGV.BatchDownloadPluginSameNameOverlay)
+            .then((res) => {
+                batchSameNameCache.current = res === "true"
+            })
+            .catch((err) => {})
+        // 单个下载的同名覆盖二次确认框缓存
+        getRemoteValue(RemotePluginGV.SingleDownloadPluginSameNameOverlay)
+            .then((res) => {
+                singleSameNameCache.current = res === "true"
+            })
+            .catch((err) => {})
+    }, [])
+
+    // 单个下载
+    const singleSameNameCache = useRef<boolean>(false)
+    const [singleSameNameHint, setSingleSameNameHint] = useState<boolean>(false)
+    const handleSingleSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+        if (isOK) {
+            singleSameNameCache.current = cache
+            const data = singleDownload[singleDownload.length - 1]
+            if (data) handleSingleDownload(data)
+        } else {
+            setSingleDownload((arr) => arr.slice(0, arr.length - 1))
+        }
+        setSingleSameNameHint(false)
+    })
+    // 单个下载的插件信息队列
+    const [singleDownload, setSingleDownload] = useState<YakitPluginOnlineDetail[]>([])
+    const onFooterExtraDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        const findIndex = singleDownload.findIndex((item) => item.uuid === info.uuid)
+        if (findIndex > -1) {
+            yakitNotify("error", "该插件正在执行下载操作,请稍后再试")
+            return
+        }
+        setSingleDownload((arr) => {
+            arr.push(info)
+            return [...arr]
+        })
+
+        grpcFetchLocalPluginDetail({Name: info.script_name, UUID: info.uuid}, true)
+            .then((res) => {
+                const {ScriptName, UUID} = res
+                if (ScriptName === info.script_name && UUID !== info.uuid) {
+                    if (!singleSameNameCache.current) {
+                        if (singleSameNameHint) return
+                        setSingleSameNameHint(true)
+                        return
+                    }
+                }
+                handleSingleDownload(info)
+            })
+            .catch((err) => {
+                handleSingleDownload(info)
+            })
+    })
+    // 单个插件下载
+    const handleSingleDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        grpcDownloadOnlinePlugin({uuid: info.uuid})
+            .then((res) => {
+                emiter.emit(
+                    "editorLocalSaveToLocalList",
+                    JSON.stringify({
+                        id: Number(res.Id) || 0,
+                        name: res.ScriptName,
+                        uuid: res.UUID || ""
+                    })
+                )
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => {
+                    setSingleDownload((arr) => arr.filter((item) => item.uuid !== info.uuid))
+                }, 50)
+            })
+    })
+
     const [allDownloadHint, setAllDownloadHint] = useState<boolean>(false)
     // 全部下载
     const handleAllDownload = useMemoizedFn(() => {
@@ -279,7 +420,9 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
 
         setBatchDownloadLoading(true)
         apiDownloadPluginMine(request)
-            .then(() => {})
+            .then(() => {
+                emiter.emit("onRefreshLocalPluginList", true)
+            })
             .catch(() => {})
             .finally(() => {
                 setTimeout(() => {
@@ -289,28 +432,20 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             })
     })
 
-    useEffect(() => {
-        // 批量下载的同名覆盖二次确认框缓存
-        getRemoteValue(RemotePluginGV.BatchDownloadPluginSameNameOverlay)
-            .then((res) => {
-                sameNameCache.current = res === "true"
-            })
-            .catch((err) => {})
-    }, [])
-    const sameNameCache = useRef<boolean>(false)
-    const [sameNameHint, setSameNameHint] = useState<boolean>(false)
-    const handleSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+    const batchSameNameCache = useRef<boolean>(false)
+    const [batchSameNameHint, setBatchSameNameHint] = useState<boolean>(false)
+    const handleBatchSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
         if (isOK) {
-            sameNameCache.current = cache
+            batchSameNameCache.current = cache
             handleBatchDownloadPlugin()
         }
-        setSameNameHint(false)
+        setBatchSameNameHint(false)
     })
 
     const onHeaderExtraDownload = useMemoizedFn(() => {
-        if (!sameNameCache.current) {
-            if (sameNameHint) return
-            setSameNameHint(true)
+        if (!batchSameNameCache.current) {
+            if (batchSameNameHint) return
+            setBatchSameNameHint(true)
             return
         }
         handleBatchDownloadPlugin()
@@ -332,40 +467,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 delHintCache.current = res === "true"
             })
             .catch((err) => {})
-
-        emiter.on("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
-        emiter.on("detailChangeStatusOwnPlugin", handleChangeStatus)
-        return () => {
-            emiter.off("detailChangeStatusOwnPlugin", handleChangeStatus)
-            emiter.off("detailDeleteOwnPlugin", handleDetailDeleteToOnline)
-        }
     }, [])
-    // 详情删除线上插件触发列表的局部更新
-    const handleDetailDeleteToOnline = useMemoizedFn((info: string) => {
-        if (!info) return
-        try {
-            const plugin: {name: string; uuid: string} = JSON.parse(info)
-            if (!plugin.name && !plugin.uuid) return
-            const index = selectList.findIndex((ele) => ele.uuid === plugin.uuid)
-            const data: YakitPluginOnlineDetail = {
-                ...DefaultOnlinePlugin,
-                uuid: plugin.uuid || "",
-                script_name: plugin.name || ""
-            }
-            if (index !== -1) {
-                optCheck(data, false)
-            }
-            fetchInitTotal()
-            fetchFilterGroup()
-            emiter.emit("ownDeleteToRecycleList")
-            dispatch({
-                type: "remove",
-                payload: {
-                    itemList: [data]
-                }
-            })
-        } catch (error) {}
-    })
 
     // 是否出现二次确认框
     const delHintCache = useRef<boolean>(false)
@@ -456,8 +558,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 if (index !== -1) {
                     optCheck(info, false)
                 }
-                fetchInitTotal()
-                fetchFilterGroup()
+                onRefreshFilterAndTotal()
                 emiter.emit("ownDeleteToRecycleList")
                 dispatch({
                     type: "remove",
@@ -476,30 +577,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     /** ---------- 删除插件 End ---------- */
 
     /** ---------- 单个操作(下载|改为公开/私密)的回调 Start ---------- */
-    const handleChangeStatus = useMemoizedFn((content: string) => {
-        if (!content) return
-        try {
-            const plugin: {name: string; uuid: string; is_private: boolean; status: number} = JSON.parse(content)
-            if (!plugin.name && !plugin.uuid) return
-            const el = response.data.find((ele) => ele.uuid === plugin.uuid)
-            if (!el) return
-            const data: YakitPluginOnlineDetail = {
-                ...el,
-                is_private: plugin.is_private,
-                status: plugin.status
-            }
-            dispatch({
-                type: "update",
-                payload: {
-                    item: data
-                }
-            })
-        } catch (error) {}
-    })
-
     const optCallback = useMemoizedFn((type: string, info: YakitPluginOnlineDetail) => {
-        if (type === "download") {
-        }
         if (type === "state") {
             dispatch({
                 type: "update",
@@ -599,6 +677,8 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             <OwnOptFooterExtra
                 isLogin={isLogin}
                 info={info}
+                execDownloadInfo={singleDownload}
+                onDownload={onFooterExtraDownload}
                 execDelInfo={singleDel}
                 onDel={onFooterExtraDel}
                 callback={optCallback}
@@ -811,11 +891,20 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
 
             {/* 批量下载同名覆盖提示 */}
             <NoPromptHint
-                visible={sameNameHint}
+                visible={batchSameNameHint}
                 title='同名覆盖提示'
                 content='如果本地存在同名插件会直接进行覆盖'
                 cacheKey={RemotePluginGV.BatchDownloadPluginSameNameOverlay}
-                onCallback={handleSameNameHint}
+                onCallback={handleBatchSameNameHint}
+            />
+
+            {/* 单个下载同名覆盖提示 */}
+            <NoPromptHint
+                visible={singleSameNameHint}
+                title='同名覆盖提示'
+                content='本地有插件同名，下载将会覆盖，是否下载'
+                cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
+                onCallback={handleSingleSameNameHint}
             />
         </div>
     )

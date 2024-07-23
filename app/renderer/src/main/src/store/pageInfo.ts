@@ -11,6 +11,7 @@ import {createWithEqualityFn} from "zustand/traditional"
 import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSourceType} from "@/pages/pluginHub/type"
+import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
 
 /**
  * @description 页面暂存数据
@@ -61,7 +62,7 @@ interface PageParamsInfoProps {
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
-    /**新建插件仓库页面 */
+    /**打开插件仓库页面 */
     pluginHubPageInfo?: PluginHubPageInfoProps
     /**新建漏洞与风险统计页面 */
     riskPageInfo?: RiskPageInfoProps
@@ -144,6 +145,10 @@ export interface ScanPortPageInfoProps {
 export interface PluginHubPageInfoProps {
     /**切换到插件仓库指定tab */
     tabActive: PluginSourceType
+    /**打开插件的id、uuid和name */
+    detailInfo?: KeyParamsFetchPluginDetail
+    /**是否刷新列表(传 true-刷新列表和高级筛选, false-刷新列表, 不传不刷新) */
+    refeshList?: boolean
 }
 
 export interface RiskPageInfoProps {

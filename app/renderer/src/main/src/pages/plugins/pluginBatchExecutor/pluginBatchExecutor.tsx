@@ -123,10 +123,10 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     }, [userInfo.isLogin])
     useEffect(() => {
         if (inViewport) {
-            emiter.on("onRefLocalPluginList", onRefLocalPluginList)
+            emiter.on("onRefreshLocalPluginList", onRefLocalPluginList)
         }
         return () => {
-            emiter.off("onRefLocalPluginList", onRefLocalPluginList)
+            emiter.off("onRefreshLocalPluginList", onRefLocalPluginList)
         }
     }, [inViewport])
 
