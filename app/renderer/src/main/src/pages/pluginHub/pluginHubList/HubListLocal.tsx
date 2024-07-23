@@ -171,17 +171,19 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
 
     // 搜索条件分组数据
-    const fetchFilterGroup = useMemoizedFn(() => {
+    const fetchFilterGroup = useMemoizedFn((refFlagList: boolean = true) => {
         apiFetchGroupStatisticsLocal()
             .then((res: API.PluginsSearchResponse) => {
-                const latestGroup = res.data.find((item) => item.groupKey === "plugin_group")?.data || []
-                const oldGroup = filterGroup.find((item) => item.groupKey === "plugin_group")?.data || []
-                const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, res.data)
-                if (updateFilterFlag) {
-                    setFilters(realFilter)
-                } else {
-                    if (JSON.stringify(latestGroup) != JSON.stringify(oldGroup)) {
-                        fetchList(true)
+                if (refFlagList) {
+                    const latestGroup = res.data.find((item) => item.groupKey === "plugin_group")?.data || []
+                    const oldGroup = filterGroup.find((item) => item.groupKey === "plugin_group")?.data || []
+                    const {realFilter, updateFilterFlag} = excludeNoExistfilter(filters, res.data)
+                    if (updateFilterFlag) {
+                        setFilters(realFilter)
+                    } else {
+                        if (JSON.stringify(latestGroup) != JSON.stringify(oldGroup)) {
+                            fetchList(true)
+                        }
                     }
                 }
                 setFilterGroup(res.data)
@@ -845,7 +847,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 刷新列表(是否刷新高级筛选数据)
     const handleRefreshList = useDebounceFn(
         useMemoizedFn((updateFilterGroup?: boolean) => {
-            if (updateFilterGroup) fetchFilterGroup()
+            if (updateFilterGroup) fetchFilterGroup(false)
             fetchList(true)
         }),
         {wait: 200}
@@ -874,8 +876,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
             const index = response.Data.findIndex((ele) => ele.ScriptName === plugin.ScriptName || ele.Id === plugin.Id)
             if (index === -1) {
-                fetchFilterGroup()
-                fetchList(true)
+                handleRefreshList(true)
             } else {
                 dispatch({
                     type: "replace",
@@ -905,8 +906,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             if (index !== -1) {
                 optCheck(data, false)
             }
-            fetchInitTotal()
-            fetchFilterGroup()
+            onRefreshFilterAndTotal()
             dispatch({
                 type: "remove",
                 payload: {
