@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from "react"
 import {Form, Space} from "antd";
-import {FromLayoutProps} from "@/pages/invoker/YakScriptCreator";
 import {EncMode, ShellScript, ShellType, WebShellDetail} from "@/pages/webShell/models";
 import {useCreation, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
 import {InputItem} from "@/utils/inputUtil";
@@ -15,6 +14,10 @@ import {failed, success} from "@/utils/notification";
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {queryYakScriptList} from "@/pages/yakitStore/network";
 
+export interface FromLayoutProps {
+    labelCol: object
+    wrapperCol: object
+}
 
 export const RemarkDetail = ({remark}) => {
 

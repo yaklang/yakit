@@ -1,5 +1,4 @@
 import React, {ReactNode, Suspense} from "react"
-import {YakExecutor} from "../pages/invoker/YakExecutor"
 import {ShellReceiver} from "../pages/reverseShellReceiver/shellReceiver"
 import {PcapXDemo} from "@/components/playground/PcapXDemo"
 import {DataCompare} from "../pages/compare/DataCompare"
@@ -493,7 +492,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <CVEViewer />
         case YakitRoute.YakScript:
             return <YakRunner />
-        // return <YakExecutor />
         case YakitRoute.PayloadManager:
             return <NewPayload />
         case YakitRoute.AccountAdminPage:

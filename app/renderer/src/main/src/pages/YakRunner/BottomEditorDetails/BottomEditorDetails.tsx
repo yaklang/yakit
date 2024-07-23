@@ -638,7 +638,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             firstMinSize={500}
                             lineDirection='right'
                             lineStyle={{width: 4, backgroundColor: "rgb(49, 52, 63)"}}
-                            lineInStyle={{backgroundColor:"#545663"}}
+                            lineInStyle={{backgroundColor: "#545663"}}
                             firstNodeStyle={{padding: 0}}
                             secondNodeStyle={{padding: 0}}
                             // isShowDefaultLineStyle={false}
@@ -673,7 +673,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                     >
                         {activeFile?.language === "yak" ? (
-                            <HelpInfoList  onJumpToEditor={onJumpToEditor}/>
+                            <HelpInfoList onJumpToEditor={onJumpToEditor} />
                         ) : (
                             <div className={styles["no-syntax-check"]}>请选中yak文件查看帮助信息</div>
                         )}
@@ -716,12 +716,5 @@ export const OutputInfo: React.FC<OutputInfoProps> = (props) => {
         }
         return true
     })
-    return (
-        <div className={styles["output-info-list"]}>
-            <YakitXterm
-                ref={xtermRef}
-                customKeyEventHandler={onCopy}
-            />
-        </div>
-    )
+    return <YakitXterm ref={xtermRef} customKeyEventHandler={onCopy} />
 }
