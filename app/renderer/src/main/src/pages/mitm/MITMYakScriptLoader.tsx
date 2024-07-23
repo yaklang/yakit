@@ -19,7 +19,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const {hooks, script, onSubmitYakScriptId, onRemoveHook, defaultPlugins, setDefaultPlugins, status} = p
     const [i, setI] = useState(script)
     useEffect(() => {
-        console.log(11, script);
         setI(script)
     }, [script])
     const onCheckboxClicked = useMemoizedFn(() => {
