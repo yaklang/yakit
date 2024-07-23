@@ -84,8 +84,8 @@ export const apiPayloadByType: (value: string) => Promise<string> = (value) => {
  */
 export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): StartBruteParams => {
     const {usernames = "", passwords = "", Targets = ""} = params
-    const usernamesArr = !!usernames ? usernames.split(/,|\r?\n/) : []
-    const passwordsArr = !!passwords ? passwords.split(/,|\r?\n/) : []
+    const usernamesArr = !!usernames ? usernames.split(/\r?\n/) : []
+    const passwordsArr = !!passwords ? passwords.split(/\r?\n/) : []
     const newParams = cloneDeep(params)
     delete newParams.usernames
     delete newParams.passwords
