@@ -745,7 +745,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                         className={classNames(styles["form-item-help"], styles["form-item-content-help"])}
                         ref={fileRef}
                     >
-                        <label>
+                        <label style={{display: 'flex', alignItems: 'center'}}>
                             {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
                             <span
                                 className={classNames(styles["dragger-help-active"], {
