@@ -10,7 +10,7 @@ import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {Risk} from "../schema"
 import {Descriptions, Divider, Form, Tooltip} from "antd"
-import {genDefaultPagination} from "@/pages/invoker/schema"
+import {YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
@@ -20,11 +20,10 @@ import {
     OutlineExportIcon,
     OutlineEyeIcon,
     OutlineOpenIcon,
+    OutlinePlayIcon,
     OutlineSearchIcon,
-    OutlineTrashIcon,
-    OutlineXIcon
-} from "@/assets/icon/outline"
-import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+    OutlineTrashIcon} from "@/assets/icon/outline"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {SolidRefreshIcon} from "@/assets/icon/solid"
@@ -70,6 +69,9 @@ import emiter from "@/utils/eventBus/eventBus"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {Uint8ArrayToString} from "@/utils/str"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {PluginHubPageInfoProps} from "@/store/pageInfo"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -404,7 +406,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
                 title: "操作",
                 dataKey: "action",
-                width: 60,
+                width: 100,
                 fixed: "right",
                 render: (text, record: Risk, index) => (
                     <>
@@ -417,11 +419,39 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             }}
                             icon={<OutlineTrashIcon />}
                         />
+                        <Divider type='vertical' />
+                        <YakitButton
+                            type='text'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onRetest(record)
+                            }}
+                            icon={<OutlinePlayIcon />}
+                        />
                     </>
                 )
             }
         ]
     }, [riskTypeVerbose, tag])
+    /**复测 */
+    const onRetest = useMemoizedFn((record: Risk) => {
+        if (record.YakScriptUUID || record.FromYakScript) {
+            grpcFetchLocalPluginDetail({Name: record.FromYakScript || "", UUID: record.YakScriptUUID}).then(
+                (yakScript: YakScript) => {
+                    const info = {
+                        route: YakitRoute.Plugin_Hub,
+                        params: {
+                            tabActive: "local",
+                            detailInfo: {id: yakScript.Id, uuid: yakScript.UUID, name: yakScript.ScriptName}
+                        } as PluginHubPageInfoProps
+                    }
+                    emiter.emit("openPage", JSON.stringify(info))
+                }
+            )
+        } else {
+            yakitNotify("error", "该漏洞未经插件扫描")
+        }
+    })
     const onRefRiskList = useDebounceFn(
         () => {
             update(1)
