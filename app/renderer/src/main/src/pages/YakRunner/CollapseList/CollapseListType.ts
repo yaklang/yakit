@@ -17,7 +17,9 @@ export interface CollapseListProp<T> {
     isShowBottom?: boolean
 }
 
-export interface HelpInfoListProps {}
+export interface HelpInfoListProps {
+    onJumpToEditor: (v: Selection) => void
+}
 
 export interface DefinitionListProps {
     lineContent: string
