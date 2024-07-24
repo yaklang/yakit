@@ -23,7 +23,6 @@ import {
     apiDeleteLocalPluginsByWhere,
     apiQueryYakScriptTotal,
     excludeNoExistfilter,
-    apiQueryYakScriptByYakScriptName,
     apiFetchGetYakScriptGroupLocal,
     apiFetchSaveYakScriptGroupLocal
 } from "@/pages/plugins/utils"
@@ -55,10 +54,8 @@ import {RemoteGV} from "@/yakitGV"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {RemotePluginGV} from "@/enums/plugin"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon, SolidYakOfficialPluginColorIcon} from "@/assets/icon/colors"
-import {randomString} from "@/utils/randomUtil"
-import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "@/pages/plugins/pluginUploadHooks"
-import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {PluginLocalUpload, PluginLocalUploadSingle} from "@/pages/plugins/local/PluginLocalUpload"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {PluginLocalUpload} from "@/pages/plugins/local/PluginLocalUpload"
 import {PluginLocalExport, PluginLocalExportForm} from "@/pages/plugins/local/PluginLocalExportProps"
 import {DefaultExportRequest, DefaultLocalPlugin, PluginOperateHint} from "../defaultConstant"
 import useGetSetState from "../hooks/useGetSetState"
@@ -68,15 +65,16 @@ import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYa
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
 import {grpcFetchLocalPluginDetail} from "../utils/grpc"
 import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
-
-import classNames from "classnames"
-import SearchResultEmpty from "@/assets/search_result_empty.png"
-import styles from "./PluginHubList.module.scss"
+import {PluginUploadModal} from "../pluginUploadModal/PluginUploadModal"
 import {PluginGroupDrawer} from "../group/PluginGroupDrawer"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "../group/UpdateGroupList"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ListDelGroupConfirmPop} from "../group/PluginOperationGroupList"
+
+import classNames from "classnames"
+import SearchResultEmpty from "@/assets/search_result_empty.png"
+import styles from "./PluginHubList.module.scss"
 
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
@@ -415,23 +413,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     /** ---------- 删除插件 End ---------- */
 
     /** ---------- 上传插件 Start ---------- */
-    const taskTokenRef = useRef(randomString(40))
-    const {onStart: onStartUploadPlugin} = usePluginUploadHooks({
-        isSingle: true,
-        taskToken: taskTokenRef.current,
-        onUploadData: () => {},
-        onUploadSuccess: () => {
-            const info = singleUpload[singleUpload.length - 1]
-            if (info) handleSingleUploadAfter(info)
-        },
-        onUploadEnd: () => {
-            setSingleUpload((arr) => arr.slice(0, arr.length - 1))
-        },
-        onUploadError: () => {
-            yakitNotify("error", "上传失败")
-        }
-    })
-
     const [batchUploadLoading, setBatchUploadLoading] = useState<boolean>(false)
     const onHeaderExtraUpload = useMemoizedFn(() => {
         if (batchUploadLoading) return
@@ -478,64 +459,36 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
 
     // 单个上传的插件信息队列
-    const [singleUpload, setSingleUpload] = useState<YakScript[]>([])
+    const uploadPlugin = useRef<YakScript>()
     const onFooterExtraUpload = useMemoizedFn((info: YakScript) => {
-        const findIndex = singleUpload.findIndex((item) => item.ScriptName === info.ScriptName)
-        if (findIndex > -1) {
-            yakitNotify("error", "该插件正在执行上传操作,请稍后再试")
+        if (!isLogin) {
+            yakitNotify("error", "登录后才可上传插件")
             return
         }
-        setSingleUpload((arr) => {
-            return [...arr, info]
-        })
-        handleSingeUpload(info)
+        if (!!uploadPlugin.current) {
+            yakitNotify("error", "有插件正在执行上传操作,请稍后再试")
+            return
+        }
+        uploadPlugin.current = cloneDeep(info)
+        openUploadHint()
     })
-    // 单个上传
-    const handleSingeUpload = useMemoizedFn((info: YakScript) => {
-        // 也可以用info里的isLocalPlugin判断
-        if (info.OnlineBaseUrl === privateDomain.current) {
-            const request: SaveYakScriptToOnlineRequest = {
-                ScriptNames: [info.ScriptName],
-                IsPrivate: !!info.OnlineIsPrivate
-            }
-            onStartUploadPlugin(request)
-        } else {
-            const m = showYakitModal({
-                type: "white",
-                title: "上传插件",
-                content: (
-                    <PluginLocalUploadSingle
-                        plugin={info}
-                        onUploadSuccess={() => handleSingleUploadAfter(info)}
-                        onClose={() => {
-                            setSingleUpload((arr) => arr.filter((item) => item.ScriptName !== info.ScriptName))
-                            m.destroy()
-                        }}
-                        onFailed={() => {
-                            setSingleUpload((arr) => arr.filter((item) => item.ScriptName !== info.ScriptName))
-                        }}
-                    />
-                ),
-                footer: null
+    const [uploadHint, setUploadHint] = useState<boolean>(false)
+    const openUploadHint = useMemoizedFn(() => {
+        if (uploadHint) return
+        if (!uploadPlugin.current) return
+        setUploadHint(true)
+    })
+    const uploadHintCallback = useMemoizedFn((result: boolean, plugin?: YakScript) => {
+        if (result && plugin) {
+            dispatch({
+                type: "replace",
+                payload: {
+                    item: {...plugin}
+                }
             })
         }
-    })
-    // 单个上传成功后
-    const handleSingleUploadAfter = useMemoizedFn((info: YakScript) => {
-        grpcFetchLocalPluginDetail({Name: info.ScriptName}, true)
-            .then((i: YakScript) => {
-                const newItem = {...i, isLocalPlugin: privateDomain.current !== i.OnlineBaseUrl}
-                dispatch({
-                    type: "update",
-                    payload: {
-                        item: {...newItem}
-                    }
-                })
-            })
-            .catch(() => {
-                fetchList(true)
-                yakitNotify("error", "查询最新的本地数据失败,自动刷新列表")
-            })
+        uploadPlugin.current = undefined
+        setUploadHint(false)
     })
     /** ---------- 上传插件 End ---------- */
 
@@ -1003,7 +956,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 isLogin={isLogin}
                 info={info}
                 onEdit={handleOpenEditHint}
-                execUploadInfo={singleUpload}
+                uploadInfo={uploadPlugin.current}
                 onUpload={onFooterExtraUpload}
                 onExport={onFooterExtraExport}
                 execDelInfo={singleDel}
@@ -1412,6 +1365,14 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 onCancel={onRemoveCancel}
                 onOk={onRemoveOk}
             ></ListDelGroupConfirmPop>
+
+            {/* 单个插件上传 */}
+            <PluginUploadModal
+                isLogin={isLogin}
+                info={uploadPlugin.current}
+                visible={uploadHint}
+                callback={uploadHintCallback}
+            />
         </div>
     )
 })

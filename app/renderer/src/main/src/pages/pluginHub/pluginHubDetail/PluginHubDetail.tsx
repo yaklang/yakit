@@ -15,7 +15,7 @@ import {Tooltip} from "antd"
 import {SolidPluscircleIcon, SolidThumbupIcon} from "@/assets/icon/solid"
 import {HubExtraOperate, HubExtraOperateRef} from "../hubExtraOperate/HubExtraOperate"
 import {v4 as uuidv4} from "uuid"
-import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail, grpcFetchLocalPluginDetailByID} from "../utils/grpc"
+import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginToDetailInfo} from "../type"
 import {thousandthConversion} from "@/pages/plugins/pluginReducer"
@@ -441,13 +441,23 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     .then((i: YakScript) => {
                         setLocalPlugin({...i, isLocalPlugin: privateDomain.current !== i.OnlineBaseUrl})
                         // 刷新本地列表
-                        emiter.emit("onRefreshLocalPluginList")
+                        emiter.emit(
+                            "editorLocalSaveToLocalList",
+                            JSON.stringify({
+                                id: Number(i.Id) || 0,
+                                name: i.ScriptName,
+                                uuid: i.UUID || ""
+                            })
+                        )
+                        if (currentRequest.current) {
+                            currentRequest.current = {...currentRequest.current, uuid: i.UUID || ""}
+                        }
                     })
                     .catch((e) => {
                         yakitNotify("error", "查询插件最新数据失败: " + e)
                     })
                 // 获取最新的线上信息
-                apiFetchOnlinePluginInfo({scriptName: localPlugin.ScriptName})
+                apiFetchOnlinePluginInfo({scriptName: localPlugin.ScriptName}, true)
                     .then((res) => {
                         setOnlinePlugin({
                             ...res,
@@ -455,8 +465,6 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             commentCountString: thousandthConversion(res.comment_num),
                             downloadedTotalString: thousandthConversion(res.downloaded_total)
                         })
-                        // 刷新我的列表
-                        emiter.emit("onRefreshOwnPluginList")
                     })
                     .catch((err) => {})
             }

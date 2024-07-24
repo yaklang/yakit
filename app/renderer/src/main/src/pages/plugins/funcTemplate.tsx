@@ -93,7 +93,7 @@ import {v4 as uuidv4} from "uuid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 import has from "lodash/has"
-import { onPluginTagsToName } from "./baseTemplate";
+import {onPluginTagsToName} from "./baseTemplate"
 import classNames from "classnames"
 import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
@@ -467,7 +467,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
     })
 
     const onDelTag = useMemoizedFn((value: TagShowOpt) => {
-        if (has(filters,value.tagType)) {
+        if (has(filters, value.tagType)) {
             const list: TagShowOpt[] = filters[value.tagType]
             filters[value.tagType] = list.filter((ele) => ele.value !== value.value)
             setFilters({...filters})
@@ -1488,7 +1488,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     /**需求：详情的搜索会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
     const onFinish = useMemoizedFn((value) => {
         for (let name of excludeFilterName) {
-            if(has(value,name)) delete value[name]
+            if (has(value, name)) delete value[name]
         }
         onFilter({...value, plugin_group: defaultFilter.plugin_group})
         setVisible(false)
@@ -1590,7 +1590,8 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         successWait = 1000,
         successHint = "（表现良好，开始上传插件中...）",
         failedHint = "（上传失败，请修复后再上传）",
-        callback
+        callback,
+        hiddenScoreHint
     } = props
 
     const [loading, setLoading] = useState<boolean>(true)
@@ -1642,23 +1643,25 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
 
     return (
         <div className={styles["code-score-modal"]}>
-            <div className={styles["header-wrapper"]}>
-                <div className={styles["title-style"]}>检测项包含：</div>
-                <div className={styles["header-body"]}>
-                    <div className={styles["opt-content"]}>
-                        <div className={styles["content-order"]}>1</div>
-                        基础编译测试，判断语法是否符合规范，是否存在不正确语法；
-                    </div>
-                    <div className={styles["opt-content"]}>
-                        <div className={styles["content-order"]}>2</div>
-                        把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
-                    </div>
-                    <div className={styles["opt-content"]}>
-                        <div className={styles["content-order"]}>3</div>
-                        检查插件执行过程是否会发生崩溃。
+            {!hiddenScoreHint && (
+                <div className={styles["header-wrapper"]}>
+                    <div className={styles["title-style"]}>检测项包含：</div>
+                    <div className={styles["header-body"]}>
+                        <div className={styles["opt-content"]}>
+                            <div className={styles["content-order"]}>1</div>
+                            基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                        </div>
+                        <div className={styles["opt-content"]}>
+                            <div className={styles["content-order"]}>2</div>
+                            把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                        </div>
+                        <div className={styles["opt-content"]}>
+                            <div className={styles["content-order"]}>3</div>
+                            检查插件执行过程是否会发生崩溃。
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
             {loading && (
                 <div className={styles["loading-wrapper"]}>
                     <div className={styles["loading-body"]}>

@@ -339,6 +339,8 @@ export interface CodeScoreModuleProps {
     failedHint?: string
     /** 执行完后的回调(合格给ture，不合格给false) */
     callback: (value: boolean) => any
+    /** 是否隐藏评分的提示信息 */
+    hiddenScoreHint?: boolean
 }
 
 /** 插件源码评分弹窗 */

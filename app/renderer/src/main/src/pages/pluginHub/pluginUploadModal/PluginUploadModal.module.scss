@@ -1,0 +1,82 @@
+// -------------------- PluginUploadModal ↓↓↓ --------------------
+.plugin-upload-modal {
+    padding: 24px;
+    padding-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+// -------------------- 公共样式 ↓↓↓ --------------------
+.plugin-upload-tips-header {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
+    .header-title {
+        color: #31343f;
+        font-size: 12px;
+        line-height: 16px;
+    }
+    .header-body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        .list-opt {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #85899e;
+            font-size: 12px;
+            line-height: 20px;
+            .opt-order {
+                width: 16px;
+                height: 16px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 8px;
+                background: rgba(136, 99, 247, 0.2);
+                color: #31343f;
+                font-size: 10px;
+            }
+            .strong-text {
+                font-weight: 600;
+                color: #31343f;
+            }
+        }
+    }
+}
+.upload-modal-next-btn {
+    display: flex;
+    justify-content: center;
+}
+
+// -------------------- PluginUploadSelectPrivate ↓↓↓ --------------------
+.upload-modal-select-private {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+}
+
+// -------------------- PluginUploadPrivateScoreTip ↓↓↓ --------------------
+.upload-modal-private-upload {
+    padding-top: 24px;
+}
+.upload-modal-private-upload-spin {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+// -------------------- PluginUploadModifyReason ↓↓↓ --------------------
+.upload-modal-modify-reason {
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+}

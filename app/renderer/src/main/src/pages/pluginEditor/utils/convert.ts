@@ -208,6 +208,46 @@ export const pluginConvertUIToOnline = (value: YakitPluginInfo, local?: YakScrip
 }
 
 /**
+ * @name 本地插件结构(YakScript)转换线上保存结构(API.PluginsRequest)
+ */
+export const pluginConvertLocalToOnline = (value: YakScript) => {
+    let data: API.PluginsRequest = cloneDeep(DefaultAPIPluginsRequest)
+
+    data.type = value.Type
+    data.script_name = value.ScriptName
+    data.help = value.Help || undefined
+
+    let newTags: string[] = []
+    if (value.Tags === "null" || !value.Tags) {
+        newTags = []
+    } else {
+        newTags = (value.Tags || "").split(",")
+    }
+    data.tags = newTags
+    data.params = value.Params ? pluginParamsConvertLocalToOnline(value.Params) : undefined
+    data.enable_plugin_selector = value.EnablePluginSelector
+    data.plugin_selector_types = value.PluginSelectorTypes || undefined
+    data.content = value.Content
+    data.riskInfo = riskDetailConvertLocalToOnline(value.RiskInfo)
+    data.is_general_module = value.IsGeneralModule
+    data.is_private = value.OnlineIsPrivate
+    data.group = value.OnlineGroup
+    data.isCorePlugin = value.IsCorePlugin
+
+    if (data.tags.length === 0) {
+        data.tags = undefined
+    }
+    if (!data.group) {
+        data.group = undefined
+    }
+    if (data.riskInfo.length === 0) {
+        data.riskInfo = undefined
+    }
+
+    return toolDelInvalidKV(data) as API.PluginsRequest
+}
+
+/**
  * @name 对比插件前后是否有修改，插件结构为(YakitPluginInfo)
  * 对比内容：名称、描述、源码、tags
  */
