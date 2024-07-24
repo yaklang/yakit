@@ -93,12 +93,14 @@ export const YakHelpDocItemLoad: React.FC<YakHelpDocItemLoadProps> = (props) => 
 export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
     const [data, setData] = useState<DataProps[]>([])
     const searchRef = useRef<string>("")
+    const [activeKey,setActiveKey] = useState<string|string[]>()
 
     useEffect(() => {
         update()
     }, [])
 
     const update = useMemoizedFn(() => {
+        setActiveKey(undefined)
         loadFromYakURLRaw(`yakdocument://${searchRef.current}`, (rsp) => {
             setData(
                 rsp.Resources.map((i, index) => ({
@@ -152,6 +154,10 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
                     titleRender={titleRender}
                     renderItem={renderItem}
                     isShowBottom={true}
+                    collapseProps={{
+                        activeKey,
+                        onChange:(v)=>{setActiveKey(v)}
+                    }}
                 />
             </div>
         </div>
