@@ -19,6 +19,7 @@ import styles from "./RunnerTabs.module.scss"
 import {KeyToIcon} from "../FileTree/icon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
+    OutlinCompileIcon,
     OutlineChevrondoubleleftIcon,
     OutlineChevrondoublerightIcon,
     OutlineImportIcon,
@@ -29,7 +30,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
-import {YakRunnerNewFileIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
+import {YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
@@ -1153,11 +1154,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 })
 
 export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((props) => {
-    const {addFileTab} = props
-
-    const {areaInfo, activeFile} = useStore()
-    const {setAreaInfo, setActiveFile} = useDispatcher()
-
+    const {addFileTab, setShowCompileModal} = props
+    const ref = useRef<HTMLDivElement>(null)
+    const size = useSize(ref)
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
     const getHistoryList = useMemoizedFn(async () => {
@@ -1201,15 +1200,20 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             })
     })
 
+    // 打开编译项目
+    const openCompileProject = useMemoizedFn(() => {
+        setShowCompileModal(true)
+    })
+
     return (
-        <div className={styles["yak-runner-welcome-page"]}>
+        <div className={styles["yak-runner-welcome-page"]} ref={ref}>
             <div className={styles["title"]}>
                 <div className={styles["icon-style"]}>
                     <SolidYakCattleNoBackColorIcon />
                 </div>
                 <div className={styles["header-style"]}>欢迎使用 Yak 语言</div>
             </div>
-            <div className={styles["operate-box"]}>
+            <div className={styles["operate-box"]} style={size && size.width < 600 ? {padding: "0px 20px"} : {}}>
                 <div className={styles["operate"]}>
                     <div className={styles["title-style"]}>快捷创建</div>
                     <div className={styles["operate-btn-group"]}>
@@ -1236,6 +1240,16 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                 打开文件夹
                             </div>
                             <OutlineImportIcon className={styles["icon-style"]} />
+                        </div>
+                        <div
+                            className={classNames(styles["btn-style"], styles["btn-open-compile"])}
+                            onClick={openCompileProject}
+                        >
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerOpenAuditIcon />
+                                编译项目
+                            </div>
+                            <OutlinCompileIcon className={styles["icon-style"]} />
                         </div>
                     </div>
                 </div>
@@ -1425,8 +1439,8 @@ const RenameYakitModalBox: React.FC<RenameYakitModalBoxProps> = (props) => {
     const {name, setName} = props
     const inputRef = useRef<any>(null)
     useEffect(() => {
-        if(inputRef.current){
-           inputRef.current.setSelectionRange(0, name.lastIndexOf(".")) 
+        if (inputRef.current) {
+            inputRef.current.setSelectionRange(0, name.lastIndexOf("."))
         }
     }, [])
     return (

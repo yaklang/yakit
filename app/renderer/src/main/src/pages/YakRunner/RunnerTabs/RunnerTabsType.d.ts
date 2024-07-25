@@ -91,6 +91,7 @@ export interface RunnerTabPaneProps {
 
 export interface YakRunnerWelcomePageProps {
     addFileTab: () => void
+    setShowCompileModal: (v:boolean) => void
 }
 
 export interface YakitRunnerSaveModalProps {

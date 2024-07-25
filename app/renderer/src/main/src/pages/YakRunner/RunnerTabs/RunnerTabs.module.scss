@@ -244,7 +244,7 @@
             overflow: hidden;
             word-break: break-all;
         }
-        .text-style-delete{
+        .text-style-delete {
             text-decoration: line-through;
         }
         .extra-icon {
@@ -413,7 +413,6 @@
         flex-direction: column;
         gap: 24px;
         padding: 0px 145px;
-
         .operate {
             padding: 20px;
             display: flex;
@@ -481,6 +480,12 @@
                     background: rgba(53, 216, 238, 0.1);
                     &:hover {
                         background: rgba(53, 216, 238, 0.2);
+                    }
+                }
+                .btn-open-compile {
+                    background-color: rgba(136, 99, 247, 0.1);
+                    &:hover {
+                        background: rgba(136, 99, 247, 0.2);
                     }
                 }
             }

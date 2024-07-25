@@ -5457,3 +5457,39 @@ const OutlileHistory = () => (
 export const OutlileHistoryIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlileHistory} {...props} />
 }
+
+
+const OutlinCompile = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+        <path
+            d='M8.3335 18.3332H5.00016C4.55814 18.3332 4.13421 18.1576 3.82165 17.845C3.50909 17.5325 3.3335 17.1085 3.3335 16.6665V3.33317C3.3335 2.89114 3.50909 2.46722 3.82165 2.15466C4.13421 1.8421 4.55814 1.6665 5.00016 1.6665H12.0835L16.6668 6.24984V11.4582M11.6668 1.6665V6.6665H16.6668M16.221 14.1665L18.3335 16.2498L16.221 18.3332M12.946 18.3332L10.8335 16.2498L12.946 14.1665'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  Icon/Outline/Outline编译
+ */
+export const OutlinCompileIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlinCompile} {...props} />
+}
+
+const OutlinCompileTwo = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M7.33333 10.6665L8.66667 5.33317M10 6.6665L11.3333 7.99984L10 9.33317M6 9.33317L4.66667 7.99984L6 6.6665M3.33333 13.3332H12.6667C13.403 13.3332 14 12.7362 14 11.9998V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V11.9998C2 12.7362 2.59695 13.3332 3.33333 13.3332Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description  Icon/Outline/Outline编译2
+ */
+export const OutlinCompileTwoIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlinCompileTwo} {...props} />
+}

@@ -37,6 +37,10 @@
                 font-weight: 500;
                 line-height: 16px;
             }
+            .extra {
+                display: flex;
+                gap: 8px;
+            }
         }
         &-tree {
             flex: 1;
@@ -97,12 +101,11 @@
             line-height: 16px;
         }
 
-        
         &.active {
             background-color: rgba(242, 139, 68, 0.06);
         }
     }
-    .file-item-no-active{
+    .file-item-no-active {
         &:hover {
             background-color: #f8f8f8;
             .del-btn {
@@ -117,7 +120,7 @@
             }
         }
     }
-    .file-item-active{
+    .file-item-active {
         background-color: rgba(242, 139, 68, 0.06);
         border: 1px solid #f28b44;
         &:hover {
