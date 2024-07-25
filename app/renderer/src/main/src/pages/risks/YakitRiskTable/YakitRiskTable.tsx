@@ -10,7 +10,7 @@ import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {Risk} from "../schema"
 import {Descriptions, Divider, Form, Tooltip} from "antd"
-import {genDefaultPagination} from "@/pages/invoker/schema"
+import {YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
@@ -20,11 +20,11 @@ import {
     OutlineExportIcon,
     OutlineEyeIcon,
     OutlineOpenIcon,
+    OutlinePlayIcon,
     OutlineSearchIcon,
-    OutlineTrashIcon,
-    OutlineXIcon
+    OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {ColumnsTypeProps, FiltersItemProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {SolidRefreshIcon} from "@/assets/icon/solid"
@@ -70,6 +70,9 @@ import emiter from "@/utils/eventBus/eventBus"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {Uint8ArrayToString} from "@/utils/str"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {PluginHubPageInfoProps} from "@/store/pageInfo"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -226,7 +229,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         Total: 0
     })
     const [scrollToIndex, setScrollToIndex] = useState<number>()
-
     const [keywords, setKeywords] = useState<string>("")
     const [type, setType] = useState<"all" | "unread">("all")
     const [allCheck, setAllCheck] = useState<boolean>(false)
@@ -405,7 +407,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
                 title: "操作",
                 dataKey: "action",
-                width: 60,
+                width: 100,
                 fixed: "right",
                 render: (text, record: Risk, index) => (
                     <>
@@ -418,11 +420,46 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             }}
                             icon={<OutlineTrashIcon />}
                         />
+                        <Divider type='vertical' />
+                        <Tooltip
+                            title='复测'
+                            destroyTooltipOnHide={true}
+                            overlayStyle={{paddingBottom: 0}}
+                            placement='top'
+                        >
+                            <YakitButton
+                                type='text'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onRetest(record)
+                                }}
+                                icon={<OutlinePlayIcon />}
+                            />
+                        </Tooltip>
                     </>
                 )
             }
         ]
     }, [riskTypeVerbose, tag])
+    /**复测 */
+    const onRetest = useMemoizedFn((record: Risk) => {
+        if (record.YakScriptUUID || record.FromYakScript) {
+            grpcFetchLocalPluginDetail({Name: record.FromYakScript || "", UUID: record.YakScriptUUID}).then(
+                (yakScript: YakScript) => {
+                    const info = {
+                        route: YakitRoute.Plugin_Hub,
+                        params: {
+                            tabActive: "local",
+                            detailInfo: {id: yakScript.Id, uuid: yakScript.UUID, name: yakScript.ScriptName}
+                        } as PluginHubPageInfoProps
+                    }
+                    emiter.emit("openPage", JSON.stringify(info))
+                }
+            )
+        } else {
+            yakitNotify("error", "该漏洞未经插件扫描")
+        }
+    })
     const onRefRiskList = useDebounceFn(
         () => {
             update(1)
@@ -798,7 +835,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         if (!currentSelectItem) {
             const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
-            setScrollToIndex(index)
         }
 
         if (!val.IsRead) {
@@ -867,8 +903,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const ResizeBoxProps = useCreation(() => {
         let p = {
-            firstRatio: "70%",
-            secondRatio: "30%"
+            firstRatio: "50%",
+            secondRatio: "50%"
         }
         if (!currentSelectItem?.Id) {
             p.secondRatio = "0%"
@@ -879,6 +915,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const selectedRowKeys = useCreation(() => {
         return selectList.map((ele) => ele.Id) || []
     }, [selectList])
+    const onClickIP = useMemoizedFn((info: Risk) => {
+        const index = response?.Data.findIndex((item) => item.Id === info.Id)
+        if (index !== -1) setScrollToIndex(index)
+    })
     return (
         <div className={styles["yakit-risk-table"]} ref={riskTableRef}>
             <YakitResizeBox
@@ -1044,17 +1084,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
                 secondNode={
                     currentSelectItem && (
-                        <div className={styles["yakit-risk-details"]}>
-                            <div className={styles["yakit-risk-details-title"]}>
-                                <span>详情</span>
-                                <YakitButton
-                                    type='text2'
-                                    icon={<OutlineXIcon />}
-                                    onClick={() => setCurrentSelectItem(undefined)}
-                                />
-                            </div>
-                            <YakitRiskDetails info={currentSelectItem} />
-                        </div>
+                        <YakitRiskDetails
+                            info={currentSelectItem}
+                            className={styles["yakit-risk-details"]}
+                            onClickIP={onClickIP}
+                        />
                     )
                 }
                 {...ResizeBoxProps}
@@ -1137,11 +1171,11 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose} = props
+    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose, className = ""} = props
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
-        switch (severity.name) {
+        switch (severity?.name) {
             case "信息":
                 icon = <IconSolidInfoRiskIcon />
                 break
@@ -1163,8 +1197,8 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         }
         return {
             icon,
-            tag: severity.tag,
-            name: severity.name || info.Severity || "-"
+            tag: severity?.tag || "default",
+            name: severity?.name || info?.Severity || "-"
         }
     }, [info.Severity])
     const items: ReactNode[] = useMemo(() => {
@@ -1216,9 +1250,12 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 
         return itemList
     }, [info, quotedResponse])
+    const onClickIP = useMemoizedFn(() => {
+        if (props.onClickIP) props.onClickIP(info)
+    })
     return (
         <>
-            <div className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions")}>
+            <div className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", className)}>
                 <div className={styles["content-heard"]}>
                     <div className={styles["content-heard-severity"]}>
                         {severityInfo.icon}
@@ -1237,6 +1274,13 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                             {info.Title || "-"}
                         </div>
                         <div className={styles["content-heard-body-description"]}>
+                            <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
+                                ID:{info.Id}
+                            </YakitTag>
+                            <span>IP:{info.IP || "-"}</span>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["description-port"]}>端口:{info.Port || "-"}</span>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                             <span className={styles["url-info"]}>
                                 URL:
                                 <span className={classNames(styles["url"], "content-ellipsis")}>
@@ -1244,21 +1288,23 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                 </span>
                                 <CopyComponents copyText={info?.Url || "-"} />
                             </span>
-                            <Divider type='vertical' style={{height: 16, margin: "0 16px"}} />
                             {isShowTime && (
-                                <div className={styles["content-heard-body-time"]}>
-                                    <span>发现时间 {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}</span>
-                                </div>
+                                <>
+                                    <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                                    <span className={styles["content-heard-body-time"]}>
+                                        发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                                    </span>
+                                </>
                             )}
                         </div>
                     </div>
                 </div>
                 <Descriptions bordered size='small' column={3}>
-                    <Descriptions.Item label='IP' contentStyle={{minWidth: 120}}>
+                    {/* <Descriptions.Item label='IP' contentStyle={{minWidth: 120}}>
                         {info.IP || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label='ID'>{info.Id || "-"}</Descriptions.Item>
-                    <Descriptions.Item label='端口'>{info.Port || "-"}</Descriptions.Item>
+                    </Descriptions.Item> */}
+                    {/* <Descriptions.Item label='ID'>{info.Id || "-"}</Descriptions.Item> */}
+                    {/* <Descriptions.Item label='端口'>{info.Port || "-"}</Descriptions.Item> */}
                     <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
                     <Descriptions.Item label='类型'>
                         {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}

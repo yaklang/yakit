@@ -54,10 +54,10 @@ $keyColor: map-keys($tagColor);
     }
     .yakit-risk-details {
         @extend %display-column-center;
-
         border-radius: 0 0 4px 4px;
         position: relative;
         height: 100%;
+        border-top: 0;
         .yakit-risk-details-title {
             @extend %display-flex-center;
             justify-content: space-between;
@@ -98,11 +98,16 @@ $keyColor: map-keys($tagColor);
                 font-weight: 400;
                 line-height: 16px;
             }
+            svg {
+                width: 28px;
+                height: 28px;
+            }
         }
         .content-heard-body {
-            @extend %display-column-center;
-            gap: 4px;
+            @extend %display-flex-center;
+            gap: 8px;
             overflow: hidden;
+            flex-wrap: wrap;
             .content-heard-body-title {
                 color: var(--yakit-header-color);
                 font-size: 16px;
@@ -116,6 +121,10 @@ $keyColor: map-keys($tagColor);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;
+                overflow: hidden;
+                .description-port {
+                    flex-shrink: 0;
+                }
                 .url-info {
                     @extend %display-flex-center;
                     gap: 4px;

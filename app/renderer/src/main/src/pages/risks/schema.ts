@@ -16,6 +16,7 @@ export interface Risk {
     Details?: string | Object
 
     FromYakScript?: string
+    YakScriptUUID?: string
     WaitingVerified?: boolean
     ReverseToken?: string
 

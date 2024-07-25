@@ -117,7 +117,7 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
                 <SelectPayload visible={visible} selectValue={userType} setSelectValue={onSetUser} />
             </Form.Item>
             <Form.Item label='爆破用户' name='usernames'>
-                <YakitInput.TextArea placeholder='请输入爆破用户，多个爆破用户用“英文逗号”或换行分隔' rows={3} />
+                <YakitInput.TextArea placeholder='请输入爆破用户，多个爆破用户换行分隔' rows={3} />
             </Form.Item>
             <Form.Item label={" "} colon={false} name='replaceDefaultUsernameDict' valuePropName='checked'>
                 <YakitCheckbox disabled={usernamesDict.length === 0 && !usernames}>同时使用默认用户字典</YakitCheckbox>
@@ -136,7 +136,7 @@ export const BruteSettings: React.FC<BruteSettingsProps> = React.memo((props) =>
                 <SelectPayload visible={visible} selectValue={password} setSelectValue={onSetPassword} />
             </Form.Item>
             <Form.Item label='爆破密码' name='passwords'>
-                <YakitInput.TextArea placeholder='请输入爆破密码，多个爆破密码用“英文逗号”或换行分隔' rows={3} />
+                <YakitInput.TextArea placeholder='请输入爆破密码，多个爆破密码换行分隔' rows={3} />
             </Form.Item>
             <Form.Item label={" "} colon={false} name='replaceDefaultPasswordDict' valuePropName='checked'>
                 <YakitCheckbox disabled={passwordsDict.length === 0 && !passwords}>同时使用默认密码字典</YakitCheckbox>
