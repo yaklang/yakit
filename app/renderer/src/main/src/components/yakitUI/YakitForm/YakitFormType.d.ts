@@ -64,8 +64,6 @@ export interface YakitDraggerContentProps
     // InputProps?: InputProps
     // /** 展示组件 input|textarea */
     // renderType?: "input" | "textarea"
-    /**@default 500k */
-    fileLimit?: number
     /**value的分隔符 @default ',' */
     valueSeparator?: string
 }
