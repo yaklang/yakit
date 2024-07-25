@@ -365,9 +365,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 粘贴
     const onPaste = useMemoizedFn(async () => {
         try {
+            if (!copyPath) return
             const fileDetail = getMapFileDetail(copyPath)
             // 文件夹不粘贴
-            if(fileDetail.isFolder) return
+            if (fileDetail.isFolder) return
             const code = await getCodeByPath(copyPath)
             const rootPath = info.isFolder ? info.path : info.parent
             if (!rootPath) return
