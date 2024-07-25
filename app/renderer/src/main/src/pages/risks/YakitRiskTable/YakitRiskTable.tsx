@@ -1175,7 +1175,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
-        switch (severity.name) {
+        switch (severity?.name) {
             case "信息":
                 icon = <IconSolidInfoRiskIcon />
                 break
@@ -1197,8 +1197,8 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         }
         return {
             icon,
-            tag: severity.tag,
-            name: severity.name || info.Severity || "-"
+            tag: severity?.tag || "default",
+            name: severity?.name || info?.Severity || "-"
         }
     }, [info.Severity])
     const items: ReactNode[] = useMemo(() => {
