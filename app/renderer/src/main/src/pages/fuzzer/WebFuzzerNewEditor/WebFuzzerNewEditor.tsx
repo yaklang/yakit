@@ -144,7 +144,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                                 copyAsUrl({Request: newRequest, IsHTTPS: isHttps})
                                 return
                             case "copy-as-curl":
-                                execCodec("packet-to-curl", request, undefined, undefined, undefined, [
+                                execCodec("packet-to-curl", newRequest, undefined, undefined, undefined, [
                                     {Key: "https", Value: isHttps ? "true" : ""}
                                 ]).then((data) => {
                                     callCopyToClipboard(data)
