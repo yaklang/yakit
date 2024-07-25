@@ -581,6 +581,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.emit("onOperationFileTree", "paste")
     })
 
+    // yakrunner全局事件(monaca中也需生效)
+    const entiretyEvent = ["17-192"]
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
@@ -603,8 +605,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
 
     const handleKeyPress = (event) => {
-        // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截)
-        if(event.target?.ariaRoleDescription === "editor") return
+        event.stopPropagation()
         // console.log("Key keydown:", event)
         // 此处在使用key时发现字母竟区分大小写-故使用which替换
         const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
@@ -618,7 +619,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         let arr = getKeyboard(newkey)
         // console.log("newkey---", newkey, arr)
         if (!arr) return
-        event.stopPropagation()
+        // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
+        if(event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
         arr.forEach((item) => {
             item.callback()
         })
