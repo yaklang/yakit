@@ -42,7 +42,7 @@ import {
     removeMapFolderDetail,
     setMapFolderDetail
 } from "../FileTreeMap/ChildMap"
-import {failed, success} from "@/utils/notification"
+import {failed, success, warn} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
 import {callCopyToClipboard} from "@/utils/basic"
@@ -344,6 +344,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 复制
     const onCopy = useMemoizedFn(() => {
         setCopyPath(info.path)
+        success(`已获取路径 ${info.path}`)
     })
 
     // 复制绝对路径
@@ -365,7 +366,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 粘贴
     const onPaste = useMemoizedFn(async () => {
         try {
-            if (!copyPath) return
+            if (!copyPath) {
+                warn("请先选择复制文件")
+                return
+            }
             const fileDetail = getMapFileDetail(copyPath)
             // 文件夹不粘贴
             if (fileDetail.isFolder) return
@@ -374,16 +378,16 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             if (!rootPath) return
             const currentPath = await getPathJoin(rootPath, fileDetail.name)
             if (!currentPath) return
-            const result = await grpcFetchPasteFile(currentPath, code, info.path)
+            const result = await grpcFetchPasteFile(currentPath, code, rootPath)
             if (result.length === 0) return
             const {path, name, parent} = result[0]
             setMapFileDetail(path, result[0])
-            const folderDetail = getMapFolderDetail(info.path)
+            const folderDetail = getMapFolderDetail(rootPath)
             const newFolderDetail: string[] = cloneDeep(folderDetail)
             // 如若为空文件夹 则可点击打开
             if (newFolderDetail.length === 0) {
-                const fileDetail = getMapFileDetail(info.path)
-                setMapFileDetail(info.path, {...fileDetail, isLeaf: false})
+                const fileDetail = getMapFileDetail(rootPath)
+                setMapFileDetail(rootPath, {...fileDetail, isLeaf: false})
             }
             // 新增文件时其位置应处于文件夹后
             let insert: number = 0
@@ -393,9 +397,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 return !isFolder
             })
             newFolderDetail.splice(insert, 0, path)
-            setMapFolderDetail(info.path, newFolderDetail)
+            setMapFolderDetail(rootPath, newFolderDetail)
             setCopyPath("")
-            emiter.emit("onExpandedFileTree", info.path)
+            emiter.emit("onExpandedFileTree", rootPath)
             emiter.emit("onRefreshFileTree")
         } catch (error) {
             setCopyPath("")
@@ -437,6 +441,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             case "copy":
                 if (!!foucsedKey) {
                     setCopyPath(foucsedKey)
+                    success(`已获取路径 ${foucsedKey}`)
                 }
                 break
             case "paste":
