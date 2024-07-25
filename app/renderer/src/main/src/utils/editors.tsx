@@ -619,27 +619,31 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     // 读取上次选择的字体大小/换行符
     const onRefreshEditorOperationRecord = useMemoizedFn((v) => {
-        const obj: RefreshEditorOperationRecordProps = JSON.parse(v)
-        if (obj.editorId === editorId) {
-            if (obj?.fontSize) {
-                setFontSize(obj.fontSize)
-            } else {
-                setShowLineBreaks(obj.showBreak || false)
+        try {
+            const obj: RefreshEditorOperationRecordProps = JSON.parse(v)
+            if (obj.editorId === editorId) {
+                if (obj?.fontSize) {
+                    setFontSize(obj.fontSize)
+                } else {
+                    setShowLineBreaks(obj.showBreak || false)
+                }
             }
-        }
+        } catch (error) {}
     })
 
     useEffect(() => {
         if (editorOperationRecord) {
             getRemoteValue(editorOperationRecord).then((data) => {
-                if (!data) return
-                let obj: OperationRecordRes = JSON.parse(data)
-                if (obj?.fontSize) {
-                    setFontSize(obj?.fontSize)
-                }
-                if (typeof obj?.showBreak === "boolean") {
-                    setShowLineBreaks(obj?.showBreak)
-                }
+                try {
+                    if (!data) return
+                    let obj: OperationRecordRes = JSON.parse(data)
+                    if (obj?.fontSize) {
+                        setFontSize(obj?.fontSize)
+                    }
+                    if (typeof obj?.showBreak === "boolean") {
+                        setShowLineBreaks(obj?.showBreak)
+                    }
+                } catch (error) {}
             })
         }
     }, [])
