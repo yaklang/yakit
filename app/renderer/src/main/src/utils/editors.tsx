@@ -589,7 +589,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         editorOperationRecord,
         typeOptionVal,
         onTypeOptionVal,
-        highLightText = []
+        highLightText = [],
+        downstreamProxyStr = ""
     } = props
     const [mode, setMode] = useState("text")
     const [strValue, setStrValue] = useState(originValue)
@@ -1181,6 +1182,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             webFuzzerCallBack={props.webFuzzerCallBack}
                             editorId={editorId}
                             highLightText={type === undefined ? highLightText : []}
+                            downstreamProxyStr={downstreamProxyStr}
                             {...props.extraEditorProps}
                         />
                     )}

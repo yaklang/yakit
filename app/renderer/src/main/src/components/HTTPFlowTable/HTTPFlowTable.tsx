@@ -74,15 +74,18 @@ import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 import {Uint8ArrayToString} from "@/utils/str"
+import {WEB_FUZZ_PROXY} from "@/defaultConstants/HTTPFuzzerPage"
+import {onSetRemoteValuesBase} from "../yakitUI/utils"
+import {CacheDropDownGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
 const {Option} = Select
 
 export interface codecHistoryPluginProps {
-    key:string
+    key: string
     label: string
-    isAiPlugin:boolean
+    isAiPlugin: boolean
 }
 
 export interface HTTPHeaderItem {
@@ -343,6 +346,8 @@ export interface HTTPFlowTableProp {
     toWebFuzzer?: boolean
     /** 是否显示批量操作 */
     showBatchActions?: boolean
+    /** 下游代理地址 */
+    downstreamProxyStr?: string
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -643,7 +648,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         toPlugin = false,
         runTimeId,
         toWebFuzzer = false,
-        showBatchActions = true
+        showBatchActions = true,
+        downstreamProxyStr = ""
     } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
@@ -724,7 +730,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         (e) => {
             const selected = getSelected()
             if (selected) {
-                selected.IsWebsocket ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request) : onSendToTab(selected)
+                selected.IsWebsocket
+                    ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request)
+                    : onSendToTab(selected, true, downstreamProxyStr)
             }
         },
         {
@@ -741,7 +749,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (selected) {
                 selected.IsWebsocket
                     ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
-                    : onSendToTab(selected, false)
+                    : onSendToTab(selected, false, downstreamProxyStr)
             }
         },
         {
@@ -2341,7 +2349,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     exportKey={toWebFuzzer ? "WEBFUZZER-HISTORY-EXPORT-KEY" : "MITM-HTTP-HISTORY-EXPORT-KEY"}
                     fileName={!toWebFuzzer ? "History" : "WebFuzzer"}
                     getData={(pagination) => getExcelData(pagination, list)}
-                    onClose={()=>m.destroy()}
+                    onClose={() => m.destroy()}
                 />
             ),
             onCancel: () => {
@@ -2422,18 +2430,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     })
 
-    const addIconLabel = useMemoizedFn((data:codecHistoryPluginProps[])=>{
-        return data.map((item)=>({
+    const addIconLabel = useMemoizedFn((data: codecHistoryPluginProps[]) => {
+        return data.map((item) => ({
             ...item,
-            label:<>
-            {item.isAiPlugin && (
+            label: (
                 <>
-                    <IconSolidAIIcon className={"ai-plugin-menu-icon-default"} />
-                    <IconSolidAIWhiteIcon className={"ai-plugin-menu-icon-hover"} />
+                    {item.isAiPlugin && (
+                        <>
+                            <IconSolidAIIcon className={"ai-plugin-menu-icon-default"} />
+                            <IconSolidAIWhiteIcon className={"ai-plugin-menu-icon-hover"} />
+                        </>
+                    )}
+                    {item.key}
                 </>
-            )}
-            {item.key}
-        </>
+            )
         }))
     })
     const getCodecHistoryPlugin = useMemoizedFn(() => {
@@ -2443,7 +2453,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 : [
                       {
                           key: "Get*plug-in",
-                          label: <><CloudDownloadIcon style={{marginRight:4}}/>获取插件</>
+                          label: (
+                              <>
+                                  <CloudDownloadIcon style={{marginRight: 4}} />
+                                  获取插件
+                              </>
+                          )
                       }
                   ]
         } else {
@@ -2452,7 +2467,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 : [
                       {
                           key: "Get*plug-in",
-                          label: <><CloudDownloadIcon style={{marginRight:4}}/>获取插件</>
+                          label: (
+                              <>
+                                  <CloudDownloadIcon style={{marginRight: 4}} />
+                                  获取插件
+                              </>
+                          )
                       }
                   ]
         }
@@ -2474,7 +2494,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 : [
                       {
                           key: "Get*ai-plug-in",
-                          label: <><CloudDownloadIcon style={{marginRight:4}}/>获取插件</>
+                          label: (
+                              <>
+                                  <CloudDownloadIcon style={{marginRight: 4}} />
+                                  获取插件
+                              </>
+                          )
                       }
                   ]
         } else {
@@ -2492,7 +2517,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 : [
                       {
                           key: "Get*ai-plug-in",
-                          label: <><CloudDownloadIcon style={{marginRight:4}}/>获取插件</>
+                          label: (
+                              <>
+                                  <CloudDownloadIcon style={{marginRight: 4}} />
+                                  获取插件
+                              </>
+                          )
                       }
                   ]
         }
@@ -2953,10 +2983,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             })
                             break
                         case "sendAndJumpToWebFuzzer":
-                            onSendToTab(rowData)
+                            onSendToTab(rowData, true, downstreamProxyStr)
                             break
                         case "sendToWebFuzzer":
-                            onSendToTab(rowData, false)
+                            onSendToTab(rowData, false, downstreamProxyStr)
                             break
                         case "sendAndJumpToWS":
                             newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request)
@@ -3246,14 +3276,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             case "sendAndJumpToWebFuzzer":
                 const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
                 if (!currentItemJumpToFuzzer) return
-                onBatch(onSendToTab, currentItemJumpToFuzzer?.number || 0, selectedRowKeys.length === total)
+                onBatch(
+                    (el) => onSendToTab(el, true, downstreamProxyStr),
+                    currentItemJumpToFuzzer?.number || 0,
+                    selectedRowKeys.length === total
+                )
 
                 break
             case "sendToWebFuzzer":
                 const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
                 if (!currentItemToFuzzer) return
                 onBatch(
-                    (el) => onSendToTab(el, false),
+                    (el) => onSendToTab(el, false, downstreamProxyStr),
                     currentItemToFuzzer?.number || 0,
                     selectedRowKeys.length === total
                 )
@@ -3996,13 +4030,14 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 })
 
 // 发送web fuzzer const
-export const onSendToTab = (rowData, openFlag?: boolean) => {
+export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string) => {
     ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
             data: {
                 openFlag,
                 isHttps: rowData.IsHTTPS,
+                downstreamProxyStr,
                 request: rowData.InvalidForUTF8Request
                     ? rowData.SafeHTTPRequest!
                     : new Buffer(rowData.Request).toString("utf8")

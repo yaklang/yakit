@@ -460,7 +460,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     return value.replace(/\D/g, "")
                                 }}
                             >
-                                <YakitInput suffix='M' size='small' className={styles['fuzzer-maxBodySize-input']} />
+                                <YakitInput suffix='M' size='small' className={styles["fuzzer-maxBodySize-input"]} />
                             </Form.Item>
                         </div>
                         <YakitCollapse

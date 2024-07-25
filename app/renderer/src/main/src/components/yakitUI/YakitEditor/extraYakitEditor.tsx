@@ -31,6 +31,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     webFuzzerValue?: string
     webSocketToServer?: string
     webFuzzerCallBack?: () => void
+    downstreamProxyStr?: string
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -46,6 +47,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webFuzzerValue,
         webSocketToServer,
         webFuzzerCallBack,
+        downstreamProxyStr = "",
         ...restProps
     } = props
 
@@ -259,11 +261,11 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             return
                         }
                         if (key === "发送并跳转") {
-                            newWebFuzzerTab(defaultHttps || false, text).finally(() => {
+                            newWebFuzzerTab(defaultHttps || false, text, true, downstreamProxyStr).finally(() => {
                                 webFuzzerCallBack && webFuzzerCallBack()
                             })
                         } else if (key === "仅发送") {
-                            newWebFuzzerTab(defaultHttps || false, text, false).finally(() => {
+                            newWebFuzzerTab(defaultHttps || false, text, false, downstreamProxyStr).finally(() => {
                                 webFuzzerCallBack && webFuzzerCallBack()
                             })
                         }
@@ -283,7 +285,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         isWebSocket,
         webSocketValue,
         webFuzzerValue,
-        webSocketToServer
+        webSocketToServer,
+        downstreamProxyStr
     ])
 
     return (

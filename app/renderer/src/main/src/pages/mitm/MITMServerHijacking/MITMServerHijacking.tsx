@@ -45,6 +45,8 @@ export interface MITMServerHijackingProp {
     statusCards: StatusCardProps[]
     tip: string
     onSetTip: (tip: string) => void
+    downstreamProxyStr: string
+    setDownstreamProxyStr: (proxy: string) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -58,7 +60,7 @@ const MITMFiltersModal = React.lazy(() => import("../MITMServerStartForm/MITMFil
 const MITMCertificateDownloadModal = React.lazy(() => import("../MITMServerStartForm/MITMCertificateDownloadModal"))
 
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
-    const {host, port, addr, status, setStatus, setVisible, logs, statusCards, tip, onSetTip} = props
+    const {host, port, addr, status, setStatus, setVisible, logs, statusCards, tip, onSetTip, downstreamProxyStr, setDownstreamProxyStr} = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -209,12 +211,13 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             <DownStreamAgentModal
                 downStreamAgentModalVisible={downStreamAgentModalVisible}
                 onCloseModal={() => setDownStreamAgentModalVisible(false)}
+                setDownstreamProxyStr={setDownstreamProxyStr}
                 tip={tip}
                 onSetTip={onSetTip}
             ></DownStreamAgentModal>
             <Divider style={{margin: "8px 0"}} />
             <div className={style["mitm-server-body"]}>
-                <MITMServer status={status} setStatus={setStatus} logs={logs} statusCards={statusCards} />
+                <MITMServer status={status} setStatus={setStatus} logs={logs} statusCards={statusCards} downstreamProxyStr={downstreamProxyStr}/>
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
                 <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={true} />
@@ -229,10 +232,11 @@ interface DownStreamAgentModalProp {
     onCloseModal: () => void
     tip: string
     onSetTip: (tip: string) => void
+    setDownstreamProxyStr: (proxy: string) => void
 }
 
 const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((props) => {
-    const {downStreamAgentModalVisible, onCloseModal, tip, onSetTip} = props
+    const {downStreamAgentModalVisible, onCloseModal, tip, onSetTip, setDownstreamProxyStr} = props
     const [form] = Form.useForm()
     const onOKFun = useMemoizedFn(async () => {
         const tipArr = tip.split("|")
@@ -254,9 +258,11 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                     .join("|")
                 onSetTip(tipStr)
             }
+            setDownstreamProxyStr(downstreamProxy)
         } else {
             const tipStr = tipArr.filter((item) => !item.startsWith("下游代理")).join("|")
             onSetTip(tipStr)
+            setDownstreamProxyStr("")
         }
         onClose()
     })
