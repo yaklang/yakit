@@ -74,6 +74,8 @@ import {sendDuplexConn} from "@/utils/duplex/duplex"
 import {StringToUint8Array} from "@/utils/str"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {AuditModalForm} from "./AuditCode/AuditCode"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -99,6 +101,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
     const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
+    const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
+    const [isInitDefault, setInitDefault] = useState<boolean>(false)
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
         if (getMapFileDetail(path).isCreate) {
@@ -776,7 +780,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     // 布局处理
     const onChangeArea = useMemoizedFn(() => {
         if (areaInfo.length === 0) {
-            return <YakRunnerWelcomePage addFileTab={addFileTab} />
+            return <YakRunnerWelcomePage addFileTab={addFileTab} setShowCompileModal={setShowCompileModal} />
         }
         return (
             <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
@@ -835,6 +839,28 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             ipcRenderer.removeAllListeners("client-yak-end")
         }
     }, [])
+
+    // initDefault是否加载表单默认值
+    const onOpenAuditModalFun = useMemoizedFn((initDefault?: string) => {
+        if (initDefault) {
+            setInitDefault(true)
+        }
+        setShowCompileModal(true)
+    })
+
+    useEffect(() => {
+        // 打开编译文件Modal
+        emiter.on("onOpenAuditModal", onOpenAuditModalFun)
+        return () => {
+            emiter.off("onOpenAuditModal", onOpenAuditModalFun)
+        }
+    }, [])
+
+    const onCloseCompileModal = useMemoizedFn(() => {
+        setInitDefault(false)
+        setShowCompileModal(false)
+    })
+
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
@@ -848,7 +874,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         firstMinSize={isUnShow ? 25 : 200}
                         // lineInStyle={{backgroundColor:"#eaecf3"}}
                         lineStyle={{width: 4}}
-                        secondMinSize={400}
+                        secondMinSize={480}
                         firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
                         secondNodeStyle={
                             isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
@@ -879,6 +905,18 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 }}
                 okButtonText={"知道了"}
             />
+            {/* 编译项目弹窗 */}
+            {isShowCompileModal && (
+                <YakitModal
+                    visible={isShowCompileModal}
+                    bodyStyle={{padding: 0}}
+                    title={"编译项目"}
+                    footer={null}
+                    onCancel={onCloseCompileModal}
+                >
+                    <AuditModalForm isInitDefault={isInitDefault} onCancle={onCloseCompileModal} />
+                </YakitModal>
+            )}
         </YakRunnerContext.Provider>
     )
 }

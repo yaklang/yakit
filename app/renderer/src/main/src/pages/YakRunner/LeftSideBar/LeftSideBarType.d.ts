@@ -4,4 +4,4 @@ export interface LeftSideBarProps {
     setUnShow: (v:boolean) => void
 }
 
-export type LeftSideType = "file-tree" | "help-doc" | undefined
+export type LeftSideType = "file-tree" | "help-doc" | "audit-code" | undefined

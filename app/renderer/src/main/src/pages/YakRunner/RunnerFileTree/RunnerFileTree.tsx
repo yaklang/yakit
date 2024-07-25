@@ -2,7 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePluscircleIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {CollapseList} from "../CollapseList/CollapseList"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
 import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
@@ -54,6 +54,7 @@ import {v4 as uuidv4} from "uuid"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, success} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
+import {Tooltip} from "antd"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -181,6 +182,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             {
                 key: "openFolder",
                 label: "打开文件夹"
+            },
+            {
+                key: "auditFolder",
+                label: "编译项目"
             }
         ]
         if (historyList.length > 0) {
@@ -190,6 +195,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 children: [...historyList.map((item) => ({key: item.path, label: item.name}))]
             })
         }
+        newMenu.push({
+            key: "auditHistory",
+            label: "最近编译"
+        })
         return newMenu
     }, [historyList, fileTree])
 
@@ -551,6 +560,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             })
     })
 
+    // 编译项目
+    const auditFolder = useMemoizedFn(() => {
+        emiter.emit("onOpenAuditModal")
+    })
+
     // 打开历史
     const openHistory = useMemoizedFn((key) => {
         const filterArr = historyList.filter((item) => item.path === key)
@@ -560,8 +574,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             if (item.isFile) {
                 const OpenFileByPathParams: OpenFileByPathProps = {
                     params: {
-                        path:item.path,
-                        name:item.name
+                        path: item.path,
+                        name: item.name
                     },
                     isHistory: true
                 }
@@ -590,6 +604,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 break
             case "openFolder":
                 openFolder()
+                break
+            case "auditFolder":
+                auditFolder()
                 break
             default:
                 openHistory(key)
@@ -626,18 +643,27 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
                             <div className={styles["title-style"]}>文件列表</div>
-                            <YakitDropdownMenu
-                                menu={{
-                                    data: menuData,
-                                    onClick: ({key}) => menuSelect(key)
-                                }}
-                                dropdown={{
-                                    trigger: ["click"],
-                                    placement: "bottomLeft"
-                                }}
-                            >
-                                <YakitButton type='text2' icon={<OutlinePluscircleIcon />} />
-                            </YakitDropdownMenu>
+                            <div className={styles["extra"]}>
+                                <Tooltip title={"编译当前项目"}>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlinCompileIcon />}
+                                        onClick={() => emiter.emit("onOpenAuditModal", "init")}
+                                    />
+                                </Tooltip>
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: menuData,
+                                        onClick: ({key}) => menuSelect(key)
+                                    }}
+                                    dropdown={{
+                                        trigger: ["click"],
+                                        placement: "bottomLeft"
+                                    }}
+                                >
+                                    <YakitButton type='text2' icon={<OutlinePluscircleIcon />} />
+                                </YakitDropdownMenu>
+                            </div>
                         </div>
 
                         <div className={styles["file-tree-tree"]}>

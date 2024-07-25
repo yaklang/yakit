@@ -3,3 +3,15 @@
     height: 100%;
     overflow: hidden;
 }
+
+.audit-form-footer{
+    overflow: hidden;
+    width: 100%;
+    padding: var(--modal-footer-padding);
+    background-color: var(--modal-header-footer-background);
+    border-top: 1px solid var(--modal-header-footer-border);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+}

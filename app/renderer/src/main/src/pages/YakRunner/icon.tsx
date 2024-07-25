@@ -63,3 +63,26 @@ const YakRunnerOpenFolder = () => (
 export const YakRunnerOpenFolderIcon = (props: Partial<IconProps>) => {
     return <Icon component={YakRunnerOpenFolder} {...props} />
 }
+
+const YakRunnerOpenAudit = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'>
+        <path
+            d='M9.60019 19.2C9.60019 17.4327 11.0329 16 12.8002 16H25.6002C27.3675 16 28.8002 17.4327 28.8002 19.2V22.4C28.8002 24.1673 27.3675 25.6 25.6002 25.6H3.2002H6.4002C8.16751 25.6 9.60019 24.1673 9.60019 22.4V19.2Z'
+            fill='#9D9AFB'
+            stroke='#31343F'
+            strokeLinejoin='round'
+        />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M3.2002 9.5999C3.2002 7.83259 4.63288 6.3999 6.4002 6.3999H12.8002L16.0002 9.5999H22.4002C24.1675 9.5999 25.6002 11.0326 25.6002 12.7999V14.3999H12.8002C10.1492 14.3999 8.0002 16.5489 8.0002 19.1999V21.5999C8.0002 22.9254 6.92568 23.9999 5.6002 23.9999C4.27471 23.9999 3.2002 22.9254 3.2002 21.5999V9.5999Z'
+            fill='#8863F7'
+            stroke='#31343F'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const YakRunnerOpenAuditIcon = (props: Partial<IconProps>) => {
+    return <Icon component={YakRunnerOpenAudit} {...props} />
+}

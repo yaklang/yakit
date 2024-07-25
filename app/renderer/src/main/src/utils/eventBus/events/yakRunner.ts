@@ -28,4 +28,6 @@ export type YakRunnerEventProps = {
     onOperationFileTree: string
     // 通过路径打开文件
     onOpenFileByPath: string
+    // 打开编译文件Modal
+    onOpenAuditModal?: string
 }
