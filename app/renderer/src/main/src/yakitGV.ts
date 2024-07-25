@@ -104,6 +104,8 @@ export enum RemoteGV {
     RiskQueryShow = "risk-query-show",
     /**@name Home开始扫描 */
     HomeStartScanning="home_start_scanning",
+    /**@name xterm全局配置(字体样式、字体大小) */
+    YakitXtermSetting="yakit_xterm_setting",
     /**@name 端口监听器缓存的监听主机 */
     ReverseShellReceiverHostList="reverse-shell-receiver-host-list",
     /**@name YakitDraggerContent组件限制文件大小 */

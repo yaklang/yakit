@@ -3,7 +3,7 @@ import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "./FileTree/FileTreeType"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
-import {StringToUint8Array} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     ConvertYakStaticAnalyzeErrorToMarker,
     IMonacoEditorMarker,
@@ -17,6 +17,8 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
+import {randomString} from "@/utils/randomUtil"
+import {useRef} from "react"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -193,7 +195,8 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
             Method: "DELETE",
             Url: {
                 Schema: "file",
-                Path: path
+                Path: path,
+                Query: [{Key: "trash", Value: "true"}],
             }
         }
         try {
@@ -204,6 +207,124 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
         } catch (error) {
             reject(error)
         }
+    })
+}
+
+/**
+ * @name 粘贴文件
+ */
+export const grpcFetchPasteFile: (
+    path: string,
+    code?: string | null,
+    parentPath?: string | null
+) => Promise<FileNodeMapProps[]> = (path, code, parentPath) => {
+    return new Promise(async (resolve, reject) => {
+        const params: any = {
+            Method: "PUT",
+            Url: {
+                Schema: "file",
+                Query: [
+                    {Key: "type", Value: "file"},
+                    {Key: "paste", Value: "true"}
+                ],
+                Path: path
+            }
+        }
+        if (code && code.length > 0) {
+            params.Body = StringToUint8Array(code)
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            // console.log("新建文件", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
+            resolve(data)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 最大限制10M
+ */
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
+/**
+ * @name 根据文件path获取其大小并判断其是否为文本
+ */
+export const getCodeSizeByPath = (path: string): Promise<{size: number; isPlainText: boolean}> => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "GET",
+            Url: {
+                Schema: "file",
+                Path: path,
+                Query: [{Key: "detectPlainText", Value: "true"}]
+            }
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            const size = parseInt(list.Resources[0].Size + "")
+            let isPlainText: boolean = true
+            list.Resources[0].Extra.forEach((item) => {
+                if (item.Key === "IsPlainText" && item.Value === "false") {
+                    isPlainText = false
+                }
+            })
+            resolve({
+                size,
+                isPlainText
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const getCodeByNode = (path: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("read-file-content", path)
+            .then((res) => {
+                resolve(res)
+            })
+            .catch(() => {
+                failed("无法获取该文件内容，请检查后后重试！")
+                reject()
+            })
+    })
+}
+
+/**
+ * @name 根据文件path获取其内容
+ */
+export const getCodeByPath = (path: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let content: string = ""
+            const token = randomString(60)
+            ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
+            ipcRenderer.on(`${token}-data`, (e, result: {Data: Uint8Array; EOF: boolean}) => {
+                content += Uint8ArrayToString(result.Data)
+                if (result.EOF) {
+                    resolve(content)
+                }
+            })
+            ipcRenderer.on(`${token}-error`, async (e, error) => {
+                try {
+                    let newContent = await getCodeByNode(path)
+                    resolve(newContent)
+                } catch (error) {
+                    failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
+                    reject()
+                }
+            })
+            ipcRenderer.on(`${token}-end`, (e, data) => {
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            })
+        } catch (error) {}
     })
 }
 
@@ -308,6 +429,28 @@ export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFile
                     newAreaInfo[index].elements[indexIn].files[fileIndex] = {
                         ...newAreaInfo[index].elements[indexIn].files[fileIndex],
                         ...data
+                    }
+                }
+            })
+        })
+    })
+    return newAreaInfo
+}
+
+/**
+ * @name 更新分栏数据里某些节点file数据为被删除待保存状态
+ */
+export const updateAreaFileInfoToDelete = (areaInfo: AreaInfoProps[], path?: string) => {
+    const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+    newAreaInfo.forEach((item, index) => {
+        item.elements.forEach((itemIn, indexIn) => {
+            itemIn.files.forEach((file, fileIndex) => {
+                if (path && (file.path === path || file.path.startsWith(path))) {
+                    newAreaInfo[index].elements[indexIn].files[fileIndex] = {
+                        ...newAreaInfo[index].elements[indexIn].files[fileIndex],
+                        isDelete: true,
+                        isUnSave: true,
+                        path: `${uuidv4()}-Delete`
                     }
                 }
             })
@@ -563,47 +706,8 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
     })
 }
 
-/**
- * @name 最大限制10M
- */
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
-
-/**
- * @name 根据文件path获取其大小
- */
-export const getCodeSizeByPath = (path: string): Promise<number> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("read-file-size", path)
-            .then((res) => {
-                resolve(res)
-            })
-            .catch(() => {
-                failed("无法获取该文件大小，请检查后后重试！")
-                reject()
-            })
-    })
-}
-
-/**
- * @name 根据文件path获取其内容
- */
-export const getCodeByPath = (path: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("read-file-content", path)
-            .then((res) => {
-                resolve(res)
-            })
-            .catch(() => {
-                failed("无法获取该文件内容，请检查后后重试！")
-                reject()
-            })
-    })
-}
-
 const YakRunnerOpenHistory = "YakRunnerOpenHistory"
-const YakRunnerLastFolderPath = "YakRunnerLastFolderPath"
+const YakRunnerLastFolderExpanded = "YakRunnerLastFolderExpanded"
 
 /**
  * @name 更改YakRunner历史记录
@@ -650,25 +754,31 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
     })
 }
 
-/**
- * @name 更改上次文件夹打开路径
- */
-export const setYakRunnerLastFolderPath = (newPath: string) => {
-    setRemoteValue(YakRunnerLastFolderPath, newPath)
+interface YakRunnerLastFolderExpandedProps {
+    folderPath: string
+    expandedKeys: string[]
 }
 
 /**
- * @name 获取上次文件夹打开路径
+ * @name 更改打开的文件夹及其展开项
  */
-export const getYakRunnerLastFolderPath = (): Promise<string | null> => {
+export const setYakRunnerLastFolderExpanded = (cache: YakRunnerLastFolderExpandedProps) => {
+    const newCache = JSON.stringify(cache)
+    setRemoteValue(YakRunnerLastFolderExpanded, newCache)
+}
+
+/**
+ * @name 获取上次打开的文件夹及其展开项
+ */
+export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExpandedProps | null> => {
     return new Promise(async (resolve, reject) => {
-        getRemoteValue(YakRunnerLastFolderPath).then((data) => {
+        getRemoteValue(YakRunnerLastFolderExpanded).then((data) => {
             try {
                 if (!data) {
                     resolve(null)
                     return
                 }
-                const historyData: string = data
+                const historyData: YakRunnerLastFolderExpandedProps = JSON.parse(data)
                 resolve(historyData)
             } catch (error) {
                 resolve(null)
@@ -725,6 +835,25 @@ export const getNameByPath = (filePath: string): Promise<string> => {
             })
             .then((currentName: string) => {
                 resolve(currentName)
+            })
+            .catch(() => {
+                resolve("")
+            })
+    })
+}
+
+/**
+ * @name 获取相对路径（兼容多系统）
+ */
+export const getRelativePath = (basePath: string, filePath: string): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("relativePathByBase", {
+                basePath,
+                filePath
+            })
+            .then((relativePath: string) => {
+                resolve(relativePath)
             })
             .catch(() => {
                 resolve("")

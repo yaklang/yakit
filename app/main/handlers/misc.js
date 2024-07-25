@@ -603,6 +603,14 @@ module.exports = (win, getClient) => {
     })
 
 
+    const streamReadFileMap = new Map();
+    ipcMain.handle("cancel-ReadFile", handlerHelper.cancelHandler(streamReadFileMap));
+    ipcMain.handle("ReadFile", (e, params, token) => {
+        let stream = getClient().ReadFile(params);
+        handlerHelper.registerHandler(win, stream, streamReadFileMap, token)
+    })
+
+
     const streamDuplexConnectionMap = new Map();
     ipcMain.handle("cancel-DuplexConnection", handlerHelper.cancelHandler(streamDuplexConnectionMap));
     ipcMain.handle("DuplexConnectionWrite", (e, params, token) => {

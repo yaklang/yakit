@@ -24,7 +24,8 @@ import {
     KeyboardToFuncProps,
     YakitIModelDecoration,
     OperationRecord,
-    OtherMenuListProps
+    OtherMenuListProps,
+    OperationRecordRes
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -471,6 +472,24 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }),
         {wait: 300}
     )
+
+    useEffect(() => {
+        if (editorOperationRecord) {
+            getRemoteValue(editorOperationRecord).then((data) => {
+                try {
+                    if (!data) return
+                    let obj: OperationRecordRes = JSON.parse(data)
+                    if (obj?.fontSize) {
+                        setNowFontsize(obj?.fontSize)
+                    }
+                    if (typeof obj?.showBreak === "boolean") {
+                        setShowBreak(obj?.showBreak)
+                    }
+                } catch (error) {}
+            })
+        }
+    }, [])
+
     /** 操作记录存储 */
     const onOperationRecord = (type: "fontSize" | "showBreak", value: number | boolean) => {
         if (editorOperationRecord) {
@@ -481,9 +500,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     }
                     setRemoteValue(editorOperationRecord, JSON.stringify(obj))
                 } else {
-                    let obj: OperationRecord = JSON.parse(data)
-                    obj[type] = value
-                    setRemoteValue(editorOperationRecord, JSON.stringify(obj))
+                    try {
+                        let obj: OperationRecord = JSON.parse(data)
+                        obj[type] = value
+                        setRemoteValue(editorOperationRecord, JSON.stringify(obj))
+                    } catch (error) {}
                 }
             })
         }
@@ -1485,7 +1506,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             }
                         }
 
-                        if (editorDidMount) editorDidMount(editor,monaco)
+                        if (editorDidMount) editorDidMount(editor, monaco)
                     }}
                     options={{
                         readOnly: readOnly,

@@ -6,23 +6,36 @@ import {RightSideBar} from "./RightSideBar/RightSideBar"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
+    getCodeByPath,
+    getCodeSizeByPath,
+    getDefaultActiveFile,
     getNameByPath,
     getPathParent,
-    getYakRunnerLastFolderPath,
+    getYakRunnerLastFolderExpanded,
     grpcFetchCreateFile,
     grpcFetchFileTree,
+    judgeAreaExistFilePath,
+    MAX_FILE_SIZE_BYTES,
     removeAreaFileInfo,
+    setAreaFileActive,
     setYakRunnerHistory,
-    setYakRunnerLastFolderPath,
+    setYakRunnerLastFolderExpanded,
     updateAreaFileInfo,
     updateFileTree
 } from "./utils"
-import {AreaInfoProps, TabFileProps, ViewsInfoProps, YakRunnerHistoryProps, YakRunnerProps} from "./YakRunnerType"
+import {
+    AreaInfoProps,
+    OpenFileByPathProps,
+    TabFileProps,
+    ViewsInfoProps,
+    YakRunnerHistoryProps,
+    YakRunnerProps
+} from "./YakRunnerType"
 import {getRemoteValue} from "@/utils/kv"
 import {YakRunnerRemoteGV} from "@/enums/yakRunner"
 import {failed, success, yakitNotify} from "@/utils/notification"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
-import {FolderDefault} from "./FileTree/icon"
+import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
 import {RunnerTabs, YakRunnerWelcomePage} from "./RunnerTabs/RunnerTabs"
 
 import {
@@ -60,6 +73,7 @@ import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFold
 import {sendDuplexConn} from "@/utils/duplex/duplex"
 import {StringToUint8Array} from "@/utils/str"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -84,6 +98,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
+    const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
         if (getMapFileDetail(path).isCreate) {
@@ -166,8 +181,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         return () => clearInterval(id)
     }, [])
 
+    const isFirstLoadRef = useRef<boolean>(true)
     // 重置Map与轮询
-    const resetMap = useMemoizedFn(() => {
+    const resetMap = useMemoizedFn((absolutePath) => {
+        // 初始加载时 无需重置（当切换时 重置）
+        if (isFirstLoadRef) {
+            isFirstLoadRef.current = false
+            return
+        }
         loadIndexRef.current = 0
         clearMapFileDetail()
         clearMapFolderDetail()
@@ -208,7 +229,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         const lastFolder = await getNameByPath(absolutePath)
 
         if (absolutePath.length > 0 && lastFolder.length > 0) {
-            resetMap()
+            resetMap(absolutePath)
             const node: FileNodeMapProps = {
                 parent: null,
                 name: lastFolder,
@@ -250,10 +271,73 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
+    // 是否正在读取中
+    const isReadingRef = useRef<boolean>(false)
+    const onOpenFileByPathFun = useMemoizedFn(async (data) => {
+        try {
+            const {params, isHistory} = JSON.parse(data) as OpenFileByPathProps
+            const {path, name, parent} = params
+
+            // 校验是否已存在 如若存在则不创建只定位
+            const file = await judgeAreaExistFilePath(areaInfo, path)
+            if (file) {
+                const newAreaInfo = setAreaFileActive(areaInfo, path)
+                setAreaInfo && setAreaInfo(newAreaInfo)
+                setActiveFile && setActiveFile(file)
+            } else {
+                const {size, isPlainText} = await getCodeSizeByPath(path)
+                if (size > MAX_FILE_SIZE_BYTES) {
+                    setShowFileHint(true)
+                    return
+                }
+                // 取消上一次请求
+                if (isReadingRef.current) {
+                    ipcRenderer.invoke("cancel-ReadFile")
+                }
+                isReadingRef.current = true
+                const code = await getCodeByPath(path)
+                isReadingRef.current = false
+                const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
+                const scratchFile: FileDetailInfo = {
+                    name,
+                    code,
+                    icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+                    isActive: true,
+                    openTimestamp: moment().unix(),
+                    isPlainText,
+                    // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
+                    path,
+                    parent: parent || null,
+                    language: name.split(".").pop() === "yak" ? "yak" : "text"
+                }
+                // 注入语法检测
+                const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
+                const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, syntaxActiveFile, activeFile)
+                setAreaInfo && setAreaInfo(newAreaInfo)
+                setActiveFile && setActiveFile(newActiveFile)
+
+                if (isHistory) {
+                    // 创建文件时接入历史记录
+                    const history: YakRunnerHistoryProps = {
+                        isFile: true,
+                        name,
+                        path
+                    }
+                    setYakRunnerHistory(history)
+                }
+            }
+        } catch (error) {
+            failed(`error: ${error}`)
+        }
+    })
+
     useEffect(() => {
         emiter.on("onOpenFolderList", onOpenFolderListFun)
+        // 通过路径打开文件
+        emiter.on("onOpenFileByPath", onOpenFileByPathFun)
         return () => {
             emiter.off("onOpenFolderList", onOpenFolderListFun)
+            emiter.off("onOpenFileByPath", onOpenFileByPathFun)
         }
     }, [])
 
@@ -291,26 +375,50 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [isUnShow, setUnShow] = useState<boolean>(true)
 
     // 根据历史读取上次打开的文件夹
-    const onSetUnShowFun = async () => {
-        const absolutePath = await getYakRunnerLastFolderPath()
-        if (absolutePath) {
-            onOpenFolderListFun(absolutePath)
+    const onSetUnShowFun = useMemoizedFn(async () => {
+        const historyData = await getYakRunnerLastFolderExpanded()
+        if (historyData?.folderPath) {
+            onOpenFolderListFun(historyData.folderPath)
             setUnShow(false)
         }
-    }
+        emiter.emit("onDefaultExpanded", JSON.stringify(historyData?.expandedKeys || []))
+    })
+
+    const onSaveYakRunnerLastFolder = useMemoizedFn(async (newPath) => {
+        const historyData = await getYakRunnerLastFolderExpanded()
+        const folderPath = historyData?.folderPath || ""
+        if (folderPath.length === 0) {
+            setYakRunnerLastFolderExpanded({
+                folderPath: newPath,
+                expandedKeys: []
+            })
+        }
+
+        if (folderPath.length > 0 && folderPath !== newPath) {
+            setYakRunnerLastFolderExpanded({
+                folderPath: newPath,
+                expandedKeys: []
+            })
+            // FileTree缓存清除
+            emiter.emit("onResetFileTree")
+        }
+    })
+
+    useUpdateEffect(() => {
+        if (fileTree.length > 0) {
+            onSaveYakRunnerLastFolder(fileTree[0].path)
+            setUnShow(false)
+        } else {
+            setYakRunnerLastFolderExpanded({
+                folderPath: "",
+                expandedKeys: []
+            })
+        }
+    }, [fileTree])
 
     useEffect(() => {
         onSetUnShowFun()
     }, [])
-
-    useUpdateEffect(() => {
-        if (fileTree.length > 0) {
-            setYakRunnerLastFolderPath(fileTree[0].path)
-            setUnShow(false)
-        } else {
-            setYakRunnerLastFolderPath("")
-        }
-    }, [fileTree])
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
@@ -343,6 +451,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 icon: "_f_yak",
                 isActive: true,
                 openTimestamp: moment().unix(),
+                isPlainText: true,
                 // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                 path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
                 parent: null,
@@ -390,24 +499,48 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 ...activeFile,
                                 path,
                                 isUnSave: false,
-                                language: suffix === "yak" ? suffix : "http"
+                                language: suffix === "yak" ? suffix : "text"
                             }
                             const parentPath = await getPathParent(file.path)
                             const parentDetail = getMapFileDetail(parentPath)
-                            await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? "" : parentPath)
-                            success(`${activeFile?.name} 保存成功`)
-                            const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
-                            const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
-                            setAreaInfo && setAreaInfo(newAreaInfo)
-                            setActiveFile && setActiveFile(file)
-
-                            // 创建文件时接入历史记录
-                            const history: YakRunnerHistoryProps = {
-                                isFile: true,
-                                name,
-                                path
+                            const result = await grpcFetchCreateFile(
+                                file.path,
+                                file.code,
+                                parentDetail.isReadFail ? "" : parentPath
+                            )
+                            // 如若保存路径为文件列表中则需要更新文件树
+                            if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
+                                const data = await grpcFetchFileTree(parentPath)
+                                if (data.length > 0) {
+                                    let childArr: string[] = []
+                                    // 文件Map
+                                    data.forEach((item) => {
+                                        // 注入文件结构Map
+                                        childArr.push(item.path)
+                                        // 文件Map
+                                        setMapFileDetail(item.path, item)
+                                    })
+                                    setMapFolderDetail(parentPath, childArr)
+                                }
+                                emiter.emit("onRefreshFileTree", parentPath)
                             }
-                            setYakRunnerHistory(history)
+                            if (result.length > 0) {
+                                file.name = result[0].name
+                                file.isDelete = false
+                                success(`${result[0].name} 保存成功`)
+                                const removeAreaInfo = removeAreaFileInfo(areaInfo, file)
+                                const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
+                                setAreaInfo && setAreaInfo(newAreaInfo)
+                                setActiveFile && setActiveFile(file)
+
+                                // 创建文件时接入历史记录
+                                const history: YakRunnerHistoryProps = {
+                                    isFile: true,
+                                    name,
+                                    path
+                                }
+                                setYakRunnerHistory(history)
+                            }
                         }
                     })
             }
@@ -424,16 +557,46 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 终端
-    const onOpenTermina = useMemoizedFn(()=>{
+    const onOpenTermina = useMemoizedFn(() => {
         emiter.emit("onOpenTerminaDetail")
     })
 
+    // 文件树重命名（快捷键）
+    const onTreeRename = useMemoizedFn(() => {
+        emiter.emit("onOperationFileTree", "rename")
+    })
+
+    // 文件树删除（快捷键）
+    const onTreeDelete = useMemoizedFn(() => {
+        emiter.emit("onOperationFileTree", "delete")
+    })
+
+    // 文件树复制（快捷键）
+    const onTreeCopy = useMemoizedFn(() => {
+        emiter.emit("onOperationFileTree", "copy")
+    })
+
+    // 文件树粘贴（快捷键）
+    const onTreePaste = useMemoizedFn(() => {
+        emiter.emit("onOperationFileTree", "paste")
+    })
+
+    // yakrunner全局事件(monaca中也需生效)
+    const entiretyEvent = ["17-192"]
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
         setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
         setKeyboard("17-192", {onlyid: uuidv4(), callback: onOpenTermina})
+        // 文件树重命名
+        setKeyboard("113", {onlyid: uuidv4(), callback: onTreeRename})
+        // 文件树删除
+        setKeyboard("46", {onlyid: uuidv4(), callback: onTreeDelete})
+        // 文件树复制
+        setKeyboard("17-67", {onlyid: uuidv4(), callback: onTreeCopy})
+        // 文件树粘贴
+        setKeyboard("17-86", {onlyid: uuidv4(), callback: onTreePaste})
     })
 
     useEffect(() => {
@@ -442,7 +605,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
 
     const handleKeyPress = (event) => {
-        // 在这里处理全局键盘事件
+        event.stopPropagation()
         // console.log("Key keydown:", event)
         // 此处在使用key时发现字母竟区分大小写-故使用which替换
         const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
@@ -456,7 +619,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         let arr = getKeyboard(newkey)
         // console.log("newkey---", newkey, arr)
         if (!arr) return
-        event.stopPropagation()
+        // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
+        if(event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
         arr.forEach((item) => {
             item.callback()
         })
@@ -673,7 +837,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id="yakit-runnner-main-box-id">
+            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
                 <div className={styles["yak-runner-body"]}>
                     <YakitResizeBox
                         freeze={!isUnShow}
@@ -683,10 +847,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         // isShowDefaultLineStyle={false}
                         firstMinSize={isUnShow ? 25 : 200}
                         // lineInStyle={{backgroundColor:"#eaecf3"}}
-                        lineStyle={{width:4}}
+                        lineStyle={{width: 4}}
                         secondMinSize={400}
                         firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
-                        secondNodeStyle={isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset",padding:0}}
+                        secondNodeStyle={
+                            isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
+                        }
                         secondNode={
                             <div
                                 className={classNames(styles["yak-runner-code"], {
@@ -702,6 +868,17 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
                 <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
             </div>
+            {/* 文件过大提示框 */}
+            <YakitHint
+                visible={isShowFileHint}
+                title='文件警告'
+                content='文件过大，无法使用YakRunner进行操作'
+                cancelButtonProps={{style: {display: "none"}}}
+                onOk={() => {
+                    setShowFileHint(false)
+                }}
+                okButtonText={"知道了"}
+            />
         </YakRunnerContext.Provider>
     )
 }

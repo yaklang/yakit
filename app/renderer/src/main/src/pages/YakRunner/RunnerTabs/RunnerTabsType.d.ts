@@ -28,6 +28,8 @@ export interface FileDetailInfo {
     language: string
     /** 打开文件的时间戳（用于打开编辑器列表排序） */
     openTimestamp: number
+    /** 文件是否为文本文件 */
+    isPlainText: boolean
     /** 文件是否有未保存的更改 */
     isDirty?: boolean
     /** 文件是否是当前活动的文件 */
@@ -38,6 +40,8 @@ export interface FileDetailInfo {
     selections?: Selection
     /** 是否未保存（用于临时文件创建） */
     isUnSave?: boolean
+    /** 是否已被外部删除（文件树监控-删除） */
+    isDelete?: boolean
     /** 语法检查（代码打开时执行） */
     syntaxCheck?: IMonacoEditorMarker[]
     /** 帮助信息（代码坐标获取时执行） */
@@ -56,6 +60,13 @@ export type OptionalFileDetailInfo = Partial<FileDetailInfo>
 export interface RunnerTabsProps {
     tabsId: string
     wrapperClassName?: string
+}
+
+export interface RunYakParamsProps {
+    Script: string
+    Params: ExecParamItem[]
+    RunnerParamRaw: string
+    WorkDir?: string
 }
 
 export interface RunnerTabBarProps {
