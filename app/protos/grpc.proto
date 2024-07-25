@@ -5061,6 +5061,8 @@ message ExecRequest {
   // 这个是为了满足 Runner 的情况，属于特殊情况
   string RunnerParamRaw = 6;
   bool NoDividedEngine = 7;
+
+  string WorkDir = 8; // 工作目录
 }
 
 message ExecResult {

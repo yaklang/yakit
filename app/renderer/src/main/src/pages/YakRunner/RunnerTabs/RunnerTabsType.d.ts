@@ -62,6 +62,13 @@ export interface RunnerTabsProps {
     wrapperClassName?: string
 }
 
+export interface RunYakParamsProps {
+    Script: string
+    Params: ExecParamItem[]
+    RunnerParamRaw: string
+    WorkDir?: string
+}
+
 export interface RunnerTabBarProps {
     tabsId: string
     tabsList: FileDetailInfo[]

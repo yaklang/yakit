@@ -9,7 +9,8 @@ import {
     RunnerTabsProps,
     YakRunnerWelcomePageProps,
     SplitDirectionProps,
-    YakitRunnerSaveModalProps
+    YakitRunnerSaveModalProps,
+    RunYakParamsProps
 } from "./RunnerTabsType"
 import {Droppable, Draggable} from "@hello-pangea/dnd"
 
@@ -71,7 +72,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const {tabsId, wrapperClassName} = props
-    const {areaInfo, activeFile, runnerTabsId} = useStore()
+    const {areaInfo, activeFile, runnerTabsId, fileTree} = useStore()
     const {setActiveFile, setAreaInfo, setRunnerTabsId} = useDispatcher()
     const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
     const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
@@ -133,11 +134,15 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             setActiveFile(newActiveFile)
             // 打开底部
             emiter.emit("onOpenBottomDetail", JSON.stringify({type: "output"}))
-            ipcRenderer.invoke("exec-yak", {
+            let params:RunYakParamsProps = {
                 Script: newActiveFile.code,
                 Params: [],
                 RunnerParamRaw: ""
-            })
+            }
+            if(fileTree.length > 0){
+                params.WorkDir = fileTree[0].path
+            }
+            ipcRenderer.invoke("exec-yak", params)
         }
     })
 
