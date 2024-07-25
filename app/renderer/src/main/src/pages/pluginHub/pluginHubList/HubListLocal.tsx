@@ -564,7 +564,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 maskClosable: false,
                 footer: null,
                 content: (
-                    <div style={{margin: "15px 0"}}>
+                    <div style={{marginBottom: 15}}>
+                        <div className={styles.infoBox}>
+                            远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+                        </div>
                         <PluginLocalExportForm
                             onCancel={() => m.destroy()}
                             onOK={(values) => {
@@ -857,13 +860,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         handleRefreshList()
     })
 
-    // 重置所有搜索条件后的列表刷新
-    const handleInitFilterRefreshList = useMemoizedFn(() => {
-        setSearch(cloneDeep(defaultSearch))
-        setFilters(cloneDeep(defaultFilter))
-        handleRefreshList(true)
-    })
-
     // 触发详情列表的局部更新
     const [recalculation, setRecalculation] = useState<boolean>(false)
     // 更新本地插件信息，存在则进行局部更新，不存在则刷新列表
@@ -919,14 +915,12 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     useEffect(() => {
         emiter.on("onSwitchPrivateDomain", handleSwitchPrivateDomain)
         emiter.on("onRefreshLocalPluginList", handleRefreshList)
-        emiter.on("onImportRefreshLocalPluginList", handleInitFilterRefreshList)
         emiter.on("editorLocalSaveToLocalList", handleUpdatePluginInfo)
         emiter.on("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
 
         return () => {
             emiter.off("onSwitchPrivateDomain", handleSwitchPrivateDomain)
             emiter.off("onRefreshLocalPluginList", handleRefreshList)
-            emiter.off("onImportRefreshLocalPluginList", handleInitFilterRefreshList)
             emiter.off("editorLocalSaveToLocalList", handleUpdatePluginInfo)
             emiter.off("detailDeleteLocalPlugin", handleDetailDeleteToLocal)
         }
