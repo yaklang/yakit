@@ -2,9 +2,22 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+    padding-left: 4px;
+    .header {
+        padding: 4px 8px;
+        .title {
+            color: #85899e;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
+    }
+    .no-audit {
+        padding-top: 80px;
+    }
 }
 
-.audit-form-footer{
+.audit-form-footer {
     overflow: hidden;
     width: 100%;
     padding: var(--modal-footer-padding);

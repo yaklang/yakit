@@ -1,0 +1,167 @@
+.yakit-textArea-images {
+    display: flex;
+    gap: 16px;
+    .upload-img-opt {
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        :global {
+            .ant-image {
+                border-radius: 4px;
+                overflow: hidden;
+                img{
+                    height: 100%;
+                    width: 100%;
+                    object-fit: cover;
+                    overflow: hidden;
+                }
+            }
+        }
+        .opt-pic {
+            width: 56px;
+            height: 56px;
+        }
+        .mask-box {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            position: absolute;
+            left: 0px;
+            right: 0px;
+            top: 0px;
+            bottom: 0px;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
+        .close {
+            display: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 20px;
+            border: 2px solid #fff;
+            background: #f0f1f3;
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            box-sizing: content-box;
+            height: 12px;
+            width: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease-in-out;
+            svg {
+                position: relative;
+                top: -6px;
+                left: 0px;
+                height: 12px;
+                width: 12px;
+                color: #85899e;
+            }
+            &:hover {
+                background-color: var(--yakit-primary-5);
+                svg {
+                    color: #ffffff;
+                }
+            }
+        }
+        &:hover {
+            .mask-box {
+                display: flex;
+            }
+            .close {
+                display: block;
+            }
+        }
+    }
+}
+
+.yakit-textarea {
+    flex: 1;
+    // padding: 12px;
+    border-radius: 4px;
+    transition: all 0.3s;
+    border: 1px solid var(--yakit-border-color);
+    .padding-top {
+        height: 12px;
+        width: 100%;
+    }
+    .padding-left-right {
+        display: flex;
+        flex-direction: row;
+        .input-upload {
+            flex: 1;
+        }
+        .padding-left,
+        .padding-right {
+            width: 12px;
+        }
+    }
+    .padding-bottom {
+        height: 12px;
+        width: 100%;
+    }
+    .input-box {
+        position: relative;
+        .input-box-textArea {
+            padding: 0px;
+            max-height: 120px;
+        }
+        .textArea-resizer-icon {
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            color: var(--yakit-body-text-color);
+            z-index: 1;
+            pointer-events: none;
+            background-color: #fff;
+        }
+    }
+    .upload-box {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding-top: 4px;
+        .upload-box-left {
+        }
+        .upload-box-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            .limit-count {
+                padding: 2px 6px;
+                border-radius: 8px;
+                background: #f0f1f3;
+                color: #85899e;
+                text-align: center;
+                font-size: 10px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 12px;
+            }
+            .disabled-btn {
+                background: var(--yakit-disable-text-color);
+                color: var(--ui-text-inverse-color);
+                border-color: var(--yakit-disable-text-color);
+                height: 24px;
+                padding: 3px 8px;
+                font-weight: 500;
+                font-size: 12px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 4px;
+                box-shadow: none;
+                border-radius: 4px;
+                border: 1px solid transparent;
+                cursor: not-allowed;
+            }
+        }
+    }
+}
+.yakit-textarea-active {
+    border-color: var(--yakit-primary-4);
+    box-shadow: 0 0 0 2px var(--yakit-primary-2);
+}
