@@ -28,6 +28,7 @@ import {OnlineJudgment} from "./onlineJudgment/OnlineJudgment"
 import {YakitTimeLineListRefProps} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineListType"
 import {YakitCollapseText} from "@/components/yakitUI/YakitCollapseText/YakitCollapseText"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitTextArea, YakitTextAreaImages} from "@/components/yakitUI/YakitTextArea/YakitTextArea"
 const {ipcRenderer} = window.require("electron")
 
 const limit = 20
@@ -483,7 +484,7 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
                     <div className={styles["comment-body-content"]}>
                         <YakitCollapseText content={info.message} rows={2} lineHeight={20} fontSize={14} />
                     </div>
-                    {lazyLoadImage && <PluginCommentImages images={message_img} key={info.id} size={90} />}
+                    {lazyLoadImage && <YakitTextAreaImages images={message_img} key={info.id} size={90} />}
                     <div className={styles["comment-body-option"]}>
                         {isOperation && (
                             <div className={styles["func-comment-and-star"]}>
@@ -552,84 +553,6 @@ const PluginCommentInfo = memo((props: PluginCommentInfoProps) => {
         </div>
     )
 })
-interface PluginCommentImagesProps {
-    images: string[]
-    onDelete?: (v: string[]) => void
-    onOpen?: () => void
-    onClose?: () => void
-    // 辅助key值
-    key?: string | number
-    // 展示图片大小 默认56
-    size?: number
-}
-
-const PluginCommentImages: React.FC<PluginCommentImagesProps> = (props) => {
-    const {images, onDelete, onOpen, onClose, key, size = 56} = props
-    const [imageShow, setImageShow] = useState<ImageShowProps>({
-        src: "",
-        visible: false
-    })
-    return (
-        <div className={styles["plugin-comment-images"]}>
-            {images.map((item, index) => {
-                return (
-                    <div
-                        key={`${item}-${key || ""}`}
-                        className={styles["upload-img-opt"]}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                        }}
-                        style={{width: size, height: size}}
-                    >
-                        <Image src={item as any} className={styles["opt-pic"]} preview={false} />
-                        <div
-                            className={styles["mask-box"]}
-                            onClick={() => {
-                                onOpen && onOpen()
-                                setImageShow({
-                                    visible: true,
-                                    src: item
-                                })
-                            }}
-                        >
-                            预览
-                        </div>
-                        {onDelete && (
-                            <div
-                                className={styles["close"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    const arr: string[] = cloneDeep(images)
-                                    arr.splice(index, 1)
-                                    onDelete && onDelete(arr)
-                                }}
-                            >
-                                <CloseIcon />
-                            </div>
-                        )}
-                    </div>
-                )
-            })}
-            <Image
-                src={imageShow.src}
-                style={{display: "none"}}
-                preview={{
-                    visible: imageShow.visible,
-                    src: imageShow.src,
-                    onVisibleChange: (value) => {
-                        if (!value) {
-                            onClose && onClose()
-                            setImageShow({
-                                visible: false,
-                                src: ""
-                            })
-                        }
-                    }
-                }}
-            />
-        </div>
-    )
-}
 
 interface PluginCommentUploadProps {
     value: string
@@ -668,45 +591,6 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
     const {userInfo} = useStore()
     const {platform, companyHeadImg, companyName} = userInfo
     const avatarColor = useRef<string>(randomAvatarColor())
-    const [filesLoading, setFilesLoading] = useState<boolean>(false)
-    const textAreRef = useRef<InputRef>(null)
-    const [isFocused, setIsFocused] = useState<boolean>(false)
-
-    // 是否允许其失焦
-    const isAllowBlur = useRef<boolean>(true)
-    const uploadFiles = (file) => {
-        setFilesLoading(true)
-        ipcRenderer
-            .invoke("upload-img", {path: file.path, type: file.type})
-            .then((res) => {
-                setFiles(files.concat(res.data))
-            })
-            .catch((err) => {
-                fail("图片上传失败")
-            })
-            .finally(() => {
-                setTimeout(() => setFilesLoading(false), 1)
-            })
-    }
-
-    const disabled = useMemo(() => {
-        if (value.length > limit) {
-            return true
-        }
-        if (value.length === 0 && files.length === 0) {
-            return true
-        }
-        return false
-    }, [value, limit, files])
-
-    // 是否展示底部元素
-    const isShowdDom = useMemo(() => {
-        if (files.length > 0 || value.length > 0 || isAlwaysShow || isFocused) {
-            return true
-        } else {
-            return false
-        }
-    }, [isFocused, files, value])
 
     return (
         <div className={styles["plugin-comment-upload"]}>
@@ -732,170 +616,18 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
                     />
                 )}
             </div>
-            <div
-                className={classNames(styles["input-upload-box"], {
-                    [styles["input-upload-box-active"]]: isFocused
-                })}
-                onClick={() => {
-                    textAreRef.current!.focus({
-                        cursor: "end"
-                    })
-                }}
-            >
-                {/* 将原本padding: 12px;拆分为4个div的原因是为了解决控件闪烁 */}
-                <div
-                    className={styles["padding-top"]}
-                    onMouseDown={(e) => {
-                        e.preventDefault()
-                    }}
-                ></div>
-                <div className={styles["padding-left-right"]}>
-                    <div
-                        className={styles["padding-left"]}
-                        onMouseDown={(e) => {
-                            e.preventDefault()
-                        }}
-                    ></div>
-                    <div className={styles["input-upload"]}>
-                        <div
-                            className={styles["input-box"]}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                            }}
-                        >
-                            <Input.TextArea
-                                className={styles["input-box-textArea"]}
-                                onFocus={() => {
-                                    setIsFocused(true)
-                                }}
-                                onBlur={() => {
-                                    if (isAllowBlur.current) {
-                                        setIsFocused(false)
-                                    } else {
-                                        isAllowBlur.current = true
-                                        textAreRef.current?.focus()
-                                    }
-                                }}
-                                value={value}
-                                ref={textAreRef}
-                                bordered={false}
-                                rows={rows}
-                                placeholder='说点什么...'
-                                onChange={(e) => setValue(e.target.value)}
-                            />
-                            <ResizerIcon className={styles["textArea-resizer-icon"]} />
-                        </div>
-                        {isShowdDom && (
-                            <div
-                                style={{paddingTop: 12}}
-                                onMouseDown={(e) => {
-                                    e.preventDefault()
-                                }}
-                            >
-                                <PluginCommentImages
-                                    images={files}
-                                    onDelete={setFiles}
-                                    onOpen={() => {
-                                        isAllowBlur.current = false
-                                    }}
-                                    onClose={() => {
-                                        isAllowBlur.current = true
-                                    }}
-                                />
-                            </div>
-                        )}
-                        {isShowdDom && (
-                            <div
-                                className={styles["upload-box"]}
-                                onMouseDown={(e) => {
-                                    e.preventDefault()
-                                }}
-                            >
-                                <div
-                                    className={styles["upload-box-left"]}
-                                    onClick={() => {
-                                        isAllowBlur.current = false
-                                    }}
-                                >
-                                    <Upload
-                                        accept='image/jpeg,image/png,image/jpg,image/gif'
-                                        multiple={false}
-                                        disabled={files.length >= 3}
-                                        showUploadList={false}
-                                        beforeUpload={(file: any) => {
-                                            if (filesLoading) {
-                                                return false
-                                            }
-                                            if (file.size / 1024 / 1024 > 10) {
-                                                failed("图片大小不超过10M")
-                                                return false
-                                            }
-                                            if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
-                                                failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
-                                                return false
-                                            }
-                                            if (file) {
-                                                uploadFiles(file)
-                                            }
-                                            return true
-                                        }}
-                                    >
-                                        {filesLoading ? (
-                                            <LoadingOutlined size={28} />
-                                        ) : (
-                                            <YakitButton
-                                                size='large'
-                                                disabled={files.length >= 3}
-                                                icon={<OutlinePhotographIcon />}
-                                                type='text2'
-                                            />
-                                        )}
-                                    </Upload>
-                                </div>
-                                <div className={styles["upload-box-right"]}>
-                                    <div className={styles["limit-count"]}>
-                                        {value.length}/{limit}
-                                    </div>
-                                    <>
-                                        {
-                                            // 由于Button的disabled为true时会被阻止默认事件向上传递 因此disable样式由自己实现
-                                            disabled ? (
-                                                <div className={styles["disabled-btn"]}>
-                                                    <PaperAirplaneIcon />
-                                                    {submitTxt}
-                                                </div>
-                                            ) : (
-                                                <YakitButton
-                                                    icon={<PaperAirplaneIcon />}
-                                                    loading={loading}
-                                                    onClick={() => {
-                                                        onSubmit()
-                                                    }}
-                                                >
-                                                    {submitTxt}
-                                                </YakitButton>
-                                            )
-                                        }
-                                    </>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div
-                        className={styles["padding-right"]}
-                        onMouseDown={(e) => {
-                            e.preventDefault()
-                        }}
-                    ></div>
-                </div>
-
-                <div
-                    className={styles["padding-bottom"]}
-                    onMouseDown={(e) => {
-                        e.preventDefault()
-                    }}
-                ></div>
-            </div>
+            <YakitTextArea
+                value={value}
+                setValue={setValue}
+                limit={limit}
+                loading={loading}
+                files={files}
+                setFiles={setFiles}
+                onSubmit={onSubmit}
+                submitTxt={submitTxt}
+                rows={rows}
+                isAlwaysShow={isAlwaysShow}
+            />
         </div>
     )
 }

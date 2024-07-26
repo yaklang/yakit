@@ -26,6 +26,9 @@ import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPlugin
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import useStore from "../hooks/useStore"
 import {getNameByPath} from "../utils"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {OutlinCompileIcon} from "@/assets/icon/outline"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -33,7 +36,28 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     useEffect(() => {
         // console.log("我是audit-code")
     }, [])
-    return <div className={styles["audit-code"]}>我是audit-code</div>
+    return (
+        <div className={styles["audit-code"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>代码审计</div>
+            </div>
+            <div className={styles["no-audit"]}>
+                <YakitEmpty
+                    title='请先编译项目'
+                    description='需要编译过的项目，才可使用代码审计功能'
+                    children={
+                        <YakitButton
+                            type='outline1'
+                            icon={<OutlinCompileIcon />}
+                            onClick={() => emiter.emit("onOpenAuditModal", "init")}
+                        >
+                            编译当前项目
+                        </YakitButton>
+                    }
+                />
+            </div>
+        </div>
+    )
 }
 
 interface AuditModalFormProps {

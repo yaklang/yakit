@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
-import {RightSideBar} from "./RightSideBar/RightSideBar"
+import {RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
@@ -377,6 +377,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
     /** ---------- 文件树 End ---------- */
     const [isUnShow, setUnShow] = useState<boolean>(true)
+    const [isUnShowAuditDetail, setShowAuditDetail] = useState<boolean>(true)
 
     // 根据历史读取上次打开的文件夹
     const onSetUnShowFun = useMemoizedFn(async () => {
@@ -870,9 +871,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         firstRatio={isUnShow ? "25px" : "300px"}
                         firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
                         lineDirection='right'
-                        // isShowDefaultLineStyle={false}
                         firstMinSize={isUnShow ? 25 : 200}
-                        // lineInStyle={{backgroundColor:"#eaecf3"}}
                         lineStyle={{width: 4}}
                         secondMinSize={480}
                         firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
@@ -880,16 +879,30 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
                         }
                         secondNode={
-                            <div
-                                className={classNames(styles["yak-runner-code"], {
-                                    [styles["yak-runner-code-offset"]]: !isUnShow
-                                })}
-                            >
-                                <div className={styles["code-container"]}>{onFixedEditorDetails(onChangeArea())}</div>
-                            </div>
+                            <YakitResizeBox
+                                freeze={!isUnShowAuditDetail}
+                                secondRatio={isUnShowAuditDetail ? "0px" : "300px"}
+                                lineDirection='left'
+                                firstMinSize={300}
+                                firstNodeStyle={isUnShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}}
+                                secondNodeStyle={
+                                    isUnShowAuditDetail ? {padding: 0, maxWidth: 0, minWidth: 0} : {padding: 0}
+                                }
+                                firstNode={
+                                    <div
+                                        className={classNames(styles["yak-runner-code"], {
+                                            [styles["yak-runner-code-offset"]]: !isUnShow
+                                        })}
+                                    >
+                                        <div className={styles["code-container"]}>
+                                            {onFixedEditorDetails(onChangeArea())}
+                                        </div>
+                                    </div>
+                                }
+                                secondNode={<RightAuditDetail />}
+                            />
                         }
                     />
-                    <RightSideBar />
                 </div>
 
                 <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
