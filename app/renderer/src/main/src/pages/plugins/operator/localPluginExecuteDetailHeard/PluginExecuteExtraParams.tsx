@@ -120,10 +120,25 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                     return (
                         <Form size='small' labelWrap={true} labelCol={{span: 8}} wrapperCol={{span: 16}} form={form}>
                             {extraParamsGroup.length > 0 && (
-                                <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} pluginType={pluginType} />
+                                <>
+                                    <div className={styles["additional-params-divider"]}>
+                                        <div className={styles["text-style"]}>自定义参数 (非必填)</div>
+                                        <div className={styles["divider-style"]}></div>
+                                    </div>
+                                    <ExtraParamsNodeByType
+                                        extraParamsGroup={extraParamsGroup}
+                                        pluginType={pluginType}
+                                    />
+                                </>
                             )}
                             {!hiddenFixedParams && (
-                                <FixExtraParamsNode form={form} pathRef={pathRef} onReset={onReset} />
+                                <>
+                                    <div className={styles["additional-params-divider"]}>
+                                        <div className={styles["text-style"]}>固定参数 (非必填)</div>
+                                        <div className={styles["divider-style"]}></div>
+                                    </div>
+                                    <FixExtraParamsNode form={form} pathRef={pathRef} onReset={onReset} />
+                                </>
                             )}
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </Form>

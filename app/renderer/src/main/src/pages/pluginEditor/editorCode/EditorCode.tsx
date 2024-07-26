@@ -261,21 +261,29 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 case "mitm":
                     return isHiddenDefaultParams && isHiddenCustomParams ? null : (
                         <>
-                            <div className={styles["additional-params-divider"]}>
-                                <div className={styles["text-style"]}>额外参数 (非必填)</div>
-                                <div className={styles["divider-style"]}></div>
-                            </div>
                             {!isHiddenCustomParams ? (
-                                <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} />
+                                <>
+                                    <div className={styles["additional-params-divider"]}>
+                                        <div className={styles["text-style"]}>自定义参数 (非必填)</div>
+                                        <div className={styles["divider-style"]}></div>
+                                    </div>
+                                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} />
+                                </>
                             ) : null}
                             {!isHiddenDefaultParams && (
-                                <FixExtraParamsNode
-                                    form={form}
-                                    pathRef={pathRef}
-                                    onReset={onSettingExtraParams}
-                                    bordered={true}
-                                    httpPathWrapper={styles["optional-params-wrapper"]}
-                                />
+                                <>
+                                    <div className={styles["additional-params-divider"]}>
+                                        <div className={styles["text-style"]}>固定参数 (非必填)</div>
+                                        <div className={styles["divider-style"]}></div>
+                                    </div>
+                                    <FixExtraParamsNode
+                                        form={form}
+                                        pathRef={pathRef}
+                                        onReset={onSettingExtraParams}
+                                        bordered={true}
+                                        httpPathWrapper={styles["optional-params-wrapper"]}
+                                    />
+                                </>
                             )}
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </>

@@ -126,7 +126,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     const initRequiredFormValue = useMemoizedFn(() => {
         // 必填参数
-        let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
+        let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue, requestType: "input"}
         requiredParams.forEach((ele) => {
             const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
             initRequiredFormValue = {
