@@ -54,6 +54,7 @@ import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
+import {isCommunityEdition} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -1613,21 +1614,23 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             fetchFirstList()
         }
         if (visible && isNew && project) {
-            try {
-                const firstDescribe = JSON.parse(project.Description)
-                if (Array.isArray(firstDescribe)) {
-                    onReset({
-                        Description: firstDescribe
-                    })
-                } else {
+            if (!isCommunityEdition()) {
+                try {
+                    const firstDescribe = JSON.parse(project.Description)
+                    if (Array.isArray(firstDescribe)) {
+                        onReset({
+                            Description: firstDescribe
+                        })
+                    } else {
+                        onReset({
+                            Description: [{Key: "系统", Value: ""}]
+                        })
+                    }
+                } catch (error) {
                     onReset({
                         Description: [{Key: "系统", Value: ""}]
                     })
                 }
-            } catch (error) {
-                onReset({
-                    Description: [{Key: "系统", Value: ""}]
-                })
             }
             setInfo({
                 Id: +project.Id,
@@ -1724,7 +1727,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         const v = form.getFieldsValue()
         const isHasDescription = Array.isArray(v?.Description) && v.Description.length > 0
 
-        if (isHasDescription && !validateArray(v.Description)) {
+        if (isHasDescription && !validateArray(v.Description) && !isCommunityEdition()) {
             warn("请将备注信息填写完整")
             return
         }
@@ -1758,7 +1761,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             }
             const type = isFolder ? "isNewFolder" : "isNewProject"
 
-            data.Description = isHasDescription ? JSON.stringify(v?.Description) : ""
+            if(!isCommunityEdition()){
+                data.Description = isHasDescription ? JSON.stringify(v?.Description) : ""
+            }
 
             onModalSubmit(type, {...data})
         }
@@ -2001,51 +2006,58 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 />
                             </Form.Item>
                         )}
-                        <div className={styles["remark-header"]}>
-                            <div className={styles["title"]}>备注 :</div>
-                            {/* 添加额外的元素 */}
-                            <span className={styles[""]}>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) => {
-                                        handleReset(e, "Description", describeRef)
-                                    }}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                                <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) => {
-                                        handleAdd(e, "Description", describeRef)
-                                    }}
-                                    className={styles["btn-padding-right-0"]}
-                                    size='small'
-                                >
-                                    添加
-                                    <PlusIcon />
-                                </YakitButton>
-                            </span>
-                        </div>
-                        <VariableProjectList
-                            ref={describeRef}
-                            field='Description'
-                            onDel={(i) => {
-                                handleRemove(i, "Description")
-                            }}
-                        />
-                        {/* <Form.Item>
-                            <YakitInput.TextArea
-                                autoSize={{minRows: 3, maxRows: 5}}
-                                showCount
-                                maxLength={100}
-                                placeholder='请输入描述与备注'
-                                value={info.Description}
-                                onChange={(e) => setInfo({...info, Description: e.target.value})}
-                            />
-                        </Form.Item> */}
+                        <>
+                            {isCommunityEdition() ? (
+                                <Form.Item label={"备注 :"}>
+                                    <YakitInput.TextArea
+                                        autoSize={{minRows: 3, maxRows: 5}}
+                                        showCount
+                                        maxLength={100}
+                                        placeholder='请输入描述与备注'
+                                        value={info.Description}
+                                        onChange={(e) => setInfo({...info, Description: e.target.value})}
+                                    />
+                                </Form.Item>
+                            ) : (
+                                <>
+                                    <div className={styles["remark-header"]}>
+                                        <div className={styles["title"]}>备注 :</div>
+                                        {/* 添加额外的元素 */}
+                                        <span className={styles[""]}>
+                                            <YakitButton
+                                                type='text'
+                                                colors='danger'
+                                                onClick={(e) => {
+                                                    handleReset(e, "Description", describeRef)
+                                                }}
+                                                size='small'
+                                            >
+                                                重置
+                                            </YakitButton>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                onClick={(e) => {
+                                                    handleAdd(e, "Description", describeRef)
+                                                }}
+                                                className={styles["btn-padding-right-0"]}
+                                                size='small'
+                                            >
+                                                添加
+                                                <PlusIcon />
+                                            </YakitButton>
+                                        </span>
+                                    </div>
+                                    <VariableProjectList
+                                        ref={describeRef}
+                                        field='Description'
+                                        onDel={(i) => {
+                                            handleRemove(i, "Description")
+                                        }}
+                                    />
+                                </>
+                            )}
+                        </>
                     </>
                 )}
                 {isExport && (
