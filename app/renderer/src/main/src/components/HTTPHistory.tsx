@@ -19,6 +19,7 @@ export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
     sendToWebFuzzer?: boolean | (() => any) | ((isHttps: boolean, request: string) => any)
     defaultPacket?: string
+    downstreamProxyStr?: string
 }
 
 // 使用 HTTPHistory 控件的来源页面
@@ -280,6 +281,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     historyId={historyId}
                                     onQueryParams={onQueryParams}
                                     inViewport={inViewport}
+                                    downstreamProxyStr={props.downstreamProxyStr}
                                 />
                             </div>
                         )}
@@ -307,6 +309,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             refresh={refresh}
                                             defaultFold={defaultFold}
                                             historyId={historyId}
+                                            downstreamProxyStr={props.downstreamProxyStr}
                                             // defaultHeight={detailHeight}
                                         />
                                     </div>

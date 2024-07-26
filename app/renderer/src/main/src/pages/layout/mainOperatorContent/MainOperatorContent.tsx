@@ -864,7 +864,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn(async (res: any) => {
-        const {isHttps, isGmTLS, request, advancedConfigValue, openFlag = true, isCache = true} = res || {}
+        const {
+            isHttps,
+            isGmTLS,
+            request,
+            advancedConfigValue,
+            openFlag = true,
+            isCache = true,
+            downstreamProxyStr = ""
+        } = res || {}
         const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
             proxy: [],
             dnsServers: [],
@@ -903,6 +911,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     }
                 }
             } catch (error) {}
+        }
+        if (downstreamProxyStr) {
+            newAdvancedConfigValue.proxy = [downstreamProxyStr]
         }
         openMenuPage(
             {route: YakitRoute.HTTPFuzzer},

@@ -459,11 +459,11 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
     return fuzzerRequests
 }
 
-export const newWebFuzzerTab = (isHttps: boolean, request: string, openFlag?: boolean) => {
+export const newWebFuzzerTab = (isHttps: boolean, request: string, openFlag?: boolean, downstreamProxyStr?: string) => {
     return ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
-            data: {isHttps: isHttps, request: request, openFlag}
+            data: {isHttps: isHttps, request: request, openFlag, downstreamProxyStr}
         })
         .then(() => {
             openFlag === false && info("发送成功")

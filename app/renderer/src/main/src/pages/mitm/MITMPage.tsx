@@ -89,6 +89,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const latestLogs = useLatest<ExecResultLog[]>(logs)
     const [_, setLatestStatusHash, getLatestStatusHash] = useGetState("")
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
+    const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
     // 检测当前劫持状态
     useEffect(() => {
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
@@ -278,6 +279,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             if (downstreamProxy) {
                 tip += `下游代理：${downstreamProxy}`
             }
+            setDownstreamProxyStr(downstreamProxy || "")
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
                     tip += "|仅国密 TLS"
@@ -307,6 +309,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setStatus={setStatus}
                         logs={[]}
                         statusCards={[]}
+                        downstreamProxyStr={downstreamProxyStr}
                     />
                 )
 
@@ -325,6 +328,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         statusCards={statusCards}
                         tip={tip}
                         onSetTip={setTip}
+                        downstreamProxyStr={downstreamProxyStr}
+                        setDownstreamProxyStr={setDownstreamProxyStr}
                     />
                 )
         }
@@ -430,9 +435,10 @@ interface MITMServerProps {
     setStatus: (status: MITMStatus) => any
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
+    downstreamProxyStr: string
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {visible, setVisible, status, setStatus, logs, statusCards} = props
+    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr} = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
     /**
@@ -737,6 +743,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         setIsFullScreen={setIsFullScreenSecondNode}
                         logs={logs}
                         statusCards={statusCards}
+                        downstreamProxyStr={downstreamProxyStr}
                     />
                 )
         }

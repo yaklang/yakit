@@ -74,6 +74,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     defaultFold?: boolean
 
     historyId?: string
+    downstreamProxyStr?: string
 }
 
 const {Text} = Typography
@@ -882,7 +883,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         flowRequestLoad,
         flowResponseLoad,
         historyId,
-        pageType
+        pageType,
+        downstreamProxyStr
     } = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
@@ -1295,6 +1297,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         readOnly={true}
                         noLineNumber={true}
                         sendToWebFuzzer={sendToWebFuzzer}
+                        downstreamProxyStr={downstreamProxyStr}
                         defaultHeight={defaultHeight}
                         loading={flowRequestLoad}
                         defaultHttps={defaultHttps}

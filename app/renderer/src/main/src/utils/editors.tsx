@@ -589,7 +589,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         editorOperationRecord,
         typeOptionVal,
         onTypeOptionVal,
-        highLightText = []
+        highLightText = [],
+        downstreamProxyStr = ""
     } = props
     const [mode, setMode] = useState("text")
     const [strValue, setStrValue] = useState(originValue)
@@ -1038,7 +1039,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             // 这儿的编码为了保证不要乱动
                                             data: {
                                                 isHttps: props.defaultHttps || false,
-                                                request: props.defaultPacket ? props.defaultPacket : originValue
+                                                request: props.defaultPacket ? props.defaultPacket : originValue,
+                                                downstreamProxyStr: downstreamProxyStr
                                             }
                                         })
                                     }}
@@ -1181,6 +1183,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             webFuzzerCallBack={props.webFuzzerCallBack}
                             editorId={editorId}
                             highLightText={type === undefined ? highLightText : []}
+                            downstreamProxyStr={downstreamProxyStr}
                             {...props.extraEditorProps}
                         />
                     )}

@@ -31,10 +31,11 @@ interface MITMHijackedContentProps {
     setIsFullScreen: (f: boolean) => void
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
+    downstreamProxyStr: string
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
-    const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards} = props
+    const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards, downstreamProxyStr} = props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
 
@@ -464,7 +465,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             case "log":
                 return (
                     <>
-                        <HTTPHistory pageType='MITM' />
+                        <HTTPHistory pageType='MITM' downstreamProxyStr={downstreamProxyStr} />
                     </>
                 )
             // 被动日志
