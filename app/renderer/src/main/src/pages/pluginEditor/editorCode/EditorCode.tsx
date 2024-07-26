@@ -92,7 +92,8 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             return type
         })
         useUpdateEffect(() => {
-            if (getType() === "yak") {
+            // yak、lua、mitm 类型都可以自定义参数
+            if (["yak", "lua", "mitm"].includes(getType())) {
                 handleFetchParams(true)
             } else {
                 setParams([])
@@ -134,7 +135,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
         // 设置非(yak|lua)类型的插件参数初始值
         const onSettingDefault = useMemoizedFn(() => {
             let defaultValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue, requestType: "input"}
-            form.setFieldsValue(cloneDeep(defaultValue))
+            form.setFieldsValue({...cloneDeep(defaultValue)})
         })
 
         // 更新表单内容
@@ -142,9 +143,16 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             initFormValue()
         }, [params])
         const initFormValue = useMemoizedFn(() => {
-            if (!["yak", "lua"].includes(type)) {
+            // 其他类型只有默认参数
+            if (!["yak", "lua", "mitm"].includes(type)) {
                 onSettingDefault()
                 return
+            }
+
+            let defaultValue: CustomPluginExecuteFormValue | undefined = undefined
+            // mitm 有默认参数和 cli 自定义参数
+            if (type === "mitm") {
+                defaultValue = {...defPluginExecuteFormValue, requestType: "input"}
             }
 
             // 表单内数据
@@ -160,7 +168,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                     [ele.Field]: value
                 }
             })
-            form.setFieldsValue({...newFormValue})
+            form.setFieldsValue({...cloneDeep(defaultValue || {}), ...newFormValue})
         })
 
         const pluginRequiredItem = (type: string) => {
@@ -192,6 +200,18 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                         />
                     )
                 case "mitm":
+                    return (
+                        <>
+                            {params.length > 0 && requiredParams.length > 0 ? (
+                                <ExecuteEnterNodeByPluginParams
+                                    paramsList={requiredParams}
+                                    pluginType={type}
+                                    isExecuting={isExecuting}
+                                />
+                            ) : null}
+                            <PluginFixFormParams form={form} disabled={isExecuting} />
+                        </>
+                    )
                 case "port-scan":
                 case "nuclei":
                     return <PluginFixFormParams form={form} disabled={isExecuting} />
@@ -202,12 +222,16 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
         /** 请求类型-为原始请求则不展示额外参数 */
         const requestType = Form.useWatch("requestType", form)
-        /** 是否隐藏非必填参数项 */
-        const isShowGroupParams = useMemo(() => {
-            if (type === "yak" || type === "lua") return false
-            if (requestType !== "input") return true
-            return false
+        /** 是否隐藏默认选填参数 */
+        const isHiddenDefaultParams = useMemo(() => {
+            if (["yak", "lua"].includes(type)) return true
+            if (requestType === "input") return false
+            return true
         }, [type, requestType])
+        /** 是否隐藏自定义选填参数 */
+        const isHiddenCustomParams = useMemo(() => {
+            return groupParams.length === 0
+        }, [groupParams.length])
 
         const pathRef = useRef<YakitBaseSelectRef>({
             onGetRemoteValues: () => {},
@@ -222,7 +246,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             switch (type) {
                 case "yak":
                 case "lua":
-                    return groupParams.length > 0 ? (
+                    return isHiddenCustomParams ? null : (
                         <>
                             <div className={styles["additional-params-divider"]}>
                                 <div className={styles["text-style"]}>额外参数 (非必填)</div>
@@ -232,9 +256,38 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </>
-                    ) : null
+                    )
 
                 case "mitm":
+                    return isHiddenDefaultParams && isHiddenCustomParams ? null : (
+                        <>
+                            {!isHiddenCustomParams ? (
+                                <>
+                                    <div className={styles["additional-params-divider"]}>
+                                        <div className={styles["text-style"]}>自定义参数 (非必填)</div>
+                                        <div className={styles["divider-style"]}></div>
+                                    </div>
+                                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} />
+                                </>
+                            ) : null}
+                            {!isHiddenDefaultParams && (
+                                <>
+                                    <div className={styles["additional-params-divider"]}>
+                                        <div className={styles["text-style"]}>固定参数 (非必填)</div>
+                                        <div className={styles["divider-style"]}></div>
+                                    </div>
+                                    <FixExtraParamsNode
+                                        form={form}
+                                        pathRef={pathRef}
+                                        onReset={onSettingExtraParams}
+                                        bordered={true}
+                                        httpPathWrapper={styles["optional-params-wrapper"]}
+                                    />
+                                </>
+                            )}
+                            <div className={styles["to-end"]}>已经到底啦～</div>
+                        </>
+                    )
                 case "port-scan":
                 case "nuclei":
                     return (
@@ -299,13 +352,22 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                         switch (type) {
                             case "yak":
                             case "lua":
-                                const request: Record<string, any> = {}
-                                for (let el of params) request[el.Field] = value[el.Field] || undefined
                                 requestParams.ExecParams = getYakExecutorParam({...value})
                                 break
                             case "codec":
                                 break
                             case "mitm":
+                                if (params.length > 0) {
+                                    requestParams.ExecParams = getYakExecutorParam({...value})
+                                }
+                                requestParams.HTTPRequestTemplate = {
+                                    ...value,
+                                    IsRawHTTPRequest: value.requestType === "original",
+                                    RawHTTPRequest: value.RawHTTPRequest
+                                        ? Buffer.from(value.RawHTTPRequest, "utf8")
+                                        : Buffer.from("", "utf8")
+                                }
+                                break
                             case "port-scan":
                             case "nuclei":
                                 requestParams.HTTPRequestTemplate = {
@@ -332,7 +394,11 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 )
                             }
                         }
-                        apiDebugPlugin(requestParams, tokenRef.current).then(() => {
+                        apiDebugPlugin({
+                            params: requestParams,
+                            token: tokenRef.current,
+                            pluginCustomParams: params
+                        }).then(() => {
                             setIsExecuting(true)
                             debugPluginStreamEvent.start()
                         })
@@ -460,7 +526,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                             <div className={styles["divider-style"]}></div>
                                         </>
                                     )}
-                                    {false ? (
+                                    {isExecuting ? (
                                         <YakitButton danger onClick={onStopExecute}>
                                             停止
                                         </YakitButton>
@@ -489,7 +555,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                         <div className={styles["custom-params-wrapper"]}>
                                             {pluginRequiredItem(type)}
                                         </div>
-                                        {isShowGroupParams ? null : pluginOptionalItem(type)}
+                                        {isHiddenDefaultParams && isHiddenCustomParams
+                                            ? null
+                                            : pluginOptionalItem(type)}
                                     </Form>
                                 </div>
                             </div>

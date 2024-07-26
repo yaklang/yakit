@@ -1,8 +1,12 @@
-import React, {memo, useRef, useState} from "react"
+import React, {memo, useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {PluginToDetailInfo} from "../type"
 import {PluginHubList} from "../pluginHubList/PluginHubList"
 import {PluginHubDetail, PluginHubDetailRefProps} from "../pluginHubDetail/PluginHubDetail"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemotePluginGV} from "@/enums/plugin"
+import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -16,6 +20,25 @@ interface PluginHubProps {}
 
 const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     const {} = props
+
+    useEffect(() => {
+        getRemoteValue(RemotePluginGV.UpdateLocalPluginForMITMCLI).then((val) => {
+            if (val !== "true") {
+                setUpdateLocalHint(true)
+            }
+        })
+    }, [])
+    const [updateLocalHint, setUpdateLocalHint] = useState<boolean>(false)
+    const [allDownloadHint, setAllDownloadHint] = useState<boolean>(false)
+    const updateLocalHintOK = useMemoizedFn(() => {
+        setRemoteValue(RemotePluginGV.UpdateLocalPluginForMITMCLI, "true")
+        setAllDownloadHint(true)
+        setUpdateLocalHint(false)
+    })
+    const updateLocalHintCancel = useMemoizedFn(() => {
+        setRemoteValue(RemotePluginGV.UpdateLocalPluginForMITMCLI, "true")
+        setUpdateLocalHint(false)
+    })
 
     const [isDetail, setIsDetail] = useState<boolean>(false)
     const handlePluginDetail = useMemoizedFn((info: PluginToDetailInfo) => {
@@ -57,6 +80,23 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
                 <div className={classNames(styles["detail"], {[styles["hidden"]]: hiddenDetail})}>
                     <PluginHubDetail ref={detailRef} rootElementId={wrapperId} onBack={onBack} />
                 </div>
+            )}
+
+            {/* mitm 新增 cli 参数，需要提示用户自动更新一遍本地插件内容 */}
+            <YakitHint
+                getContainer={document.getElementById(wrapperId) || undefined}
+                wrapClassName={styles["update-local-hint"]}
+                visible={updateLocalHint}
+                title='更新提示'
+                content='由于MITM插件参数升级，需要将插件重新下载一次方可正常使用'
+                okButtonText='立即下载'
+                cancelButtonText='忽略'
+                onOk={updateLocalHintOK}
+                onCancel={updateLocalHintCancel}
+            />
+            {/* 一键下载 */}
+            {allDownloadHint && (
+                <YakitGetOnlinePlugin visible={allDownloadHint} setVisible={() => setAllDownloadHint(false)} />
             )}
         </div>
     )

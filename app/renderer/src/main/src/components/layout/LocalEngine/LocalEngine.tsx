@@ -4,19 +4,27 @@ import {LocalGVS} from "@/enums/localGlobal"
 import {getLocalValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {getRandomLocalEnginePort} from "../WelcomeConsoleUtil"
-import {getReleaseEditionName, isCommunityEdition} from "@/utils/envfile"
+import {isCommunityEdition} from "@/utils/envfile"
 import {failed, info, yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {UpdateYakitAndYaklang} from "../update/UpdateYakitAndYaklang"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
+import {handleFetchIsDev, SystemInfo} from "@/constants/hardware"
 
 const {ipcRenderer} = window.require("electron")
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
         const {system, setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion} = props
+
+        const isDevRef = useRef<boolean | undefined>(SystemInfo.isDev)
+        useEffect(() => {
+            if (isDevRef.current === undefined) {
+                handleFetchIsDev(() => (isDevRef.current = SystemInfo.isDev))
+            }
+        }, [])
 
         const [localPort, setLocalPort] = useState<number>(0)
 
@@ -89,7 +97,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         const onFetchLocalAndLatsVersion = useMemoizedFn(() => {
             setTimeout(() => {
-                handleFetchYakitAndYaklangLocalVersion(handleFetchYakitAndYaklangLatestVersion, true)
+                // 开发环境不做版本检测和 hash 检测
+                handleFetchYakitAndYaklangLocalVersion(
+                    isDevRef.current ? undefined : handleFetchYakitAndYaklangLatestVersion,
+                    !isDevRef.current
+                )
             }, 500)
         })
 
@@ -162,7 +174,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 handleFetchYakitAndYaklangLatestVersion()
             }
         }
-        
+
         const onUseCurrentEngine = () => {
             setLog(["引擎校验已结束"])
             setVersionAbnormalVisible(false)

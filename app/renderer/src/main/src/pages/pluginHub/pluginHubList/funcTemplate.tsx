@@ -1275,7 +1275,7 @@ interface LocalOptFooterExtraProps {
     info: YakScript
     onEdit: (data: YakScript) => void
     /** 当前正在执行上传的插件队列 */
-    execUploadInfo?: YakScript[]
+    uploadInfo?: YakScript
     onUpload: (data: YakScript) => void
     onExport: (data: YakScript) => void
     /** 当前正在执行删除的插件UUID队列 */
@@ -1284,18 +1284,15 @@ interface LocalOptFooterExtraProps {
 }
 /** @name 本地插件单项-上传|编辑|导出|删除本地 */
 export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((props) => {
-    const {isLogin, info, onEdit, execUploadInfo = [], onUpload, onExport, execDelInfo = [], onDel} = props
+    const {isLogin, info, onEdit, uploadInfo, onUpload, onExport, execDelInfo = [], onDel} = props
 
     const isShowUpload = useMemo(() => {
-        if (!!info.IsCorePlugin) return false
-        return !!info.isLocalPlugin
-    }, [info.isLocalPlugin, info.IsCorePlugin])
+        return !info.IsCorePlugin
+    }, [info.IsCorePlugin])
     const uploadLoading = useMemo(() => {
-        if (!execUploadInfo || execUploadInfo.length === 0) return false
-        const findIndex = execUploadInfo.findIndex((ele) => ele.ScriptName === info.ScriptName)
-        if (findIndex > -1) return true
-        return false
-    }, [info, execUploadInfo])
+        return info.ScriptName === uploadInfo?.ScriptName || info.Id === uploadInfo?.Id
+    }, [info, uploadInfo])
+    const [uploadTipShow, setUploadTipShow] = useState<boolean>(false)
     // 上传
     const handleUpload = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -1308,6 +1305,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
             yakitNotify("error", "登录后才可以进行上传")
             return
         }
+        setUploadTipShow(false)
         onUpload(info)
     })
     // 编辑
@@ -1375,7 +1373,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         <div className={styles["local-opt-footer-extra"]}>
             {isShowUpload && (
                 <>
-                    <Tooltip title='上传'>
+                    <Tooltip title='上传' visible={uploadTipShow} onVisibleChange={(val) => setUploadTipShow(val)}>
                         <YakitButton
                             type='text2'
                             icon={<OutlineClouduploadIcon />}

@@ -30,7 +30,6 @@ import {
 } from "@/pages/plugins/utils"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {useStore} from "@/store"
-import {PluginLocalUploadSingle} from "@/pages/plugins/local/PluginLocalUpload"
 import useListenWidth from "../hooks/useListenWidth"
 import {PluginLocalExport, PluginLocalExportForm} from "@/pages/plugins/local/PluginLocalExportProps"
 import {DefaultExportRequest, PluginOperateHint} from "../defaultConstant"
@@ -39,6 +38,7 @@ import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {ExportYakScriptStreamRequest} from "@/pages/plugins/local/PluginsLocalType"
 import {defaultSearch} from "@/pages/plugins/builtInData"
 import cloneDeep from "lodash/cloneDeep"
+import {PluginUploadModal} from "../pluginUploadModal/PluginUploadModal"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
@@ -264,11 +264,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             activeOperate.current = type
             // 上传
             if (type === "upload") {
-                if (isOnline) {
-                    yakitNotify("error", "非纯本地插件，暂不支持上传")
-                } else {
-                    handleUpload()
-                }
+                handleOpenUploadHint()
             }
             // 删除本地
             if (type === "delLocal") {
@@ -352,9 +348,12 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 })
                 .catch(() => {})
         })
+
+        const [uploadHint, setUploadHint] = useState<boolean>(false)
         // 插件上传
-        const handleUpload = useMemoizedFn(() => {
+        const handleOpenUploadHint = useMemoizedFn(() => {
             activeOperate.current = ""
+            if (uploadHint) return
             if (!local) return
             if (!local.ScriptName) {
                 yakitNotify("error", "插件信息缺失，请切换插件后重试")
@@ -364,24 +363,15 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 yakitNotify("error", "登录后才可上传插件")
                 return
             }
-
-            const m = showYakitModal({
-                type: "white",
-                title: "上传插件",
-                content: (
-                    <PluginLocalUploadSingle
-                        plugin={local}
-                        onUploadSuccess={() => {
-                            if (onCallback) onCallback("upload")
-                        }}
-                        onClose={() => {
-                            m.destroy()
-                        }}
-                    />
-                ),
-                footer: null
-            })
+            setUploadHint(true)
         })
+        const handleUploadHintCallback = useMemoizedFn((result: boolean, plugin?: YakScript) => {
+            if (result && plugin) {
+                if (onCallback) onCallback("upload")
+            }
+            setUploadHint(false)
+        })
+
         // 插件下载|更新
         const handleDownload = useMemoizedFn(() => {
             activeOperate.current = ""
@@ -592,7 +582,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         />
                     </div>
                 )}
-                {!online && !!local && !isCorePlugin && (
+                {!!local && !isCorePlugin && (
                     <HubButton
                         width={wrapperWidth}
                         iconWidth={900}
@@ -649,6 +639,14 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                     getContainer={document.getElementById(getContainer || "") || document.body}
                     exportLocalParams={exportParams.current}
                     onClose={closeExportModal}
+                />
+
+                {/* 上传插件 */}
+                <PluginUploadModal
+                    isLogin={userInfo.isLogin}
+                    info={local}
+                    visible={uploadHint}
+                    callback={handleUploadHintCallback}
                 />
             </div>
         )

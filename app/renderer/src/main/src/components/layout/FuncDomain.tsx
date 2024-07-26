@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip, Avatar, Form, Typography} from "antd"
+import {Badge, Modal, Tooltip, Avatar, Form} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
@@ -7,11 +7,10 @@ import {
     UnLoginSvgIcon,
     UpdateSvgIcon,
     VersionUpdateSvgIcon,
-    YakitWhiteSvgIcon,
-    YaklangSvgIcon
+    YakitWhiteSvgIcon
 } from "./icons"
 import {YakitEllipsis} from "../basics/YakitEllipsis"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {showModal} from "@/utils/showModal"
 import {failed, info, success, yakitFailed, warn, yakitNotify} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
@@ -29,24 +28,16 @@ import SetPassword from "@/pages/SetPassword"
 import SelectUpload from "@/pages/SelectUpload"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
-import {RiskDetails} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
-import {
-    getReleaseEditionName,
-    isCommunityEdition,
-    isEnpriTrace,
-    isEnpriTraceAgent,
-    isEnterpriseEdition,
-    showDevTool
-} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTraceAgent, showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
-import {GithubSvgIcon, PencilAltIcon, TerminalIcon, CameraIcon} from "@/assets/newIcon"
+import {GithubSvgIcon, PencilAltIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {NetWorkApi} from "@/services/fetch"
@@ -72,22 +63,19 @@ import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import {OutlineSearchIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
-import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {yakProcess} from "./PerformanceDisplay"
 import YakitLogo from "@/assets/yakitLogo.png"
-import {DebugPluginRequest, apiDebugPlugin, apiQueryYakScript} from "@/pages/plugins/utils"
+import {DebugPluginRequest, apiDebugPlugin} from "@/pages/plugins/utils"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
-import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {randomString} from "@/utils/randomUtil"
 import {PerformanceSamplingLog, usePerformanceSampling} from "@/store/performanceSampling"
 import {YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {SolidPlayIcon} from "@/assets/icon/solid"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
-import {getValueByType} from "@/pages/plugins/editDetails/utils"
+import {getValueByType, getYakExecutorParam} from "@/pages/plugins/editDetails/utils"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2457,8 +2445,8 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     item.TypeVerbose = "uint"
                     return item
                 })
-                let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
-                requiredParams.forEach((ele) => {
+                let initRequiredFormValue: CustomPluginExecuteFormValue = {}
+                samplingPlugin.Params.forEach((ele) => {
                     const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
                     initRequiredFormValue = {
                         ...initRequiredFormValue,
@@ -2484,35 +2472,27 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     onOkText: "开始检测",
                     onOk: () => {
                         const yakExecutorParams: YakExecutorParam[] = []
-                        samplingPlugin.Params.forEach((item) => {
-                            if (item.Field === "timeout") {
-                                yakExecutorParams.push({
-                                    Key: item.Field,
-                                    Value: performanceParamsRef.current.timeout || item.DefaultValue
-                                })
-                            } else {
-                                yakExecutorParams.push({
-                                    Key: item.Field,
-                                    Value:
-                                        item.TypeVerbose === "boolean"
-                                            ? item.DefaultValue === "true"
-                                            : item.DefaultValue
-                                })
-                            }
-                        })
+                        initRequiredFormValue["timeout"] = Number(performanceParamsRef.current.timeout) || 0
+                        if (!initRequiredFormValue["timeout"]) {
+                            yakitNotify("error", "检测时间必须大于0")
+                            return
+                        }
                         const executeParams: DebugPluginRequest = {
                             Code: "",
                             PluginType: samplingPlugin.Type,
                             Input: "",
-                            HTTPRequestTemplate: {
-                                ...defPluginExecuteFormValue
-                            },
+                            HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
                             ExecParams: yakExecutorParams,
                             PluginName: samplingPlugin.ScriptName
                         }
+                        executeParams.ExecParams = getYakExecutorParam({...initRequiredFormValue})
                         setPerformanceSamplingLog([])
                         debugPluginStreamEvent.reset()
-                        apiDebugPlugin(executeParams, performanceSamplingInfo.token).then(() => {
+                        apiDebugPlugin({
+                            params: executeParams,
+                            token: performanceSamplingInfo.token,
+                            pluginCustomParams: samplingPlugin.Params
+                        }).then(() => {
                             debugPluginStreamEvent.start()
                             setSampling(true)
                             m.destroy()
