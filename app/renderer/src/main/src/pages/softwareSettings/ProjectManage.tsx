@@ -2,7 +2,7 @@ import React, {memo, ReactNode, useEffect, useImperativeHandle, useMemo, useRef,
 import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryGeneralRequest} from "../invoker/schema"
-import {failed, info, yakitFailed,warn} from "@/utils/notification"
+import {failed, info, yakitFailed, warn} from "@/utils/notification"
 import {
     ChevronDownIcon,
     ChevronRightIcon,
@@ -53,7 +53,8 @@ import styles from "./ProjectManage.module.scss"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import { AutoTextarea } from "../fuzzer/components/AutoTextarea/AutoTextarea"
+import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
+import {isCommunityEdition} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -297,22 +298,23 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )
                 }
             },
-            {   
-                key: "Description", 
-                name: "备注", 
+            {
+                key: "Description",
+                name: "备注",
                 width: "30%",
-                render:(data)=>{
+                render: (data) => {
                     try {
-                        const arr:{Key:string,Value:string}[] = JSON.parse(data.Description)
+                        const arr: {Key: string; Value: string}[] = JSON.parse(data.Description)
                         let str = ""
-                        arr.forEach((item)=>{
+                        arr.forEach((item) => {
                             str += `${item.Key}：${item.Value}; `
                         })
                         return str
                     } catch (error) {
                         return data.Description
                     }
-                }},
+                }
+            },
             {
                 key: "DatabasePath",
                 name: "存储路径",
@@ -775,12 +777,31 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         ChildFolderId: projectInfo.ChildFolderId ? +projectInfo.ChildFolderId : 0,
                         Type: "project"
                     }
-                    if (newProject.ProjectName === projectInfo.oldName) {
-                        if (projectInfo.Id) newProject.Id = +projectInfo.Id
+                    if (projectInfo.Id) {
+                        newProject.Id = +projectInfo.Id
+                        ipcRenderer
+                            .invoke("UpdateProject", newProject)
+                            .then((res) => {
+                                info("编辑项目成功")
+                                setModalInfo({visible: false})
+                                setNewProjectInfo(res)
+                                setTimeout(() => {
+                                    update()
+                                }, 300)
+                            })
+                            .catch((e) => {
+                                failed(`编辑项目失败：${e}`)
+                            })
+                            .finally(() => {
+                                setTimeout(() => {
+                                    setModalLoading(false)
+                                }, 300)
+                            })
+                    } else {
                         ipcRenderer
                             .invoke("NewProject", newProject)
                             .then((res) => {
-                                info(projectInfo.Id ? "编辑项目成功" : "创建新项目成功")
+                                info("创建新项目成功")
                                 setModalInfo({visible: false})
                                 setParams({...params, Pagination: {...params.Pagination, Page: 1}})
                                 setNewProjectInfo(res)
@@ -797,40 +818,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                     setModalLoading(false)
                                 }, 300)
                             })
-                    } else {
-                        ipcRenderer
-                            .invoke("IsProjectNameValid", newProject)
-                            .then((e) => {
-                                if (projectInfo.Id) newProject.Id = +projectInfo.Id
-                                ipcRenderer
-                                    .invoke("NewProject", newProject)
-                                    .then((res) => {
-                                        info(projectInfo.Id ? "编辑项目成功" : "创建新项目成功")
-                                        setModalInfo({visible: false})
-                                        setParams({...params, Pagination: {...params.Pagination, Page: 1}})
-                                        setNewProjectInfo(res)
-                                        setTimeout(() => {
-                                            setInquireIntoProjectVisible(true)
-                                            update()
-                                        }, 300)
-                                    })
-                                    .catch((e) => {
-                                        failed(`${projectInfo.Id ? "编辑" : "创建新"}项目失败：${e}`)
-                                    })
-                                    .finally(() => {
-                                        setTimeout(() => {
-                                            setModalLoading(false)
-                                        }, 300)
-                                    })
-                            })
-                            .catch((e) => {
-                                info(`${projectInfo.Id ? "编辑" : "创建新"}项目失败，项目名校验不通过：${e}`)
-                                setTimeout(() => {
-                                    setModalLoading(false)
-                                }, 300)
-                            })
                     }
-
                     return
                 case "isNewFolder":
                     let folderInfo: ProjectFolderInfoProps = {...(value as any)}
@@ -1626,22 +1614,23 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             fetchFirstList()
         }
         if (visible && isNew && project) {
-            try {
-                const firstDescribe = JSON.parse(project.Description)
-                if(Array.isArray(firstDescribe)){
+            if (!isCommunityEdition()) {
+                try {
+                    const firstDescribe = JSON.parse(project.Description)
+                    if (Array.isArray(firstDescribe)) {
+                        onReset({
+                            Description: firstDescribe
+                        })
+                    } else {
+                        onReset({
+                            Description: [{Key: "系统", Value: ""}]
+                        })
+                    }
+                } catch (error) {
                     onReset({
-                        Description: firstDescribe
+                        Description: [{Key: "系统", Value: ""}]
                     })
                 }
-                else{
-                    onReset({
-                        Description: [{Key: '系统', Value: ''}]
-                    })
-                }
-            } catch (error) {
-                onReset({
-                    Description: [{Key: '系统', Value: ''}]
-                })
             }
             setInfo({
                 Id: +project.Id,
@@ -1730,15 +1719,15 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         visible: false
     })
 
-    const validateArray = useMemoizedFn((arr)=>{
-        return arr.every(item => item.Key.trim() !== '' && item.Value.trim() !== '');
+    const validateArray = useMemoizedFn((arr) => {
+        return arr.every((item) => item.Key.trim() !== "" && item.Value.trim() !== "")
     })
 
     const onSubmit = useMemoizedFn(() => {
         const v = form.getFieldsValue()
         const isHasDescription = Array.isArray(v?.Description) && v.Description.length > 0
-            
-        if(isHasDescription && !validateArray(v.Description)){
+
+        if (isHasDescription && !validateArray(v.Description) && !isCommunityEdition()) {
             warn("请将备注信息填写完整")
             return
         }
@@ -1772,8 +1761,10 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             }
             const type = isFolder ? "isNewFolder" : "isNewProject"
 
-            data.Description = isHasDescription?JSON.stringify(v?.Description):""
-            
+            if(!isCommunityEdition()){
+                data.Description = isHasDescription ? JSON.stringify(v?.Description) : ""
+            }
+
             onModalSubmit(type, {...data})
         }
         if (isExport) {
@@ -1902,7 +1893,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     ) => {
         e.stopPropagation()
         onReset({
-            [field]: [{Key: '系统', Value: ''}]
+            [field]: [{Key: "系统", Value: ""}]
         })
         ref.current.setVariableActiveKey(["0"])
     }
@@ -2015,47 +2006,58 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 />
                             </Form.Item>
                         )}
-                        <div className={styles['remark-header']}>
-                        <div className={styles['title']}>备注 :</div>
-                            {/* 添加额外的元素 */}
-                            <span className={styles['']}>
-                            <YakitButton
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) =>{
-                                                handleReset(e, "Description", describeRef)
-                                            }}
-                                            size='small'
-                                        >
-                                            重置
-                                        </YakitButton>
-                                        <Divider type='vertical' style={{margin: 0}} />
-                                        <YakitButton
-                                            type='text'
-                                            onClick={(e) =>{
-                                                handleAdd(e, "Description", describeRef)
-                                            }}
-                                            className={styles["btn-padding-right-0"]}
-                                            size='small'
-                                        >
-                                            添加
-                                            <PlusIcon />
-                                        </YakitButton>
-                            </span>
-                        </div>
-                        <VariableProjectList ref={describeRef} field="Description" onDel={(i) => {
-                            handleRemove(i, "Description")
-                        }}/>
-                        {/* <Form.Item>
-                            <YakitInput.TextArea
-                                autoSize={{minRows: 3, maxRows: 5}}
-                                showCount
-                                maxLength={100}
-                                placeholder='请输入描述与备注'
-                                value={info.Description}
-                                onChange={(e) => setInfo({...info, Description: e.target.value})}
-                            />
-                        </Form.Item> */}
+                        <>
+                            {isCommunityEdition() ? (
+                                <Form.Item label={"备注 :"}>
+                                    <YakitInput.TextArea
+                                        autoSize={{minRows: 3, maxRows: 5}}
+                                        showCount
+                                        maxLength={100}
+                                        placeholder='请输入描述与备注'
+                                        value={info.Description}
+                                        onChange={(e) => setInfo({...info, Description: e.target.value})}
+                                    />
+                                </Form.Item>
+                            ) : (
+                                <>
+                                    <div className={styles["remark-header"]}>
+                                        <div className={styles["title"]}>备注 :</div>
+                                        {/* 添加额外的元素 */}
+                                        <span className={styles[""]}>
+                                            <YakitButton
+                                                type='text'
+                                                colors='danger'
+                                                onClick={(e) => {
+                                                    handleReset(e, "Description", describeRef)
+                                                }}
+                                                size='small'
+                                            >
+                                                重置
+                                            </YakitButton>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                onClick={(e) => {
+                                                    handleAdd(e, "Description", describeRef)
+                                                }}
+                                                className={styles["btn-padding-right-0"]}
+                                                size='small'
+                                            >
+                                                添加
+                                                <PlusIcon />
+                                            </YakitButton>
+                                        </span>
+                                    </div>
+                                    <VariableProjectList
+                                        ref={describeRef}
+                                        field='Description'
+                                        onDel={(i) => {
+                                            handleRemove(i, "Description")
+                                        }}
+                                    />
+                                </>
+                            )}
+                        </>
                     </>
                 )}
                 {isExport && (
@@ -2439,8 +2441,8 @@ interface VariableProjectListProps {
 /**
  * 目前只有Project备注使用
  */
-const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef((props,ref) => {
-    const {field,onDel,collapseWrapperClassName,extra} = props
+const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef((props, ref) => {
+    const {field, onDel, collapseWrapperClassName, extra} = props
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
     useImperativeHandle(
@@ -2456,8 +2458,8 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
         setVariableActiveKey(key as string[])
     })
 
-    return(
-        <div className={styles['variable-project-list']}>
+    return (
+        <div className={styles["variable-project-list"]}>
             <Form.List name={field}>
                 {(fields, {add}) => {
                     return (

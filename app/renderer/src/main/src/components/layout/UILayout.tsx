@@ -992,6 +992,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     const onOkEnterProjectMag = () => {
+        ipcRenderer.invoke("SetCurrentProject", {})
         setYakitMode("soft")
         setShowProjectManage(true)
         setCurrentProject(undefined)
