@@ -33,7 +33,7 @@ export interface YakitDraggerProps extends FileDraggerProps {
     value?: string
     /**回显的文本回调事件 */
     onChange?: (s: string) => void
-    /**all:支出上传文件和文件夹,不支持accept; file:只支持文件; folder:只支持文件夹;a */
+    /**all:支持上传文件和文件夹,不支持accept; file:只支持文件; folder:只支持文件夹;a */
     selectType?: "file" | "folder" | "all"
     /** 展示组件 input|textarea|autoComplete */
     renderType?: "input" | "textarea" | "autoComplete"

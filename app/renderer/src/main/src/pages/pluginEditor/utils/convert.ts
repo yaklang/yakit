@@ -7,6 +7,12 @@ import {API} from "@/services/swagger/resposeType"
 import {DefaultAPIPluginsRequest, DefaultGRPCSavePluginRequest} from "../defaultconstants"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {YakParamProps, YakRiskInfoProps, localYakInfo} from "@/pages/plugins/pluginsType"
+import {
+    CustomPluginExecuteFormValue,
+    PluginExecuteExtraFormValue
+} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
+import {KVPair} from "@/models/kv"
 
 /**
  * @name 本地插件参数数据(YakParamProps)-转换成-线上插件参数数据(API.YakitPluginParam)
@@ -272,4 +278,31 @@ export const checkPluginIsModify = (newPlugin: YakitPluginInfo, oldPlugin: Yakit
     }
 
     return false
+}
+
+/**
+ * @name 将插件参数数据拆分成两部分，一部分为固定参数数据，一部分为自定义参数数据
+ */
+export const splitPluginParamsData = (value: Record<string, any>, customs: YakParamProps[]) => {
+    const customValue: CustomPluginExecuteFormValue = {}
+    let fixedValue: PluginExecuteExtraFormValue = {...defPluginExecuteFormValue}
+
+    const data = cloneDeep(value)
+    for (let item of customs) {
+        if (data[item.Field] !== undefined) {
+            customValue[item.Field] = data[item.Field]
+            delete data[item.Field]
+        }
+    }
+    fixedValue = {...data}
+
+    return {customValue, fixedValue}
+}
+
+/**
+ * @name 将插件执行参数-ExecParams里的非自定义参数键值对删除
+ */
+export const delInvalidPluginExecuteParams = (kvs: KVPair[], params: YakParamProps[]) => {
+    const keys = params.map((item) => item.Field)
+    return kvs.filter((item) => keys.includes(item.Key))
 }

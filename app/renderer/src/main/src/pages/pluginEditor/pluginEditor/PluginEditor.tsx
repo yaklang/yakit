@@ -437,6 +437,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 GetPluginLanguage(data.Type) === "yak"
                     ? await onCodeToInfo({type: data.Type, code: data.Content})
                     : null
+            // 源码-获取 tag 信息
             let newTags = data.Tags
             if (codeAnalysis && codeAnalysis.Tags.length > 0) {
                 newTags = newTags.concat(codeAnalysis.Tags)
@@ -445,8 +446,12 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 })
             }
             data.Tags = cloneDeep(newTags)
-            if (data.Type === "yak" && codeAnalysis) {
+            // 源码-获取漏洞详情信息
+            if (GetPluginLanguage(data.Type) === "yak" && codeAnalysis) {
                 data.RiskDetail = codeAnalysis.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
+            }
+            // 源码-获取参数信息
+            if (["yak", "mitm"].includes(data.Type) && codeAnalysis) {
                 data.Params = codeAnalysis.CliParameter || []
             }
 

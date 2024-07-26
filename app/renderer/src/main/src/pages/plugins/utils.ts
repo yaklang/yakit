@@ -34,6 +34,8 @@ import {HTTPRequestParameters} from "@/types/http-api"
 import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
 import {APIFunc, APIOptionalFunc} from "../pluginHub/utils/apiType"
 import {KVPair} from "@/models/kv"
+import {YakParamProps} from "./pluginsType"
+import {delInvalidPluginExecuteParams} from "../pluginEditor/utils/convert"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1193,7 +1195,12 @@ export const defaultLinkPluginConfig = {
 /**
  * @description 本地插件详情执行方法
  */
-export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Promise<null> = (params, token) => {
+export const apiDebugPlugin: (request: {
+    params: DebugPluginRequest
+    token: string
+    pluginCustomParams?: YakParamProps[]
+}) => Promise<null> = (request) => {
+    const {params, token, pluginCustomParams = []} = request
     return new Promise((resolve, reject) => {
         try {
             let executeParams: DebugPluginRequest = {
@@ -1207,8 +1214,13 @@ export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Prom
                         Input: ""
                     }
                     break
-                case "codec":
                 case "mitm":
+                    executeParams.ExecParams = delInvalidPluginExecuteParams(
+                        executeParams.ExecParams,
+                        pluginCustomParams
+                    )
+                    break
+                case "codec":
                 case "port-scan":
                 case "nuclei":
                     executeParams = {

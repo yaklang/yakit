@@ -19,6 +19,9 @@ import {SolidPlusIcon} from "@/assets/icon/solid"
 import {KVPair} from "@/models/kv"
 import {PluginGV} from "../../builtInData"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import {YakParamProps} from "../../pluginsType"
+import {defPluginExecuteFormValue} from "./constants"
+import {splitPluginParamsData} from "@/pages/pluginEditor/utils/convert"
 
 const {YakitPanel} = YakitCollapse
 
@@ -26,11 +29,15 @@ type ExtraParamsValue = PluginExecuteExtraFormValue | CustomPluginExecuteFormVal
 interface PluginExecuteExtraParamsProps {
     ref?: any
     pluginType: string
+    /** 选填参数数据 */
+    customPluginParams?: YakParamProps[]
+    /** 是否隐藏固定参数UI */
+    hiddenFixedParams?: boolean
     extraParamsValue: ExtraParamsValue
     extraParamsGroup: YakExtraParamProps[]
     visible: boolean
     setVisible: (b: boolean) => void
-    onSave: (v: ExtraParamsValue) => void
+    onSave: (value: {customValue: CustomPluginExecuteFormValue; fixedValue: PluginExecuteExtraFormValue}) => void
 }
 
 export interface PluginExecuteExtraParamsRefProps {
@@ -38,7 +45,16 @@ export interface PluginExecuteExtraParamsRefProps {
 }
 const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {extraParamsGroup = [], pluginType, extraParamsValue, visible, setVisible, onSave} = props
+        const {
+            pluginType,
+            customPluginParams = [],
+            hiddenFixedParams,
+            extraParamsGroup = [],
+            extraParamsValue,
+            visible,
+            setVisible,
+            onSave
+        } = props
 
         const [form] = Form.useForm()
 
@@ -64,17 +80,24 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                 case "yak":
                 case "lua":
                     form.validateFields().then((formValue: CustomPluginExecuteFormValue) => {
-                        onSave(formValue)
+                        onSave({customValue: formValue, fixedValue: {...defPluginExecuteFormValue}})
                     })
                     break
                 case "mitm":
+                    form.validateFields().then((formValue: HTTPRequestBuilderParams) => {
+                        if (formValue.Path) {
+                            pathRef.current.onSetRemoteValues(formValue.Path)
+                        }
+                        onSave(splitPluginParamsData(formValue, customPluginParams))
+                    })
+                    break
                 case "port-scan":
                 case "nuclei":
                     form.validateFields().then((formValue: HTTPRequestBuilderParams) => {
                         if (formValue.Path) {
                             pathRef.current.onSetRemoteValues(formValue.Path)
                         }
-                        onSave(formValue as ExtraParamsValue)
+                        onSave({customValue: {}, fixedValue: formValue as PluginExecuteExtraFormValue})
                     })
                     break
                 default:
@@ -93,8 +116,18 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </Form>
                     )
-
                 case "mitm":
+                    return (
+                        <Form size='small' labelWrap={true} labelCol={{span: 8}} wrapperCol={{span: 16}} form={form}>
+                            {extraParamsGroup.length > 0 && (
+                                <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} pluginType={pluginType} />
+                            )}
+                            {!hiddenFixedParams && (
+                                <FixExtraParamsNode form={form} pathRef={pathRef} onReset={onReset} />
+                            )}
+                            <div className={styles["to-end"]}>已经到底啦～</div>
+                        </Form>
+                    )
                 case "port-scan":
                 case "nuclei":
                     return (

@@ -84,13 +84,17 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const requiredParams: YakParamProps[] = useMemo(() => {
         return plugin.Params?.filter((ele) => ele.Required) || []
     }, [plugin.Params])
+    /** 选填参数数据 */
+    const customParams: YakParamProps[] = useMemo(() => {
+        return plugin.Params?.filter((ele) => !ele.Required) || []
+    }, [plugin.Params])
     /**额外参数,根据参数组分类 */
     const extraParamsGroup: YakExtraParamProps[] = useMemo(() => {
         const paramsList = plugin.Params?.filter((ele) => !ele.Required) || []
         return ParamsToGroupByGroupName(paramsList)
     }, [plugin.Params])
     useEffect(() => {
-        if (plugin.Type === "yak" || plugin.Type === "lua") {
+        if (["yak", "lua", "mitm"].includes(plugin.Type)) {
             initFormValue()
         } else {
             form.resetFields()
@@ -146,8 +150,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         switch (plugin.Type) {
             case "yak":
             case "lua":
+            case "mitm":
                 setCustomExtraParamsValue({...initExtraFormValue})
                 break
+
             default:
                 break
         }
@@ -182,6 +188,18 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     />
                 )
             case "mitm":
+                return (
+                    <>
+                        {plugin.Params.length > 0 && requiredParams.length > 0 ? (
+                            <ExecuteEnterNodeByPluginParams
+                                paramsList={requiredParams}
+                                pluginType={plugin.Type}
+                                isExecuting={isExecuting}
+                            />
+                        ) : null}
+                        <PluginFixFormParams form={form} disabled={isExecuting} />
+                    </>
+                )
             case "port-scan":
             case "nuclei":
                 return <PluginFixFormParams form={form} disabled={isExecuting} />
@@ -191,7 +209,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     }
     /**开始执行 */
     const onStartExecute = useMemoizedFn((value) => {
-        const yakExecutorParams: YakExecutorParam[] = getYakExecutorParam({...value, ...customExtraParamsValue})
+        let yakExecutorParams: YakExecutorParam[] = []
+        yakExecutorParams = getYakExecutorParam({...value, ...customExtraParamsValue})
         const input = value["Input"]
 
         let executeParams: DebugPluginRequest = {
@@ -214,8 +233,11 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")
-
-        apiDebugPlugin(executeParams, token).then(() => {
+        apiDebugPlugin({
+            params: executeParams,
+            token: token,
+            pluginCustomParams: plugin.Params
+        }).then(() => {
             setExecuteStatus("process")
             setIsExpand(false)
             debugPluginStreamEvent.start()
@@ -239,22 +261,27 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             })
     })
     /**保存额外参数 */
-    const onSaveExtraParams = useMemoizedFn((v: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue) => {
-        switch (plugin.Type) {
-            case "yak":
-            case "lua":
-                setCustomExtraParamsValue({...v} as CustomPluginExecuteFormValue)
-                break
-            case "mitm":
-            case "port-scan":
-            case "nuclei":
-                setExtraParamsValue({...v} as PluginExecuteExtraFormValue)
-                break
-            default:
-                break
+    const onSaveExtraParams = useMemoizedFn(
+        (v: {customValue: CustomPluginExecuteFormValue; fixedValue: PluginExecuteExtraFormValue}) => {
+            switch (plugin.Type) {
+                case "yak":
+                case "lua":
+                    setCustomExtraParamsValue({...v.customValue})
+                    break
+                case "mitm":
+                    setCustomExtraParamsValue({...v.customValue})
+                    setExtraParamsValue({...v.fixedValue})
+                    break
+                case "port-scan":
+                case "nuclei":
+                    setExtraParamsValue({...v.fixedValue})
+                    break
+                default:
+                    break
+            }
+            setExtraParamsVisible(false)
         }
-        setExtraParamsVisible(false)
-    })
+    )
     /**打开额外参数抽屉 */
     const openExtraPropsDrawer = useMemoizedFn(() => {
         if (isExecuting) return
@@ -265,6 +292,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             case "codec":
                 return false
             case "mitm":
+                if (extraParamsGroup.length > 0) return true
+                return requestType === "input"
             case "port-scan":
             case "nuclei":
                 if (requestType !== "input") return false
@@ -279,6 +308,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             case "lua":
                 return customExtraParamsValue
             case "mitm":
+                return {...customExtraParamsValue, ...extraParamsValue}
             case "port-scan":
             case "nuclei":
                 return extraParamsValue
@@ -416,6 +446,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 <PluginExecuteExtraParams
                     ref={pluginExecuteExtraParamsRef}
                     pluginType={plugin.Type}
+                    customPluginParams={customParams}
+                    hiddenFixedParams={requestType !== "input"}
                     extraParamsValue={executeExtraParams}
                     extraParamsGroup={extraParamsGroup}
                     visible={extraParamsVisible}
@@ -510,6 +542,23 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
                     }}
                     renderType='textarea'
                     selectType='file'
+                    disabled={disabled}
+                />
+            )
+        // 单选文件夹-路径
+        case "upload-folder-path":
+            return (
+                <YakitFormDragger
+                    className={styles["plugin-execute-form-item"]}
+                    formItemProps={{
+                        name: item.Field,
+                        label: item.FieldVerbose || item.Field,
+                        rules: [{required: item.Required}]
+                    }}
+                    isShowPathNumber={false}
+                    selectType='folder'
+                    multiple={false}
+                    help='可将文件夹拖入框内或点击此处'
                     disabled={disabled}
                 />
             )

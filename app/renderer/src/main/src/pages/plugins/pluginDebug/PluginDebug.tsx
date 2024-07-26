@@ -36,11 +36,13 @@ import {CustomPluginExecuteFormValue} from "../operator/localPluginExecuteDetail
 import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam, onCodeToInfo} from "../editDetails/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../utils"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {defPluginExecuteFormValue} from "../operator/localPluginExecuteDetailHeard/constants"
+import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./PluginDebug.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
     const {plugin, getContainer, visible, onClose, onMerge} = props
@@ -264,7 +266,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     // init
     useEffect(() => {
         if (plugin) {
-            if (plugin.Type === "yak") setParams(plugin.Params || [])
+            if (["yak", "mitm", "lua"].includes(plugin.Type)) setParams(plugin.Params || [])
             // 非yak类型插件固定参数
             else setParams([])
             setNewCode(newCode || plugin.Content || "")
@@ -286,23 +288,19 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
 
     // 设置非(yak|lua)类型的插件参数初始值
     const onSettingDefault = useMemoizedFn(() => {
-        let defaultValue: CustomPluginExecuteFormValue = {
-            IsHttps: false,
-            IsRawHTTPRequest: false,
-            RawHTTPRequest: Buffer.from("", "utf-8"),
-            Method: "GET",
-            Path: [],
-            GetParams: [],
-            Headers: [],
-            Cookie: []
-        }
-        form.setFieldsValue({...defaultValue})
+        form.setFieldsValue({...defPluginExecuteFormValue})
     })
 
     const initFormValue = useMemoizedFn(() => {
-        if (!["yak", "lua"].includes(pluginType)) {
+        if (!["yak", "lua", "mitm"].includes(pluginType)) {
             onSettingDefault()
             return
+        }
+
+        let defaultValue: CustomPluginExecuteFormValue | undefined = undefined
+        // mitm 有默认参数和 cli 自定义参数
+        if (pluginType === "mitm") {
+            defaultValue = cloneDeep(defPluginExecuteFormValue)
         }
 
         // 表单内数据
@@ -318,7 +316,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 [ele.Field]: value
             }
         })
-        form.setFieldsValue({...newFormValue})
+        form.setFieldsValue({...(defaultValue || {}), ...newFormValue})
     })
 
     const pluginRequiredItem = (type: string) => {
@@ -350,6 +348,18 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     />
                 )
             case "mitm":
+                return (
+                    <>
+                        {params.length > 0 && requiredParams.length > 0 ? (
+                            <ExecuteEnterNodeByPluginParams
+                                paramsList={requiredParams}
+                                pluginType={pluginType}
+                                isExecuting={isExecuting}
+                            />
+                        ) : null}
+                        <PluginFixFormParams form={form} disabled={isExecuting} />
+                    </>
+                )
             case "port-scan":
             case "nuclei":
                 return <PluginFixFormParams form={form} disabled={isExecuting} />
@@ -360,13 +370,16 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
 
     /** 请求类型-为原始请求则不展示额外参数 */
     const requestType = Form.useWatch("requestType", form)
-
-    /** 是否隐藏非必填参数项 */
-    const isShowGroupParams = useMemo(() => {
-        if (pluginType === "yak" || pluginType === "lua") return false
-        if (requestType !== "input") return true
-        return false
+    /** 是否隐藏默认选填参数 */
+    const isHiddenDefaultParams = useMemo(() => {
+        if (["yak", "lua"].includes(pluginType)) return true
+        if (requestType === "input") return false
+        return true
     }, [pluginType, requestType])
+    /** 是否隐藏自定义选填参数 */
+    const isHiddenCustomParams = useMemo(() => {
+        return groupParams.length === 0
+    }, [groupParams.length])
 
     const pathRef = useRef<YakitBaseSelectRef>({
         onGetRemoteValues: () => {},
@@ -394,6 +407,27 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 ) : null
 
             case "mitm":
+                return isHiddenDefaultParams && isHiddenCustomParams ? null : (
+                    <>
+                        <div className={styles["additional-params-divider"]}>
+                            <div className={styles["text-style"]}>额外参数 (非必填)</div>
+                            <div className={styles["divider-style"]}></div>
+                        </div>
+                        {!isHiddenCustomParams ? (
+                            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={pluginType} />
+                        ) : null}
+                        {!isHiddenDefaultParams && (
+                            <FixExtraParamsNode
+                                form={form}
+                                pathRef={pathRef}
+                                onReset={onSettingExtraParams}
+                                bordered={true}
+                                httpPathWrapper={styles["optional-params-wrapper"]}
+                            />
+                        )}
+                        <div className={styles["to-end"]}>已经到底啦～</div>
+                    </>
+                )
             case "port-scan":
             case "nuclei":
                 return (
@@ -443,7 +477,6 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
         if (form) {
             form.validateFields()
                 .then(async (value: any) => {
-                    // console.log("插件执行时的表单值", value)
                     // 保存参数-请求路径的选项
                     if (pathRef && pathRef.current) {
                         pathRef.current.onSetRemoteValues(value?.Path || [])
@@ -461,13 +494,22 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     switch (pluginType) {
                         case "yak":
                         case "lua":
-                            const request: Record<string, any> = {}
-                            for (let el of params) request[el.Field] = value[el.Field] || undefined
                             requestParams.ExecParams = getYakExecutorParam({...value})
                             break
                         case "codec":
                             break
                         case "mitm":
+                            if (params.length > 0) {
+                                requestParams.ExecParams = getYakExecutorParam({...value})
+                            }
+                            requestParams.HTTPRequestTemplate = {
+                                ...value,
+                                IsRawHTTPRequest: value.requestType === "original",
+                                RawHTTPRequest: value.RawHTTPRequest
+                                    ? Buffer.from(value.RawHTTPRequest, "utf8")
+                                    : Buffer.from("", "utf8")
+                            }
+                            break
                         case "port-scan":
                         case "nuclei":
                             requestParams.HTTPRequestTemplate = {
@@ -494,7 +536,11 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                             )
                         }
                     }
-                    apiDebugPlugin(requestParams, tokenRef.current).then(() => {
+                    apiDebugPlugin({
+                        params: requestParams,
+                        token: tokenRef.current,
+                        pluginCustomParams: params
+                    }).then(() => {
                         setIsExecuting(true)
                         debugPluginStreamEvent.start()
                     })
@@ -517,7 +563,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
         <div className={styles["plugin-debug-wrapper"]}>
             <YakitResizeBox
                 isVer={false}
-                lineDirection="left"
+                lineDirection='left'
                 firstNode={
                     <div className={styles["left-wrapper"]}>
                         <YakitCard
@@ -568,14 +614,16 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                                     <div className={styles["custom-params-wrapper"]}>
                                         {pluginRequiredItem(pluginType)}
                                     </div>
-                                    {isShowGroupParams ? null : pluginOptionalItem(pluginType)}
+                                    {isHiddenDefaultParams && isHiddenCustomParams
+                                        ? null
+                                        : pluginOptionalItem(pluginType)}
                                 </Form>
                             </div>
                         </YakitCard>
                     </div>
                 }
-                firstRatio="15%"
-                firstMinSize="340px"
+                firstRatio='15%'
+                firstMinSize='340px'
                 firstNodeStyle={{padding: 0}}
                 secondNode={
                     <div className={styles["right-wrapper"]}>
@@ -649,8 +697,8 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                         </div>
                     </div>
                 }
-                secondRatio="50%"
-                secondMinSize="620px"
+                secondRatio='50%'
+                secondMinSize='620px'
             />
         </div>
     )
