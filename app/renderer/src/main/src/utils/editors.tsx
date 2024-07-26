@@ -1039,7 +1039,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             // 这儿的编码为了保证不要乱动
                                             data: {
                                                 isHttps: props.defaultHttps || false,
-                                                request: props.defaultPacket ? props.defaultPacket : originValue
+                                                request: props.defaultPacket ? props.defaultPacket : originValue,
+                                                downstreamProxyStr: downstreamProxyStr
                                             }
                                         })
                                     }}
