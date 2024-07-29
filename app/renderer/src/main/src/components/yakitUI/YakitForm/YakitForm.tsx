@@ -745,7 +745,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                         className={classNames(styles["form-item-help"], styles["form-item-content-help"])}
                         ref={fileRef}
                     >
-                        <label style={{display: 'flex', alignItems: 'center'}}>
+                        <label>
                             {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
                             <span
                                 className={classNames(styles["dragger-help-active"], {
@@ -757,7 +757,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                             </span>
                             上传
                         </label>
-                        <div className={styles['divider-line']}></div>
+                        <span className={styles["divider-line"]}></span>
                         <YakitPopover
                             overlayClassName={styles["form-item-setting-dropdown"]}
                             placement='bottomLeft'
@@ -802,10 +802,10 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                                 }
                             }}
                         >
-                            <div className={styles["form-item-setting"]} onClick={(e) => e.stopPropagation()}>
+                            <span className={styles["form-item-setting"]} onClick={(e) => e.stopPropagation()}>
                                 <UISettingSvgIcon className={styles["form-item-setting-icon"]} />
                                 设置
-                            </div>
+                            </span>
                         </YakitPopover>
                     </div>
                 )}
