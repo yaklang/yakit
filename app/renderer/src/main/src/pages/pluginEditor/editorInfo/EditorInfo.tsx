@@ -457,7 +457,6 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 /** @name 插件类型下拉框组件 */
 const PluginTypeSelect: React.FC<YakitSelectProps> = memo((props) => {
     const {dropdownClassName, wrapperClassName, ...rest} = props
-    console.log(123, rest.value)
 
     return (
         <YakitSelect
