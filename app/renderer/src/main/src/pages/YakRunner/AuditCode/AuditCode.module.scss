@@ -5,12 +5,18 @@
     padding-left: 4px;
     .header {
         padding: 4px 8px;
+        height: 32px;
+        display: flex;
+        align-items: center;
         .title {
             color: #85899e;
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
         }
+    }
+    .textarea-box{
+        padding: 0px 8px 8px 8px;
     }
     .no-audit {
         padding-top: 80px;
@@ -27,4 +33,135 @@
     justify-content: flex-end;
     align-items: center;
     gap: 8px;
+}
+
+.audit-tree{
+    height: 100%;
+    padding: 0px 0px 0px 4px;
+    :global {
+        .ant-tree .ant-tree-treenode {
+            padding-bottom: 0;
+        }
+        .ant-tree-switcher {
+            display: none;
+        }
+        .ant-tree .ant-tree-node-content-wrapper {
+            padding: 0;
+            line-height: normal;
+            min-height: auto;
+            border-radius: 0;
+        }
+        .ant-tree .ant-tree-node-content-wrapper:hover {
+            background-color: transparent;
+        }
+        .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+            background-color: transparent;
+        }
+        .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {
+            flex: 1;
+            overflow: hidden;
+        }
+        .ant-tree-indent-unit{
+            width: 0px;
+        }
+        // 树的滚动条
+        .ant-tree-list-scrollbar{
+            width: 6px !important;
+        }
+        .ant-tree-list-scrollbar-thumb{
+            background: #c1c1c1 !important;
+        }
+    }
+
+    :global(.ant-tree-treenode-loading) {
+        .file-tree-node {
+            .node-switcher {
+                display: none;
+            }
+            .node-loading {
+                display: flex;
+            }
+        }
+    }
+}
+
+.audit-tree-node {
+    padding: 3px 12px 3px 8px;
+    display: flex;
+    align-content: center;
+    gap: 2px;
+    cursor: pointer;
+
+    .node-switcher {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #85899e;
+            transition: transform 0.3s;
+        }
+        &.expanded {
+            svg {
+                transform: rotate(90deg);
+            }
+        }
+    }
+    .node-loading {
+        display: none;
+        width: 16px;
+        height: 16px;
+        justify-content: center;
+        align-items: center;
+        svg {
+            width: 12px;
+            height: 12px;
+            color: #f28b44;
+        }
+    }
+
+    .node-content {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        align-content: center;
+
+        .content-icon {
+            height: 16px;
+            margin-right: 2px;
+            display: flex;
+            align-items: center;
+            img {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        .content-body {
+            flex: 1;
+            overflow: hidden;
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
+    }
+
+    &:hover {
+        border-radius: 4px;
+        background-color: #f8f8f8;
+    }
+
+    &.node-selected {
+        background-color: rgba(242, 139, 68, 0.06);
+    }
+    &.node-foucsed {
+        border: 1px solid #f28b44;
+        background-color: rgba(242, 139, 68, 0.06);
+        border-radius: 4px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
 }

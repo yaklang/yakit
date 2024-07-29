@@ -9,6 +9,7 @@ import {PaperAirplaneIcon, ResizerIcon} from "@/assets/newIcon"
 import {CloseIcon} from "@/components/configNetwork/icon"
 import {failed} from "@/utils/notification"
 import {OutlinePhotographIcon} from "@/assets/icon/outline"
+import {TextAreaProps} from "antd/lib/input"
 const {ipcRenderer} = window.require("electron")
 
 interface ImageShowProps {
@@ -38,7 +39,7 @@ interface YakitTextAreaImagesProps {
 }
 
 export const YakitTextAreaImages: React.FC<YakitTextAreaImagesProps> = (props) => {
-    const {className,images, onDelete, onOpen, onClose, key, size = 56} = props
+    const {className, images, onDelete, onOpen, onClose, key, size = 56} = props
     const [imageShow, setImageShow] = useState<ImageShowProps>({
         src: "",
         visible: false
@@ -106,9 +107,13 @@ export const YakitTextAreaImages: React.FC<YakitTextAreaImagesProps> = (props) =
 }
 /**
  * @description YakitTextAreaProps 的属性
- * @param {string} className
+ * @augments TextAreaProps 继承antd的TextAreaProps默认属性
+ * @param {string} type 类型 默认文本域（text文本域、images图片文本域）
+ * @param {"small" | "middle"} textAreaSize 控件尺寸
+ * @param {string} wrapClassName
  * @param {string} value 输入框值
  * @param {(value:string) => void} setValue  更改输入框值
+ * @param {boolean} isLimit 是否限制输入字数 默认限制
  * @param {number} limit 限制输入字数，默认150字
  * @param {boolean} loading 是否加载中
  * @param {string[]} files 显示图片列表
@@ -119,32 +124,39 @@ export const YakitTextAreaImages: React.FC<YakitTextAreaImagesProps> = (props) =
  * @param {boolean} isAlwaysShow 是否常驻显示操作按钮（默认为聚焦显示）
  */
 
-export interface YakitTextAreaProps {
-    className?: string
+export interface YakitTextAreaProps extends TextAreaProps {
+    type?: "text" | "images"
+    textAreaSize?: "small" | "middle"
+    wrapClassName?: string
     value: string
     setValue: (value: string) => void
+    isLimit?: boolean
     limit?: number
-    loading: boolean
-    files: string[]
-    setFiles: (files: string[]) => void
-    onSubmit: () => void
+    loading?: boolean
+    files?: string[]
+    setFiles?: (files: string[]) => void
+    onSubmit?: () => void
     submitTxt?: string
     rows?: number
     isAlwaysShow?: boolean
 }
 export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
     const {
-        className,
+        type = "text",
+        textAreaSize = "middle",
+        wrapClassName,
         value,
         setValue,
+        isLimit = true,
         limit = 150,
         loading,
-        files,
+        files = [],
         setFiles,
         onSubmit,
         submitTxt = "发布评论",
         rows = 4,
-        isAlwaysShow
+        isAlwaysShow,
+        ...resProps
     } = props
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
     const textAreRef = useRef<InputRef>(null)
@@ -156,7 +168,7 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
         ipcRenderer
             .invoke("upload-img", {path: file.path, type: file.type})
             .then((res) => {
-                setFiles(files.concat(res.data))
+                setFiles && setFiles(files.concat(res.data))
             })
             .catch((err) => {
                 fail("图片上传失败")
@@ -167,14 +179,14 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
     }
 
     const disabled = useMemo(() => {
-        if (value.length > limit) {
+        if (value.length > limit && isLimit) {
             return true
         }
         if (value.length === 0 && files.length === 0) {
             return true
         }
         return false
-    }, [value, limit, files])
+    }, [value, limit, files, isLimit])
 
     // 是否展示底部元素
     const isShowdDom = useMemo(() => {
@@ -186,7 +198,7 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
     }, [isFocused, files, value])
     return (
         <div
-            className={classNames(styles["yakit-textarea"], className || "", {
+            className={classNames(styles["yakit-textarea"], wrapClassName || "", {
                 [styles["yakit-textarea-active"]]: isFocused
             })}
             onClick={() => {
@@ -197,12 +209,20 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
         >
             {/* 将原本padding: 12px;拆分为4个div的原因是为了解决控件闪烁 */}
             <div
-                className={styles["padding-top"]}
+                className={classNames({
+                    [styles["padding-top-small"]]: textAreaSize === "small",
+                    [styles["padding-top-middle"]]: textAreaSize === "middle"
+                })}
                 onMouseDown={(e) => {
                     e.preventDefault()
                 }}
             ></div>
-            <div className={styles["padding-left-right"]}>
+            <div
+                className={classNames(styles["padding-left-right"], {
+                    [styles["padding-left-right-small"]]: textAreaSize === "small",
+                    [styles["padding-left-right-middle"]]: textAreaSize === "middle"
+                })}
+            >
                 <div
                     className={styles["padding-left"]}
                     onMouseDown={(e) => {
@@ -217,7 +237,14 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
                         }}
                     >
                         <Input.TextArea
-                            className={styles["input-box-textArea"]}
+                            {...resProps}
+                            className={classNames(
+                                styles["input-box-textArea"],
+                                {
+                                    [styles["input-box-textArea-small"]]: textAreaSize === "small"
+                                },
+                                resProps.className || ""
+                            )}
                             onFocus={() => {
                                 setIsFocused(true)
                             }}
@@ -233,14 +260,13 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
                             ref={textAreRef}
                             bordered={false}
                             rows={rows}
-                            placeholder='说点什么...'
                             onChange={(e) => setValue(e.target.value)}
                         />
                         <ResizerIcon className={styles["textArea-resizer-icon"]} />
                     </div>
-                    {isShowdDom && (
+                    {isShowdDom && type === "images" && (
                         <div
-                            style={{paddingTop: 12}}
+                            style={{paddingTop: textAreaSize === "middle" ? 12 : 8}}
                             onMouseDown={(e) => {
                                 e.preventDefault()
                             }}
@@ -257,58 +283,73 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
                             />
                         </div>
                     )}
+                    {isShowdDom && type === "text" && (
+                        <div
+                            style={{paddingTop: textAreaSize === "middle" ? 12 : 8}}
+                            onMouseDown={(e) => {
+                                e.preventDefault()
+                            }}
+                        ></div>
+                    )}
                     {isShowdDom && (
                         <div
-                            className={styles["upload-box"]}
+                            className={classNames(styles["upload-box"], {
+                                [styles["upload-box-text"]]: type === "text",
+                                [styles["upload-box-images"]]: type === "images"
+                            })}
                             onMouseDown={(e) => {
                                 e.preventDefault()
                             }}
                         >
-                            <div
-                                className={styles["upload-box-left"]}
-                                onClick={() => {
-                                    isAllowBlur.current = false
-                                }}
-                            >
-                                <Upload
-                                    accept='image/jpeg,image/png,image/jpg,image/gif'
-                                    multiple={false}
-                                    disabled={files.length >= 3}
-                                    showUploadList={false}
-                                    beforeUpload={(file: any) => {
-                                        if (filesLoading) {
-                                            return false
-                                        }
-                                        if (file.size / 1024 / 1024 > 10) {
-                                            failed("图片大小不超过10M")
-                                            return false
-                                        }
-                                        if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
-                                            failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
-                                            return false
-                                        }
-                                        if (file) {
-                                            uploadFiles(file)
-                                        }
-                                        return true
+                            {type === "images" && (
+                                <div
+                                    className={styles["upload-box-left"]}
+                                    onClick={() => {
+                                        isAllowBlur.current = false
                                     }}
                                 >
-                                    {filesLoading ? (
-                                        <LoadingOutlined size={28} />
-                                    ) : (
-                                        <YakitButton
-                                            size='large'
-                                            disabled={files.length >= 3}
-                                            icon={<OutlinePhotographIcon />}
-                                            type='text2'
-                                        />
-                                    )}
-                                </Upload>
-                            </div>
-                            <div className={styles["upload-box-right"]}>
-                                <div className={styles["limit-count"]}>
-                                    {value.length}/{limit}
+                                    <Upload
+                                        accept='image/jpeg,image/png,image/jpg,image/gif'
+                                        multiple={false}
+                                        disabled={files.length >= 3}
+                                        showUploadList={false}
+                                        beforeUpload={(file: any) => {
+                                            if (filesLoading) {
+                                                return false
+                                            }
+                                            if (file.size / 1024 / 1024 > 10) {
+                                                failed("图片大小不超过10M")
+                                                return false
+                                            }
+                                            if (!"image/jpeg,image/png,image/jpg,image/gif".includes(file.type)) {
+                                                failed("仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif")
+                                                return false
+                                            }
+                                            if (file) {
+                                                uploadFiles(file)
+                                            }
+                                            return true
+                                        }}
+                                    >
+                                        {filesLoading ? (
+                                            <LoadingOutlined size={28} />
+                                        ) : (
+                                            <YakitButton
+                                                size='large'
+                                                disabled={files.length >= 3}
+                                                icon={<OutlinePhotographIcon />}
+                                                type='text2'
+                                            />
+                                        )}
+                                    </Upload>
                                 </div>
+                            )}
+                            <div className={styles["upload-box-right"]}>
+                                {isLimit && (
+                                    <div className={styles["limit-count"]}>
+                                        {value.length}/{limit}
+                                    </div>
+                                )}
                                 <>
                                     {
                                         // 由于Button的disabled为true时会被阻止默认事件向上传递 因此disable样式由自己实现
@@ -322,7 +363,7 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
                                                 icon={<PaperAirplaneIcon />}
                                                 loading={loading}
                                                 onClick={() => {
-                                                    onSubmit()
+                                                    onSubmit && onSubmit()
                                                 }}
                                             >
                                                 {submitTxt || "确认"}
@@ -343,7 +384,10 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
             </div>
 
             <div
-                className={styles["padding-bottom"]}
+                className={classNames({
+                    [styles["padding-bottom-small"]]: textAreaSize === "small",
+                    [styles["padding-bottom-middle"]]: textAreaSize === "middle"
+                })}
                 onMouseDown={(e) => {
                     e.preventDefault()
                 }}
