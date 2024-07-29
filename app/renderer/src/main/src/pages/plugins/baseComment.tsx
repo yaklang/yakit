@@ -617,6 +617,7 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
                 )}
             </div>
             <YakitTextArea
+                type="images"
                 value={value}
                 setValue={setValue}
                 limit={limit}
@@ -627,6 +628,7 @@ export const PluginCommentUpload: React.FC<PluginCommentUploadProps> = (props) =
                 submitTxt={submitTxt}
                 rows={rows}
                 isAlwaysShow={isAlwaysShow}
+                placeholder="说点什么"
             />
         </div>
     )

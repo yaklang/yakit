@@ -1,9 +1,9 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
-import {AuditCodeProps} from "./AuditCodeType"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import {AuditCodeProps, AuditNodeProps, AuditTreeNodeProps, AuditTreeProps, AuditYakUrlProps} from "./AuditCodeType"
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
 import {YakScript} from "@/pages/invoker/schema"
-import {Form, FormInstance} from "antd"
+import {Form, FormInstance, Tree} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -14,7 +14,7 @@ import {
     onCodeToInfo,
     ParamsToGroupByGroupName
 } from "@/pages/plugins/editDetails/utils"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
@@ -25,23 +25,228 @@ import {randomString} from "@/utils/randomUtil"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import useStore from "../hooks/useStore"
-import {getNameByPath} from "../utils"
+import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {OutlinCompileIcon} from "@/assets/icon/outline"
+import {OutlinCompileIcon, OutlineChevronrightIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitTextArea} from "@/components/yakitUI/YakitTextArea/YakitTextArea"
+import {LoadingOutlined} from "@ant-design/icons"
+import { StringToUint8Array } from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
+export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
+    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys} = props
+
+    const handleSelect = useMemoizedFn(() => {
+        onSelected(true, info)
+    })
+
+    const isExpanded = useMemo(() => {
+        return expandedKeys.includes(info.id)
+    }, [expandedKeys, info.id])
+
+    const handleExpand = useMemoizedFn(() => {
+        onExpanded(isExpanded, info)
+    })
+
+    const handleClick = useMemoizedFn(() => {
+        if (info.isLeaf) {
+            handleSelect()
+        } else {
+            handleExpand()
+        }
+    })
+
+    const isFoucsed = useMemo(() => {
+        return foucsedKey === info.id
+    }, [foucsedKey, info.id])
+    return (
+        <>
+            {info.isBottom ? (
+                <div className={styles["tree-bottom"]}>{info.name}</div>
+            ) : (
+                <div
+                    className={classNames(styles["audit-tree-node"], {
+                        [styles["node-foucsed"]]: isFoucsed
+                    })}
+                    style={{paddingLeft: (info.depth - 1) * 16 + 8}}
+                    onClick={handleClick}
+                >
+                    {!info.isLeaf && (
+                        <div className={classNames(styles["node-switcher"], {[styles["expanded"]]: isExpanded})}>
+                            <OutlineChevronrightIcon />
+                        </div>
+                    )}
+
+                    <div className={styles["node-loading"]}>
+                        <LoadingOutlined />
+                    </div>
+
+                    <div className={styles["node-content"]}>
+                        <div className={styles["content-icon"]}>{/* <img src={iconImage} /> */}</div>
+                        <div
+                            className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}
+                            title={info.name}
+                        >
+                            {info.name}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    )
+})
+
+export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
+    const {data, expandedKeys, onLoadData, foucsedKey, setFoucsedKey} = props
+    const treeRef = useRef<any>(null)
+    const wrapper = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(wrapper)
+    const size = useSize(wrapper)
+
+    const handleSelect = useMemoizedFn((selected: boolean, node: any) => {})
+
+    const handleExpand = useMemoizedFn((expanded: boolean, node: any) => {})
+
+    return (
+        <div ref={wrapper} className={styles["audit-tree"]}>
+            <Tree
+                ref={treeRef}
+                height={size?.height}
+                fieldNames={{title: "name", key: "path", children: "children"}}
+                treeData={data}
+                blockNode={true}
+                switcherIcon={<></>}
+                multiple={true}
+                expandedKeys={expandedKeys}
+                loadData={onLoadData}
+                // 解决重复打开一个节点时 能加载
+                loadedKeys={[]}
+                titleRender={(nodeData) => {
+                    return (
+                        <AuditTreeNode
+                            info={nodeData}
+                            foucsedKey={foucsedKey}
+                            expandedKeys={expandedKeys}
+                            onSelected={handleSelect}
+                            onExpanded={handleExpand}
+                            setFoucsedKey={setFoucsedKey}
+                        />
+                    )
+                }}
+            />
+        </div>
+    )
+})
+
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
+    const [value, setValue] = useState<string>("")
+    const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
+    const [foucsedKey, setFoucsedKey] = React.useState<string>("")
+
     useEffect(() => {
         // console.log("我是audit-code")
     }, [])
+
+    const initAuditTree = useMemoizedFn((data: any[], depth: number) => {
+        return []
+    })
+
+    const auditDetailTree = useMemo(() => {
+        const initTree: AuditNodeProps[] = []
+        // initAuditTree(fileTree, 1)
+        if (initTree.length > 0) {
+            initTree.push({
+                parent: null,
+                name: "已经到底啦~",
+                id: "111",
+                depth: 1,
+                isBottom: true
+            })
+        }
+        return initTree
+    }, [])
+
+    const handleAuditLoadData = useMemoizedFn((id: string) => {
+        return new Promise((resolve, reject) => {
+            resolve("")
+            // // 校验其子项是否存在
+            // const childArr = getMapFolderDetail(path)
+            // if (childArr.length > 0) {
+            //     emiter.emit("onRefreshFileTree")
+            //     resolve("")
+            // } else {
+            //     handleFetchFileList(path, (value) => {
+            //         if (value.length > 0) {
+            //             let childArr: string[] = []
+            //             value.forEach((item) => {
+            //                 // 注入文件结构Map
+            //                 childArr.push(item.path)
+            //                 // 文件Map
+            //                 setMapFileDetail(item.path, item)
+            //             })
+            //             setMapFolderDetail(path, childArr)
+            //             setTimeout(() => {
+            //                 emiter.emit("onRefreshFileTree")
+            //                 resolve("")
+            //             }, 300)
+            //         } else {
+            //             reject()
+            //         }
+            //     })
+            // }
+        })
+    })
+
+    const onLoadData = useMemoizedFn((node: AuditNodeProps) => {
+        if (node.parent === null) return Promise.reject()
+        if (handleAuditLoadData) return handleAuditLoadData(node.id)
+        return Promise.reject()
+    })
+
+    const onSubmit = useMemoizedFn(async() => {
+        const params:AuditYakUrlProps = {
+            FromRaw: "syntaxflow://program_id/variable/index",
+            Schema: "syntaxflow",
+            Location: "xxe",
+            Path: "/",
+        }
+        const body = StringToUint8Array(value)
+        const result = await loadAuditFromYakURLRaw(params,body)
+        console.log("result---",result);
+        
+    })
+
     return (
         <div className={styles["audit-code"]}>
             <div className={styles["header"]}>
                 <div className={styles["title"]}>代码审计</div>
             </div>
-            <div className={styles["no-audit"]}>
+            <div className={styles["textarea-box"]}>
+                <YakitTextArea
+                    textAreaSize='small'
+                    value={value}
+                    setValue={setValue}
+                    isLimit={false}
+                    onSubmit={onSubmit}
+                    submitTxt={"开始审计"}
+                    rows={1}
+                    isAlwaysShow={true}
+                    placeholder='请输入审计规则...'
+                />
+            </div>
+
+            <AuditTree
+                data={auditDetailTree}
+                expandedKeys={expandedKeys}
+                setExpandedKeys={setExpandedKeys}
+                onLoadData={onLoadData}
+                foucsedKey={foucsedKey}
+                setFoucsedKey={setFoucsedKey}
+            />
+
+            {/* <div className={styles["no-audit"]}>
                 <YakitEmpty
                     title='请先编译项目'
                     description='需要编译过的项目，才可使用代码审计功能'
@@ -55,7 +260,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         </YakitButton>
                     }
                 />
-            </div>
+            </div> */}
         </div>
     )
 }

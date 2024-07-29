@@ -19,6 +19,7 @@ import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
 import {useRef} from "react"
+import { AuditYakUrlProps } from "./AuditCode/AuditCodeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -884,5 +885,27 @@ export const loadFolderDetail = (path) => {
             .catch((error) => {
                 resolve(null)
             })
+    })
+}
+
+/**
+ * @name 代码审计
+ */
+export const loadAuditFromYakURLRaw = (params: AuditYakUrlProps,body:Uint8Array) => {
+    console.log("审计参数",{
+        Method: "GET",
+        Url: params,
+        Body: body,
+    });
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer.invoke("RequestYakURL", {
+            Method: "GET",
+            Url: params,
+            Body: body,
+        }).then((rsp: RequestYakURLResponse) => {
+            resolve(rsp)
+        }).catch(e => {
+            resolve(null)
+        })
     })
 }
