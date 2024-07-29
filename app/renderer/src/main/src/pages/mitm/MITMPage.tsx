@@ -80,6 +80,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [addr, setAddr] = useState("")
     const [host, setHost] = useState("127.0.0.1")
     const [port, setPort] = useState(8083)
+    const [disableCACertPage, setDisableCACertPage] = useState(false)
     const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
     const [tip, setTip] = useState("")
@@ -236,6 +237,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             downstreamProxy,
             enableHttp2,
             ForceDisableKeepAlive,
+            DisableCACertPage,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -247,6 +249,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     downstreamProxy,
                     enableHttp2,
                     ForceDisableKeepAlive,
+                    DisableCACertPage,
                     certs,
                     extra
                 )
@@ -266,15 +269,26 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             plugins,
             enableHttp2,
             ForceDisableKeepAlive,
+            DisableCACertPage,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
             setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
             setHost(host)
             setPort(port)
+            setDisableCACertPage(DisableCACertPage)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
-            startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certs, extra)
+            startMITMServer(
+                host,
+                port,
+                downstreamProxy,
+                enableHttp2,
+                ForceDisableKeepAlive,
+                DisableCACertPage,
+                certs,
+                extra
+            )
             let tip = ""
             if (downstreamProxy) {
                 tip += `下游代理：${downstreamProxy}`
@@ -321,6 +335,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         port={port}
                         addr={addr}
                         host={host}
+                        disableCACertPage={disableCACertPage}
                         status={status}
                         setStatus={setStatus}
                         defaultPlugins={defaultPlugins}
@@ -431,6 +446,7 @@ interface MITMServerProps {
         defaultPlugins: string[],
         enableHttp2: boolean,
         ForceDisableKeepAlive: boolean,
+        DisableCACertPage: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -488,6 +504,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             enableInitialPlugin,
             enableHttp2,
             ForceDisableKeepAlive,
+            DisableCACertPage,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -500,6 +517,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     enableInitialPlugin ? noParamsCheckList : [],
                     enableHttp2,
                     ForceDisableKeepAlive,
+                    DisableCACertPage,
                     certs,
                     extra
                 )

@@ -215,7 +215,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitm-set-downstream-proxy", (e, downstreamProxy) => {
         if (stream) {
             stream.write({
-                SetDownstreamProxy : true,
+                SetDownstreamProxy: true,
                 downstreamProxy
             })
         }
@@ -233,7 +233,7 @@ module.exports = (win, getClient) => {
 
     // 开始调用 MITM，设置 stream
     let isFirstData = true
-    ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive,certificates, extra) => {
+    ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, DisableCACertPage, certificates, extra) => {
         if (stream) {
             if (win) {
                 win.webContents.send("client-mitm-start-success")
@@ -325,7 +325,7 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 host, port, downstreamProxy,
-                enableHttp2, ForceDisableKeepAlive ,certificates,
+                enableHttp2, ForceDisableKeepAlive, DisableCACertPage, certificates,
                 ...extra,
             })
         }

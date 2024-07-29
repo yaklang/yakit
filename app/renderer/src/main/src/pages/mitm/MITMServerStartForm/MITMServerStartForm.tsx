@@ -24,7 +24,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
-import {CacheDropDownGV} from "@/yakitGV"
+import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -44,6 +44,7 @@ export interface MITMServerStartFormProp {
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
         ForceDisableKeepAlive: boolean,
+        DisableCACertPage: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -213,6 +214,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.enableInitialPlugin,
             params.enableHttp2,
             params.ForceDisableKeepAlive,
+            params.DisableCACertPage,
             params.certs,
             extra
         )
@@ -355,6 +357,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <YakitSwitch size='large' />
                 </Item>
                 <Item
+                    label={"禁用初始页"}
+                    name='DisableCACertPage'
+                    initialValue={false}
+                    help={"MITM劫持禁用长连接，每个劫持连接处理一个请求响应后会自动关闭"}
+                    valuePropName='checked'
+                >
+                    <YakitSwitch size='large' />
+                </Item>
+                <Item
                     label={"内容规则"}
                     help={
                         <span className={styles["form-rule-help"]}>
@@ -400,6 +411,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <ChromeLauncherButton
                             host={useWatch("host", form)}
                             port={useWatch("port", form)}
+                            disableCACertPage={useWatch("DisableCACertPage", form)}
                             onFished={(host, port) => {
                                 const values = {
                                     ...form.getFieldsValue(),
