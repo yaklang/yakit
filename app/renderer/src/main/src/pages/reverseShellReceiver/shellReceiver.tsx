@@ -291,7 +291,7 @@ export interface ShellReceiverRightRunProps {
 
 export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (props) => {
     const {loading, addr, fold, setFold, onCancelMonitor} = props
-    const [echoBack, setEchoBack] = useState<boolean>(true)
+    const [isOriginalMode, setIsOriginalMode] = useState<boolean>(true)
     const [local, setLocal] = useState<string>("")
     const [remote, setRemote] = useState<string>("")
 
@@ -322,8 +322,8 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                 </div>
                 <div className={styles["extra"]}>
                     <div className={styles["extra-show"]}>
-                        <span className={styles["extra-text"]}>客户端回显:</span>
-                        <YakitSwitch checked={echoBack} onChange={setEchoBack} />
+                        <span className={styles["extra-text"]}>原始模式:</span>
+                        <YakitSwitch checked={isOriginalMode} onChange={setIsOriginalMode} />
                     </div>
                     <YakitPopconfirm
                         title={"确定关闭该端口吗？"}
@@ -341,7 +341,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
             <div className={styles["terminal-content"]}>
                 <YakitSpin spinning={loading}>
                     <ReverseShellTerminal
-                        echoBack={echoBack}
+                        isWrite={!isOriginalMode}
                         addr={addr}
                         setLocal={setLocal}
                         setRemote={setRemote}

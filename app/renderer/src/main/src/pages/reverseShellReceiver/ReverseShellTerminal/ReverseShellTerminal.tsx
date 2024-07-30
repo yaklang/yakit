@@ -1,26 +1,31 @@
 import React, {useEffect, useRef} from "react"
-import {useMemoizedFn} from "ahooks"
-import YakitXterm, {YakitXtermRefProps} from "@/components/yakitUI/YakitXterm/YakitXterm"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
+import YakitXterm, {TERMINAL_KEYBOARD_Map, YakitXtermRefProps} from "@/components/yakitUI/YakitXterm/YakitXterm"
 import {writeXTerm} from "@/utils/xtermUtils"
-import { yakitNotify } from "@/utils/notification"
+import {yakitNotify} from "@/utils/notification"
+import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 
 const {ipcRenderer} = window.require("electron")
 export interface ReverseShellTerminalProps {
-    echoBack: boolean
+    /**false：前端不做任何处理，数据都是后端返回*/
+    isWrite: boolean
     addr: string
     setLocal: (local: string) => void
     setRemote: (remote: string) => void
     onCancelMonitor: () => void
 }
 export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props) => {
-    const {addr, echoBack, setLocal, setRemote, onCancelMonitor} = props
+    const {addr, isWrite, setLocal, setRemote, onCancelMonitor} = props
 
     const xtermRef = useRef<YakitXtermRefProps>()
+    const systemRef = useRef<System | undefined>(SystemInfo.system)
 
     useEffect(() => {
+        if (!systemRef.current) {
+            handleFetchSystem(() => (systemRef.current = SystemInfo.system))
+        }
         const key = `client-listening-port-data-${addr}`
         ipcRenderer.on(key, (e, data) => {
-            console.log("listening-port-data", data)
             if (data.closed) {
                 onCancelMonitor()
                 return
@@ -41,13 +46,11 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
         })
         const errorKey = `client-listening-port-error-${addr}`
         ipcRenderer.on(errorKey, (e: any, data: any) => {
-            console.log("listening-port-error", data)
-            yakitNotify('error', `监听报错:${data}`)
+            yakitNotify("error", `监听报错:${data}`)
             onCancelMonitor()
         })
         const endKey = `client-listening-port-end-${addr}`
         ipcRenderer.on(endKey, (e: any, data: any) => {
-            console.log("listening-port-end", data)
             onCancelMonitor()
         })
         return () => {
@@ -59,10 +62,38 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
 
     // 写入
     const commandExec = useMemoizedFn((str) => {
-        if (echoBack) {
+        if (isWrite) {
             writeXTerm(xtermRef, str)
         }
         ipcRenderer.invoke("listening-port-input", addr, str)
+    })
+    const customKeyEventHandler = useMemoizedFn((e) => {
+        if (!xtermRef.current) return true
+        const isCtrl = systemRef.current === "Darwin" ? e.metaKey : e.ctrlKey
+        if (e.type === "keydown") {
+            if (isCtrl) {
+                if (e.code === TERMINAL_KEYBOARD_Map.KeyC.code) {
+                    const select = xtermRef.current?.terminal?.getSelection()
+                    return !select
+                }
+
+                if (e.code === TERMINAL_KEYBOARD_Map.KeyV.code) {
+                    return false
+                }
+            }
+            if (isWrite && e.key === TERMINAL_KEYBOARD_Map.Backspace.key) {
+                commandExec("\x1b[D \x1b[D")
+                e.preventDefault()
+                return false
+            }
+            if (isWrite && e.key === TERMINAL_KEYBOARD_Map.Enter.key) {
+                commandExec(String.fromCharCode(10)) //enter 该为换行符
+                e.preventDefault()
+                return false
+            }
+        }
+
+        return true
     })
     return (
         <YakitXterm
@@ -70,6 +101,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
             onData={(data) => {
                 commandExec(data)
             }}
+            customKeyEventHandler={customKeyEventHandler}
         />
     )
 }
