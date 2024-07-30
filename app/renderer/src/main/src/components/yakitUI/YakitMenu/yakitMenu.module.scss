@@ -39,6 +39,19 @@
     --menu-select-background: var(--ui-hover-background-color);
 }
 
+// 无色透明样式使用的menu-item(给自定义菜单单项使用)
+@mixin generateItemColourless() {
+    --menu-color: var(--ui-text-color);
+    --menu-icon-color: var(--ui-icon-color);
+    --menu-background: var(--ui-background-color);
+    --menu-active-color: var(--ui-text-color);
+    --menu-active-icon-color: var(--ui-icon-color);
+    --menu-active-background: var(--ui-background-color);
+    --menu-select-color: var(--ui-text-color);
+    --menu-select-icon-color: var(--ui-icon-color);
+    --menu-select-background: var(--ui-background-color);
+}
+
 /* ---------- 类型类 ----------*/
 .yakit-menu-primary {
     --menu-color: var(--ui-text-color);
@@ -60,6 +73,10 @@
 
         li:has(.yakit-menu-item-info) {
             @include generateItemInfo();
+        }
+
+        li:has(.yakit-menu-item-no-style) {
+            @include generateItemColourless();
         }
     }
 }
@@ -83,6 +100,10 @@
 
         li:has(.yakit-menu-item-info) {
             @include generateItemInfo();
+        }
+
+        li:has(.yakit-menu-item-no-style) {
+            @include generateItemColourless();
         }
     }
 }
@@ -128,17 +149,16 @@
         .keys-style {
             color: var(--menu-icon-color);
         }
-        :global{
-            .ai-plugin-menu-icon-default{
+        :global {
+            .ai-plugin-menu-icon-default {
                 margin-right: 4px;
-                svg{
+                svg {
                     height: 16px;
                     width: 16px;
                 }
             }
-            .ai-plugin-menu-icon-hover{
+            .ai-plugin-menu-icon-hover {
                 display: none;
-                
             }
         }
     }
@@ -152,15 +172,15 @@
         .keys-style {
             color: var(--menu-active-icon-color);
         }
-        :global{
-            .ai-plugin-menu-icon-default{
+        :global {
+            .ai-plugin-menu-icon-default {
                 display: none;
             }
-            .ai-plugin-menu-icon-hover{
+            .ai-plugin-menu-icon-hover {
                 display: block;
                 margin-right: 4px;
                 margin-left: 0px;
-                svg{
+                svg {
                     height: 16px;
                     width: 16px;
                 }
@@ -215,17 +235,16 @@
         .ant-#{$kind}menu-submenu-title:active {
             background: unset;
         }
-        :global{
-            .ai-plugin-menu-icon-default{
+        :global {
+            .ai-plugin-menu-icon-default {
                 margin-right: 4px;
-                svg{
+                svg {
                     height: 16px;
                     width: 16px;
                 }
             }
-            .ai-plugin-menu-icon-hover{
+            .ai-plugin-menu-icon-hover {
                 display: none;
-                
             }
         }
     }
@@ -245,15 +264,15 @@
         .ant-#{$kind}menu-submenu-title:hover {
             background-color: unset;
         }
-        :global{
-            .ai-plugin-menu-icon-default{
+        :global {
+            .ai-plugin-menu-icon-default {
                 display: none;
             }
-            .ai-plugin-menu-icon-hover{
+            .ai-plugin-menu-icon-hover {
                 display: block;
                 margin-right: 4px;
                 margin-left: 0px;
-                svg{
+                svg {
                     height: 16px;
                     width: 16px;
                 }
@@ -378,5 +397,17 @@
         height: var(--menu-content-height);
         display: flex;
         align-items: center;
+    }
+}
+
+// 取消固定高度
+.yakit-menu-item-no-style {
+    height: 100%;
+    padding: 0;
+    .yakit-menu-item-content {
+        height: 100%;
+    }
+    .yakit-menu-item-title {
+        height: 100%;
     }
 }

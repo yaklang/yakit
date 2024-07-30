@@ -74,14 +74,6 @@
 .dropdown-menu-user-info {
     padding: 16px;
     display: flex;
-    &::after {
-        content: "";
-        height: 1px;
-        width: calc(100% - 32px);
-        background-color: #eaecf3;
-        position: absolute;
-        bottom: 0px;
-    }
     &:hover {
         background-color: #f5f5f5;
     }
