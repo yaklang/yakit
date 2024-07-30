@@ -30,4 +30,8 @@ export type YakRunnerEventProps = {
     onOpenFileByPath: string
     // 打开编译文件Modal
     onOpenAuditModal?: string
+    // 刷新审计树
+    onRefreshAuditTree?: string
+    // 打开编译右侧详情
+    onOpenAuditRightDetail: string
 }

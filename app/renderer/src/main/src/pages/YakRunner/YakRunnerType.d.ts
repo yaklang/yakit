@@ -1,5 +1,6 @@
 import {FileNodeProps} from "./FileTree/FileTreeType"
 import { FileDetailInfo } from "./RunnerTabs/RunnerTabsType";
+import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 export interface YakRunnerProps {
     initCode?: YakRunnerCodeProps
 }
@@ -50,4 +51,8 @@ export interface OpenFileByPathProps {
     }
     // 是否记录历史
     isHistory?: boolean
+}
+
+export interface AuditEmiterYakUrlProps extends AuditYakUrlProps {
+    Body: string
 }

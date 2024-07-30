@@ -124,6 +124,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 isBottom: true
             })
         }
+        
         return initTree
     }, [fileTree, refreshTree])
 

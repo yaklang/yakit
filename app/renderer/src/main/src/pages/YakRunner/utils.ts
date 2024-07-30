@@ -19,7 +19,7 @@ import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
 import {useRef} from "react"
-import { AuditYakUrlProps } from "./AuditCode/AuditCodeType"
+import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -197,7 +197,7 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
             Url: {
                 Schema: "file",
                 Path: path,
-                Query: [{Key: "trash", Value: "true"}],
+                Query: [{Key: "trash", Value: "true"}]
             }
         }
         try {
@@ -891,21 +891,27 @@ export const loadFolderDetail = (path) => {
 /**
  * @name 代码审计
  */
-export const loadAuditFromYakURLRaw = (params: AuditYakUrlProps,body:Uint8Array) => {
-    console.log("审计参数",{
+export const loadAuditFromYakURLRaw = (
+    params: AuditYakUrlProps,
+    body: Uint8Array
+): Promise<RequestYakURLResponse | null> => {
+    console.log("审计参数", {
         Method: "GET",
         Url: params,
-        Body: body,
-    });
+        Body: body
+    })
     return new Promise(async (resolve, reject) => {
-        ipcRenderer.invoke("RequestYakURL", {
-            Method: "GET",
-            Url: params,
-            Body: body,
-        }).then((rsp: RequestYakURLResponse) => {
-            resolve(rsp)
-        }).catch(e => {
-            resolve(null)
-        })
+        ipcRenderer
+            .invoke("RequestYakURL", {
+                Method: "GET",
+                Url: params,
+                Body: body
+            })
+            .then((rsp: RequestYakURLResponse) => {
+                resolve(rsp)
+            })
+            .catch((e) => {
+                resolve(null)
+            })
     })
 }
