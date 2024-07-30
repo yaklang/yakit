@@ -225,12 +225,12 @@
             .extra {
                 display: flex;
                 flex-direction: row;
-                gap: 16px;
                 align-items: center;
                 flex-shrink: 0;
                 .extra-show {
                     display: flex;
                     align-items: center;
+                    margin-right: 16px;
                     .extra-text {
                         text-align: right;
                         font-size: 12px;
@@ -300,5 +300,15 @@
         display: flex;
         justify-content: center;
         gap: 8px;
+    }
+}
+
+.setting-terminal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    line-height: 16px;
+    div {
+        display: flex;
     }
 }

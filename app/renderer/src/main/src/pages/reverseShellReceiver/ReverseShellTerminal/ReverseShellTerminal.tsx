@@ -1,9 +1,10 @@
-import React, {useEffect, useRef} from "react"
+import React, {forwardRef, memo, useEffect, useImperativeHandle, useRef} from "react"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import YakitXterm, {TERMINAL_KEYBOARD_Map, YakitXtermRefProps} from "@/components/yakitUI/YakitXterm/YakitXterm"
 import {writeXTerm} from "@/utils/xtermUtils"
 import {yakitNotify} from "@/utils/notification"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
+import {Position} from "monaco-editor"
 
 const {ipcRenderer} = window.require("electron")
 export interface ReverseShellTerminalProps {
@@ -13,9 +14,14 @@ export interface ReverseShellTerminalProps {
     setLocal: (local: string) => void
     setRemote: (remote: string) => void
     onCancelMonitor: () => void
+    onResizeXterm: (v: XTermSizeProps) => void
 }
-export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props) => {
-    const {addr, isWrite, setLocal, setRemote, onCancelMonitor} = props
+export interface XTermSizeProps {
+    cols: number
+    rows: number
+}
+export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((props) => {
+    const {addr, isWrite, setLocal, setRemote, onCancelMonitor, onResizeXterm} = props
 
     const xtermRef = useRef<YakitXtermRefProps>()
     const systemRef = useRef<System | undefined>(SystemInfo.system)
@@ -95,6 +101,9 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
 
         return true
     })
+    const onResize = useMemoizedFn((val) => {
+        if (onResizeXterm) onResizeXterm(val)
+    })
     return (
         <YakitXterm
             ref={xtermRef}
@@ -102,6 +111,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = (props)
                 commandExec(data)
             }}
             customKeyEventHandler={customKeyEventHandler}
+            onResize={onResize}
         />
     )
-}
+})

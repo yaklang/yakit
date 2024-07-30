@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form, Result, Tag, Tooltip} from "antd"
+import {Divider, Form, Result, Tag, Tooltip} from "antd"
 import {} from "@ant-design/icons"
 import {useCreation, useDebounceFn, useInterval, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import styles from "./shellReceiver.module.scss"
@@ -30,9 +30,11 @@ import {
 } from "./utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultGenerateReverseShellCommand} from "./constants"
-import {ReverseShellTerminal} from "./ReverseShellTerminal/ReverseShellTerminal"
+import {ReverseShellTerminal, XTermSizeProps} from "./ReverseShellTerminal/ReverseShellTerminal"
 import {callCopyToClipboard} from "@/utils/basic"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {OutlineCogIcon} from "@/assets/icon/outline"
 const {ipcRenderer} = window.require("electron")
 
 export interface ShellReceiverLeftListProps {
@@ -294,11 +296,11 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
     const [isOriginalMode, setIsOriginalMode] = useState<boolean>(true)
     const [local, setLocal] = useState<string>("")
     const [remote, setRemote] = useState<string>("")
+    const [xtermSize, setXtermSize] = useState<XTermSizeProps>()
 
     const tagString = useCreation(() => {
         return `本地端口:${local || addr || "-"} <== 远程端口:${remote || "-"}`
     }, [local, addr, remote])
-
     return (
         <div className={styles["shell-receiver-right-run"]}>
             <div className={styles["header"]}>
@@ -321,10 +323,34 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                     </Tooltip>
                 </div>
                 <div className={styles["extra"]}>
-                    <div className={styles["extra-show"]}>
-                        <span className={styles["extra-text"]}>原始模式:</span>
-                        <YakitSwitch checked={isOriginalMode} onChange={setIsOriginalMode} />
-                    </div>
+                    <YakitPopover
+                        trigger='click'
+                        content={
+                            <div className={styles["setting-terminal"]}>
+                                <div>
+                                    升级终端:&nbsp;script -qc /bin/bash /dev/null
+                                    <CopyComponents copyText='script -qc /bin/bash /dev/null' />
+                                </div>
+                                <div>
+                                    设置size:&nbsp;stty rows {xtermSize?.rows || 0} columns {xtermSize?.cols || 0}
+                                    <CopyComponents
+                                        copyText={`stty rows ${xtermSize?.rows || 0} columns ${xtermSize?.cols || 0}`}
+                                    />
+                                </div>
+                            </div>
+                        }
+                    >
+                        <YakitButton type='text2' icon={<OutlineCogIcon />}>
+                            设置终端
+                        </YakitButton>
+                    </YakitPopover>
+                    <Divider type='vertical' style={{margin: "0px 16px 0 8px"}} />
+                    <Tooltip title='打开原始模式用户的所有输入和输出都会原封不动发送到后端'>
+                        <div className={styles["extra-show"]}>
+                            <span className={styles["extra-text"]}>原始模式:</span>
+                            <YakitSwitch checked={isOriginalMode} onChange={setIsOriginalMode} />
+                        </div>
+                    </Tooltip>
                     <YakitPopconfirm
                         title={"确定关闭该端口吗？"}
                         onConfirm={() => {
@@ -346,6 +372,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                         setLocal={setLocal}
                         setRemote={setRemote}
                         onCancelMonitor={onCancelMonitor}
+                        onResizeXterm={setXtermSize}
                     />
                 </YakitSpin>
             </div>
