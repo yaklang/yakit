@@ -86,109 +86,7 @@
             }
         }
     }
-    .shell-receiver-middle-item {
-        width: 300px;
-        box-sizing: content-box;
-        border-right: 1px solid #eaecf3;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        .header {
-            height: 24px;
-            box-sizing: content-box;
-            background-color: #fff;
-            padding: 14px 12px 10px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eaecf3;
-            .title {
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 16px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-            }
-            .extra {
-                display: flex;
-                flex-direction: row;
-                gap: 4px;
-                .extra-icon {
-                    width: 16px;
-                    height: 16px;
-                    box-sizing: content-box;
-                    padding: 4px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    color: #85899e;
-                    svg {
-                        width: 16px;
-                        height: 16px;
-                    }
-                    &:hover {
-                        background-color: var(--yakit-background-color);
-                        color: var(--yakit-primary-5);
-                    }
-                }
-            }
-        }
-        .content {
-            flex: 1;
-            overflow: auto;
-            .content-text {
-                background-color: var(--yakit-card-background-color);
-                padding: 8px 12px;
-                word-break: break-all;
-                flex: 1;
-            }
-            .content-result {
-                :global {
-                    .ant-result-icon {
-                        svg {
-                            width: 48px;
-                            height: 48px;
-                        }
-                    }
-                    .ant-result-title {
-                        word-break: break-all;
-                    }
-                }
-            }
-        }
-        .footer {
-            border-top: 1px solid #eaecf3;
-            box-shadow: 0px -8px 16px 0px rgba(133, 137, 158, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 12px;
-            background-color: #fff;
-            .select-box {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                .select-item {
-                    display: flex;
-                    flex-direction: row;
-                    gap: 4px;
-                    align-items: center;
-                    justify-content: flex-end;
-                    .title {
-                        font-size: 12px;
-                        font-weight: 400;
-                        line-height: 16px;
-                    }
-                }
-            }
-            .line {
-                height: 1px;
-                width: 100%;
-                background-color: #eaecf3;
-            }
-        }
-    }
+
     .shell-receiver-right-run {
         flex: 1;
         display: flex;
@@ -302,7 +200,119 @@
         gap: 8px;
     }
 }
+.shell-receiver-middle-item {
+    width: 300px;
+    box-sizing: content-box;
+    border-right: 1px solid #eaecf3;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    .header {
+        height: 24px;
+        box-sizing: content-box;
+        background-color: #fff;
+        padding: 14px 12px 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eaecf3;
+        .title {
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        .extra {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            .extra-icon {
+                width: 16px;
+                height: 16px;
+                box-sizing: content-box;
+                padding: 4px;
+                border-radius: 4px;
+                cursor: pointer;
+                color: #85899e;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+                &:hover {
+                    background-color: var(--yakit-background-color);
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+    }
+    .content {
+        flex: 1;
+        overflow: auto;
 
+        .content-text {
+            background-color: var(--yakit-card-background-color);
+            padding: 8px 12px;
+            word-break: break-all;
+            flex: 1;
+            min-height: 100px;
+            max-height: 300px;
+        }
+        .content-result {
+            :global {
+                .ant-result-icon {
+                    svg {
+                        width: 48px;
+                        height: 48px;
+                    }
+                }
+                .ant-result-title {
+                    word-break: break-all;
+                }
+            }
+        }
+    }
+    .footer {
+        border-top: 1px solid #eaecf3;
+        box-shadow: 0px -8px 16px 0px rgba(133, 137, 158, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        background-color: #fff;
+        .select-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            .select-item {
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                align-items: center;
+                justify-content: flex-end;
+                .title {
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+        }
+        .line {
+            height: 1px;
+            width: 100%;
+            background-color: #eaecf3;
+        }
+    }
+}
+.popover-shell-receiver {
+    :global {
+        .ant-popover-inner-content {
+            padding: 0;
+        }
+    }
+}
 .setting-terminal {
     display: flex;
     flex-direction: column;
