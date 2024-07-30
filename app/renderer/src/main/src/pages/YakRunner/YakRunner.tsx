@@ -25,6 +25,7 @@ import {
 } from "./utils"
 import {
     AreaInfoProps,
+    AuditEmiterYakUrlProps,
     OpenFileByPathProps,
     TabFileProps,
     ViewsInfoProps,
@@ -377,7 +378,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
     /** ---------- 文件树 End ---------- */
     const [isUnShow, setUnShow] = useState<boolean>(true)
-    const [isUnShowAuditDetail, setShowAuditDetail] = useState<boolean>(true)
+    const [isUnShowAuditDetail, setUnShowAuditDetail] = useState<boolean>(false)
 
     // 根据历史读取上次打开的文件夹
     const onSetUnShowFun = useMemoizedFn(async () => {
@@ -624,8 +625,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         let arr = getKeyboard(newkey)
         // console.log("newkey---", newkey, arr)
         if (!arr) return
+        // 屏蔽所有Input输入框引起的快捷键 PS:monaca除外
+        if (event.target.localName === "textarea" && event.target?.ariaRoleDescription !== "editor") return
         // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
-        if(event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
+        if (event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
         arr.forEach((item) => {
             item.callback()
         })
@@ -862,6 +865,23 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         setShowCompileModal(false)
     })
 
+    const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
+    const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
+        try {
+            const data: AuditEmiterYakUrlProps = JSON.parse(value)
+            setAuditRightParams(data)
+            setUnShowAuditDetail(false)
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        // 打开编译右侧详情
+        emiter.on("onOpenAuditRightDetail", onOpenAuditRightDetailFun)
+        return () => {
+            emiter.off("onOpenAuditRightDetail", onOpenAuditRightDetailFun)
+        }
+    }, [])
+
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
             <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
@@ -899,7 +919,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                         </div>
                                     </div>
                                 }
-                                secondNode={<RightAuditDetail />}
+                                secondNode={
+                                    <RightAuditDetail
+                                        auditRightParams={auditRightParams}
+                                        isUnShowAuditDetail={isUnShowAuditDetail}
+                                    />
+                                }
                             />
                         }
                     />

@@ -3,6 +3,8 @@
     height: 100%;
     overflow: hidden;
     padding-left: 4px;
+    display: flex;
+    flex-direction: column;
     .header {
         padding: 4px 8px;
         height: 32px;
@@ -15,11 +17,14 @@
             line-height: 16px;
         }
     }
-    .textarea-box{
+    .textarea-box {
         padding: 0px 8px 8px 8px;
     }
     .no-audit {
         padding-top: 80px;
+    }
+    .audit-tree {
+        flex: 1;
     }
 }
 
@@ -35,7 +40,7 @@
     gap: 8px;
 }
 
-.audit-tree{
+.audit-tree {
     height: 100%;
     padding: 0px 0px 0px 4px;
     :global {
@@ -61,20 +66,20 @@
             flex: 1;
             overflow: hidden;
         }
-        .ant-tree-indent-unit{
+        .ant-tree-indent-unit {
             width: 0px;
         }
         // 树的滚动条
-        .ant-tree-list-scrollbar{
+        .ant-tree-list-scrollbar {
             width: 6px !important;
         }
-        .ant-tree-list-scrollbar-thumb{
+        .ant-tree-list-scrollbar-thumb {
             background: #c1c1c1 !important;
         }
     }
 
     :global(.ant-tree-treenode-loading) {
-        .file-tree-node {
+        .audit-tree-node {
             .node-switcher {
                 display: none;
             }
@@ -83,6 +88,15 @@
             }
         }
     }
+}
+
+.tree-bottom {
+    position: relative;
+    height: 22px;
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    line-height: 22px;
 }
 
 .audit-tree-node {
@@ -127,24 +141,21 @@
         flex: 1;
         overflow: hidden;
         display: flex;
+        gap: 8px;
         align-content: center;
 
-        .content-icon {
-            height: 16px;
-            margin-right: 2px;
-            display: flex;
-            align-items: center;
-            img {
-                width: 16px;
-                height: 16px;
-            }
-        }
         .content-body {
             flex: 1;
             overflow: hidden;
             color: #31343f;
             font-size: 12px;
             font-weight: 500;
+            line-height: 16px;
+        }
+        .count{
+            color: #b4bbca;
+            font-size: 12px;
+            font-weight: 400;
             line-height: 16px;
         }
     }
@@ -163,5 +174,25 @@
         border-radius: 4px;
         padding-top: 2px;
         padding-bottom: 2px;
+    }
+
+    .icon-box {
+        display: flex;
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+    }
+    .hint-icon {
+        color: #b4bbca;
+    }
+    .info-icon {
+        color: #4a94f8;
+    }
+    .warn-icon {
+        color: #ffb660;
+    }
+    .error-icon {
+        color: #f6544a;
     }
 }
