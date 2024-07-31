@@ -39,6 +39,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const onResetFilters = useMemoizedFn(() => {
         ipcRenderer.invoke("mitm-reset-filter").then(() => {
             info("MITM 过滤器重置命令已发送")
+            emiter.emit("onSetFilterWhiteListEvent", false + "")
             setVisible(false)
         })
     })
