@@ -43,6 +43,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
 
         const [newRequest, setNewRequest] = useState<string>(request) // 由于传过来的request是ref 值变化并不会导致重渲染 这里拿到的request还是旧值
+        useEffect(() => {
+            setNewRequest(request)
+        }, [request])
 
         useImperativeHandle(
             ref,
@@ -173,6 +176,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 contextMenu={editorRightMenu}
                 onEditor={setReqEditor}
                 onChange={(i) => {
+                    console.log(333, i);
                     setNewRequest(i)
                     setRequest(i)
                 }}
