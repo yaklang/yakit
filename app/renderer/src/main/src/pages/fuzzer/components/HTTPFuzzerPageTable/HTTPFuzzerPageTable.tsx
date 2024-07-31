@@ -790,7 +790,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         // 编辑器编码
         const [codeKey, setCodeKey] = useState<string>("")
         const [codeLoading, setCodeLoading] = useState<boolean>(false)
-        const [codeValue, setCodeValue] = useState<string>('')
+        const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
             if (currentSelectItem) {
                 getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then((res) => {
@@ -928,7 +928,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
-                            webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw||new Uint8Array())}
+                            webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw || new Uint8Array())}
                             extraEditorProps={{
                                 isShowSelectRangeMenu: true
                             }}
@@ -999,7 +999,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             codingBtn={
                                 <CodingPopover
                                     key='coding'
-                                    originValue={originReqOrResValue}
+                                    originValue={
+                                        (currentSelectShowType === "request"
+                                            ? currentSelectItem?.RequestRaw
+                                            : currentSelectItem?.ResponseRaw) || new Uint8Array()
+                                    }
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
                                     onSetCodeKey={(codeKey) => {

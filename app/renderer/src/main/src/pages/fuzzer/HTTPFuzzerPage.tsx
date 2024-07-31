@@ -2954,7 +2954,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             codingBtn={
                                 <CodingPopover
                                     key='coding'
-                                    originValue={responseRawString}
+                                    originValue={fuzzerResponse.ResponseRaw}
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
                                     onSetCodeKey={(codeKey) => {
