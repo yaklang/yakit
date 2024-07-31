@@ -90,26 +90,23 @@
 }
 
 .form-item-help {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     width: 100%;
     font-size: 14px;
     color: var(--yakit-body-text-color);
     .divider-line {
+        display: inline-block;
         width: 1px;
         height: 12px;
         background-color: var(--yakit-border-color);
         margin: 0 5px;
     }
     .form-item-setting {
-        display: flex;
-        align-items: center;
         color: var(--yakit-primary-5);
         font-size: 14px;
         &-icon {
             svg {
                 width: 16px;
+                height: 16px;
             }
         }
     }

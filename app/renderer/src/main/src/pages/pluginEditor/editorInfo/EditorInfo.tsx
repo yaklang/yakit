@@ -1,5 +1,5 @@
 import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState} from "react"
-import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useMemoizedFn, usePrevious, useUpdateEffect} from "ahooks"
 import {OutlineCloseIcon, OutlineIdentificationIcon, OutlineTagIcon} from "@/assets/icon/outline"
 import {Form, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -20,6 +20,7 @@ import {yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorInfo.module.scss"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
@@ -182,7 +183,10 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 
         /** ---------- 插件类型变化时的数据更新 Start ---------- */
         const type = Form.useWatch("Type", form)
-
+        const [typeSwitchPopShow, setTypeSwitchPopShow] = useState<boolean>(false)
+        const tempType = useRef<string>("")
+        const previousType = usePrevious(type)
+        
         // 类型影响 tags 的部分数据更新
         useUpdateEffect(() => {
             if (type === "yak") {
@@ -276,7 +280,14 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         name='Type'
                         rules={[{required: true, message: "脚本类型必填"}]}
                     >
-                        <PluginTypeSelect size='large' disabled={!!isEdit} onChange={(value) => setType(value)} />
+                        <PluginTypeSelect
+                            size='large'
+                            disabled={!!isEdit}
+                            onChange={(value) => {
+                                tempType.current = value
+                                setTypeSwitchPopShow(true)
+                            }}
+                        />
                     </Form.Item>
 
                     <Form.Item
@@ -425,6 +436,19 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         </Form.Item>
                     )}
                 </Form>
+                <YakitHint
+                    visible={typeSwitchPopShow}
+                    title='切换脚本类型'
+                    content='切换脚本类型会清空源码内容，确定切换吗？'
+                    onOk={() => {
+                        setType(tempType.current)
+                        setTypeSwitchPopShow(false)
+                    }}
+                    onCancel={() => {
+                        form.setFieldsValue({Type: previousType})
+                        setTypeSwitchPopShow(false)
+                    }}
+                />
             </div>
         )
     })
@@ -433,6 +457,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 /** @name 插件类型下拉框组件 */
 const PluginTypeSelect: React.FC<YakitSelectProps> = memo((props) => {
     const {dropdownClassName, wrapperClassName, ...rest} = props
+
     return (
         <YakitSelect
             {...rest}
