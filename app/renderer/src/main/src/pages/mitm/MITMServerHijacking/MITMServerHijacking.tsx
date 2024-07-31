@@ -360,6 +360,5 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
 })
 
 export const enableMITMPluginMode = (initPluginNames?: string[]) => {
-    console.log('初始化', initPluginNames);
     return ipcRenderer.invoke("mitm-enable-plugin-mode", initPluginNames)
 }

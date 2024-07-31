@@ -804,7 +804,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 </div>
             )}
             lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}
-            firstMinSize={openTabsFlag ? "340px" : "24px"}
+            firstMinSize={openTabsFlag ? "360px" : "24px"}
             secondMinSize={620}
             secondNode={() => (
                 <div
