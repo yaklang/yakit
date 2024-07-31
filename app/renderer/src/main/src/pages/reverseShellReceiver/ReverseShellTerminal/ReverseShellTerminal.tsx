@@ -1,10 +1,10 @@
-import React, {forwardRef, memo, useEffect, useImperativeHandle, useRef} from "react"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import React, {memo, useEffect, useRef} from "react"
+import {useMemoizedFn} from "ahooks"
 import YakitXterm, {TERMINAL_KEYBOARD_Map, YakitXtermRefProps} from "@/components/yakitUI/YakitXterm/YakitXterm"
 import {writeXTerm} from "@/utils/xtermUtils"
 import {yakitNotify} from "@/utils/notification"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
-import {Position} from "monaco-editor"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 export interface ReverseShellTerminalProps {
@@ -32,6 +32,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((p
         }
         const key = `client-listening-port-data-${addr}`
         ipcRenderer.on(key, (e, data) => {
+            console.log("data", data, Uint8ArrayToString(data?.raw || new Uint8Array()))
             if (data.closed) {
                 onCancelMonitor()
                 return
@@ -52,11 +53,13 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((p
         })
         const errorKey = `client-listening-port-error-${addr}`
         ipcRenderer.on(errorKey, (e: any, data: any) => {
+            console.log("error", data)
             yakitNotify("error", `监听报错:${data}`)
             onCancelMonitor()
         })
         const endKey = `client-listening-port-end-${addr}`
         ipcRenderer.on(endKey, (e: any, data: any) => {
+            console.log("end", data)
             onCancelMonitor()
         })
         return () => {
@@ -68,7 +71,9 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((p
 
     // 写入
     const commandExec = useMemoizedFn((str) => {
+        console.log("addr,str", addr, str)
         if (isWrite) {
+            console.log('isWrite',isWrite)
             writeXTerm(xtermRef, str)
         }
         ipcRenderer.invoke("listening-port-input", addr, str)
@@ -93,7 +98,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((p
                 return false
             }
             if (isWrite && e.key === TERMINAL_KEYBOARD_Map.Enter.key) {
-                commandExec(String.fromCharCode(10)) //enter 该为换行符
+                commandExec(String.fromCharCode(10)) //enter 改为换行符
                 e.preventDefault()
                 return false
             }
