@@ -1,0 +1,21 @@
+.table-total-select {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    .table-total-select-item {
+        display: flex;
+        align-items: center;
+
+        .table-total-select-text {
+            color: var(--yakit-helper-text-color);
+            font-size: 12px;
+            margin-right: 4px;
+        }
+
+        .table-total-select-number {
+            color: var(--yakit-primary-5);
+            font-size: 12px;
+        }
+    }
+}
