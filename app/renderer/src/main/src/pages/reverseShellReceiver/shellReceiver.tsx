@@ -110,7 +110,8 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
         setReceiverDetail(data)
     })
     const onGenerateReverseShellCommand = useDebounceFn(
-        useMemoizedFn((detail) => {
+        useMemoizedFn((detail: GenerateReverseShellCommandRequest) => {
+            if (!detail.Program) return
             setLoadingCommand(true)
             apiGenerateReverseShellCommand(detail)
                 .then((res) => {
