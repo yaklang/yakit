@@ -129,6 +129,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         getRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive).then((e) => {
             form.setFieldsValue({ForceDisableKeepAlive: !!e})
         })
+        getRemoteValue(RemoteGV.MITMDisableCACertPage).then((e) => {
+            form.setFieldsValue({DisableCACertPage: !!e})
+        })
     }, [props.status])
     useUpdateEffect(() => {
         form.setFieldsValue({enableInitialPlugin: props.enableInitialPlugin})
@@ -227,6 +230,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.stateSecretHijacking}`)
         setRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive, `${params.ForceDisableKeepAlive ? "1" : ""}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
+        setRemoteValue(RemoteGV.MITMDisableCACertPage, params.DisableCACertPage ? "true" : "")
         // 记录时间戳
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)

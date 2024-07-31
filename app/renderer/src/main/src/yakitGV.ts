@@ -103,7 +103,9 @@ export enum RemoteGV {
     /**@name 端口监听器缓存的监听主机 */
     ReverseShellReceiverHostList="reverse-shell-receiver-host-list",
     /**@name YakitDraggerContent组件限制文件大小 */
-    YakitDraggerContentFileLimit = "yakit_dragger_content_file_limit"
+    YakitDraggerContentFileLimit = "yakit_dragger_content_file_limit",
+    /**@name mitm禁用初始页 */
+    MITMDisableCACertPage = "mitm_disable_CACertPage",
 }
 
 /** 项目逻辑全局变量 */
