@@ -360,7 +360,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     label={"禁用初始页"}
                     name='DisableCACertPage'
                     initialValue={false}
-                    help={"MITM劫持禁用长连接，每个劫持连接处理一个请求响应后会自动关闭"}
+                    help={"开启后免配置启动不会访问初始页面，也可不被知晓使用yakit抓包"}
                     valuePropName='checked'
                 >
                     <YakitSwitch size='large' />
