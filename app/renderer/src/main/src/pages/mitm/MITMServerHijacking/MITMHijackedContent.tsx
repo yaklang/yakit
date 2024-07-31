@@ -32,10 +32,13 @@ interface MITMHijackedContentProps {
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
     downstreamProxyStr: string
+    loadedPluginLen: number
+    onSelectAll: (e: boolean) => void
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
-    const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards, downstreamProxyStr} = props
+    const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards, downstreamProxyStr, loadedPluginLen, onSelectAll} =
+        props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
 
@@ -151,6 +154,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             emiter.off("onOpenRepRuleEvent", onOpenRepRuleEvent)
         }
     }, [])
+
+    useEffect(() => {
+        if (loadedPluginLen) setAlertVisible(true)
+    }, [loadedPluginLen])
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
@@ -480,13 +487,58 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
     })
 
+    const clearLoadedPlugins = () => {
+        return (
+            <YakitButton type='text' colors='danger' onClick={() => onSelectAll(false)} style={{padding: 0}}>
+                清空
+            </YakitButton>
+        )
+    }
     // 提示文案
     const alertMsg = useMemo(() => {
-        if (whiteListFlag && openRepRuleFlag) return "检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭"
+        if (whiteListFlag && openRepRuleFlag && loadedPluginLen) {
+            return (
+                <>
+                    检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。检测到加载
+                    {loadedPluginLen}个插件，如抓包有问题可点击
+                    {clearLoadedPlugins()}
+                    取消加载插件。
+                </>
+            )
+        }
+        if (whiteListFlag && openRepRuleFlag) {
+            return "检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。"
+        }
+        if (whiteListFlag && loadedPluginLen) {
+            return (
+                <>
+                    检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭。检测到加载
+                    {loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}
+                    取消加载插件。
+                </>
+            )
+        }
+        if (openRepRuleFlag && loadedPluginLen) {
+            return (
+                <>
+                    检测到配置替换规则，如抓包有问题可先将替换关闭。检测到加载
+                    {loadedPluginLen}
+                    个插件，如抓包有问题可点击
+                    {clearLoadedPlugins()}
+                    取消加载插件。
+                </>
+            )
+        }
         if (whiteListFlag) return "检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭"
         if (openRepRuleFlag) return "检测到配置替换规则，如抓包有问题可先将替换关闭"
+        if (loadedPluginLen)
+            return (
+                <>
+                    检测到加载{loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}取消加载插件
+                </>
+            )
         return ""
-    }, [openRepRuleFlag, whiteListFlag])
+    }, [openRepRuleFlag, whiteListFlag, loadedPluginLen])
     useEffect(() => {
         if (alertMsg === "") {
             setAlertVisible(false)

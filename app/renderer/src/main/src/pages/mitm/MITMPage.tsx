@@ -446,7 +446,8 @@ interface MITMServerProps {
     onIsHasParams: (isHasParams: boolean) => void
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr, isHasParams, onIsHasParams} = props
+    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr, isHasParams, onIsHasParams} =
+        props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
@@ -472,6 +473,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
 
     const [listNames, setListNames] = useState<string[]>([]) // 存储的 带参全部本地插件 或者 不带参本地插件 =》 由tab切换决定
+
+    const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
@@ -722,6 +725,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         groupNames={groupNames}
                         setGroupNames={setGroupNames}
                         onSetOpenTabsFlag={setOpenTabsFlag}
+                        onSetLoadedPluginLen={setLoadedPluginLen}
                     />
                 )
         }
@@ -757,6 +761,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         logs={logs}
                         statusCards={statusCards}
                         downstreamProxyStr={downstreamProxyStr}
+                        loadedPluginLen={loadedPluginLen}
+                        onSelectAll={onSelectAll}
                     />
                 )
         }

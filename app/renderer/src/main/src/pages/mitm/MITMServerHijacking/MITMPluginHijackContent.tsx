@@ -59,6 +59,7 @@ interface MITMPluginHijackContentProps {
     setTags: (s: string[]) => void
     setSearchKeyword: (s: string) => void
     onSetOpenTabsFlag: (s: boolean) => void
+    onSetLoadedPluginLen: (s: number) => void
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
@@ -101,7 +102,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         searchKeyword,
         setTags,
         setSearchKeyword,
-        onSetOpenTabsFlag
+        onSetOpenTabsFlag,
+        onSetLoadedPluginLen
     } = props
 
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
@@ -198,6 +200,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
                 const allCheckList = [...new Set(cacheTmp)]
                 setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? "true" : "")
+                onSetLoadedPluginLen(allCheckList.length)
                 noParamsCheckArr = []
                 hasParamsCheckArr = []
                 // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
@@ -522,7 +525,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             allChecked={isHasParams ? false : isSelectAll}
                             checkedPlugin={isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList}
                         />
-                        <div style={{display: "flex", alignItems: "center", gap: '10px'}}>
+                        <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
                             <YakitRadioButtons
                                 buttonStyle='solid'
                                 options={[

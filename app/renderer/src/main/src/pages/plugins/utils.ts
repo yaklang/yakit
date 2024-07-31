@@ -1543,7 +1543,6 @@ export const apiFetchQueryYakScriptGroupLocal: (
     ExcludeType?: string[],
     IsMITMParamPlugins?: number
 ) => Promise<GroupCount[]> = (All = true, ExcludeType = [], IsMITMParamPlugins = 0) => {
-    console.log('组查询', {All, ExcludeType, IsMITMParamPlugins});
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("QueryYakScriptGroup", {All, ExcludeType, IsMITMParamPlugins})
