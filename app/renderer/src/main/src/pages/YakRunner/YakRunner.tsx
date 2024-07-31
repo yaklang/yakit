@@ -904,9 +904,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 secondRatio={isUnShowAuditDetail ? "0px" : "300px"}
                                 lineDirection='left'
                                 firstMinSize={300}
+                                lineStyle={{width: 4}}
                                 firstNodeStyle={isUnShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}}
                                 secondNodeStyle={
-                                    isUnShowAuditDetail ? {padding: 0, maxWidth: 0, minWidth: 0} : {padding: 0}
+                                    isUnShowAuditDetail ? {padding: 0, maxWidth: 0, minWidth: 0} : {overflow: "unset",padding: 0}
                                 }
                                 firstNode={
                                     <div
