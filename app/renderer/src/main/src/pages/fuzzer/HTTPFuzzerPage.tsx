@@ -2922,13 +2922,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         setResTypeOptionVal(undefined)
                     }
                 })
-                getRemoteValue(RemoteGV.webFuzzerOneResEditorCodeKey).then((res) => {
-                    if (!!res) {
-                        setCodeKey(res)
-                    } else {
-                        setCodeKey("")
-                    }
-                })
             }
         }, [fuzzerResponse])
 
@@ -2965,7 +2958,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
                                     onSetCodeKey={(codeKey) => {
-                                        setRemoteValue(RemoteGV.webFuzzerOneResEditorCodeKey, codeKey)
                                         setCodeKey(codeKey)
                                     }}
                                     onSetCodeValue={setCodeValue}

@@ -1138,13 +1138,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     setResTypeOptionVal(undefined)
                 }
             })
-            getRemoteValue(RemoteGV.HistoryResCodeKey).then((res) => {
-                if (!!res) {
-                    setCodeKey(res)
-                } else {
-                    setCodeKey("")
-                }
-            })
         }
     }, [flow])
 
@@ -1215,19 +1208,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 />
             )
         }
-        // extraBtn.push(
-        //     <CodingPopover
-        //         key='coding'
-        //         originValue={originRspValue}
-        //         onSetCodeLoading={setCodeLoading}
-        //         codeKey={codeKey}
-        //         onSetCodeKey={(codeKey) => {
-        //             setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
-        //             setCodeKey(codeKey)
-        //         }}
-        //         onSetCodeValue={setCodeValue}
-        //     />
-        // )
         return extraBtn
     }
 
@@ -1417,7 +1397,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 onSetCodeLoading={setCodeLoading}
                                 codeKey={codeKey}
                                 onSetCodeKey={(codeKey) => {
-                                    setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
                                     setCodeKey(codeKey)
                                 }}
                                 onSetCodeValue={setCodeValue}

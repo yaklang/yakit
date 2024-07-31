@@ -800,13 +800,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         setTypeOptionVal(undefined)
                     }
                 })
-                getRemoteValue(RemoteGV.webFuzzerEditorCodeKey).then((res) => {
-                    if (!!res) {
-                        setCodeKey(res)
-                    } else {
-                        setCodeKey("")
-                    }
-                })
             }
         }, [currentSelectItem, currentSelectShowType])
 
@@ -1010,7 +1003,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     onSetCodeLoading={setCodeLoading}
                                     codeKey={codeKey}
                                     onSetCodeKey={(codeKey) => {
-                                        setRemoteValue(RemoteGV.webFuzzerEditorCodeKey, codeKey)
                                         setCodeKey(codeKey)
                                     }}
                                     onSetCodeValue={setCodeValue}

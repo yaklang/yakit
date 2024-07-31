@@ -176,7 +176,6 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 contextMenu={editorRightMenu}
                 onEditor={setReqEditor}
                 onChange={(i) => {
-                    console.log(333, i);
                     setNewRequest(i)
                     setRequest(i)
                 }}
