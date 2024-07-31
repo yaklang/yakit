@@ -2061,7 +2061,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     useDebounceEffect(
         () => {
             if (searchValue && searchValue.length) {
-                const filterCodec = cacheCodecRef.current.filter((item) => item.CodecName.includes(searchValue))
+                const filterCodec = cacheCodecRef.current.filter((item) => item.CodecName.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()))
                 setLeftSearchData(filterCodec)
                 setShowSearchList(true)
             } else {
