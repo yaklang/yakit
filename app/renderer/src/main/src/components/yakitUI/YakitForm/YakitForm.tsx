@@ -757,7 +757,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                             </span>
                             上传
                         </label>
-                        <span className={styles["divider-line"]}></span>
+                        <div className={styles["divider-line"]}></div>
                         <YakitPopover
                             overlayClassName={styles["form-item-setting-dropdown"]}
                             placement='bottomLeft'
