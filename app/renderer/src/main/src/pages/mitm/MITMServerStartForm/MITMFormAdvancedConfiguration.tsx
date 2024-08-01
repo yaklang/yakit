@@ -448,7 +448,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         label={"禁用初始页"}
                         name='disableCACertPage'
                         valuePropName='checked'
-                        help={"开启后免配置启动不会访问初始页面，也可不被知晓使用yakit抓包"}
+                        help={"开启后免配置启动不会访问初始页面"}
                     >
                         <YakitSwitch size='large' />
                     </Form.Item>
