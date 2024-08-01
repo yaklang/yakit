@@ -1,92 +1,15 @@
 @use "../../theme/themeify.scss" as tools;
+.shell-receiver-contain {
+    display: flex;
+    overflow: hidden;
+}
 .shell-receiver {
     height: 100%;
     display: flex;
     flex-direction: row;
-    .shell-receiver-left-list {
-        width: 302px;
-        padding: 14px 12px 0px 16px;
-        display: flex;
-        flex-direction: column;
-        border-right: 1px solid #eaecf3;
-        flex-shrink: 0;
-        .header {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            .title-select-box {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 8px;
-                .title {
-                    font-size: 12px;
-                    font-weight: 600;
-                    line-height: 16px;
-                }
-            }
-            .extra {
-                display: flex;
-            }
-        }
-        .filter-box {
-            display: flex;
-            flex-direction: row;
-            gap: 8px;
-            margin-bottom: 12px;
-            .select-box {
-                flex: 1;
-            }
-            .input-box {
-                flex: 2;
-                .prefix {
-                    display: flex;
-                    align-items: center;
-                    color: #85899e;
-                    svg {
-                        width: 16px;
-                        height: 16px;
-                    }
-                }
-            }
-        }
-        .list-box {
-            flex: 1;
-            overflow: auto;
-            .item-box {
-                height: 40px;
-                display: flex;
-                align-items: center;
-                padding: 10px 8px;
-                border-radius: 4px;
-                background: #f8f8f8;
-                margin-bottom: 4px;
-                cursor: pointer;
-                .text {
-                    font-size: 12px;
-                    font-weight: 600;
-                    line-height: 16px;
-                    word-break: break-all; //内部单词换行
-                    overflow: hidden;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                }
-                &:hover {
-                    background-color: var(--yakit-background-color);
-                }
-            }
-            .item-box-active {
-                background-color: var(--yakit-primary-5);
-                color: #fff;
-                &:hover {
-                    background-color: var(--yakit-primary-5);
-                }
-            }
-        }
-    }
-
+    flex: 1;
+    justify-content: center;
+    overflow-y: auto;
     .shell-receiver-right-run {
         flex: 1;
         display: flex;
@@ -143,6 +66,99 @@
             display: flex;
             overflow: hidden;
         }
+    }
+}
+.shell-receiver-left-list {
+    width: 302px;
+    padding: 14px 12px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #eaecf3;
+    flex-shrink: 0;
+    .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        .title-select-box {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            .title {
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
+        }
+        .extra {
+            display: flex;
+        }
+    }
+    .filter-box {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-bottom: 12px;
+        .select-box {
+            flex: 1;
+        }
+        .input-box {
+            flex: 2;
+            .prefix {
+                display: flex;
+                align-items: center;
+                color: #85899e;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+        }
+    }
+    .list-box {
+        flex: 1;
+        overflow: auto;
+        .item-box {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 10px 8px;
+            border-radius: 4px;
+            background: #f8f8f8;
+            margin-bottom: 4px;
+            cursor: pointer;
+            .text {
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+                word-break: break-all; //内部单词换行
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+            &:hover {
+                background-color: var(--yakit-background-color);
+            }
+        }
+        .item-box-active {
+            background-color: var(--yakit-primary-5);
+            color: #fff;
+            &:hover {
+                background-color: var(--yakit-primary-5);
+            }
+        }
+    }
+    .no-more-text {
+        font-size: 12px;
+        color: var(--yakit-helper-text-color);
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding-top: 8px;
     }
 }
 .fold-icon {
