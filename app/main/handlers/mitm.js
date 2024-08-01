@@ -233,7 +233,7 @@ module.exports = (win, getClient) => {
 
     // 开始调用 MITM，设置 stream
     let isFirstData = true
-    ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, DisableCACertPage, certificates, extra) => {
+    ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certificates, extra) => {
         if (stream) {
             if (win) {
                 win.webContents.send("client-mitm-start-success")
@@ -325,8 +325,9 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 host, port, downstreamProxy,
-                enableHttp2, ForceDisableKeepAlive, DisableCACertPage, certificates,
+                enableHttp2, ForceDisableKeepAlive, certificates,
                 ...extra,
+                DisableCACertPage: extra.disableCACertPage
             })
         }
     })

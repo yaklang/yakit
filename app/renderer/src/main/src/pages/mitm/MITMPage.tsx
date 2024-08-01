@@ -237,7 +237,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             downstreamProxy,
             enableHttp2,
             ForceDisableKeepAlive,
-            DisableCACertPage,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -249,7 +248,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     downstreamProxy,
                     enableHttp2,
                     ForceDisableKeepAlive,
-                    DisableCACertPage,
                     certs,
                     extra
                 )
@@ -269,26 +267,16 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             plugins,
             enableHttp2,
             ForceDisableKeepAlive,
-            DisableCACertPage,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
             setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
             setHost(host)
             setPort(port)
-            setDisableCACertPage(DisableCACertPage)
+            setDisableCACertPage(extra?.disableCACertPage || false)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
-            startMITMServer(
-                host,
-                port,
-                downstreamProxy,
-                enableHttp2,
-                ForceDisableKeepAlive,
-                DisableCACertPage,
-                certs,
-                extra
-            )
+            startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certs, extra)
             let tip = ""
             if (downstreamProxy) {
                 tip += `下游代理：${downstreamProxy}`
@@ -435,6 +423,8 @@ export interface ExtraMITMServerProps {
     hosts: {Key: string; Value: string}[]
     /**@name 过滤WebSocket */
     filterWebsocket: boolean
+    /**禁用初始页 */
+    disableCACertPage: boolean
 }
 
 interface MITMServerProps {
@@ -446,7 +436,6 @@ interface MITMServerProps {
         defaultPlugins: string[],
         enableHttp2: boolean,
         ForceDisableKeepAlive: boolean,
-        DisableCACertPage: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -504,7 +493,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             enableInitialPlugin,
             enableHttp2,
             ForceDisableKeepAlive,
-            DisableCACertPage,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -517,7 +505,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     enableInitialPlugin ? noParamsCheckList : [],
                     enableHttp2,
                     ForceDisableKeepAlive,
-                    DisableCACertPage,
                     certs,
                     extra
                 )

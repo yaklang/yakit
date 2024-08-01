@@ -24,12 +24,10 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
-import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
-import emiter from "@/utils/eventBus/eventBus"
+import {CacheDropDownGV} from "@/yakitGV"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
@@ -44,7 +42,6 @@ export interface MITMServerStartFormProp {
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
         ForceDisableKeepAlive: boolean,
-        DisableCACertPage: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -129,9 +126,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         getRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive).then((e) => {
             form.setFieldsValue({ForceDisableKeepAlive: !!e})
         })
-        getRemoteValue(RemoteGV.MITMDisableCACertPage).then((e) => {
-            form.setFieldsValue({DisableCACertPage: !!e})
-        })
     }, [props.status])
     useUpdateEffect(() => {
         form.setFieldsValue({enableInitialPlugin: props.enableInitialPlugin})
@@ -203,7 +197,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             proxyPassword: params.proxyPassword,
             dnsServers: params.dnsServers,
             hosts: params.etcHosts,
-            filterWebsocket: params.filterWebsocket
+            filterWebsocket: params.filterWebsocket,
+            disableCACertPage: params.disableCACertPage
         }
         if (params.stateSecretHijacking === "enableGMTLS") {
             extra.enableGMTLS = true
@@ -217,7 +212,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.enableInitialPlugin,
             params.enableHttp2,
             params.ForceDisableKeepAlive,
-            params.DisableCACertPage,
             params.certs,
             extra
         )
@@ -230,7 +224,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.stateSecretHijacking}`)
         setRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive, `${params.ForceDisableKeepAlive ? "1" : ""}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
-        setRemoteValue(RemoteGV.MITMDisableCACertPage, params.DisableCACertPage ? "true" : "")
         // 记录时间戳
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
@@ -361,15 +354,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <YakitSwitch size='large' />
                 </Item>
                 <Item
-                    label={"禁用初始页"}
-                    name='DisableCACertPage'
-                    initialValue={false}
-                    help={"开启后免配置启动不会访问初始页面，也可不被知晓使用yakit抓包"}
-                    valuePropName='checked'
-                >
-                    <YakitSwitch size='large' />
-                </Item>
-                <Item
                     label={"内容规则"}
                     help={
                         <span className={styles["form-rule-help"]}>
@@ -415,7 +399,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <ChromeLauncherButton
                             host={useWatch("host", form)}
                             port={useWatch("port", form)}
-                            disableCACertPage={useWatch("DisableCACertPage", form)}
+                            disableCACertPage={advancedValue?.disableCACertPage || false}
                             onFished={(host, port) => {
                                 const values = {
                                     ...form.getFieldsValue(),
