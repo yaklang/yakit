@@ -182,10 +182,10 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                                     value: "operate",
                                     label: "运营专员"
                                 },
-                                {
-                                    value: "auditor",
-                                    label: "审核员"
-                                }
+                                // {
+                                //     value: "auditor",
+                                //     label: "审核员"
+                                // }
                             ],
                             optValue: "value",
                             optText: "label",
@@ -356,9 +356,9 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                     case "operate":
                         role = "运营专员"
                         break
-                    case "auditor":
-                        role = "审核员"
-                        break
+                    // case "auditor":
+                    //     role = "审核员"
+                    //     break
                     default:
                         role = "--"
                         break

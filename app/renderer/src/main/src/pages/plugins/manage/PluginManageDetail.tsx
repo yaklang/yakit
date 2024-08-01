@@ -29,7 +29,7 @@ import {
     PluginSettingRefProps
 } from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
-import {ApplicantIcon, AuthorImg, FilterPopoverBtn, FuncBtn} from "../funcTemplate"
+import {ApplicantIcon, AuthorImg, CodeScoreModal, FilterPopoverBtn, FuncBtn} from "../funcTemplate"
 import {PluginBaseParamProps, PluginDataProps, PluginSettingParamProps} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
@@ -513,24 +513,43 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         // 审核通过
         const onPass = useMemoizedFn(() => {
             if (statusLoading) return
-            setStatusLoading(true)
-            onChangeStatus({isPass: true}, (value) => {
-                if (value) {
-                    setPlugin({...value, status: 1})
-                    dispatch({
-                        type: "update",
-                        payload: {
-                            item: {...value, status: 1}
-                        }
-                    })
+            handleOpenScoreHint()
+        })
+
+        // 通过操作需先进行源码评分
+        const [scoreHint, setScoreHint] = useState<boolean>(false)
+        const handleOpenScoreHint = useMemoizedFn(() => {
+            if (scoreHint) return
+            if (!plugin) {
+                yakitNotify("error", "未获取到插件信息，请切换插件详情后重试")
+                return
+            }
+            setScoreHint(true)
+        })
+        const handleScoreHint = useMemoizedFn((value: boolean) => {
+            if (value) {
+                setStatusLoading(true)
+                setScoreHint(false)
+                onChangeStatus({isPass: true}, (value) => {
+                    if (value) {
+                        setPlugin({...value, status: 1})
+                        dispatch({
+                            type: "update",
+                            payload: {
+                                item: {...value, status: 1}
+                            }
+                        })
+                        setTimeout(() => {
+                            setRecalculation(!recalculation)
+                        }, 200)
+                    }
                     setTimeout(() => {
-                        setRecalculation(!recalculation)
+                        setStatusLoading(false)
                     }, 200)
-                }
-                setTimeout(() => {
-                    setStatusLoading(false)
-                }, 200)
-            })
+                })
+            } else {
+                setScoreHint(false)
+            }
         })
 
         /** --------------- 插件调试 Start --------------- */
@@ -894,6 +913,11 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     type={showReason.type}
                     onOK={onReasonCallback}
                 />
+
+                {/* 源码评分机制 */}
+                {plugin && scoreHint && (
+                    <CodeScoreModal type={plugin.type} code={content} visible={scoreHint} onCancel={handleScoreHint} />
+                )}
             </PluginDetails>
         )
     })
