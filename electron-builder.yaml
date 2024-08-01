@@ -42,6 +42,7 @@ publish:
 
 mac:
   artifactName: ${productName}-${version}-darwin-${arch}.${ext}
+  gatekeeperAssess: false
   # extraFiles:
   #   - from: "bins/flag.darwin.txt"
   #     to: "bins/flag.darwin.txt"
