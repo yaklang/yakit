@@ -1,18 +1,23 @@
-import React, {memo, ReactNode, useEffect, useRef, useState} from "react"
-import {List, Select, Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Avatar} from "antd"
+import React, {useEffect, useState} from "react"
+import {Table, Space, Form, Tag, Avatar} from "antd"
 import {GithubOutlined, QqOutlined, WechatOutlined, UserOutlined} from "@ant-design/icons"
 import {ItemSelects} from "@/components/baseTemplate/FormItemUtil"
 import {useGetState, useMemoizedFn} from "ahooks"
-import type {SelectProps} from "antd/es/select"
 import type {ColumnsType} from "antd/es/table"
 import debounce from "lodash/debounce"
 import moment from "moment"
-import "./TrustListPage.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed, success, info} from "@/utils/notification"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {OnlineUserItem} from "@/components/OnlineUserItem/OnlineUserItem"
 import {PaginationSchema} from "@/pages/invoker/schema"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+
+import "./TrustListPage.scss"
+
 export interface UserQuery {
     keywords: string
     role?: string
@@ -49,7 +54,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
             return
         }
         const param = {
-            appid:[appid],
+            appid: [appid],
             operation: "add",
             role
         }
@@ -136,7 +141,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                             data: userList.data || [],
                             optValue: "name",
                             optText: "appid",
-                            optKey:"appid",
+                            optKey: "appid",
                             placeholder: "请输入完整的用户名",
                             optionLabelProp: "name",
                             value: currentUser,
@@ -176,7 +181,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                                 {
                                     value: "operate",
                                     label: "运营专员"
-                                }
+                                },
+                                // {
+                                //     value: "auditor",
+                                //     label: "审核员"
+                                // }
                             ],
                             optValue: "value",
                             optText: "label",
@@ -189,9 +198,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                     ></ItemSelects>
                 </div>
                 <div style={{textAlign: "center", marginTop: 20}}>
-                    <Button type='primary' htmlType='submit' loading={loading}>
+                    <YakitButton htmlType='submit' loading={loading}>
                         添加
-                    </Button>
+                    </YakitButton>
                 </div>
             </Form>
         </div>
@@ -237,7 +246,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             }
         })
             .then((res) => {
-                const dataSource = res.data??[]
+                const dataSource = res.data ?? []
                 const newData = dataSource.map((item) => ({...item}))
                 setData(newData)
                 setPagination({...pagination, Limit: res.pagemeta.limit})
@@ -259,7 +268,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
 
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows: API.UserList[]) => {
-            let newArr = selectedRows.map((item)=>item.appid)
+            let newArr = selectedRows.map((item) => item.appid)
             setSelectedRowKeys(newArr)
         }
     }
@@ -270,7 +279,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             url: "user",
             data: {
                 appid,
-                operation:"remove"
+                operation: "remove"
             }
         })
             .then((res) => {
@@ -317,8 +326,11 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 <div style={{display: "flex"}}>
                     <div style={{width: 32, display: "flex", alignItems: "center"}}>{judgeAvatar(record)}</div>
 
-                    <div style={{paddingLeft: 10, flex: 1,lineHeight:"32px"}}>
-                        <div>{text}<span style={{paddingLeft:4}}>{judgeSource(record)}</span></div>
+                    <div style={{paddingLeft: 10, flex: 1, lineHeight: "32px"}}>
+                        <div>
+                            {text}
+                            <span style={{paddingLeft: 4}}>{judgeSource(record)}</span>
+                        </div>
                     </div>
                 </div>
             )
@@ -344,6 +356,9 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                     case "operate":
                         role = "运营专员"
                         break
+                    // case "auditor":
+                    //     role = "审核员"
+                    //     break
                     default:
                         role = "--"
                         break
@@ -359,19 +374,17 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
         {
             title: "操作",
             render: (i) => (
-                <Space>
-                    <Popconfirm
-                        title={"确定移除该用户吗？"}
-                        onConfirm={() => {
-                            onRemove([i.appid])
-                        }}
-                        placement="right"
-                    >
-                        <Button size={"small"} danger={true} type="link">
-                            移除
-                        </Button>
-                    </Popconfirm>
-                </Space>
+                <YakitPopconfirm
+                    title={"确定移除该用户吗？"}
+                    onConfirm={() => {
+                        onRemove([i.appid])
+                    }}
+                    placement='right'
+                >
+                    <YakitButton type='text' colors='danger'>
+                        移除
+                    </YakitButton>
+                </YakitPopconfirm>
             ),
             width: 100
         }
@@ -396,7 +409,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                     return (
                         <div className='table-title'>
                             <div className='filter'>
-                                <Input.Search
+                                <YakitInput.Search
                                     placeholder={"请输入用户名进行搜索"}
                                     enterButton={true}
                                     size={"small"}
@@ -413,29 +426,22 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                             <div className='operation'>
                                 <Space>
                                     {!!selectedRowKeys.length ? (
-                                        <Popconfirm
+                                        <YakitPopconfirm
                                             title={"确定删除选择的用户吗？不可恢复"}
                                             onConfirm={() => {
                                                 onRemove(selectedRowKeys)
                                             }}
                                         >
-                                            <Button type='primary' htmlType='submit' size='small'>
-                                                批量移除
-                                            </Button>
-                                        </Popconfirm>
+                                            <YakitButton size='small'>批量移除</YakitButton>
+                                        </YakitPopconfirm>
                                     ) : (
-                                        <Button type='primary' size='small' disabled={true}>
+                                        <YakitButton size='small' disabled={true}>
                                             批量移除
-                                        </Button>
+                                        </YakitButton>
                                     )}
-                                    <Button
-                                        type='primary'
-                                        htmlType='submit'
-                                        size='small'
-                                        onClick={() => setCreateUserShow(!createUserShow)}
-                                    >
+                                    <YakitButton size='small' onClick={() => setCreateUserShow(!createUserShow)}>
                                         添加用户
-                                    </Button>
+                                    </YakitButton>
                                 </Space>
                             </div>
                         </div>
@@ -450,7 +456,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 bordered={true}
                 dataSource={data}
             />
-            <Modal
+            <YakitModal
                 visible={createUserShow}
                 title={"添加用户"}
                 destroyOnClose={true}
@@ -461,7 +467,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 footer={null}
             >
                 <CreateUserForm onCancel={() => setCreateUserShow(false)} refresh={() => update()} />
-            </Modal>
+            </YakitModal>
         </div>
     )
 }

@@ -1,4 +1,4 @@
-import React, {ReactNode, useMemo, useState} from "react"
+import React, {ReactNode, useMemo} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
@@ -21,6 +21,11 @@ export interface YakitMenuItemProps {
     title?: string
     /** 单项菜单类型(只在叶子节点时有效) */
     type?: "success" | "danger" | "info"
+    /**
+     * 取消统一的固定高度，固定 padding
+     * 取消悬浮、选中状态的颜色样式，只保存初始的背景、icon和文字颜色样式
+     */
+    noStyle?: boolean
 }
 export interface YakitMenuItemDividerProps {
     type: "divider"
@@ -127,11 +132,15 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                 itemInfo.children = itemInfo.children.concat(arr)
                 return itemInfo
             } else {
+                const {noStyle} = info
                 const itemInfo: ItemType = {
                     label: (
                         <div
                             style={{minWidth: width}}
-                            className={classNames(styles["yakit-menu-item"], itemMenuTypeClass(info.type) || "")}
+                            className={classNames(styles["yakit-menu-item"], itemMenuTypeClass(info.type) || "", {
+                                [styles["yakit-menu-item-no-style"]]: noStyle,
+                                "yakit-menu-item-no-style": noStyle
+                            })}
                         >
                             <div className={styles["yakit-menu-item-content"]}>
                                 {info.itemIcon}

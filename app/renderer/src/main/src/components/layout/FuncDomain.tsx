@@ -20,8 +20,7 @@ import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {showConfigYaklangEnvironment} from "@/utils/ConfigYaklangEnvironment"
 import Login from "@/pages/Login"
 import {useStore, yakitDynamicStatus} from "@/store"
-import {defaultUserInfo, MenuItemType, SetUserInfo} from "@/pages/MainOperator"
-import {DropdownMenu} from "../baseTemplate/DropdownMenu"
+import {defaultUserInfo, SetUserInfo} from "@/pages/MainOperator"
 import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
@@ -30,7 +29,7 @@ import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
-import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
 import {getReleaseEditionName, isCommunityEdition, isEnpriTraceAgent, showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
@@ -57,13 +56,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 import {serverPushStatus} from "@/utils/duplex/duplex"
-
-import yakitImg from "../../assets/yakit.jpg"
-import classNames from "classnames"
-import styles from "./funcDomain.module.scss"
 import {OutlineSearchIcon, OutlineWrenchIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
-import YakitLogo from "@/assets/yakitLogo.png"
 import {DebugPluginRequest, apiDebugPlugin} from "@/pages/plugins/utils"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
@@ -76,6 +70,12 @@ import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPlugin
 import {getValueByType, getYakExecutorParam} from "@/pages/plugins/editDetails/utils"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
+import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+
+import YakitLogo from "@/assets/yakitLogo.png"
+import yakitImg from "../../assets/yakit.jpg"
+import classNames from "classnames"
+import styles from "./funcDomain.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -123,6 +123,26 @@ export const randomAvatarColor = () => {
     return color
 }
 
+/** 用户菜单 */
+const UserMenusMap: Record<string, YakitMenuItemType> = {
+    divider: {type: "divider"},
+    singOut: {key: "sign-out", label: "退出登录", type: "danger"},
+    pluginAduit: {key: "plugin-aduit", label: "插件管理"},
+    // CE
+    trustList: {key: "trust-list", label: "用户管理"},
+    licenseAdmin: {key: "license-admin", label: "License管理"},
+    dataStatistics: {key: "data-statistics", label: "数据统计"},
+    // EE|SE
+    roleAdmin: {key: "role-admin", label: "角色管理"},
+    accountAdmin: {key: "account-admin", label: "用户管理"},
+    setPassword: {key: "set-password", label: "修改密码"},
+    uploadData: {key: "upload-data", label: "上传数据"},
+    controlAdmin: {key: "control-admin", label: "远程管理"},
+    dynamicControl: {key: "dynamic-control", label: "发起远程"},
+    closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
+    holeCollect: {key: "hole-collect", label: "漏洞汇总"}
+}
+
 export interface FuncDomainProp {
     isEngineLink: boolean
     isReverse?: Boolean
@@ -162,10 +182,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
     const [loginShow, setLoginShow] = useState<boolean>(false)
     /** 用户功能菜单 */
-    const [userMenu, setUserMenu] = useState<MenuItemType[]>([
-        {title: "退出登录", key: "sign-out"}
-        // {title: "帐号绑定(监修)", key: "account-bind"}
-    ])
+    const [userMenu, setUserMenu] = useState<YakitMenuItemType[]>([UserMenusMap["singOut"]])
+
     /** 修改密码弹框 */
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 是否允许密码框关闭 */
@@ -187,109 +205,133 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         const SetUserInfoModule = () => (
             <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
         )
-        const LoginOutBox = () => <div className={styles["login-out-component"]}>退出登录</div>
-        // 非企业管理员登录
-        if (userInfo.role === "admin" && userInfo.platform !== "company") {
-            setUserMenu([
-                // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
-                {key: "plugin-aduit", title: "插件管理"},
-                {key: "data-statistics", title: "数据统计"},
-                {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
-            ])
-        }
-        // 非企业超级管理员登录
-        else if (userInfo.role === "superAdmin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "trust-list", title: "用户管理"},
-                {key: "license-admin", title: "License管理"},
-                {key: "plugin-aduit", title: "插件管理"},
-                {key: "data-statistics", title: "数据统计"},
-                {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
-            ])
-        }
-        // 非企业操作员
-        else if (userInfo.role === "operate" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "data-statistics", title: "数据统计"},
-                {key: "sign-out", title: "退出登录"}
-            ])
-        }
-        // 非企业license管理员
-        else if (userInfo.role === "licenseAdmin" && userInfo.platform !== "company") {
-            setUserMenu([
-                {key: "license-admin", title: "License管理"},
-                {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
-            ])
-        }
-        // 企业用户管理员登录
-        else if (userInfo.role === "admin" && userInfo.platform === "company") {
-            let cacheMenu = (() => {
+
+        // 退出菜单
+        const signOutMenu: YakitMenuItemType[] = [UserMenusMap["divider"], UserMenusMap["singOut"]]
+        // 用户头像
+        const userAvatar: YakitMenuItemType[] = [
+            {key: "user-info", label: SetUserInfoModule(), noStyle: true},
+            UserMenusMap["divider"]
+        ]
+
+        // CE 版本
+        if (userInfo.platform !== "company") {
+            let isNew: boolean = false
+            // CE-超管
+            if (userInfo.role === "superAdmin") {
+                isNew = true
+                setUserMenu(
+                    [
+                        UserMenusMap["trustList"],
+                        UserMenusMap["licenseAdmin"],
+                        UserMenusMap["pluginAduit"],
+                        UserMenusMap["dataStatistics"]
+                    ].concat(signOutMenu)
+                )
+            }
+            // CE-管理员
+            if (userInfo.role === "admin") {
+                isNew = true
+                setUserMenu([UserMenusMap["pluginAduit"], UserMenusMap["dataStatistics"]].concat(signOutMenu))
+            }
+            // CE-操作员
+            if (userInfo.role === "operate") {
+                isNew = true
+                setUserMenu([UserMenusMap["dataStatistics"]].concat(signOutMenu))
+            }
+            // CE-license管理员
+            if (userInfo.role === "licenseAdmin") {
+                isNew = true
+                setUserMenu([UserMenusMap["licenseAdmin"]].concat(signOutMenu))
+            }
+            // CE-审核员
+            if (userInfo.role === "auditor") {
+                isNew = true
+                setUserMenu([UserMenusMap["pluginAduit"]].concat(signOutMenu))
+            }
+            // CE-非权限人员
+            if (!isNew) {
+                setUserMenu([UserMenusMap["singOut"]])
+            }
+        } else {
+            // EE|SE 版本
+            if (userInfo.role === "admin") {
+                // 管理员
                 if (isEnpriTraceAgent()) {
-                    return [
-                        {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                        {key: "hole-collect", title: "漏洞汇总"},
-                        {key: "role-admin", title: "角色管理"},
-                        {key: "account-admin", title: "用户管理"},
-                        {key: "set-password", title: "修改密码"},
-                        {key: "plugin-aduit", title: "插件管理"},
-                        {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
+                    setUserMenu([
+                        ...userAvatar,
+                        UserMenusMap["holeCollect"],
+                        UserMenusMap["roleAdmin"],
+                        UserMenusMap["accountAdmin"],
+                        UserMenusMap["setPassword"],
+                        UserMenusMap["pluginAduit"],
+                        ...signOutMenu
+                    ])
+                } else {
+                    let cacheMenus: YakitMenuItemType[] = [
+                        ...userAvatar,
+                        UserMenusMap["uploadData"],
+                        UserMenusMap["dynamicControl"],
+                        UserMenusMap["controlAdmin"],
+                        UserMenusMap["closeDynamicControl"],
+                        UserMenusMap["roleAdmin"],
+                        UserMenusMap["accountAdmin"],
+                        UserMenusMap["setPassword"],
+                        UserMenusMap["pluginAduit"],
+                        ...signOutMenu
                     ]
+                    if (dynamicConnect) {
+                        // 远程中时不显示发起远程 显示退出远程
+                        cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "dynamic-control")
+                    } else {
+                        // 非远程控制时显示发起远程 不显示退出远程
+                        cacheMenus = cacheMenus.filter(
+                            (item) => (item as YakitMenuItemProps).key !== "close-dynamic-control"
+                        )
+                    }
+                    setUserMenu([...cacheMenus])
                 }
-                let cacheMenu = [
-                    {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                    {key: "upload-data", title: "上传数据"},
-                    {key: "dynamic-control", title: "发起远程"},
-                    {key: "control-admin", title: "远程管理"},
-                    {key: "close-dynamic-control", title: "退出远程"},
-                    {key: "role-admin", title: "角色管理"},
-                    {key: "account-admin", title: "用户管理"},
-                    {key: "set-password", title: "修改密码"},
-                    {key: "plugin-aduit", title: "插件管理"},
-                    {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
+            } else {
+                let isNew: boolean = false
+                let cacheMenus: YakitMenuItemType[] = [
+                    ...userAvatar,
+                    UserMenusMap["uploadData"],
+                    UserMenusMap["dynamicControl"],
+                    UserMenusMap["closeDynamicControl"],
+                    UserMenusMap["setPassword"],
+                    UserMenusMap["pluginAduit"],
+                    ...signOutMenu
                 ]
+                if (userInfo.role !== "auditor") {
+                    // 不为审核员时 移除插件管理
+                    isNew = true
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-aduit")
+                }
+                if (isEnpriTraceAgent()) {
+                    isNew = true
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "upload-data")
+                }
                 // 远程中时不显示发起远程 显示退出远程
                 if (dynamicConnect) {
-                    cacheMenu = cacheMenu.filter((item) => item.key !== "dynamic-control")
+                    isNew = true
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "dynamic-control")
                 }
                 // 非远程控制时显示发起远程 不显示退出远程
                 if (!dynamicConnect) {
-                    cacheMenu = cacheMenu.filter((item) => item.key !== "close-dynamic-control")
+                    isNew = true
+                    cacheMenus = cacheMenus.filter(
+                        (item) => (item as YakitMenuItemProps).key !== "close-dynamic-control"
+                    )
                 }
-                return cacheMenu
-            })()
-            setUserMenu(cacheMenu)
+                if (isNew) {
+                    setUserMenu([...cacheMenus])
+                } else {
+                    // 非权限人员
+                    setUserMenu([UserMenusMap["singOut"]])
+                }
+            }
         }
-        // 企业用户非管理员登录
-        else if (userInfo.role !== "admin" && userInfo.platform === "company") {
-            let cacheMenu = [
-                {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                {key: "upload-data", title: "上传数据"},
-                {key: "dynamic-control", title: "发起远程"},
-                {key: "close-dynamic-control", title: "退出远程"},
-                {key: "set-password", title: "修改密码"},
-                {key: "plugin-aduit", title: "插件管理"},
-                {key: "sign-out", title: "退出登录"}
-            ]
-            // 不为审核员时 移除插件管理
-            if (userInfo.role !== "auditor") {
-                cacheMenu = cacheMenu.filter((item) => item.key !== "plugin-aduit")
-            }
-            if (isEnpriTraceAgent()) {
-                cacheMenu = cacheMenu.filter((item) => item.key !== "upload-data")
-            }
-            // 远程中时不显示发起远程 显示退出远程
-            if (dynamicConnect) {
-                cacheMenu = cacheMenu.filter((item) => item.key !== "dynamic-control")
-            }
-            // 非远程控制时显示发起远程 不显示退出远程
-            if (!dynamicConnect) {
-                cacheMenu = cacheMenu.filter((item) => item.key !== "close-dynamic-control")
-            }
-            setUserMenu(cacheMenu)
-        } else {
-            setUserMenu([{key: "sign-out", title: "退出登录"}])
-        }
-    }, [userInfo.role, userInfo.companyHeadImg, dynamicConnect])
+    }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect])
 
     /** 渲染端通信-打开一个指定页面 */
     const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {
@@ -441,91 +483,96 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                         [styles["user-info-dynamic"]]: dynamicConnect
                                     })}
                                 >
-                                    <DropdownMenu
+                                    <YakitDropdownMenu
                                         menu={{
-                                            data: userMenu
+                                            data: userMenu,
+                                            onClick: (e) => {
+                                                const {key} = e
+                                                setDynamicMenuOpen(false)
+                                                if (key === "sign-out") {
+                                                    if (
+                                                        dynamicStatus.isDynamicStatus ||
+                                                        dynamicStatus.isDynamicSelfStatus
+                                                    ) {
+                                                        Modal.confirm({
+                                                            title: "温馨提示",
+                                                            icon: <ExclamationCircleOutlined />,
+                                                            content: "点击退出登录将自动退出远程控制，是否确认退出",
+                                                            cancelText: "取消",
+                                                            okText: "退出",
+                                                            onOk() {
+                                                                if (dynamicStatus.isDynamicStatus) {
+                                                                    ipcRenderer.invoke("lougin-out-dynamic-control", {
+                                                                        loginOut: true
+                                                                    })
+                                                                }
+                                                                if (dynamicStatus.isDynamicSelfStatus) {
+                                                                    ipcRenderer
+                                                                        .invoke("kill-dynamic-control")
+                                                                        .finally(() => {
+                                                                            setStoreUserInfo(defaultUserInfo)
+                                                                            loginOut(userInfo)
+                                                                            setTimeout(
+                                                                                () => success("已成功退出账号"),
+                                                                                500
+                                                                            )
+                                                                        })
+                                                                    // 立即退出界面
+                                                                    ipcRenderer.invoke(
+                                                                        "lougin-out-dynamic-control-page"
+                                                                    )
+                                                                }
+                                                            },
+                                                            onCancel() {}
+                                                        })
+                                                    } else {
+                                                        setStoreUserInfo(defaultUserInfo)
+                                                        loginOut(userInfo)
+                                                        setTimeout(() => success("已成功退出账号"), 500)
+                                                    }
+                                                }
+                                                if (key === "trust-list") {
+                                                    onOpenPage({route: YakitRoute.TrustListPage})
+                                                }
+                                                if (key === "set-password") {
+                                                    setPasswordClose(true)
+                                                    setPasswordShow(true)
+                                                }
+                                                if (key === "upload-data") setUploadModalShow(true)
+                                                if (key === "role-admin") {
+                                                    onOpenPage({route: YakitRoute.RoleAdminPage})
+                                                }
+                                                if (key === "account-admin") {
+                                                    onOpenPage({route: YakitRoute.AccountAdminPage})
+                                                }
+                                                if (key === "license-admin") {
+                                                    onOpenPage({route: YakitRoute.LicenseAdminPage})
+                                                }
+                                                if (key === "plugin-aduit") {
+                                                    onOpenPage({route: YakitRoute.Plugin_Audit})
+                                                }
+                                                if (key === "hole-collect") {
+                                                    onOpenPage({route: YakitRoute.HoleCollectPage})
+                                                }
+                                                if (key === "control-admin") {
+                                                    onOpenPage({route: YakitRoute.ControlAdminPage})
+                                                }
+                                                if (key === "data-statistics") {
+                                                    onOpenPage({route: YakitRoute.Data_Statistics})
+                                                }
+                                                if (key === "dynamic-control") {
+                                                    setDynamicControlModal(true)
+                                                }
+                                                if (key === "close-dynamic-control") {
+                                                    ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: false})
+                                                }
+                                            }
                                         }}
                                         dropdown={{
                                             placement: "bottom",
                                             trigger: ["click"],
-                                            overlayClassName: "user-dropdown-menu-box",
                                             onVisibleChange: (value: boolean) => {
                                                 setDynamicMenuOpen(value)
-                                            }
-                                        }}
-                                        onClick={(key) => {
-                                            setDynamicMenuOpen(false)
-                                            if (key === "sign-out") {
-                                                if (
-                                                    dynamicStatus.isDynamicStatus ||
-                                                    dynamicStatus.isDynamicSelfStatus
-                                                ) {
-                                                    Modal.confirm({
-                                                        title: "温馨提示",
-                                                        icon: <ExclamationCircleOutlined />,
-                                                        content: "点击退出登录将自动退出远程控制，是否确认退出",
-                                                        cancelText: "取消",
-                                                        okText: "退出",
-                                                        onOk() {
-                                                            if (dynamicStatus.isDynamicStatus) {
-                                                                ipcRenderer.invoke("lougin-out-dynamic-control", {
-                                                                    loginOut: true
-                                                                })
-                                                            }
-                                                            if (dynamicStatus.isDynamicSelfStatus) {
-                                                                ipcRenderer
-                                                                    .invoke("kill-dynamic-control")
-                                                                    .finally(() => {
-                                                                        setStoreUserInfo(defaultUserInfo)
-                                                                        loginOut(userInfo)
-                                                                        setTimeout(() => success("已成功退出账号"), 500)
-                                                                    })
-                                                                // 立即退出界面
-                                                                ipcRenderer.invoke("lougin-out-dynamic-control-page")
-                                                            }
-                                                        },
-                                                        onCancel() {}
-                                                    })
-                                                } else {
-                                                    setStoreUserInfo(defaultUserInfo)
-                                                    loginOut(userInfo)
-                                                    setTimeout(() => success("已成功退出账号"), 500)
-                                                }
-                                            }
-                                            if (key === "trust-list") {
-                                                onOpenPage({route: YakitRoute.TrustListPage})
-                                            }
-                                            if (key === "set-password") {
-                                                setPasswordClose(true)
-                                                setPasswordShow(true)
-                                            }
-                                            if (key === "upload-data") setUploadModalShow(true)
-                                            if (key === "role-admin") {
-                                                onOpenPage({route: YakitRoute.RoleAdminPage})
-                                            }
-                                            if (key === "account-admin") {
-                                                onOpenPage({route: YakitRoute.AccountAdminPage})
-                                            }
-                                            if (key === "license-admin") {
-                                                onOpenPage({route: YakitRoute.LicenseAdminPage})
-                                            }
-                                            if (key === "plugin-aduit") {
-                                                onOpenPage({route: YakitRoute.Plugin_Audit})
-                                            }
-                                            if (key === "hole-collect") {
-                                                onOpenPage({route: YakitRoute.HoleCollectPage})
-                                            }
-                                            if (key === "control-admin") {
-                                                onOpenPage({route: YakitRoute.ControlAdminPage})
-                                            }
-                                            if (key === "data-statistics") {
-                                                onOpenPage({route: YakitRoute.Data_Statistics})
-                                            }
-                                            if (key === "dynamic-control") {
-                                                setDynamicControlModal(true)
-                                            }
-                                            if (key === "close-dynamic-control") {
-                                                ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: false})
                                             }
                                         }}
                                     >
@@ -539,7 +586,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 style={{width: 24, height: 24, borderRadius: "50%"}}
                                             />
                                         )}
-                                    </DropdownMenu>
+                                    </YakitDropdownMenu>
                                 </div>
                             ) : (
                                 <div className={styles["user-show"]} onClick={() => setLoginShow(true)}>
