@@ -348,14 +348,20 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                         trigger='click'
                         content={
                             <div className={styles["setting-terminal"]}>
-                                <div>
-                                    升级终端:&nbsp;script -qc /bin/bash /dev/null
+                                <div className={styles["setting-terminal-tip"]}>命令只在linux shell中生效</div>
+                                <div className={styles["setting-terminal-upgrade"]}>
+                                    <div>升级终端:&nbsp;script -qc /bin/bash /dev/null</div>
                                     <CopyComponents copyText='script -qc /bin/bash /dev/null' />
                                 </div>
-                                <div>
-                                    设置size:&nbsp;stty rows {xtermSize?.rows || 0} columns {xtermSize?.cols || 0}
+                                <div className={styles["setting-terminal-size"]}>
+                                    <div>
+                                        设置size:&nbsp;export TERM=xterm-256color && stty rows {xtermSize?.rows || 0}{" "}
+                                        columns {xtermSize?.cols || 0} && reset
+                                    </div>
                                     <CopyComponents
-                                        copyText={`stty rows ${xtermSize?.rows || 0} columns ${xtermSize?.cols || 0}`}
+                                        copyText={`export TERM=xterm-256color && stty rows ${
+                                            xtermSize?.rows || 0
+                                        } columns ${xtermSize?.cols || 0} && reset`}
                                     />
                                 </div>
                             </div>
