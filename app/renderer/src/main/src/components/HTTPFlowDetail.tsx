@@ -1138,13 +1138,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     setResTypeOptionVal(undefined)
                 }
             })
-            getRemoteValue(RemoteGV.HistoryResCodeKey).then((res) => {
-                if (!!res) {
-                    setCodeKey(res)
-                } else {
-                    setCodeKey("")
-                }
-            })
         }
     }, [flow])
 
@@ -1215,19 +1208,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 />
             )
         }
-        // extraBtn.push(
-        //     <CodingPopover
-        //         key='coding'
-        //         originValue={originRspValue}
-        //         onSetCodeLoading={setCodeLoading}
-        //         codeKey={codeKey}
-        //         onSetCodeKey={(codeKey) => {
-        //             setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
-        //             setCodeKey(codeKey)
-        //         }}
-        //         onSetCodeValue={setCodeValue}
-        //     />
-        // )
         return extraBtn
     }
 
@@ -1413,11 +1393,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         codingBtn={
                             <CodingPopover
                                 key='coding'
-                                originValue={originRspValue}
+                                originValue={flow.Response}
                                 onSetCodeLoading={setCodeLoading}
                                 codeKey={codeKey}
                                 onSetCodeKey={(codeKey) => {
-                                    setRemoteValue(RemoteGV.HistoryResCodeKey, codeKey)
                                     setCodeKey(codeKey)
                                 }}
                                 onSetCodeValue={setCodeValue}
@@ -1459,7 +1438,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 })
 
 interface CodingPopoverProps {
-    originValue: string
+    originValue: Uint8Array
     codeKey: string
     onSetCodeLoading: (loading: boolean) => void
     onSetCodeKey: (codeKey: string) => void
@@ -1491,7 +1470,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
 
     const fetchNewCodec = (codeVal: string) => {
         const newCodecParams = {
-            InputBytes: StringToUint8Array(originValue),
+            InputBytes: originValue,
             WorkFlow: [
                 {
                     CodecType: "CharsetToUTF8",
@@ -1512,7 +1491,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
                 onSetCodeKey(codeVal)
             })
             .catch((e) => {
-                onSetCodeValue(originValue)
+                onSetCodeValue(Uint8ArrayToString(originValue))
                 yakitNotify("error", `${e}`)
             })
             .finally(() => {

@@ -484,7 +484,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 isHttps: false,
                                                 noFixContentLength: false,
                                                 actualHost: "",
-                                                timeout: 30
+                                                timeout: 30,
+                                                batchTarget: new Uint8Array()
                                             }
                                             onReset(restValue)
                                         }}
@@ -584,8 +585,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                             e.stopPropagation()
                                             const restValue = {
                                                 concurrent: 20,
-                                                proxy: [],
-                                                noSystemProxy: false,
                                                 minDelaySeconds: undefined,
                                                 maxDelaySeconds: undefined,
                                                 repeatTimes: 0
