@@ -23,6 +23,7 @@
         "@types/react-resizable": "^1.7.4",
         "@types/react-sparklines": "^1.7.2",
         "@uiw/react-md-editor": "^3.6.5",
+        "@viz-js/viz": "^3.7.0",
         "@xterm/addon-fit": "^0.10.0",
         "ahooks": "3.7.9",
         "ali-react-table": "2.6.1",
