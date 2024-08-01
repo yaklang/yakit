@@ -2,6 +2,7 @@ import {AutoCompleteProps} from "antd"
 import {SizeType} from "antd/lib/config-provider/SizeContext"
 import {CacheDataHistoryProps} from "../utils"
 import {BaseSelectRef} from "rc-select"
+import {CSSProperties} from "react"
 
 /**
  * @description YakitAutoCompleteProps 的属性
@@ -20,6 +21,7 @@ export interface YakitAutoCompleteProps extends AutoCompleteProps {
     ref?: React.ForwardedRef<YakitAutoCompleteRefProps> & Ref<BaseSelectRef>
     /** 初始默认值 主要用于缓存值不存在时*/
     initValue?: string
+    wrapperStyle?: CSSProperties
 }
 
 export interface YakitAutoCompleteRefProps {
