@@ -315,7 +315,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     <YakitSwitch size='large' />
                 </Item>
                 <Item
-                    label={"国密劫持"}
+                    label={"HTTPS 配置"}
                     name='stateSecretHijacking'
                     initialValue={"enableGMTLS"}
                     help={
