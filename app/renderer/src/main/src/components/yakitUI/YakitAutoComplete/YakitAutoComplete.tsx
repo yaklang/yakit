@@ -1,4 +1,4 @@
-import {AutoComplete} from "antd"
+import {AutoComplete, Typography} from "antd"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {YakitAutoCompleteCacheDataHistoryProps, YakitAutoCompleteProps} from "./YakitAutoCompleteType"
 import styles from "./YakitAutoComplete.module.scss"
@@ -6,7 +6,7 @@ import classNames from "classnames"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import {YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 import {OutlineXIcon} from "@/assets/icon/outline"
-
+const {Text} = Typography
 export const defYakitAutoCompleteRef = {
     onGetRemoteValues: () => ({options: [], defaultValue: ""}),
     onSetRemoteValues: (s: string) => {}
@@ -124,7 +124,13 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                     setMouseEnterItem("")
                 }}
             >
-                {copyItem.label}
+                <Text
+                    ellipsis={{
+                        tooltip: true
+                    }}
+                >
+                    {copyItem.label}
+                </Text>
                 <OutlineXIcon
                     style={{display: mouseEnterItem === item.value && item.value !== props.value ? "block" : "none"}}
                     className={styles["option-item-close"]}
