@@ -401,7 +401,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
 export interface ExtraMITMServerProps {
     /**@name 国密劫持*/
-    enableGMTLS: boolean
+    enableGMTLS?: boolean
+    /**@name 随机TLS指纹*/
+    RandomJA3?: boolean
     /**@name 代理认证 */
     enableProxyAuth: boolean
     /**@name 仅国密 TLS */

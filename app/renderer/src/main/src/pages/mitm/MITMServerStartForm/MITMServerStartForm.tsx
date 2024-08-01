@@ -30,6 +30,7 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -99,8 +100,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     })
 
     const [form] = Form.useForm()
-    const enableGMTLS = useWatch<boolean>("enableGMTLS", form)
-    useEffect(() => {}, [enableGMTLS])
+    const stateSecretHijacking = useWatch<string>("stateSecretHijacking", form)
 
     useEffect(() => {
         if (props.status !== "idle") return
@@ -119,7 +119,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             form.setFieldsValue({enableHttp2: !!e})
         })
         getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS).then((e) => {
-            form.setFieldsValue({enableGMTLS: !!e})
+            if (e === "1") {
+                form.setFieldsValue({stateSecretHijacking: "enableGMTLS"})
+            } else {
+                form.setFieldsValue({stateSecretHijacking: e || "stateSecretHijacking"})
+            }
         })
         getRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive).then((e) => {
             form.setFieldsValue({ForceDisableKeepAlive: !!e})
@@ -187,6 +191,21 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             ...advancedFormValue,
             ...advancedValue
         }
+        const extra: ExtraMITMServerProps = {
+            onlyEnableGMTLS: params.onlyEnableGMTLS,
+            preferGMTLS: params.preferGMTLS,
+            enableProxyAuth: params.enableProxyAuth,
+            proxyUsername: params.proxyUsername,
+            proxyPassword: params.proxyPassword,
+            dnsServers: params.dnsServers,
+            hosts: params.etcHosts,
+            filterWebsocket: params.filterWebsocket
+        }
+        if (params.stateSecretHijacking === "enableGMTLS") {
+            extra.enableGMTLS = true
+        } else if (params.stateSecretHijacking === "randomJA3") {
+            extra.RandomJA3 = true
+        }
         props.onStartMITMServer(
             params.host,
             params.port,
@@ -195,17 +214,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.enableHttp2,
             params.ForceDisableKeepAlive,
             params.certs,
-            {
-                enableGMTLS: params.enableGMTLS,
-                onlyEnableGMTLS: params.onlyEnableGMTLS,
-                preferGMTLS: params.preferGMTLS,
-                enableProxyAuth: params.enableProxyAuth,
-                proxyUsername: params.proxyUsername,
-                proxyPassword: params.proxyPassword,
-                dnsServers: params.dnsServers,
-                hosts: params.etcHosts,
-                filterWebsocket: params.filterWebsocket
-            }
+            extra
         )
         hostRef.current.onSetRemoteValues(params.host)
         if (downstreamProxyRef.current) {
@@ -213,7 +222,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         }
         setRemoteValue(MITMConsts.MITMDefaultPort, `${params.port}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
-        setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.enableGMTLS ? "1" : ""}`)
+        setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.stateSecretHijacking}`)
         setRemoteValue(MITMConsts.MITMDefaultForceDisableKeepAlive, `${params.ForceDisableKeepAlive ? "1" : ""}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
         // 记录时间戳
@@ -307,12 +316,34 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 </Item>
                 <Item
                     label={"国密劫持"}
-                    name='enableGMTLS'
-                    initialValue={true}
-                    help={"适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"}
-                    valuePropName='checked'
+                    name='stateSecretHijacking'
+                    initialValue={"enableGMTLS"}
+                    help={
+                        stateSecretHijacking === "enableGMTLS"
+                            ? "适配国密算法的 TLS (GM-tls) 劫持，对目标网站发起国密 TLS 的连接"
+                            : stateSecretHijacking === "randomJA3"
+                            ? "访问时随机客户端握手(ClientHello)消息，用于规避服务器对 TLS 指纹的检测(TLS指纹是一种用于通过分析客户端在建立安全连接时发送的握手信息来识别和分类SSL/TLS客户端的特征方法)"
+                            : "不配置国密和随机TLS指纹"
+                    }
                 >
-                    <YakitSwitch size='large' />
+                    <YakitRadioButtons
+                        buttonStyle='solid'
+                        options={[
+                            {
+                                value: "enableGMTLS",
+                                label: "国密"
+                            },
+                            {
+                                value: "randomJA3",
+                                label: "随机TLS指纹"
+                            },
+                            {
+                                value: "stateSecretHijacking",
+                                label: "默认"
+                            }
+                        ]}
+                        size={"small"}
+                    />
                 </Item>
                 <Item
                     label={"禁用劫持长连接"}
@@ -401,7 +432,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         setAdvancedValue(val)
                         setAdvancedFormVisible(false)
                     }}
-                    enableGMTLS={enableGMTLS}
+                    enableGMTLS={stateSecretHijacking === "enableGMTLS"}
                     ref={advancedFormRef}
                 />
             </React.Suspense>
