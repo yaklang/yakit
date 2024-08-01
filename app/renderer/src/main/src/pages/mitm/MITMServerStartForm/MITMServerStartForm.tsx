@@ -399,7 +399,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <ChromeLauncherButton
                             host={useWatch("host", form)}
                             port={useWatch("port", form)}
-                            disableCACertPage={advancedValue?.disableCACertPage || false}
+                            disableCACertPage={advancedFormRef.current?.getValue().disableCACertPage}
                             onFished={(host, port) => {
                                 const values = {
                                     ...form.getFieldsValue(),
