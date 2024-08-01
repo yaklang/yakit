@@ -4869,6 +4869,12 @@ message MITMRequest {
 
   // runtime change proxy
   bool SetDownstreamProxy = 60;
+
+  // disable MITM CA Cert Page
+  bool DisableCACertPage = 61;
+  
+  // random JA3 fingerprint
+  bool RandomJA3 = 62;
 }
 
 message Certificate {
