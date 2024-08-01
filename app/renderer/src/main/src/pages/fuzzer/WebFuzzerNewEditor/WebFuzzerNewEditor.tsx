@@ -10,10 +10,11 @@ import {copyAsUrl, showDictsAndSelect} from "../HTTPFuzzerPage"
 import styles from "./WebFuzzerNewEditor.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setRemoteValue} from "@/utils/kv"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {yakitNotify} from "@/utils/notification"
 import {WEB_FUZZ_HOTPATCH_CODE, WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE} from "@/defaultConstants/HTTPFuzzerPage"
+const {ipcRenderer} = window.require("electron")
 
 export interface WebFuzzerNewEditorProps {
     ref?: any
@@ -45,6 +46,10 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         const [newRequest, setNewRequest] = useState<string>(request) // 由于传过来的request是ref 值变化并不会导致重渲染 这里拿到的request还是旧值
         useEffect(() => {
             setNewRequest(request)
+        }, [request])
+
+        useEffect(() => {
+            setNewRequest(newRequest)
         }, [request])
 
         useImperativeHandle(
@@ -162,6 +167,19 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             }
         }, [newRequest, isHttps])
 
+        const [url, setUrl] = useState<string>("")
+        useDebounceEffect(
+            () => {
+                ipcRenderer
+                    .invoke("ExtractUrl", {Request: newRequest, IsHTTPS: isHttps})
+                    .then((data: {Url: string}) => {
+                        setUrl(data.Url)
+                    })
+            },
+            [newRequest, isHttps],
+            {wait: 300}
+        )
+
         return (
             <NewHTTPPacketEditor
                 defaultHttps={isHttps}
@@ -184,6 +202,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                     isShowSelectRangeMenu: true
                 }}
                 extraEnd={firstNodeExtra && firstNodeExtra()}
+                url={url}
             />
         )
     })

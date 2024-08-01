@@ -15,6 +15,7 @@ import {failed, info, yakitFailed, yakitNotify, warn} from "../../utils/notifica
 import {
     useControllableValue,
     useCreation,
+    useDebounceEffect,
     useDebounceFn,
     useGetState,
     useInViewport,
@@ -106,7 +107,7 @@ import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {openABSFileLocated} from "@/utils/openWebsite"
+import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
 import {createRoot} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon} from "@/assets/icon/solid"
@@ -1490,6 +1491,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 onlyOneResponse={onlyOneResponse}
                 cachedTotal={cachedTotal}
                 rsp={httpResponse}
+                isHttps={advancedConfigValue.isHttps}
+                request={requestRef.current}
                 valueSearch={affixSearch}
                 onSearchValueChange={(value) => {
                     setAffixSearch(value)
@@ -1840,6 +1843,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         isHttps={advancedConfigValue.isHttps}
                                         ref={responseViewerRef}
                                         fuzzerResponse={httpResponse}
+                                        request={requestRef.current}
                                         defaultResponseSearch={defaultResponseSearch}
                                         system={props.system}
                                         showMatcherAndExtraction={showMatcherAndExtraction}
@@ -2061,6 +2065,8 @@ interface SecondNodeExtraProps {
     retryNoPopconfirm?: boolean
     cancelCurrentHTTPFuzzer?: () => void
     resumeAndPause?: () => void
+    isHttps?: boolean
+    request?: string
 }
 
 /**
@@ -2069,6 +2075,8 @@ interface SecondNodeExtraProps {
 export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
     const {
         rsp,
+        isHttps,
+        request,
         onlyOneResponse,
         cachedTotal,
         valueSearch,
@@ -2187,7 +2195,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         <ChromeSvgIcon
                             className={styles["extra-chrome-btn"]}
                             onClick={() => {
-                                showResponseViaResponseRaw(rsp.ResponseRaw || "")
+                                ipcRenderer
+                                    .invoke("ExtractUrl", {Request: request, IsHTTPS: isHttps})
+                                    .then((data: {Url: string}) => {
+                                        openExternalWebsite(data.Url)
+                                    })
+                                    .catch((error) => {
+                                        yakitNotify("error", error + "")
+                                    })
                             }}
                         />
                         {((rsp.Payloads && rsp.Payloads.length > 0) ||
@@ -2782,8 +2797,9 @@ interface ResponseViewerProps {
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
-    webFuzzerValue?: string
+    webFuzzerValue: string
     isHttps?: boolean
+    request: string
 
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
@@ -2807,7 +2823,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             setShowResponseInfoSecondEditor,
             isHttps,
             secondNodeTitle,
-            secondNodeExtra
+            secondNodeExtra,
+            webFuzzerValue,
+            request
         } = props
 
         const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
@@ -2929,6 +2947,19 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
         }, [fuzzerResponse.ResponseRaw])
 
+        const [url, setUrl] = useState<string>("")
+        useDebounceEffect(
+            () => {
+                ipcRenderer
+                    .invoke("ExtractUrl", {Request: request, IsHTTPS: isHttps})
+                    .then((data: {Url: string}) => {
+                        setUrl(data.Url)
+                    })
+            },
+            [request, isHttps],
+            {wait: 300}
+        )
+
         return (
             <>
                 <YakitResizeBox
@@ -3002,7 +3033,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             }
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
-                            webFuzzerValue={props.webFuzzerValue}
+                            webFuzzerValue={webFuzzerValue}
                             extraEditorProps={{
                                 isShowSelectRangeMenu: true
                             }}
@@ -3016,6 +3047,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     setRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender, "")
                                 }
                             }}
+                            url={url}
                             {...otherEditorProps}
                         />
                     }

@@ -566,6 +566,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
     /** 编码按钮 */
     codingBtn?: ReactElement
+    url?: string
 }
 
 export type RenderTypeOptionVal = "beautify" | "render"
@@ -1184,6 +1185,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             editorId={editorId}
                             highLightText={type === undefined ? highLightText : []}
                             downstreamProxyStr={downstreamProxyStr}
+                            url={props.url}
                             {...props.extraEditorProps}
                         />
                     )}

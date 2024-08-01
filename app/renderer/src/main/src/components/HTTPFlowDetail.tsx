@@ -42,7 +42,7 @@ import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
 import {YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {openABSFileLocated} from "@/utils/openWebsite"
+import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
@@ -398,6 +398,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     ...copyUrlMenuItem,
                                                     ...sendCodeCompareMenuItem("request")
                                                 }}
+                                                url={flow.Url}
                                             />
                                         )}
                                     </div>
@@ -425,6 +426,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     ...copyUrlMenuItem,
                                                     ...sendCodeCompareMenuItem("response")
                                                 }}
+                                                url={flow.Url}
                                             />
                                         )}
                                     </div>
@@ -1203,7 +1205,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     size={"small"}
                     icon={<ChromeSvgIcon />}
                     onClick={() => {
-                        flow?.Response && showResponseViaResponseRaw(flow?.Response)
+                        flow?.Url && openExternalWebsite(flow?.Url)
                     }}
                 />
             )
@@ -1317,6 +1319,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             }
                         }}
                         highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => i.IsMatchRequest)}
+                        url={flow.Url}
                     />
                 )
             }}
@@ -1429,6 +1432,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         highLightText={
                             flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)
                         }
+                        url={flow.Url}
                     />
                 )
             }}

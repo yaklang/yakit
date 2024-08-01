@@ -39,8 +39,8 @@ import {
     SelectSearchProps,
     SortProps
 } from "../TableVirtualResize/TableVirtualResizeType"
-import {saveABSFileToOpen} from "@/utils/openWebsite"
-import {showResponseViaHTTPFlowID, showResponseViaResponseRaw} from "@/components/ShowInBrowser"
+import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
+import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "../yakitUI/YakitTag/YakitCheckableTag"
@@ -1873,7 +1873,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 ipcRenderer
                                     .invoke("GetHTTPFlowById", {Id: rowData?.Id})
                                     .then((i: HTTPFlow) => {
-                                        showResponseViaResponseRaw(i?.Response)
+                                        i.Url && openExternalWebsite(i.Url)
                                     })
                                     .catch((e: any) => {
                                         yakitNotify("error", `Query HTTPFlow failed: ${e}`)
@@ -2646,8 +2646,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         },
         {
-            key: "浏览器中打开",
-            label: "浏览器中打开",
+            key: "浏览器中打开URL",
+            label: "浏览器中打开URL",
+            default: true,
+            webSocket: false,
+            toWebFuzzer: true,
+            onClickSingle: (v) => {
+                v.Url && openExternalWebsite(v.Url)
+            }
+        },
+        {
+            key: "浏览器中查看响应",
+            label: "浏览器中查看响应",
             default: true,
             webSocket: false,
             toWebFuzzer: true,
