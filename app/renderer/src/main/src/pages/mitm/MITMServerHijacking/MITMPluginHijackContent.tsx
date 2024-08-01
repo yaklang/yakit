@@ -538,7 +538,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                         label: "带参数"
                                     }
                                 ]}
-                                size={"small"}
                                 value={isHasParams}
                                 onChange={(e) => {
                                     onIsHasParams(e.target.value)
