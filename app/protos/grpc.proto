@@ -2950,6 +2950,8 @@ message QueryRisksRequest {
   string IsRead = 12;
   string Title = 13;
   repeated int64 Ids = 14;
+  
+  string RuntimeId = 15;
 }
 
 message QueryRisksResponse {
