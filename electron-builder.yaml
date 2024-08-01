@@ -33,6 +33,19 @@ directories:
   output: release/
   app: .
 
+files:
+  - "**/*"
+  - "!bins/**/*"
+  - "!.github/**/*"
+  - "!multibuilder/**/*"
+  - "!scripts/**/*"
+  - "!buildutil/**/*"
+  - "!buildHooks/**/*"
+  - "!build/**/*"
+  - "!backups/**/*"
+  - "!app/renderer/src/**/*"
+
+
 #artifactName: ${productName}-${version}-${platform}-${arch}.${ext}
 asar: true
 
