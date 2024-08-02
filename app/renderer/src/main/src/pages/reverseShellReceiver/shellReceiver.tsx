@@ -223,7 +223,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
         getShellTypeList()
     }, [])
     useEffect(() => {
-        if (receiverDetail.Program) onGenerateReverseShellCommand(receiverDetail)
+        if (receiverDetail.Program) onGenerateReverseShellCommand()
         if (receiverDetail.IP !== ip) {
             setIP(receiverDetail.IP)
         }
@@ -242,15 +242,12 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
     })
     const onIPChange = useMemoizedFn((e) => {
         setIP(e.target.value)
-        setTimeout(() => {
-            onGenerateReverseShellCommand(receiverDetail)
-        }, 200)
     })
     const onGenerateReverseShellCommand = useDebounceFn(
-        useMemoizedFn((detail: GenerateReverseShellCommandRequest) => {
-            if (!detail.Program) return
+        useMemoizedFn(() => {
+            if (!receiverDetail.Program) return
             setLoading(true)
-            const params: GenerateReverseShellCommandRequest = {...detail, IP: ip || detail.IP}
+            const params: GenerateReverseShellCommandRequest = {...receiverDetail, IP: ip || receiverDetail.IP}
             apiGenerateReverseShellCommand(params)
                 .then((res) => {
                     setReverseShellCommand(res)
@@ -273,6 +270,13 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
         }),
         {wait: 500, leading: true}
     ).run
+    const onBlur = useMemoizedFn(() => {
+        onGenerateReverseShellCommand()
+    })
+    const onPressEnter = useMemoizedFn(() => {
+        onGenerateReverseShellCommand()
+    })
+
     return (
         <div className={styles["shell-receiver-middle-item"]}>
             {reverseShellCommand && (
@@ -298,7 +302,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                             wrapperStyle={{width: 164}}
                             value={receiverDetail.ShellType}
                             onSelect={(val) => {
-                                setReceiverDetail((prev) => ({...prev, ShellType: val}))
+                                setReceiverDetail((prev) => ({...prev, IP: ip, ShellType: val}))
                             }}
                             placeholder='请选择...'
                         >
@@ -315,7 +319,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                             wrapperStyle={{width: 164}}
                             value={receiverDetail.Encode}
                             onSelect={(val) => {
-                                setReceiverDetail((prev) => ({...prev, Encode: val}))
+                                setReceiverDetail((prev) => ({...prev, IP: ip, Encode: val}))
                             }}
                             placeholder='请选择...'
                         >
@@ -332,6 +336,8 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                             placeholder={"请输入IP"}
                             value={ip}
                             onChange={onIPChange}
+                            onBlur={onBlur}
+                            onPressEnter={onPressEnter}
                         />
                     </div>
                 </div>
