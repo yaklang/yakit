@@ -24,11 +24,13 @@ interface ChromeLauncherButtonProp {
     onFished?: (host: string, port: number) => void
     isStartMITM?: boolean
     repRuleFlag?: boolean
+    disableCACertPage: boolean
 }
 
 interface MITMChromeLauncherProp {
     host?: string
     port?: number
+    disableCACertPage: boolean
     callback: (host: string, port: number) => void
 }
 
@@ -84,7 +86,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     userDataDir?: string
                     username?: string
                     password?: string
-                } = {...params, username, password, userDataDir}
+                    disableCACertPage: boolean
+                } = {...params, username, password, userDataDir, disableCACertPage: props.disableCACertPage}
 
                 setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + "")
                 userDataDirRef.current.onSetRemoteValues(userDataDir)
@@ -211,7 +214,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
 }
 
 const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((props: ChromeLauncherButtonProp) => {
-    const {isStartMITM, host, port, onFished, repRuleFlag = false} = props
+    const {isStartMITM, host, port, onFished, repRuleFlag = false, disableCACertPage} = props
     const [started, setStarted] = useState(false)
     const [chromeVisible, setChromeVisible] = useState(false)
 
@@ -319,6 +322,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                     <MITMChromeLauncher
                         host={host}
                         port={port}
+                        disableCACertPage={disableCACertPage}
                         callback={(host, port) => {
                             setChromeVisible(false)
                             if (!isStartMITM) {

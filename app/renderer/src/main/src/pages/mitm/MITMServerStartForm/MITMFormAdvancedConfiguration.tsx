@@ -17,10 +17,11 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {useWatch} from "antd/lib/form/Form"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
-import { inputHTTPFuzzerHostConfigItem } from "@/pages/fuzzer/HTTPFuzzerHosts"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {RemoteGV} from "@/yakitGV"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -45,6 +46,7 @@ export interface AdvancedConfigurationFromValue {
     dnsServers: string[]
     etcHosts: any[]
     filterWebsocket: boolean
+    disableCACertPage: boolean
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -58,10 +60,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [enableProxyAuthDef, setEnableProxyAuthDef] = useState<boolean>(false)
         const [proxyUsernameDef, setProxyUsernameDef] = useState<string>()
         const [proxyPasswordDef, setProxyPasswordDef] = useState<string>()
-        const [dnsServersDef,setDnsServersDef] = useState<string[]>(["8.8.8.8", "114.114.114.114"])
-        const [etcHostsDef,setEtcHostsDef] = useState<any[]>([])
+        const [dnsServersDef, setDnsServersDef] = useState<string[]>(["8.8.8.8", "114.114.114.114"])
+        const [etcHostsDef, setEtcHostsDef] = useState<any[]>([])
         const [etcHosts, setEtcHosts] = useState<any[]>([])
         const [filterWebsocketDef, setFilterWebsocketDef] = useState<boolean>(false)
+        const [disableCACertPageDef, setDisableCACertPageDef] = useState<boolean>(false)
 
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -76,7 +79,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 getValue: () => {
                     const v = form.getFieldsValue()
                     if (Object.keys(v).length > 0) {
-                        return {...v,etcHosts}
+                        return {...v, etcHosts}
                     } else {
                         return {
                             certs: certsDef,
@@ -87,7 +90,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             dnsServers: dnsServersDef,
                             proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
                             proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
-                            filterWebsocket: filterWebsocketDef
+                            filterWebsocket: filterWebsocketDef,
+                            disableCACertPage: disableCACertPageDef
                         }
                     }
                 }
@@ -101,6 +105,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 proxyPasswordDef,
                 dnsServersDef,
                 filterWebsocketDef,
+                disableCACertPageDef,
                 visible,
                 form
             ]
@@ -153,7 +158,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 if (!!e) {
                     const dnsServers = JSON.parse(e)
                     setDnsServersDef(dnsServers)
-                    form.setFieldsValue({dnsServers}) 
+                    form.setFieldsValue({dnsServers})
                 }
             })
             // Host配置
@@ -170,6 +175,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 const v = e === "true" ? true : false
                 setFilterWebsocketDef(v)
                 form.setFieldsValue({filterWebsocket: v})
+            })
+            // 禁用初始页
+            getRemoteValue(RemoteGV.MITMDisableCACertPage).then((e) => {
+                const v = e === "true" ? true : false
+                setDisableCACertPageDef(v)
+                form.setFieldsValue({disableCACertPage: v})
             })
         }, [visible])
         /**
@@ -254,29 +265,31 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultDnsServers, JSON.stringify(params.dnsServers))
                 setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts))
                 setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
+                setRemoteValue(RemoteGV.MITMDisableCACertPage, params.disableCACertPage ? "true" : "")
                 onSave(params)
             })
         })
-        const onClose = useMemoizedFn((jumpPage?:boolean) => {
+        const onClose = useMemoizedFn((jumpPage?: boolean) => {
             const formValue = form.getFieldsValue()
-            const oldValue:any = {
+            const oldValue: any = {
                 certs: certsDef,
                 dnsServers: dnsServersDef,
-                etcHosts:etcHostsDef,
+                etcHosts: etcHostsDef,
                 enableProxyAuth: enableProxyAuthDef,
                 filterWebsocket: filterWebsocketDef,
+                disableCACertPage: disableCACertPageDef,
                 proxyUsername: proxyUsernameDef,
-                proxyPassword: proxyPasswordDef,
+                proxyPassword: proxyPasswordDef
             }
-            if(enableGMTLS){
+            if (enableGMTLS) {
                 oldValue.preferGMTLS = preferGMTLSDef
                 oldValue.onlyEnableGMTLS = onlyEnableGMTLSDef
             }
             const newValue = {
                 certs,
                 ...formValue,
-                proxyUsername:formValue.proxyUsername||'',
-                proxyPassword:formValue.proxyPassword||'',
+                proxyUsername: formValue.proxyUsername || "",
+                proxyPassword: formValue.proxyPassword || "",
                 etcHosts
             }
             if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
@@ -300,18 +313,18 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     ),
                     onOk: () => {
                         onSaveSetting()
-                        jumpPage&&ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
+                        jumpPage && ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
                     },
                     onCancel: () => {
                         setVisible(false)
-                        jumpPage&&ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
+                        jumpPage && ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
                     },
                     cancelButtonProps: {size: "small", className: "modal-cancel-button"},
                     okButtonProps: {size: "small", className: "modal-ok-button"}
                 })
             } else {
                 setVisible(false)
-                jumpPage&&ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
+                jumpPage && ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
             }
         })
         return (
@@ -341,45 +354,45 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 maskClosable={false}
             >
                 <Form labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
-                <Form.Item
-                    label='DNS服务器'
-                    name='dnsServers'
-                    help={"指定DNS服务器"}
-                    initialValue={["8.8.8.8", "114.114.114.114"]}
-                >
-                    <YakitSelect
-                        options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
-                            return {value: i, label: i}
-                        })}
-                        mode='tags'
-                        allowClear={true}
-                        placeholder={"例如 1.1.1.1"}
-                    />
-                </Form.Item>
-                <Form.Item label={"Hosts配置"} name='etcHosts'>
-                    <Space direction={"horizontal"} wrap>
-                        <YakitButton
-                            onClick={() => {
-                                inputHTTPFuzzerHostConfigItem((obj) => {
-                                    setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
-                                })
-                            }}
-                        >
-                            添加 Hosts 映射
-                        </YakitButton>
-                        {etcHosts.map((i, n) => (
-                            <YakitTag
-                                closable={true}
-                                onClose={() => {
-                                    setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+                    <Form.Item
+                        label='DNS服务器'
+                        name='dnsServers'
+                        help={"指定DNS服务器"}
+                        initialValue={["8.8.8.8", "114.114.114.114"]}
+                    >
+                        <YakitSelect
+                            options={["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"].map((i) => {
+                                return {value: i, label: i}
+                            })}
+                            mode='tags'
+                            allowClear={true}
+                            placeholder={"例如 1.1.1.1"}
+                        />
+                    </Form.Item>
+                    <Form.Item label={"Hosts配置"} name='etcHosts'>
+                        <Space direction={"horizontal"} wrap>
+                            <YakitButton
+                                onClick={() => {
+                                    inputHTTPFuzzerHostConfigItem((obj) => {
+                                        setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
+                                    })
                                 }}
-                                key={`${i.Key}-${n}`}
                             >
-                                {`${i.Key} => ${i.Value}`}
-                            </YakitTag>
-                        ))}
-                    </Space>
-                </Form.Item>
+                                添加 Hosts 映射
+                            </YakitButton>
+                            {etcHosts.map((i, n) => (
+                                <YakitTag
+                                    closable={true}
+                                    onClose={() => {
+                                        setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+                                    }}
+                                    key={`${i.Key}-${n}`}
+                                >
+                                    {`${i.Key} => ${i.Value}`}
+                                </YakitTag>
+                            ))}
+                        </Space>
+                    </Form.Item>
                     {enableGMTLS && (
                         <>
                             <Form.Item
@@ -428,10 +441,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             </Form.Item>
                         </>
                     )}
+                    <Form.Item label={"过滤WebSocket"} name='filterWebsocket' valuePropName='checked'>
+                        <YakitSwitch size='large' />
+                    </Form.Item>
                     <Form.Item
-                        label={"过滤WebSocket"}
-                        name='filterWebsocket'
+                        label={"禁用初始页"}
+                        name='disableCACertPage'
                         valuePropName='checked'
+                        help={"开启后免配置启动不会访问初始页面"}
                     >
                         <YakitSwitch size='large' />
                     </Form.Item>
