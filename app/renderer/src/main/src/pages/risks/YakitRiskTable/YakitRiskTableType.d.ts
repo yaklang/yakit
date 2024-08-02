@@ -1,14 +1,23 @@
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {Risk} from "../schema"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
+import {ReactNode} from "react"
+import {TableVirtualResizeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 
 export interface YakitRiskTableProps {
     setRiskLoading: (b: boolean) => void
     /**是否开启高级查询 */
-    advancedQuery: boolean
-    setAdvancedQuery: (b: boolean) => void
+    advancedQuery?: boolean
+    setAdvancedQuery?: (b: boolean) => void
     query: QueryRisksRequest
     setQuery: (v: QueryRisksRequest) => void
+    renderTitle?: ReactNode
+    riskWrapperClassName?: string
+    tableVirtualResizeProps?: TableVirtualResizeProps
+    yakitRiskDetailsBorder?: boolean
+    excludeColumnsKey?: string[]
+    allTotal?: number
+    setAllTotal?: (b: number) => void
 }
 
 export interface QueryRisksRequest {
@@ -35,19 +44,22 @@ export interface QueryRisksRequest {
     TagList?: string[]
     /**IP段 */
     IPList?: string[]
+
+    RuntimeId?: string
 }
 
 export type QueryRisksResponse = QueryGeneralResponse<Risk>
 
 export interface YakitRiskDetailsProps {
-    className?:string
+    className?: string
     info: Risk
     isShowTime?: boolean
     shrink?: boolean
     quotedRequest?: string
     quotedResponse?: string
     onClose?: () => void
-    onClickIP?:(info: Risk)=>void
+    onClickIP?: (info: Risk) => void
+    border?: boolean
 }
 
 export interface YakitRiskSelectTagProps {
