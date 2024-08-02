@@ -812,14 +812,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [url, setUrl] = useState<string>("")
         useDebounceEffect(
             () => {
-                ipcRenderer
-                    .invoke("ExtractUrl", {
-                        Request: Uint8ArrayToString(currentSelectItem?.RequestRaw || new Uint8Array()),
-                        IsHTTPS: currentSelectItem?.IsHTTPS
-                    })
-                    .then((data: {Url: string}) => {
-                        setUrl(data.Url)
-                    })
+                if (currentSelectItem?.RequestRaw) {
+                    ipcRenderer
+                        .invoke("ExtractUrl", {
+                            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+                            IsHTTPS: currentSelectItem?.IsHTTPS
+                        })
+                        .then((data: {Url: string}) => {
+                            setUrl(data.Url)
+                        })
+                } else {
+                    setUrl("")
+                }
             },
             [currentSelectItem?.RequestRaw, currentSelectItem?.IsHTTPS],
             {wait: 300}
