@@ -2,7 +2,7 @@ import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
@@ -14,6 +14,7 @@ import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebTree} from "./WebTree/WebTree"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
+import { MITMConsts } from "@/pages/mitm/MITMConsts"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -39,7 +40,7 @@ interface HTTPHistoryTabsItem {
 }
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
-    const {pageType} = props
+    const {pageType, downstreamProxyStr} = props
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
     const {isRefreshHistory, setIsRefreshHistory} = useStore()
@@ -69,6 +70,26 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             }
         })
     }, [])
+
+    const [downstreamProxy, setDownstreamProxy] = useState<string>(downstreamProxyStr || "")
+    useDebounceEffect(
+        () => {
+            getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
+                if (pageType === "History" && res) {
+                    try {
+                        const obj = JSON.parse(res) || {}
+                        setDownstreamProxy(obj.defaultValue || "")
+                    } catch (error) {
+                        setDownstreamProxy(downstreamProxyStr || "")
+                    }
+                } else {
+                    setDownstreamProxy(downstreamProxyStr || "")
+                }
+            })
+        },
+        [downstreamProxyStr, inViewport, pageType],
+        {wait: 300}
+    )
 
     /**
      * 左侧tab部分
@@ -281,7 +302,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     historyId={historyId}
                                     onQueryParams={onQueryParams}
                                     inViewport={inViewport}
-                                    downstreamProxyStr={props.downstreamProxyStr}
+                                    downstreamProxyStr={downstreamProxy}
                                 />
                             </div>
                         )}
@@ -309,7 +330,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             refresh={refresh}
                                             defaultFold={defaultFold}
                                             historyId={historyId}
-                                            downstreamProxyStr={props.downstreamProxyStr}
+                                            downstreamProxyStr={downstreamProxy}
                                             // defaultHeight={detailHeight}
                                         />
                                     </div>

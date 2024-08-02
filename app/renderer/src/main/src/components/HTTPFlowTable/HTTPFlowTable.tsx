@@ -301,14 +301,14 @@ export const HTTLFlowFilterDropdownForms: React.FC<FilterDropdownStringsProp> = 
     )
 }
 
-export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => any) => {
+export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed: () => any, downstreamProxyStr: string) => {
     if (!flow) {
         return <Empty>找不到该请求详情</Empty>
     }
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed} downstreamProxyStr={downstreamProxyStr}/>
         </div>
     )
 }
@@ -1890,7 +1890,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 e.stopPropagation()
                                 let m = showDrawer({
                                     width: "80%",
-                                    content: onExpandHTTPFlow(rowData, () => m.destroy())
+                                    content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr)
                                 })
                             }}
                         />
@@ -1934,7 +1934,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             RequestSizeVerbose,
             action
         ]
-    }, [tags, tagsFilter, checkBodyLength, toWebFuzzer])
+    }, [tags, tagsFilter, checkBodyLength, toWebFuzzer, downstreamProxyStr])
 
     // 背景颜色是否标注为红色
     const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1

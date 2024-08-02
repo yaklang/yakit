@@ -399,6 +399,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     ...sendCodeCompareMenuItem("request")
                                                 }}
                                                 url={flow.Url}
+                                                downstreamProxyStr={props.downstreamProxyStr}
                                             />
                                         )}
                                     </div>
@@ -427,6 +428,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     ...sendCodeCompareMenuItem("response")
                                                 }}
                                                 url={flow.Url}
+                                                downstreamProxyStr={props.downstreamProxyStr}
                                             />
                                         )}
                                     </div>
