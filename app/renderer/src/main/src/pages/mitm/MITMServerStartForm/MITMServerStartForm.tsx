@@ -327,6 +327,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }
                 >
                     <YakitRadioButtons
+                        wrapClassName={styles['stateSecretHijacking-btns']}
                         buttonStyle='solid'
                         options={[
                             {
@@ -342,7 +343,6 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 label: "默认"
                             }
                         ]}
-                        size={"small"}
                     />
                 </Item>
                 <Item
