@@ -54,9 +54,31 @@ const initFileTreeData = (list, path) => {
  */
 export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
     return new Promise(async (resolve, reject) => {
+        // local
         const params = {
             Method: "GET",
             Url: {Schema: "file", Query: [{Key: "op", Value: "list"}], Path: path}
+        }
+
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            const data: FileNodeMapProps[] = initFileTreeData(list, path)
+            resolve(data)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 审计树获取
+ */
+export const grpcFetchAuditTree: (path: string) =>Promise<FileNodeMapProps[]> = (path) => {
+    return new Promise(async (resolve, reject) => {
+        // ssadb path为/时 展示最近编译
+        const params = {
+            Method: "GET",
+            Url: {Schema: "ssadb", Query: [{Key: "op", Value: "list"}], Path: path} 
         }
 
         try {
@@ -312,6 +334,7 @@ export const getCodeByPath = (path: string): Promise<string> => {
                 }
             })
             ipcRenderer.on(`${token}-error`, async (e, error) => {
+                // 此处在 ssadb 模式时不做node兼容处理
                 try {
                     let newContent = await getCodeByNode(path)
                     resolve(newContent)

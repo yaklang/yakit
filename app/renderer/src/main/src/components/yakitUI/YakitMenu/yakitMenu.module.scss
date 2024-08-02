@@ -52,6 +52,16 @@
     --menu-select-background: var(--ui-background-color);
 }
 
+@mixin generateItemText($type: "primary") {
+    --menu-color: #{fetch-color($type, "color-5")};
+    --menu-icon-color: #{fetch-color($type, "color-5")};
+    --menu-background: var(--ui-background-color);
+    --menu-active-color: #31343f;   //var(--ui-background-color)
+    --menu-active-icon-color: #{fetch-color($type, "color-5")};
+    --menu-active-background: var(--yakit-primary-2);
+    @include generateMenuSelect($type);
+}
+
 /* ---------- 类型类 ----------*/
 .yakit-menu-primary {
     --menu-color: var(--ui-text-color);
@@ -77,6 +87,10 @@
 
         li:has(.yakit-menu-item-no-style) {
             @include generateItemColourless();
+        }
+
+        li:has(.yakit-menu-item-text) {
+            @include generateItemPrimary();
         }
     }
 }
@@ -104,6 +118,10 @@
 
         li:has(.yakit-menu-item-no-style) {
             @include generateItemColourless();
+        }
+
+        li:has(.yakit-menu-item-text) {
+            @include generateItemText();
         }
     }
 }
