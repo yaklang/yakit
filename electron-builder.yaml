@@ -33,6 +33,19 @@ directories:
   output: release/
   app: .
 
+files:
+  - "**/*"
+  - "!bins/**/*"
+  - "!.github/**/*"
+  - "!multibuilder/**/*"
+  - "!scripts/**/*"
+  - "!buildutil/**/*"
+  - "!buildHooks/**/*"
+  - "!build/**/*"
+  - "!backups/**/*"
+  - "!app/renderer/src/**/*"
+
+
 #artifactName: ${productName}-${version}-${platform}-${arch}.${ext}
 asar: true
 
@@ -42,6 +55,7 @@ publish:
 
 mac:
   artifactName: ${productName}-${version}-darwin-${arch}.${ext}
+  gatekeeperAssess: false
   # extraFiles:
   #   - from: "bins/flag.darwin.txt"
   #     to: "bins/flag.darwin.txt"
