@@ -2482,9 +2482,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
     }, [streamInfo])
 
     const handlePerformanceSampling = () => {
-        console.log(1);
         if (performanceSamplingInfo.isPerformanceSampling) return
-        console.log(2);
         grpcFetchLocalPluginDetail({Name: "核心引擎性能采样"}, true)
             .then((res) => {
                 const samplingPlugin = res
@@ -2502,7 +2500,6 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                         [ele.Field]: value
                     }
                 })
-                console.log('弹弹窗');
                 let m = showYakitModal({
                     title: "性能采样",
                     width: 400,
