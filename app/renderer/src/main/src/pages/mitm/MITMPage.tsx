@@ -80,6 +80,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [addr, setAddr] = useState("")
     const [host, setHost] = useState("127.0.0.1")
     const [port, setPort] = useState(8083)
+    const [disableCACertPage, setDisableCACertPage] = useState(false)
     const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
     const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
     const [tip, setTip] = useState("")
@@ -272,6 +273,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             setAddr(`http://${host}:${port} 或 socks5://${host}:${port}`)
             setHost(host)
             setPort(port)
+            setDisableCACertPage(extra?.disableCACertPage || false)
             setDefaultPlugins(plugins)
             setEnableInitialMITMPlugin(enableInitialPlugin)
             startMITMServer(host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certs, extra)
@@ -321,6 +323,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         port={port}
                         addr={addr}
                         host={host}
+                        disableCACertPage={disableCACertPage}
                         status={status}
                         setStatus={setStatus}
                         defaultPlugins={defaultPlugins}
@@ -420,6 +423,8 @@ export interface ExtraMITMServerProps {
     hosts: {Key: string; Value: string}[]
     /**@name 过滤WebSocket */
     filterWebsocket: boolean
+    /**禁用初始页 */
+    disableCACertPage: boolean
 }
 
 interface MITMServerProps {

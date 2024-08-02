@@ -35,6 +35,7 @@ export interface MITMServerHijackingProp {
     addr: string
     host: string
     port: number
+    disableCACertPage: boolean
     status: MITMStatus
     enableInitialMITMPlugin?: boolean
     defaultPlugins?: string[]
@@ -65,6 +66,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const {
         host,
         port,
+        disableCACertPage,
         addr,
         status,
         setStatus,
@@ -219,7 +221,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     {/*    系统代理*/}
                     {/*</YakitButton>*/}
                     <div className={style["mitm-server-chrome"]}>
-                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
+                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} disableCACertPage={disableCACertPage} />
                     </div>
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />

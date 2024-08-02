@@ -1,6 +1,6 @@
 import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {useDebounceEffect, useMemoizedFn, usePrevious, useUpdateEffect} from "ahooks"
-import {OutlineCloseIcon, OutlineIdentificationIcon, OutlineTagIcon} from "@/assets/icon/outline"
+import {OutlineCloseIcon, OutlineIdentificationIcon, OutlineQuestionmarkcircleIcon, OutlineTagIcon} from "@/assets/icon/outline"
 import {Form, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -21,6 +21,9 @@ import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorInfo.module.scss"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { YamlTempHelp } from "./YamlTempHelp"
 
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
@@ -268,6 +271,19 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         })
         /** ---------- 插件配置逻辑 End ---------- */
 
+        const onOpenHelpModal = useMemoizedFn(() => {
+            const m = showYakitModal({
+                title: "Yaml 模板案例",
+                type: "white",
+                width: "60vw",
+                cancelButtonProps: {style: {display: "none"}},
+                onOkText: "我知道了",
+                onOk: () => m.destroy(),
+                bodyStyle: {padding: "8px 24px"},
+                content: <YamlTempHelp />
+            })
+        })
+
         return (
             <div className={styles["editor-info-form"]}>
                 <Form className={styles["editor-info-form-global"]} form={form} layout='vertical'>
@@ -436,6 +452,9 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         </Form.Item>
                     )}
                 </Form>
+                <div className={styles["yaml-temp-example"]} onClick={() => onOpenHelpModal()}>
+                    <span>Yaml 模板案例</span> <OutlineQuestionmarkcircleIcon />
+                </div>
                 <YakitHint
                     visible={typeSwitchPopShow}
                     title='切换脚本类型'

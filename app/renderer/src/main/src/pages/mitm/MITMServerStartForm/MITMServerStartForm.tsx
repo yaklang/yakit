@@ -25,11 +25,9 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {CacheDropDownGV} from "@/yakitGV"
-import emiter from "@/utils/eventBus/eventBus"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
@@ -199,7 +197,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             proxyPassword: params.proxyPassword,
             dnsServers: params.dnsServers,
             hosts: params.etcHosts,
-            filterWebsocket: params.filterWebsocket
+            filterWebsocket: params.filterWebsocket,
+            disableCACertPage: params.disableCACertPage
         }
         if (params.stateSecretHijacking === "enableGMTLS") {
             extra.enableGMTLS = true
@@ -400,6 +399,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <ChromeLauncherButton
                             host={useWatch("host", form)}
                             port={useWatch("port", form)}
+                            disableCACertPage={advancedFormRef.current?.getValue().disableCACertPage}
                             onFished={(host, port) => {
                                 const values = {
                                     ...form.getFieldsValue(),
