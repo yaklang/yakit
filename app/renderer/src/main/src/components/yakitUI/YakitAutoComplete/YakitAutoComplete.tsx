@@ -126,7 +126,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
             >
                 <Text
                     ellipsis={{
-                        tooltip: true
+                        tooltip: false
                     }}
                 >
                     {copyItem.label}

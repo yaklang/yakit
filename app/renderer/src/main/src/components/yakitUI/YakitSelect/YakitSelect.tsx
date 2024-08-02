@@ -194,7 +194,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             >
                 <Text
                     ellipsis={{
-                        tooltip: true
+                        tooltip: false
                     }}
                 >
                     {copyItem.label}
