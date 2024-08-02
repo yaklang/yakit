@@ -202,7 +202,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     }, [hooks, hooksID, i])
     const checkedStatus = useMemo(() => {
         return status === "idle" ? !!defaultPlugins?.includes(i.ScriptName) : hackingCheck
-    }, [status, defaultPlugins, hackingCheck])
+    }, [status, defaultPlugins, hackingCheck, i])
     return (
         <div className={style["mitm-plugin-local-item"]}>
             <div className={style["mitm-plugin-local-left"]}>
