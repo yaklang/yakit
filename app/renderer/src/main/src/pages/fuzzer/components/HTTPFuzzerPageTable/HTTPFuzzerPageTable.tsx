@@ -793,6 +793,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
             if (currentSelectItem) {
+                setCodeKey("utf-8")
                 getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then((res) => {
                     if (!!res) {
                         setTypeOptionVal(res)

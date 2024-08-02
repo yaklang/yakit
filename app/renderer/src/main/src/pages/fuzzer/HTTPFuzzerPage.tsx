@@ -2915,6 +2915,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
             if (fuzzerResponse.ResponseRaw) {
+                setCodeKey("utf-8")
                 getRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
                     if (!!res) {
                         setResTypeOptionVal(res)
@@ -2924,10 +2925,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 })
             }
         }, [fuzzerResponse])
-
-        const responseRawString = useCreation(() => {
-            return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
-        }, [fuzzerResponse.ResponseRaw])
 
         return (
             <>

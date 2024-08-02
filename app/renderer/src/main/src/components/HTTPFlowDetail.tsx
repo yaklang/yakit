@@ -1124,6 +1124,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [codeValue, setCodeValue] = useState<string>("")
     useEffect(() => {
         if (flow) {
+            setCodeKey("utf-8")
             getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
                 if (!!res) {
                     setReqTypeOptionVal(res)
