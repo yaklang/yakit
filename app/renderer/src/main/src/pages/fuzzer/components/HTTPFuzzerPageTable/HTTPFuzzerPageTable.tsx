@@ -804,6 +804,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         }, [currentSelectItem, currentSelectShowType])
 
+        const originReqOrResValue = useMemo(() => {
+            const value =
+                currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
+            return (value && Uint8ArrayToString(value)) || ""
+        }, [currentSelectShowType, currentSelectItem])
+
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
@@ -917,7 +923,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             noHex={true}
                             loading={codeLoading}
                             // noHeader={true}
-                            originValue={codeValue}
+                            originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
                             onAddOverlayWidget={(editor) => {
                                 setEditor(editor)
                             }}

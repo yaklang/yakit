@@ -2926,6 +2926,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
         }, [fuzzerResponse])
 
+        const responseRawString = useCreation(() => {
+            return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
+        }, [fuzzerResponse.ResponseRaw])
+
         return (
             <>
                 <YakitResizeBox
@@ -2939,7 +2943,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
-                            originValue={codeValue}
+                            originValue={codeKey === "utf-8" ? responseRawString : codeValue}
                             readOnly={true}
                             hideSearch={true}
                             isResponse={true}
