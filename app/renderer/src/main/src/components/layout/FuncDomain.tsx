@@ -2563,6 +2563,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         emiter.on("cancelPerformanceSampling", cancelPerformanceSampling)
         return () => {
             emiter.off("cancelPerformanceSampling", cancelPerformanceSampling)
+            emiter.off("performanceSampling", handlePerformanceSampling)
         }
     }, [])
 
