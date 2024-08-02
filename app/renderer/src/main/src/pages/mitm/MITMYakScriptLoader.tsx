@@ -1,9 +1,9 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {ForwardedRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {Card, Col, Form, Typography, Row, Statistic} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
-import {failed, yakitNotify} from "../../utils/notification"
+import {failed} from "../../utils/notification"
 import {useMemoizedFn} from "ahooks"
 import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -13,14 +13,16 @@ import {LightningBoltIcon} from "@/assets/newIcon"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
 import {YakParamProps} from "../plugins/pluginsType"
-import {CustomPluginExecuteFormValue} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {
+    CustomPluginExecuteFormValue,
+    YakExtraParamProps
+} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {ExecuteEnterNodeByPluginParams} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {getValueByType} from "../plugins/editDetails/utils"
-import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {getValueByType, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
-const {YakitPanel} = YakitCollapse
+import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 const {Text} = Typography
 
 const {ipcRenderer} = window.require("electron")
@@ -46,68 +48,43 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     /**
      * mitm处理带参
      */
+    const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
     const handleMitmHasParams = (submitFlag = false) => {
         const requiredParams = i.Params.filter((item) => item.Required)
         const norequiredParams = i.Params.filter((item) => !item.Required)
-        let requiredInitRequiredFormValue: CustomPluginExecuteFormValue = {}
-        let norequiredInitRequiredFormValue: CustomPluginExecuteFormValue = {}
-        requiredParams.forEach((ele) => {
+        const groupParams: YakExtraParamProps[] = ParamsToGroupByGroupName(norequiredParams)
+        let initFormValue: CustomPluginExecuteFormValue = {}
+        i.Params.forEach((ele) => {
             const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-            requiredInitRequiredFormValue = {
-                ...requiredInitRequiredFormValue,
+            initFormValue = {
+                ...initFormValue,
                 [ele.Field]: value
             }
         })
-        norequiredParams.forEach((ele) => {
-            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-            norequiredInitRequiredFormValue = {
-                ...norequiredInitRequiredFormValue,
-                [ele.Field]: value
-            }
-        })
-
         getRemoteValue("mitm_has_params_" + i.ScriptName).then((res) => {
             if (res) {
                 try {
                     const arr: YakExecutorParam[] = JSON.parse(res) || []
                     arr.forEach((item) => {
-                        if (requiredInitRequiredFormValue.hasOwnProperty(item.Key)) {
-                            requiredInitRequiredFormValue[item.Key] =
-                                item.Value || requiredInitRequiredFormValue[item.Key]
-                        } else if (norequiredInitRequiredFormValue.hasOwnProperty(item.Key)) {
-                            norequiredInitRequiredFormValue[item.Key] = item.Value
+                        if (initFormValue.hasOwnProperty(item.Key)) {
+                            initFormValue[item.Key] = item.Value
                         }
                     })
                 } catch (error) {}
-                mitmParamsModal(
-                    requiredInitRequiredFormValue,
-                    requiredParams,
-                    norequiredInitRequiredFormValue,
-                    norequiredParams,
-                    submitFlag
-                )
+                mitmParamsModal(initFormValue, requiredParams, groupParams, submitFlag)
             } else {
                 // 带参插件参数本地不存在 采用默认值为初始值
-                mitmParamsModal(
-                    requiredInitRequiredFormValue,
-                    requiredParams,
-                    norequiredInitRequiredFormValue,
-                    norequiredParams,
-                    submitFlag
-                )
+                mitmParamsModal(initFormValue, requiredParams, groupParams, submitFlag)
             }
         })
     }
     const mitmParamsModal = (
-        requiredInitRequiredFormValue: CustomPluginExecuteFormValue,
+        initFormValue: CustomPluginExecuteFormValue,
         requiredParams: YakParamProps[],
-        norequiredInitRequiredFormValue: CustomPluginExecuteFormValue,
-        norequiredParams: YakParamProps[],
+        groupParams: YakExtraParamProps[],
         submitFlag: boolean
     ) => {
-        if (requiredParams.length || norequiredParams.length) {
-            let saveRequiredParams: CustomPluginExecuteFormValue = requiredInitRequiredFormValue
-            let saveNORequiredParams: CustomPluginExecuteFormValue = norequiredInitRequiredFormValue
+        if (requiredParams.length || groupParams.length) {
             let m = showYakitModal({
                 title: (
                     <div>
@@ -127,41 +104,34 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 centered: true,
                 maskClosable: false,
                 content: (
-                    <div
-                        className={style["mitm-params-set"]}
-                        style={{margin: !requiredParams.length ? "-1px 10px 15px" : "15px 10px"}}
-                    >
-                        <MitmRequiredParamsForm
-                            onPerformanceParams={(params) => (saveRequiredParams = params)}
-                            initRequiredFormValue={requiredInitRequiredFormValue}
+                    <div className={style["mitm-params-set"]}>
+                        <MitmHasParamsForm
+                            ref={mitmHasParamsPluginFormRef}
+                            initFormValue={initFormValue}
                             requiredParams={requiredParams}
-                        ></MitmRequiredParamsForm>
-                        {!!norequiredParams.length && (
-                            <YakitCollapse defaultActiveKey={!requiredParams.length ? ["额外参数"] : [""]}>
-                                <YakitPanel header='额外参数' key='额外参数'>
-                                    <MitmParamsForm
-                                        onPerformanceParams={(params) => (saveNORequiredParams = params)}
-                                        initRequiredFormValue={norequiredInitRequiredFormValue}
-                                        params={norequiredParams}
-                                    ></MitmParamsForm>
-                                </YakitPanel>
-                            </YakitCollapse>
-                        )}
+                            groupParams={groupParams}
+                        ></MitmHasParamsForm>
                     </div>
                 ),
                 onOkText: "确定",
                 onOk: () => {
-                    const saveParams: any = {...saveRequiredParams, ...saveNORequiredParams}
-                    const saveParasmArr: YakExecutorParam[] = []
-                    Object.keys(saveParams).forEach((key) => {
-                        saveParasmArr.push({Key: key, Value: saveParams[key]})
-                    })
-                    setRemoteValue("mitm_has_params_" + i.ScriptName, JSON.stringify(saveParasmArr))
-                    if (submitFlag) {
-                        clearMITMPluginCache()
-                        onSubmitYakScriptId(script.Id, saveParasmArr)
+                    if (mitmHasParamsPluginFormRef.current) {
+                        mitmHasParamsPluginFormRef.current.onSubmit().then((values) => {
+                            if (values) {
+                                const saveParams: CustomPluginExecuteFormValue = {...values}
+                                const saveParasmArr: YakExecutorParam[] = []
+                                Object.keys(saveParams).forEach((key) => {
+                                    saveParasmArr.push({Key: key, Value: saveParams[key]})
+                                })
+                                setRemoteValue("mitm_has_params_" + i.ScriptName, JSON.stringify(saveParasmArr))
+                                if (submitFlag) {
+                                    clearMITMPluginCache()
+                                    onSubmitYakScriptId(script.Id, saveParasmArr)
+                                }
+                                m.destroy()
+                            }
+                        })
                     }
-                    m.destroy()
                 },
                 onCancel: () => {
                     m.destroy()
@@ -229,7 +199,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     })
     const hackingCheck = useMemo(() => {
         return !!hooks.get(i.ScriptName) || !!hooksID.get(i.Id + "")
-    }, [hooks, hooksID])
+    }, [hooks, hooksID, i])
     const checkedStatus = useMemo(() => {
         return status === "idle" ? !!defaultPlugins?.includes(i.ScriptName) : hackingCheck
     }, [status, defaultPlugins, hackingCheck])
@@ -319,52 +289,50 @@ export function clearMITMPluginCache() {
         failed(`清除插件缓存失败: ${e}`)
     })
 }
-interface MitmRequiredParamsFormProps {
-    onPerformanceParams: (params: any) => void
-    initRequiredFormValue: CustomPluginExecuteFormValue
-    requiredParams: YakParamProps[]
+interface MitmHasParamsFormPropsRefProps {
+    onSubmit: () => Promise<CustomPluginExecuteFormValue | undefined>
 }
-// 必填参数
-const MitmRequiredParamsForm = React.memo((props: MitmRequiredParamsFormProps) => {
-    const {onPerformanceParams, initRequiredFormValue, requiredParams} = props
+interface MitmHasParamsFormProps {
+    ref?: ForwardedRef<MitmHasParamsFormPropsRefProps>
+    initFormValue: CustomPluginExecuteFormValue
+    requiredParams: YakParamProps[]
+    groupParams: YakExtraParamProps[]
+}
+const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) => {
+    const {initFormValue, requiredParams, groupParams} = props
     const [form] = Form.useForm()
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            onSubmit: handleFormSubmit
+        }),
+        [form]
+    )
+
+    const handleFormSubmit: () => Promise<CustomPluginExecuteFormValue | undefined> = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            if (!form) return resolve(undefined)
+            form.validateFields()
+                .then((values) => {
+                    resolve(values)
+                })
+                .catch(() => {
+                    resolve(undefined)
+                })
+        })
+    })
+
     return (
         <Form
             form={form}
             layout={"horizontal"}
             labelCol={{span: 8}}
             wrapperCol={{span: 15}}
-            initialValues={initRequiredFormValue}
-            onValuesChange={(changedValues, allValues) => {
-                onPerformanceParams({...allValues})
-            }}
+            initialValues={initFormValue}
         >
             <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"mitm"} isExecuting={false} />
-        </Form>
-    )
-})
-interface MitmParamsFormProps {
-    onPerformanceParams: (params: any) => void
-    initRequiredFormValue: CustomPluginExecuteFormValue
-    params: YakParamProps[]
-}
-// 额外参数
-const MitmParamsForm = React.memo((props: MitmParamsFormProps) => {
-    const {onPerformanceParams, initRequiredFormValue, params} = props
-    const [form] = Form.useForm()
-    return (
-        <Form
-            form={form}
-            layout={"horizontal"}
-            labelCol={{span: 8}}
-            wrapperCol={{span: 15}}
-            style={{marginTop: 20}}
-            initialValues={initRequiredFormValue}
-            onValuesChange={(changedValues, allValues) => {
-                onPerformanceParams({...allValues})
-            }}
-        >
-            <ExecuteEnterNodeByPluginParams paramsList={params} pluginType={"mitm"} isExecuting={false} />
+            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"mitm"} />
         </Form>
     )
 })
