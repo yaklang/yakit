@@ -1119,11 +1119,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [reqTypeOptionVal, setReqTypeOptionVal] = useState<RenderTypeOptionVal>()
     const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
     // 编辑器编码
-    const [codeKey, setCodeKey] = useState<string>("")
+    const [codeKey, setCodeKey] = useState<string>("utf-8")
     const [codeLoading, setCodeLoading] = useState<boolean>(false)
     const [codeValue, setCodeValue] = useState<string>("")
     useEffect(() => {
         if (flow) {
+            setCodeKey("utf-8")
             getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
                 if (!!res) {
                     setReqTypeOptionVal(res)
@@ -1406,7 +1407,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
                         loading={resEditorLoading}
-                        originValue={codeKey === "" ? originRspValue : codeValue}
+                        originValue={codeKey === "utf-8" ? originRspValue : codeValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
@@ -1451,7 +1452,11 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
     useDebounceEffect(
         () => {
             if (codeKey) {
-                fetchNewCodec(codeKey)
+                if (codeKey === "utf-8") {
+                    onSetCodeValue(Uint8ArrayToString(originValue))
+                } else {
+                    fetchNewCodec(codeKey)
+                }
             }
         },
         [originValue],
@@ -1461,8 +1466,10 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
     )
 
     const handleClickCoding = (codeVal: string) => {
-        if (codeKey === codeVal) {
-            onSetCodeKey("")
+        if (codeKey === codeVal) return
+        if (codeVal === "utf-8") {
+            onSetCodeValue(Uint8ArrayToString(originValue))
+            onSetCodeKey(codeVal)
         } else {
             fetchNewCodec(codeVal)
         }
@@ -1514,7 +1521,8 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
                         {label: "windows-1252", codeKey: "windows-1252"},
                         {label: "iso-8859-1", codeKey: "iso-8859-1"},
                         {label: "big5", codeKey: "big5"},
-                        {label: "utf-16", codeKey: "utf-16"}
+                        {label: "utf-16", codeKey: "utf-16"},
+                        {label: "utf-8", codeKey: "utf-8"}
                     ].map((item) => (
                         <div
                             key={item.codeKey}

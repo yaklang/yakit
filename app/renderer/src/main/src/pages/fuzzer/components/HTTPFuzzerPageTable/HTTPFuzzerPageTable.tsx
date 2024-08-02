@@ -788,11 +788,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
         // 编辑器编码
-        const [codeKey, setCodeKey] = useState<string>("")
+        const [codeKey, setCodeKey] = useState<string>("utf-8")
         const [codeLoading, setCodeLoading] = useState<boolean>(false)
         const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
             if (currentSelectItem) {
+                setCodeKey("utf-8")
                 getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then((res) => {
                     if (!!res) {
                         setTypeOptionVal(res)
@@ -922,7 +923,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             noHex={true}
                             loading={codeLoading}
                             // noHeader={true}
-                            originValue={codeKey === "" ? originReqOrResValue : codeValue}
+                            originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
                             onAddOverlayWidget={(editor) => {
                                 setEditor(editor)
                             }}
