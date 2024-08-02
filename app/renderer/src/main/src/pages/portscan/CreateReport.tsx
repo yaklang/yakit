@@ -242,7 +242,11 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
                     const percent = obj.content.progress
                     setReportPercent(Math.trunc(percent * 100))
                 }
-                reportIdRef.current = parseInt(obj.content.data)
+                if (obj?.type === "log") {
+                    if (obj.content?.level === "report") {
+                        reportIdRef.current = parseInt(obj.content.data)
+                    }
+                }
             }
         })
         ipcRenderer.on(`${tokenRef.current}-error`, (e: any, error: any) => {
