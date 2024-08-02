@@ -32,7 +32,6 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((p
         }
         const key = `client-listening-port-data-${addr}`
         ipcRenderer.on(key, (e, data) => {
-            console.log("data", data, Uint8ArrayToString(data?.raw || new Uint8Array()))
             if (data.closed) {
                 onCancelMonitor()
                 return
@@ -53,13 +52,11 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((p
         })
         const errorKey = `client-listening-port-error-${addr}`
         ipcRenderer.on(errorKey, (e: any, data: any) => {
-            console.log("error", data)
             yakitNotify("error", `监听报错:${data}`)
             onCancelMonitor()
         })
         const endKey = `client-listening-port-end-${addr}`
         ipcRenderer.on(endKey, (e: any, data: any) => {
-            console.log("end", data)
             onCancelMonitor()
         })
         return () => {
@@ -71,9 +68,7 @@ export const ReverseShellTerminal: React.FC<ReverseShellTerminalProps> = memo((p
 
     // 写入
     const commandExec = useMemoizedFn((str) => {
-        console.log("addr,str", addr, str)
         if (isWrite) {
-            console.log('isWrite',isWrite)
             writeXTerm(xtermRef, str)
         }
         ipcRenderer.invoke("listening-port-input", addr, str)
