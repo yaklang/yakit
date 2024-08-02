@@ -13,7 +13,7 @@ import {FileTree} from "../FileTree/FileTree"
 import classNames from "classnames"
 import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {
     getDefaultActiveFile,
@@ -22,6 +22,7 @@ import {
     getPathJoin,
     getPathParent,
     getYakRunnerHistory,
+    grpcFetchAuditTree,
     grpcFetchDeleteFile,
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
@@ -64,6 +65,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
+    const [aduitList, setAduitList] = useState<FileNodeMapProps[]>([])
     // 选中的文件或文件夹
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
@@ -124,7 +126,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 isBottom: true
             })
         }
-        
+
         return initTree
     }, [fileTree, refreshTree])
 
@@ -140,8 +142,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         } catch (error) {}
     })
 
+    const getAduitList = useMemoizedFn(async () => {
+        try {
+            const data = await grpcFetchAuditTree("/")
+            console.log("getAduitList", data)
+            setAduitList(data)
+        } catch (error) {}
+    })
+
     useEffect(() => {
         getHistoryList()
+        getAduitList()
         // 通知历史记录发生改变
         emiter.on("onRefreshRunnerHistory", getHistoryList)
         return () => {
@@ -196,12 +207,36 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 children: [...historyList.map((item) => ({key: item.path, label: item.name}))]
             })
         }
-        newMenu.push({
-            key: "auditHistory",
-            label: "最近编译"
-        })
+        if (aduitList.length > 0) {
+            // if (aduitList.length <= 10) {
+            //     newMenu.push({
+            //         key: "auditHistory",
+            //         label: "最近编译",
+            //         children: aduitList.map((item) => ({key: item.path, label: item.name}))
+            //     })
+            // } else {
+                let children: any = [
+                    ...aduitList.slice(0, 10).map((item) => ({key: item.path, label: item.name})),
+                    {
+                        type: "divider"
+                    },
+                    {
+                        key: "aduitAllList",
+                        label: "查看全部",
+                        type: "text"
+                    }
+                ]
+
+                newMenu.push({
+                    key: "auditHistory",
+                    label: "最近编译",
+                    children
+                })
+            // }
+        }
+
         return newMenu
-    }, [historyList, fileTree])
+    }, [historyList, aduitList, fileTree])
 
     // 新建文件
     const onNewFile = useMemoizedFn(async (path: string) => {

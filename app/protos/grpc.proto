@@ -5245,6 +5245,7 @@ message ModifyFingerprintResponse{
 message ReadFileRequest {
   string FilePath = 1;
   int64 BufSize = 2;
+  string FileSystem = 3; // "local" "ssadb"
 }
 
 message ReadFileResponse {

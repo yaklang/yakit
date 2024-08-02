@@ -96,8 +96,10 @@ const {ipcRenderer} = window.require("electron")
 export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const {initCode} = props
 
-    /** ---------- 文件树 Start ---------- */
+    /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
+    /** ---------- 审计树 ---------- */
+    const [auditTree, setAuditTree] = useState<string>()
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
@@ -376,7 +378,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             }
         })
     })
-    /** ---------- 文件树 End ---------- */
+
     const [isUnShow, setUnShow] = useState<boolean>(true)
     const [isUnShowAuditDetail, setUnShowAuditDetail] = useState<boolean>(false)
 
@@ -429,15 +431,17 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const store: YakRunnerContextStore = useMemo(() => {
         return {
             fileTree: fileTree,
+            auditTree: auditTree,
             areaInfo: areaInfo,
             activeFile: activeFile,
             runnerTabsId: runnerTabsId
         }
-    }, [fileTree, areaInfo, activeFile, runnerTabsId])
+    }, [fileTree, auditTree, areaInfo, activeFile, runnerTabsId])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
             setFileTree: setFileTree,
+            setAuditTree: setAuditTree,
             handleFileLoadData: handleFileLoadData,
             setAreaInfo: setAreaInfo,
             setActiveFile: setActiveFile,
@@ -907,7 +911,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 lineStyle={{width: 4}}
                                 firstNodeStyle={isUnShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}}
                                 secondNodeStyle={
-                                    isUnShowAuditDetail ? {padding: 0, maxWidth: 0, minWidth: 0} : {overflow: "unset",padding: 0}
+                                    isUnShowAuditDetail
+                                        ? {padding: 0, maxWidth: 0, minWidth: 0}
+                                        : {overflow: "unset", padding: 0}
                                 }
                                 firstNode={
                                     <div
