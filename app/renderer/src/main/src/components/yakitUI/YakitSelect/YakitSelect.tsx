@@ -1,4 +1,4 @@
-import {Select, Typography} from "antd"
+import {Select} from "antd"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     YakitBaseSelectRef,
@@ -16,7 +16,6 @@ import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSe
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
-const {Text} = Typography
 const {Option, OptGroup} = Select
 
 /**
@@ -192,13 +191,11 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     setMouseEnterItem("")
                 }}
             >
-                <Text
-                    ellipsis={{
-                        tooltip: false
-                    }}
+                <div
+                    className={styles["yakit-option-item-label"]}
                 >
                     {copyItem.label}
-                </Text>
+                </div>
                 <OutlineXIcon
                     style={{
                         display: showClose ? "block" : "none"

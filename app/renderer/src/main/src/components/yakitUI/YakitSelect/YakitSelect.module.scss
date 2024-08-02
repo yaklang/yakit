@@ -124,7 +124,7 @@
 // ========================== mode tags ==========================
 .yakit-select-wrapper-tags {
     --select-primary-icon-color: var(--yakit-primary-5);
-    
+
     :global {
         .ant-select-item-option-selected:not(.ant-select-item-option-disabled) .ant-select-item-option-state {
             color: var(--select-primary-icon-color);
@@ -317,6 +317,13 @@
 .yakit-option-item {
     display: flex;
     justify-content: space-between;
+    gap: 8px;
+    &-label {
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
     .option-item-close {
         svg {
             width: 16px;
