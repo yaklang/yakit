@@ -82,6 +82,13 @@
             }
         }
     }
+    .stateSecretHijacking-btns {
+        :global {
+            .ant-radio-button-wrapper {
+                font-weight: normal
+            }
+        }
+    }
 }
 
 .advanced-configuration-drawer {
