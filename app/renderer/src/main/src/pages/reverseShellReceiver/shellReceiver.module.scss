@@ -1,194 +1,15 @@
 @use "../../theme/themeify.scss" as tools;
+.shell-receiver-contain {
+    display: flex;
+    overflow: hidden;
+}
 .shell-receiver {
     height: 100%;
     display: flex;
     flex-direction: row;
-    .shell-receiver-left-list {
-        width: 302px;
-        padding: 14px 12px 0px 16px;
-        display: flex;
-        flex-direction: column;
-        border-right: 1px solid #eaecf3;
-        flex-shrink: 0;
-        .header {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            .title-select-box {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 8px;
-                .title {
-                    font-size: 12px;
-                    font-weight: 600;
-                    line-height: 16px;
-                }
-            }
-            .extra {
-                display: flex;
-            }
-        }
-        .filter-box {
-            display: flex;
-            flex-direction: row;
-            gap: 8px;
-            margin-bottom: 12px;
-            .select-box {
-                flex: 1;
-            }
-            .input-box {
-                flex: 2;
-                .prefix {
-                    display: flex;
-                    align-items: center;
-                    color: #85899e;
-                    svg {
-                        width: 16px;
-                        height: 16px;
-                    }
-                }
-            }
-        }
-        .list-box {
-            flex: 1;
-            overflow: auto;
-            .item-box {
-                height: 40px;
-                display: flex;
-                align-items: center;
-                padding: 10px 8px;
-                border-radius: 4px;
-                background: #f8f8f8;
-                margin-bottom: 4px;
-                cursor: pointer;
-                .text {
-                    font-size: 12px;
-                    font-weight: 600;
-                    line-height: 16px;
-                    word-break: break-all; //内部单词换行
-                    overflow: hidden;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                }
-                &:hover {
-                    background-color: var(--yakit-background-color);
-                }
-            }
-            .item-box-active {
-                background-color: var(--yakit-primary-5);
-                color: #fff;
-                &:hover {
-                    background-color: var(--yakit-primary-5);
-                }
-            }
-        }
-    }
-    .shell-receiver-middle-item {
-        width: 300px;
-        box-sizing: content-box;
-        border-right: 1px solid #eaecf3;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        .header {
-            height: 24px;
-            box-sizing: content-box;
-            background-color: #fff;
-            padding: 14px 12px 10px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eaecf3;
-            .title {
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 16px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-            }
-            .extra {
-                display: flex;
-                flex-direction: row;
-                gap: 4px;
-                .extra-icon {
-                    width: 16px;
-                    height: 16px;
-                    box-sizing: content-box;
-                    padding: 4px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    color: #85899e;
-                    svg {
-                        width: 16px;
-                        height: 16px;
-                    }
-                    &:hover {
-                        background-color: var(--yakit-background-color);
-                        color: var(--yakit-primary-5);
-                    }
-                }
-            }
-        }
-        .content {
-            flex: 1;
-            overflow: auto;
-            .content-text {
-                background-color: var(--yakit-card-background-color);
-                padding: 8px 12px;
-                word-break: break-all;
-                flex: 1;
-            }
-            .content-result {
-                :global {
-                    .ant-result-icon {
-                        svg {
-                            width: 48px;
-                            height: 48px;
-                        }
-                    }
-                    .ant-result-title {
-                        word-break: break-all;
-                    }
-                }
-            }
-        }
-        .footer {
-            border-top: 1px solid #eaecf3;
-            box-shadow: 0px -8px 16px 0px rgba(133, 137, 158, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 12px;
-            background-color: #fff;
-            .select-box {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                .select-item {
-                    display: flex;
-                    flex-direction: row;
-                    gap: 4px;
-                    align-items: center;
-                    justify-content: flex-end;
-                    .title {
-                        font-size: 12px;
-                        font-weight: 400;
-                        line-height: 16px;
-                    }
-                }
-            }
-            .line {
-                height: 1px;
-                width: 100%;
-                background-color: #eaecf3;
-            }
-        }
-    }
+    flex: 1;
+    justify-content: center;
+    overflow-y: auto;
     .shell-receiver-right-run {
         flex: 1;
         display: flex;
@@ -225,12 +46,12 @@
             .extra {
                 display: flex;
                 flex-direction: row;
-                gap: 16px;
                 align-items: center;
                 flex-shrink: 0;
                 .extra-show {
                     display: flex;
                     align-items: center;
+                    margin-right: 16px;
                     .extra-text {
                         text-align: right;
                         font-size: 12px;
@@ -245,6 +66,99 @@
             display: flex;
             overflow: hidden;
         }
+    }
+}
+.shell-receiver-left-list {
+    width: 302px;
+    padding: 14px 12px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #eaecf3;
+    flex-shrink: 0;
+    .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        .title-select-box {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            .title {
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
+        }
+        .extra {
+            display: flex;
+        }
+    }
+    .filter-box {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-bottom: 12px;
+        .select-box {
+            flex: 1;
+        }
+        .input-box {
+            flex: 2;
+            .prefix {
+                display: flex;
+                align-items: center;
+                color: #85899e;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+        }
+    }
+    .list-box {
+        flex: 1;
+        overflow: auto;
+        .item-box {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 10px 8px;
+            border-radius: 4px;
+            background: #f8f8f8;
+            margin-bottom: 4px;
+            cursor: pointer;
+            .text {
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+                word-break: break-all; //内部单词换行
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+            &:hover {
+                background-color: var(--yakit-background-color);
+            }
+        }
+        .item-box-active {
+            background-color: var(--yakit-primary-5);
+            color: #fff;
+            &:hover {
+                background-color: var(--yakit-primary-5);
+            }
+        }
+    }
+    .no-more-text {
+        font-size: 12px;
+        color: var(--yakit-helper-text-color);
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding-top: 8px;
     }
 }
 .fold-icon {
@@ -300,5 +214,139 @@
         display: flex;
         justify-content: center;
         gap: 8px;
+    }
+}
+.shell-receiver-middle-item {
+    width: 300px;
+    box-sizing: content-box;
+    border-right: 1px solid #eaecf3;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    .header {
+        height: 24px;
+        box-sizing: content-box;
+        background-color: #fff;
+        padding: 14px 12px 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eaecf3;
+        .title {
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        .extra {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            .extra-icon {
+                width: 16px;
+                height: 16px;
+                box-sizing: content-box;
+                padding: 4px;
+                border-radius: 4px;
+                cursor: pointer;
+                color: #85899e;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+                &:hover {
+                    background-color: var(--yakit-background-color);
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+    }
+    .content {
+        flex: 1;
+        overflow: auto;
+
+        .content-text {
+            background-color: var(--yakit-card-background-color);
+            padding: 8px 12px;
+            word-break: break-all;
+            flex: 1;
+            min-height: 100px;
+            max-height: 300px;
+        }
+        .content-result {
+            :global {
+                .ant-result-icon {
+                    svg {
+                        width: 48px;
+                        height: 48px;
+                    }
+                }
+                .ant-result-title {
+                    word-break: break-all;
+                }
+            }
+        }
+    }
+    .footer {
+        border-top: 1px solid #eaecf3;
+        box-shadow: 0px -8px 16px 0px rgba(133, 137, 158, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        background-color: #fff;
+        .select-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            .select-item {
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                align-items: center;
+                justify-content: flex-end;
+                .title {
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+        }
+        .line {
+            height: 1px;
+            width: 100%;
+            background-color: #eaecf3;
+        }
+    }
+}
+.popover-shell-receiver {
+    :global {
+        .ant-popover-inner-content {
+            padding: 0;
+        }
+    }
+}
+.setting-terminal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    line-height: 16px;
+    .setting-terminal-tip {
+        font-size: 12px;
+        color: var(--yakit-helper-text-color);
+    }
+    .setting-terminal-upgrade {
+        display: flex;
+        align-items: center;
+    }
+    .setting-terminal-size {
+        display: flex;
+        align-items: center;
+        :first-child {
+            flex-shrink: 0;
+        }
     }
 }

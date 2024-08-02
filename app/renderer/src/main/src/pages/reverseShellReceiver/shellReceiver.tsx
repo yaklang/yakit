@@ -1,12 +1,11 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form, Result, Tag, Tooltip} from "antd"
+import {Divider, Form, Result, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useCreation, useDebounceFn, useInterval, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useInterval, useMemoizedFn, useVirtualList} from "ahooks"
 import styles from "./shellReceiver.module.scss"
 import {failed, success} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {RemoveIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineExitIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -30,16 +29,16 @@ import {
 } from "./utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultGenerateReverseShellCommand} from "./constants"
-import {ReverseShellTerminal} from "./ReverseShellTerminal/ReverseShellTerminal"
+import {ReverseShellTerminal, XTermSizeProps} from "./ReverseShellTerminal/ReverseShellTerminal"
 import {callCopyToClipboard} from "@/utils/basic"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {OutlineCogIcon} from "@/assets/icon/outline"
 const {ipcRenderer} = window.require("electron")
 
 export interface ShellReceiverLeftListProps {
     receiverDetail: GenerateReverseShellCommandRequest
-    fold: boolean
-    setFold: (v: boolean) => void
-    onSetDetail: (value: ReceiverDetail) => void
+    setReceiverDetail: (v: GenerateReverseShellCommandRequest) => void
 }
 
 export interface ReceiverDetail {
@@ -49,7 +48,6 @@ export interface ReceiverDetail {
 }
 
 export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (props) => {
-    const {receiverDetail, setFold, onSetDetail} = props
     const [params, setParams] = useState<GetReverseShellProgramListRequest>({
         System: defaultGenerateReverseShellCommand.System,
         CmdType: defaultGenerateReverseShellCommand.CmdType
@@ -58,11 +56,19 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
     const [loading, setLoading] = useState<boolean>(false)
     const [refresh, setRefresh] = useState<boolean>(false)
     const [originalList, setOriginalList] = useState<string[]>([])
+
+    const [receiverDetail, setReceiverDetail] = useControllableValue<GenerateReverseShellCommandRequest>(props, {
+        defaultValue: {...defaultGenerateReverseShellCommand},
+        valuePropName: "receiverDetail",
+        trigger: "setReceiverDetail"
+    })
+
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     useEffect(() => {
         getList()
     }, [params, refresh])
+
     const [list] = useVirtualList(originalList, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
@@ -90,11 +96,16 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
         setRefresh(!refresh)
     })
     const onClickDetail = useMemoizedFn((val: string) => {
-        const data: ReceiverDetail = {
+        const data: GenerateReverseShellCommandRequest = {
             ...params,
+            ...receiverDetail,
             Program: val
         }
-        onSetDetail(data)
+        setReceiverDetail(data)
+    })
+
+    const onVisibleChange = useMemoizedFn((v) => {
+        if (!v) setReceiverDetail((v) => ({...v, Program: ""}))
     })
     return (
         <div className={styles["shell-receiver-left-list"]}>
@@ -118,16 +129,6 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                             }
                         ]}
                     />
-                </div>
-                <div className={classNames(styles["extra"])}>
-                    <Tooltip placement='top' title='收起代码生成器'>
-                        <SideBarCloseIcon
-                            className={styles["fold-icon"]}
-                            onClick={() => {
-                                setFold(false)
-                            }}
-                        />
-                    </Tooltip>
                 </div>
             </div>
             <div className={styles["filter-box"]}>
@@ -163,17 +164,33 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                 <YakitSpin spinning={loading}>
                     <div ref={wrapperRef}>
                         {list.map((ele) => (
-                            <div
-                                className={classNames(styles["item-box"], {
-                                    [styles["item-box-active"]]: receiverDetail.Program === ele.data
-                                })}
+                            <YakitPopover
+                                placement='rightBottom'
                                 key={ele.data}
-                                onClick={() => onClickDetail(ele.data)}
+                                content={
+                                    <ShellReceiverMiddleItem
+                                        receiverDetail={receiverDetail}
+                                        setReceiverDetail={setReceiverDetail}
+                                    />
+                                }
+                                destroyTooltipOnHide={true}
+                                trigger='click'
+                                overlayClassName={styles["popover-shell-receiver"]}
+                                onVisibleChange={onVisibleChange}
                             >
-                                <div className={styles["text"]}>{ele.data}</div>
-                            </div>
+                                <div
+                                    className={classNames(styles["item-box"], {
+                                        [styles["item-box-active"]]: receiverDetail.Program === ele.data
+                                    })}
+                                    key={ele.data}
+                                    onClick={() => onClickDetail(ele.data)}
+                                >
+                                    <div className={styles["text"]}>{ele.data}</div>
+                                </div>
+                            </YakitPopover>
                         ))}
                     </div>
+                    <div className={styles["no-more-text"]}>暂无更多</div>
                 </YakitSpin>
             </div>
         </div>
@@ -181,19 +198,36 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
 }
 
 export interface ShellReceiverMiddleItemProps {
-    loading: boolean
-    reverseShellCommand?: GenerateReverseShellCommandResponse
     receiverDetail: GenerateReverseShellCommandRequest
     setReceiverDetail: React.Dispatch<React.SetStateAction<GenerateReverseShellCommandRequest>>
-    setShowDetail: (v: boolean) => void
 }
 
 export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (props) => {
-    const {loading, receiverDetail, setReceiverDetail, reverseShellCommand, setShowDetail} = props
     const [shellList, setShellList] = useState<string[]>([])
+    const [ip, setIP] = useState<string>("")
+
+    const [loading, setLoading] = useState<boolean>(false)
+    const [reverseShellCommand, setReverseShellCommand] = useState<GenerateReverseShellCommandResponse>({
+        Status: {
+            Ok: true,
+            Reason: ""
+        },
+        Result: ""
+    })
+    const [receiverDetail, setReceiverDetail] = useControllableValue<GenerateReverseShellCommandRequest>(props, {
+        defaultValue: {...defaultGenerateReverseShellCommand},
+        valuePropName: "receiverDetail",
+        trigger: "setReceiverDetail"
+    })
     useEffect(() => {
         getShellTypeList()
     }, [])
+    useEffect(() => {
+        if (receiverDetail.Program) onGenerateReverseShellCommand()
+        if (receiverDetail.IP !== ip) {
+            setIP(receiverDetail.IP)
+        }
+    }, [receiverDetail])
     const getShellTypeList = useMemoizedFn(() => {
         const params: GetReverseShellProgramListRequest = {
             System: receiverDetail.System,
@@ -206,21 +240,45 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
     const onCopy = useMemoizedFn(() => {
         if (reverseShellCommand?.Result) callCopyToClipboard(reverseShellCommand?.Result)
     })
+    const onIPChange = useMemoizedFn((e) => {
+        setIP(e.target.value)
+    })
+    const onGenerateReverseShellCommand = useDebounceFn(
+        useMemoizedFn(() => {
+            if (!receiverDetail.Program) return
+            setLoading(true)
+            const params: GenerateReverseShellCommandRequest = {...receiverDetail, IP: ip || receiverDetail.IP}
+            apiGenerateReverseShellCommand(params)
+                .then((res) => {
+                    setReverseShellCommand(res)
+                })
+                .catch((error) => {
+                    const errorRes: GenerateReverseShellCommandResponse = {
+                        Status: {
+                            Ok: false,
+                            Reason: `${error}`
+                        },
+                        Result: ""
+                    }
+                    setReverseShellCommand(errorRes)
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                )
+        }),
+        {wait: 500, leading: true}
+    ).run
+    const onBlur = useMemoizedFn(() => {
+        onGenerateReverseShellCommand()
+    })
+    const onPressEnter = useMemoizedFn(() => {
+        onGenerateReverseShellCommand()
+    })
+
     return (
         <div className={styles["shell-receiver-middle-item"]}>
-            <div className={styles["header"]}>
-                <div className={styles["title"]}>{receiverDetail?.Program || ""}</div>
-                <div className={styles["extra"]}>
-                    <div
-                        className={styles["extra-icon"]}
-                        onClick={() => {
-                            setShowDetail(false)
-                        }}
-                    >
-                        <RemoveIcon />
-                    </div>
-                </div>
-            </div>
             {reverseShellCommand && (
                 <div className={styles["content"]}>
                     <YakitSpin spinning={loading}>
@@ -244,7 +302,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                             wrapperStyle={{width: 164}}
                             value={receiverDetail.ShellType}
                             onSelect={(val) => {
-                                setReceiverDetail((prev) => ({...prev, ShellType: val}))
+                                setReceiverDetail((prev) => ({...prev, IP: ip, ShellType: val}))
                             }}
                             placeholder='请选择...'
                         >
@@ -261,7 +319,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                             wrapperStyle={{width: 164}}
                             value={receiverDetail.Encode}
                             onSelect={(val) => {
-                                setReceiverDetail((prev) => ({...prev, Encode: val}))
+                                setReceiverDetail((prev) => ({...prev, IP: ip, Encode: val}))
                             }}
                             placeholder='请选择...'
                         >
@@ -270,6 +328,17 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
                             <YakitSelect value='DoubleUrl'>DoubleUrl</YakitSelect>
                             <YakitSelect value='Base64'>Base64</YakitSelect>
                         </YakitSelect>
+                    </div>
+                    <div className={styles["select-item"]}>
+                        <div className={styles["title"]}>IP</div>
+                        <YakitInput
+                            wrapperStyle={{width: 164}}
+                            placeholder={"请输入IP"}
+                            value={ip}
+                            onChange={onIPChange}
+                            onBlur={onBlur}
+                            onPressEnter={onPressEnter}
+                        />
                     </div>
                 </div>
                 <div className={styles["line"]}></div>
@@ -284,35 +353,23 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
 export interface ShellReceiverRightRunProps {
     loading: boolean
     addr: string
-    fold: boolean
-    setFold: (v: boolean) => void
     onCancelMonitor: () => void
 }
 
 export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (props) => {
-    const {loading, addr, fold, setFold, onCancelMonitor} = props
-    const [echoBack, setEchoBack] = useState<boolean>(true)
+    const {loading, addr, onCancelMonitor} = props
+    const [isOriginalMode, setIsOriginalMode] = useState<boolean>(true)
     const [local, setLocal] = useState<string>("")
     const [remote, setRemote] = useState<string>("")
+    const [xtermSize, setXtermSize] = useState<XTermSizeProps>()
 
     const tagString = useCreation(() => {
         return `本地端口:${local || addr || "-"} <== 远程端口:${remote || "-"}`
     }, [local, addr, remote])
-
     return (
         <div className={styles["shell-receiver-right-run"]}>
             <div className={styles["header"]}>
                 <div className={styles["title"]}>
-                    {!fold && (
-                        <Tooltip title='展开代码生成器'>
-                            <SideBarOpenIcon
-                                className={styles["fold-icon"]}
-                                onClick={() => {
-                                    setFold(true)
-                                }}
-                            />
-                        </Tooltip>
-                    )}
                     <div className={styles["text"]}>正在监听:</div>
                     <Tooltip title={tagString}>
                         <YakitTag color='blue' className={styles["tag-port"]}>
@@ -321,10 +378,40 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                     </Tooltip>
                 </div>
                 <div className={styles["extra"]}>
-                    <div className={styles["extra-show"]}>
-                        <span className={styles["extra-text"]}>客户端回显:</span>
-                        <YakitSwitch checked={echoBack} onChange={setEchoBack} />
-                    </div>
+                    <YakitPopover
+                        trigger='click'
+                        content={
+                            <div className={styles["setting-terminal"]}>
+                                <div className={styles["setting-terminal-tip"]}>命令只在linux shell中生效</div>
+                                <div className={styles["setting-terminal-upgrade"]}>
+                                    <div>升级终端:&nbsp;script -qc /bin/bash /dev/null</div>
+                                    <CopyComponents copyText='script -qc /bin/bash /dev/null' />
+                                </div>
+                                <div className={styles["setting-terminal-size"]}>
+                                    <div>
+                                        设置size:&nbsp;export TERM=xterm-256color && stty rows {xtermSize?.rows || 0}{" "}
+                                        columns {xtermSize?.cols || 0} && reset
+                                    </div>
+                                    <CopyComponents
+                                        copyText={`export TERM=xterm-256color && stty rows ${
+                                            xtermSize?.rows || 0
+                                        } columns ${xtermSize?.cols || 0} && reset`}
+                                    />
+                                </div>
+                            </div>
+                        }
+                    >
+                        <YakitButton type='text2' icon={<OutlineCogIcon />}>
+                            设置终端
+                        </YakitButton>
+                    </YakitPopover>
+                    <Divider type='vertical' style={{margin: "0px 16px 0 8px"}} />
+                    <Tooltip title='打开原始模式用户的所有输入和输出都会原封不动发送到后端'>
+                        <div className={styles["extra-show"]}>
+                            <span className={styles["extra-text"]}>原始模式:</span>
+                            <YakitSwitch checked={isOriginalMode} onChange={setIsOriginalMode} />
+                        </div>
+                    </Tooltip>
                     <YakitPopconfirm
                         title={"确定关闭该端口吗？"}
                         onConfirm={() => {
@@ -341,11 +428,12 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
             <div className={styles["terminal-content"]}>
                 <YakitSpin spinning={loading}>
                     <ReverseShellTerminal
-                        echoBack={echoBack}
+                        isWrite={!isOriginalMode}
                         addr={addr}
                         setLocal={setLocal}
                         setRemote={setRemote}
                         onCancelMonitor={onCancelMonitor}
+                        onResizeXterm={setXtermSize}
                     />
                 </YakitSpin>
             </div>
@@ -360,30 +448,23 @@ interface MonitorFormProps {
 
 export interface ShellReceiverProps {}
 export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
-    const [fold, setFold] = useState<boolean>(true)
-    const [isShowDetail, setShowDetail] = useState<boolean>(false)
     const [isShowStart, setShowStart] = useState<boolean>(true)
 
     const [addrList, setAddrList] = useState<string[]>([])
     const [addrLoading, setAddrLoading] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
-    const [loadingCommand, setLoadingCommand] = useState<boolean>(false)
+
+    const [interval, setInterval] = useState<number | undefined>(1000)
 
     const [receiverDetail, setReceiverDetail] = useState<GenerateReverseShellCommandRequest>({
         ...defaultGenerateReverseShellCommand
     })
-
-    const [reverseShellCommand, setReverseShellCommand] = useState<GenerateReverseShellCommandResponse>()
-
-    const [interval, setInterval] = useState<number | undefined>(1000)
 
     const [form] = Form.useForm()
 
     const hostRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
-    const currentHostRef = useRef<string>("")
-    const currentPortRef = useRef<number>(8085)
 
     useInterval(() => {
         ipcRenderer
@@ -403,51 +484,25 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
             onCancelMonitor()
         }
     }, [])
+    const addr = useCreation(() => {
+        return `${receiverDetail.IP}:${receiverDetail.port}`
+    }, [receiverDetail.IP, receiverDetail.port])
 
-    useUpdateEffect(() => {
-        onGenerateReverseShellCommand()
-    }, [receiverDetail])
-
-    const onGenerateReverseShellCommand = useDebounceFn(
-        useMemoizedFn(() => {
-            setLoadingCommand(true)
-            apiGenerateReverseShellCommand(receiverDetail)
-                .then((res) => {
-                    setReverseShellCommand(res)
-                })
-                .catch((error) => {
-                    const errorRes: GenerateReverseShellCommandResponse = {
-                        Status: {
-                            Ok: false,
-                            Reason: `${error}`
-                        },
-                        Result: ""
-                    }
-                    setReverseShellCommand(errorRes)
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoadingCommand(false)
-                    }, 200)
-                )
-        }),
-        {wait: 200}
-    ).run
     const onCancelMonitor = useMemoizedFn(() => {
-        apiCancelListeningPort(`${currentHostRef.current}:${currentPortRef.current}`).then(() => {
+        apiCancelListeningPort(addr).then(() => {
             setShowStart(true)
             setInterval(1000)
         })
     })
 
     const onStartMonitor = useMemoizedFn((value: MonitorFormProps) => {
-        const {host, port} = value
-        const addr = `${host}:${port}`
+        const {IP, port} = receiverDetail
+        const addr = `${IP}:${port}`
         if (!addr.includes(":")) {
             failed(`无法启动端口监听程序，端口格式不合理: [${addr}]`)
             return
         }
-        if (!host || !port) {
+        if (!IP || !port) {
             failed(`无法解析主机/端口`)
             return
         }
@@ -455,108 +510,76 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
             failed("该地址已经被占用: " + addr)
             return
         }
-        if (host) {
-            hostRef.current.onSetRemoteValues(host)
+        if (IP) {
+            hostRef.current.onSetRemoteValues(IP)
         }
         setLoading(true)
         ipcRenderer
-            .invoke("listening-port", host, port)
+            .invoke("listening-port", IP, port)
             .then(() => {
                 success("监听端口成功")
                 setInterval(undefined)
                 setShowStart(false)
-                currentHostRef.current = host
-                currentPortRef.current = port
             })
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
     })
-    const onSetDetail = useMemoizedFn((value: ReceiverDetail) => {
-        const param: GenerateReverseShellCommandRequest = {
-            ...receiverDetail,
-            ...value,
-            IP: currentHostRef.current,
-            port: currentPortRef.current
-        }
-        setReceiverDetail({...param})
-        setShowDetail(true)
-    })
+
     return (
-        <>
-            {isShowStart ? (
-                <div className={styles["shellReceiver-heard"]}>
-                    <div className={styles["heard-title-text"]}>开启端口监听</div>
-                    <div className={styles["heard-subTitle-text"]}>
-                        反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互。
+        <div className={styles["shell-receiver-contain"]}>
+            <ShellReceiverLeftList receiverDetail={receiverDetail} setReceiverDetail={setReceiverDetail} />
+            <div className={styles["shell-receiver"]}>
+                {isShowStart ? (
+                    <div className={styles["shellReceiver-heard"]}>
+                        <div className={styles["heard-title-text"]}>开启端口监听</div>
+                        <div className={styles["heard-subTitle-text"]}>
+                            反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互。
+                        </div>
+                        <YakitSpin spinning={addrLoading}>
+                            <Form
+                                layout='vertical'
+                                form={form}
+                                onFinish={onStartMonitor}
+                                className={styles["shellReceiver-form"]}
+                            >
+                                <Form.Item
+                                    rules={[{required: true, message: "该项为必填"}]}
+                                    label={"监听的主机"}
+                                    // name={"host"}
+                                >
+                                    <YakitAutoComplete
+                                        ref={hostRef}
+                                        cacheHistoryDataKey={RemoteGV.ReverseShellReceiverHostList}
+                                        placeholder={"请输入监听的主机"}
+                                        options={["0.0.0.0", "127.0.0.1", "192.168.1.235"].map((i) => {
+                                            return {value: i, label: i}
+                                        })}
+                                        value={receiverDetail.IP}
+                                        onChange={(val) => setReceiverDetail((prev) => ({...prev, IP: val}))}
+                                    />
+                                </Form.Item>
+                                <Form.Item rules={[{required: true, message: "该项为必填"}]} label={"端口"}>
+                                    <YakitInputNumber
+                                        min={1}
+                                        max={65535}
+                                        placeholder='请输入端口'
+                                        value={receiverDetail.port}
+                                        onChange={(val) => setReceiverDetail((prev) => ({...prev, port: +(val || 0)}))}
+                                    />
+                                </Form.Item>
+                                <div className={styles["footer-btns"]}>
+                                    <YakitButton htmlType='submit' size='large'>
+                                        启动监听
+                                    </YakitButton>
+                                </div>
+                            </Form>
+                        </YakitSpin>
                     </div>
-                    <YakitSpin spinning={addrLoading}>
-                        <Form
-                            layout='vertical'
-                            form={form}
-                            onFinish={onStartMonitor}
-                            className={styles["shellReceiver-form"]}
-                        >
-                            <Form.Item
-                                rules={[{required: true, message: "该项为必填"}]}
-                                label={"监听的主机"}
-                                name={"host"}
-                            >
-                                <YakitAutoComplete
-                                    ref={hostRef}
-                                    cacheHistoryDataKey={RemoteGV.ReverseShellReceiverHostList}
-                                    placeholder={"请输入监听的主机"}
-                                    options={["0.0.0.0", "127.0.0.1", "192.168.1.235"].map((i) => {
-                                        return {value: i, label: i}
-                                    })}
-                                />
-                            </Form.Item>
-                            <Form.Item
-                                rules={[{required: true, message: "该项为必填"}]}
-                                label={"端口"}
-                                name={"port"}
-                                initialValue={8085}
-                            >
-                                <YakitInputNumber min={1} max={65535} placeholder='请输入端口' />
-                            </Form.Item>
-                            <div className={styles["footer-btns"]}>
-                                <YakitButton htmlType='submit' size='large'>
-                                    启动监听
-                                </YakitButton>
-                            </div>
-                        </Form>
-                    </YakitSpin>
-                </div>
-            ) : (
-                <div className={styles["shell-receiver"]}>
-                    {fold && (
-                        <>
-                            <ShellReceiverLeftList
-                                receiverDetail={receiverDetail}
-                                fold={fold}
-                                setFold={setFold}
-                                onSetDetail={onSetDetail}
-                            />
-                            {isShowDetail && (
-                                <ShellReceiverMiddleItem
-                                    loading={loadingCommand}
-                                    receiverDetail={receiverDetail}
-                                    reverseShellCommand={reverseShellCommand}
-                                    setShowDetail={setShowDetail}
-                                    setReceiverDetail={setReceiverDetail}
-                                />
-                            )}
-                        </>
-                    )}
-                    <ShellReceiverRightRun
-                        loading={loading}
-                        addr={`${currentHostRef.current}:${currentPortRef.current}`}
-                        fold={fold}
-                        setFold={setFold}
-                        onCancelMonitor={onCancelMonitor}
-                    />
-                </div>
-            )}
-        </>
+                ) : (
+                    <ShellReceiverRightRun loading={loading} addr={addr} onCancelMonitor={onCancelMonitor} />
+                )}
+            </div>
+        </div>
     )
 }

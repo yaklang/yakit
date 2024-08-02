@@ -776,9 +776,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         props.onChange && props.onChange(strValue)
     }, [strValue])
 
-    useEffect(() => {
-        props.onChange && props.onChange(Uint8ArrayToString(hexValue))
-    }, [hexValue])
+    // hexValue 暂时没有用，后续添加hexValue，请不要使用onChange方法，单独用一个事件去处理
+    // useEffect(() => {
+    //     props.onChange && props.onChange(Uint8ArrayToString(hexValue))
+    // }, [hexValue])
 
     const empty = !!props.emptyOr && originValue.length == 0
 

@@ -151,7 +151,7 @@ const defaultOptions = {
         brightWhite: "#f6f7ec"
     }
 }
-const TERMINAL_KEYBOARD_Map = {
+export const TERMINAL_KEYBOARD_Map = {
     KeyV: {
         code: "KeyV",
         key: "v", // 会区分大小写
@@ -248,29 +248,25 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
         if (props.customKeyEventHandler) {
             return props.customKeyEventHandler(e)
         } else {
-            if (!terminalRef.current || loading.current) return true
-            const isCtrl = systemRef.current === "Darwin" ? e.metaKey : e.ctrlKey
-            if (e.type === "keydown") {
-                if (e.code === TERMINAL_KEYBOARD_Map.KeyV.code && isCtrl) {
-                    return false
+            return onCustomKeyEventHandler(e)
+        }
+    }
+    const onCustomKeyEventHandler = (e: KeyboardEvent) => {
+        if (!terminalRef.current || loading.current) return true
+        const isCtrl = systemRef.current === "Darwin" ? e.metaKey : e.ctrlKey
+        if (e.type === "keydown") {
+            if (isCtrl) {
+                if (e.code === TERMINAL_KEYBOARD_Map.KeyC.code) {
+                    const select = terminalRef.current.getSelection()
+                    return !select
                 }
-                if (e.code === TERMINAL_KEYBOARD_Map.KeyC.code && isCtrl) {
-                    return false
-                }
-                if (e.key === TERMINAL_KEYBOARD_Map.Backspace.key) {
-                    onData("\x1b[D \x1b[D")
-                    e.preventDefault()
-                    return false
-                }
-                if (e.key === TERMINAL_KEYBOARD_Map.Enter.key) {
-                    onData(String.fromCharCode(10)) //enter 该为换行符
-                    e.preventDefault()
+                if (e.code === TERMINAL_KEYBOARD_Map.KeyV.code) {
                     return false
                 }
             }
-
-            return true
         }
+
+        return true
     }
     const onBinary = (data: string) => {
         if (props.onBinary) props.onBinary(data)

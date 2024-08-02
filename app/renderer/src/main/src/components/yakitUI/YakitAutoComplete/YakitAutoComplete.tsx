@@ -28,6 +28,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         isCacheDefaultValue = true,
         // ref: autoRef = null,
         initValue = "",
+        wrapperStyle,
         ...restProps
     } = props
     const autoCompleteRef = useRef<HTMLDivElement>(null)
@@ -151,6 +152,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                 [styles["yakit-auto-complete-wrapper-small"]]: size === "small",
                 [styles["yakit-auto-complete-disabled"]]: !!props.disabled
             })}
+            style={{...wrapperStyle||{}}}
         >
             {loading ? (
                 <></>
