@@ -452,7 +452,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         </Form.Item>
                     )}
                 </Form>
-                <div className={styles["yaml-temp-example"]} onClick={() => onOpenHelpModal()}>
+                <div className={styles["yaml-temp-example"]} onClick={onOpenHelpModal}>
                     <span>Yaml 模板案例</span> <OutlineQuestionmarkcircleIcon />
                 </div>
                 <YakitHint
