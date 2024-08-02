@@ -4,7 +4,7 @@ import {Divider} from "antd"
 
 interface TableTotalAndSelectNumberProps {
     total: number
-    selectNum: number
+    selectNum?: number
 }
 export const TableTotalAndSelectNumber: React.FC<TableTotalAndSelectNumberProps> = React.memo((props) => {
     const {total, selectNum} = props
@@ -14,11 +14,15 @@ export const TableTotalAndSelectNumber: React.FC<TableTotalAndSelectNumberProps>
                 <span className={styles["table-total-select-text"]}>Total</span>
                 <span className={styles["table-total-select-number"]}>{total}</span>
             </div>
-            <Divider type='vertical' />
-            <div className={styles["table-total-select-item"]}>
-                <span className={styles["table-total-select-text"]}>Selected</span>
-                <span className={styles["table-total-select-number"]}>{selectNum}</span>
-            </div>
+            {selectNum !== undefined && (
+                <>
+                    <Divider type='vertical' />
+                    <div className={styles["table-total-select-item"]}>
+                        <span className={styles["table-total-select-text"]}>Selected</span>
+                        <span className={styles["table-total-select-number"]}>{selectNum}</span>
+                    </div>
+                </>
+            )}
         </div>
     )
 })
