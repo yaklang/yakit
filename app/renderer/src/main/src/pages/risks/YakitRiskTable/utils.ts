@@ -16,7 +16,15 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
             })
     })
 }
-
+/**
+ * @description QueryRisks 获取降序的增量数据
+ */
+export const apiQueryRisksIncrementOrderDesc: (params: QueryRisksRequest) => Promise<QueryRisksResponse> = (
+    params
+) => {
+    const newParams:QueryRisksRequest = {...params, UntilId:0}
+    return apiQueryRisks(newParams)
+}
 export interface NewRiskReadRequest {
     /**@deprecated */
     AfterId?: string
