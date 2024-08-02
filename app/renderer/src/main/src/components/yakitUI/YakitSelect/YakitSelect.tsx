@@ -16,7 +16,6 @@ import {CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSe
 import {setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineCheckIcon, OutlineXIcon} from "@/assets/icon/outline"
-
 const {Option, OptGroup} = Select
 
 /**
@@ -192,7 +191,11 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     setMouseEnterItem("")
                 }}
             >
-                {copyItem.label}
+                <div
+                    className={styles["yakit-option-item-label"]}
+                >
+                    {copyItem.label}
+                </div>
                 <OutlineXIcon
                     style={{
                         display: showClose ? "block" : "none"

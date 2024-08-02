@@ -110,6 +110,12 @@
 .yakit-option-item {
     display: flex;
     justify-content: space-between;
+    &-label {
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
     .option-item-close {
         svg {
             width: 16px;

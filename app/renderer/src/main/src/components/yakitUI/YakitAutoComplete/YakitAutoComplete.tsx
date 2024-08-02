@@ -6,7 +6,6 @@ import classNames from "classnames"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import {YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 import {OutlineXIcon} from "@/assets/icon/outline"
-
 export const defYakitAutoCompleteRef = {
     onGetRemoteValues: () => ({options: [], defaultValue: ""}),
     onSetRemoteValues: (s: string) => {}
@@ -125,7 +124,11 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                     setMouseEnterItem("")
                 }}
             >
-                {copyItem.label}
+                <div
+                    className={styles["yakit-option-item-label"]}
+                >
+                    {copyItem.label}
+                </div>
                 <OutlineXIcon
                     style={{display: mouseEnterItem === item.value && item.value !== props.value ? "block" : "none"}}
                     className={styles["option-item-close"]}
