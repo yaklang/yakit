@@ -17,7 +17,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {failed, yakitFailed} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
@@ -810,6 +810,26 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             return (value && Uint8ArrayToString(value)) || ""
         }, [currentSelectShowType, currentSelectItem])
 
+        const [url, setUrl] = useState<string>("")
+        useDebounceEffect(
+            () => {
+                if (currentSelectItem?.RequestRaw) {
+                    ipcRenderer
+                        .invoke("ExtractUrl", {
+                            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+                            IsHTTPS: currentSelectItem?.IsHTTPS
+                        })
+                        .then((data: {Url: string}) => {
+                            setUrl(data.Url)
+                        })
+                } else {
+                    setUrl("")
+                }
+            },
+            [currentSelectItem?.RequestRaw, currentSelectItem?.IsHTTPS],
+            {wait: 300}
+        )
+
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
@@ -1013,6 +1033,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     onSetCodeValue={setCodeValue}
                                 />
                             }
+                            url={url}
                             typeOptionVal={typeOptionVal}
                             onTypeOptionVal={(typeOptionVal) => {
                                 if (typeOptionVal !== undefined) {

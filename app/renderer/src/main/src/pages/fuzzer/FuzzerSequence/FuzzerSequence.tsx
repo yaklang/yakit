@@ -1901,6 +1901,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             <>
                 <SecondNodeExtra
                     onlyOneResponse={onlyOneResponse}
+                    isHttps={advancedConfigValue.isHttps}
+                    request={requestHttpRef.current}
                     cachedTotal={cachedTotal}
                     rsp={httpResponse}
                     valueSearch={affixSearch}
@@ -1993,6 +1995,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                     ref={responseViewerRef}
                                     fuzzerResponse={httpResponse}
                                     defaultResponseSearch={defaultResponseSearch}
+                                    request={requestHttpRef.current}
                                     webFuzzerValue={Uint8ArrayToString(httpResponse.ResponseRaw)}
                                     showMatcherAndExtraction={showMatcherAndExtraction}
                                     setShowMatcherAndExtraction={setShowMatcherAndExtraction}

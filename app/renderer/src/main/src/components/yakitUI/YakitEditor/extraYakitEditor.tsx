@@ -13,7 +13,7 @@ import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {StringToUint8Array} from "@/utils/str"
 import {callCopyToClipboard} from "@/utils/basic"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
 import {Modal} from "antd"
 import {execAutoDecode} from "@/utils/encodec"
 import {YakitSystem} from "@/yakitGVDefine"
@@ -32,6 +32,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     webSocketToServer?: string
     webFuzzerCallBack?: () => void
     downstreamProxyStr?: string
+    url?: string
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -48,6 +49,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webSocketToServer,
         webFuzzerCallBack,
         downstreamProxyStr = "",
+        url,
         ...restProps
     } = props
 
@@ -69,7 +71,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
 
     const rightContextMenu: OtherMenuListProps = useMemo(() => {
         const originValueBytes = StringToUint8Array(originValue)
-        const menuItems: OtherMenuListProps = {
+        let menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
             copyCSRF: {
                 menu: [
@@ -98,7 +100,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "open-in-browser",
-                        label: "浏览器中打开"
+                        label: "浏览器中查看响应"
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -275,11 +277,32 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 }
             }
         }
+
+        if (url) {
+            menuItems = Object.keys(menuItems).reduce((ac, a) => {
+                if (a === "openBrowser")
+                    ac["openURLBrowser"] = {
+                        menu: [
+                            {
+                                key: "open-url-in-browser",
+                                label: "浏览器中打开URL"
+                            }
+                        ],
+                        onRun: (editor: YakitIMonacoEditor, key: string) => {
+                            url && openExternalWebsite(url)
+                        }
+                    }
+                ac[a] = menuItems[a]
+                return ac
+            }, {}) as OtherMenuListProps
+        }
+        
         return menuItems
     }, [
         defaultHttps,
         system,
         originValue,
+        url,
         contextMenu,
         readOnly,
         isWebSocket,
