@@ -397,7 +397,7 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
     const {isSelectAll, onSelectAll, setIsSelectAll, total, length, loading, isHasParams} = props
     useEffect(() => {
         if (length > 0 && !isHasParams) setIsSelectAll(length == total)
-    }, [total, length])
+    }, [total, length, isHasParams])
     return (
         <div className={style["mitm-plugin-list-heard"]}>
             {!isHasParams && (
