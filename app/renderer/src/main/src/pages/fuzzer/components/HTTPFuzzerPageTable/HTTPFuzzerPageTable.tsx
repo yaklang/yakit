@@ -788,7 +788,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
         // 编辑器编码
-        const [codeKey, setCodeKey] = useState<string>("")
+        const [codeKey, setCodeKey] = useState<string>("utf-8")
         const [codeLoading, setCodeLoading] = useState<boolean>(false)
         const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
@@ -802,12 +802,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 })
             }
         }, [currentSelectItem, currentSelectShowType])
-
-        const originReqOrResValue = useMemo(() => {
-            const value =
-                currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
-            return (value && Uint8ArrayToString(value)) || ""
-        }, [currentSelectShowType, currentSelectItem])
 
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
@@ -922,7 +916,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             noHex={true}
                             loading={codeLoading}
                             // noHeader={true}
-                            originValue={codeKey === "" ? originReqOrResValue : codeValue}
+                            originValue={codeValue}
                             onAddOverlayWidget={(editor) => {
                                 setEditor(editor)
                             }}

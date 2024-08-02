@@ -2910,7 +2910,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         // 一个响应的编辑器美化渲染缓存
         const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
         // 编辑器编码
-        const [codeKey, setCodeKey] = useState<string>("")
+        const [codeKey, setCodeKey] = useState<string>("utf-8")
         const [codeLoading, setCodeLoading] = useState<boolean>(false)
         const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
@@ -2942,7 +2942,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
-                            originValue={codeKey === "" ? responseRawString : codeValue}
+                            originValue={codeValue}
                             readOnly={true}
                             hideSearch={true}
                             isResponse={true}
