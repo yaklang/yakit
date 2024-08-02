@@ -18,12 +18,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {RiskDetails, TitleColor} from "@/pages/risks/RiskTable"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {Risk} from "@/pages/risks/schema"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {formatTimestamp} from "@/utils/timeUtil"
+import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {CurrentHttpFlow, formatJson} from "@/pages/yakitStore/viewers/base"
 import {Timeline} from "antd"
 import {LogLevelToCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
@@ -36,7 +31,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {SolidViewgridIcon} from "@/assets/icon/solid"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {QueryPortsRequest} from "@/pages/assetViewer/PortAssetPage"
-import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {PortTable} from "@/pages/assetViewer/PortTable/PortTable"
 import {defQueryPortsRequest} from "@/pages/assetViewer/PortTable/utils"
@@ -44,7 +39,11 @@ import cloneDeep from "lodash/cloneDeep"
 import {yakitFailed} from "@/utils/notification"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {v4 as uuidv4} from "uuid"
-import {YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {YakitRiskTable} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {QueryRisksRequest} from "@/pages/risks/YakitRiskTable/YakitRiskTableType"
+import {defQueryRisksRequest} from "@/pages/risks/YakitRiskTable/constants"
+import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 
 const {TabPane} = PluginTabs
 
@@ -55,13 +54,13 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         loading,
         defaultActiveKey,
         pluginExecuteResultWrapper = "",
-        PluginTabsRightNode,
+        PluginTabsRightNode
     } = props
 
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
             case "risk":
-                return <VulnerabilitiesRisksTable riskState={streamInfo.riskState} />
+                return !!runtimeId ? <VulnerabilitiesRisksTable runtimeId={runtimeId} /> : <></>
             case "port":
                 return !!runtimeId ? <PluginExecutePortTable runtimeId={runtimeId} /> : <></>
             case "http":
@@ -96,8 +95,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 
     const showTabs = useMemo(() => {
         if (streamInfo.riskState.length === 0) {
-            return streamInfo.tabsState
-                .filter((item) => item.tabName !== "漏洞与风险")
+            return streamInfo.tabsState.filter((item) => item.tabName !== "漏洞与风险")
         }
         return streamInfo.tabsState
     }, [streamInfo.tabsState, streamInfo.riskState])
@@ -119,7 +117,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     }, [streamInfo.cardState])
     return (
         <div className={classNames(styles["plugin-execute-result"], pluginExecuteResultWrapper)}>
-            {cardState.length > 0  && (
+            {cardState.length > 0 && (
                 <div className={styles["plugin-execute-result-wrapper"]}>
                     <HorizontalScrollCard title={"Data Card"} data={cardState} />
                 </div>
@@ -302,74 +300,12 @@ const getSeverity = (type) => {
 }
 /**风险与漏洞tab表 */
 const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
-    const {riskState} = props
-
-    const columns: ColumnsTypeProps[] = useMemo(() => {
-        return [
-            {
-                title: "标题",
-                dataKey: "TitleVerbose",
-                width: 400,
-                render: (_, i) => i.TitleVerbose || i.Title || "-"
-            },
-            {
-                title: "类型",
-                dataKey: "RiskTypeVerbose"
-            },
-            {
-                title: "等级",
-                dataKey: "Severity",
-                render: (severity) => {
-                    const title = TitleColor.filter((item) => item.key.includes(severity || ""))[0]
-                    const value = title ? title.name : severity || "-"
-                    return <YakitTag color={getSeverity(value)}>{value}</YakitTag>
-                }
-            },
-            {
-                title: "IP",
-                dataKey: "IP"
-            },
-            {
-                title: "发现时间",
-                dataKey: "CreatedAt",
-                // width: 160,
-                enableDrag: false,
-                render: (v) => formatTimestamp(v)
-            },
-            {
-                title: "操作",
-                dataKey: "Action",
-                width: 70,
-                fixed: "right",
-                render: (_, i: Risk) => {
-                    return (
-                        <>
-                            <YakitButton
-                                type='text'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onDetail(i)
-                                }}
-                            >
-                                详情
-                            </YakitButton>
-                        </>
-                    )
-                }
-            }
-        ]
-    }, [])
-    const onDetail = useMemoizedFn((i: Risk) => {
-        let m = showYakitModal({
-            width: "80%",
-            title: "详情",
-            footer: null,
-            content: (
-                <div style={{padding: 24}}>
-                    <YakitRiskDetails info={i} onClose={() => m.destroy()} />
-                </div>
-            )
-        })
+    const {runtimeId} = props
+    const [riskLoading, setRiskLoading] = useState<boolean>(false)
+    const [allTotal, setAllTotal] = useState<number>(0)
+    const [query, setQuery] = useState<QueryRisksRequest>({
+        ...defQueryRisksRequest,
+        RuntimeId: runtimeId
     })
     const onJumpRisk = useMemoizedFn(() => {
         const info: RouteToPageProps = {
@@ -379,28 +315,32 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
     })
     return (
         <div className={styles["risks-table"]}>
-            <TableVirtualResize<StreamResult.Risk>
-                renderTitle={
-                    <div className={styles["table-renderTitle"]}>
-                        <span>风险与漏洞</span>
-                        <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
-                            查看全部
-                        </YakitButton>
-                    </div>
-                }
-                enableDrag={true}
-                titleHeight={44}
-                data={riskState}
-                renderKey={"Hash"}
-                pagination={{
-                    page: 1,
-                    limit: 50,
-                    total: riskState.length,
-                    onChange: () => {}
-                }}
-                columns={columns}
-                containerClassName={styles["table-container"]}
-            />
+            <YakitSpin spinning={riskLoading}>
+                <YakitRiskTable
+                    query={query}
+                    setQuery={setQuery}
+                    advancedQuery={true}
+                    setRiskLoading={setRiskLoading}
+                    renderTitle={
+                        <div className={styles["table-renderTitle"]}>
+                            <span>风险与漏洞</span>
+                            <TableTotalAndSelectNumber total={allTotal} />
+                            <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
+                                查看全部
+                            </YakitButton>
+                        </div>
+                    }
+                    riskWrapperClassName={styles["risks-table-wrapper"]}
+                    tableVirtualResizeProps={{
+                        containerClassName: styles["table-container"],
+                        titleHeight: 44
+                    }}
+                    yakitRiskDetailsBorder={false}
+                    excludeColumnsKey={["action"]}
+                    allTotal={allTotal}
+                    setAllTotal={setAllTotal}
+                />
+            </YakitSpin>
         </div>
     )
 })

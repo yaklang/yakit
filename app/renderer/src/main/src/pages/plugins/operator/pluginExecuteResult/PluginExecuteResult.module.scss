@@ -39,10 +39,12 @@
     }
 
     .risks-table {
-        display: flex;
-        flex-direction: column;
+        @extend %display-column-center;
         overflow: hidden;
         height: 100%;
+        .risks-table-wrapper{
+            padding: 0;
+        }
     }
     .table-container {
         border: 0 !important;

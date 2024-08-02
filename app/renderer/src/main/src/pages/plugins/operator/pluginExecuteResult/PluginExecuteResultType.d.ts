@@ -12,7 +12,7 @@ export interface PluginExecuteResultProps {
 }
 
 export interface VulnerabilitiesRisksTableProps {
-    riskState: StreamResult.Risk[]
+    runtimeId: string
 }
 
 export interface PluginExecuteLogProps {
