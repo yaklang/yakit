@@ -176,8 +176,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 编辑器部分是否显示
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
     useEffect(() => {
-        setSecondNodeVisible(!onlyShowFirstNode && typeof defaultFold === "boolean")
-    }, [onlyShowFirstNode, defaultFold])
+        setSecondNodeVisible(!onlyShowFirstNode)
+    }, [onlyShowFirstNode])
 
     return (
         <div

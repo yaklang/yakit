@@ -965,7 +965,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const {URL = ""} = res || {}
         if (type === 1 && URL) {
             setBugUrl(URL)
-            apiFetchQueryYakScriptGroupLocal(false)
+            apiFetchQueryYakScriptGroupLocal(false, [], 2)
                 .then((res) => {
                     setBugList(res)
                     setBugTestShow(true)

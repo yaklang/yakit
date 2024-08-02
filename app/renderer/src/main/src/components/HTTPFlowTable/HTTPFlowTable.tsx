@@ -1490,8 +1490,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     })
     const onSetCurrentRow = useDebounceFn(
-        (rowDate: HTTPFlow) => {
-            onRowClick(getHTTPFlowReqAndResToString(rowDate))
+        (rowDate: HTTPFlow | undefined) => {
+            onRowClick(rowDate ? getHTTPFlowReqAndResToString(rowDate) : undefined)
         },
         {wait: 200, leading: true}
     ).run

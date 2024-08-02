@@ -135,7 +135,8 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                           limit: +response.Pagination.Limit || 20
                       }
                 const query: QueryYakScriptRequest = {
-                    ...convertLocalPluginsRequestParams({filter: filters, search, pageParams: params, defaultFilters})
+                    ...convertLocalPluginsRequestParams({filter: filters, search, pageParams: params, defaultFilters}),
+                    IsMITMParamPlugins: 2
                 }
                 try {
                     const res = await apiQueryYakScript(query)
@@ -272,6 +273,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                             selectGroup={selectGroup}
                             setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
                             excludeType={pluginGroupExcludeType}
+                            isMITMParamPlugins={2}
                             pluginListQuery={() => {
                                 const params: PluginListPageMeta = {
                                     page: +response.Pagination.Page,
@@ -283,7 +285,8 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
                                         search,
                                         pageParams: params,
                                         defaultFilters
-                                    })
+                                    }),
+                                    IsMITMParamPlugins: 2
                                 }
                                 return {
                                     ...query,

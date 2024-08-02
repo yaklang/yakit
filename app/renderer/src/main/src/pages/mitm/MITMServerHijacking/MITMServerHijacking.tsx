@@ -47,6 +47,8 @@ export interface MITMServerHijackingProp {
     onSetTip: (tip: string) => void
     downstreamProxyStr: string
     setDownstreamProxyStr: (proxy: string) => void
+    isHasParams: boolean
+    onIsHasParams: (isHasParams: boolean) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -60,7 +62,22 @@ const MITMFiltersModal = React.lazy(() => import("../MITMServerStartForm/MITMFil
 const MITMCertificateDownloadModal = React.lazy(() => import("../MITMServerStartForm/MITMCertificateDownloadModal"))
 
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
-    const {host, port, addr, status, setStatus, setVisible, logs, statusCards, tip, onSetTip, downstreamProxyStr, setDownstreamProxyStr} = props
+    const {
+        host,
+        port,
+        addr,
+        status,
+        setStatus,
+        setVisible,
+        logs,
+        statusCards,
+        tip,
+        onSetTip,
+        downstreamProxyStr,
+        setDownstreamProxyStr,
+        isHasParams,
+        onIsHasParams
+    } = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -117,6 +134,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             ipcRenderer
                 .invoke("mitm-stop-call")
                 .then(() => {
+                    onIsHasParams(false)
                     setStatus("idle")
                     resolve("ok")
                 })
@@ -217,7 +235,15 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             ></DownStreamAgentModal>
             <Divider style={{margin: "8px 0"}} />
             <div className={style["mitm-server-body"]}>
-                <MITMServer status={status} setStatus={setStatus} logs={logs} statusCards={statusCards} downstreamProxyStr={downstreamProxyStr}/>
+                <MITMServer
+                    isHasParams={isHasParams}
+                    onIsHasParams={onIsHasParams}
+                    status={status}
+                    setStatus={setStatus}
+                    logs={logs}
+                    statusCards={statusCards}
+                    downstreamProxyStr={downstreamProxyStr}
+                />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
                 <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={true} />

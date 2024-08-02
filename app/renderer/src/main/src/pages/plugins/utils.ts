@@ -732,7 +732,6 @@ export const convertLocalPluginsRequestParams = (query: {
         Group: {
             UnSetGroup: false,
             Group: group?.map((ele) => ele.value) || [],
-            IsPocBuiltIn: "false"
         }
     }
     return toolDelInvalidKV(data)
@@ -1539,13 +1538,14 @@ export const onToEditPlugin = (plugin: YakScript, route?: YakitRoute) => {
 }
 
 /**本地获取插件组数据 */
-export const apiFetchQueryYakScriptGroupLocal: (All?: boolean, ExcludeType?: string[]) => Promise<GroupCount[]> = (
-    All = true,
-    ExcludeType = []
-) => {
+export const apiFetchQueryYakScriptGroupLocal: (
+    All?: boolean,
+    ExcludeType?: string[],
+    IsMITMParamPlugins?: number
+) => Promise<GroupCount[]> = (All = true, ExcludeType = [], IsMITMParamPlugins = 0) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("QueryYakScriptGroup", {All, ExcludeType})
+            .invoke("QueryYakScriptGroup", {All, ExcludeType, IsMITMParamPlugins})
             .then((res: QueryYakScriptGroupResponse) => {
                 resolve(res.Group)
             })
