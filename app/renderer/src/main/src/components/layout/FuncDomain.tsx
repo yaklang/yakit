@@ -127,7 +127,7 @@ export const randomAvatarColor = () => {
 const UserMenusMap: Record<string, YakitMenuItemType> = {
     divider: {type: "divider"},
     singOut: {key: "sign-out", label: "退出登录", type: "danger"},
-    pluginAduit: {key: "plugin-aduit", label: "插件管理"},
+    pluginAudit: {key: "plugin-audit", label: "插件管理"},
     // CE
     trustList: {key: "trust-list", label: "用户管理"},
     licenseAdmin: {key: "license-admin", label: "License管理"},
@@ -224,7 +224,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     [
                         UserMenusMap["trustList"],
                         UserMenusMap["licenseAdmin"],
-                        UserMenusMap["pluginAduit"],
+                        UserMenusMap["pluginAudit"],
                         UserMenusMap["dataStatistics"]
                     ].concat(signOutMenu)
                 )
@@ -232,7 +232,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-管理员
             if (userInfo.role === "admin") {
                 isNew = true
-                setUserMenu([UserMenusMap["pluginAduit"], UserMenusMap["dataStatistics"]].concat(signOutMenu))
+                setUserMenu([UserMenusMap["pluginAudit"], UserMenusMap["dataStatistics"]].concat(signOutMenu))
             }
             // CE-操作员
             if (userInfo.role === "operate") {
@@ -247,7 +247,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-审核员
             if (userInfo.role === "auditor") {
                 isNew = true
-                setUserMenu([UserMenusMap["pluginAduit"]].concat(signOutMenu))
+                setUserMenu([UserMenusMap["pluginAudit"]].concat(signOutMenu))
             }
             // CE-非权限人员
             if (!isNew) {
@@ -264,7 +264,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["roleAdmin"],
                         UserMenusMap["accountAdmin"],
                         UserMenusMap["setPassword"],
-                        UserMenusMap["pluginAduit"],
+                        UserMenusMap["pluginAudit"],
                         ...signOutMenu
                     ])
                 } else {
@@ -277,7 +277,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["roleAdmin"],
                         UserMenusMap["accountAdmin"],
                         UserMenusMap["setPassword"],
-                        UserMenusMap["pluginAduit"],
+                        UserMenusMap["pluginAudit"],
                         ...signOutMenu
                     ]
                     if (dynamicConnect) {
@@ -299,13 +299,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     UserMenusMap["dynamicControl"],
                     UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
-                    UserMenusMap["pluginAduit"],
+                    UserMenusMap["pluginAudit"],
                     ...signOutMenu
                 ]
                 if (userInfo.role !== "auditor") {
                     // 不为审核员时 移除插件管理
                     isNew = true
-                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-aduit")
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
                 }
                 if (isEnpriTraceAgent()) {
                     isNew = true
@@ -548,7 +548,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 if (key === "license-admin") {
                                                     onOpenPage({route: YakitRoute.LicenseAdminPage})
                                                 }
-                                                if (key === "plugin-aduit") {
+                                                if (key === "plugin-audit") {
                                                     onOpenPage({route: YakitRoute.Plugin_Audit})
                                                 }
                                                 if (key === "hole-collect") {

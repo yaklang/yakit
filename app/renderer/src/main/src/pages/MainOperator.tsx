@@ -26,7 +26,7 @@ import {
     isCommunityEdition,
     isEnpriTrace,
     isEnpriTraceAgent,
-    shouldVerifyEnpriTraceLogin
+    isEnterpriseOrSimpleEdition
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
@@ -322,7 +322,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     /** ---------- 引擎控制台 end ---------- */
     /** ---------- 登录状态变化的逻辑 start ---------- */
     const {userInfo, setStoreUserInfo} = useStore()
-    const IsEnpriTrace = shouldVerifyEnpriTraceLogin()
 
     useEffect(() => {
         ipcRenderer.on("fetch-signin-token", (e, res: UserInfoProps) => {
@@ -338,7 +337,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     useEffect(() => {
         // 企业版初始进入页面（已登录）已获取用户信息 因此刷新
-        if (shouldVerifyEnpriTraceLogin()) {
+        if (isEnterpriseOrSimpleEdition()) {
             ipcRenderer.send("company-refresh-in")
         }
     }, [])

@@ -27,7 +27,7 @@ import {
     defaultFixedTabs,
     LogOutCloseRoutes
 } from "@/routes/newRoute"
-import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
+import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition} from "@/utils/envfile"
 import {
     useCreation,
     useGetState,
@@ -1513,7 +1513,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- 登录状态变化的逻辑 start ---------- */
     const {userInfo, setStoreUserInfo} = useStore()
-    const IsEnpriTrace = shouldVerifyEnpriTraceLogin()
+    const IsEnpriTrace = isEnterpriseOrSimpleEdition()
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)

@@ -237,7 +237,8 @@ export const apiFetchCheckList: (query: PluginsQueryProps) => Promise<YakitPlugi
             const newQuery = {
                 ...query,
                 order_by: query.order_by || "updated_at",
-                listType: "check"
+                listType: "check",
+                upgrade: true
             }
             apiFetchList(newQuery)
                 .then((res: YakitPluginListOnlineResponse) => {
@@ -518,11 +519,11 @@ export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => P
             apiDownloadPluginBase(newQuery)
                 .then((res) => resolve(res))
                 .catch((err) => {
-                    yakitNotify("error", "插件管理插件失败:" + err)
+                    yakitNotify("error", "插件管理下载失败:" + err)
                     reject(err)
                 })
         } catch (error) {
-            yakitNotify("error", "插件管理插件失败:" + error)
+            yakitNotify("error", "插件管理下载失败:" + error)
             reject(error)
         }
     })

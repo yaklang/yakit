@@ -11,7 +11,7 @@ import {
 import {ReactNode} from "react"
 import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
 import {MITMPluginTemplate, PortScanPluginTemplate} from "../pluginDebugger/defaultData"
-import {SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon} from "@/assets/icon/solid"
+import {SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon, SolidSolidCircle} from "@/assets/icon/solid"
 import {TypeSelectOpt} from "./funcTemplateType"
 import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "./baseTemplateType"
 
@@ -130,15 +130,17 @@ export enum PluginGV {
 
 /** @name 审核状态对应展示名称 */
 export const aduitStatusToName: Record<string, {name: string; icon: ReactNode}> = {
-    "0": {name: "待审核", icon: <SolidFlagIcon className='aduit-status-flag-color' />},
+    "0": {name: "待审核", icon: <SolidSolidCircle className='aduit-status-solid-circle-color' />},
     "1": {name: "已通过", icon: <SolidBadgecheckIcon className='aduit-status-badge-check-color' />},
-    "2": {name: "未通过", icon: <SolidBanIcon className='aduit-status-ban-color' />}
+    "2": {name: "未通过", icon: <SolidBanIcon className='aduit-status-ban-color' />},
+    "3": {name: "审核中", icon: <SolidFlagIcon className='aduit-status-flag-color' />}
 }
 /** @name 审核状态选择列表 */
 export const DefaultStatusList: TypeSelectOpt[] = [
     {key: "0", ...aduitStatusToName["0"]},
     {key: "1", ...aduitStatusToName["1"]},
-    {key: "2", ...aduitStatusToName["2"]}
+    {key: "2", ...aduitStatusToName["2"]},
+    {key: "3", ...aduitStatusToName["3"]}
 ]
 
 /** @name 公开状态对应展示信息 */

@@ -1,6 +1,6 @@
-import {info} from "@/utils/notification";
-import {setRemoteValue} from "@/utils/kv";
-import {RemoteGV} from "@/yakitGV";
+import {info} from "@/utils/notification"
+import {setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
 
 enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
@@ -8,17 +8,7 @@ enum PRODUCT_RELEASE_EDITION {
     EnpriTrace = 1,
     /**@name 便携版/简易版 */
     EnpriTraceAgent = 2,
-    BreachTrace = 3,
-}
-
-export const shouldOverrideMenuItem = () => {
-    switch (GetReleaseEdition()) {
-        case PRODUCT_RELEASE_EDITION.EnpriTrace:
-        case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
-            return true
-        default:
-            return false
-    }
+    BreachTrace = 3
 }
 
 export const getReleaseEditionName = () => {
@@ -50,18 +40,18 @@ export const isCommunityEdition = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit
 }
 
-
 export const isEnterpriseEdition = () => {
     return !isCommunityEdition()
 }
 
-export const shouldVerifyEnpriTraceLogin = () => {
+export const isEnterpriseOrSimpleEdition = () => {
     switch (GetReleaseEdition()) {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
             return true
+        default:
+            return false
     }
-    return false
 }
 
 export const GetReleaseEdition = () => {
@@ -88,9 +78,9 @@ const fetchEnv = () => {
 }
 
 /*
-* 在导入的时候，就马上设置，不用等到组件加载
-* */
-const {ipcRenderer} = window.require("electron");
+ * 在导入的时候，就马上设置，不用等到组件加载
+ * */
+const {ipcRenderer} = window.require("electron")
 ipcRenderer.invoke("set-release-edition-raw", fetchEnv() || "").then(() => {
     if (isEnpriTraceAgent()) {
         info(`设置 ${getReleaseEditionName()} 发行版成功`)
