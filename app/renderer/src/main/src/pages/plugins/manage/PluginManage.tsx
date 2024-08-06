@@ -59,7 +59,7 @@ import {
     convertPluginsRequestParams,
     excludeNoExistfilter
 } from "../utils"
-import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isEnterpriseOrSimpleEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -82,6 +82,7 @@ import {RemotePluginGV} from "@/enums/plugin"
 import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import emiter from "@/utils/eventBus/eventBus"
+import useAdmin from "@/hook/useAdmin"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -109,20 +110,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
     // 用户信息
     const {userInfo} = useStore()
-    // CE
-    const ceAdmin = useMemo(() => {
-        if (isCommunityEdition() && ["superAdmin", "admin"].includes(userInfo.role || "")) {
-            return true
-        }
-        return true
-    }, [userInfo.role])
-    // EE|SE
-    const enterpriseSimpleAdmin = useMemo(() => {
-        if (isEnterpriseOrSimpleEdition() && userInfo.role === "admin") {
-            return true
-        }
-        return false
-    }, [userInfo.role])
+    const admin = useAdmin()
 
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
@@ -303,20 +291,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         onInit()
     })
 
-    /** 修改作者按钮展示状态 */
-    const showAuthState = useMemo(() => {
-        if (userInfo.role === "superAdmin") {
-            if (isCommunityEdition()) return true
-            else return false
-        }
-        if (userInfo.role === "admin") {
-            if (isCommunityEdition()) return true
-            if (isEnpriTrace()) return true
-            if (isEnpriTraceAgent()) return true
-            return false
-        }
-        return false
-    }, [userInfo.role])
     /** 批量修改插件作者 */
     const [showModifyAuthor, setShowModifyAuthor] = useState<boolean>(false)
     const onShowModifyAuthor = useMemoizedFn(() => {
@@ -484,29 +458,28 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             <FuncFilterPopover
                 icon={<OutlineDotshorizontalIcon />}
                 menu={{
-                    data:
-                        ceAdmin || enterpriseSimpleAdmin
-                            ? [
-                                  {
-                                      key: "download",
-                                      label: "下载",
-                                      itemIcon: <OutlineClouddownloadIcon />
-                                  },
-                                  {type: "divider"},
-                                  {
-                                      key: "del",
-                                      label: "删除",
-                                      type: "danger",
-                                      itemIcon: <OutlineTrashIcon />
-                                  }
-                              ]
-                            : [
-                                  {
-                                      key: "download",
-                                      label: "下载",
-                                      itemIcon: <OutlineClouddownloadIcon />
-                                  }
-                              ],
+                    data: admin.isAdmin
+                        ? [
+                              {
+                                  key: "download",
+                                  label: "下载",
+                                  itemIcon: <OutlineClouddownloadIcon />
+                              },
+                              {type: "divider"},
+                              {
+                                  key: "del",
+                                  label: "删除",
+                                  type: "danger",
+                                  itemIcon: <OutlineTrashIcon />
+                              }
+                          ]
+                        : [
+                              {
+                                  key: "download",
+                                  label: "下载",
+                                  itemIcon: <OutlineClouddownloadIcon />
+                              }
+                          ],
                     className: styles["func-filter-dropdown-menu"],
                     onClick: ({key}) => {
                         switch (key) {
@@ -577,7 +550,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             yakitNotify("error", "请先登录")
             return
         }
-        if (userInfo.role !== "admin") {
+        if (!admin.ee) {
             yakitNotify("error", "暂无权限")
             return
         }
@@ -601,11 +574,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const [pluginGroupMagDrawer, setPluginGroupMagDrawer] = useState<boolean>(false)
     const [importGroupVisible, setImportGroupVisible] = useState<boolean>(false)
     // 管理分组展示状态
-    const magGroupState = useMemo(() => {
-        if (isEnterpriseOrSimpleEdition() && userInfo.role === "admin") return true
-        if (!isEnterpriseOrSimpleEdition() && ["admin", "superAdmin"].includes(userInfo.role || "")) return true
-        else return false
-    }, [userInfo.role])
+    const magGroupState = useMemoizedFn(() => {
+        if (admin.isAdmin) {
+            return true
+        }
+        return false
+    })
 
     const onOpenPluginGroup = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -717,7 +691,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     useDebounceEffect(
         () => {
             if (selectList.length || allCheck) {
-                if (magGroupState) {
+                if (magGroupState()) {
                     getYakScriptGroupOnline(selectList.map((item) => item.uuid))
                 }
             } else {
@@ -1010,7 +984,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         <FuncSearch maxWidth={1000} value={searchs} onSearch={onKeywordAndUser} onChange={setSearchs} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
-                            {showAuthState && (
+                            {admin.isAdmin && (
                                 <FuncBtn
                                     maxWidth={1150}
                                     icon={<OutlinePencilaltIcon />}
@@ -1031,7 +1005,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 onClick={() => headerExtraDownload()}
                                 disabled={initTotal === 0}
                             />
-                            {(ceAdmin || enterpriseSimpleAdmin) && (
+                            {admin.isAdmin && (
                                 <FuncBtn
                                     maxWidth={1150}
                                     icon={<OutlineSaveIcon />}
@@ -1041,7 +1015,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     onClick={() => setImportGroupVisible(true)}
                                 />
                             )}
-                            {enterpriseSimpleAdmin && (
+                            {admin.ee && (
                                 <FuncBtn
                                     maxWidth={1150}
                                     icon={<OutlineClouduploadIcon />}
@@ -1089,7 +1063,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     }}
                                 />
                             )}
-                            {(ceAdmin || enterpriseSimpleAdmin) && (
+                            {admin.isAdmin && (
                                 <FuncBtn
                                     maxWidth={1150}
                                     icon={<OutlineTrashIcon />}
@@ -1112,7 +1086,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     onSelect={onFilter}
                     groupList={pluginFilters.map((item) => {
                         if (item.groupKey === "plugin_group") {
-                            item.groupExtraOptBtn = magGroupState ? (
+                            item.groupExtraOptBtn = magGroupState() ? (
                                 <>
                                     <YakitButton type='text' onClick={onOpenPluginGroup}>
                                         管理
@@ -1139,7 +1113,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         setVisible={onSetShowFilter}
                         extraHeader={
                             <div className={styles["hub-list-header-right-extra"]}>
-                                {magGroupState ? (
+                                {magGroupState() ? (
                                     <>
                                         {showGroupList.length > 0 && (
                                             <div className={styles["header-filter-tag"]}>

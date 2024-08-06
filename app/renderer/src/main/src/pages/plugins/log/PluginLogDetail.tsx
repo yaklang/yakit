@@ -8,12 +8,10 @@ import {SolidBanIcon} from "@/assets/icon/solid"
 import {PluginLogDetailProps} from "./PluginLogDetailType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {PluginBaseParamProps, PluginDataProps, PluginSettingParamProps} from "../pluginsType"
-import {pluginTypeToName} from "../builtInData"
+import {GetPluginLanguage, pluginTypeToName} from "../builtInData"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 import {PluginDebugBody} from "../pluginDebug/PluginDebug"
-import classNames from "classnames"
-import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
 import {API} from "@/services/swagger/resposeType"
 import {convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
@@ -23,7 +21,9 @@ import {Form} from "antd"
 import {CodeScoreModule} from "../funcTemplate"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert"
+import {httpFetchMergePluginDetail, httpMergePluginOperate} from "@/pages/pluginHub/utils/http"
 
+import classNames from "classnames"
 import styles from "./PluginLogDetail.module.scss"
 
 export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
@@ -69,8 +69,6 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
         }
         return undefined
     }, [pluginType])
-    // 修改人及修改原因
-    // const [apply, setApply] = useState<{name: string; img: string; description: string}>()
 
     // 基础信息
     const baseInfo = useRef<PluginBaseParamProps>()
@@ -95,27 +93,15 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
         if (fetchLoading) return
 
         setFetchLoading(true)
-        apiFetchPluginDetailCheck({uuid: uuid, list_type: "log", up_log_id: info.id})
+        httpFetchMergePluginDetail({uuid: uuid, up_log_id: info.id})
             .then(async (res) => {
                 if (res) {
-                    // console.log(
-                    //     `method:post|api:plugins/audit/detail`,
-                    //     `\nrequest:${JSON.stringify({uuid: uuid, list_type: "log", up_log_id: info.id})}`,
-                    //     `\nresponse"${JSON.stringify(res)}`
-                    // )
+                    console.log(`单个日志的详情\n`, `${JSON.stringify(res)}`)
                     setPRInfo(res)
                     // 获取对比器-修改源码
                     setNewCode(res.content)
                     // 获取对比器-源码
                     if (res.merge_before_plugins) oldCode.current = res.merge_before_plugins.content || ""
-                    // 获取修改人信息
-                    // if (res.apply_user_name && res.apply_user_head_img) {
-                    //     setApply({
-                    //         name: res.apply_user_name || "",
-                    //         img: res.apply_user_head_img || "",
-                    //         description: res.logDescription || ""
-                    //     })
-                    // }
                     // 获取基础信息
                     let infoData: PluginBaseParamProps = {
                         ScriptName: res.script_name,
@@ -135,10 +121,9 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                     }
                     settingInfo.current = {...settingData}
                     //获取参数信息
-                    const paramsList =
-                        res.type === "yak"
-                            ? await onCodeToInfo({type: res.type, code: res.content})
-                            : {CliParameter: []}
+                    const paramsList = ["yak", "mitm"].includes(res.type)
+                        ? await onCodeToInfo({type: res.type, code: res.content})
+                        : {CliParameter: []}
                     setPlugin({
                         ScriptName: res.script_name,
                         Type: res.type,
@@ -174,8 +159,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
         return new Promise(async (resolve, reject) => {
             if (prInfo) {
                 // 生成合并结果数据
-                const audit: API.PluginsAudit = {
-                    listType: "log",
+                const audit: API.PluginMerge = {
                     status: isPass ? "true" : "false",
                     uuid: prInfo.uuid,
                     logDescription: (reason || "").trim() || undefined,
@@ -191,21 +175,31 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                     EnablePluginSelector: settingInfo.current?.EnablePluginSelector,
                     PluginSelectorTypes: settingInfo.current?.PluginSelectorTypes
                 }
-                // yak类型-进行源码分析出参数和风险
-                if (data.Type === "yak") {
-                    const codeInfo = await onCodeToInfo({type: data.Type, code: data.Content})
-                    if (codeInfo) {
-                        data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
-                        data.Params = codeInfo.CliParameter
-                    }
-                } else {
-                    // 非yak类型-排除参数和风险
-                    data.RiskDetail = []
-                    data.Params = []
-                }
-                const info = convertRemoteToRemoteInfo(prInfo, data)
 
-                apiAuditPluginDetaiCheck({...info, ...audit})
+                const codeAnalysis =
+                    GetPluginLanguage(data.Type) === "yak"
+                        ? await onCodeToInfo({type: data.Type, code: data.Content})
+                        : null
+                // 源码-获取 tag 信息
+                let newTags = (data.Tags || "").split(",") || []
+                if (codeAnalysis && codeAnalysis.Tags.length > 0) {
+                    newTags = newTags.concat(codeAnalysis.Tags)
+                    newTags = newTags.filter((item, index, self) => {
+                        return self.indexOf(item) === index
+                    })
+                }
+                data.Tags = newTags.length === 0 ? undefined : newTags.join(",")
+                // 源码-获取漏洞详情信息
+                if (GetPluginLanguage(data.Type) === "yak" && codeAnalysis) {
+                    data.RiskDetail = codeAnalysis.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
+                }
+                // 源码-获取参数信息
+                if (["yak", "mitm"].includes(data.Type) && codeAnalysis) {
+                    data.Params = codeAnalysis.CliParameter || []
+                }
+
+                const info = convertRemoteToRemoteInfo(prInfo, data)
+                httpMergePluginOperate({...info, ...audit})
                     .then(() => {
                         resolve("success")
                     })

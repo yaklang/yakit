@@ -23,11 +23,11 @@ export const getReleaseEditionName = () => {
             return "Yakit"
     }
 }
-
+/** EE */
 export const isEnpriTrace = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
 }
-
+/** SE  */
 export const isEnpriTraceAgent = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTraceAgent
 }
@@ -35,11 +35,11 @@ export const isEnpriTraceAgent = () => {
 export const isBreachTrace = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.BreachTrace
 }
-
+/** CE */
 export const isCommunityEdition = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit
 }
-
+/** 非CE */
 export const isEnterpriseEdition = () => {
     return !isCommunityEdition()
 }

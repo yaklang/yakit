@@ -29,17 +29,12 @@ import {
     PluginSettingRefProps
 } from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
-import {ApplicantIcon, AuthorImg, CodeScoreModal, FilterPopoverBtn, FuncBtn} from "../funcTemplate"
+import {ApplicantIcon, AuthorImg, CodeScoreModal, FilterPopoverBtn} from "../funcTemplate"
 import {PluginBaseParamProps, PluginDataProps, PluginSettingParamProps} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
-import {
-    apiAuditPluginDetaiCheck,
-    apiFetchPluginDetailCheck,
-    convertPluginsRequestParams,
-    PluginsQueryProps
-} from "../utils"
+import {convertPluginsRequestParams} from "../utils"
 import {convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -47,12 +42,16 @@ import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {PluginDebug} from "../pluginDebug/PluginDebug"
 import {GetPluginLanguage} from "../builtInData"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {useStore} from "@/store"
 import {riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert"
+import {httpAuditPluginOperate, httpFetchAuditPluginDetail} from "@/pages/pluginHub/utils/http"
+import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
+import {HubButton} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
+import useAdmin from "@/hook/useAdmin"
+import {PluginLogs} from "../log/PluginLog"
 
+import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
-import {shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 
 const {TabPane} = PluginTabs
 
@@ -116,6 +115,8 @@ interface PluginManageDetailProps {
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => any
 }
 
+const pageWrapId = "plugin-manage-detail"
+
 export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
     forwardRef((props, ref) => {
         const {
@@ -137,7 +138,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             loadMoreData,
             onDetailSearch
         } = props
-        const userInfo = useStore((s) => s.userInfo)
+
+        const wrapperWidth = useListenWidth(document.body)
+        const admin = useAdmin()
+
         const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
         const onSearch = useMemoizedFn((value: PluginSearchParams) => {
             onDetailSearch(value, filters)
@@ -166,10 +170,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             if (loading) return
 
             setLoading(true)
-            apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
+            httpFetchAuditPluginDetail(info.uuid)
                 .then(async (res) => {
                     if (res) {
-                        // console.log("插件管理的单个插件详情", res)
+                        console.log("插件管理的单个插件详情", JSON.stringify(res))
                         setOldContent("")
                         // 源码
                         setContent(res.content)
@@ -306,6 +310,33 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         )
 
         const [plugin, setPlugin] = useState<API.PluginsAuditDetailResponse>()
+        // 判断不同权限不同审核状态下的按钮展示
+        const extraHeaderInfo = useMemo(() => {
+            const data = {
+                isBtns: true, // 是否展示通过和不通过按钮
+                isPass: false // 是否展示钢笔 icon
+            }
+            if (plugin?.isAuthor) return data
+
+            const status = plugin?.status || 0
+            const isOP = !!plugin?.loginUserIsHandle
+            if (admin.isAdmin) {
+                if (status === 0 || status === 3) data.isBtns = true
+                else data.isPass = status === 1
+            } else {
+                if (status === 0) data.isBtns = true
+                else if (status === 3) {
+                    data.isBtns = !isOP
+                    // 因为审核员操作后还是审核中状态，那么只可能操作的是通过按钮
+                    data.isPass = isOP
+                } else {
+                    data.isBtns = false
+                    data.isPass = status === 1
+                }
+            }
+
+            return data
+        }, [admin, plugin?.status, plugin?.loginUserIsHandle, plugin?.isAuthor])
 
         // 修改者信息
         const [apply, setApply] = useState<{name: string; img: string; description: string}>()
@@ -354,7 +385,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         const convertPluginInfo = useMemoizedFn(async () => {
             if (!plugin) return undefined
 
-            if (+plugin.status !== 0) {
+            if (plugin.status === 1 || plugin.status === 2) {
                 const obj = convertRemoteToRemoteInfo(plugin)
                 return obj
             }
@@ -392,26 +423,26 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             data.Content = content
 
-            const codeInfo =
+            const codeAnalysis =
                 GetPluginLanguage(data.Type) === "yak"
                     ? await onCodeToInfo({type: data.Type, code: data.Content})
                     : null
-            let tags: string = data.Tags || ""
-            if (codeInfo && codeInfo.Tags.length > 0) {
-                tags += `,${codeInfo.Tags.join(",")}`
-                // 去重
-                tags = filter(tags.split(",")).join(",")
+            // 源码-获取 tag 信息
+            let newTags = (data.Tags || "").split(",") || []
+            if (codeAnalysis && codeAnalysis.Tags.length > 0) {
+                newTags = newTags.concat(codeAnalysis.Tags)
+                newTags = newTags.filter((item, index, self) => {
+                    return self.indexOf(item) === index
+                })
             }
-            data.Tags = tags || undefined
-
-            // yak类型-进行源码分析出参数和风险
-            if (data.Type === "yak" && codeInfo) {
-                data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
-                data.Params = codeInfo.CliParameter
-            } else {
-                // 非yak类型-排除参数和风险
-                data.RiskDetail = []
-                data.Params = []
+            data.Tags = newTags.length === 0 ? undefined : newTags.join(",")
+            // 源码-获取漏洞详情信息
+            if (GetPluginLanguage(data.Type) === "yak" && codeAnalysis) {
+                data.RiskDetail = codeAnalysis.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
+            }
+            // 源码-获取参数信息
+            if (["yak", "mitm"].includes(data.Type) && codeAnalysis) {
+                data.Params = codeAnalysis.CliParameter || []
             }
 
             const obj = convertRemoteToRemoteInfo(plugin, data)
@@ -431,12 +462,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 const {isPass, description = ""} = param
 
                 if (plugin) {
-                    const audit: API.PluginsAudit = {
-                        listType: "check",
+                    const audit: API.PluginAudit = {
                         status: isPass ? "true" : "false",
                         uuid: plugin.uuid,
-                        logDescription: description || undefined,
-                        upPluginLogId: plugin.up_log_id || 0
+                        logDescription: description || undefined
                     }
                     const info: API.PluginsRequest | undefined = await convertPluginInfo()
                     if (!info) {
@@ -444,7 +473,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         return
                     }
 
-                    apiAuditPluginDetaiCheck({...info, ...audit})
+                    httpAuditPluginOperate({...info, ...audit})
                         .then(() => {
                             if (callback)
                                 callback({
@@ -468,11 +497,17 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             visible: false,
             type: "nopass"
         })
+        const [statusShow, setStatusShow] = useState<boolean>(false)
+        const handleStatusShow = useMemoizedFn((val: boolean) => {
+            setStatusShow(val)
+        })
         // 审核按钮
         const [statusLoading, setStatusLoading] = useState<boolean>(false)
         // 打开原因窗口
         const onOpenReason = useMemoizedFn(() => {
+            if (!!plugin?.isAuthor) return
             if (statusLoading) return
+            setStatusShow(false)
             setStatusLoading(true)
             setShowReason({visible: true, type: "nopass"})
         })
@@ -493,7 +528,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 setStatusLoading(true)
                 onChangeStatus({isPass: false, description: reason}, (value) => {
                     if (value) {
-                        setPlugin({...value, status: 2})
+                        setContent(plugin?.content || "")
+                        setPlugin({...(plugin || value), status: 2, loginUserIsHandle: true})
                         dispatch({
                             type: "update",
                             payload: {
@@ -512,6 +548,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
         // 审核通过
         const onPass = useMemoizedFn(() => {
+            if (!!plugin?.isAuthor) return
             if (statusLoading) return
             handleOpenScoreHint()
         })
@@ -532,11 +569,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 setScoreHint(false)
                 onChangeStatus({isPass: true}, (value) => {
                     if (value) {
-                        setPlugin({...value, status: 1})
+                        const status = admin.isAdmin ? 1 : plugin?.status === 3 ? 1 : 3
+                        setPlugin({...value, status: status, loginUserIsHandle: true})
                         dispatch({
                             type: "update",
                             payload: {
-                                item: {...value, status: 1}
+                                item: {...value, status: status}
                             }
                         })
                         setTimeout(() => {
@@ -620,13 +658,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             return statusTag[`${data.status}`]
         })
 
-        /** 管理分组展示状态 */
-        const magGroupState = useMemo(() => {
-            if (shouldVerifyEnpriTraceLogin() && userInfo.role === "admin") return true
-            if (!shouldVerifyEnpriTraceLogin() && ["admin", "superAdmin"].includes(userInfo.role || "")) return true
-            else return false
-        }, [userInfo.role])
-
         /**选中组 */
         const selectGroup = useMemo(() => {
             const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
@@ -652,7 +683,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
         return (
             <PluginDetails<YakitPluginOnlineDetail>
-                pageWrapId='plugin-manage-detail'
+                pageWrapId={pageWrapId}
                 title='插件管理'
                 spinLoading={spinLoading}
                 search={searchs}
@@ -665,7 +696,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             selectGroup={selectGroup}
                             pluginListQuery={getGroupPluginListQuery}
                             setSelectGroup={(group) => onFilter(convertGroupParam(filters, {group}))}
-                            isShowGroupMagBtn={magGroupState}
+                            isShowGroupMagBtn={admin.isAdmin}
                             onClickMagFun={onPluginBack}
                             checkedPlugin={selectList.map((item) => item.uuid)}
                             allChecked={allCheck}
@@ -694,17 +725,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 onClick={onDownload}
                             />
                         </Tooltip>
-                        {/* <div style={{height: 12}} className='divider-style'></div>
-                        <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                            <YakitButton
-                                type='text2'
-                                loading={delLoading}
-                                icon={<OutlineTrashIcon />}
-                                onClick={() => {
-                                    onBatchDel()
-                                }}
-                            />
-                        </Tooltip> */}
                     </div>
                 }
                 checked={allCheck}
@@ -760,18 +780,20 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                         tags={plugin.tags}
                                         extraNode={
                                             <div className={styles["plugin-info-extra-header"]}>
-                                                {+plugin.status !== 0 && (
+                                                {!extraHeaderInfo.isBtns && (
                                                     <>
                                                         <Tooltip
-                                                            title={+plugin.status === 1 ? "改为未通过" : "改为通过"}
+                                                            title={extraHeaderInfo.isPass ? "改为未通过" : "改为通过"}
                                                             overlayClassName='plugins-tooltip'
+                                                            visible={statusShow}
+                                                            onVisibleChange={handleStatusShow}
                                                         >
                                                             <YakitButton
                                                                 loading={statusLoading}
                                                                 type='text2'
                                                                 icon={<OutlinePencilIcon />}
                                                                 onClick={() => {
-                                                                    if (+plugin.status === 1) onOpenReason()
+                                                                    if (extraHeaderInfo.isPass) onOpenReason()
                                                                     else onPass()
                                                                 }}
                                                             />
@@ -779,44 +801,62 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         <div style={{height: 12}} className='divider-style'></div>
                                                     </>
                                                 )}
-                                                <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                                                    <YakitButton
-                                                        type='text2'
-                                                        icon={<OutlineTrashIcon />}
-                                                        loading={delLoading}
-                                                        onClick={() => {
-                                                            if (delLoading) return
-                                                            setDelLoading(true)
-                                                            onBatchDel(plugin)
-                                                        }}
-                                                    />
-                                                </Tooltip>
+                                                {admin.isAdmin && (
+                                                    <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
+                                                        <YakitButton
+                                                            type='text2'
+                                                            icon={<OutlineTrashIcon />}
+                                                            loading={delLoading}
+                                                            onClick={() => {
+                                                                if (delLoading) return
+                                                                setDelLoading(true)
+                                                                onBatchDel(plugin)
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                )}
 
-                                                {+plugin.status === 0 && (
+                                                {extraHeaderInfo.isBtns && (
                                                     <>
-                                                        <FuncBtn
-                                                            maxWidth={1100}
+                                                        <HubButton
+                                                            width={wrapperWidth}
+                                                            iconWidth={1100}
                                                             type='outline1'
                                                             colors='danger'
                                                             icon={<SolidBanIcon />}
                                                             loading={statusLoading}
-                                                            name={"不通过"}
+                                                            name='不通过'
+                                                            disabled={plugin.isAuthor}
+                                                            className={classNames({
+                                                                [styles["operate-disabled-btn"]]: plugin.isAuthor
+                                                            })}
+                                                            hint='作者无法操作'
                                                             onClick={onOpenReason}
                                                         />
-                                                        <FuncBtn
-                                                            maxWidth={1100}
+                                                        <HubButton
+                                                            width={wrapperWidth}
+                                                            iconWidth={1100}
                                                             colors='success'
                                                             icon={<SolidBadgecheckIcon />}
                                                             loading={statusLoading}
-                                                            name={"通过"}
+                                                            name='通过'
+                                                            disabled={plugin.isAuthor}
+                                                            className={classNames({
+                                                                [styles["operate-disabled-btn"]]: plugin.isAuthor
+                                                            })}
+                                                            hint='作者无法操作'
                                                             onClick={onPass}
                                                         />
-                                                        <FuncBtn
-                                                            maxWidth={1100}
-                                                            icon={<OutlineCodeIcon />}
-                                                            name={"调试"}
-                                                            onClick={onDebug}
-                                                        />
+                                                        {/* 作者隐藏调试功能 */}
+                                                        {!plugin.isAuthor && (
+                                                            <HubButton
+                                                                width={wrapperWidth}
+                                                                iconWidth={1100}
+                                                                icon={<OutlineCodeIcon />}
+                                                                name='调试'
+                                                                onClick={onDebug}
+                                                            />
+                                                        )}
                                                     </>
                                                 )}
                                             </div>
@@ -833,7 +873,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                         wrapperClassName={styles["plugin-info-header"]}
                                     />
 
-                                    {+plugin.status === 0 ? (
+                                    {plugin.status === 0 || plugin.status === 3 ? (
                                         <div className={styles["plugin-info-body"]}>
                                             <div className={styles["plugin-modify-info"]}>
                                                 {isApply && (
@@ -903,6 +943,102 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     )}
                                 </div>
                             </YakitSpin>
+                        </TabPane>
+                        <TabPane tab='日 志' key='logs'>
+                            <div className={styles["plugin-logs-wrapper"]}>
+                                <PluginDetailHeader
+                                    pluginName={plugin.script_name}
+                                    help={plugin.help}
+                                    titleNode={statusTag[+plugin.status]}
+                                    tags={plugin.tags}
+                                    extraNode={
+                                        <div className={styles["plugin-info-extra-header"]}>
+                                            {!extraHeaderInfo.isBtns && (
+                                                <>
+                                                    <Tooltip
+                                                        title={extraHeaderInfo.isPass ? "改为未通过" : "改为通过"}
+                                                        overlayClassName='plugins-tooltip'
+                                                    >
+                                                        <YakitButton
+                                                            loading={statusLoading}
+                                                            type='text2'
+                                                            icon={<OutlinePencilIcon />}
+                                                            onClick={() => {
+                                                                if (extraHeaderInfo.isPass) onOpenReason()
+                                                                else onPass()
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                    <div style={{height: 12}} className='divider-style'></div>
+                                                </>
+                                            )}
+                                            {admin.isAdmin && (
+                                                <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
+                                                    <YakitButton
+                                                        type='text2'
+                                                        icon={<OutlineTrashIcon />}
+                                                        loading={delLoading}
+                                                        onClick={() => {
+                                                            if (delLoading) return
+                                                            setDelLoading(true)
+                                                            onBatchDel(plugin)
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                            )}
+
+                                            {extraHeaderInfo.isBtns && (
+                                                <>
+                                                    <HubButton
+                                                        width={wrapperWidth}
+                                                        iconWidth={1100}
+                                                        type='outline1'
+                                                        colors='danger'
+                                                        icon={<SolidBanIcon />}
+                                                        loading={statusLoading}
+                                                        name='不通过'
+                                                        disabled={plugin.isAuthor}
+                                                        hint='作者无法操作'
+                                                        onClick={onOpenReason}
+                                                    />
+                                                    <HubButton
+                                                        width={wrapperWidth}
+                                                        iconWidth={1100}
+                                                        colors='success'
+                                                        icon={<SolidBadgecheckIcon />}
+                                                        loading={statusLoading}
+                                                        name='通过'
+                                                        disabled={plugin.isAuthor}
+                                                        hint='作者无法操作'
+                                                        onClick={onPass}
+                                                    />
+                                                    {/* 作者隐藏调试功能 */}
+                                                    {!plugin.isAuthor && (
+                                                        <HubButton
+                                                            width={wrapperWidth}
+                                                            iconWidth={1100}
+                                                            icon={<OutlineCodeIcon />}
+                                                            name='调试'
+                                                            onClick={onDebug}
+                                                        />
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    }
+                                    img={plugin.head_img}
+                                    user={plugin.authors}
+                                    pluginId={plugin.uuid}
+                                    updated_at={plugin.updated_at}
+                                    prImgs={(plugin.collaborator || []).map((ele) => ({
+                                        headImg: ele.head_img,
+                                        userName: ele.user_name
+                                    }))}
+                                    type={plugin.type}
+                                    wrapperClassName={styles["plugin-info-header"]}
+                                />
+                                <PluginLogs uuid={plugin?.uuid || ""} getContainer={pageWrapId} />
+                            </div>
                         </TabPane>
                     </PluginTabs>
                 </div>
