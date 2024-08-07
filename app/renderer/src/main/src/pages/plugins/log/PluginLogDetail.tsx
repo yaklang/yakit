@@ -22,6 +22,7 @@ import {CodeScoreModule} from "../funcTemplate"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert"
 import {httpFetchMergePluginDetail, httpMergePluginOperate} from "@/pages/pluginHub/utils/http"
+import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./PluginLogDetail.module.scss"
@@ -201,6 +202,8 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 const info = convertRemoteToRemoteInfo(prInfo, data)
                 httpMergePluginOperate({...info, ...audit})
                     .then(() => {
+                        // 合并操作成功后,通知审核详情页刷新数据(如果详情页插件和合并插件是同一个的情况下触发)
+                        emiter.emit("logMergeModifyToManageDetail", prInfo.uuid)
                         resolve("success")
                     })
                     .catch(() => {

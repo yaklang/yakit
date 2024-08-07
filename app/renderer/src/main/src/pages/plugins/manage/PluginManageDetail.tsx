@@ -48,6 +48,7 @@ import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {HubButton} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
 import useAdmin from "@/hook/useAdmin"
 import {PluginLogs} from "../log/PluginLog"
+import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -166,66 +167,92 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         }
 
         // 获取插件详情
-        const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
-            if (loading) return
+        const onDetail = useMemoizedFn(
+            (info: YakitPluginOnlineDetail, callback?: (data: API.PluginsAuditDetailResponse) => void) => {
+                if (loading) return
 
-            setLoading(true)
-            httpFetchAuditPluginDetail(info.uuid)
-                .then(async (res) => {
-                    if (res) {
-                        console.log("插件管理的单个插件详情", JSON.stringify(res))
-                        setOldContent("")
-                        // 源码
-                        setContent(res.content)
-                        // 设置修改人
-                        setApply({
-                            name: res.apply_user_name || "",
-                            img: res.apply_user_head_img || "",
-                            description: res.logDescription || ""
-                        })
-                        // 设置基础信息
-                        let infoData: PluginBaseParamProps = {
-                            ScriptName: res.script_name,
-                            Help: res.help,
-                            RiskDetail: riskDetailConvertOnlineToLocal(res.riskInfo),
-                            Tags: []
-                        }
-                        let tags: string[] = []
-                        try {
-                            tags = (res.tags || "").split(",") || []
-                        } catch (error) {}
-                        const codeInfo =
-                            GetPluginLanguage(res.type) === "yak"
-                                ? await onCodeToInfo({type: res.type, code: res.content})
-                                : null
-                        if (codeInfo && codeInfo.Tags.length > 0) {
-                            // 去重
-                            tags = filter([...tags, ...codeInfo.Tags])
-                        }
-                        infoData.Tags = [...tags]
+                setLoading(true)
+                httpFetchAuditPluginDetail(info.uuid)
+                    .then(async (res) => {
+                        if (res) {
+                            console.log("插件管理的单个插件详情", JSON.stringify(res))
+                            setOldContent("")
+                            // 源码
+                            setContent(res.content)
+                            // 设置修改人
+                            setApply({
+                                name: res.apply_user_name || "",
+                                img: res.apply_user_head_img || "",
+                                description: res.logDescription || ""
+                            })
+                            // 设置基础信息
+                            let infoData: PluginBaseParamProps = {
+                                ScriptName: res.script_name,
+                                Help: res.help,
+                                RiskDetail: riskDetailConvertOnlineToLocal(res.riskInfo),
+                                Tags: []
+                            }
+                            let tags: string[] = []
+                            try {
+                                tags = (res.tags || "").split(",") || []
+                            } catch (error) {}
+                            const codeInfo =
+                                GetPluginLanguage(res.type) === "yak"
+                                    ? await onCodeToInfo({type: res.type, code: res.content})
+                                    : null
+                            if (codeInfo && codeInfo.Tags.length > 0) {
+                                // 去重
+                                tags = filter([...tags, ...codeInfo.Tags])
+                            }
+                            infoData.Tags = [...tags]
 
-                        setInfoParams({...infoData})
-                        setCacheTags(infoData?.Tags || [])
-                        // 设置配置信息
-                        let settingData: PluginSettingParamProps = {
-                            EnablePluginSelector: !!res.enable_plugin_selector,
-                            PluginSelectorTypes: res.plugin_selector_types,
-                            Content: res.content || ""
+                            setInfoParams({...infoData})
+                            setCacheTags(infoData?.Tags || [])
+                            // 设置配置信息
+                            let settingData: PluginSettingParamProps = {
+                                EnablePluginSelector: !!res.enable_plugin_selector,
+                                PluginSelectorTypes: res.plugin_selector_types,
+                                Content: res.content || ""
+                            }
+                            setSettingParams({...settingData})
+                            setPlugin({...res})
+                            if (res.merge_before_plugins) setOldContent(res.merge_before_plugins.content || "")
+                            if (callback) callback(res)
                         }
-                        setSettingParams({...settingData})
-                        setPlugin({...res})
-                        if (res.merge_before_plugins) setOldContent(res.merge_before_plugins.content || "")
-                    }
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                })
-        })
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            setLoading(false)
+                        }, 200)
+                    })
+            }
+        )
 
         // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
         const [scrollTo, setScrollTo] = useState<number>(0)
+
+        const updateDetail = useMemoizedFn((uuid) => {
+            if (!uuid || !plugin) return
+            if (uuid !== plugin.uuid) return
+            onDetail(plugin, (data) => {
+                dispatch({
+                    type: "update",
+                    payload: {
+                        item: cloneDeep(data)
+                    }
+                })
+                setTimeout(() => {
+                    setRecalculation(!recalculation)
+                }, 50)
+            })
+        })
+        // 日志里的合并影响审核插件的状态，所以需要获取最新数据展示
+        useEffect(() => {
+            emiter.on("logMergeModifyToManageDetail", updateDetail)
+            return () => {
+                emiter.off("logMergeModifyToManageDetail", updateDetail)
+            }
+        }, [])
 
         useEffect(() => {
             if (info) {
@@ -475,12 +502,13 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
                     httpAuditPluginOperate({...info, ...audit})
                         .then(() => {
-                            if (callback)
-                                callback({
-                                    ...(info as any),
-                                    tags: (info.tags || []).join(","),
-                                    downloaded_total: info.download_total || 0
+                            if (plugin) {
+                                onDetail(cloneDeep(plugin), (data) => {
+                                    if (callback) callback(cloneDeep(data))
                                 })
+                            } else {
+                                yakitNotify("error", "未获取到插件信息，请在左侧列表切换插件获取最新信息")
+                            }
                         })
                         .catch(() => {
                             if (callback) callback()
@@ -528,12 +556,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 setStatusLoading(true)
                 onChangeStatus({isPass: false, description: reason}, (value) => {
                     if (value) {
-                        setContent(plugin?.content || "")
-                        setPlugin({...(plugin || value), status: 2, loginUserIsHandle: true})
+                        setContent(value?.content || "")
+                        setPlugin({...value})
                         dispatch({
                             type: "update",
                             payload: {
-                                item: {...value, status: 2}
+                                item: {...value}
                             }
                         })
                         setTimeout(() => {
@@ -569,12 +597,11 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 setScoreHint(false)
                 onChangeStatus({isPass: true}, (value) => {
                     if (value) {
-                        const status = admin.isAdmin ? 1 : plugin?.status === 3 ? 1 : 3
-                        setPlugin({...value, status: status, loginUserIsHandle: true})
+                        setPlugin({...value})
                         dispatch({
                             type: "update",
                             payload: {
-                                item: {...value, status: status}
+                                item: {...value}
                             }
                         })
                         setTimeout(() => {
@@ -958,6 +985,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                     <Tooltip
                                                         title={extraHeaderInfo.isPass ? "改为未通过" : "改为通过"}
                                                         overlayClassName='plugins-tooltip'
+                                                        visible={statusShow}
+                                                        onVisibleChange={handleStatusShow}
                                                     >
                                                         <YakitButton
                                                             loading={statusLoading}
@@ -998,6 +1027,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         loading={statusLoading}
                                                         name='不通过'
                                                         disabled={plugin.isAuthor}
+                                                        className={classNames({
+                                                            [styles["operate-disabled-btn"]]: plugin.isAuthor
+                                                        })}
                                                         hint='作者无法操作'
                                                         onClick={onOpenReason}
                                                     />
@@ -1009,6 +1041,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         loading={statusLoading}
                                                         name='通过'
                                                         disabled={plugin.isAuthor}
+                                                        className={classNames({
+                                                            [styles["operate-disabled-btn"]]: plugin.isAuthor
+                                                        })}
                                                         hint='作者无法操作'
                                                         onClick={onPass}
                                                     />
@@ -1052,7 +1087,14 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
                 {/* 源码评分机制 */}
                 {plugin && scoreHint && (
-                    <CodeScoreModal type={plugin.type} code={content} visible={scoreHint} onCancel={handleScoreHint} />
+                    <CodeScoreModal
+                        type={plugin.type}
+                        code={content}
+                        successHint='检测合格'
+                        failedHint='检测不合格，请修改后操作'
+                        visible={scoreHint}
+                        onCancel={handleScoreHint}
+                    />
                 )}
             </PluginDetails>
         )

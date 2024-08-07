@@ -63,25 +63,27 @@
             margin-top: 4px;
         }
     }
+
+    .plugin-info-header {
+        background-color: #fff;
+        padding-top: 12px;
+    }
+    .plugin-info-extra-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .operate-disabled-btn {
+            background: var(--yakit-disable-text-color) !important;
+            color: var(--ui-text-inverse-color) !important;
+            border-color: var(--yakit-disable-text-color) !important;
+        }
+    }
     .plugin-info-wrapper {
         width: 100%;
         height: 100%;
         padding: 0 12px 12px 12px;
         overflow: hidden overlay;
-        .plugin-info-header {
-            background-color: #fff;
-            padding-top: 12px;
-        }
-        .plugin-info-extra-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            .operate-disabled-btn {
-                background: var(--yakit-disable-text-color) !important;
-                color: var(--ui-text-inverse-color) !important;
-                border-color: var(--yakit-disable-text-color) !important;
-            }
-        }
+
         .plugin-info-body {
             margin-top: 12px;
             width: 100%;
