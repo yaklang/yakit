@@ -1,6 +1,6 @@
-import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useDebounceEffect, useMemoizedFn, usePrevious, useUpdateEffect} from "ahooks"
-import {OutlineCloseIcon, OutlineIdentificationIcon, OutlineQuestionmarkcircleIcon, OutlineTagIcon} from "@/assets/icon/outline"
+import {OutlineCloseIcon, OutlineIdentificationIcon, OutlineTagIcon} from "@/assets/icon/outline"
 import {Form, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -21,9 +21,9 @@ import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorInfo.module.scss"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { YamlTempHelp } from "./YamlTempHelp"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {TempExampleHelp, TempExampleInfo, tempExampleList} from "./TempExampleHelp"
 
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
@@ -189,7 +189,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         const [typeSwitchPopShow, setTypeSwitchPopShow] = useState<boolean>(false)
         const tempType = useRef<string>("")
         const previousType = usePrevious(type)
-        
+
         // 类型影响 tags 的部分数据更新
         useUpdateEffect(() => {
             if (type === "yak") {
@@ -271,18 +271,29 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         })
         /** ---------- 插件配置逻辑 End ---------- */
 
-        const onOpenHelpModal = useMemoizedFn(() => {
+        /** ---------- 模板案例 Start ---------- */
+        const [searchTempExampleVal, setSearchTempExampleVal] = useState<string>("")
+        const renderTempExampleList = useMemo(() => {
+            return searchTempExampleVal
+                ? tempExampleList.filter((v) =>
+                      v.label.toLocaleLowerCase().includes(searchTempExampleVal.toLocaleLowerCase())
+                  )
+                : tempExampleList
+        }, [searchTempExampleVal, tempExampleList])
+        const onOpenHelpModal = (tempExampleItem: TempExampleInfo) => {
             const m = showYakitModal({
-                title: "Yaml 模板案例",
+                title: "模板案例",
                 type: "white",
                 width: "60vw",
+                centered: true,
                 cancelButtonProps: {style: {display: "none"}},
                 onOkText: "我知道了",
                 onOk: () => m.destroy(),
                 bodyStyle: {padding: "8px 24px"},
-                content: <YamlTempHelp />
+                content: <TempExampleHelp tempExampleItem={tempExampleItem} />
             })
-        })
+        }
+        /** ---------- 模板案例 End ---------- */
 
         return (
             <div className={styles["editor-info-form"]}>
@@ -452,8 +463,35 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         </Form.Item>
                     )}
                 </Form>
-                <div className={styles["yaml-temp-example"]} onClick={onOpenHelpModal}>
-                    <span>Yaml 模板案例</span> <OutlineQuestionmarkcircleIcon />
+                <div className={styles["temp-example-wrapper"]}>
+                    <div className={styles["temp-example-title-wrapper"]}>
+                        <span className={styles["temp-example-title-text"]}>模板案例 :</span>
+                    </div>
+                    <div className={styles["temp-example-search-wrapper"]}>
+                        <YakitInput.Search allowClear={true} onSearch={(value) => setSearchTempExampleVal(value)} />
+                    </div>
+                    <div className={styles["temp-example-list-wrapper"]}>
+                        {renderTempExampleList.length ? (
+                            <>
+                                {renderTempExampleList.map((item) => (
+                                    <div
+                                        className={styles["temp-example-list-item"]}
+                                        key={item.label}
+                                        onClick={() => onOpenHelpModal(item)}
+                                    >
+                                        <div className={styles["temp-example-item-left-wrapper"]}>
+                                            <div className={styles["temp-example-item-label"]} title={item.label}>
+                                                {item.label}
+                                            </div>
+                                        </div>
+                                        <div className={styles["temp-example-item-desc"]}>{item.desc}</div>
+                                    </div>
+                                ))}
+                            </>
+                        ) : (
+                            <YakitEmpty></YakitEmpty>
+                        )}
+                    </div>
                 </div>
                 <YakitHint
                     visible={typeSwitchPopShow}

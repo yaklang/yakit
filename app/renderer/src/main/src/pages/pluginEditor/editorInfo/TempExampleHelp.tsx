@@ -1,13 +1,17 @@
 import React from "react"
 import styles from "./EditorInfo.module.scss"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
+export interface TempExampleInfo {
+  label: string
+  desc: string
+  code: string
+}
 
-export const YamlTempHelp: React.FC = React.memo(() => {
-    return (
-        <div className={styles["yaml-temp-help-body"]}>
-            <h1>一、文件读取(普通特征字符串匹配)</h1>
-            <ChatMarkdown
-                content={`\`\`\`yaml
+export const tempExampleList: TempExampleInfo[] = [
+    {
+        label: "文件读取(普通特征字符串匹配)",
+        desc: "yaml",
+        code: `\`\`\`yaml
 id: WebFuzzer-Template-file-read
 info:
   name: 文件读取模板
@@ -34,11 +38,12 @@ http:
     regex:
     - 'root:.*:0:0:'
     condition: and
-\`\`\``}
-            />
-            <h1>二、代码执行(匹配二次处理后的结果)</h1>
-            <ChatMarkdown
-                content={`\`\`\`yaml
+\`\`\``
+    },
+    {
+        label: "代码执行(匹配二次处理后的结果)",
+        desc: "yaml",
+        code: `\`\`\`yaml
 id: WebFuzzer-Template-code-execution
 info:
   name: 代码执行模板
@@ -69,11 +74,12 @@ http:
     dsl:
     - contains(body,r2)
     condition: and
-\`\`\``}
-            />
-            <h1>三、二进制数据发包 </h1>
-            <ChatMarkdown
-                content={`\`\`\`yaml
+\`\`\``
+    },
+    {
+        label: "二进制数据发包",
+        desc: "yaml",
+        code: `\`\`\`yaml
 id: WebFuzzer-Template-rce-hex_decode
 info:
   name: Struts2 046
@@ -116,11 +122,12 @@ http:
     dsl:
     - contains(all_headers,int(r1)+int(r2))
     condition: and
-\`\`\``}
-            />
-            <h1>四、无回显检测(通过延时判断)</h1>
-            <ChatMarkdown
-                content={`\`\`\`yaml
+\`\`\``
+    },
+    {
+        label: "无回显检测(通过延时判断)",
+        desc: "yaml",
+        code: `\`\`\`yaml
 id: WebFuzzer-Template-Delay
 info:
   name: SQL时间盲注
@@ -152,11 +159,12 @@ http:
     dsl:
     - duration > 5
     condition: and
-\`\`\``}
-            />
-            <h1>五、无回显检测(通过DNSLOG判断)</h1>
-            <ChatMarkdown
-                content={`\`\`\`yaml
+\`\`\``
+    },
+    {
+        label: "无回显检测(通过DNSLOG判断)",
+        desc: "yaml",
+        code: `\`\`\`yaml
 id: WebFuzzer-Template-dnslog
 info:
   name: 反序列化漏洞之DNSLOG 检测
@@ -187,11 +195,12 @@ http:
     dsl:
     - interactsh_protocol
     condition: and
-\`\`\``}
-            />
-            <h1>六、SQL 注入（如何用随机计算乘法除法并匹配结果）</h1>
-            <ChatMarkdown
-                content={`\`\`\`yaml
+\`\`\``
+    },
+    {
+        label: "SQL 注入（如何用随机计算乘法除法并匹配结果）",
+        desc: "yaml",
+        code: `\`\`\`yaml
 id: WebFuzzer-Template-sql-injection
 info:
   name: SQL 注入检测模板
@@ -225,11 +234,12 @@ http:
     dsl:
     - contains(body,r1+r2)
     condition: and
-\`\`\``}
-            />
-            <h1>六、多个请求检测(文件上传)</h1>
-            <ChatMarkdown
-                content={`\`\`\`yaml
+\`\`\``
+    },
+    {
+        label: "多个请求检测(文件上传)",
+        desc: "yaml",
+        code: `\`\`\`yaml
 id: WebFuzzer-Template-file-upload
 info:
   name: 文件上传/getshell
@@ -267,8 +277,18 @@ http:
     dsl:
     - contains(body,flag)
     condition: and
-\`\`\``}
-            />
+\`\`\``
+    }
+]
+interface TempExampleHelpProps {
+    tempExampleItem: TempExampleInfo
+}
+export const TempExampleHelp: React.FC<TempExampleHelpProps> = React.memo((props) => {
+    const {tempExampleItem} = props
+    return (
+        <div className={styles["temp-example-help-body"]}>
+            <h1>{tempExampleItem.label}</h1>
+            <ChatMarkdown content={tempExampleItem.code} />
         </div>
     )
 })
