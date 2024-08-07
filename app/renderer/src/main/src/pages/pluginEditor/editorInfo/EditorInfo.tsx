@@ -465,7 +465,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 </Form>
                 <div className={styles["temp-example-wrapper"]}>
                     <div className={styles["temp-example-title-wrapper"]}>
-                        <span className={styles["temp-example-title-text"]}>模板案例</span>
+                        <span className={styles["temp-example-title-text"]}>模板案例 :</span>
                     </div>
                     <div className={styles["temp-example-search-wrapper"]}>
                         <YakitInput.Search allowClear={true} onSearch={(value) => setSearchTempExampleVal(value)} />
