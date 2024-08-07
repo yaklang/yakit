@@ -876,6 +876,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
     const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>("")
     const [startExecYakCodeParams, setStartExecYakCodeParams] = useState<YakScriptParam>()
+    const [importLoading, setImportLoading] = useState<boolean>(false)
 
     useDebounceEffect(
         () => {
@@ -1083,6 +1084,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
 
         if (loadMode === "uploadId") {
+            setImportLoading(true)
             apiDownloadPluginOther({
                 UUID: [formValue.localId]
             }).then(() => {
@@ -1095,6 +1097,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                     })
                 )
                 success("插件导入成功")
+            }).finally(() => {
+                setImportLoading(false)
             })
         }
     })
@@ -1147,7 +1151,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 footer={
                     <>
                         <div style={{marginLeft: 12, display: "block"}}>
-                            <YakitButton onClick={onOk}>导入</YakitButton>
+                            <YakitButton onClick={onOk} loading={importLoading}>导入</YakitButton>
                         </div>
                     </>
                 }
