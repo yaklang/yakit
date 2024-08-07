@@ -74,18 +74,20 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [downstreamProxy, setDownstreamProxy] = useState<string>(downstreamProxyStr || "")
     useDebounceEffect(
         () => {
-            getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
-                if (pageType === "History" && res) {
-                    try {
-                        const obj = JSON.parse(res) || {}
-                        setDownstreamProxy(obj.defaultValue || "")
-                    } catch (error) {
+            if (inViewport) {
+                getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
+                    if (pageType === "History" && res) {
+                        try {
+                            const obj = JSON.parse(res) || {}
+                            setDownstreamProxy(obj.defaultValue || "")
+                        } catch (error) {
+                            setDownstreamProxy(downstreamProxyStr || "")
+                        }
+                    } else {
                         setDownstreamProxy(downstreamProxyStr || "")
                     }
-                } else {
-                    setDownstreamProxy(downstreamProxyStr || "")
-                }
-            })
+                })
+            }
         },
         [downstreamProxyStr, inViewport, pageType],
         {wait: 300}
