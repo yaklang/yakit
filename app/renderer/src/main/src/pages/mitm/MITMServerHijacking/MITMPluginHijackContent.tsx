@@ -201,14 +201,14 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                 const allCheckList = [...new Set(cacheTmp)]
                 setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? "true" : "")
                 onSetLoadedPluginLen(allCheckList.length)
-                noParamsCheckArr = []
-                hasParamsCheckArr = []
                 // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
                 let promises_1: (() => Promise<any>)[] = []
                 allCheckList.forEach((scriptName) => {
                     promises_1.push(() => getRemoteValue("mitm_has_params_" + scriptName))
                 })
                 Promise.allSettled(promises_1.map((promiseFunc) => promiseFunc())).then((res) => {
+                    noParamsCheckArr = []
+                    hasParamsCheckArr = []
                     res.forEach((item, index) => {
                         if (item.status === "fulfilled") {
                             if (!item.value) {
