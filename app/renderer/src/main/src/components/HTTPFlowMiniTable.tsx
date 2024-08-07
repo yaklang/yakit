@@ -19,6 +19,7 @@ export interface HTTPFlowMiniTableProp {
     filter: YakQueryHTTPFlowRequest
     onTotal: (total: number) => any
     onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+    downstreamProxyStr?: string
 }
 
 export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((props) => {
@@ -104,7 +105,8 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                         width: "80%",
                                         content: onExpandHTTPFlow(
                                             findHTTPFlowById(i),
-                                            () => m.destroy()
+                                            () => m.destroy(),
+                                            props.downstreamProxyStr || ""
                                         ),
                                     })
                                 }}
@@ -170,7 +172,8 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                         width: "80%",
                                         content: onExpandHTTPFlow(
                                             findHTTPFlowById(i),
-                                            () => m.destroy()
+                                            () => m.destroy(),
+                                            props.downstreamProxyStr || ""
                                         )
                                     })
                                 }}
