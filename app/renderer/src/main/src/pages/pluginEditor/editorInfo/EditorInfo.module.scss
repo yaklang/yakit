@@ -167,21 +167,84 @@
     }
 }
 
-.yaml-temp-example {
-    margin-left: 8px;
-    color: var(--yakit-primary-5);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 14px;
-    svg {
-        width: 16px;
-        height: 16px;
+.temp-example-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    border: 1px solid var(--yakit-border-color);
+    border-radius: 8px;
+
+    gap: 8px;
+    .temp-example-title-wrapper {
+        display: flex;
+        align-items: center;
+
+        gap: 8px;
+        .temp-example-title-text {
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    }
+    .temp-example-list-wrapper {
+        overflow-y: overlay;
+        flex: 1;
+        .temp-example-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+            cursor: pointer;
+            &:not(:first-child) {
+                border-top: 1px solid var(--yakit-border-color);
+            }
+            &:last-child {
+                border-bottom: 1px solid var(--yakit-border-color);
+            }
+            .temp-example-item-left-wrapper {
+                width: calc(100% - 55px);
+                display: flex;
+                align-items: center;
+
+                gap: 4px;
+                .temp-example-item-label {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    font-size: 14px;
+                }
+            }
+            .temp-example-item-desc {
+                visibility: hidden;
+                overflow: hidden;
+                margin: 0 6px;
+                padding: 0 6px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                border-radius: 4px;
+                background-color: #eaecf3;
+                font-size: 13px;
+            }
+            &:hover {
+                border-color: transparent;
+                border-radius: 8px;
+                background-color: #f8f8f8;
+                & + .temp-example-list-item {
+                    border-top-color: transparent;
+                }
+                .temp-example-item-desc {
+                    visibility: visible;
+                }
+            }
+        }
     }
 }
-
-.yaml-temp-help-body {
+.temp-example-help-body {
     height: 100%;
     overflow: auto;
     max-height: 70vh;
