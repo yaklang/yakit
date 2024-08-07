@@ -1,8 +1,13 @@
 import React from "react"
 import styles from "./EditorInfo.module.scss"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
+export interface TempExampleInfo {
+  label: string
+  desc: string
+  code: string
+}
 
-export const tempExampleList = [
+export const tempExampleList: TempExampleInfo[] = [
     {
         label: "文件读取(普通特征字符串匹配)",
         desc: "yaml",
@@ -275,11 +280,6 @@ http:
 \`\`\``
     }
 ]
-export interface TempExampleInfo {
-  label: string
-  desc: string
-  code: string
-}
 interface TempExampleHelpProps {
     tempExampleItem: TempExampleInfo
 }
