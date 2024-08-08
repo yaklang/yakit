@@ -8,4 +8,6 @@ export type MitmEventProps = {
     onOpenRepRuleEvent: string
     onChangeAddrAndEnableInitialPlugin: string
     onClearMITMHackPlugin?: string
+    onHasParamsJumpHistory: string
+    onHistoryTagToMitm: string
 }
