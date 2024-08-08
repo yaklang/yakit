@@ -12,7 +12,7 @@ import {GetPluginLanguage, pluginTypeToName} from "../builtInData"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
-import {CodeScoreModule} from "../funcTemplate"
+import {CodeScoreModal, CodeScoreModule} from "../funcTemplate"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {failed, yakitNotify} from "@/utils/notification"
@@ -282,6 +282,17 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     useUpdateEffect(() => {
         initFormValue()
     }, [params])
+
+    /** ---------- 代码评分 Start ---------- */
+    const [scoreHint, setScoreHint] = useState<boolean>(false)
+    const handleOpenScoreHint = useMemoizedFn(() => {
+        if (scoreHint) return
+        setScoreHint(true)
+    })
+    const handleScoreHintCallback = useMemoizedFn((value: boolean) => {
+        if (!value) setScoreHint(false)
+    })
+    /** ---------- 代码评分 End ---------- */
 
     /** --------------- 参数部分逻辑 Start --------------- */
     const [form] = Form.useForm()
@@ -572,7 +583,14 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                             headClassName={styles["left-header-wrapper"]}
                             extra={
                                 <div className={styles["header-extra"]}>
-                                    {plugin?.Type === "yak" && (
+                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                        自动检测
+                                    </YakitButton>
+                                    <div
+                                        className={styles["divider-wrapper"]}
+                                        style={["yak", "mitm"].includes(pluginType) ? {marginRight: 0} : undefined}
+                                    ></div>
+                                    {["yak", "mitm"].includes(pluginType) && (
                                         <>
                                             <YakitButton
                                                 type='text'
@@ -699,6 +717,14 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 }
                 secondRatio='50%'
                 secondMinSize='620px'
+            />
+
+            {/* 代码评分弹窗 */}
+            <CodeScoreModal
+                type={pluginType}
+                code={newCode || ""}
+                visible={scoreHint}
+                onCancel={handleScoreHintCallback}
             />
         </div>
     )

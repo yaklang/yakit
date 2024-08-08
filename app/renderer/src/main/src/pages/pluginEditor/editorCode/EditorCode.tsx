@@ -43,6 +43,7 @@ import cloneDeep from "lodash/cloneDeep"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorCode.module.scss"
+import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
 
 export interface EditorCodeRefProps {
     onSubmit: () => string
@@ -128,6 +129,17 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             {wait: 300}
         ).run
         /** ---------- 代码和参数数据的更新 Start ---------- */
+
+        /** ---------- 代码评分 Start ---------- */
+        const [scoreHint, setScoreHint] = useState<boolean>(false)
+        const handleOpenScoreHint = useMemoizedFn(() => {
+            if (scoreHint) return
+            setScoreHint(true)
+        })
+        const handleScoreHintCallback = useMemoizedFn((value: boolean) => {
+            if (!value) setScoreHint(false)
+        })
+        /** ---------- 代码评分 End ---------- */
 
         /** ---------- 参数获取和展示逻辑 Start ---------- */
         const [form] = Form.useForm()
@@ -508,12 +520,18 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 )}
                             </div>
                         </div>
-
                         <div className={styles["editor-params"]}>
                             <div className={styles["header"]}>
                                 参数预览
                                 <div className={styles["header-extra"]}>
-                                    {type === "yak" && (
+                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                        自动检测
+                                    </YakitButton>
+                                    <div
+                                        className={styles["divider-style"]}
+                                        style={["yak", "mitm"].includes(type) ? {marginRight: 0} : undefined}
+                                    ></div>
+                                    {["yak", "mitm"].includes(type) && (
                                         <>
                                             <YakitButton
                                                 type='text'
@@ -562,6 +580,14 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 </div>
                             </div>
                         </div>
+
+                        {/* 代码评分弹窗 */}
+                        <CodeScoreModal
+                            type={type}
+                            code={content || ""}
+                            visible={scoreHint}
+                            onCancel={handleScoreHintCallback}
+                        />
                     </div>
                 </div>
             </div>
