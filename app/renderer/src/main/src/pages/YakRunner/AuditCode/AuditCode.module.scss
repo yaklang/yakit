@@ -152,7 +152,7 @@
             font-weight: 500;
             line-height: 16px;
         }
-        .count{
+        .count {
             color: #b4bbca;
             font-size: 12px;
             font-weight: 400;
@@ -194,5 +194,137 @@
     }
     .error-icon {
         color: #f6544a;
+    }
+}
+
+.audit-history-table {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    .header {
+        padding: 8px 16px;
+        height: 40px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        border-top: 1px solid #eaecf3;
+        border-bottom: 1px solid #eaecf3;
+        background: #f8f8f8;
+        .main {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            .title {
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            .sub-title {
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                .text {
+                    color: #b4bbca;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+                .number {
+                    color: #f28b44;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+        }
+        .extra {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            .search-icon {
+                color: #85899e;
+                svg {
+                    height: 12px;
+                    width: 12px;
+                    path {
+                        stroke-width: 1.5;
+                    }
+                }
+            }
+        }
+    }
+    .table {
+        padding: 12px 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        .table-header {
+            display: flex;
+            flex-direction: row;
+            gap: 16px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            .audit-name {
+                flex: 1;
+                display: flex;
+                flex-direction: row;
+                gap: 8px;
+                align-items: center;
+            }
+            .audit-path {
+                flex: 2;
+            }
+            .audit-time {
+                width: 200px;
+            }
+            .audit-opt {
+                width: 80px;
+            }
+        }
+        .table-content {
+            flex: 1;
+            overflow: auto;
+            .table-item {
+                display: flex;
+                flex-direction: row;
+                border-top: 1px solid #eaecf3;
+                gap: 16px;
+                padding: 8px 12px;
+                .audit-name {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: row;
+                    gap: 8px;
+                    align-items: center;
+                }
+                .audit-path {
+                    flex: 2;
+                }
+                .audit-time {
+                    width: 200px;
+                }
+                .audit-opt {
+                    width: 80px;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 12px;
+                    .to-icon {
+                        svg {
+                            color: #85899e;
+                        }
+                        &:hover {
+                            svg {
+                                color: #f28b44;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

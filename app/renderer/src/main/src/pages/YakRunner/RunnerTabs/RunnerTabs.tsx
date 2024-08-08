@@ -42,6 +42,7 @@ import {
     getOpenFileInfo,
     getPathParent,
     getYakRunnerHistory,
+    grpcFetchAuditTree,
     grpcFetchCreateFile,
     grpcFetchFileTree,
     grpcFetchRenameFileTree,
@@ -68,6 +69,7 @@ import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
 import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {FileNodeMapProps} from "../FileTree/FileTreeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -135,12 +137,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             setActiveFile(newActiveFile)
             // 打开底部
             emiter.emit("onOpenBottomDetail", JSON.stringify({type: "output"}))
-            let params:RunYakParamsProps = {
+            let params: RunYakParamsProps = {
                 Script: newActiveFile.code,
                 Params: [],
                 RunnerParamRaw: ""
             }
-            if(fileTree.length > 0){
+            if (fileTree.length > 0) {
                 params.WorkDir = fileTree[0].path
             }
             ipcRenderer.invoke("exec-yak", params)
@@ -927,7 +929,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile} = useStore()
+    const {areaInfo, activeFile,loadTreeType} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
@@ -972,8 +974,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         // console.log("更新编辑器文件内容", newAreaInfo)
         if (editorInfo) {
             const newEditorInfo = {...editorInfo, code: content}
-            // 未保存文件不用自动保存
-            if (!editorInfo?.isUnSave) {
+            // 未保存文件不用自动保存 审计树不用自动保存
+            if (!editorInfo?.isUnSave && loadTreeType === "file") {
                 autoSaveCurrentFile.run(newEditorInfo)
             }
             setEditorInfo(newEditorInfo)
@@ -1138,6 +1140,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 </div>
             ) : (
                 <YakitEditor
+                    readOnly={editorInfo?.fileSourceType==="audit"}
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
                     editorDidMount={(editor) => {
                         setReqEditor(editor)
@@ -1178,7 +1181,8 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                         path,
                         name
                     },
-                    isHistory: true
+                    isHistory: true,
+                    isOutside: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
@@ -1195,7 +1199,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             .then((data: any) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFolderList", absolutePath)
+                    emiter.emit("onOpenFileTree", absolutePath)
                 }
             })
     })
@@ -1269,11 +1273,16 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                                     path: item.path,
                                                     name: item.name
                                                 },
-                                                isHistory: true
+                                                isHistory: true,
+                                                isOutside: true
                                             }
                                             emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                                         } else {
-                                            emiter.emit("onOpenFolderList", item.path)
+                                            if (item.loadTreeType === "audit") {
+                                                emiter.emit("onOpenAuditTree", item.name)
+                                            } else {
+                                                emiter.emit("onOpenFileTree", item.path)
+                                            }
                                         }
                                     }}
                                 >
@@ -1303,7 +1312,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         setWaitRemoveAll
     } = props
     const {setActiveFile, setAreaInfo} = useDispatcher()
-    const {fileTree, areaInfo} = useStore()
+    const {fileTree, areaInfo,loadTreeType} = useStore()
 
     const [codePath, setCodePath] = useState<string>("")
 
@@ -1363,11 +1372,19 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                 )
                 // 如若保存路径为文件列表中则需要更新文件树
                 if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
-                    const data = await grpcFetchFileTree(parentPath)
-                    if (data.length > 0) {
+                    let arr: FileNodeMapProps[] = []
+                    if (loadTreeType === "file") {
+                        arr = await grpcFetchFileTree(parentPath)
+                    }
+                    if (loadTreeType === "audit") {
+                        const {data} = await grpcFetchAuditTree(parentPath)
+                        arr = data
+                    }
+
+                    if (arr.length > 0) {
                         let childArr: string[] = []
                         // 文件Map
-                        data.forEach((item) => {
+                        arr.forEach((item) => {
                             // 注入文件结构Map
                             childArr.push(item.path)
                             // 文件Map

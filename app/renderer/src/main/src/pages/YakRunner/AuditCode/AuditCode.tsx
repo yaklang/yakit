@@ -3,7 +3,7 @@ import {AuditCodeProps, AuditNodeProps, AuditTreeNodeProps, AuditTreeProps, Audi
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
 import {YakScript} from "@/pages/invoker/schema"
-import {Form, FormInstance, Tree} from "antd"
+import {Divider, Form, FormInstance, Tree} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -14,7 +14,7 @@ import {
     onCodeToInfo,
     ParamsToGroupByGroupName
 } from "@/pages/plugins/editDetails/utils"
-import {useDebounceFn, useInViewport, useMemoizedFn, useSize} from "ahooks"
+import {useDebounceFn, useInViewport, useMemoizedFn, useSize, useThrottleEffect} from "ahooks"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
@@ -25,9 +25,17 @@ import {randomString} from "@/utils/randomUtil"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import useStore from "../hooks/useStore"
-import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
+import {getNameByPath, grpcFetchAuditTree, loadAuditFromYakURLRaw} from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {OutlinCompileIcon, OutlineChevronrightIcon, OutlineDeprecatedIcon} from "@/assets/icon/outline"
+import {
+    OutlinCompileIcon,
+    OutlineArrowcirclerightIcon,
+    OutlineChevronrightIcon,
+    OutlineDeprecatedIcon,
+    OutlineSearchIcon,
+    OutlineTrashIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitTextArea} from "@/components/yakitUI/YakitTextArea/YakitTextArea"
 import {LoadingOutlined} from "@ant-design/icons"
@@ -36,6 +44,11 @@ import {clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail} from "./Audit
 import {clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail} from "./AuditTree/ChildMap"
 import {SolidExclamationIcon, SolidInformationcircleIcon, SolidXcircleIcon} from "@/assets/icon/solid"
 import {AuditEmiterYakUrlProps} from "../YakRunnerType"
+import {FileNodeMapProps} from "../FileTree/FileTreeType"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {RequestYakURLResponse} from "@/pages/yakURLTree/data"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -200,6 +213,8 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 const TopId = "top-message"
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
+    const {projectNmae,loadTreeType} = useStore()
+
     const [value, setValue] = useState<string>("")
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
@@ -273,7 +288,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     const path = id
                     const params: AuditYakUrlProps = {
                         Schema: "syntaxflow",
-                        Location: "xxe",
+                        Location: projectNmae || "",
                         Path: path
                     }
                     const body = StringToUint8Array(lastValue.current)
@@ -334,7 +349,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const path: string = "/"
         const params: AuditYakUrlProps = {
             Schema: "syntaxflow",
-            Location: "xxe",
+            Location: projectNmae || "",
             Path: path
         }
         const body = StringToUint8Array(value)
@@ -350,7 +365,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
                 // 警告信息（置顶显示）前端收集折叠
                 if (ResourceType === "message") {
-                    const id = `${TopId}${path}${VerboseName}`
+                    const id = `${TopId}${path}${VerboseName}-${index}`
                     messageIds.push(id)
                     setMapAuditDetail(id, {
                         parent: path,
@@ -362,8 +377,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         Extra
                     })
                 }
-                // 正常树状结构
-                if (ResourceType === "variable" && VerboseType === "normal") {
+                    // 变量
+                    if (ResourceType === "variable" ) {
                     const id = `${path}${ResourceName}`
                     variableIds.push(id)
                     setMapAuditDetail(id, {
@@ -400,7 +415,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         if (v.ResourceType === "value") {
             const rightParams: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
-                Location: "xxe",
+                Location: projectNmae || "",
                 Path: v.id,
                 Body: value
             }
@@ -412,45 +427,51 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             <div className={styles["header"]}>
                 <div className={styles["title"]}>代码审计</div>
             </div>
-            <div className={styles["textarea-box"]}>
-                <YakitTextArea
-                    textAreaSize='small'
-                    value={value}
-                    setValue={setValue}
-                    isLimit={false}
-                    onSubmit={onSubmit}
-                    submitTxt={"开始审计"}
-                    rows={1}
-                    isAlwaysShow={true}
-                    placeholder='请输入审计规则...'
-                />
-            </div>
+            <>
+                {loadTreeType === "audit" ? (
+                    <>
+                        <div className={styles["textarea-box"]}>
+                            <YakitTextArea
+                                textAreaSize='small'
+                                value={value}
+                                setValue={setValue}
+                                isLimit={false}
+                                onSubmit={onSubmit}
+                                submitTxt={"开始审计"}
+                                rows={1}
+                                isAlwaysShow={true}
+                                placeholder='请输入审计规则...'
+                            />
+                        </div>
 
-            <AuditTree
-                data={auditDetailTree}
-                expandedKeys={expandedKeys}
-                setExpandedKeys={setExpandedKeys}
-                onLoadData={onLoadData}
-                foucsedKey={foucsedKey}
-                setFoucsedKey={setFoucsedKey}
-                onJump={onJump}
-            />
-
-            {/* <div className={styles["no-audit"]}>
-                <YakitEmpty
-                    title='请先编译项目'
-                    description='需要编译过的项目，才可使用代码审计功能'
-                    children={
-                        <YakitButton
-                            type='outline1'
-                            icon={<OutlinCompileIcon />}
-                            onClick={() => emiter.emit("onOpenAuditModal", "init")}
-                        >
-                            编译当前项目
-                        </YakitButton>
-                    }
-                />
-            </div> */}
+                        <AuditTree
+                            data={auditDetailTree}
+                            expandedKeys={expandedKeys}
+                            setExpandedKeys={setExpandedKeys}
+                            onLoadData={onLoadData}
+                            foucsedKey={foucsedKey}
+                            setFoucsedKey={setFoucsedKey}
+                            onJump={onJump}
+                        />
+                    </>
+                ) : (
+                    <div className={styles["no-audit"]}>
+                        <YakitEmpty
+                            title='请先编译项目'
+                            description='需要编译过的项目，才可使用代码审计功能'
+                            children={
+                                <YakitButton
+                                    type='outline1'
+                                    icon={<OutlinCompileIcon />}
+                                    onClick={() => emiter.emit("onOpenAuditModal", "init")}
+                                >
+                                    编译当前项目
+                                </YakitButton>
+                            }
+                        />
+                    </div>
+                )}
+            </>
         </div>
     )
 }
@@ -458,37 +479,22 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 interface AuditModalFormProps {
     onCancle: () => void
     isInitDefault: boolean
+    isExecuting: boolean
+    onStartAudit: (path: string, v: DebugPluginRequest) => void
 }
 
 export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
-    const {onCancle, isInitDefault} = props
+    const {onCancle, isInitDefault, isExecuting, onStartAudit} = props
     const {fileTree} = useStore()
-    const tokenRef = useRef<string>(randomString(40))
     const [loading, setLoading] = useState<boolean>(true)
-    const [runtimeId, setRuntimeId] = useState<string>("")
-    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-        taskName: "debug-plugin",
-        apiKey: "DebugPlugin",
-        token: tokenRef.current,
-        onEnd: () => {
-            debugPluginStreamEvent.stop()
-            setTimeout(() => setIsExecuting(false), 300)
-        },
-        setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-            setRuntimeId(rId)
-        }
-    })
 
-    /** 是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [plugin, setPlugin] = useState<YakScript>()
     const [form] = Form.useForm()
 
     // 获取参数
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
-            const newPlugin = await grpcFetchLocalPluginDetail({Name: "YakSSA项目编译"}, true)
+            const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目编译"}, true)
             console.log("xxx", newPlugin)
             setLoading(false)
             setPlugin(newPlugin)
@@ -513,39 +519,55 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
             ProjectPath = fileTree[0].path
             ProjectName = await getNameByPath(ProjectPath)
         }
+        console.log("ProjectName", ProjectName, ProjectPath, requiredParams)
+
         // 必填参数
         let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
-        requiredParams.forEach((ele) => {
+
+        if (isInitDefault) {
+            requiredParams.forEach((ele) => {
+                const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+                if (ele.Field === "programName") {
+                    initRequiredFormValue = {
+                        ...initRequiredFormValue,
+                        [ele.Field]: ProjectName
+                    }
+                    return
+                }
+                if (ele.Field === "ProgramPath") {
+                    initRequiredFormValue = {
+                        ...initRequiredFormValue,
+                        [ele.Field]: ProjectPath
+                    }
+                    return
+                }
+                initRequiredFormValue = {
+                    ...initRequiredFormValue,
+                    [ele.Field]: value
+                }
+            })
+        }
+
+        // 选填参数默认值
+        const defaultCheck = (plugin?.Params || []).filter((item) => item.Field === "re-compile")
+        if (defaultCheck.length > 0) {
+            const ele = defaultCheck[0]
             const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-            if (ele.Field === "ProjectName") {
-                initRequiredFormValue = {
-                    ...initRequiredFormValue,
-                    [ele.Field]: ProjectName
-                }
-                return
-            }
-            if (ele.Field === "ProjectPath") {
-                initRequiredFormValue = {
-                    ...initRequiredFormValue,
-                    [ele.Field]: ProjectPath
-                }
-                return
-            }
             initRequiredFormValue = {
                 ...initRequiredFormValue,
                 [ele.Field]: value
             }
-        })
+        }
         console.log("cccc", initRequiredFormValue)
 
         form.setFieldsValue({...initRequiredFormValue})
     })
 
     useEffect(() => {
-        if (plugin?.Params && isInitDefault) {
+        if (plugin?.Params) {
             initRequiredFormValue()
         }
-    }, [plugin?.Params, isInitDefault])
+    }, [plugin?.Params])
 
     /** 选填参数 */
     const groupParams = useMemo(() => {
@@ -559,7 +581,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 .then(async (value: any) => {
                     const requestParams: DebugPluginRequest = {
                         Code: plugin.Content,
-                        PluginType: "yak",
+                        PluginType: plugin.Type,
                         Input: value["Input"] || "",
                         HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
                         ExecParams: [],
@@ -570,14 +592,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     for (let el of plugin?.Params || []) request[el.Field] = value[el.Field] || undefined
                     requestParams.ExecParams = getYakExecutorParam({...value})
 
-                    debugPluginStreamEvent.reset()
-                    setRuntimeId("")
-
-                    console.log("执行:", plugin, value, requestParams)
-                    // apiDebugPlugin(requestParams, tokenRef.current).then(() => {
-                    //     setIsExecuting(true)
-                    //     debugPluginStreamEvent.start()
-                    // })
+                    onStartAudit(value["programName"], requestParams)
                 })
                 .catch(() => {})
         }
@@ -624,3 +639,127 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         </YakitSpin>
     )
 }
+
+interface AuditHistoryTableProps {
+    visible: boolean
+    onClose: () => void
+}
+
+export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
+    const {visible, onClose} = props
+    const [aduitData, setAduitData] = useState<RequestYakURLResponse>()
+    const [selected, setSelected] = useState<string[]>([])
+    useEffect(() => {
+        if (visible) {
+            getAduitList()
+        }
+    }, [visible])
+
+    const getAduitList = useMemoizedFn(async () => {
+        try {
+            const {res} = await grpcFetchAuditTree("/")
+            console.log("getAduitList***", res)
+            setAduitData(res)
+        } catch (error) {}
+    })
+
+    // 保留数组中非重复数据
+    const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
+    // 数组去重
+    const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+
+    return (
+        <div className={styles["audit-history-table"]}>
+            <div className={styles["header"]}>
+                <div className={styles["main"]}>
+                    <div className={styles["title"]}>已编译项目</div>
+                    <div className={styles["sub-title"]}>
+                        <div className={styles["text"]}>Total</div>
+                        <div className={styles["number"]}>{aduitData?.Total}</div>
+                    </div>
+                    <Divider type={"vertical"} style={{margin: 0}} />
+                    <div className={styles["sub-title"]}>
+                        <div className={styles["text"]}>Selected</div>
+                        <div className={styles["number"]}>{selected.length}</div>
+                    </div>
+                </div>
+                <div className={styles["extra"]}>
+                    <YakitInput
+                        prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                        placeholder='请输入关键词搜索'
+                        size='small'
+                    />
+                    <Divider type={"vertical"} style={{margin: 0}} />
+                    <YakitButton style={{paddingLeft: 0}} type='text' danger disabled={selected.length === 0}>
+                        {selected.length === aduitData?.Total ? "清空" : "删除"}
+                    </YakitButton>
+
+                    <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onClose} />
+                </div>
+            </div>
+
+            <div className={styles["table"]}>
+                <div className={styles["table-header"]}>
+                    <div className={styles["audit-name"]}>
+                        <YakitCheckbox
+                            value={true}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    aduitData && setSelected(aduitData.Resources.map((item) => item.Path))
+                                } else {
+                                    setSelected([])
+                                }
+                            }}
+                        />
+                        项目名称
+                    </div>
+                    <div className={styles["audit-path"]}>存储路径</div>
+                    <div className={styles["audit-time"]}>编译时间</div>
+                    <div className={styles["audit-opt"]}>操作</div>
+                </div>
+                <div className={styles["table-content"]}>
+                    {aduitData &&
+                        aduitData.Resources.map((item, index) => {
+                            return (
+                                <div className={styles["table-item"]} key={`${item.ResourceName}-${index}`}>
+                                    <div className={styles["audit-name"]}>
+                                        <YakitCheckbox
+                                            value={true}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    const newArr = filterItem([...selected, item.Path])
+                                                    setSelected(newArr)
+                                                } else {
+                                                    const newArr = selected.filter((itemIn) => itemIn !== item.Path)
+                                                    setSelected(newArr)
+                                                }
+                                            }}
+                                        />
+                                        {item.ResourceName}
+                                    </div>
+                                    <div className={styles["audit-path"]}>-</div>
+                                    <div className={styles["audit-time"]}>-</div>
+                                    <div className={styles["audit-opt"]}>
+                                        <YakitButton
+                                            type='text'
+                                            icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
+                                        />
+                                        <Divider type={"vertical"} style={{margin: 0}} />
+                                        {/* <YakitPopconfirm
+                                        title={
+                                            allCheck
+                                                ? "确定删除所有风险与漏洞吗? 不可恢复"
+                                                : "确定删除选择的风险与漏洞吗?不可恢复"
+                                        }
+                                        onConfirm={onRemove}
+                                    > */}
+                                        <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
+                                    </div>
+                                </div>
+                            )
+                        })}
+                </div>
+            </div>
+        </div>
+    )
+})

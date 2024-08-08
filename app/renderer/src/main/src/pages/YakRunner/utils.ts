@@ -61,8 +61,9 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
         }
 
         try {
-            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            const data: FileNodeMapProps[] = initFileTreeData(list, path)
+            const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            console.log("文件树获取---", res)
+            const data: FileNodeMapProps[] = initFileTreeData(res, path)
             resolve(data)
         } catch (error) {
             reject(error)
@@ -73,18 +74,20 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 /**
  * @name 审计树获取
  */
-export const grpcFetchAuditTree: (path: string) =>Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
+    path
+) => {
     return new Promise(async (resolve, reject) => {
         // ssadb path为/时 展示最近编译
         const params = {
             Method: "GET",
-            Url: {Schema: "ssadb", Query: [{Key: "op", Value: "list"}], Path: path} 
+            Url: {Schema: "ssadb", Query: [{Key: "op", Value: "list"}], Path: path}
         }
-
         try {
-            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            const data: FileNodeMapProps[] = initFileTreeData(list, path)
-            resolve(data)
+            const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            // console.log("审计树获取---", params, res)
+            const data: FileNodeMapProps[] = initFileTreeData(res, path)
+            resolve({res, data})
         } catch (error) {
             reject(error)
         }
@@ -258,7 +261,7 @@ export const grpcFetchPasteFile: (
         }
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            // console.log("新建文件", params, list)
+            // console.log("粘贴文件", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
             resolve(data)
         } catch (error) {
@@ -275,12 +278,15 @@ export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 /**
  * @name 根据文件path获取其大小并判断其是否为文本
  */
-export const getCodeSizeByPath = (path: string): Promise<{size: number; isPlainText: boolean}> => {
+export const getCodeSizeByPath = (
+    path: string,
+    loadTreeType?: "file" | "audit"
+): Promise<{size: number; isPlainText: boolean}> => {
     return new Promise(async (resolve, reject) => {
         const params = {
             Method: "GET",
             Url: {
-                Schema: "file",
+                Schema: loadTreeType === "audit" ? "ssadb" : "file",
                 Path: path,
                 Query: [{Key: "detectPlainText", Value: "true"}]
             }
@@ -321,12 +327,16 @@ const getCodeByNode = (path: string): Promise<string> => {
 /**
  * @name 根据文件path获取其内容
  */
-export const getCodeByPath = (path: string): Promise<string> => {
+export const getCodeByPath = (path: string, loadTreeType?: "file" | "audit"): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         try {
             let content: string = ""
             const token = randomString(60)
-            ipcRenderer.invoke("ReadFile", {FilePath: path}, token)
+            ipcRenderer.invoke(
+                "ReadFile",
+                {FilePath: path, FileSystem: loadTreeType === "audit" ? "ssadb" : "local"},
+                token
+            )
             ipcRenderer.on(`${token}-data`, (e, result: {Data: Uint8Array; EOF: boolean}) => {
                 content += Uint8ArrayToString(result.Data)
                 if (result.EOF) {
@@ -779,6 +789,7 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
 }
 
 interface YakRunnerLastFolderExpandedProps {
+    loadTreeType: "file" | "audit"
     folderPath: string
     expandedKeys: string[]
 }
@@ -888,26 +899,47 @@ export const getRelativePath = (basePath: string, filePath: string): Promise<str
 /**
  * @name 用于用户操作过快时文件夹内数据还未来得及加载,提前加载
  */
-export const loadFolderDetail = (path) => {
+export const loadFolderDetail = (path, loadTreeType?: "file" | "audit") => {
     return new Promise(async (resolve, reject) => {
-        grpcFetchFileTree(path)
-            .then((res) => {
-                if (res.length > 0) {
-                    let childArr: string[] = []
-                    // 文件Map
-                    res.forEach((item) => {
-                        // 注入文件结构Map
-                        childArr.push(item.path)
+        if (loadTreeType === "audit") {
+            grpcFetchAuditTree(path)
+                .then(({data}) => {
+                    if (data.length > 0) {
+                        let childArr: string[] = []
                         // 文件Map
-                        setMapFileDetail(item.path, item)
-                    })
-                    setMapFolderDetail(path, childArr)
-                }
-                resolve(null)
-            })
-            .catch((error) => {
-                resolve(null)
-            })
+                        data.forEach((item) => {
+                            // 注入文件结构Map
+                            childArr.push(item.path)
+                            // 文件Map
+                            setMapFileDetail(item.path, item)
+                        })
+                        setMapFolderDetail(path, childArr)
+                    }
+                    resolve(null)
+                })
+                .catch((error) => {
+                    resolve(null)
+                })
+        } else {
+            grpcFetchFileTree(path)
+                .then((res) => {
+                    if (res.length > 0) {
+                        let childArr: string[] = []
+                        // 文件Map
+                        res.forEach((item) => {
+                            // 注入文件结构Map
+                            childArr.push(item.path)
+                            // 文件Map
+                            setMapFileDetail(item.path, item)
+                        })
+                        setMapFolderDetail(path, childArr)
+                    }
+                    resolve(null)
+                })
+                .catch((error) => {
+                    resolve(null)
+                })
+        }
     })
 }
 

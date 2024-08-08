@@ -82,7 +82,8 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                 <div
                     className={classNames(styles["left-side-bar-item"], {
                         [styles["left-side-bar-item-active"]]: active === "audit-code",
-                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "audit-code" && isUnShow
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "audit-code" && isUnShow,
+                        // [styles["left-side-bar-item-disable"]]: false
                     })}
                     onClick={() => {
                         if (active !== "audit-code") {

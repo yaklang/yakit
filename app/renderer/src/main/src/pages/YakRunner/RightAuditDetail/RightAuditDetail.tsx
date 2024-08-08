@@ -10,60 +10,74 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Tooltip} from "antd"
 import {instance} from "@viz-js/viz"
-interface FlowChartBoxProps {}
+import {failed} from "@/utils/notification"
+interface FlowChartBoxProps {
+    graph?: string
+    graphInfo?: GraphInfoProps[]
+}
 
 export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
+    const {graph, graphInfo} = props
     const svgBoxRef = useRef<HTMLDivElement>(null)
     const svgRef = useRef<any>(null)
+    const [nodeId, setNodeId] = useState<string>()
+    const [styleNode, setStyleNode] = useState<string>()
+    const styleNodeRef = useRef<string>()
+
+    const onElementStyle = useMemoizedFn((id, stroke, fill) => {
+        // 获取 id 为 node 的元素
+        const nodeElement = document.getElementById(id)
+        if (nodeElement) {
+            // 查找该元素下的所有 ellipse 标签
+            const ellipses = nodeElement.getElementsByTagName("ellipse")
+
+            // 遍历所有找到的 ellipse 标签，并添加样式
+            for (let i = 0; i < ellipses.length; i++) {
+                ellipses[i].style.stroke = stroke
+                ellipses[i].style.fill = fill
+            }
+        }
+    })
+
+    // 更改SVG样式
+    const onChangeSvgStyle = useMemoizedFn((id?: string) => {
+        if (styleNodeRef.current) {
+            onElementStyle(styleNodeRef.current, "black", "#ffffff")
+        }
+        if (id) {
+            styleNodeRef.current = id
+            onElementStyle(styleNodeRef.current, "#f28b44", "#fbe7d9")
+        }
+    })
+
+    const onEventListener = useMemoizedFn((event: any) => {
+        const target = event.target
+        if (target && target?.tagName === "text" && (target.parentNode?.id || "").startsWith("node")) {
+            // target.parentNode.id
+            const titleElement = target.parentNode.querySelector("title")
+            if (titleElement) {
+                const titleText = titleElement.textContent
+                console.log("click---", titleText, nodeId)
+                if (titleText === nodeId) {
+                    setNodeId(undefined)
+                    onChangeSvgStyle()
+                } else {
+                    setNodeId(titleText)
+                    onChangeSvgStyle(target.parentNode.id)
+                }
+            } else {
+                failed("获取节点信息失败")
+            }
+        }
+    })
+
     useEffect(() => {
-        // 定义 DOT 描述的图形内容
-        const dotContent = `
-strict digraph {
-    rankdir = "BT";
-    n24 [label="DocumentBuilderFactory"];
-    n29 [label="t183666: dbf=#183663.newInstance()"];
-    n1 [label="ByteArrayInputStream"];
-    n14 [label="#183633.parse"];
-    n16 [label="t183633: doDocumentBuilder()"];
-    n6 [label="#183620.getBytes"];
-    n8 [label="xmlStr"];
-    n18 [label="#183630.newDocumentBuilder"];
-    n20 [label="t183630: #183627.newInstance()"];
-    n22 [label="#183627.newInstance"];
-    n26 [label="#183663.newInstance"];
-    n2 [label="t183640: stream=ByteArrayInputStream(ByteArrayInputStream,t183639)"];
-    n4 [label="t183639: #183620.getBytes(t183638)"];
-    n7 [label="t183638: \\"UTF-8\\""];
-    n20 -> n18 [label="step[10]: search: *Builder", color="red", fontcolor="red", penwidth="3.0"];
-    n24 -> n26 [label="step[2]: search newInstance", color="red", fontcolor="red", penwidth="3.0", label="step[2]: search newInstance"];
-    n22 -> n29 [label="step[3]: call", color="red", fontcolor="red", penwidth="3.0"];
-    n2 -> n1 [label=""];
-    n2 -> n1 [label=""];
-    n18 -> n16 [label="step[11]: call", color="red", fontcolor="red", penwidth="3.0"];
-    n24 -> n22 [label="step[2]: search newInstance", color="red", fontcolor="red", penwidth="3.0", label="step[2]: search newInstance"];
-    n26 -> n20 [label="step[3]: call", color="red", fontcolor="red", penwidth="3.0"];
-    n26 -> n29 [label="step[3]: call", color="red", fontcolor="red", penwidth="3.0"];
-    n2 -> n4 [label=""];
-    n4 -> n6 [label=""];
-    n4 -> n7 [label=""];
-    n16 -> n14 [label="step[12]: search parse", color="red", fontcolor="red", penwidth="3.0"];
-    n22 -> n20 [label="step[3]: call", color="red", fontcolor="red", penwidth="3.0"];
-    n6 -> n8 [label=""];
-    n4 -> n8 [label=""];
-    n14 -> n2 [label="step[13]: all-actual-args", color="red", fontcolor="red", penwidth="3.0"];
-}
-`
+        if (!graph) return
         instance().then((viz) => {
-            const svg = viz.renderSVGElement(dotContent, {})
+            const svg = viz.renderSVGElement(graph, {})
             svgRef.current = svg
 
-            svg.addEventListener("click",(event:any)=>{
-                const target = event.target;
-                if(target && target?.tagName === "text" && (target.parentNode?.id||"").startsWith("node")){
-                    const id = target.parentNode.id
-                    console.log("click---",id);
-                }
-            })
+            svg.addEventListener("click", onEventListener)
 
             if (svgBoxRef.current) {
                 // 清空所有子元素
@@ -75,7 +89,17 @@ strict digraph {
                 console.log("ppp", svg)
             }
         })
-    }, [])
+    }, [graph])
+
+    const contentInfo = useMemo(() => {
+        console.log("cccc", graphInfo, nodeId)
+        if (graphInfo && nodeId) {
+            const arr = graphInfo.filter((item) => item.node_id === nodeId)
+            if (arr.length > 0) {
+                return arr[0]
+            }
+        }
+    }, [graphInfo, nodeId])
 
     const firstOffsetRef = useRef<{x: number; y: number}>()
     const [scale, setScale] = useState(1) // 初始缩放比例为1
@@ -97,7 +121,7 @@ strict digraph {
         if (svgRef.current && svgBoxRef.current) {
             const svg = svgRef.current as SVGSVGElement
             svg.style.transform = `scale(${scale})`
-            if(isAllowHand){
+            if (isAllowHand) {
                 svgBoxRef.current.style.cursor = dragging ? "grabbing" : "grab"
             }
             // console.log("uuu", offset)
@@ -154,7 +178,7 @@ strict digraph {
                         <div className={styles["title"]}>Syntax Flow 审计过程</div>
                         <div className={styles["extra"]}>
                             <YakitButton
-                                type={isAllowHand?"text":'text2'}
+                                type={isAllowHand ? "text" : "text2"}
                                 icon={<OutlineHandIcon />}
                                 onClick={handleHand}
                             />
@@ -165,13 +189,40 @@ strict digraph {
                 </div>
             </div>
             <div
-                style={isAllowHand?{cursor:"grab"}:{cursor:"unset"}}
+                style={isAllowHand ? {cursor: "grab"} : {cursor: "unset"}}
                 className={styles["svg-box"]}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 ref={svgBoxRef}
             />
+            {nodeId && (
+                <div className={styles["root-detail"]}>
+                    <div className={styles["header"]}>
+                        <div className={styles["title"]}>节点信息</div>
+                        <div className={styles["extra"]}>
+                            <YakitButton
+                                type='text2'
+                                icon={<OutlineXIcon />}
+                                onClick={() => {
+                                    setNodeId(undefined)
+                                    onChangeSvgStyle()
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <div className={styles["content"]}>
+                        {contentInfo && (
+                            <Tooltip placement='topLeft' title={contentInfo.code_range.url}>
+                                <div className={classNames(styles["url-box"], "yakit-single-line-ellipsis")}>
+                                    {contentInfo.code_range.url}
+                                </div>
+                            </Tooltip>
+                        )}
+                        {contentInfo && <div className={styles["ir-code-box"]}>{contentInfo?.ir_code}</div>}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -186,26 +237,28 @@ interface CodeRangeProps {
 
 interface GraphInfoProps {
     code_range: CodeRangeProps
-    node_id: number
+    node_id: string
     ir_code: string
 }
 
 interface RightSideBarProps {
     auditRightParams: AuditEmiterYakUrlProps | undefined
-    isUnShowAuditDetail: boolean
+    isShowAuditDetail: boolean
+    setShowAuditDetail: (v: boolean) => void
 }
 
 export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
-    const {auditRightParams, isUnShowAuditDetail} = props
+    const {auditRightParams, isShowAuditDetail, setShowAuditDetail} = props
     const [graph, setGraph] = useState<string>()
     const [graphInfo, setGraphInfo] = useState<GraphInfoProps[]>()
-    const [nodeId, setNodeId] = useState<number>()
+    const [message, setMessage] = useState<string>("")
+    const [nodeId, setNodeId] = useState<string>()
 
     useEffect(() => {
-        if (!isUnShowAuditDetail && auditRightParams) {
+        if (isShowAuditDetail && auditRightParams) {
             initData(auditRightParams)
         }
-    }, [isUnShowAuditDetail, auditRightParams])
+    }, [isShowAuditDetail, auditRightParams])
 
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
         const {Schema, Location, Path, Body} = params
@@ -223,8 +276,11 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                         setGraphInfo(graph_info)
                     } catch (error) {}
                 }
+                if (item.Key === "message") {
+                    setMessage(item.Value)
+                }
                 if (item.Key === "node_id") {
-                    setNodeId(parseInt(item.Value + ""))
+                    setNodeId(item.Value)
                 }
             })
         }
@@ -245,7 +301,13 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     <div className={styles["absolute-box"]}>
                         <div className={styles["title"]}>审计详情</div>
                         <div className={styles["extra"]}>
-                            <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => {}} />
+                            <YakitButton
+                                type='text2'
+                                icon={<OutlineXIcon />}
+                                onClick={() => {
+                                    setShowAuditDetail(false)
+                                }}
+                            />
                         </div>
                     </div>
                 </div>
@@ -253,13 +315,13 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             <div className={styles["main"]}>
                 <YakitResizeBox
                     isVer={true}
-                    secondRatio={isUnShowAuditDetail ? "0px" : undefined}
+                    secondRatio={!isShowAuditDetail ? "0px" : undefined}
                     lineDirection='bottom'
                     firstRatio={"200px"}
                     firstMinSize={140}
                     firstNodeStyle={{padding: 0}}
                     secondNodeStyle={{padding: 0}}
-                    secondMinSize={300}
+                    secondMinSize={350}
                     firstNode={
                         <div className={styles["content"]}>
                             {contentInfo && (
@@ -269,13 +331,11 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                                     </div>
                                 </Tooltip>
                             )}
-                            <div className={styles["message-box"]}>
-                                bufio.NewReadWriter(i any, i2 any) (*bufio.ReadWriter, error)
-                            </div>
+                            {message && <div className={styles["message-box"]}>{message}</div>}
                             {contentInfo && <div className={styles["ir-code-box"]}>{contentInfo?.ir_code}</div>}
                         </div>
                     }
-                    secondNode={<FlowChartBox />}
+                    secondNode={<FlowChartBox graph={graph} graphInfo={graphInfo} />}
                 />
             </div>
         </div>
