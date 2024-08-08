@@ -28,6 +28,8 @@ export interface YakRunnerHistoryProps {
     name: string
     // 路径
     path: string
+    // 加载的树类型
+    loadTreeType?: "file" | "audit"
 }
 
 export interface TabFileProps {
@@ -51,6 +53,8 @@ export interface OpenFileByPathProps {
     }
     // 是否记录历史
     isHistory?: boolean
+    // 是否为外部选择打开(用于审计文件树打开)
+    isOutside?: boolean
 }
 
 export interface AuditEmiterYakUrlProps extends AuditYakUrlProps {

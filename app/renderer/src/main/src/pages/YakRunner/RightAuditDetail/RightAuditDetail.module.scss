@@ -43,6 +43,10 @@
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;
+                &:hover {
+                    cursor: pointer;
+                    text-decoration: underline;
+                }
             }
             .message-box {
                 color: #31343f;
@@ -108,6 +112,37 @@
                         fill: var(--yakit-primary-5);
                     }
                 }
+            }
+        }
+    }
+    .root-detail {
+        height: 152px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid #EAECF3;
+        .header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 4px 12px;
+        }
+        .content {
+            flex: 1;
+            .url-box {
+                color: #f28b44;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                &:hover {
+                    cursor: pointer;
+                    text-decoration: underline;
+                }
+            }
+            .ir-code-box {
+                padding: 8px;
+                border-radius: 4px;
+                background: #f0f1f3;
             }
         }
     }
