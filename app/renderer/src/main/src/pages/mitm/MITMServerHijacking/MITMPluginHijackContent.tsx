@@ -60,6 +60,8 @@ interface MITMPluginHijackContentProps {
     setSearchKeyword: (s: string) => void
     onSetOpenTabsFlag: (s: boolean) => void
     onSetLoadedPluginLen: (s: number) => void
+    showPluginHistoryList: string[]
+    setShowPluginHistoryList: (l: string[]) => void
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
@@ -103,7 +105,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setTags,
         setSearchKeyword,
         onSetOpenTabsFlag,
-        onSetLoadedPluginLen
+        onSetLoadedPluginLen,
+        showPluginHistoryList,
+        setShowPluginHistoryList,
     } = props
 
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
@@ -492,6 +496,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                             }
                                         }}
                                         showEditor={false}
+                                        hasParamsCheckList={hasParamsCheckList}
+                                        showPluginHistoryList={showPluginHistoryList}
+                                        setShowPluginHistoryList={setShowPluginHistoryList}
+                                        curTabKey={curTabKey}
                                     />
                                 )}
                             />
@@ -530,12 +538,12 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 buttonStyle='solid'
                                 options={[
                                     {
-                                        value: false,
-                                        label: "普通"
+                                        value: true,
+                                        label: "交互插件"
                                     },
                                     {
-                                        value: true,
-                                        label: "带参数"
+                                        value: false,
+                                        label: "被动插件"
                                     }
                                 ]}
                                 value={isHasParams}
@@ -558,6 +566,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 isHasParams={isHasParams}
                                 onSubmitYakScriptId={onSubmitYakScriptId}
                                 status={status}
+                                hasParamsCheckList={hasParamsCheckList}
                                 noParamsCheckList={noParamsCheckList}
                                 setNoParamsCheckList={(list) => {
                                     setNoParamsCheckList(list)
@@ -578,6 +587,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 onSendToPatch={onSendToPatch}
                                 groupNames={groupNames}
                                 setGroupNames={setGroupNames}
+                                showPluginHistoryList={showPluginHistoryList}
+                                setShowPluginHistoryList={setShowPluginHistoryList}
+                                curTabKey={curTabKey}
                             />
                         </YakitSpin>
                     </div>

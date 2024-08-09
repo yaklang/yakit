@@ -90,6 +90,10 @@ interface MITMPluginLocalListProps {
     groupNames: string[]
     setGroupNames: (s: string[]) => void
     isHasParams: boolean
+    showPluginHistoryList?: string[]
+    setShowPluginHistoryList?: (l: string[]) => void
+    hasParamsCheckList: string[]
+    curTabKey?: string
 }
 export interface YakFilterRemoteObj {
     name: string
@@ -115,7 +119,11 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         onSendToPatch,
         groupNames,
         setGroupNames,
-        isHasParams
+        isHasParams,
+        showPluginHistoryList = [],
+        setShowPluginHistoryList = () => {},
+        hasParamsCheckList,
+        curTabKey = ""
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -261,9 +269,13 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                                     }
                                 }}
                                 showEditor={isHasParams ? true : false}
+                                showPluginHistoryList={showPluginHistoryList}
+                                setShowPluginHistoryList={setShowPluginHistoryList}
+                                hasParamsCheckList={hasParamsCheckList}
                                 // 劫持启动前
                                 defaultPlugins={noParamsCheckList}
                                 setDefaultPlugins={setNoParamsCheckList}
+                                curTabKey={curTabKey}
                             />
                         )
                     }}

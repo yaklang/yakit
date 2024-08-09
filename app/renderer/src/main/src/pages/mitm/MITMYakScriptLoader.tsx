@@ -1,5 +1,5 @@
 import React, {ForwardedRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {Card, Col, Form, Typography, Row, Statistic} from "antd"
+import {Card, Col, Form, Typography, Row, Statistic, Tooltip} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
@@ -21,8 +21,10 @@ import {ExecuteEnterNodeByPluginParams} from "../plugins/operator/localPluginExe
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {getValueByType, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {OutlileHistoryIcon, OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/enums/yakitRoute"
 const {Text} = Typography
 
 const {ipcRenderer} = window.require("electron")
@@ -38,7 +40,11 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         setDefaultPlugins,
         status,
         isHasParams,
-        showEditor
+        showEditor,
+        showPluginHistoryList = [],
+        setShowPluginHistoryList = () => {},
+        hasParamsCheckList,
+        curTabKey
     } = p
     const [i, setI] = useState(script)
     useEffect(() => {
@@ -203,6 +209,65 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const checkedStatus = useMemo(() => {
         return status === "idle" ? !!defaultPlugins?.includes(i.ScriptName) : hackingCheck
     }, [status, defaultPlugins, hackingCheck, i])
+
+    const showPluginHistoryListRef = useRef<string[]>(showPluginHistoryList)
+    useEffect(() => {
+        showPluginHistoryListRef.current = showPluginHistoryList
+    }, [showPluginHistoryList])
+    const historyIcon = useMemo(() => {
+        return (
+            <Tooltip title={showPluginHistoryList.includes(i.ScriptName) ? "取消查看该插件流量" : "查看该插件流量"}>
+                <OutlileHistoryIcon
+                    className={classNames(style["history-icon"], {
+                        [style["history-icon-def"]]: !showPluginHistoryList.includes(i.ScriptName),
+                        [style["history-icon-light"]]: showPluginHistoryList.includes(i.ScriptName)
+                    })}
+                    onClick={() => {
+                        let arr = [...showPluginHistoryList]
+                        if (arr.includes(i.ScriptName)) {
+                            arr = arr.filter((item) => item !== i.ScriptName)
+                        } else {
+                            arr.push(i.ScriptName)
+                        }
+                        setShowPluginHistoryList(arr)
+                        emiter.emit("onHasParamsJumpHistory", arr.join(","))
+                    }}
+                />
+            </Tooltip>
+        )
+    }, [i, showPluginHistoryList])
+
+    const onHistoryTagToMitm = (tags: string) => {
+        const newSelectTags = tags.split(",")
+        const arr = showPluginHistoryListRef.current.filter((item) => newSelectTags.includes(item))
+        setShowPluginHistoryList(arr)
+    }
+
+    useEffect(() => {
+        emiter.on("onHistoryTagToMitm", onHistoryTagToMitm)
+        return () => {
+            emiter.off("onHistoryTagToMitm", onHistoryTagToMitm)
+        }
+    }, [])
+
+    const hotIcon = useMemo(() => {
+        return (
+            <YakitPopconfirm
+                disabled={!p.onSendToPatch}
+                title='发送到【热加载】中调试代码？'
+                onConfirm={() => {
+                    if (!i.Content) {
+                        getScriptInfo(i, true)
+                        return
+                    }
+                    p.onSendToPatch && p.onSendToPatch(i)
+                }}
+            >
+                <LightningBoltIcon className={style["lightning-bolt-icon"]} />
+            </YakitPopconfirm>
+        )
+    }, [i, p])
+
     return (
         <div className={style["mitm-plugin-local-item"]}>
             <div className={style["mitm-plugin-local-left"]}>
@@ -227,21 +292,15 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     }}
                 />
             )}
-            {status !== "idle" && (
-                <YakitPopconfirm
-                    disabled={!p.onSendToPatch}
-                    title='发送到【热加载】中调试代码？'
-                    onConfirm={() => {
-                        if (!i.Content) {
-                            getScriptInfo(i, true)
-                            return
-                        }
-                        p.onSendToPatch && p.onSendToPatch(i)
-                    }}
-                >
-                    <LightningBoltIcon className={style["lightning-bolt-icon"]} />
-                </YakitPopconfirm>
-            )}
+            {status !== "idle" ? (
+                <>
+                    {curTabKey === "loaded" ? (
+                        <>{hasParamsCheckList.includes(i.ScriptName) ? historyIcon : hotIcon}</>
+                    ) : (
+                        <>{isHasParams ? historyIcon : hotIcon}</>
+                    )}
+                </>
+            ) : null}
         </div>
     )
 })
@@ -282,6 +341,10 @@ export interface MITMYakScriptLoaderProps {
     setDefaultPlugins?: (p: string[]) => void
     isHasParams: boolean
     showEditor: boolean
+    showPluginHistoryList?: string[]
+    setShowPluginHistoryList?: (l: string[]) => void
+    hasParamsCheckList: string[]
+    curTabKey: string
 }
 
 export function clearMITMPluginCache() {

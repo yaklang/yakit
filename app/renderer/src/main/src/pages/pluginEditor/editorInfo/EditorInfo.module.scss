@@ -170,9 +170,11 @@
 .temp-example-wrapper {
     display: flex;
     flex-direction: column;
-    border-top: 1px solid var(--yakit-border-color);
+    border: 1px solid var(--yakit-border-color);
     padding-top: 12px;
     gap: 8px;
+    padding: 5px;
+    border-radius: 4px;
     .temp-example-title-wrapper {
         display: flex;
         align-items: center;

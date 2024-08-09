@@ -34,11 +34,22 @@ interface MITMHijackedContentProps {
     downstreamProxyStr: string
     loadedPluginLen: number
     onSelectAll: (e: boolean) => void
+    setShowPluginHistoryList: (l: string[]) => void
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
-    const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards, downstreamProxyStr, loadedPluginLen, onSelectAll} =
-        props
+    const {
+        status,
+        setStatus,
+        isFullScreen,
+        setIsFullScreen,
+        logs,
+        statusCards,
+        downstreamProxyStr,
+        loadedPluginLen,
+        onSelectAll,
+        setShowPluginHistoryList
+    } = props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
 
@@ -281,6 +292,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             if (currentPacket && currentPacketId) {
                 forward()
             }
+            setShowPluginHistoryList([])
         } catch (e) {
             console.info(e)
         }

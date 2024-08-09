@@ -63,6 +63,24 @@
         width: 16px;
         margin-right: 4px;
     }
+    .history-icon {
+        svg {
+            width: 16px;
+        }
+        margin-left: 24px;
+        margin-right: 4px;
+    }
+
+    .history-icon-def {
+        svg {
+            color: var(--yakit-helper-text-color);
+        }
+    }
+    .history-icon-light {
+        svg {
+            color: var(--yakit-primary-5);
+        }
+    }
 }
 
 .mitm-params-set {

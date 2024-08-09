@@ -75,7 +75,7 @@ export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 整体的劫持状态
     const [status, setStatus, getStatus] = useGetState<"idle" | "hijacked" | "hijacking">("idle")
-    const [isHasParams, setIsHasParams] = useState<boolean>(false) // mitm插件类型是否带参数
+    const [isHasParams, setIsHasParams] = useState<boolean>(true) // mitm插件类型是否带参数
     // 通过启动表单的内容
     const [addr, setAddr] = useState("")
     const [host, setHost] = useState("127.0.0.1")
@@ -91,6 +91,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [_, setLatestStatusHash, getLatestStatusHash] = useGetState("")
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
     const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
+    const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     // 检测当前劫持状态
     useEffect(() => {
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
@@ -314,6 +315,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         downstreamProxyStr={downstreamProxyStr}
                         isHasParams={isHasParams}
                         onIsHasParams={setIsHasParams}
+                        showPluginHistoryList={showPluginHistoryList}
+                        setShowPluginHistoryList={setShowPluginHistoryList}
                     />
                 )
 
@@ -337,6 +340,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setDownstreamProxyStr={setDownstreamProxyStr}
                         isHasParams={isHasParams}
                         onIsHasParams={setIsHasParams}
+                        showPluginHistoryList={showPluginHistoryList}
+                        setShowPluginHistoryList={setShowPluginHistoryList}
                     />
                 )
         }
@@ -449,9 +454,11 @@ interface MITMServerProps {
     downstreamProxyStr: string
     isHasParams: boolean
     onIsHasParams: (isHasParams: boolean) => void
+    showPluginHistoryList: string[]
+    setShowPluginHistoryList: (l: string[]) => void
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr, isHasParams, onIsHasParams} =
+    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr, isHasParams, onIsHasParams, showPluginHistoryList, setShowPluginHistoryList} =
         props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -480,6 +487,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [listNames, setListNames] = useState<string[]>([]) // 存储的 带参全部本地插件 或者 不带参本地插件 =》 由tab切换决定
 
     const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
+
+    
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
@@ -671,6 +680,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             isHasParams={false}
                             onSubmitYakScriptId={onSubmitYakScriptId}
                             status={status}
+                            hasParamsCheckList={hasParamsCheckList}
                             noParamsCheckList={noParamsCheckList}
                             setNoParamsCheckList={(list) => {
                                 if (list.length === 0) {
@@ -731,6 +741,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         setGroupNames={setGroupNames}
                         onSetOpenTabsFlag={setOpenTabsFlag}
                         onSetLoadedPluginLen={setLoadedPluginLen}
+                        showPluginHistoryList={showPluginHistoryList}
+                        setShowPluginHistoryList={setShowPluginHistoryList}
                     />
                 )
         }
@@ -768,6 +780,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         downstreamProxyStr={downstreamProxyStr}
                         loadedPluginLen={loadedPluginLen}
                         onSelectAll={onSelectAll}
+                        setShowPluginHistoryList={setShowPluginHistoryList}
                     />
                 )
         }
@@ -1087,19 +1100,21 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             setImportLoading(true)
             apiDownloadPluginOther({
                 UUID: [formValue.localId]
-            }).then(() => {
-                setVisible(false)
-                emiter.emit(
-                    "openPage",
-                    JSON.stringify({
-                        route: YakitRoute.Plugin_Hub,
-                        params: {tabActive: "local", refeshList: true}
-                    })
-                )
-                success("插件导入成功")
-            }).finally(() => {
-                setImportLoading(false)
             })
+                .then(() => {
+                    setVisible(false)
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.Plugin_Hub,
+                            params: {tabActive: "local", refeshList: true}
+                        })
+                    )
+                    success("插件导入成功")
+                })
+                .finally(() => {
+                    setImportLoading(false)
+                })
         }
     })
 
@@ -1151,7 +1166,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 footer={
                     <>
                         <div style={{marginLeft: 12, display: "block"}}>
-                            <YakitButton onClick={onOk} loading={importLoading}>导入</YakitButton>
+                            <YakitButton onClick={onOk} loading={importLoading}>
+                                导入
+                            </YakitButton>
                         </div>
                     </>
                 }

@@ -50,6 +50,8 @@ export interface MITMServerHijackingProp {
     setDownstreamProxyStr: (proxy: string) => void
     isHasParams: boolean
     onIsHasParams: (isHasParams: boolean) => void
+    showPluginHistoryList: string[]
+    setShowPluginHistoryList: (l: string[]) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -78,7 +80,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         downstreamProxyStr,
         setDownstreamProxyStr,
         isHasParams,
-        onIsHasParams
+        onIsHasParams,
+        showPluginHistoryList,
+        setShowPluginHistoryList
     } = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
@@ -136,7 +140,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             ipcRenderer
                 .invoke("mitm-stop-call")
                 .then(() => {
-                    onIsHasParams(false)
+                    onIsHasParams(true)
+                    setShowPluginHistoryList([])
                     setStatus("idle")
                     resolve("ok")
                 })
@@ -245,6 +250,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     logs={logs}
                     statusCards={statusCards}
                     downstreamProxyStr={downstreamProxyStr}
+                    showPluginHistoryList={showPluginHistoryList}
+                    setShowPluginHistoryList={setShowPluginHistoryList}
                 />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
