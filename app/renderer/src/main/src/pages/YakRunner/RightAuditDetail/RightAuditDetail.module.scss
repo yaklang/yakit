@@ -129,6 +129,8 @@
         }
         .content {
             flex: 1;
+            display: flex;
+            flex-direction: column;
             .url-box {
                 color: #f28b44;
                 font-size: 12px;
@@ -140,6 +142,8 @@
                 }
             }
             .ir-code-box {
+                flex: 1;
+                overflow: auto;
                 padding: 8px;
                 border-radius: 4px;
                 background: #f0f1f3;

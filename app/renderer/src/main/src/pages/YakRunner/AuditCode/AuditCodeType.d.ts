@@ -1,5 +1,10 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 
+export interface YakURLKVPair {
+    Key: string;
+    Value: string;
+}
+
 export interface AuditCodeProps {}
 
 export interface AuditTreeProps {
@@ -51,6 +56,7 @@ export interface AuditNodeProps {
     isLeaf?: boolean
     children?: FileNodeProps[]
 
+    Extra: YakURLKVPair[]
     ResourceType: string
     VerboseType: string
     name: string

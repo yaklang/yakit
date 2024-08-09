@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
+import {useGetState, useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
@@ -15,9 +15,11 @@ import {
     grpcFetchAuditTree,
     grpcFetchCreateFile,
     grpcFetchFileTree,
+    judgeAreaExistAuditPath,
     judgeAreaExistFilePath,
     MAX_FILE_SIZE_BYTES,
     removeAreaFileInfo,
+    removeAreaFilesInfo,
     setAreaFileActive,
     setYakRunnerHistory,
     setYakRunnerLastFolderExpanded,
@@ -108,7 +110,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     /** ---------- 审计树 ---------- */
     const [projectNmae, setProjectNmae] = useState<string>()
     /** ---------- 当前渲染树（文件树/审计树） ---------- */
-    const [loadTreeType,setLoadTreeType] = useState<"file" | "audit">("file")
+    const [loadTreeType,setLoadTreeType,getLoadTreeType] = useGetState<"file" | "audit">("file")
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
@@ -122,7 +124,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             if (callback) callback([])
             return
         }
-        if (loadTreeType === "file") {
+        if (getLoadTreeType() === "file") {
             grpcFetchFileTree(path)
                 .then((res) => {
                     // console.log("文件树", res)
@@ -151,7 +153,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 提前注入Map
     const insertFileMap = useMemoizedFn((path) => {
-        // console.log("提前注入Map", path)
         isFetchRef.current = true
         loadIndexRef.current += 1
         handleFetchFileList(path, (value) => {
@@ -185,6 +186,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const loadFileMap = useMemoizedFn(() => {
         // 接口运行中 暂时拦截下一个接口请求
         if (isFetchRef.current) return
+        if (fileTree.length === 0) return
         const keys = getMapAllFileKey()
         const index = loadIndexRef.current
         if (!keys[index]) return
@@ -249,6 +251,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     const onInitTreeFun = useMemoizedFn(async (rootPath) => {
+        onResetAuditStatusFun()
         // 开启文件夹监听
         startMonitorFolder(rootPath)
         // console.log("onOpenFileTreeFun", rootPath)
@@ -292,7 +295,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 isFile: false,
                 name: lastFolder,
                 path: rootPath,
-                loadTreeType
+                loadTreeType: getLoadTreeType()
             }
             setYakRunnerHistory(history)
         }
@@ -300,7 +303,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 加载文件树(初次加载)
     const onOpenFileTreeFun = useMemoizedFn(async (absolutePath: string) => {
-        console.log("uuuu",absolutePath);
+        console.log("文件树---",absolutePath);
         
         setLoadTreeType("file")
         onInitTreeFun(absolutePath)
@@ -308,7 +311,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 加载审计树(初次加载)
     const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
-        console.log("yyyy",name);
+        console.log("审计树---",name);
         setLoadTreeType("audit")
         setProjectNmae(name)
         onInitTreeFun(`/${name}`)
@@ -987,13 +990,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
     const logInfoRef = useRef<string[]>([])
     useEffect(() => {
-        console.log("streamInfo---", streamInfo)
         const progress = Math.floor(streamInfo.progressState.map((item) => item.progress)[0] || 0)
         // 当任务结束时 跳转打开编译列表
         if (progress === 1) {
             setTimeout(() => {
                 console.log("跳转打开编译列表")
                 onOpenAuditTreeFun(`${projectNmae}`)
+                emiter.emit("onRefreshAduitHistory")
             }, 300)
         }
 
@@ -1023,10 +1026,25 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         debugPluginStreamEvent.reset()
     }
 
-    useEffect(()=>{
-        // 清除代码审计树残留数据
+    // 清除代码审计树残留数据
+    const onResetAuditStatusFun = useMemoizedFn(async()=>{
         clearMapAuditChildDetail()
         clearMapAuditDetail()
+        setShowAuditDetail(false)
+        // 移除已显示的审计树代码
+        const auditPaths = await judgeAreaExistAuditPath(areaInfo)
+        const newAreaInfo = removeAreaFilesInfo(areaInfo, auditPaths)
+        setAreaInfo(newAreaInfo)
+    })
+
+    // 监听与初始重置审计树残留数据
+    useEffect(()=>{
+        onResetAuditStatusFun()
+        // 监听新建文件
+        emiter.on("onResetAuditStatus", onResetAuditStatusFun)
+        return () => {
+            emiter.off("onResetAuditStatus", onResetAuditStatusFun)
+        }
     },[])
 
     return (
