@@ -3393,28 +3393,29 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     })
 
+    const onHasParamsJumpHistory = useMemoizedFn((mitmHasParamsNames: string) => {
+        const arr = params.SourceType?.split(",") || []
+        arr.push("scan")
+        const selectTypeList = [...new Set(arr)]
+        const newParams = {...params, SourceType: selectTypeList.join(",")}
+        getHTTPFlowsFieldGroup(true, (t: FiltersItemProps[]) => {
+            let tagsList: string[] = []
+            mitmHasParamsNames.split(",").forEach((item) => {
+                if (t.findIndex((ele) => ele.label === item) !== -1) {
+                    tagsList.push(item)
+                }
+            })
+            setTagsFilter(tagsList)
+            newParams.Tags = tagsList
+            setParams(newParams)
+            setTimeout(() => {
+                updateData()
+            }, 10)
+        })
+    })
+
     // mitm页面带参数插件跳转过来
     useEffect(() => {
-        const onHasParamsJumpHistory = (mitmHasParamsNames: string) => {
-            const arr = params.SourceType?.split(",") || []
-            arr.push("scan")
-            const selectTypeList = [...new Set(arr)]
-            const newParams = {...params, SourceType: selectTypeList.join(",")}
-            getHTTPFlowsFieldGroup(true, (t: FiltersItemProps[]) => {
-                let tagsList: string[] = []
-                mitmHasParamsNames.split(",").forEach((item) => {
-                    if (t.findIndex((ele) => ele.label === item) !== -1) {
-                        tagsList.push(item)
-                    }
-                })
-                setTagsFilter(tagsList)
-                newParams.Tags = tagsList
-                setParams(newParams)
-                setTimeout(() => {
-                    updateData()
-                }, 10)
-            })
-        }
         if (pageType === "MITM") {
             emiter.on("onHasParamsJumpHistory", onHasParamsJumpHistory)
         }
@@ -3423,7 +3424,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 emiter.off("onHasParamsJumpHistory", onHasParamsJumpHistory)
             }
         }
-    }, [pageType, params])
+    }, [pageType])
 
     return (
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -3951,16 +3952,19 @@ const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
         {wait: 500}
     ).run
 
+    const getRealOriginalList = useMemoizedFn(() => {
+        return originalList
+    })
     useDebounceEffect(
         () => {
             if (searchVal) {
-                const newData = originalList.filter((ele) => ele.label.includes(searchVal || ""))
+                const newData = getRealOriginalList().filter((ele) => ele.label.includes(searchVal || ""))
                 setData(newData)
             } else {
-                setData(originalList)
+                setData(getRealOriginalList())
             }
         },
-        [searchVal, originalList],
+        [searchVal],
         {wait: 300}
     )
 
