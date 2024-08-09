@@ -97,8 +97,8 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
     })
     const onClickDetail = useMemoizedFn((val: string) => {
         const data: GenerateReverseShellCommandRequest = {
-            ...params,
             ...receiverDetail,
+            ...params,
             Program: val
         }
         setReceiverDetail(data)
