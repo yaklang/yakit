@@ -1687,7 +1687,9 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         <div style={{marginRight: 5}}>
                             <YakitCheckbox
                                 onChange={(e) => {
-                                    const str = folder.id.split("-")[1]
+                                    const index = folder.id.indexOf('-')
+                                    // 使用 substring 方法获取第一个 "-" 后的所有内容
+                                    const str = folder.id.substring(index + 1);
                                     if (e.target.checked) {
                                         const arr = [...floderChecked]
                                         arr.push(str)
@@ -2402,7 +2404,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         <div style={{marginRight: 5}}>
                             <YakitCheckbox
                                 onChange={(e) => {
-                                    const str = file.id.split("-")[1]
+                                    const index = file.id.indexOf('-')
+                                    // 使用 substring 方法获取第一个 "-" 后的所有内容
+                                    const str = file.id.substring(index + 1);
                                     if (e.target.checked) {
                                         const arr = [...checkedItem]
                                         arr.push(str)
