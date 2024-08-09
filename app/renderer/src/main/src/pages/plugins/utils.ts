@@ -237,7 +237,8 @@ export const apiFetchCheckList: (query: PluginsQueryProps) => Promise<YakitPlugi
             const newQuery = {
                 ...query,
                 order_by: query.order_by || "updated_at",
-                listType: "check"
+                listType: "check",
+                upgrade: true
             }
             apiFetchList(newQuery)
                 .then((res: YakitPluginListOnlineResponse) => {
@@ -518,11 +519,11 @@ export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => P
             apiDownloadPluginBase(newQuery)
                 .then((res) => resolve(res))
                 .catch((err) => {
-                    yakitNotify("error", "插件管理插件失败:" + err)
+                    yakitNotify("error", "插件管理下载失败:" + err)
                     reject(err)
                 })
         } catch (error) {
-            yakitNotify("error", "插件管理插件失败:" + error)
+            yakitNotify("error", "插件管理下载失败:" + error)
             reject(error)
         }
     })
@@ -731,7 +732,7 @@ export const convertLocalPluginsRequestParams = (query: {
         Tag: tag.map((ele) => ele.value) || [],
         Group: {
             UnSetGroup: false,
-            Group: group?.map((ele) => ele.value) || [],
+            Group: group?.map((ele) => ele.value) || []
         }
     }
     return toolDelInvalidKV(data)
@@ -939,60 +940,6 @@ export const apiDeleteLocalPluginsByWhere: APIFunc<DeleteLocalPluginsByWhereRequ
                 })
         } catch (error) {
             if (!hiddenError) yakitNotify("error", "DeleteLocalPluginsByWhere删除本地插件失败:" + error)
-            reject(error)
-        }
-    })
-}
-
-/**
- * @name 获取插件的详细信息
- * @description 审核|日志
- */
-export const apiFetchPluginDetailCheck: (
-    query: API.PluginsAuditDetailRequest
-) => Promise<API.PluginsAuditDetailResponse> = (query) => {
-    return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<API.PluginsAuditDetailRequest, API.PluginsAuditDetailResponse>({
-                method: "post",
-                url: "plugins/audit/detail",
-                data: {...query}
-            })
-                .then((res) => {
-                    resolve(res)
-                })
-                .catch((err) => {
-                    yakitNotify("error", "获取详情失败：" + err)
-                    reject(err)
-                })
-        } catch (error) {
-            yakitNotify("error", "获取详情失败：：" + error)
-            reject(error)
-        }
-    })
-}
-
-/**
- * @name 审核插件详情(通过|不通过)
- * @description 审核|日志
- */
-export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promise<API.ActionSucceeded> = (query) => {
-    return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<API.PluginsAuditRequest, API.ActionSucceeded>({
-                method: "post",
-                url: "plugins/audit",
-                data: {...query}
-            })
-                .then((res) => {
-                    resolve(res)
-                })
-                .catch((err) => {
-                    yakitNotify("error", "操作失败：" + err)
-                    reject(err)
-                })
-        } catch (error) {
-            yakitNotify("error", "操作失败：" + error)
             reject(error)
         }
     })

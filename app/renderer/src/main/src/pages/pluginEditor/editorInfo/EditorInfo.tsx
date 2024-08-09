@@ -16,14 +16,14 @@ import {
 } from "../defaultconstants"
 import {YakitPluginBaseInfo} from "../base"
 import {yakitNotify} from "@/utils/notification"
-
-import classNames from "classnames"
-import "../../plugins/plugins.scss"
-import styles from "./EditorInfo.module.scss"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TempExampleHelp, TempExampleInfo, tempExampleList} from "./TempExampleHelp"
+
+import classNames from "classnames"
+import "../../plugins/plugins.scss"
+import styles from "./EditorInfo.module.scss"
 
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
@@ -463,6 +463,8 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         </Form.Item>
                     )}
                 </Form>
+
+                {/* 模板案例 */}
                 <div className={styles["temp-example-wrapper"]}>
                     <div className={styles["temp-example-title-wrapper"]}>
                         <span className={styles["temp-example-title-text"]}>模板案例 :</span>

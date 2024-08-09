@@ -166,10 +166,11 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
             setLoading(true)
 
             const params: PluginListPageMeta = !!reset
-                ? {page: 1, limit: 20}
+                ? {page: 1, limit: 20, order_by: "updated_at"}
                 : {
                       page: response.pagemeta.page + 1,
-                      limit: response.pagemeta.limit || 20
+                      limit: response.pagemeta.limit || 20,
+                      order_by: "updated_at"
                   }
 
             const queryFilter = getFilters()

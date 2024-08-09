@@ -425,19 +425,19 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             if (riskShow) setRiskShow(false)
         })
 
-        const replaceTagName = useMemoizedFn((key:string)=>{
-            return {key,label:onPluginTagsToName(key)}
+        const replaceTagName = useMemoizedFn((key: string) => {
+            return {key, label: onPluginTagsToName(key)}
         })
 
         useEffect(() => {
             if (data) {
                 form.resetFields()
                 const copyData = cloneDeep(data)
-                let newTags:any = copyData.Tags
-                if(Array.isArray(copyData.Tags) && copyData.Tags.length>0){
+                let newTags: any = copyData.Tags
+                if (Array.isArray(copyData.Tags) && copyData.Tags.length > 0) {
                     newTags = []
-                    copyData.Tags.forEach((item)=>{
-                        newTags.push(replaceTagName(item)) 
+                    copyData.Tags.forEach((item) => {
+                        newTags.push(replaceTagName(item))
                     })
                 }
                 copyData.Tags = newTags
@@ -1082,6 +1082,12 @@ export const statusTag: {[key: string]: ReactNode} = {
         <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-failed"])}>
             {aduitStatusToName["2"].icon}
             {aduitStatusToName["2"].name}
+        </div>
+    ),
+    "3": (
+        <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-afoot"])}>
+            {aduitStatusToName["3"].icon}
+            {aduitStatusToName["3"].name}
         </div>
     )
 }

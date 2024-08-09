@@ -429,6 +429,10 @@ export declare namespace API {
     export interface PluginsWhereListRequest extends PluginsWhere, PluginsWhereList {}
     export interface PluginsWhereList {
         token?: string
+        /**
+         * 审核流程更新,需要提示强制更新版本
+         */
+        upgrade?: boolean
     }
     export interface PluginsWhereDownloadRequest extends PluginsWhere, PluginsWhereDownload {}
     export interface PluginsWhereDownload {
@@ -554,7 +558,7 @@ export declare namespace API {
     export interface PluginsLogsResponse extends Paging {
         data: PluginsLogsDetail[]
     }
-    export interface PluginsLogsDetail extends GormBaseModel {
+    export interface PluginsLogsDetail extends GormBaseModel, HandleUser, PluginComment {
         /**
          * 操作人名称
          */
@@ -576,17 +580,21 @@ export declare namespace API {
          */
         checkStatus: number
         /**
-         * 日志类型 submit:新增 delete:删除  update:修改  check:审核 recover:恢复 applyMerge: 合并申请
+         * 日志类型 submit:新增 delete:删除  update:修改  check:审核 recover:恢复 applyMerge: 合并申请  comment:评论
          */
         logType: string
         /**
-         * 描述
+         * 描述/评论
          */
         description: string
         /**
          * 登陆用户是否是插件作者
          */
         loginIsPluginUser: boolean
+        /**
+         * 描述/评论 图片
+         */
+        descriptionImg?: string
     }
     export interface PluginsListResponse extends Paging {
         data: PluginsDetail[]
@@ -674,7 +682,7 @@ export declare namespace API {
         isAuthor?: boolean
     }
     export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
-    export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail {}
+    export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail, PluginsAuditButton {}
     export interface PluginsAuditDetailRequest {
         uuid: string
         /**
@@ -736,6 +744,16 @@ export declare namespace API {
          */
         isCorePlugin?: boolean
     }
+    export interface PluginsAuditButton {
+        /**
+         * true 显示钢笔标签, false 其他
+         */
+        pen?: boolean
+        /**
+         * true 表示禁用, false 其他
+         */
+        disable?: boolean
+    }
     export interface PluginsAudit {
         pageType?: string
         /**
@@ -759,11 +777,71 @@ export declare namespace API {
          */
         upPluginLogId?: number
     }
+    export interface PluginMergeRequest extends PluginsRequest, PluginMerge {}
+    export interface PluginMerge {
+        /**
+         * 审核 'true' 通过 'false' 不通过
+         */
+        status: string
+        /**
+         * 必传
+         */
+        uuid: string
+        /**
+         * 不通过时必传
+         */
+        logDescription?: string
+        /**
+         * 有对比的审核页 必传此id
+         */
+        upPluginLogId: number
+    }
     export interface PluginIncreResponse {
         day_incre_num: number
         yesterday_incre_num: number
         week_incre_num: number
         lastWeek_incre_num: number
+    }
+    export interface PluginComment {
+        /**
+         * 操作人名称
+         */
+        userName: string
+        /**
+         * 操作人头像
+         */
+        headImg: string
+        /**
+         * 操作人是否是作者 true 是   false否
+         */
+        isAuthors: boolean
+        /**
+         * 审核状态
+         */
+        checkStatus: number
+        /**
+         * 描述/评论
+         */
+        description: string
+        /**
+         * 描述/评论 图片
+         */
+        descriptionImg?: string
+    }
+    export interface PluginAuditRequest extends PluginsRequest, PluginAudit {}
+    export interface PluginAudit {
+        /**
+         * 审核 'true' 通过 'false' 不通过
+         */
+        status: string
+        /**
+         * 必传
+         */
+        uuid: string
+        /**
+         * 不通过时必传
+         */
+        logDescription?: string
     }
     export interface Paging {
         pagemeta: PageMeta
@@ -898,6 +976,7 @@ export declare namespace API {
     export interface HTTPFlowRequest {
         projectName: string
         content: string
+        projectDescription?: string
     }
     export interface HTTPFlowListResponse extends Paging {
         data: HTTPFlowList[]
@@ -955,6 +1034,7 @@ export declare namespace API {
         disableRenderStyles?: boolean
         projectName?: string
         userName?: string
+        projectDescription?: string
     }
     export interface HTTPFlowDeleteWhere {
         deleteAll?: boolean
@@ -967,6 +1047,20 @@ export declare namespace API {
     export interface HTTPFlowBareResponse {
         id: number
         data: string
+    }
+    export interface HandleUser {
+        /**
+         * 流程操作人名称
+         */
+        handleUserName?: string
+        /**
+         * 流程操作人头像
+         */
+        handleHeadImg?: string
+        /**
+         * 流程作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
+         */
+        handleUserRole?: string
     }
     export interface GroupResponseDetail {
         value: string
@@ -1066,6 +1160,12 @@ export declare namespace API {
         maxUser: number
         durationDate: number
         currentTime?: number
+    }
+    export interface CommentLogRequest {
+        uuid: string
+        description_img?: string[]
+        parent_id?: number
+        description?: string
     }
     export interface CommentListResponse extends Paging {
         data: CommentListData[]

@@ -15,7 +15,7 @@ import {
 } from "./icon"
 import {useDebounceEffect, useDebounceFn, useInViewport, useLatest, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
-import {apiFetchOnlinePluginInfo, apiFetchPluginDetailCheck, apiFetchPluginLogs} from "../utils"
+import {apiFetchOnlinePluginInfo, apiFetchPluginLogs} from "../utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -24,14 +24,15 @@ import {GetPluginLanguage} from "../builtInData"
 import {PluginLogDetail} from "./PluginLogDetail"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {API} from "@/services/swagger/resposeType"
-import classNames from "classnames"
 import {useStore} from "@/store"
 import {YakitTimeLineList} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineList"
 import {PluginDetailHeader} from "../baseTemplate"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitTimeLineListRefProps} from "@/components/yakitUI/YakitTimeLineList/YakitTimeLineListType"
 import emiter from "@/utils/eventBus/eventBus"
+import {httpFetchMergePluginDetail} from "@/pages/pluginHub/utils/http"
 
+import classNames from "classnames"
 import styles from "./PluginLog.module.scss"
 
 /** 日志类型-对应展示信息 */
@@ -507,51 +508,50 @@ export const PluginLogs: React.FC<PluginLogProps> = memo((props) => {
 
     return (
         <div ref={wrapperRef} className={styles["plugin-online-logs"]}>
-                <div className={styles["plugin-online-log-list"]}>
-                    <div className={styles["log-header"]}>
-                        <span className={styles["header-title"]}>插件日志</span>
-                        <div className={styles["header-tag"]}>{response.pagemeta.total}</div>
-                    </div>
-                    <div className={styles["log-content"]}>
-                        {response.data.length > 0 ? (
-                            <OnlineJudgment>
-                                <YakitTimeLineList
-                                    ref={timeListRef}
-                                    loading={resLoading}
-                                    data={response.data}
-                                    icon={(info) => {
-                                        return handleToLogInfo(info)?.icon || null
-                                    }}
-                                    renderItem={(info) => {
-                                        return (
-                                            <PluginLogOpt
-                                                uuid={uuid}
-                                                info={info}
-                                                onMerge={(info) => handleMerge(info, 0)}
-                                            />
-                                        )
-                                    }}
-                                    hasMore={hasMore.current}
-                                    loadMore={handleLoadMore}
-                                />
-                            </OnlineJudgment>
-                        ) : (
-                            <YakitEmpty style={{paddingTop: 48}} />
-                        )}
-                    </div>
-
-                    {mergeShow.info && (
-                        <PluginLogDetail
-                            getContainer={document.getElementById(getContainer || "") || undefined}
-                            uuid={uuid}
-                            info={mergeShow.info}
-                            visible={mergeShow.visible}
-                            onClose={onCancelMerge}
-                            onChange={handleChangeMerge}
-                        />
+            <div className={styles["plugin-online-log-list"]}>
+                <div className={styles["log-header"]}>
+                    <span className={styles["header-title"]}>插件日志</span>
+                    <div className={styles["header-tag"]}>{response.pagemeta.total}</div>
+                </div>
+                <div className={styles["log-content"]}>
+                    {response.data.length > 0 ? (
+                        <OnlineJudgment>
+                            <YakitTimeLineList
+                                ref={timeListRef}
+                                loading={resLoading}
+                                data={response.data}
+                                icon={(info) => {
+                                    return handleToLogInfo(info)?.icon || null
+                                }}
+                                renderItem={(info) => {
+                                    return (
+                                        <PluginLogOpt
+                                            uuid={uuid}
+                                            info={info}
+                                            onMerge={(info) => handleMerge(info, 0)}
+                                        />
+                                    )
+                                }}
+                                hasMore={hasMore.current}
+                                loadMore={handleLoadMore}
+                            />
+                        </OnlineJudgment>
+                    ) : (
+                        <YakitEmpty style={{paddingTop: 48}} />
                     )}
                 </div>
-            
+
+                {mergeShow.info && (
+                    <PluginLogDetail
+                        getContainer={document.getElementById(getContainer || "") || undefined}
+                        uuid={uuid}
+                        info={mergeShow.info}
+                        visible={mergeShow.visible}
+                        onClose={onCancelMerge}
+                        onChange={handleChangeMerge}
+                    />
+                )}
+            </div>
         </div>
     )
 })
@@ -574,7 +574,7 @@ const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
             return <YakitRoundCornerTag color='green'>信任用户</YakitRoundCornerTag>
         }
         if (role === "auditor") {
-            return <YakitRoundCornerTag color='blue'>管理员</YakitRoundCornerTag>
+            return <YakitRoundCornerTag color='blue'>审核员</YakitRoundCornerTag>
         }
 
         return null
@@ -647,7 +647,7 @@ const PluginLogDiffCode: React.FC<PluginLogDiffCodeProps> = memo((props) => {
         if (loading) return
 
         setLoading(true)
-        apiFetchPluginDetailCheck({uuid: uuid, list_type: "log", up_log_id: logId})
+        httpFetchMergePluginDetail({uuid: uuid, up_log_id: logId})
             .then(async (res) => {
                 if (res) {
                     language.current = GetPluginLanguage(res.type)

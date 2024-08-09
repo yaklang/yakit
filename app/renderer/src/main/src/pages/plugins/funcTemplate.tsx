@@ -1741,7 +1741,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
 
 /** @name 插件源码评分弹窗 */
 export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
-    const {type, code, visible, onCancel} = props
+    const {visible, onCancel, ...rest} = props
 
     // 不合格|取消
     const onFailed = useMemoizedFn(() => {
@@ -1772,7 +1772,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
             onCancel={onFailed}
             bodyStyle={{padding: 0}}
         >
-            {visible && <CodeScoreModule type={type} code={code} isStart={visible} callback={moduleCallback} />}
+            {visible && <CodeScoreModule {...rest} isStart={visible} callback={moduleCallback} />}
         </YakitModal>
     )
 })

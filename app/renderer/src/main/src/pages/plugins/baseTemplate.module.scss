@@ -107,7 +107,7 @@
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 16px;
-                gap: 64px;// 搜索框没有拉满的时候与左边文字的间距，目前需求最多只有两个元素
+                gap: 64px; // 搜索框没有拉满的时候与左边文字的间距，目前需求最多只有两个元素
                 .title-style {
                     color: #31343f;
                     font-size: 12px;
@@ -556,6 +556,10 @@
 .audit-status-tag-passed {
     background: rgba(86, 201, 145, 0.2);
     color: #56c991;
+}
+.audit-status-tag-afoot {
+    background: rgba(74, 148, 248, 0.2);
+    color: #4a94f8;
 }
 
 // -----------------------

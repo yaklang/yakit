@@ -38,6 +38,9 @@ export type PluginsEventProps = {
     /** 插件详情更改公开|私密 通知我的列表里状态更新 */
     detailChangeStatusOwnPlugin: string
 
+    /** 插件详情-日志页里,合并修改后并通知插件管理详情页,在同插件下刷新最新数据 */
+    logMergeModifyToManageDetail: string
+
     // ---------- 插件(新建|编辑)相关通信 ----------
     /**
      * 插件(新建|编辑)本地保存后通知本地列表更新(更新插件存在进行局部更新，不存在进行刷新列表)

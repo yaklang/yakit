@@ -8,7 +8,7 @@
     justify-content: center;
 }
 // -------------------- 审核状态图标颜色 ↓↓↓ --------------------
-.aduit-status-flag-color {
+.aduit-status-solid-circle-color {
     color: #ffb660;
 }
 .aduit-status-badge-check-color {
@@ -16,6 +16,9 @@
 }
 .aduit-status-ban-color {
     color: #b4bbca;
+}
+.aduit-status-flag-color {
+    color: #4a94f8;
 }
 // -------------------- tooltip组件样式 ↓↓↓ --------------------
 .plugins-tooltip {

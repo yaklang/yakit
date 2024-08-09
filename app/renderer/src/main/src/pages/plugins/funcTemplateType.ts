@@ -323,20 +323,24 @@ export interface FilterPopoverBtnProps {
     fixFilterList?: API.PluginsSearch[]
 }
 
-/** 插件源码评分模块 */
-export interface CodeScoreModuleProps {
+/** 源码评分基础属性 */
+interface CodeScoreBaseProps {
     /** 插件类型 */
     type: string
     /** 插件源码 */
     code: string
-    /** 是否开始评分 */
-    isStart: boolean
     /** 执行完后的成功结果回调延时(默认:1000) */
     successWait?: number
     /** 评分合格的提示语(默认: "（表现良好，开始上传插件中...）") */
     successHint?: string
     /** 评分合格的提示语(默认: "（上传失败，请修复后再上传）") */
     failedHint?: string
+}
+
+/** 插件源码评分模块 */
+export interface CodeScoreModuleProps extends CodeScoreBaseProps {
+    /** 是否开始评分 */
+    isStart: boolean
     /** 执行完后的回调(合格给ture，不合格给false) */
     callback: (value: boolean) => any
     /** 是否隐藏评分的提示信息 */
@@ -344,11 +348,7 @@ export interface CodeScoreModuleProps {
 }
 
 /** 插件源码评分弹窗 */
-export interface CodeScoreModalProps {
-    /** 插件类型 */
-    type: string
-    /** 插件源码 */
-    code: string
+export interface CodeScoreModalProps extends CodeScoreBaseProps {
     visible: boolean
     /** 关闭弹窗(true:合格|false:不合格) */
     onCancel: (value: boolean) => any

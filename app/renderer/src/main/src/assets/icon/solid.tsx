@@ -4812,7 +4812,6 @@ const SolidSwitchConfiguration = () => (
         />
     </svg>
 )
-
 /**
  * @description  Icon/Solid/switch 配置
  */
@@ -4830,10 +4829,21 @@ const SolidStore = () => (
         />
     </svg>
 )
-
 /**
  * @description  Icon/Solid/存储
  */
 export const SolidStoreIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidStore} {...props} />
+}
+
+const SolidCircle = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'>
+        <circle cx='6' cy='6' r='3' fill='currentColor' />
+    </svg>
+)
+/**
+ * @description  Icon/Solid/实心圆
+ */
+export const SolidSolidCircle = (props: Partial<IconProps>) => {
+    return <Icon component={SolidCircle} {...props} />
 }

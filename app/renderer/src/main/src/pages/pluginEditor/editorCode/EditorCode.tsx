@@ -1,6 +1,6 @@
 import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {OutlineOpenIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineOpenIcon} from "@/assets/icon/outline"
 import {SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -39,6 +39,7 @@ import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import cloneDeep from "lodash/cloneDeep"
+import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -127,7 +128,18 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             }),
             {wait: 300}
         ).run
-        /** ---------- 代码和参数数据的更新 Start ---------- */
+        /** ---------- 代码和参数数据的更新 End ---------- */
+
+        /** ---------- 代码评分 Start ---------- */
+        const [scoreHint, setScoreHint] = useState<boolean>(false)
+        const handleOpenScoreHint = useMemoizedFn(() => {
+            if (scoreHint) return
+            setScoreHint(true)
+        })
+        const handleScoreHintCallback = useMemoizedFn((value: boolean) => {
+            if (!value) setScoreHint(false)
+        })
+        /** ---------- 代码评分 End ---------- */
 
         /** ---------- 参数获取和展示逻辑 Start ---------- */
         const [form] = Form.useForm()
@@ -513,7 +525,14 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                             <div className={styles["header"]}>
                                 参数预览
                                 <div className={styles["header-extra"]}>
-                                    {type === "yak" && (
+                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                        自动检测
+                                    </YakitButton>
+                                    <div
+                                        className={styles["divider-style"]}
+                                        style={["yak", "mitm"].includes(type) ? {marginRight: 0} : undefined}
+                                    ></div>
+                                    {["yak", "mitm"].includes(type) && (
                                         <>
                                             <YakitButton
                                                 type='text'
@@ -521,7 +540,6 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                                 onClick={handleFetchParams}
                                             >
                                                 获取参数
-                                                <OutlineRefreshIcon />
                                             </YakitButton>
                                             <div className={styles["divider-style"]}></div>
                                         </>
@@ -562,6 +580,16 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 </div>
                             </div>
                         </div>
+
+                        {/* 代码评分弹窗 */}
+                        <CodeScoreModal
+                            type={type}
+                            code={content || ""}
+                            successHint=' '
+                            failedHint=' '
+                            visible={scoreHint}
+                            onCancel={handleScoreHintCallback}
+                        />
                     </div>
                 </div>
             </div>

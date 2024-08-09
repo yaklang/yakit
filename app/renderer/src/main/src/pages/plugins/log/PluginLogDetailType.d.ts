@@ -1,3 +1,5 @@
+import {API} from "@/services/swagger/resposeType"
+
 export interface PluginLogDetailProps {
     getContainer?: HTMLElement
     uuid: string

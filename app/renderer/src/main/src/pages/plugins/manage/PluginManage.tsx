@@ -29,7 +29,6 @@ import {
     useGetState,
     useInViewport,
     useLatest,
-    useLockFn,
     useMemoizedFn,
     useUpdateEffect
 } from "ahooks"
@@ -60,20 +59,15 @@ import {
     convertPluginsRequestParams,
     excludeNoExistfilter
 } from "../utils"
-import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {DefaultStatusList, PluginGV, defaultPagemeta, defaultSearch} from "../builtInData"
 import {useStore} from "@/store"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-
-import "../plugins.scss"
-import styles from "./pluginManage.module.scss"
-import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginGroupList} from "../local/PluginsLocalType"
-import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {PluginGroupDrawer} from "@/pages/pluginHub/group/PluginGroupDrawer"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "@/pages/pluginHub/group/UpdateGroupList"
@@ -82,9 +76,17 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import Dragger from "antd/lib/upload/Dragger"
 import {PropertyIcon} from "@/pages/payloadManager/icon"
 import {RcFile} from "antd/lib/upload"
-import path from "path"
 import {RemoteGV} from "@/yakitGV"
 import {ListDelGroupConfirmPop} from "@/pages/pluginHub/group/PluginOperationGroupList"
+import {RemotePluginGV} from "@/enums/plugin"
+import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
+import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import emiter from "@/utils/eventBus/eventBus"
+import useAdmin from "@/hook/useAdmin"
+
+import "../plugins.scss"
+import styles from "./pluginManage.module.scss"
+
 const {ipcRenderer} = window.require("electron")
 interface PluginManageProps {}
 
@@ -92,6 +94,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 判断该页面-用户是否可见状态
     const layoutRef = useRef<HTMLDivElement>(null)
     const [inViewPort = true] = useInViewport(layoutRef)
+
     // 初始时，数据是否为空，为空展示空数据时的UI
     const [initTotal, setInitTotal] = useState<number>(0)
     const getInitTotal = useMemoizedFn(() => {
@@ -107,6 +110,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
     // 用户信息
     const {userInfo} = useStore()
+    const admin = useAdmin()
 
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
@@ -287,20 +291,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         onInit()
     })
 
-    /** 修改作者按钮展示状态 */
-    const showAuthState = useMemo(() => {
-        if (userInfo.role === "superAdmin") {
-            if (isCommunityEdition()) return true
-            else return false
-        }
-        if (userInfo.role === "admin") {
-            if (isCommunityEdition()) return true
-            if (isEnpriTrace()) return true
-            if (isEnpriTraceAgent()) return true
-            return false
-        }
-        return false
-    }, [userInfo.role])
     /** 批量修改插件作者 */
     const [showModifyAuthor, setShowModifyAuthor] = useState<boolean>(false)
     const onShowModifyAuthor = useMemoizedFn(() => {
@@ -310,62 +300,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         setShowModifyAuthor(false)
         onCheck(false)
         fetchList(true)
-    })
-
-    /** 批量下载插件 */
-    const [showBatchDownload, setShowBatchDownload] = useState<boolean>(false)
-    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-    // 批量下载(首页批量下载和详情批量下载共用一个方法)
-    const onBatchDownload = useMemoizedFn((newParams?: BackInfoProps) => {
-        // 选中插件数量
-        let selectTotal: number = selectNum
-        // 选中插件UUID
-        let selectUuids: string[] = [...selectUUIDs]
-        // 搜索内容
-        let downloadSearch: PluginSearchParams = {...searchs}
-        // 搜索筛选条件
-        let downloadFilter: PluginFilterParams = {...filters}
-
-        if (newParams) {
-            selectTotal = newParams.allCheck ? response.pagemeta.total : newParams.selectList.length
-            selectUuids = newParams.selectList.map((item) => item.uuid)
-            downloadSearch = {...newParams.search}
-            downloadFilter = {...newParams.filter}
-        }
-
-        if (selectTotal === 0) {
-            // 全部下载
-            setShowBatchDownload(true)
-        } else {
-            // 批量下载
-            let downloadRequest: DownloadOnlinePluginsRequest = {}
-            if (allCheck) {
-                downloadRequest = {...convertDownloadOnlinePluginBatchRequestParams(downloadFilter, downloadSearch)}
-            } else {
-                downloadRequest = {
-                    UUID: selectUuids
-                }
-            }
-            if (downloadLoading) return
-            setDownloadLoading(true)
-            apiDownloadPluginCheck(downloadRequest)
-                .then(() => {
-                    onCheck(false)
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setDownloadLoading(false)
-                    }, 200)
-                })
-        }
-    })
-    /** 单个插件下载 */
-    const onDownload = useLockFn(async (value: YakitPluginOnlineDetail) => {
-        let downloadRequest: DownloadOnlinePluginsRequest = {
-            UUID: [value.uuid]
-        }
-
-        apiDownloadPluginCheck(downloadRequest).then(() => {})
     })
 
     /** 批量删除插件 */
@@ -524,20 +458,28 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             <FuncFilterPopover
                 icon={<OutlineDotshorizontalIcon />}
                 menu={{
-                    data: [
-                        {
-                            key: "download",
-                            label: "下载",
-                            itemIcon: <OutlineClouddownloadIcon />
-                        },
-                        {type: "divider"},
-                        {
-                            key: "del",
-                            label: "删除",
-                            type: "danger",
-                            itemIcon: <OutlineTrashIcon />
-                        }
-                    ],
+                    data: admin.isAdmin
+                        ? [
+                              {
+                                  key: "download",
+                                  label: "下载",
+                                  itemIcon: <OutlineClouddownloadIcon />
+                              },
+                              {type: "divider"},
+                              {
+                                  key: "del",
+                                  label: "删除",
+                                  type: "danger",
+                                  itemIcon: <OutlineTrashIcon />
+                              }
+                          ]
+                        : [
+                              {
+                                  key: "download",
+                                  label: "下载",
+                                  itemIcon: <OutlineClouddownloadIcon />
+                              }
+                          ],
                     className: styles["func-filter-dropdown-menu"],
                     onClick: ({key}) => {
                         switch (key) {
@@ -546,7 +488,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 setShowReason({visible: true, type: "del"})
                                 return
                             case "download":
-                                onDownload(data)
+                                onFooterExtraDownload(data)
                                 return
                             default:
                                 return
@@ -602,20 +544,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         fetchPluginFilters()
     })
     // 一键重置
-    const showResetAll = useMemo(() => {
-        if (userInfo.role === "admin") {
-            if (isEnpriTrace()) return true
-            return false
-        }
-        return false
-    }, [userInfo.role])
     const [resetLoading, setResetLoading] = useState<boolean>(false)
     const onResetAll = useMemoizedFn(() => {
         if (!userInfo.isLogin) {
             yakitNotify("error", "请先登录")
             return
         }
-        if (userInfo.role !== "admin") {
+        if (!admin.ee) {
             yakitNotify("error", "暂无权限")
             return
         }
@@ -639,11 +574,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const [pluginGroupMagDrawer, setPluginGroupMagDrawer] = useState<boolean>(false)
     const [importGroupVisible, setImportGroupVisible] = useState<boolean>(false)
     // 管理分组展示状态
-    const magGroupState = useMemo(() => {
-        if (shouldVerifyEnpriTraceLogin() && userInfo.role === "admin") return true
-        if (!shouldVerifyEnpriTraceLogin() && ["admin", "superAdmin"].includes(userInfo.role || "")) return true
-        else return false
-    }, [userInfo.role])
+    const magGroupState = useMemoizedFn(() => {
+        if (admin.isAdmin) {
+            return true
+        }
+        return false
+    })
 
     const onOpenPluginGroup = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -749,13 +685,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const [groupTagShow, setGroupTagShow] = useState<boolean>(false)
     const [listDelGroupConfirm, setListDelGroupConfirm] = useState<boolean>(false)
     const listDelGroupConfirmPopRef = useRef<any>()
-    const removeSingleRef = useRef<boolean>(false)  
+    const removeSingleRef = useRef<boolean>(false)
     const removeSingleGroupRef = useRef<string>("")
     const removeOutGroupContRef = useRef<string>("")
     useDebounceEffect(
         () => {
             if (selectList.length || allCheck) {
-                if (magGroupState) {
+                if (magGroupState()) {
                     getYakScriptGroupOnline(selectList.map((item) => item.uuid))
                 }
             } else {
@@ -849,6 +785,172 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
 
     /** ---------- 分组 End ---------- */
+
+    /** ---------- 下载插件 Start ---------- */
+    useEffect(() => {
+        // 批量下载的同名覆盖二次确认框缓存
+        getRemoteValue(RemotePluginGV.BatchDownloadPluginSameNameOverlay)
+            .then((res) => {
+                batchSameNameCache.current = res === "true"
+            })
+            .catch((err) => {})
+        // 单个下载的同名覆盖二次确认框缓存
+        getRemoteValue(RemotePluginGV.SingleDownloadPluginSameNameOverlay)
+            .then((res) => {
+                singleSameNameCache.current = res === "true"
+            })
+            .catch((err) => {})
+    }, [])
+
+    const batchDownloadRequest = useRef<BackInfoProps>()
+    const setBatchDownloadRequest = useMemoizedFn((request?: BackInfoProps) => {
+        batchDownloadRequest.current = request || undefined
+    })
+    const headerExtraDownload = useMemoizedFn((newRequest?: BackInfoProps) => {
+        if (!batchSameNameCache.current) {
+            setBatchDownloadRequest()
+            if (batchSameNameHint) return
+            setBatchSameNameHint(true)
+            setBatchDownloadRequest(newRequest)
+            return
+        }
+        setBatchDownloadRequest(newRequest)
+        handleBatchDownloadPlugin()
+    })
+
+    // 批量下载同名覆盖提示
+    const batchSameNameCache = useRef<boolean>(false)
+    const [batchSameNameHint, setBatchSameNameHint] = useState<boolean>(false)
+    const handleBatchSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+        if (isOK) {
+            batchSameNameCache.current = cache
+            handleBatchDownloadPlugin()
+        }
+        setBatchSameNameHint(false)
+    })
+
+    // 全部下载
+    const [allDownloadHint, setAllDownloadHint] = useState<boolean>(false)
+    const handleAllDownload = useMemoizedFn(() => {
+        if (allDownloadHint) return
+        setAllDownloadHint(true)
+    })
+    // 批量下载
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
+    const handleBatchDownloadPlugin = useMemoizedFn(() => {
+        let allChecks: boolean = allCheck
+        let selectedTotal: number = selectNum
+        let selectedUUIDs: string[] = [...selectUUIDs]
+        let downloadSearch: PluginSearchParams = {...searchs}
+        let downloadFilter: PluginFilterParams = {...filters}
+
+        if (batchDownloadRequest.current) {
+            const {
+                allCheck: detailAllCheck,
+                selectList: detailSelectList,
+                search: detailSearch,
+                filter: detailFilter
+            } = batchDownloadRequest.current
+            allChecks = detailAllCheck
+            selectedTotal = detailAllCheck ? response.pagemeta.total : detailSelectList.length
+            selectedUUIDs = detailSelectList.map((item) => item.uuid)
+            downloadSearch = {...detailSearch}
+            downloadFilter = {...detailFilter}
+        }
+
+        setBatchDownloadRequest()
+        if (selectedTotal === 0) {
+            handleAllDownload()
+        } else {
+            let downloadRequest: DownloadOnlinePluginsRequest = {}
+            if (allChecks) {
+                downloadRequest = {...convertDownloadOnlinePluginBatchRequestParams(downloadFilter, downloadSearch)}
+            } else {
+                downloadRequest = {
+                    UUID: selectedUUIDs
+                }
+            }
+            if (downloadLoading) return
+            setDownloadLoading(true)
+            apiDownloadPluginCheck(downloadRequest)
+                .then(() => {
+                    onCheck(false)
+                    yakitNotify("success", "批量下载成功")
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setDownloadLoading(false)
+                    }, 200)
+                })
+        }
+    })
+
+    // 单个下载同名覆盖提示
+    const singleSameNameCache = useRef<boolean>(false)
+    const [singleSameNameHint, setSingleSameNameHint] = useState<boolean>(false)
+    const handleSingleSameNameHint = useMemoizedFn((isOK: boolean, cache: boolean) => {
+        if (isOK) {
+            singleSameNameCache.current = cache
+            const data = singleDownload[singleDownload.length - 1]
+            if (data) handleSingleDownload(data)
+        } else {
+            setSingleDownload((arr) => arr.slice(0, arr.length - 1))
+        }
+        setSingleSameNameHint(false)
+    })
+    // 单个下载的插件信息队列
+    const [singleDownload, setSingleDownload] = useState<YakitPluginOnlineDetail[]>([])
+    const onFooterExtraDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        const findIndex = singleDownload.findIndex((item) => item.uuid === info.uuid)
+        if (findIndex > -1) {
+            yakitNotify("error", "该插件正在执行下载操作,请稍后再试")
+            return
+        }
+        setSingleDownload((arr) => {
+            arr.push(info)
+            return [...arr]
+        })
+
+        grpcFetchLocalPluginDetail({Name: info.script_name, UUID: info.uuid}, true)
+            .then((res) => {
+                const {ScriptName, UUID} = res
+                if (ScriptName === info.script_name && UUID !== info.uuid) {
+                    if (!singleSameNameCache.current) {
+                        if (singleSameNameHint) return
+                        setSingleSameNameHint(true)
+                        return
+                    }
+                }
+                handleSingleDownload(info)
+            })
+            .catch((err) => {
+                handleSingleDownload(info)
+            })
+    })
+    // 单个插件下载
+    const handleSingleDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        grpcDownloadOnlinePlugin({uuid: info.uuid})
+            .then((res) => {
+                emiter.emit(
+                    "editorLocalSaveToLocalList",
+                    JSON.stringify({
+                        id: Number(res.Id) || 0,
+                        name: res.ScriptName,
+                        uuid: res.UUID || ""
+                    })
+                )
+                yakitNotify("success", "下载成功")
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => {
+                    setSingleDownload((arr) => arr.filter((item) => item.uuid !== info.uuid))
+                }, 50)
+            })
+    })
+    /** ---------- 下载插件 End ---------- */
+
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
             {!!plugin && (
@@ -864,7 +966,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     defaultSearch={searchs}
                     defaultFilter={filters}
                     downloadLoading={downloadLoading}
-                    onBatchDownload={onBatchDownload}
+                    onBatchDownload={headerExtraDownload}
                     onPluginDel={onDetailDel}
                     currentIndex={showPluginIndex.current}
                     setCurrentIndex={setShowPluginIndex}
@@ -873,7 +975,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     onDetailSearch={onDetailSearch}
                 />
             )}
-
             <PluginsLayout
                 title='插件管理'
                 hidden={!!plugin}
@@ -883,7 +984,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         <FuncSearch maxWidth={1000} value={searchs} onSearch={onKeywordAndUser} onChange={setSearchs} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
-                            {showAuthState && (
+                            {admin.isAdmin && (
                                 <FuncBtn
                                     maxWidth={1150}
                                     icon={<OutlinePencilaltIcon />}
@@ -901,10 +1002,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 size='large'
                                 loading={downloadLoading}
                                 name={selectNum > 0 ? "下载" : "一键下载"}
-                                onClick={() => onBatchDownload()}
+                                onClick={() => headerExtraDownload()}
                                 disabled={initTotal === 0}
                             />
-                            {magGroupState && (
+                            {admin.isAdmin && (
                                 <FuncBtn
                                     maxWidth={1150}
                                     icon={<OutlineSaveIcon />}
@@ -914,7 +1015,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     onClick={() => setImportGroupVisible(true)}
                                 />
                             )}
-                            {showResetAll && (
+                            {admin.ee && (
                                 <FuncBtn
                                     maxWidth={1150}
                                     icon={<OutlineClouduploadIcon />}
@@ -962,15 +1063,17 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     }}
                                 />
                             )}
-                            <FuncBtn
-                                maxWidth={1150}
-                                icon={<OutlineTrashIcon />}
-                                type='outline2'
-                                size='large'
-                                name={selectNum > 0 ? "删除" : "清空"}
-                                onClick={onShowDelPlugin}
-                                disabled={initTotal === 0}
-                            />
+                            {admin.isAdmin && (
+                                <FuncBtn
+                                    maxWidth={1150}
+                                    icon={<OutlineTrashIcon />}
+                                    type='outline2'
+                                    size='large'
+                                    name={selectNum > 0 ? "删除" : "清空"}
+                                    onClick={onShowDelPlugin}
+                                    disabled={initTotal === 0}
+                                />
+                            )}
                         </div>
                     </div>
                 }
@@ -983,7 +1086,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     onSelect={onFilter}
                     groupList={pluginFilters.map((item) => {
                         if (item.groupKey === "plugin_group") {
-                            item.groupExtraOptBtn = magGroupState ? (
+                            item.groupExtraOptBtn = magGroupState() ? (
                                 <>
                                     <YakitButton type='text' onClick={onOpenPluginGroup}>
                                         管理
@@ -1010,7 +1113,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         setVisible={onSetShowFilter}
                         extraHeader={
                             <div className={styles["hub-list-header-right-extra"]}>
-                                {magGroupState ? (
+                                {magGroupState() ? (
                                     <>
                                         {showGroupList.length > 0 && (
                                             <div className={styles["header-filter-tag"]}>
@@ -1205,7 +1308,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
-
             <ModifyAuthorModal
                 visible={showModifyAuthor}
                 setVisible={setShowModifyAuthor}
@@ -1219,15 +1321,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 total={!!activeDelPlugin.current ? 1 : selectNum || response.pagemeta.total}
                 onOK={onReasonCallback}
             />
-            {showBatchDownload && (
-                <YakitGetOnlinePlugin
-                    listType='check'
-                    visible={showBatchDownload}
-                    setVisible={(v) => {
-                        setShowBatchDownload(v)
-                    }}
-                />
-            )}
             <PluginGroupDrawer
                 groupType='online'
                 visible={pluginGroupMagDrawer}
@@ -1253,6 +1346,31 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     <UploadGroupModal importSuccess={fetchPluginFilters} onClose={() => setImportGroupVisible(false)} />
                 </YakitModal>
             )}
+
+            {/* 一键下载 */}
+            {allDownloadHint && (
+                <YakitGetOnlinePlugin
+                    listType='check'
+                    visible={allDownloadHint}
+                    setVisible={(v) => setAllDownloadHint(v)}
+                />
+            )}
+            {/* 批量下载同名覆盖提示 */}
+            <NoPromptHint
+                visible={batchSameNameHint}
+                title='同名覆盖提示'
+                content='如果本地存在同名插件会直接进行覆盖'
+                cacheKey={RemotePluginGV.BatchDownloadPluginSameNameOverlay}
+                onCallback={handleBatchSameNameHint}
+            />
+            {/* 单个下载同名覆盖提示 */}
+            <NoPromptHint
+                visible={singleSameNameHint}
+                title='同名覆盖提示'
+                content='本地有插件同名，下载将会覆盖，是否下载'
+                cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
+                onCallback={handleSingleSameNameHint}
+            />
         </div>
     )
 }
