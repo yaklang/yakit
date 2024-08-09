@@ -97,7 +97,6 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
         httpFetchMergePluginDetail({uuid: uuid, up_log_id: info.id})
             .then(async (res) => {
                 if (res) {
-                    console.log(`单个日志的详情\n`, `${JSON.stringify(res)}`)
                     setPRInfo(res)
                     // 获取对比器-修改源码
                     setNewCode(res.content)

@@ -49,7 +49,7 @@ export const httpCopyPluginToOnline: APIFunc<API.CopyPluginsRequest, API.Plugins
  */
 export const httpFetchAuditPluginDetail: APIFunc<string, API.PluginsAuditDetailResponse> = (uuid, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("method:get|api:plugins/detail/audit\n", JSON.stringify({uuid: uuid}))
+        // console.log("method:get|api:plugins/detail/audit\n", JSON.stringify({uuid: uuid}))
         NetWorkApi<{uuid: string}, API.PluginsAuditDetailResponse>({
             method: "get",
             url: "plugins/detail/audit",
@@ -68,7 +68,7 @@ export const httpFetchAuditPluginDetail: APIFunc<string, API.PluginsAuditDetailR
  */
 export const httpAuditPluginOperate: APIFunc<API.PluginAuditRequest, API.ActionSucceeded> = (request, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("method:post|api:plugins/detail/audit\n", JSON.stringify(request))
+        // console.log("method:post|api:plugins/detail/audit\n", JSON.stringify(request))
         NetWorkApi<API.PluginAuditRequest, API.ActionSucceeded>({
             method: "post",
             url: "plugins/detail/audit",
@@ -94,7 +94,7 @@ export const httpFetchMergePluginDetail: APIFunc<FetchMergePluginDetailRequest, 
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        console.log("method:get|api:plugins/merge/update/detail\n", JSON.stringify(request))
+        // console.log("method:get|api:plugins/merge/update/detail\n", JSON.stringify(request))
         NetWorkApi<FetchMergePluginDetailRequest, API.PluginsAuditDetailResponse>({
             method: "get",
             url: "plugins/merge/update/detail",
@@ -116,7 +116,7 @@ export const httpMergePluginOperate: APIFunc<API.PluginMergeRequest, API.Plugins
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        console.log("method:post|api:plugins/merge/update/detail\n", JSON.stringify(request))
+        // console.log("method:post|api:plugins/merge/update/detail\n", JSON.stringify(request))
         NetWorkApi<API.PluginMergeRequest, API.PluginsLogsDetail>({
             method: "post",
             url: "plugins/merge/update/detail",

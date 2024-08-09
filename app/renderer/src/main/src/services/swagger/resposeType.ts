@@ -682,12 +682,7 @@ export declare namespace API {
         isAuthor?: boolean
     }
     export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
-    export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail {
-        /**
-         * 当前登录人是否已操作过
-         */
-        loginUserIsHandle?: boolean
-    }
+    export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail, PluginsAuditButton {}
     export interface PluginsAuditDetailRequest {
         uuid: string
         /**
@@ -748,6 +743,16 @@ export declare namespace API {
          * 是否为内置插件
          */
         isCorePlugin?: boolean
+    }
+    export interface PluginsAuditButton {
+        /**
+         * true 显示钢笔标签, false 其他
+         */
+        pen?: boolean
+        /**
+         * true 表示禁用, false 其他
+         */
+        disable?: boolean
     }
     export interface PluginsAudit {
         pageType?: string

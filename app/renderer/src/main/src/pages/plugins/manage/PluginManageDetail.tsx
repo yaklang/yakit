@@ -9,13 +9,7 @@ import {
     statusTag
 } from "../baseTemplate"
 import {SolidBadgecheckIcon, SolidBanIcon} from "@/assets/icon/solid"
-import {
-    OutlineClouddownloadIcon,
-    OutlineCodeIcon,
-    OutlineLightbulbIcon,
-    OutlinePencilIcon,
-    OutlineTrashIcon
-} from "@/assets/icon/outline"
+import {OutlineClouddownloadIcon, OutlineCodeIcon, OutlineLightbulbIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
@@ -29,7 +23,7 @@ import {
     PluginSettingRefProps
 } from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
-import {ApplicantIcon, AuthorImg, CodeScoreModal, FilterPopoverBtn} from "../funcTemplate"
+import {ApplicantIcon, AuthorImg, CodeScoreModule, FilterPopoverBtn} from "../funcTemplate"
 import {PluginBaseParamProps, PluginDataProps, PluginSettingParamProps} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
@@ -49,6 +43,7 @@ import {HubButton} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
 import useAdmin from "@/hook/useAdmin"
 import {PluginLogs} from "../log/PluginLog"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -175,7 +170,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 httpFetchAuditPluginDetail(info.uuid)
                     .then(async (res) => {
                         if (res) {
-                            console.log("插件管理的单个插件详情", JSON.stringify(res))
                             setOldContent("")
                             // 源码
                             setContent(res.content)
@@ -339,31 +333,18 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         const [plugin, setPlugin] = useState<API.PluginsAuditDetailResponse>()
         // 判断不同权限不同审核状态下的按钮展示
         const extraHeaderInfo = useMemo(() => {
-            const data = {
-                isBtns: true, // 是否展示通过和不通过按钮
-                isPass: false // 是否展示钢笔 icon
+            const isPass = !!plugin?.pen ? (plugin.status === 3 ? true : plugin?.status === 1) : plugin?.status === 1
+            // isBtns-是否展示通过和不通过按钮
+            // isPass-是否展示钢笔 icon
+            return {isBtns: !plugin?.pen, isPass: isPass}
+        }, [plugin?.status, plugin?.pen])
+        // 是否可以进行操作和禁用提示语
+        const isBanOperate = useMemo(() => {
+            return {
+                isBan: !!plugin?.disable,
+                hint: !!plugin?.disable ? (plugin?.isAuthor ? "作者无法操作" : "修改者无法操作") : ""
             }
-            if (plugin?.isAuthor) return data
-
-            const status = plugin?.status || 0
-            const isOP = !!plugin?.loginUserIsHandle
-            if (admin.isAdmin) {
-                if (status === 0 || status === 3) data.isBtns = true
-                else data.isPass = status === 1
-            } else {
-                if (status === 0) data.isBtns = true
-                else if (status === 3) {
-                    data.isBtns = !isOP
-                    // 因为审核员操作后还是审核中状态，那么只可能操作的是通过按钮
-                    data.isPass = isOP
-                } else {
-                    data.isBtns = false
-                    data.isPass = status === 1
-                }
-            }
-
-            return data
-        }, [admin, plugin?.status, plugin?.loginUserIsHandle, plugin?.isAuthor])
+        }, [plugin?.disable, plugin?.isAuthor])
 
         // 修改者信息
         const [apply, setApply] = useState<{name: string; img: string; description: string}>()
@@ -525,17 +506,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             visible: false,
             type: "nopass"
         })
-        const [statusShow, setStatusShow] = useState<boolean>(false)
-        const handleStatusShow = useMemoizedFn((val: boolean) => {
-            setStatusShow(val)
-        })
         // 审核按钮
         const [statusLoading, setStatusLoading] = useState<boolean>(false)
         // 打开原因窗口
         const onOpenReason = useMemoizedFn(() => {
-            if (!!plugin?.isAuthor) return
+            if (isBanOperate.isBan) return
             if (statusLoading) return
-            setStatusShow(false)
             setStatusLoading(true)
             setShowReason({visible: true, type: "nopass"})
         })
@@ -576,7 +552,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
         // 审核通过
         const onPass = useMemoizedFn(() => {
-            if (!!plugin?.isAuthor) return
+            if (isBanOperate.isBan) return
             if (statusLoading) return
             handleOpenScoreHint()
         })
@@ -589,32 +565,36 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 yakitNotify("error", "未获取到插件信息，请切换插件详情后重试")
                 return
             }
+            setScore(0)
             setScoreHint(true)
         })
-        const handleScoreHint = useMemoizedFn((value: boolean) => {
-            if (value) {
-                setStatusLoading(true)
-                setScoreHint(false)
-                onChangeStatus({isPass: true}, (value) => {
-                    if (value) {
-                        setPlugin({...value})
-                        dispatch({
-                            type: "update",
-                            payload: {
-                                item: {...value}
-                            }
-                        })
-                        setTimeout(() => {
-                            setRecalculation(!recalculation)
-                        }, 200)
-                    }
+        const [score, setScore] = useState<number>(0)
+        const handleScoreModule = useMemoizedFn((value: boolean) => {
+            setScore(value ? 1 : 2)
+        })
+        const handleScoreHintSuccess = useMemoizedFn(() => {
+            setStatusLoading(true)
+            handleCancelScoreHint()
+            onChangeStatus({isPass: true}, (value) => {
+                if (value) {
+                    setPlugin({...value})
+                    dispatch({
+                        type: "update",
+                        payload: {
+                            item: {...value}
+                        }
+                    })
                     setTimeout(() => {
-                        setStatusLoading(false)
+                        setRecalculation(!recalculation)
                     }, 200)
-                })
-            } else {
-                setScoreHint(false)
-            }
+                }
+                setTimeout(() => {
+                    setStatusLoading(false)
+                }, 200)
+            })
+        })
+        const handleCancelScoreHint = useMemoizedFn(() => {
+            setScoreHint(false)
         })
 
         /** --------------- 插件调试 Start --------------- */
@@ -705,6 +685,91 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             return params
         })
+
+        const extraNode = useMemo(() => {
+            if (!plugin) return null
+            return (
+                <div className={styles["plugin-info-extra-header"]}>
+                    {!extraHeaderInfo.isBtns && (
+                        <>
+                            <YakitButton
+                                loading={statusLoading}
+                                type={extraHeaderInfo.isPass ? "outline1" : undefined}
+                                colors={extraHeaderInfo.isPass ? "danger" : "success"}
+                                onClick={() => {
+                                    if (extraHeaderInfo.isPass) onOpenReason()
+                                    else onPass()
+                                }}
+                                className={classNames({
+                                    [styles["operate-disabled-btn"]]: isBanOperate.isBan
+                                })}
+                            >
+                                {extraHeaderInfo.isPass ? "改为未通过" : "改为通过"}
+                            </YakitButton>
+                            {admin.isAdmin && <div style={{height: 12}} className='divider-style'></div>}
+                        </>
+                    )}
+                    {admin.isAdmin && (
+                        <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
+                            <YakitButton
+                                type='text2'
+                                icon={<OutlineTrashIcon />}
+                                loading={delLoading}
+                                onClick={() => {
+                                    if (delLoading) return
+                                    setDelLoading(true)
+                                    onBatchDel(plugin)
+                                }}
+                            />
+                        </Tooltip>
+                    )}
+
+                    {extraHeaderInfo.isBtns && (
+                        <>
+                            <HubButton
+                                width={wrapperWidth}
+                                iconWidth={1100}
+                                type='outline1'
+                                colors='danger'
+                                icon={<SolidBanIcon />}
+                                loading={statusLoading}
+                                name='不通过'
+                                disabled={isBanOperate.isBan}
+                                className={classNames({
+                                    [styles["operate-disabled-btn"]]: isBanOperate.isBan
+                                })}
+                                hint={isBanOperate.hint}
+                                onClick={onOpenReason}
+                            />
+                            <HubButton
+                                width={wrapperWidth}
+                                iconWidth={1100}
+                                colors='success'
+                                icon={<SolidBadgecheckIcon />}
+                                loading={statusLoading}
+                                name='通过'
+                                disabled={isBanOperate.isBan}
+                                className={classNames({
+                                    [styles["operate-disabled-btn"]]: isBanOperate.isBan
+                                })}
+                                hint={isBanOperate.hint}
+                                onClick={onPass}
+                            />
+                            {/* 禁用状态隐藏调试功能 */}
+                            {!isBanOperate.isBan && (
+                                <HubButton
+                                    width={wrapperWidth}
+                                    iconWidth={1100}
+                                    icon={<OutlineCodeIcon />}
+                                    name='调试'
+                                    onClick={onDebug}
+                                />
+                            )}
+                        </>
+                    )}
+                </div>
+            )
+        }, [extraHeaderInfo, statusLoading, admin, delLoading, wrapperWidth, plugin, isBanOperate])
 
         if (!plugin) return null
 
@@ -805,89 +870,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                         help={plugin.help}
                                         titleNode={statusTag[+plugin.status]}
                                         tags={plugin.tags}
-                                        extraNode={
-                                            <div className={styles["plugin-info-extra-header"]}>
-                                                {!extraHeaderInfo.isBtns && (
-                                                    <>
-                                                        <Tooltip
-                                                            title={extraHeaderInfo.isPass ? "改为未通过" : "改为通过"}
-                                                            overlayClassName='plugins-tooltip'
-                                                            visible={statusShow}
-                                                            onVisibleChange={handleStatusShow}
-                                                        >
-                                                            <YakitButton
-                                                                loading={statusLoading}
-                                                                type='text2'
-                                                                icon={<OutlinePencilIcon />}
-                                                                onClick={() => {
-                                                                    if (extraHeaderInfo.isPass) onOpenReason()
-                                                                    else onPass()
-                                                                }}
-                                                            />
-                                                        </Tooltip>
-                                                        <div style={{height: 12}} className='divider-style'></div>
-                                                    </>
-                                                )}
-                                                {admin.isAdmin && (
-                                                    <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                                                        <YakitButton
-                                                            type='text2'
-                                                            icon={<OutlineTrashIcon />}
-                                                            loading={delLoading}
-                                                            onClick={() => {
-                                                                if (delLoading) return
-                                                                setDelLoading(true)
-                                                                onBatchDel(plugin)
-                                                            }}
-                                                        />
-                                                    </Tooltip>
-                                                )}
-
-                                                {extraHeaderInfo.isBtns && (
-                                                    <>
-                                                        <HubButton
-                                                            width={wrapperWidth}
-                                                            iconWidth={1100}
-                                                            type='outline1'
-                                                            colors='danger'
-                                                            icon={<SolidBanIcon />}
-                                                            loading={statusLoading}
-                                                            name='不通过'
-                                                            disabled={plugin.isAuthor}
-                                                            className={classNames({
-                                                                [styles["operate-disabled-btn"]]: plugin.isAuthor
-                                                            })}
-                                                            hint='作者无法操作'
-                                                            onClick={onOpenReason}
-                                                        />
-                                                        <HubButton
-                                                            width={wrapperWidth}
-                                                            iconWidth={1100}
-                                                            colors='success'
-                                                            icon={<SolidBadgecheckIcon />}
-                                                            loading={statusLoading}
-                                                            name='通过'
-                                                            disabled={plugin.isAuthor}
-                                                            className={classNames({
-                                                                [styles["operate-disabled-btn"]]: plugin.isAuthor
-                                                            })}
-                                                            hint='作者无法操作'
-                                                            onClick={onPass}
-                                                        />
-                                                        {/* 作者隐藏调试功能 */}
-                                                        {!plugin.isAuthor && (
-                                                            <HubButton
-                                                                width={wrapperWidth}
-                                                                iconWidth={1100}
-                                                                icon={<OutlineCodeIcon />}
-                                                                name='调试'
-                                                                onClick={onDebug}
-                                                            />
-                                                        )}
-                                                    </>
-                                                )}
-                                            </div>
-                                        }
+                                        extraNode={extraNode}
                                         img={plugin.head_img}
                                         user={plugin.authors}
                                         pluginId={plugin.uuid}
@@ -978,89 +961,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     help={plugin.help}
                                     titleNode={statusTag[+plugin.status]}
                                     tags={plugin.tags}
-                                    extraNode={
-                                        <div className={styles["plugin-info-extra-header"]}>
-                                            {!extraHeaderInfo.isBtns && (
-                                                <>
-                                                    <Tooltip
-                                                        title={extraHeaderInfo.isPass ? "改为未通过" : "改为通过"}
-                                                        overlayClassName='plugins-tooltip'
-                                                        visible={statusShow}
-                                                        onVisibleChange={handleStatusShow}
-                                                    >
-                                                        <YakitButton
-                                                            loading={statusLoading}
-                                                            type='text2'
-                                                            icon={<OutlinePencilIcon />}
-                                                            onClick={() => {
-                                                                if (extraHeaderInfo.isPass) onOpenReason()
-                                                                else onPass()
-                                                            }}
-                                                        />
-                                                    </Tooltip>
-                                                    <div style={{height: 12}} className='divider-style'></div>
-                                                </>
-                                            )}
-                                            {admin.isAdmin && (
-                                                <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                                                    <YakitButton
-                                                        type='text2'
-                                                        icon={<OutlineTrashIcon />}
-                                                        loading={delLoading}
-                                                        onClick={() => {
-                                                            if (delLoading) return
-                                                            setDelLoading(true)
-                                                            onBatchDel(plugin)
-                                                        }}
-                                                    />
-                                                </Tooltip>
-                                            )}
-
-                                            {extraHeaderInfo.isBtns && (
-                                                <>
-                                                    <HubButton
-                                                        width={wrapperWidth}
-                                                        iconWidth={1100}
-                                                        type='outline1'
-                                                        colors='danger'
-                                                        icon={<SolidBanIcon />}
-                                                        loading={statusLoading}
-                                                        name='不通过'
-                                                        disabled={plugin.isAuthor}
-                                                        className={classNames({
-                                                            [styles["operate-disabled-btn"]]: plugin.isAuthor
-                                                        })}
-                                                        hint='作者无法操作'
-                                                        onClick={onOpenReason}
-                                                    />
-                                                    <HubButton
-                                                        width={wrapperWidth}
-                                                        iconWidth={1100}
-                                                        colors='success'
-                                                        icon={<SolidBadgecheckIcon />}
-                                                        loading={statusLoading}
-                                                        name='通过'
-                                                        disabled={plugin.isAuthor}
-                                                        className={classNames({
-                                                            [styles["operate-disabled-btn"]]: plugin.isAuthor
-                                                        })}
-                                                        hint='作者无法操作'
-                                                        onClick={onPass}
-                                                    />
-                                                    {/* 作者隐藏调试功能 */}
-                                                    {!plugin.isAuthor && (
-                                                        <HubButton
-                                                            width={wrapperWidth}
-                                                            iconWidth={1100}
-                                                            icon={<OutlineCodeIcon />}
-                                                            name='调试'
-                                                            onClick={onDebug}
-                                                        />
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                    }
+                                    extraNode={extraNode}
                                     img={plugin.head_img}
                                     user={plugin.authors}
                                     pluginId={plugin.uuid}
@@ -1087,14 +988,36 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
                 {/* 源码评分机制 */}
                 {plugin && scoreHint && (
-                    <CodeScoreModal
-                        type={plugin.type}
-                        code={content}
-                        successHint='检测合格'
-                        failedHint='检测不合格，请修改后操作'
+                    <YakitModal
+                        title='插件基础检测'
+                        type='white'
+                        width={506}
+                        centered={true}
+                        maskClosable={false}
+                        closable={true}
                         visible={scoreHint}
-                        onCancel={handleScoreHint}
-                    />
+                        footer={null}
+                        destroyOnClose={true}
+                        onCancel={handleCancelScoreHint}
+                        bodyStyle={{padding: 0}}
+                    >
+                        <CodeScoreModule
+                            type={plugin.type}
+                            code={content}
+                            successHint='检测合格，是否通过审核'
+                            failedHint='检测不合格，请修改后操作'
+                            successWait={50}
+                            isStart={scoreHint}
+                            callback={handleScoreModule}
+                        />
+                        {score === 1 && (
+                            <div style={{display: "flex", justifyContent: "center", paddingBottom: 12}}>
+                                <YakitButton colors='success' onClick={handleScoreHintSuccess}>
+                                    确定通过
+                                </YakitButton>
+                            </div>
+                        )}
+                    </YakitModal>
                 )}
             </PluginDetails>
         )
