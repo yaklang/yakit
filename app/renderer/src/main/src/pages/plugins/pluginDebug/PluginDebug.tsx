@@ -3,7 +3,7 @@ import {PluginDebugBodyProps, PluginDebugProps} from "./PluginDebugType"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePuzzleIcon, OutlineRefreshIcon, OutlineSparklesIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinePuzzleIcon, OutlineRefreshIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -12,7 +12,7 @@ import {GetPluginLanguage, pluginTypeToName} from "../builtInData"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
-import {CodeScoreModule} from "../funcTemplate"
+import {CodeScoreModal} from "../funcTemplate"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {failed, yakitNotify} from "@/utils/notification"
@@ -74,31 +74,6 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         if (onClose) onClose()
     })
 
-    /** --------------- 自动评分 Start --------------- */
-    const [scoreShow, setScoreShow] = useState<boolean>(false)
-    const onOpenScore = useMemoizedFn(() => {
-        if (!scoreShow) {
-            setIsPass(0)
-            setTimeout(() => {
-                setScoreShow(true)
-            }, 10)
-        }
-    })
-    /** @description 0-未检测;1-不合格;2-合格 */
-    const [isPass, setIsPass] = useState<number>(0)
-    // 评分是否合格
-    const onCallbackScore = useMemoizedFn((v: boolean) => {
-        setIsPass(v ? 2 : 1)
-    })
-    const onOkScore = useMemoizedFn(() => {
-        onOpenDiff()
-        onCancelScore()
-    })
-    const onCancelScore = useMemoizedFn(() => {
-        if (scoreShow) setScoreShow(false)
-    })
-    /** --------------- 自动评分 End --------------- */
-
     /** --------------- 合并代码 Start --------------- */
     const [diffShow, setDiffShow] = useState<boolean>(false)
     // 强制更新对比器显示内容
@@ -145,9 +120,6 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
                 title={<div className={styles["header-title"]}>插件调试</div>}
                 extra={
                     <div className={styles["header-extra-wrapper"]}>
-                        <YakitButton type='outline2' icon={<OutlineSparklesIcon />} onClick={onOpenScore}>
-                            自动评分
-                        </YakitButton>
                         <YakitButton icon={<OutlinePuzzleIcon />} onClick={onOpenDiff}>
                             合并代码
                         </YakitButton>
@@ -182,35 +154,6 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
                         language={diffLanguage}
                     />
                 </div>
-            </YakitModal>
-
-            <YakitModal
-                title='插件评分'
-                type='white'
-                width={506}
-                centered={true}
-                maskClosable={false}
-                closable={true}
-                destroyOnClose={true}
-                visible={scoreShow}
-                okText='合并代码'
-                okButtonProps={{
-                    icon: <OutlinePuzzleIcon />,
-                    style: isPass === 2 ? undefined : {display: "none"}
-                }}
-                cancelButtonProps={{style: isPass !== 0 ? undefined : {display: "none"}}}
-                onOk={onOkScore}
-                onCancel={onCancelScore}
-            >
-                <CodeScoreModule
-                    type={pluginType}
-                    code={content}
-                    isStart={scoreShow}
-                    successWait={10}
-                    successHint='表现良好，检测通过'
-                    failedHint='检测不通过，请根据提示修改'
-                    callback={onCallbackScore}
-                />
             </YakitModal>
         </>
     )
@@ -282,6 +225,17 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
     useUpdateEffect(() => {
         initFormValue()
     }, [params])
+
+    /** ---------- 代码评分 Start ---------- */
+    const [scoreHint, setScoreHint] = useState<boolean>(false)
+    const handleOpenScoreHint = useMemoizedFn(() => {
+        if (scoreHint) return
+        setScoreHint(true)
+    })
+    const handleScoreHintCallback = useMemoizedFn((value: boolean) => {
+        if (!value) setScoreHint(false)
+    })
+    /** ---------- 代码评分 End ---------- */
 
     /** --------------- 参数部分逻辑 Start --------------- */
     const [form] = Form.useForm()
@@ -572,7 +526,14 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                             headClassName={styles["left-header-wrapper"]}
                             extra={
                                 <div className={styles["header-extra"]}>
-                                    {plugin?.Type === "yak" && (
+                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                        自动检测
+                                    </YakitButton>
+                                    <div
+                                        className={styles["divider-wrapper"]}
+                                        style={["yak", "mitm"].includes(pluginType) ? {marginRight: 0} : undefined}
+                                    ></div>
+                                    {["yak", "mitm"].includes(pluginType) && (
                                         <>
                                             <YakitButton
                                                 type='text'
@@ -699,6 +660,16 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 }
                 secondRatio='50%'
                 secondMinSize='620px'
+            />
+
+            {/* 代码评分弹窗 */}
+            <CodeScoreModal
+                type={pluginType}
+                code={newCode || ""}
+                successHint=' '
+                failedHint=' '
+                visible={scoreHint}
+                onCancel={handleScoreHintCallback}
             />
         </div>
     )

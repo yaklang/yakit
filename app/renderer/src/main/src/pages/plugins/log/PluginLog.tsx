@@ -574,7 +574,7 @@ const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
             return <YakitRoundCornerTag color='green'>信任用户</YakitRoundCornerTag>
         }
         if (role === "auditor") {
-            return <YakitRoundCornerTag color='blue'>管理员</YakitRoundCornerTag>
+            return <YakitRoundCornerTag color='blue'>审核员</YakitRoundCornerTag>
         }
 
         return null

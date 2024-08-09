@@ -87,7 +87,7 @@ interface FetchMergePluginDetailRequest {
     up_log_id: number
 }
 /**
- * @name 插件日志页-获取插件详情
+ * @name 插件日志页-获取合并插件详情
  */
 export const httpFetchMergePluginDetail: APIFunc<FetchMergePluginDetailRequest, API.PluginsAuditDetailResponse> = (
     request,
@@ -109,19 +109,22 @@ export const httpFetchMergePluginDetail: APIFunc<FetchMergePluginDetailRequest, 
 }
 
 /**
- * @name 插件日志页-审核插件操作(合并|不合并)
+ * @name 插件日志页-日志修改插件操作(合并|不合并)
  */
-export const httpMergePluginOperate: APIFunc<API.PluginMergeRequest, API.ActionSucceeded> = (request, hiddenError) => {
+export const httpMergePluginOperate: APIFunc<API.PluginMergeRequest, API.PluginsLogsDetail> = (
+    request,
+    hiddenError
+) => {
     return new Promise((resolve, reject) => {
         console.log("method:post|api:plugins/merge/update/detail\n", JSON.stringify(request))
-        NetWorkApi<API.PluginMergeRequest, API.ActionSucceeded>({
+        NetWorkApi<API.PluginMergeRequest, API.PluginsLogsDetail>({
             method: "post",
             url: "plugins/merge/update/detail",
             data: request
         })
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "日志插件操作失败:" + err)
+                if (!hiddenError) yakitNotify("error", "操作失败:" + err)
                 reject(err)
             })
     })

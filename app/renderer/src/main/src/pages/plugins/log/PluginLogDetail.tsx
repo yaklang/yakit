@@ -237,8 +237,11 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                         .then(() => {
                             onChange(false, value.noPassReason)
                         })
-                        .catch(() => {
-                            onCancelNoPass()
+                        .catch(() => {})
+                        .finally(() => {
+                            setTimeout(() => {
+                                onCancelNoPass()
+                            }, 200)
                         })
                 })
                 .catch(() => {})
@@ -261,7 +264,8 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 .then(() => {
                     onChange(true)
                 })
-                .catch(() => {
+                .catch(() => {})
+                .finally(() => {
                     setTimeout(() => {
                         setModifyLoading(false)
                     }, 300)
@@ -287,14 +291,16 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
             .then(() => {
                 onChange(true)
             })
-            .catch(() => {
+            .catch(() => {})
+            .finally(() => {
                 setTimeout(() => {
-                    setModifyLoading(false)
+                    onCancelPass()
                 }, 300)
             })
     })
     const onCancelPass = useMemoizedFn(() => {
         setPass(false)
+        setModifyLoading(false)
     })
     /** ---------- 合并代码 End ---------- */
 
