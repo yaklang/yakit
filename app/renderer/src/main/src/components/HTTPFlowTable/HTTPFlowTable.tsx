@@ -3929,7 +3929,7 @@ const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
         if (!searchVal) {
             setData(originalList)
         }
-    }, [originalList])
+    }, [originalList, searchVal])
     useEffect(() => {
         // 新版UI组件之前的过度写法
         const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
@@ -3960,7 +3960,7 @@ const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
                 setData(originalList)
             }
         },
-        [searchVal],
+        [searchVal, originalList],
         {wait: 300}
     )
 
