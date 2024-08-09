@@ -299,8 +299,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     ) : (
                         <>{isHasParams ? historyIcon : hotIcon}</>
                     )}
-
-                    {hasParamsCheckList.includes(i.ScriptName) || isHasParams ? <></> : <></>}
                 </>
             ) : null}
         </div>
