@@ -147,7 +147,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const getAduitList = useMemoizedFn(async () => {
         try {
             const {res} = await grpcFetchAuditTree("/")
-            console.log("getAduitList", res)
+            console.log("getAduitList","/", res)
             const arr = res.Resources.map(({Path, ResourceName}) => ({
                 path: Path,
                 name: ResourceName
@@ -161,8 +161,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         getAduitList()
         // 通知历史记录发生改变
         emiter.on("onRefreshRunnerHistory", getHistoryList)
+        // 通知最近编译发生改变
+        emiter.on("onRefreshAduitHistory", getAduitList)
         return () => {
             emiter.off("onRefreshRunnerHistory", getHistoryList)
+            emiter.off("onRefreshAduitHistory", getAduitList)
         }
     }, [])
 
@@ -210,35 +213,43 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             newMenu.push({
                 key: "history",
                 label: "最近打开",
-                children: [...historyList.map((item) => ({key: item.path, label: item.name}))]
+                children: [
+                    ...historyList.map((item) => {
+                        if (item.loadTreeType === "audit") {
+                            return {key: item.path, label: `${item.name}（编译）`}
+                        } else {
+                            return {key: item.path, label: item.name}
+                        }
+                    })
+                ]
             })
         }
         if (aduitList.length > 0) {
-            // if (aduitList.length <= 10) {
-            //     newMenu.push({
-            //         key: "auditHistory",
-            //         label: "最近编译",
-            //         children: aduitList.map((item) => ({key: item.path, label: item.name}))
-            //     })
-            // } else {
-            let children: any = [
-                ...aduitList.slice(0, 10).map((item) => ({key: `aduit-${item.name}`, label: item.name})),
-                {
-                    type: "divider"
-                },
-                {
-                    key: "aduitAllList",
-                    label: "查看全部",
-                    type: "text"
-                }
-            ]
+            if (aduitList.length <= 10) {
+                newMenu.push({
+                    key: "auditHistory",
+                    label: "最近编译",
+                    children: aduitList.map((item) => ({key: `aduit-${item.name}`, label: item.name}))
+                })
+            } else {
+                let children: any = [
+                    ...aduitList.slice(0, 10).map((item) => ({key: `aduit-${item.name}`, label: item.name})),
+                    {
+                        type: "divider"
+                    },
+                    {
+                        key: "aduitAllList",
+                        label: "查看全部",
+                        type: "text"
+                    }
+                ]
 
-            newMenu.push({
-                key: "auditHistory",
-                label: "最近编译",
-                children
-            })
-            // }
+                newMenu.push({
+                    key: "auditHistory",
+                    label: "最近编译",
+                    children
+                })
+            }
         }
 
         return newMenu
@@ -524,6 +535,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const closeFolder = useMemoizedFn(() => {
         setLoadTreeType && setLoadTreeType("file")
         setFileTree && setFileTree([])
+        emiter.emit("onResetAuditStatus")
     })
 
     const createFile = useMemoizedFn(async () => {

@@ -5,6 +5,7 @@ export type YakRunnerEventProps = {
     onOpenBottomDetail: string
     onOpenTerminaDetail?: string
     onRefreshRunnerHistory: string
+    onRefreshAduitHistory?: string
     // 打开文件树
     onOpenFileTree: string
     // 刷新文件树
@@ -39,4 +40,6 @@ export type YakRunnerEventProps = {
     onOpenAuditRightDetail: string
     // 打开审计树
     onOpenAuditTree: string
+    // 重置审计模式缓存数据
+    onResetAuditStatus?: string
 }

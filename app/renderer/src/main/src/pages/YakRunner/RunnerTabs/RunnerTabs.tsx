@@ -929,7 +929,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile,loadTreeType} = useStore()
+    const {areaInfo, activeFile, loadTreeType} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
@@ -1140,7 +1140,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 </div>
             ) : (
                 <YakitEditor
-                    readOnly={editorInfo?.fileSourceType==="audit"}
+                    readOnly={editorInfo?.fileSourceType === "audit"}
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
                     editorDidMount={(editor) => {
                         setReqEditor(editor)
@@ -1288,7 +1288,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                 >
                                     <div className={styles["file-name"]}>{item.name}</div>
                                     <div className={classNames(styles["file-path"], "yakit-single-line-ellipsis")}>
-                                        {item.path}
+                                        {item.loadTreeType === "audit" ? "（已编译项目）" : item.path}
                                     </div>
                                 </div>
                             )
@@ -1312,7 +1312,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         setWaitRemoveAll
     } = props
     const {setActiveFile, setAreaInfo} = useDispatcher()
-    const {fileTree, areaInfo,loadTreeType} = useStore()
+    const {fileTree, areaInfo, loadTreeType} = useStore()
 
     const [codePath, setCodePath] = useState<string>("")
 

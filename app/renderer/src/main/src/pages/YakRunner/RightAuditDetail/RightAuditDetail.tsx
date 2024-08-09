@@ -2,26 +2,28 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import classNames from "classnames"
 import styles from "./RightAuditDetail.module.scss"
 import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
-import {AuditEmiterYakUrlProps} from "../YakRunnerType"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerType"
 import {StringToUint8Array} from "@/utils/str"
-import {loadAuditFromYakURLRaw} from "../utils"
+import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
 import {OutlineHandIcon, OutlineXIcon, OutlineZoominIcon, OutlineZoomoutIcon} from "@/assets/icon/outline"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Tooltip} from "antd"
 import {instance} from "@viz-js/viz"
 import {failed} from "@/utils/notification"
+import emiter from "@/utils/eventBus/eventBus"
+import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 interface FlowChartBoxProps {
+    onDetail: (data: CodeRangeProps) => void
     graph?: string
     graphInfo?: GraphInfoProps[]
 }
 
 export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
-    const {graph, graphInfo} = props
+    const {onDetail, graph, graphInfo} = props
     const svgBoxRef = useRef<HTMLDivElement>(null)
     const svgRef = useRef<any>(null)
     const [nodeId, setNodeId] = useState<string>()
-    const [styleNode, setStyleNode] = useState<string>()
     const styleNodeRef = useRef<string>()
 
     const onElementStyle = useMemoizedFn((id, stroke, fill) => {
@@ -92,7 +94,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     }, [graph])
 
     const contentInfo = useMemo(() => {
-        console.log("cccc", graphInfo, nodeId)
         if (graphInfo && nodeId) {
             const arr = graphInfo.filter((item) => item.node_id === nodeId)
             if (arr.length > 0) {
@@ -214,7 +215,10 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                     <div className={styles["content"]}>
                         {contentInfo && (
                             <Tooltip placement='topLeft' title={contentInfo.code_range.url}>
-                                <div className={classNames(styles["url-box"], "yakit-single-line-ellipsis")}>
+                                <div
+                                    className={classNames(styles["url-box"], "yakit-single-line-ellipsis")}
+                                    onClick={() => onDetail(contentInfo.code_range)}
+                                >
                                     {contentInfo.code_range.url}
                                 </div>
                             </Tooltip>
@@ -227,7 +231,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     )
 }
 
-interface CodeRangeProps {
+export interface CodeRangeProps {
     url: string
     start_column: number
     start_line: number
@@ -294,6 +298,32 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             }
         }
     }, [graphInfo, nodeId])
+
+    // 跳转详情
+    const onDetail = useMemoizedFn(async (data: CodeRangeProps) => {
+        const {url, start_line, start_column, end_line, end_column} = data
+        const name = await getNameByPath(url)
+        const OpenFileByPathParams: OpenFileByPathProps = {
+            params: {
+                path: url,
+                name
+            }
+        }
+        emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+        setTimeout(() => {
+            const obj: JumpToEditorProps = {
+                selections: {
+                    startLineNumber: start_line,
+                    startColumn: start_column,
+                    endLineNumber: end_line,
+                    endColumn: end_column
+                },
+                id: url
+            }
+            emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+        }, 100)
+    })
+
     return (
         <div className={classNames(styles["right-audit-detail"])}>
             <div className={styles["header"]}>
@@ -326,7 +356,10 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                         <div className={styles["content"]}>
                             {contentInfo && (
                                 <Tooltip placement='topLeft' title={contentInfo.code_range.url}>
-                                    <div className={classNames(styles["url-box"], "yakit-single-line-ellipsis")}>
+                                    <div
+                                        className={classNames(styles["url-box"], "yakit-single-line-ellipsis")}
+                                        onClick={() => onDetail(contentInfo.code_range)}
+                                    >
                                         {contentInfo.code_range.url}
                                     </div>
                                 </Tooltip>
@@ -335,7 +368,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                             {contentInfo && <div className={styles["ir-code-box"]}>{contentInfo?.ir_code}</div>}
                         </div>
                     }
-                    secondNode={<FlowChartBox graph={graph} graphInfo={graphInfo} />}
+                    secondNode={<FlowChartBox onDetail={onDetail} graph={graph} graphInfo={graphInfo} />}
                 />
             </div>
         </div>

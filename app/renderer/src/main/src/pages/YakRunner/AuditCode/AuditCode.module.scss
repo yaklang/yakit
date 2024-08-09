@@ -258,8 +258,7 @@
     .table {
         padding: 12px 16px;
         flex: 1;
-        display: flex;
-        flex-direction: column;
+        overflow: hidden;
         .table-header {
             display: flex;
             flex-direction: row;
@@ -268,6 +267,11 @@
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
+            position: fixed;
+            width: calc(100% - 40px);
+            background: #ffffff;
+            z-index: 1;
+            border-bottom: 1px solid #eaecf3;
             .audit-name {
                 flex: 1;
                 display: flex;
@@ -286,12 +290,13 @@
             }
         }
         .table-content {
-            flex: 1;
+            padding-top: 32px;
             overflow: auto;
+            height: 100%;
             .table-item {
                 display: flex;
                 flex-direction: row;
-                border-top: 1px solid #eaecf3;
+                border-bottom: 1px solid #eaecf3;
                 gap: 16px;
                 padding: 8px 12px;
                 .audit-name {

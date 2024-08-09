@@ -328,6 +328,8 @@ const getCodeByNode = (path: string): Promise<string> => {
  * @name 根据文件path获取其内容
  */
 export const getCodeByPath = (path: string, loadTreeType?: "file" | "audit"): Promise<string> => {
+    console.log("getCodeByPath---",path,loadTreeType);
+    
     return new Promise(async (resolve, reject) => {
         try {
             let content: string = ""
@@ -449,6 +451,28 @@ export const judgeAreaExistFilesPath = (areaInfo: AreaInfoProps[], pathArr: stri
         resolve(hasArr)
     })
 }
+
+/**
+ * @name 判断分栏数据里是否存在审计代码框
+ */
+export const judgeAreaExistAuditPath = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
+    return new Promise(async (resolve, reject) => {
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        let hasPath: string[] = []
+        newAreaInfo.forEach((item, index) => {
+            item.elements.forEach((itemIn, indexIn) => {
+                itemIn.files.forEach((file, fileIndex) => {
+                    if (file.fileSourceType === "audit") {
+                        hasPath.push(file.path)
+                    }
+
+                })
+            })
+        })
+        resolve(hasPath)
+    })
+}
+
 
 /**
  * @name 更新分栏数据里某个节点的file数据

@@ -14,7 +14,7 @@ import {
     onCodeToInfo,
     ParamsToGroupByGroupName
 } from "@/pages/plugins/editDetails/utils"
-import {useDebounceFn, useInViewport, useMemoizedFn, useSize, useThrottleEffect} from "ahooks"
+import {useDebounceFn, useInViewport, useMemoizedFn, useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
@@ -43,12 +43,14 @@ import {StringToUint8Array} from "@/utils/str"
 import {clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail} from "./AuditTree/AuditMap"
 import {clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail} from "./AuditTree/ChildMap"
 import {SolidExclamationIcon, SolidInformationcircleIcon, SolidXcircleIcon} from "@/assets/icon/solid"
-import {AuditEmiterYakUrlProps} from "../YakRunnerType"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerType"
 import {FileNodeMapProps} from "../FileTree/FileTreeType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {RequestYakURLResponse} from "@/pages/yakURLTree/data"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
+import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -174,8 +176,35 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         setExpandedKeys([...arr])
     })
 
-    const onContext = useMemoizedFn((v: AuditNodeProps) => {
-        console.log("monaca跳转", v)
+    const onContext = useMemoizedFn(async (data: AuditNodeProps) => {
+        try {
+            const arr = data.Extra.filter((item) => item.Key === "code_range")
+            if (arr.length > 0) {
+                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                const {url, start_line, start_column, end_line, end_column} = item
+                const name = await getNameByPath(url)
+                // console.log("monaca跳转", item, name)
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path: url,
+                        name
+                    }
+                }
+                emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                setTimeout(() => {
+                    const obj: JumpToEditorProps = {
+                        selections: {
+                            startLineNumber: start_line,
+                            startColumn: start_column,
+                            endLineNumber: end_line,
+                            endColumn: end_column
+                        },
+                        id: url
+                    }
+                    emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+                }, 100)
+            }
+        } catch (error) {}
     })
 
     return (
@@ -213,7 +242,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 const TopId = "top-message"
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
-    const {projectNmae,loadTreeType} = useStore()
+    const {projectNmae, loadTreeType} = useStore()
 
     const [value, setValue] = useState<string>("")
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
@@ -259,6 +288,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 id: "111",
                 depth: 1,
                 isBottom: true,
+                Extra: [],
                 ResourceType: "",
                 VerboseType: "",
                 Size: 0
@@ -344,6 +374,18 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         emiter.emit("onRefreshAuditTree")
     })
 
+    useEffect(()=>{
+        if(loadTreeType==="file"){
+            setValue("")
+            resetMap()
+        }
+    },[loadTreeType])
+
+    useUpdateEffect(()=>{
+        setValue("")
+        resetMap()
+    },[projectNmae])
+
     const onSubmit = useMemoizedFn(async () => {
         resetMap()
         const path: string = "/"
@@ -377,8 +419,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         Extra
                     })
                 }
-                    // 变量
-                    if (ResourceType === "variable" ) {
+                // 变量
+                if (ResourceType === "variable") {
                     const id = `${path}${ResourceName}`
                     variableIds.push(id)
                     setMapAuditDetail(id, {
@@ -743,6 +785,10 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         <YakitButton
                                             type='text'
                                             icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
+                                            onClick={()=>{
+                                                emiter.emit("onOpenAuditTree", item.ResourceName)
+                                                onClose()
+                                            }}
                                         />
                                         <Divider type={"vertical"} style={{margin: 0}} />
                                         {/* <YakitPopconfirm

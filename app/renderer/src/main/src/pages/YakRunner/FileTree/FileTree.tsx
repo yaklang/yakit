@@ -445,7 +445,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             case "copy":
                 if (!!foucsedKey) {
                     setCopyPath(foucsedKey)
-                    success(`已获取路径 ${foucsedKey}`)
+                    // success(`已获取路径 ${foucsedKey}`)
                 }
                 break
             case "paste":
