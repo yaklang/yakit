@@ -49,6 +49,7 @@ import {
     grpcFetchSaveFile,
     isResetActiveFile,
     judgeAreaExistFilePath,
+    monacaLanguageType,
     removeAreaFileInfo,
     setYakRunnerHistory,
     updateAreaFileInfo
@@ -1361,7 +1362,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     ...info,
                     path,
                     isUnSave: false,
-                    language: suffix === "yak" ? suffix : "text"
+                    language: monacaLanguageType(suffix || "")
                 }
                 const parentPath = await getPathParent(file.path)
                 const parentDetail = getMapFileDetail(parentPath)

@@ -62,7 +62,7 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
 
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("文件树获取---", res)
+            // console.log("文件树获取---", res)
             const data: FileNodeMapProps[] = initFileTreeData(res, path)
             resolve(data)
         } catch (error) {
@@ -328,8 +328,8 @@ const getCodeByNode = (path: string): Promise<string> => {
  * @name 根据文件path获取其内容
  */
 export const getCodeByPath = (path: string, loadTreeType?: "file" | "audit"): Promise<string> => {
-    console.log("getCodeByPath---",path,loadTreeType);
-    
+    console.log("getCodeByPath---", path, loadTreeType)
+
     return new Promise(async (resolve, reject) => {
         try {
             let content: string = ""
@@ -465,14 +465,12 @@ export const judgeAreaExistAuditPath = (areaInfo: AreaInfoProps[]): Promise<stri
                     if (file.fileSourceType === "audit") {
                         hasPath.push(file.path)
                     }
-
                 })
             })
         })
         resolve(hasPath)
     })
 }
-
 
 /**
  * @name 更新分栏数据里某个节点的file数据
@@ -993,4 +991,20 @@ export const loadAuditFromYakURLRaw = (
                 resolve(null)
             })
     })
+}
+
+/**
+ * @name 编辑器代码类型判断
+ */
+export const monacaLanguageType = (suffix: string) => {
+    switch (suffix) {
+        case "yak":
+            return "yak"
+        case "java":
+            return "java"
+        case "xml":
+            return "xml"
+        default:
+            return "text"
+    }
 }

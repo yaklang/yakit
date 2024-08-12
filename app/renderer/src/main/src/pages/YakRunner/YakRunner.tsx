@@ -18,6 +18,7 @@ import {
     judgeAreaExistAuditPath,
     judgeAreaExistFilePath,
     MAX_FILE_SIZE_BYTES,
+    monacaLanguageType,
     removeAreaFileInfo,
     removeAreaFilesInfo,
     setAreaFileActive,
@@ -84,8 +85,9 @@ import {SavePayloadProgress, UploadStatusInfo} from "../payloadManager/newPayloa
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
-import { clearMapAuditChildDetail } from "./AuditCode/AuditTree/ChildMap"
-import { clearMapAuditDetail } from "./AuditCode/AuditTree/AuditMap"
+import {clearMapAuditChildDetail} from "./AuditCode/AuditTree/ChildMap"
+import {clearMapAuditDetail} from "./AuditCode/AuditTree/AuditMap"
+import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -110,7 +112,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     /** ---------- 审计树 ---------- */
     const [projectNmae, setProjectNmae] = useState<string>()
     /** ---------- 当前渲染树（文件树/审计树） ---------- */
-    const [loadTreeType,setLoadTreeType,getLoadTreeType] = useGetState<"file" | "audit">("file")
+    const [loadTreeType, setLoadTreeType, getLoadTreeType] = useGetState<"file" | "audit">("file")
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
@@ -204,9 +206,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         insertFileMap(keys[index])
     })
     useEffect(() => {
+        loadIndexRef.current = 0
+        clearMapFileDetail()
+        clearMapFolderDetail()
         let id = setInterval(() => {
             loadFileMap()
-        }, 50)
+        }, 100)
         return () => clearInterval(id)
     }, [])
 
@@ -303,15 +308,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 加载文件树(初次加载)
     const onOpenFileTreeFun = useMemoizedFn(async (absolutePath: string) => {
-        console.log("文件树---",absolutePath);
-        
+        console.log("文件树---", absolutePath)
+
         setLoadTreeType("file")
         onInitTreeFun(absolutePath)
     })
 
     // 加载审计树(初次加载)
     const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
-        console.log("审计树---",name);
+        console.log("审计树---", name)
         setLoadTreeType("audit")
         setProjectNmae(name)
         onInitTreeFun(`/${name}`)
@@ -360,7 +365,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                     path,
                     parent: parent || null,
-                    language: name.split(".").pop() === "yak" ? "yak" : "text"
+                    language: monacaLanguageType(suffix || "")
+                    // 此处需要后缀swich判断
                 }
                 // 注入语法检测
                 const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
@@ -438,7 +444,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             setLoadTreeType("audit")
             if (historyData?.folderPath) {
                 const path = historyData.folderPath
-                const name = path.startsWith('/')?path.slice(1):path
+                const name = path.startsWith("/") ? path.slice(1) : path
                 onOpenAuditTreeFun(name)
                 setUnShow(false)
             }
@@ -499,7 +505,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             activeFile: activeFile,
             runnerTabsId: runnerTabsId
         }
-    }, [fileTree, projectNmae,loadTreeType, areaInfo, activeFile, runnerTabsId])
+    }, [fileTree, projectNmae, loadTreeType, areaInfo, activeFile, runnerTabsId])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
@@ -542,6 +548,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         {wait: 300}
     ).run
 
+    const [active, setActive, getActive] = useGetState<LeftSideType>("file-tree")
     const [codePath, setCodePath] = useState<string>("")
     // 默认保存路径
     useEffect(() => {
@@ -574,7 +581,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                                 ...activeFile,
                                 path,
                                 isUnSave: false,
-                                language: suffix === "yak" ? suffix : "text"
+                                language: monacaLanguageType(suffix || "")
                             }
                             const parentPath = await getPathParent(file.path)
                             const parentDetail = getMapFileDetail(parentPath)
@@ -664,10 +671,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // yakrunner全局事件(monaca中也需生效)
-    const entiretyEvent = ["17-192"]
+    const entiretyEvent = ["17-192", "17-83", "17-87", "17-78"]
+    // 仅在文件树显示时生效的事件
+    const fileTreeEvent = ["113", "46", "17-67", "17-86"]
     // 注入默认键盘事件
     const defaultKeyDown = useMemoizedFn(() => {
+        // ctrl_n 新建临时文件
         setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
+        // 保存
         setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
         setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
         // 打开终端
@@ -700,10 +711,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         activeKey.push(which)
         const newkey = keySortHandle(activeKey).join("-")
         let arr = getKeyboard(newkey)
-        // console.log("newkey---", newkey, arr)
+        console.log("newkey---", newkey, arr)
         if (!arr) return
         // 屏蔽所有Input输入框引起的快捷键 PS:monaca除外
-        if (event.target.localName === "textarea" && event.target?.ariaRoleDescription !== "editor") return
+        // if (event.target.localName === "textarea" && event.target?.ariaRoleDescription !== "editor") return
+        // 文件树相关快捷键只在文件树控件展示时生效
+        if (fileTreeEvent.includes(newkey) && (getActive() !== "file-tree" || getLoadTreeType() === "audit")) return
         // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
         if (event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
         arr.forEach((item) => {
@@ -1027,7 +1040,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }
 
     // 清除代码审计树残留数据
-    const onResetAuditStatusFun = useMemoizedFn(async()=>{
+    const onResetAuditStatusFun = useMemoizedFn(async () => {
         clearMapAuditChildDetail()
         clearMapAuditDetail()
         setShowAuditDetail(false)
@@ -1038,14 +1051,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 监听与初始重置审计树残留数据
-    useEffect(()=>{
+    useEffect(() => {
         onResetAuditStatusFun()
         // 监听新建文件
         emiter.on("onResetAuditStatus", onResetAuditStatusFun)
         return () => {
             emiter.off("onResetAuditStatus", onResetAuditStatusFun)
         }
-    },[])
+    }, [])
 
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
@@ -1059,7 +1072,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                         firstMinSize={isUnShow ? 25 : 200}
                         lineStyle={{width: 4}}
                         secondMinSize={480}
-                        firstNode={<LeftSideBar addFileTab={addFileTab} isUnShow={isUnShow} setUnShow={setUnShow} />}
+                        firstNode={
+                            <LeftSideBar
+                                addFileTab={addFileTab}
+                                isUnShow={isUnShow}
+                                setUnShow={setUnShow}
+                                active={active}
+                                setActive={setActive}
+                            />
+                        }
                         secondNodeStyle={
                             isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
                         }
