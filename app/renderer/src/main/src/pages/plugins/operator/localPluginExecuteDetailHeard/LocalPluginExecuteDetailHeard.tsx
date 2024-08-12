@@ -223,8 +223,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 IsRawHTTPRequest: value.requestType === "original",
                 IsHttpFlowId: false,
                 HTTPFlowId: [],
-                RawHTTPRequest: value.RawHTTPRequest
-                    ? Buffer.from(value.RawHTTPRequest, "utf8")
+                RawHTTPRequest: value.rawHTTPRequest
+                    ? Buffer.from(value.rawHTTPRequest, "utf8")
                     : Buffer.from("", "utf8")
             },
             ExecParams: yakExecutorParams,
@@ -649,6 +649,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                 </Form.Item>
             )
         case "http-packet":
+            const defaultValue = item.DefaultValue || ""
             return (
                 <Form.Item
                     {...formProps}
@@ -665,21 +666,16 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                             }
                         }
                     ]}
-                    valuePropName='originValue'
                     className={classNames(formProps.className, styles["code-wrapper"], {
                         [styles["code-error-wrapper"]]: validateStatus === "error"
                     })}
-                    initialValue={item.DefaultValue || ""}
+                    initialValue={defaultValue}
                     trigger='setValue'
                     validateTrigger='setValue'
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <HTTPPacketYakitEditor
-                        originValue={item.DefaultValue}
-                        value={item.DefaultValue || ""}
-                        readOnly={disabled}
-                    />
+                    <HTTPPacketYakitEditor originValue={defaultValue} readOnly={disabled} />
                 </Form.Item>
             )
         case "yak":
@@ -706,7 +702,6 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                             }
                         }
                     ]}
-                    valuePropName='originValue'
                     className={classNames(formProps.className, styles["code-wrapper"], {
                         [styles["code-error-wrapper"]]: validateStatus === "error"
                     })}
@@ -716,7 +711,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <YakitEditor type={language} value={item.DefaultValue || ""} readOnly={disabled} />
+                    <YakitEditor type={language} readOnly={disabled} />
                 </Form.Item>
             )
         default:
@@ -747,7 +742,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
     const requestType: RequestType = Form.useWatch("requestType", form)
     const rawItem = useMemo(() => {
         const codeItem: YakParamProps = {
-            Field: "RawHTTPRequest",
+            Field: "rawHTTPRequest",
             FieldVerbose: "数据包",
             Required: true,
             TypeVerbose: "http-packet",

@@ -459,8 +459,8 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                             requestParams.HTTPRequestTemplate = {
                                 ...value,
                                 IsRawHTTPRequest: value.requestType === "original",
-                                RawHTTPRequest: value.RawHTTPRequest
-                                    ? Buffer.from(value.RawHTTPRequest, "utf8")
+                                RawHTTPRequest: value.rawHTTPRequest
+                                    ? Buffer.from(value.rawHTTPRequest, "utf8")
                                     : Buffer.from("", "utf8")
                             }
                             break
@@ -469,8 +469,8 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                             requestParams.HTTPRequestTemplate = {
                                 ...value,
                                 IsRawHTTPRequest: value.requestType === "original",
-                                RawHTTPRequest: value.RawHTTPRequest
-                                    ? Buffer.from(value.RawHTTPRequest, "utf8")
+                                RawHTTPRequest: value.rawHTTPRequest
+                                    ? Buffer.from(value.rawHTTPRequest, "utf8")
                                     : Buffer.from("", "utf8")
                             }
                             break

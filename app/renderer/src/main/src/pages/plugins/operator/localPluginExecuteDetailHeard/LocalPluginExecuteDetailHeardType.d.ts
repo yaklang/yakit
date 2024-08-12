@@ -70,6 +70,8 @@ export interface PluginExecuteProgressProps {
 export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
     /**前端使用，请求类型的选择 */
     requestType: RequestType
+    /**前端使用，请求类型》原始请求:数据包 */
+    rawHTTPRequest:string
 }
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
