@@ -7,17 +7,16 @@ import {YakHelpDoc} from "../YakHelpDoc/YakHelpDoc"
 
 import classNames from "classnames"
 import styles from "./LeftSideBar.module.scss"
-import { AuditCode } from "../AuditCode/AuditCode"
+import {AuditCode} from "../AuditCode/AuditCode"
 
 const {ipcRenderer} = window.require("electron")
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
-    const {addFileTab, isUnShow, setUnShow} = props
+    const {addFileTab, isUnShow, setUnShow, active, setActive} = props
 
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<string>>(new Set(["file-tree"]))
 
-    const [active, setActive] = React.useState<LeftSideType>("file-tree")
     const onSetActive = useMemoizedFn((type: LeftSideType) => {
         // if (type === active) {
         //     setActive(undefined)
@@ -82,7 +81,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                 <div
                     className={classNames(styles["left-side-bar-item"], {
                         [styles["left-side-bar-item-active"]]: active === "audit-code",
-                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "audit-code" && isUnShow,
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "audit-code" && isUnShow
                         // [styles["left-side-bar-item-disable"]]: false
                     })}
                     onClick={() => {
@@ -120,17 +119,15 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         <YakHelpDoc />
                     </div>
                 )}
-                {
-                    rendered.current.has("audit-code") && (
-                        <div
-                            className={classNames(styles["content-wrapper"], {
-                                [styles["hidden-content"]]: active !== "audit-code" || isUnShow
-                            })}
-                        >
-                            <AuditCode />
-                        </div>
-                    )
-                }
+                {rendered.current.has("audit-code") && (
+                    <div
+                        className={classNames(styles["content-wrapper"], {
+                            [styles["hidden-content"]]: active !== "audit-code" || isUnShow
+                        })}
+                    >
+                        <AuditCode />
+                    </div>
+                )}
             </div>
         </div>
     )
