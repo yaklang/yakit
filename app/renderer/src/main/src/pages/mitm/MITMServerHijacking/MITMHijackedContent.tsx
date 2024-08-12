@@ -295,6 +295,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 forward()
             }
             setShowPluginHistoryList([])
+            setSourceType("mitm")
         } catch (e) {
             console.info(e)
         }
