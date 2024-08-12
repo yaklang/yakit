@@ -36,7 +36,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
-import {setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "./MITMConsts"
 import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {CacheDropDownGV} from "@/yakitGV"
@@ -75,7 +75,7 @@ export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 整体的劫持状态
     const [status, setStatus, getStatus] = useGetState<"idle" | "hijacked" | "hijacking">("idle")
-    const [isHasParams, setIsHasParams] = useState<boolean>(true) // mitm插件类型是否带参数
+    const [isHasParams, setIsHasParams] = useState<boolean>(false) // mitm插件类型是否带参数
     // 通过启动表单的内容
     const [addr, setAddr] = useState("")
     const [host, setHost] = useState("127.0.0.1")
@@ -313,7 +313,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         logs={[]}
                         statusCards={[]}
                         downstreamProxyStr={downstreamProxyStr}
-                        isHasParams={isHasParams}
+                        isHasParams={false}
                         onIsHasParams={setIsHasParams}
                         showPluginHistoryList={showPluginHistoryList}
                         setShowPluginHistoryList={setShowPluginHistoryList}
@@ -458,8 +458,19 @@ interface MITMServerProps {
     setShowPluginHistoryList: (l: string[]) => void
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
-    const {visible, setVisible, status, setStatus, logs, statusCards, downstreamProxyStr, isHasParams, onIsHasParams, showPluginHistoryList, setShowPluginHistoryList} =
-        props
+    const {
+        visible,
+        setVisible,
+        status,
+        setStatus,
+        logs,
+        statusCards,
+        downstreamProxyStr,
+        isHasParams,
+        onIsHasParams = () => {},
+        showPluginHistoryList,
+        setShowPluginHistoryList
+    } = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
@@ -488,7 +499,33 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
     const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
 
-    
+    useDebounceEffect(
+        () => {
+            if (status === "idle") {
+                const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
+                getRemoteValue(CHECK_CACHE_LIST_DATA)
+                    .then((data: string) => {
+                        getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
+                            if (!!data && !!is) {
+                                const cacheData: string[] = JSON.parse(data)
+                                if (cacheData.length) {
+                                    onIsHasParams(false) 
+                                }
+                            } else {
+                                if (noParamsCheckList.length) {
+                                    onIsHasParams(false)
+                                } else {
+                                    onIsHasParams(true)
+                                }
+                            }
+                        })
+                    })
+                
+            }
+        },
+        [status, noParamsCheckList],
+        {wait: 300}
+    )
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)

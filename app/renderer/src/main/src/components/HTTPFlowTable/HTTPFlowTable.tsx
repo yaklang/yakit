@@ -554,7 +554,7 @@ const defSort: SortProps = {
     orderBy: "id"
 }
 
-const SourceType = [
+export const SourceType = [
     {text: "MITM", value: "mitm"},
     {text: "插件", value: "scan"},
     {
@@ -3393,14 +3393,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     })
 
+    useEffect(() => {
+        if (props.params?.SourceType !== undefined) {
+            let selectTypeList = props.params?.SourceType.split(",") || [""]
+            const newParams = {...params, SourceType: selectTypeList.join(",")}
+            setParams(newParams)
+            setTimeout(() => {
+                updateData()
+            }, 10)
+        }
+    }, [props.params?.SourceType])
+
     const onHasParamsJumpHistory = useMemoizedFn((mitmHasParamsNames: string) => {
-        const arr = params.SourceType?.split(",") || []
-        arr.push("scan")
-        const selectTypeList = [...new Set(arr)]
+        const mitmHasParamsNamesArr = mitmHasParamsNames.split(",")
+        let selectTypeList = params.SourceType?.split(",") || [""]
+        if (mitmHasParamsNamesArr[0] !== "" || !mitmHasParamsNamesArr.length) {
+            selectTypeList = ["scan"]
+        } else {
+            selectTypeList = selectTypeList.filter((item) => item !== "scan")
+            if (selectTypeList[0] === "" || !selectTypeList.length) {
+                selectTypeList = ["mitm"]
+            }
+        }
         const newParams = {...params, SourceType: selectTypeList.join(",")}
         getHTTPFlowsFieldGroup(true, (t: FiltersItemProps[]) => {
             let tagsList: string[] = []
-            mitmHasParamsNames.split(",").forEach((item) => {
+            mitmHasParamsNamesArr.forEach((item) => {
                 if (t.findIndex((ele) => ele.label === item) !== -1) {
                     tagsList.push(item)
                 }
@@ -3408,9 +3426,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setTagsFilter(tagsList)
             newParams.Tags = tagsList
             setParams(newParams)
-            setTimeout(() => {
-                updateData()
-            }, 10)
+            emiter.emit("onHistorySourceTypeToMitm", newParams.SourceType)
         })
     })
 
@@ -3467,39 +3483,45 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     style["http-history-table-row"]
                                 )}
                             >
-                                <div
-                                    style={onlyShowSearch ? {marginLeft: 8} : {}}
-                                    className={classNames(style["http-history-table-flex"])}
-                                >
-                                    {!onlyShowSearch &&
-                                        SourceType.map((tag) => (
-                                            <YakitCheckableTag
-                                                key={tag.value}
-                                                checked={!!params.SourceType?.split(",").includes(tag.value)}
-                                                onChange={(checked) => {
-                                                    if (checked) {
-                                                        const selectTypeList = [
-                                                            ...(params.SourceType?.split(",") || []),
-                                                            tag.value
-                                                        ]
-                                                        setParams({...params, SourceType: selectTypeList.join(",")})
-                                                    } else {
-                                                        const selectTypeList = (
-                                                            params.SourceType?.split(",") || []
-                                                        ).filter((ele) => ele !== tag.value)
-                                                        setParams({...params, SourceType: selectTypeList.join(",")})
-                                                    }
-                                                    setTimeout(() => {
-                                                        updateData()
-                                                    }, 10)
-                                                }}
-                                            >
-                                                {tag.text}
-                                            </YakitCheckableTag>
-                                        ))}
-                                </div>
                                 {pageType === "History" && (
                                     <>
+                                        <div
+                                            style={onlyShowSearch ? {marginLeft: 8} : {}}
+                                            className={classNames(style["http-history-table-flex"])}
+                                        >
+                                            {!onlyShowSearch &&
+                                                SourceType.map((tag) => (
+                                                    <YakitCheckableTag
+                                                        key={tag.value}
+                                                        checked={!!params.SourceType?.split(",").includes(tag.value)}
+                                                        onChange={(checked) => {
+                                                            if (checked) {
+                                                                const selectTypeList = [
+                                                                    ...(params.SourceType?.split(",") || []),
+                                                                    tag.value
+                                                                ]
+                                                                setParams({
+                                                                    ...params,
+                                                                    SourceType: selectTypeList.join(",")
+                                                                })
+                                                            } else {
+                                                                const selectTypeList = (
+                                                                    params.SourceType?.split(",") || []
+                                                                ).filter((ele) => ele !== tag.value)
+                                                                setParams({
+                                                                    ...params,
+                                                                    SourceType: selectTypeList.join(",")
+                                                                })
+                                                            }
+                                                            setTimeout(() => {
+                                                                updateData()
+                                                            }, 10)
+                                                        }}
+                                                    >
+                                                        {tag.text}
+                                                    </YakitCheckableTag>
+                                                ))}
+                                        </div>
                                         <div className={style["http-history-table-flex"]}>
                                             {shieldData?.data.length > 0 && (
                                                 <div style={{marginRight: 16}}>

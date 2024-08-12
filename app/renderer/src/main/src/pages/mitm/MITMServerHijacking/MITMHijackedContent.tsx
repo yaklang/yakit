@@ -103,6 +103,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [beautifyOpen, setBeautifyOpen] = useState<boolean>(false)
     const [currentBeautifyPacket, setCurrentBeautifyPacket] = useState<string>("")
 
+    const [sourceType, setSourceType] = useState<string>("mitm")
+
     const getMITMFilter = useMemoizedFn(() => {
         ipcRenderer
             .invoke("mitm-get-filter")
@@ -293,6 +295,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 forward()
             }
             setShowPluginHistoryList([])
+            setSourceType("mitm")
         } catch (e) {
             console.info(e)
         }
@@ -436,7 +439,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     />
                 )
             case "log":
-                return <MITMLogHeardExtra />
+                return <MITMLogHeardExtra sourceType={sourceType} onSetSourceType={setSourceType} />
             default:
                 break
         }
@@ -484,7 +487,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             case "log":
                 return (
                     <>
-                        <HTTPHistory pageType='MITM' downstreamProxyStr={downstreamProxyStr} />
+                        <HTTPHistory
+                            pageType='MITM'
+                            downstreamProxyStr={downstreamProxyStr}
+                            params={{SourceType: sourceType}}
+                        />
                     </>
                 )
             // 被动日志
