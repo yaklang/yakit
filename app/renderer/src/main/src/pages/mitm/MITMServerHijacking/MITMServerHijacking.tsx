@@ -140,7 +140,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             ipcRenderer
                 .invoke("mitm-stop-call")
                 .then(() => {
-                    onIsHasParams(true)
+                    onIsHasParams(false)
                     setShowPluginHistoryList([])
                     setStatus("idle")
                     resolve("ok")

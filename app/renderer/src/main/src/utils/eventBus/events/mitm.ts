@@ -10,4 +10,5 @@ export type MitmEventProps = {
     onClearMITMHackPlugin?: string
     onHasParamsJumpHistory: string
     onHistoryTagToMitm: string
+    onHistorySourceTypeToMitm: string
 }

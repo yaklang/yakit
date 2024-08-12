@@ -27,8 +27,8 @@ export interface HTTPPacketFuzzable {
 export type HTTPHistorySourcePageType = "MITM" | "History"
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
-    websocket?: boolean
     pageType?: HTTPHistorySourcePageType
+    params?: YakQueryHTTPFlowRequest
 }
 
 type tabKeys = "web-tree"
@@ -40,7 +40,7 @@ interface HTTPHistoryTabsItem {
 }
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
-    const {pageType, downstreamProxyStr} = props
+    const {pageType, downstreamProxyStr, params} = props
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
     const {isRefreshHistory, setIsRefreshHistory} = useStore()
@@ -281,13 +281,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             >
                                 <HTTPFlowTable
                                     noHeader={true}
-                                    params={
-                                        props?.websocket
-                                            ? ({
-                                                  OnlyWebsocket: true
-                                              } as YakQueryHTTPFlowRequest)
-                                            : undefined
-                                    }
+                                    params={params}
                                     searchURL={searchURL}
                                     includeInUrl={includeInUrl}
                                     // tableHeight={200}
