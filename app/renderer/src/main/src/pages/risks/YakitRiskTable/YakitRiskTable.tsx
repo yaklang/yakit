@@ -337,7 +337,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     }, [offsetDataInTop, interval])
     const clearTopRedDot = useInterval(() => {
         const scrollTop = getScrollTop()
-        if (scrollTop < 10 && offsetDataInTop?.length > 0) {
+        if (inViewport && scrollTop < 10 && offsetDataInTop?.length > 0) {
             // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
             setResponse({
                 ...response,
@@ -372,7 +372,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             return
         }
         const scrollTop = getScrollTop()
-        if (scrollTop < 10 && offsetDataInTop?.length > 0) {
+        if (inViewport && scrollTop < 10 && offsetDataInTop?.length > 0) {
             // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
             setResponse({
                 ...response,
