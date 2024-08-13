@@ -13,7 +13,15 @@ import {
     VulnerabilitiesRisksTableProps
 } from "./PluginExecuteResultType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    useControllableValue,
+    useCreation,
+    useDebounceEffect,
+    useDebounceFn,
+    useInterval,
+    useMemoizedFn,
+    useUpdateEffect
+} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -44,6 +52,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {QueryRisksRequest} from "@/pages/risks/YakitRiskTable/YakitRiskTableType"
 import {defQueryRisksRequest} from "@/pages/risks/YakitRiskTable/constants"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
+import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
 
 const {TabPane} = PluginTabs
 
@@ -57,10 +66,46 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         PluginTabsRightNode
     } = props
 
+    const [allTotal, setAllTotal] = useState<number>(0)
+    const [isShowRiskTab, setIsShowRiskTab] = useState<boolean>(false)
+
+    const [interval, setInterval] = useState<number | undefined>(1000)
+
+    useEffect(() => {
+        return () => {
+            clearTopIncrement()
+        }
+    }, [])
+    const clearTopIncrement = useInterval(() => {
+        if (runtimeId) getTotal()
+    }, interval)
+
+    const getTotal = useMemoizedFn(() => {
+        const params: QueryRisksRequest = {
+            ...defQueryRisksRequest,
+            Pagination: {
+                ...defQueryRisksRequest.Pagination,
+                Page: 1,
+                Limit: 1
+            },
+            RuntimeId: runtimeId
+        }
+        apiQueryRisks(params).then((allRes) => {
+            if (+allRes.Total > 0) {
+                setIsShowRiskTab(true)
+                setInterval(undefined)
+            }
+        })
+    })
+
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
             case "risk":
-                return !!runtimeId ? <VulnerabilitiesRisksTable runtimeId={runtimeId} /> : <></>
+                return !!runtimeId ? (
+                    <VulnerabilitiesRisksTable runtimeId={runtimeId} allTotal={allTotal} setAllTotal={setAllTotal} />
+                ) : (
+                    <></>
+                )
             case "port":
                 return !!runtimeId ? <PluginExecutePortTable runtimeId={runtimeId} /> : <></>
             case "http":
@@ -94,11 +139,11 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     })
 
     const showTabs = useMemo(() => {
-        if (streamInfo.riskState.length === 0) {
+        if (!isShowRiskTab) {
             return streamInfo.tabsState.filter((item) => item.tabName !== "漏洞与风险")
         }
         return streamInfo.tabsState
-    }, [streamInfo.tabsState, streamInfo.riskState])
+    }, [streamInfo.tabsState, isShowRiskTab])
 
     const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
         if (tab.type === "risk") {
@@ -126,9 +171,10 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 <PluginTabs defaultActiveKey={defaultActiveKey} tabBarExtraContent={{right: PluginTabsRightNode}}>
                     {showTabs.map((ele) => (
                         <TabPane
-                            tab={tabBarRender(ele, streamInfo.riskState.length)}
+                            tab={tabBarRender(ele, allTotal)}
                             key={ele.tabName}
                             className={styles["plugin-execute-result-tabPane"]}
+                            forceRender={ele.tabName === "漏洞与风险"}
                         >
                             {renderTabContent(ele)}
                         </TabPane>
@@ -302,7 +348,11 @@ const getSeverity = (type) => {
 const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
     const {runtimeId} = props
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
-    const [allTotal, setAllTotal] = useState<number>(0)
+    const [allTotal, setAllTotal] = useControllableValue<number>(props, {
+        defaultValue: 0,
+        valuePropName: "allTotal",
+        trigger: "setAllTotal"
+    })
     const [query, setQuery] = useState<QueryRisksRequest>({
         ...defQueryRisksRequest,
         RuntimeId: runtimeId
