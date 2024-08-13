@@ -67,8 +67,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     } = props
 
     const [allTotal, setAllTotal] = useState<number>(0)
-    const [isShowRiskTab, setIsShowRiskTab] = useState<boolean>(false)
-
+    const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
     const [interval, setInterval] = useState<number | undefined>(1000)
 
     useEffect(() => {
@@ -92,17 +91,28 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         }
         apiQueryRisks(params).then((allRes) => {
             if (+allRes.Total > 0) {
-                setIsShowRiskTab(true)
-                setInterval(undefined)
+                setTempTotal(+allRes.Total)
             }
         })
+    })
+
+    /**
+     * 漏洞风险tab没有点击之前，tabContent不会渲染展示；不会请求数据
+     * 强制渲染得话，组件内部不会请求数据
+     * 采取：没有点击漏洞风险tab之前，由外面根据runtimeId查询是否有数据，有数据就展示对应得tab,以里面传出来得total为准，total>0后停止外面得useInterval，
+     */
+    const onSetRiskTotal = useMemoizedFn((total) => {
+        if (total > 0) {
+            setAllTotal(total)
+            if (interval) setInterval(undefined)
+        }
     })
 
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
             case "risk":
                 return !!runtimeId ? (
-                    <VulnerabilitiesRisksTable runtimeId={runtimeId} allTotal={allTotal} setAllTotal={setAllTotal} />
+                    <VulnerabilitiesRisksTable runtimeId={runtimeId} allTotal={allTotal} setAllTotal={onSetRiskTotal} />
                 ) : (
                     <></>
                 )
@@ -139,11 +149,11 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     })
 
     const showTabs = useMemo(() => {
-        if (!isShowRiskTab) {
+        if (!tempTotal) {
             return streamInfo.tabsState.filter((item) => item.tabName !== "漏洞与风险")
         }
         return streamInfo.tabsState
-    }, [streamInfo.tabsState, isShowRiskTab])
+    }, [streamInfo.tabsState, tempTotal])
 
     const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
         if (tab.type === "risk") {
@@ -160,6 +170,10 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     const cardState = useCreation(() => {
         return streamInfo.cardState.filter((item) => item.tag !== "no display")
     }, [streamInfo.cardState])
+    const showRiskTotal = useCreation(() => {
+        if (allTotal > 0) return allTotal
+        return tempTotal
+    }, [allTotal, tempTotal])
     return (
         <div className={classNames(styles["plugin-execute-result"], pluginExecuteResultWrapper)}>
             {cardState.length > 0 && (
@@ -171,10 +185,9 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 <PluginTabs defaultActiveKey={defaultActiveKey} tabBarExtraContent={{right: PluginTabsRightNode}}>
                     {showTabs.map((ele) => (
                         <TabPane
-                            tab={tabBarRender(ele, allTotal)}
+                            tab={tabBarRender(ele, showRiskTotal)}
                             key={ele.tabName}
                             className={styles["plugin-execute-result-tabPane"]}
-                            forceRender={ele.tabName === "漏洞与风险"}
                         >
                             {renderTabContent(ele)}
                         </TabPane>
@@ -329,21 +342,7 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
         </PluginExecuteResultTabContent>
     )
 })
-/**获取风险等级的展示tag类型 */
-const getSeverity = (type) => {
-    switch (type) {
-        case "低危":
-            return "warning"
-        case "中危":
-            return "info"
-        case "高危":
-            return "danger"
-        case "严重":
-            return "serious"
-        default:
-            return undefined
-    }
-}
+
 /**风险与漏洞tab表 */
 const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
     const {runtimeId} = props
@@ -373,8 +372,10 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
                     setRiskLoading={setRiskLoading}
                     renderTitle={
                         <div className={styles["table-renderTitle"]}>
-                            <span>风险与漏洞</span>
-                            <TableTotalAndSelectNumber total={allTotal} />
+                            <div className={styles["table-renderTitle-left"]}>
+                                <span>风险与漏洞</span>
+                                <TableTotalAndSelectNumber total={allTotal} />
+                            </div>
                             <YakitButton type='outline2' size='small' onClick={onJumpRisk}>
                                 查看全部
                             </YakitButton>
@@ -383,7 +384,8 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
                     riskWrapperClassName={styles["risks-table-wrapper"]}
                     tableVirtualResizeProps={{
                         containerClassName: styles["table-container"],
-                        titleHeight: 44
+                        titleHeight: 44,
+                        rowSelection: undefined
                     }}
                     yakitRiskDetailsBorder={false}
                     excludeColumnsKey={["action"]}

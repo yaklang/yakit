@@ -16,6 +16,7 @@ export interface YakitRiskTableProps {
     tableVirtualResizeProps?: TableVirtualResizeProps
     yakitRiskDetailsBorder?: boolean
     excludeColumnsKey?: string[]
+    /**该字段会影响初次请求数据，建议外界只使用，不设值 */
     allTotal?: number
     setAllTotal?: (b: number) => void
 }
