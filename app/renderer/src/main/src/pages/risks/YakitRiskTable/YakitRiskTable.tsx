@@ -854,13 +854,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onResetRefresh = useMemoizedFn(() => {
         setQuery(cloneDeep(defQueryRisksRequest))
     })
-    const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
+    const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+        let sort = {...newSort}
         if (sort.order === "none") {
             sort.order = "desc"
             sort.orderBy = "id"
         }
-        setOffsetDataInTop([]) // 排序条件变化，清空缓存的实时数据
-        setQuery({
+        const newQuery = {
             ...query,
             ...filter,
             Pagination: {
@@ -868,7 +868,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 Order: sort.order,
                 OrderBy: sort.orderBy
             }
-        })
+        }
+        setOffsetDataInTop([]) // 排序条件变化，清空缓存的实时数据
+        setQuery(newQuery)
         limitRef.current = defLimitRef.current
     })
     const getQuerySeverity = useMemoizedFn((list: string[]) => {

@@ -454,7 +454,8 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             }
             setSendPopoverVisible(false)
         })
-        const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
+        const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+            let sort = {...newSort}
             if (sort.order === "none") {
                 sort.order = "desc"
                 sort.orderBy = "id"
