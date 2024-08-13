@@ -128,11 +128,14 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                 const saveParams: CustomPluginExecuteFormValue = {...values}
                                 const saveParasmArr: YakExecutorParam[] = []
                                 Object.keys(saveParams).forEach((key) => {
-                                    saveParasmArr.push({Key: key, Value: saveParams[key]})
+                                    if (saveParams[key] !== false) {
+                                        saveParasmArr.push({Key: key, Value: saveParams[key]})
+                                    }
                                 })
                                 setRemoteValue("mitm_has_params_" + i.ScriptName, JSON.stringify(saveParasmArr))
                                 if (submitFlag) {
                                     clearMITMPluginCache()
+                                    console.log('提交传参', saveParasmArr);
                                     onSubmitYakScriptId(script.Id, saveParasmArr)
                                     setTempShowPluginHistory && setTempShowPluginHistory(i.ScriptName)
                                 }
@@ -242,7 +245,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         }
 
                         setTempShowPluginHistory && setTempShowPluginHistory("")
-                        
+
                         setShowPluginHistoryList(arr)
                         emiter.emit("onHasParamsJumpHistory", arr.join(","))
                     }}
