@@ -1636,7 +1636,8 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                 route: YakitRoute.BatchExecutorPage,
                 params: {
                     runtimeId,
-                    defaultActiveKey
+                    defaultActiveKey,
+                    hybridScanMode:'status'
                 }
             })
         )
