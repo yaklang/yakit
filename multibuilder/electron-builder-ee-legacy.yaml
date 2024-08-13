@@ -92,7 +92,7 @@ nsis:
     createDesktopShortcut: false
     createStartMenuShortcut: true
 
-beforePack: "buildHooks/before_pack.js"
+beforePack: "buildHooks/legacy_before_pack.js"
 
 releaseInfo:
     releaseName: ${version}

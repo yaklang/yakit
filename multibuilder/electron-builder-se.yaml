@@ -1,110 +1,98 @@
-appId: 'io.yaklang.enpritraceagent'
-extraMetadata: 
-  name: enpritraceagent
-productName: 'EnpriTraceAgent'
+appId: "io.yaklang.enpritraceagent"
+extraMetadata:
+    name: enpritraceagent
+productName: "EnpriTraceAgent"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
-  - from: "bins/scripts/auto-install-cert.zip"
-    to: "bins/scripts/auto-install-cert.zip"
-  - from: "bins/scripts/start-engine.zip"
-    to: "bins/scripts/start-engine.zip"
-  - from: "bins/flag.txt"
-    to: "bins/flag.txt"
-  - from: "bins/engine-version.txt"
-    to: "bins/engine-version.txt"
-  - from: "bins/resources"
-    to: "bins/resources"
-    filter:
-      - "**/*"
-      - "*.txt"
-  - from: "bins/database/"
-    to: "bins/database/"
-    filter:
-      - "**/*"
-      - "*.txt"
-      - "*.gzip"
-      - "!*.db"
-  - from: "LICENSE.md"
-    to: "LICENSE.md"
+    - from: "bins/scripts/auto-install-cert.zip"
+      to: "bins/scripts/auto-install-cert.zip"
+    - from: "bins/scripts/start-engine.zip"
+      to: "bins/scripts/start-engine.zip"
+    - from: "bins/flag.txt"
+      to: "bins/flag.txt"
+    - from: "bins/engine-version.txt"
+      to: "bins/engine-version.txt"
+    - from: "bins/resources"
+      to: "bins/resources"
+      filter:
+          - "**/*"
+          - "*.txt"
+    - from: "bins/database/"
+      to: "bins/database/"
+      filter:
+          - "**/*"
+          - "*.txt"
+          - "*.gzip"
+          - "!*.db"
+    - from: "LICENSE.md"
+      to: "LICENSE.md"
+    - from: "report/template.zip"
+      to: "report/template.zip"
 
 directories:
-  buildResources: resources
-  output: release/
-  app: .
+    buildResources: resources
+    output: release/
+    app: .
 
-#artifactName: ${productName}-${version}-${platform}-${arch}.${ext}
+files:
+    - "**/*"
+    - "!bins/**/*"
+    - "!.github/**/*"
+    - "!multibuilder/**/*"
+    - "!scripts/**/*"
+    - "!buildutil/**/*"
+    - "!buildHooks/**/*"
+    - "!build/**/*"
+    - "!backups/**/*"
+    - "!app/renderer/src/**/*"
+
 asar: true
 
 publish:
-  - provider: "generic"
-    url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
+    - provider: "generic"
+      url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
 
 mac:
-  artifactName: ${productName}-${version}-darwin-${arch}.${ext}
-  extraFiles:
-    - from: "bins/flag.darwin.txt"
-      to: "bins/flag.darwin.txt"
-    - from: "bins/yak_darwin_amd64.zip"
-      to: "bins/yak.zip"
-    - from: "report/template.zip"
-      to: "report/template.zip"
-  target:
-    - target: dmg
-      arch:
-        - x64
-        - arm64
-  icon: "app/assets/yakitselogo.icns"
+    gatekeeperAssess: false
+    target:
+        - target: dmg
+          arch:
+              - x64
+              - arm64
+    icon: "app/assets/yakitselogo.icns"
 
 linux:
-  artifactName: ${productName}-${version}-linux-amd64.${ext}
-  extraFiles:
-    - from: "bins/flag.linux.txt"
-      to: "bins/flag.linux.txt"
-    - from: "bins/yak_linux_amd64.zip"
-      to: "bins/yak.zip"
-    - from: "report/template.zip"
-      to: "report/template.zip"
-  target:
-    - target: AppImage
-      arch:
-        - x64
-  icon: "app/assets/yakitselogo.icns"
+    target:
+        - target: AppImage
+          arch:
+              - x64
+    icon: "app/assets/yakitselogo.icns"
 
 win:
-  artifactName: ${productName}-${version}-windows-amd64.${ext}
-  extraFiles:
-    - from: "bins/flag.windows.txt"
-      to: "bins/flag.windows.txt"
-    - from: "bins/yak_windows_amd64.zip"
-      to: "bins/yak.zip"
-    - from: "report/template.zip"
-      to: "report/template.zip"
-  # requestedExecutionLevel: requireAdministrator
-  target:
-    - target: nsis
-      arch:
-        - x64
-  icon: "app/assets/yakitselogo.ico"
+    # requestedExecutionLevel: requireAdministrator
+    target:
+        - target: nsis
+          arch:
+              - x64
+    icon: "app/assets/yakitselogo.ico"
 
 nsis:
-  oneClick: false 
-  perMachine: false
-  deleteAppDataOnUninstall: true
-  allowToChangeInstallationDirectory: true 
-  installerIcon: app/assets/yakitselogo.ico 
-  uninstallerIcon: app/assets/yakitselogo.ico 
-  unicode: true
-  include: build/yakit_build.nsh
-  license: LICENSE.md
-  warningsAsErrors: false
-  createDesktopShortcut: false
-  createStartMenuShortcut: true
+    oneClick: false
+    perMachine: false
+    deleteAppDataOnUninstall: true
+    allowToChangeInstallationDirectory: true
+    installerIcon: app/assets/yakitselogo.ico
+    uninstallerIcon: app/assets/yakitselogo.ico
+    unicode: true
+    include: build/yakit_build.nsh
+    license: LICENSE.md
+    warningsAsErrors: false
+    createDesktopShortcut: false
+    createStartMenuShortcut: true
 
-#publish:
-#  - provider: generic
-#    url: https://update.electron-builder.com
-#    channel: latest
+beforePack: "buildHooks/before_pack.js"
+
 releaseInfo:
-  releaseName: ${version}
-  releaseNotes: "view github release: https://github.com/yaklang/yakit/releases"
+    releaseName: ${version}
+    releaseNotes: "view github release: https://github.com/yaklang/yakit/releases"

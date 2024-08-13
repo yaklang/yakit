@@ -21,7 +21,7 @@ module.exports = async function (context) {
         ];
         const productVersion =
             baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
-        win32Config.artifactName = `${"${productName}"}-${productVersion}-windows-amd64.${"${ext}"}`;
+        win32Config.artifactName = `${"${productName}"}-${productVersion}-windows-legacy-amd64.${"${ext}"}`;
 
         context.packager.config.win = win32Config;
     }
@@ -41,7 +41,7 @@ module.exports = async function (context) {
             baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
         switch (arch) {
             case "arm64":
-                linuxConfig.artifactName = `${"${productName}"}-${productVersion}-linux-arm64.${"${ext}"}`;
+                linuxConfig.artifactName = `${"${productName}"}-${productVersion}-linux-legacy-arm64.${"${ext}"}`;
                 linuxConfig.extraFiles = [
                     ...linuxExtraFiles,
                     {
@@ -51,7 +51,7 @@ module.exports = async function (context) {
                 ];
                 break;
             case "x64":
-                linuxConfig.artifactName = `${"${productName}"}-${productVersion}-linux-amd64.${"${ext}"}`;
+                linuxConfig.artifactName = `${"${productName}"}-${productVersion}-linux-legacy-amd64.${"${ext}"}`;
                 linuxConfig.extraFiles = [
                     ...linuxExtraFiles,
                     {
@@ -80,7 +80,7 @@ module.exports = async function (context) {
         const baseInfo = context.packager.appInfo;
         const productVersion =
             baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
-        macConfig.artifactName = `${"${productName}"}-${productVersion}-darwin-${"${arch}"}.${"${ext}"}`;
+        macConfig.artifactName = `${"${productName}"}-${productVersion}-darwin-legacy-${"${arch}"}.${"${ext}"}`;
         switch (arch) {
             case "arm64":
                 macConfig.extraFiles = [

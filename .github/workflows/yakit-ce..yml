@@ -1,0 +1,275 @@
+name: Yakit-CE-CI
+# 社区版
+
+on:
+    push:
+        branches:
+            - "ci/ce-*"
+        tags:
+            - "v*"
+
+jobs:
+    build_yakit:
+        runs-on: macos-13
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+            IS_TAG_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') && 'tag/v' || 'ci/ce' }} # 全版本发布
+            PACKAGING_PLATFORM: ${{ contains(github.ref, 'mac') && 'mac' || contains(github.ref, 'linux') && 'linux' || contains(github.ref, 'win') && 'win' || 'mwl' }}
+            COMPATIBILITY_MODE: ${{ (startsWith(github.ref, 'refs/heads/ci/ce-') && contains(github.ref, 'legacy')) && 'legacy' || 'normal' }}
+
+        steps:
+            - name: Show Custom ENV
+              run: echo ${{ env.IS_TAG_RELEASE }} ${{ env.PACKAGING_PLATFORM }} ${{ env.COMPATIBILITY_MODE }}
+
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+                  # 缓存 yarn 依赖包 ↓↓↓
+                  cache: "yarn"
+                  cache-dependency-path: |
+                      yarn.lock
+                      app/renderer/src/main/yarn.lock
+
+            - run: echo ${{ github.ref }}
+            - run: cp buildutil/zip /usr/local/bin/zip
+            - run: chmod +x /usr/local/bin/zip
+            - run: zip -h
+
+            - name: "Download Yak Engine via wget(MacOS)"
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac' }}
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac' }}
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+
+            - name: "Download Yak Engine via wget(Linux)"
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux' }}
+              id: download-linux-engine
+              run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+            - name: "Download Yak Engine via wget(Linux-arm64)"
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux' }}
+              id: download-linux-engine-arm64
+              run: wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+
+            - name: "Download Yak Engine via wget(Windows)"
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win' }}
+              id: download-windows-engine
+              run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+
+            - name: "Fetch Latest EngineVersion"
+              id: fetch-version-engine
+              run: wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+            - run: ls ./bins && cat bins/engine-version.txt
+
+            - name: Extract Package.json Version
+              id: extract_version
+              uses: Saionaro/extract-package-version@v1.1.1
+            - name: Echo Yakit Package Version
+              run: echo ${{ steps.extract_version.outputs.version }}
+
+            - run: yarn install && yarn install-render
+              working-directory: ./
+              name: "Install Dependencies"
+
+            - name: "Build CE Render"
+              working-directory: ./
+              run: yarn build-render
+
+            - name: Build Yakit (MultiPlatform)
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || (env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'normal') }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn add -D dmg-license && yarn electron-publish
+            - name: Build Yakit (MAC)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'mac' && env.COMPATIBILITY_MODE == 'normal' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-mac
+            - name: Build Yakit (LINUX)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'linux' && env.COMPATIBILITY_MODE == 'normal' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-linux
+            - name: Build Yakit (WIN)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'normal' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-win
+
+            - run: yarn add electron@22.3.27
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.COMPATIBILITY_MODE == 'legacy' }}
+              working-directory: ./
+              name: "Install Legacy Electron"
+
+            - name: Build Yakit Legacy (MultiPlatform)
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || (env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'legacy') }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn add -D dmg-license && yarn electron-publish-legacy
+            - name: Build Yakit Legacy (MAC)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'mac' && env.COMPATIBILITY_MODE == 'legacy' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-mac-legacy
+            - name: Build Yakit Legacy (LINUX)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'linux' && env.COMPATIBILITY_MODE == 'legacy' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-linux-legacy
+            - name: Build Yakit Legacy (WIN)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'legacy' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-win-legacy
+
+            - name: View Published Content
+              run:
+                  ls ./release
+                  # Yakit-1.3.4-sp6-darwin-arm64.dmg
+                  # Yakit-1.3.4-sp6-darwin-x64.dmg
+                  # Yakit-1.3.4-sp6-linux-amd64.AppImage
+                  # Yakit-1.3.4-sp6-linux-arm64.AppImage
+                  # Yakit-1.3.4-sp6-windows-amd64.exe
+                  # Yakit-1.3.4-sp6-darwin-legacy-arm64.dmg
+                  # Yakit-1.3.4-sp6-darwin-legacy-x64.dmg
+                  # Yakit-1.3.4-sp6-linux-legacy-amd64.AppImage
+                  # Yakit-1.3.4-sp6-linux-legacy-arm64.AppImage
+                  # Yakit-1.3.4-sp6-windows-legacy-amd64.exe
+
+            - name: Upload Yakit(CE) Artifacts Windows
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win') && env.COMPATIBILITY_MODE == 'normal') }}
+              with:
+                  # Yakit-1.3.4-sp6-windows-amd64.exe
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+            - name: Upload Yakit(CE) Artifacts Mac(m1)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal') }}
+              with:
+                  # Yakit-1.3.4-sp6-darwin-arm64.dmg
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-arm64.dmg
+            - name: Upload Yakit(CE) Artifacts Mac(intel)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal') }}
+              with:
+                  # Yakit-1.3.4-sp6-darwin-x64.dmg
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-x64.dmg
+            - name: Upload Yakit(CE) Artifacts Linux(amd64)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'normal') }}
+              with:
+                  # Yakit-1.3.4-sp6-linux-amd64.AppImage
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-amd64.AppImage
+            - name: Upload Yakit(CE) Artifacts Linux(arm64)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'normal') }}
+              with:
+                  # Yakit-1.3.4-sp6-linux-arm64.AppImage
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-arm64.AppImage
+
+            - name: Upload Yakit(CE) Artifacts Legacy Windows
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win') && env.COMPATIBILITY_MODE == 'legacy') }}
+              with:
+                  # Yakit-1.3.4-sp6-windows-legacy-amd64.exe
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-windows-legacy-amd64.exe
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-legacy-amd64.exe
+            - name: Upload Yakit(CE) Artifacts Legacy Mac(m1)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy') }}
+              with:
+                  # Yakit-1.3.4-sp6-darwin-legacy-arm64.dmg
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-legacy-arm64.dmg
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-legacy-arm64.dmg
+            - name: Upload Yakit(CE) Artifacts Legacy Mac(intel)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy') }}
+              with:
+                  # Yakit-1.3.4-sp6-darwin-legacy-x64.dmg
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-darwin-legacy-x64.dmg
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-darwin-legacy-x64.dmg
+            - name: Upload Yakit(CE) Artifacts Legacy Linux(amd64)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'legacy') }}
+              with:
+                  # Yakit-1.3.4-sp6-linux-legacy-amd64.AppImage
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-linux-legacy-amd64.AppImage
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-legacy-amd64.AppImage
+            - name: Upload Yakit(CE) Artifacts Legacy Linux(arm64)
+              uses: actions/upload-artifact@v4
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'legacy') }}
+              with:
+                  # Yakit-1.3.4-sp6-linux-legacy-arm64.AppImage
+                  name: Yakit-${{ steps.extract_version.outputs.version }}-linux-legacy-arm64.AppImage
+                  path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-legacy-arm64.AppImage
+
+    publish_yakit_ce_to_oss:
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/ce-ggg') }}
+        needs:
+            - build_yakit
+        runs-on: ubuntu-latest
+        steps:
+            - name: Set Yak Version by Tag
+              uses: mad9000/actions-find-and-replace-string@5
+              id: fetchtag_release
+              with:
+                  source: ${{ github.ref }}
+                  find: "refs/tags/v"
+                  replace: ""
+            - name: Download Yakit And Legacy Yakit
+              uses: actions/download-artifact@v4
+              with:
+                  merge-multiple: true
+
+            - run: ls
+              name: Ls Published Artifacts...
+
+            - name: Upload Yakit to oss
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-amd64.exe
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-x64.dmg
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-arm64.dmg
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-amd64.AppImage
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-arm64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-arm64.AppImage
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-legacy-amd64.exe:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-windows-legacy-amd64.exe
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-legacy-x64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-legacy-x64.dmg
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-legacy-arm64.dmg:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-darwin-legacy-arm64.dmg
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-legacy-amd64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-legacy-amd64.AppImage
+                      Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-legacy-arm64.AppImage:/yak/${{ steps.fetchtag_release.outputs.value }}/Yakit-${{ steps.fetchtag_release.outputs.value }}-linux-legacy-arm64.AppImage
+
+            - name: Update OSS latest file
+              run: echo ${{ steps.fetchtag_release.outputs.value }}
+            # - name: Update OSS latest file
+            #   run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
+            # - name: Upload Yakit Version to oss
+            #   uses: tvrcgo/upload-to-oss@master
+            #   with:
+            #       key-id: ${{ secrets.OSS_KEY_ID }}
+            #       key-secret: ${{ secrets.OSS_KEY_SECRET }}
+            #       region: oss-accelerate
+            #       bucket: yaklang
+            #       assets: |
+            #           ./yakit-version.txt:/yak/latest/yakit-version.txt

@@ -1,8 +1,6 @@
-appId: "io.yaklang.enpritrace"
-extraMetadata:
-    name: enpritrace
-productName: "EnpriTrace"
-copyright: Copyright © 2021 v1ll4n
+appId: "io.yaklang.yakit"
+productName: "Yakit"
+copyright: Copyright © 2024 yaklang.io
 
 extraFiles:
     - from: "bins/scripts/auto-install-cert.zip"
@@ -60,7 +58,7 @@ mac:
           arch:
               - x64
               - arm64
-    icon: "app/assets/yakiteelogo.icns"
+    icon: "app/assets/yakitlogo.icns"
 
 linux:
     target:
@@ -68,7 +66,7 @@ linux:
           arch:
               - x64
               - arm64
-    icon: "app/assets/yakiteelogo.icns"
+    icon: "app/assets/yakitlogo.icns"
 
 win:
     # requestedExecutionLevel: requireAdministrator
@@ -76,15 +74,15 @@ win:
         - target: nsis
           arch:
               - x64
-    icon: "app/assets/yakiteelogo.ico"
+    icon: "app/assets/yakitlogo.ico"
 
 nsis:
     oneClick: false
     perMachine: false
     deleteAppDataOnUninstall: true
     allowToChangeInstallationDirectory: true
-    installerIcon: app/assets/yakiteelogo.ico
-    uninstallerIcon: app/assets/yakiteelogo.ico
+    installerIcon: app/assets/yakitlogo.ico
+    uninstallerIcon: app/assets/yakitlogo.ico
     unicode: true
     include: build/yakit_build.nsh
     license: LICENSE.md
@@ -92,7 +90,7 @@ nsis:
     createDesktopShortcut: false
     createStartMenuShortcut: true
 
-beforePack: "buildHooks/before_pack.js"
+beforePack: "buildHooks/legacy_before_pack.js"
 
 releaseInfo:
     releaseName: ${version}

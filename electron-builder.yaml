@@ -3,123 +3,95 @@ productName: "Yakit"
 copyright: Copyright © 2024 yaklang.io
 
 extraFiles:
-  - from: "bins/scripts/auto-install-cert.zip"
-    to: "bins/scripts/auto-install-cert.zip"
-  - from: "bins/scripts/start-engine.zip"
-    to: "bins/scripts/start-engine.zip"
-  - from: "bins/flag.txt"
-    to: "bins/flag.txt"
-  - from: "bins/engine-version.txt"
-    to: "bins/engine-version.txt"
-  - from: "bins/resources"
-    to: "bins/resources"
-    filter:
-      - "**/*"
-      - "*.txt"
-  - from: "bins/database/"
-    to: "bins/database/"
-    filter:
-      - "**/*"
-      - "*.txt"
-      - "*.gzip"
-      - "!*.db"
-  - from: "LICENSE.md"
-    to: "LICENSE.md"
-  - from: "report/template.zip"
-    to: "report/template.zip"
+    - from: "bins/scripts/auto-install-cert.zip"
+      to: "bins/scripts/auto-install-cert.zip"
+    - from: "bins/scripts/start-engine.zip"
+      to: "bins/scripts/start-engine.zip"
+    - from: "bins/flag.txt"
+      to: "bins/flag.txt"
+    - from: "bins/engine-version.txt"
+      to: "bins/engine-version.txt"
+    - from: "bins/resources"
+      to: "bins/resources"
+      filter:
+          - "**/*"
+          - "*.txt"
+    - from: "bins/database/"
+      to: "bins/database/"
+      filter:
+          - "**/*"
+          - "*.txt"
+          - "*.gzip"
+          - "!*.db"
+    - from: "LICENSE.md"
+      to: "LICENSE.md"
+    - from: "report/template.zip"
+      to: "report/template.zip"
 
 directories:
-  buildResources: resources
-  output: release/
-  app: .
+    buildResources: resources
+    output: release/
+    app: .
 
 files:
-  - "**/*"
-  - "!bins/**/*"
-  - "!.github/**/*"
-  - "!multibuilder/**/*"
-  - "!scripts/**/*"
-  - "!buildutil/**/*"
-  - "!buildHooks/**/*"
-  - "!build/**/*"
-  - "!backups/**/*"
-  - "!app/renderer/src/**/*"
+    - "**/*"
+    - "!bins/**/*"
+    - "!.github/**/*"
+    - "!multibuilder/**/*"
+    - "!scripts/**/*"
+    - "!buildutil/**/*"
+    - "!buildHooks/**/*"
+    - "!build/**/*"
+    - "!backups/**/*"
+    - "!app/renderer/src/**/*"
 
-
-#artifactName: ${productName}-${version}-${platform}-${arch}.${ext}
 asar: true
 
 publish:
-  - provider: "generic"
-    url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
+    - provider: "generic"
+      url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
 
 mac:
-  artifactName: ${productName}-${version}-darwin-${arch}.${ext}
-  gatekeeperAssess: false
-  # extraFiles:
-  #   - from: "bins/flag.darwin.txt"
-  #     to: "bins/flag.darwin.txt"
-    # - from: bins/yak_darwin_${arch}.zip
-    #   to: "bins/yak.zip"
-    # - from: "report/template.zip"
-    #   to: "report/template.zip"
-  target:
-    - target: dmg
-      arch:
-        - x64
-        - arm64
-  icon: "app/assets/yakitlogo.icns"
+    gatekeeperAssess: false
+    target:
+        - target: dmg
+          arch:
+              - x64
+              - arm64
+    icon: "app/assets/yakitlogo.icns"
 
 linux:
-  # artifactName: ${productName}-${version}-linux-${arch}.${ext}
-  # extraFiles:
-  #   - from: "bins/flag.linux.txt"
-  #     to: "bins/flag.linux.txt"
-  #   - from: bins/yak_linux_${arch}.zip
-  #     to: "bins/yak.zip"
-  #   - from: "report/template.zip"
-  #     to: "report/template.zip"
-  target:
-    - target: AppImage
-      arch:
-        - x64
-        - arm64
-  icon: "app/assets/yakitlogo.icns"
+    target:
+        - target: AppImage
+          arch:
+              - x64
+              - arm64
+    icon: "app/assets/yakitlogo.icns"
 
 win:
-  artifactName: ${productName}-${version}-windows-amd64.${ext}
-  extraFiles:
-    - from: "bins/flag.windows.txt"
-      to: "bins/flag.windows.txt"
-    - from: "bins/yak_windows_amd64.zip"
-      to: "bins/yak.zip"
-  # requestedExecutionLevel: requireAdministrator
-  target:
-    - target: nsis
-      arch:
-        - x64
-  icon: "app/assets/yakitlogo.ico"
-
+    # requestedExecutionLevel: requireAdministrator
+    target:
+        - target: nsis
+          arch:
+              - x64
+    icon: "app/assets/yakitlogo.ico"
 
 nsis:
-  oneClick: false
-  perMachine: false
-  deleteAppDataOnUninstall: true
-  allowToChangeInstallationDirectory: true
-  installerIcon: app/assets/yakitlogo.ico
-  uninstallerIcon: app/assets/yakitlogo.ico
-  unicode: true
-  include: build/yakit_build.nsh
-  license: LICENSE.md
-  warningsAsErrors: false
-  createDesktopShortcut: false
-  createStartMenuShortcut: true
+    oneClick: false
+    perMachine: false
+    deleteAppDataOnUninstall: true
+    allowToChangeInstallationDirectory: true
+    installerIcon: app/assets/yakitlogo.ico
+    uninstallerIcon: app/assets/yakitlogo.ico
+    unicode: true
+    include: build/yakit_build.nsh
+    license: LICENSE.md
+    warningsAsErrors: false
+    createDesktopShortcut: false
+    createStartMenuShortcut: true
 
 beforePack: "buildHooks/before_pack.js"
-#publish:
-#  - provider: generic
-#    url: https://update.electron-builder.com
-#    channel: latest
+
 releaseInfo:
-  releaseName: ${version}
-  releaseNotes: "view github release: https://github.com/yaklang/yakit/releases"
+    releaseName: ${version}
+    releaseNotes: "view github release: https://github.com/yaklang/yakit/releases"
