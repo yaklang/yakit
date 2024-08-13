@@ -92,6 +92,7 @@ interface MITMPluginLocalListProps {
     isHasParams: boolean
     showPluginHistoryList?: string[]
     setShowPluginHistoryList?: (l: string[]) => void
+    setTempShowPluginHistory?: (t: string) => void
     hasParamsCheckList: string[]
     curTabKey?: string
 }
@@ -122,6 +123,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         isHasParams,
         showPluginHistoryList = [],
         setShowPluginHistoryList = () => {},
+        setTempShowPluginHistory,
         hasParamsCheckList,
         curTabKey = ""
     } = props
@@ -272,6 +274,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                                 showPluginHistoryList={showPluginHistoryList}
                                 setShowPluginHistoryList={setShowPluginHistoryList}
                                 hasParamsCheckList={hasParamsCheckList}
+                                setTempShowPluginHistory={setTempShowPluginHistory}
                                 // 劫持启动前
                                 defaultPlugins={noParamsCheckList}
                                 setDefaultPlugins={setNoParamsCheckList}

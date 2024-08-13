@@ -3415,19 +3415,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 selectTypeList = ["mitm"]
             }
         }
-        const newParams = {...params, SourceType: selectTypeList.join(",")}
-        getHTTPFlowsFieldGroup(true, (t: FiltersItemProps[]) => {
-            let tagsList: string[] = []
-            mitmHasParamsNamesArr.forEach((item) => {
-                if (t.findIndex((ele) => ele.label === item) !== -1) {
-                    tagsList.push(item)
-                }
-            })
-            setTagsFilter(tagsList)
-            newParams.Tags = tagsList
+        const newParams = {...params, SourceType: selectTypeList.join(","), FromPlugin: mitmHasParamsNames}
+        if (JSON.stringify(params.SourceType?.split(",") || [""]) === JSON.stringify(selectTypeList)) {
             setParams(newParams)
-            emiter.emit("onHistorySourceTypeToMitm", newParams.SourceType)
-        })
+            setTimeout(() => {
+                updateData()
+            }, 20)
+        } else {
+            setParams(newParams)
+            setTimeout(() => {
+                emiter.emit("onHistorySourceTypeToMitm", newParams.SourceType)
+            }, 20)
+        }
     })
 
     // mitm页面带参数插件跳转过来

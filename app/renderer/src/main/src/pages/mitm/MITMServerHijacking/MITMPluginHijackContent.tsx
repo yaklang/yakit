@@ -26,6 +26,7 @@ import styles from "./MITMServerHijacking.module.scss"
 import classNames from "classnames"
 import {RemoteGV} from "@/yakitGV"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -62,6 +63,8 @@ interface MITMPluginHijackContentProps {
     onSetLoadedPluginLen: (s: number) => void
     showPluginHistoryList: string[]
     setShowPluginHistoryList: (l: string[]) => void
+    tempShowPluginHistory?: string
+    setTempShowPluginHistory?: (t: string) => void
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
@@ -108,6 +111,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         onSetLoadedPluginLen,
         showPluginHistoryList,
         setShowPluginHistoryList,
+        tempShowPluginHistory = "",
+        setTempShowPluginHistory
     } = props
 
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
@@ -146,6 +151,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     // 是否允许获取默认勾选值
     const isDefaultCheck = useRef<boolean>(false)
+
+    const tempShowPluginHistoryRef = useRef<string>(tempShowPluginHistory)
+    useEffect(() => {
+        tempShowPluginHistoryRef.current = tempShowPluginHistory
+    }, [tempShowPluginHistory])
 
     // 初始化加载 hooks，设置定时更新 hooks 状态
     useEffect(() => {
@@ -222,6 +232,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             }
                         }
                     })
+                    if (tempShowPluginHistoryRef.current && hasParamsCheckArr.includes(tempShowPluginHistoryRef.current)) {
+                        setShowPluginHistoryList([tempShowPluginHistoryRef.current])
+                        emiter.emit("onHasParamsJumpHistory", [tempShowPluginHistoryRef.current].join(","))
+                    }
                     setHasParamsCheckList([...hasParamsCheckArr])
                     setNoParamsCheckList([...noParamsCheckArr])
                 })
@@ -499,6 +513,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                         hasParamsCheckList={hasParamsCheckList}
                                         showPluginHistoryList={showPluginHistoryList}
                                         setShowPluginHistoryList={setShowPluginHistoryList}
+                                        setTempShowPluginHistory={setTempShowPluginHistory}
                                         curTabKey={curTabKey}
                                     />
                                 )}
@@ -590,6 +605,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 showPluginHistoryList={showPluginHistoryList}
                                 setShowPluginHistoryList={setShowPluginHistoryList}
                                 curTabKey={curTabKey}
+                                setTempShowPluginHistory={setTempShowPluginHistory}
                             />
                         </YakitSpin>
                     </div>
