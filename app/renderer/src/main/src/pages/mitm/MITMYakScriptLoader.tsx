@@ -223,12 +223,22 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         [style["history-icon-light"]]: showPluginHistoryList.includes(i.ScriptName)
                     })}
                     onClick={() => {
+                        // 多个
+                        // let arr = [...showPluginHistoryList]
+                        // if (arr.includes(i.ScriptName)) {
+                        //     arr = arr.filter((item) => item !== i.ScriptName)
+                        // } else {
+                        //     arr.push(i.ScriptName)
+                        // }
+
+                        // 单个
                         let arr = [...showPluginHistoryList]
                         if (arr.includes(i.ScriptName)) {
                             arr = arr.filter((item) => item !== i.ScriptName)
                         } else {
-                            arr.push(i.ScriptName)
+                            arr = [i.ScriptName]
                         }
+
                         setShowPluginHistoryList(arr)
                         emiter.emit("onHasParamsJumpHistory", arr.join(","))
                     }}
