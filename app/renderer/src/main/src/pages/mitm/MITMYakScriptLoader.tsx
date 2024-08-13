@@ -43,6 +43,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         showEditor,
         showPluginHistoryList = [],
         setShowPluginHistoryList = () => {},
+        setTempShowPluginHistory,
         hasParamsCheckList,
         curTabKey
     } = p
@@ -133,6 +134,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                 if (submitFlag) {
                                     clearMITMPluginCache()
                                     onSubmitYakScriptId(script.Id, saveParasmArr)
+                                    setTempShowPluginHistory && setTempShowPluginHistory(i.ScriptName)
                                 }
                                 m.destroy()
                             }
@@ -239,6 +241,8 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                             arr = [i.ScriptName]
                         }
 
+                        setTempShowPluginHistory && setTempShowPluginHistory("")
+                        
                         setShowPluginHistoryList(arr)
                         emiter.emit("onHasParamsJumpHistory", arr.join(","))
                     }}
@@ -353,6 +357,7 @@ export interface MITMYakScriptLoaderProps {
     showEditor: boolean
     showPluginHistoryList?: string[]
     setShowPluginHistoryList?: (l: string[]) => void
+    setTempShowPluginHistory?: (l: string) => void
     hasParamsCheckList: string[]
     curTabKey: string
 }

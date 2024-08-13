@@ -92,6 +92,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [statusCards, setStatusCards] = useState<StatusCardProps[]>([])
     const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
+    const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
     // 检测当前劫持状态
     useEffect(() => {
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
@@ -342,6 +343,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         onIsHasParams={setIsHasParams}
                         showPluginHistoryList={showPluginHistoryList}
                         setShowPluginHistoryList={setShowPluginHistoryList}
+                        tempShowPluginHistory={tempShowPluginHistory}
+                        setTempShowPluginHistory={setTempShowPluginHistory}
                     />
                 )
         }
@@ -456,6 +459,8 @@ interface MITMServerProps {
     onIsHasParams: (isHasParams: boolean) => void
     showPluginHistoryList: string[]
     setShowPluginHistoryList: (l: string[]) => void
+    tempShowPluginHistory?: string
+    setTempShowPluginHistory?: (t: string) => void
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const {
@@ -469,7 +474,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         isHasParams,
         onIsHasParams = () => {},
         showPluginHistoryList,
-        setShowPluginHistoryList
+        tempShowPluginHistory,
+        setShowPluginHistoryList,
+        setTempShowPluginHistory
     } = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -503,24 +510,24 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         () => {
             if (status === "idle") {
                 const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
-                getRemoteValue(CHECK_CACHE_LIST_DATA)
-                    .then((data: string) => {
-                        getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
-                            if (!!data && !!is) {
-                                const cacheData: string[] = JSON.parse(data)
-                                if (cacheData.length) {
-                                    onIsHasParams(false) 
-                                }
+                getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
+                    getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
+                        if (!!data && !!is) {
+                            const cacheData: string[] = JSON.parse(data)
+                            if (cacheData.length) {
+                                onIsHasParams(false)
                             } else {
-                                if (noParamsCheckList.length) {
-                                    onIsHasParams(false)
-                                } else {
-                                    onIsHasParams(true)
-                                }
+                                onIsHasParams(true)
                             }
-                        })
+                        } else {
+                            if (noParamsCheckList.length) {
+                                onIsHasParams(false)
+                            } else {
+                                onIsHasParams(true)
+                            }
+                        }
                     })
-                
+                })
             }
         },
         [status, noParamsCheckList],
@@ -779,7 +786,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         onSetOpenTabsFlag={setOpenTabsFlag}
                         onSetLoadedPluginLen={setLoadedPluginLen}
                         showPluginHistoryList={showPluginHistoryList}
+                        tempShowPluginHistory={tempShowPluginHistory}
                         setShowPluginHistoryList={setShowPluginHistoryList}
+                        setTempShowPluginHistory={setTempShowPluginHistory}
                     />
                 )
         }
@@ -818,6 +827,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         loadedPluginLen={loadedPluginLen}
                         onSelectAll={onSelectAll}
                         setShowPluginHistoryList={setShowPluginHistoryList}
+                        setTempShowPluginHistory={setTempShowPluginHistory}
                     />
                 )
         }
