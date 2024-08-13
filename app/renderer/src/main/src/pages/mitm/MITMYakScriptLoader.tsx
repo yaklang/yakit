@@ -135,7 +135,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                 setRemoteValue("mitm_has_params_" + i.ScriptName, JSON.stringify(saveParasmArr))
                                 if (submitFlag) {
                                     clearMITMPluginCache()
-                                    console.log('提交传参', saveParasmArr);
                                     onSubmitYakScriptId(script.Id, saveParasmArr)
                                     setTempShowPluginHistory && setTempShowPluginHistory(i.ScriptName)
                                 }
