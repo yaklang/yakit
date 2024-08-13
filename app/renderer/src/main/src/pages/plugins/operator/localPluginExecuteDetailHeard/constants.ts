@@ -15,5 +15,6 @@ export const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
     MultipartFileParams: [],
     IsHttpFlowId: false,
     HTTPFlowId: [],
-    requestType: "original"
+    requestType: "original",
+    rawHTTPRequest:''
 }

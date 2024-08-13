@@ -221,10 +221,6 @@ export const getValueByType = (defaultValue, type: string): number | string | bo
         case "boolean":
             value = defaultValue === "true" || defaultValue === true
             break
-        case "http-packet":
-        case "yak":
-            value = Buffer.from((defaultValue || "") as string, "utf8")
-            break
         case "select":
             // 考虑(defaultValue)的数据可能本身就是一个数组
             if (Array.isArray(defaultValue)) {

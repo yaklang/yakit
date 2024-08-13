@@ -631,6 +631,7 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
         const onSetScanData = useMemoizedFn(() => {
             if (!dataScanParams) return
             const {https, httpFlowIds, request} = dataScanParams
+            const initRawHTTPRequestString = Uint8ArrayToString(isEmpty(request) ? new Uint8Array() : request)
             const formValue = {
                 IsHttps: https,
                 httpFlowId: httpFlowIds.length > 0 ? httpFlowIds.join(",") : "",
@@ -641,15 +642,15 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
                     ? "input"
                     : "original") as RequestType,
                 IsRawHTTPRequest: isEmpty(request),
-                RawHTTPRequest: isEmpty(request) ? new Uint8Array() : request
+                rawHTTPRequest: initRawHTTPRequestString
             }
-            const initRawHTTPRequestString = Uint8ArrayToString(formValue.RawHTTPRequest)
+
             setExtraParamsValue((v) => ({...v, ...formValue}))
             /**目前只有webfuzzer带数据包的参数进入poc */
             setInitRawHTTPRequest(initRawHTTPRequestString)
             form.setFieldsValue({
                 ...formValue,
-                RawHTTPRequest: initRawHTTPRequestString
+                rawHTTPRequest: initRawHTTPRequestString
             })
         })
 
@@ -706,19 +707,21 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
                 httpFlowId,
                 requestType: (isHttpFlowId ? "httpFlowId" : isRawHTTPRequest ? "original" : "input") as RequestType
             }
+            const initRawHTTPRequestString = Uint8ArrayToString(params.HTTPRequestTemplate.RawHTTPRequest)
             // form表单数据
             const extraForm = {
                 ...params.HTTPRequestTemplate,
                 ...requestType,
                 Proxy: params.Proxy,
                 Concurrent: params.Concurrent,
-                TotalTimeoutSecond: params.TotalTimeoutSecond
+                TotalTimeoutSecond: params.TotalTimeoutSecond,
+                rawHTTPRequest: initRawHTTPRequestString
             }
-            const initRawHTTPRequestString = Uint8ArrayToString(params.HTTPRequestTemplate.RawHTTPRequest)
+
             const formValue = {
                 Input: params.Input,
                 IsHttps: params.HTTPRequestTemplate.IsHttps,
-                RawHTTPRequest: initRawHTTPRequestString,
+                rawHTTPRequest: initRawHTTPRequestString,
                 ...requestType
             }
             form.setFieldsValue({...formValue})
@@ -748,8 +751,8 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
                     IsRawHTTPRequest: value.requestType === "original",
                     IsHttpFlowId: value.requestType === "httpFlowId",
                     HTTPFlowId: hTTPFlowId.map((ele) => Number(ele)).filter((ele) => !!ele),
-                    RawHTTPRequest: value.RawHTTPRequest
-                        ? Buffer.from(value.RawHTTPRequest, "utf8")
+                    RawHTTPRequest: value.rawHTTPRequest
+                        ? Buffer.from(value.rawHTTPRequest, "utf8")
                         : Buffer.from("", "utf8")
                 }
             }

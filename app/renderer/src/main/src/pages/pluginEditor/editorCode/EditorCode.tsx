@@ -375,8 +375,8 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 requestParams.HTTPRequestTemplate = {
                                     ...value,
                                     IsRawHTTPRequest: value.requestType === "original",
-                                    RawHTTPRequest: value.RawHTTPRequest
-                                        ? Buffer.from(value.RawHTTPRequest, "utf8")
+                                    RawHTTPRequest: value.rawHTTPRequest
+                                        ? Buffer.from(value.rawHTTPRequest, "utf8")
                                         : Buffer.from("", "utf8")
                                 }
                                 break
@@ -385,8 +385,8 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 requestParams.HTTPRequestTemplate = {
                                     ...value,
                                     IsRawHTTPRequest: value.requestType === "original",
-                                    RawHTTPRequest: value.RawHTTPRequest
-                                        ? Buffer.from(value.RawHTTPRequest, "utf8")
+                                    RawHTTPRequest: value.rawHTTPRequest
+                                        ? Buffer.from(value.rawHTTPRequest, "utf8")
                                         : Buffer.from("", "utf8")
                                 }
                                 break
