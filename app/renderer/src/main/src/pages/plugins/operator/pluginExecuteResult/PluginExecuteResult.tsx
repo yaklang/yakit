@@ -70,12 +70,12 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
     const [interval, setInterval] = useState<number | undefined>(1000)
 
-    useEffect(() => {
-        return () => {
-            clearTopIncrement()
-        }
-    }, [])
-    const clearTopIncrement = useInterval(() => {
+    useUpdateEffect(() => {
+        setAllTotal(0)
+        setTempTotal(0)
+        setInterval(1000)
+    }, [runtimeId])
+    useInterval(() => {
         if (runtimeId) getTotal()
     }, interval)
 
