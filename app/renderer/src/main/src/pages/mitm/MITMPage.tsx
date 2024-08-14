@@ -897,7 +897,7 @@ export const loadModeInfo = [
     {
         value: "giturl",
         label: "线上 Nuclei",
-        width: 544
+        width: 680
     },
     {
         value: "local",
@@ -912,7 +912,7 @@ export const loadModeInfo = [
     {
         value: "uploadId",
         label: "插件 ID",
-        width: 448
+        width: 680
     }
 ]
 interface ImportLocalPluginProps {
@@ -1001,9 +1001,6 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             case "giturl":
                 return (
                     <>
-                        <div className={style.giturlInfoBox}>
-                            如果因为网络问题无法访问 Github，请切换到第三方仓库源，选择Gitee镜像 ghproxy.com镜像
-                        </div>
                         <Form.Item
                             labelCol={{span: 3}}
                             wrapperCol={{span: 21}}
@@ -1220,6 +1217,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                     </>
                 }
             >
+                <div className={style.infoBox}>
+                    导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
+                </div>
                 <Form form={form} className={style["import-local-plugin-form"]}>
                     {getRenderByLoadMode(loadMode)}
                 </Form>
