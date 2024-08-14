@@ -193,10 +193,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const [currentSelectResponse, setCurrentSelectResponse] = useState<ResponseProps>()
     const [responseMap, {set: setResponse, get: getResponse, reset: resetResponse}] = useMap<string, ResponseProps>()
-    const [droppedCountMap, {set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount}] = useMap<
-        string,
-        number
-    >(new Map())
 
     const [visiblePluginDrawer, setVisiblePluginDrawer] = useState<boolean>(false)
     const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
@@ -354,8 +350,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
-
-            if (onIsDropped(Response, FuzzerIndex)) return
 
             if (Response.Ok) {
                 // successCount++
@@ -605,39 +599,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }),
         {wait: 200}
     ).run
-    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
-    const onIsDropped = useMemoizedFn((data, fuzzerIndex) => {
-        const currentRequest = getRequest(fuzzerIndex)
-        if (!currentRequest) return
-        const advancedConfigValue: AdvancedConfigValueProps = {
-            ...defaultAdvancedConfigValue,
-            ...currentRequest
-        }
-
-        if (advancedConfigValue.matchers?.length > 0) {
-            // 设置了 matchers
-            const hit = data["MatchedByMatcher"] === true
-            // 丢包的条件：
-            //   1. 命中过滤器，同时过滤模式设置为丢弃
-            //   2. 未命中过滤器，过滤模式设置为保留
-            if (
-                (hit && advancedConfigValue.filterMode === "drop") ||
-                (!hit && advancedConfigValue.filterMode === "match")
-            ) {
-                // 丢弃不匹配的内容
-                let dropCount = getDroppedCount(fuzzerIndex)
-                if (dropCount) {
-                    dropCount++
-                } else {
-                    dropCount = 1
-                }
-                setDroppedCount(fuzzerIndex, dropCount)
-                return true
-            }
-            return false
-        }
-        return false
-    })
     const getPageNodeInfoByPageIdByRoute = useMemoizedFn(() => {
         const pageChildrenList = getCurrentGroupSequence()
         onSetOriginSequence(pageChildrenList)
@@ -763,7 +724,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         onClearRef()
         fuzzerTableMaxDataRef.current.clear()
         resetResponse()
-        resetDroppedCount()
         setCurrentSelectResponse(undefined)
         const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
         setSequenceList([...newSequenceList])
@@ -1191,7 +1151,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 disabled={responseMap.size === 0 || loading}
                                 responseInfo={currentSelectResponse}
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
-                                droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
                                     if (judgeMoreFuzzerTableMaxData()) {
                                         setShowAllRes(true)
@@ -1562,7 +1521,6 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
 const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((props) => {
     const {
         advancedConfigValue,
-        droppedCount,
         responseInfo,
         disabled,
         onShowAll,
@@ -1622,7 +1580,6 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                 </span>
 
                 <FuzzerExtraShow
-                    droppedCount={droppedCount}
                     advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue}
                     onlyOneResponse={onlyOneResponse}
                     httpResponse={httpResponse}

@@ -154,7 +154,6 @@ export interface SequenceResponseRefProps {
 /**
  * @description 返回响应头部
  * @property {boolean} disabled 展示全部按钮禁用状态
- * @property {number} droppedCount 丢弃响应数
  * @property {string} currentSequenceItemName 当前选中序列名称
  * @property {string} currentSequenceItemPageName 当前选中页面名称
  * @property {AdvancedConfigValueProps} advancedConfigValue 当前选中序列对应的页面高级配置数据
@@ -164,7 +163,6 @@ export interface SequenceResponseRefProps {
  */
 export interface SequenceResponseHeardProps {
     disabled: boolean
-    droppedCount: number
     currentSequenceItemName: string
     currentSequenceItemPageName: string
     advancedConfigValue?: AdvancedConfigValueProps
