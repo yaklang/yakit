@@ -90,8 +90,8 @@ module.exports = (win, getClient) => {
     })
 
     const asyncFetchCheckYaklangSource = (version) => {
-        return new Promise((resolve, reject) => {
-            let url = getCheckTextUrl()
+        return new Promise(async (resolve, reject) => {
+            const url = await getCheckTextUrl(version)
             if (url === '') {
                 reject(`Unsupported platform: ${process.platform}`)
             }
