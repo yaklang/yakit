@@ -969,10 +969,20 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
     )
 
+    // 优化性能 减少卡顿
+    const updateAreaFun = useDebounceFn(
+        (content: string) => {
+            const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
+            console.log("更新编辑器文件内容", newAreaInfo)
+            setAreaInfo && setAreaInfo(newAreaInfo)
+        },
+        {
+            wait: 200
+        }
+    ).run
+
     // 更新编辑器文件内容(activeFile-code字段在光标位置改变时就已更新，为减少渲染，则不更新)
     const updateAreaInputInfo = useMemoizedFn((content: string) => {
-        const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
-        // console.log("更新编辑器文件内容", newAreaInfo)
         if (editorInfo) {
             const newEditorInfo = {...editorInfo, code: content}
             // 未保存文件不用自动保存 审计树不用自动保存
@@ -981,29 +991,36 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             }
             setEditorInfo(newEditorInfo)
         }
-        setAreaInfo && setAreaInfo(newAreaInfo)
+        updateAreaFun(content)
     })
 
     // 更新当前底部展示信息
-    const updateBottomEditorDetails = useMemoizedFn(async () => {
-        if (!editorInfo) return
-        let newActiveFile = editorInfo
-        // 注入语法检查结果
-        newActiveFile = await getDefaultActiveFile(newActiveFile)
-        // 更新位置信息
-        if (positionRef.current) {
-            // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
-            newActiveFile = {...newActiveFile, position: positionRef.current}
+    const updateBottomEditorDetails = useDebounceFn(
+        async () => {
+            console.log("更新当前底部展示信息---")
+
+            if (!editorInfo) return
+            let newActiveFile = editorInfo
+            // 注入语法检查结果
+            newActiveFile = await getDefaultActiveFile(newActiveFile)
+            // 更新位置信息
+            if (positionRef.current) {
+                // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
+                newActiveFile = {...newActiveFile, position: positionRef.current}
+            }
+            if (selectionRef.current) {
+                // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
+                newActiveFile = {...newActiveFile, selections: selectionRef.current}
+            }
+            setActiveFile && setActiveFile(newActiveFile)
+            const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
+            // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
+            setAreaInfo && setAreaInfo(newAreaInfo)
+        },
+        {
+            wait: 200
         }
-        if (selectionRef.current) {
-            // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
-            newActiveFile = {...newActiveFile, selections: selectionRef.current}
-        }
-        setActiveFile && setActiveFile(newActiveFile)
-        const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
-        // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
-        setAreaInfo && setAreaInfo(newAreaInfo)
-    })
+    ).run
 
     // 聚焦时校验是否更新活跃文件
     const onSetActiveFileByFocus = useMemoizedFn(() => {

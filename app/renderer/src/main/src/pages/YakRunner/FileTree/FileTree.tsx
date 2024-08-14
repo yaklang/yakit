@@ -729,6 +729,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         }
     }, [info, copyPath])
 
+    // 此处关闭文件夹由于审计树没有树右键 因此只有文件树存在
     const closeFolder = useMemoizedFn(() => {
         setFileTree && setFileTree([])
     })

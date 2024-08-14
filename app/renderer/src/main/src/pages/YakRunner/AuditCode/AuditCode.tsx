@@ -3,7 +3,7 @@ import {AuditCodeProps, AuditNodeProps, AuditTreeNodeProps, AuditTreeProps, Audi
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
 import {YakScript} from "@/pages/invoker/schema"
-import {Divider, Form, FormInstance, Tree} from "antd"
+import {Divider, Form, FormInstance, Tooltip, Tree} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -25,7 +25,7 @@ import {randomString} from "@/utils/randomUtil"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import useStore from "../hooks/useStore"
-import {getNameByPath, grpcFetchAuditTree, loadAuditFromYakURLRaw} from "../utils"
+import {getNameByPath, grpcFetchAuditTree, grpcFetchDeleteAudit, loadAuditFromYakURLRaw} from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {
     OutlinCompileIcon,
@@ -46,11 +46,14 @@ import {SolidExclamationIcon, SolidInformationcircleIcon, SolidXcircleIcon} from
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerType"
 import {FileNodeMapProps} from "../FileTree/FileTreeType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {RequestYakURLResponse} from "@/pages/yakURLTree/data"
+import {RequestYakURLResponse, YakURLResource} from "@/pages/yakURLTree/data"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {formatTimestamp} from "@/utils/timeUtil"
+import {QuestionMarkCircleIcon} from "@/assets/newIcon"
+import useDispatcher from "../hooks/useDispatcher"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -374,17 +377,17 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         emiter.emit("onRefreshAuditTree")
     })
 
-    useEffect(()=>{
-        if(loadTreeType==="file"){
+    useEffect(() => {
+        if (loadTreeType === "file") {
             setValue("")
             resetMap()
         }
-    },[loadTreeType])
+    }, [loadTreeType])
 
-    useUpdateEffect(()=>{
+    useUpdateEffect(() => {
         setValue("")
         resetMap()
-    },[projectNmae])
+    }, [projectNmae])
 
     const onSubmit = useMemoizedFn(async () => {
         resetMap()
@@ -689,19 +692,32 @@ interface AuditHistoryTableProps {
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
     const {visible, onClose} = props
+    const {projectNmae} = useStore()
+    const {setFileTree, setLoadTreeType} = useDispatcher()
     const [aduitData, setAduitData] = useState<RequestYakURLResponse>()
     const [selected, setSelected] = useState<string[]>([])
+    const [search, setSearch] = useState<string>()
     useEffect(() => {
         if (visible) {
             getAduitList()
         }
-    }, [visible])
+    }, [visible, search])
 
     const getAduitList = useMemoizedFn(async () => {
         try {
             const {res} = await grpcFetchAuditTree("/")
             console.log("getAduitList***", res)
-            setAduitData(res)
+            if (search && search.length > 0) {
+                const newResources = res.Resources.filter((item) => JSON.stringify(item).includes(search))
+                const obj: RequestYakURLResponse = {
+                    ...res,
+                    Resources: newResources,
+                    Total: newResources.length
+                }
+                setAduitData(obj)
+            } else {
+                setAduitData(res)
+            }
         } catch (error) {}
     })
 
@@ -710,8 +726,54 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
+    const getAuditPath = useMemoizedFn((val: YakURLResource) => {
+        let path: string = "-"
+        let time: string = "-"
+        let description: string = ""
+        let language: string = ""
+        val.Extra.forEach((item) => {
+            switch (item.Key) {
+                case "Path":
+                    path = item.Value
+                    break
+                case "Description":
+                    description = item.Value
+                    break
+                case "Language":
+                    language = item.Value
+                    break
+                case "CreateAt":
+                    time = formatTimestamp(parseInt(item.Value))
+                    break
+            }
+        })
+
+        return {
+            path,
+            time,
+            description,
+            language
+        }
+    })
+
+    const onDelete = useMemoizedFn(async (path: string) => {
+        try {
+            await grpcFetchDeleteAudit(path)
+            getAduitList()
+            console.log("ooo",path,projectNmae);
+            
+            if (path === `/${projectNmae}`) {
+                setLoadTreeType && setLoadTreeType("file")
+                setFileTree && setFileTree([])
+                emiter.emit("onResetAuditStatus")
+            }
+        } catch (error) {
+            fail("删除失败")
+        }
+    })
+
     return (
-        <div className={styles["audit-history-table"]}>
+        <div className={styles["audit-history-table"]} onKeyDown={(event)=>event.stopPropagation()}>
             <div className={styles["header"]}>
                 <div className={styles["main"]}>
                     <div className={styles["title"]}>已编译项目</div>
@@ -719,22 +781,26 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                         <div className={styles["text"]}>Total</div>
                         <div className={styles["number"]}>{aduitData?.Total}</div>
                     </div>
-                    <Divider type={"vertical"} style={{margin: 0}} />
+                    {/* <Divider type={"vertical"} style={{margin: 0}} />
                     <div className={styles["sub-title"]}>
                         <div className={styles["text"]}>Selected</div>
                         <div className={styles["number"]}>{selected.length}</div>
-                    </div>
+                    </div> */}
                 </div>
                 <div className={styles["extra"]}>
                     <YakitInput
                         prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                         placeholder='请输入关键词搜索'
                         size='small'
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value)
+                        }}
                     />
-                    <Divider type={"vertical"} style={{margin: 0}} />
+                    {/* <Divider type={"vertical"} style={{margin: 0}} />
                     <YakitButton style={{paddingLeft: 0}} type='text' danger disabled={selected.length === 0}>
                         {selected.length === aduitData?.Total ? "清空" : "删除"}
-                    </YakitButton>
+                    </YakitButton> */}
 
                     <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onClose} />
                 </div>
@@ -743,7 +809,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             <div className={styles["table"]}>
                 <div className={styles["table-header"]}>
                     <div className={styles["audit-name"]}>
-                        <YakitCheckbox
+                        {/* <YakitCheckbox
                             value={true}
                             onChange={(e) => {
                                 if (e.target.checked) {
@@ -752,7 +818,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     setSelected([])
                                 }
                             }}
-                        />
+                        /> */}
                         项目名称
                     </div>
                     <div className={styles["audit-path"]}>存储路径</div>
@@ -762,10 +828,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 <div className={styles["table-content"]}>
                     {aduitData &&
                         aduitData.Resources.map((item, index) => {
+                            const obj = getAuditPath(item)
                             return (
                                 <div className={styles["table-item"]} key={`${item.ResourceName}-${index}`}>
                                     <div className={styles["audit-name"]}>
-                                        <YakitCheckbox
+                                        {/* <YakitCheckbox
                                             value={true}
                                             onChange={(e) => {
                                                 if (e.target.checked) {
@@ -776,16 +843,21 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                                     setSelected(newArr)
                                                 }
                                             }}
-                                        />
+                                        /> */}
                                         {item.ResourceName}
+                                        {obj.description && (
+                                            <Tooltip title={obj.description}>
+                                                <QuestionMarkCircleIcon />
+                                            </Tooltip>
+                                        )}
                                     </div>
-                                    <div className={styles["audit-path"]}>-</div>
-                                    <div className={styles["audit-time"]}>-</div>
+                                    <div className={styles["audit-path"]}>{obj.path}</div>
+                                    <div className={styles["audit-time"]}>{obj.time}</div>
                                     <div className={styles["audit-opt"]}>
                                         <YakitButton
                                             type='text'
                                             icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
-                                            onClick={()=>{
+                                            onClick={() => {
                                                 emiter.emit("onOpenAuditTree", item.ResourceName)
                                                 onClose()
                                             }}
@@ -799,7 +871,12 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         }
                                         onConfirm={onRemove}
                                     > */}
-                                        <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
+                                        <YakitButton
+                                            type='text'
+                                            danger
+                                            icon={<OutlineTrashIcon />}
+                                            onClick={() => onDelete(item.Path)}
+                                        />
                                     </div>
                                 </div>
                             )
