@@ -147,7 +147,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const getAduitList = useMemoizedFn(async () => {
         try {
             const {res} = await grpcFetchAuditTree("/")
-            console.log("getAduitList","/", res)
+            console.log("getAduitList", "/", res)
             const arr = res.Resources.map(({Path, ResourceName}) => ({
                 path: Path,
                 name: ResourceName
@@ -225,31 +225,23 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             })
         }
         if (aduitList.length > 0) {
-            if (aduitList.length <= 10) {
-                newMenu.push({
-                    key: "auditHistory",
-                    label: "最近编译",
-                    children: aduitList.map((item) => ({key: `aduit-${item.name}`, label: item.name}))
-                })
-            } else {
-                let children: any = [
-                    ...aduitList.slice(0, 10).map((item) => ({key: `aduit-${item.name}`, label: item.name})),
-                    {
-                        type: "divider"
-                    },
-                    {
-                        key: "aduitAllList",
-                        label: "查看全部",
-                        type: "text"
-                    }
-                ]
+            let children: any = [
+                ...aduitList.slice(0, 10).map((item) => ({key: `aduit-${item.name}`, label: item.name})),
+                {
+                    type: "divider"
+                },
+                {
+                    key: "aduitAllList",
+                    label: "查看全部",
+                    type: "text"
+                }
+            ]
 
-                newMenu.push({
-                    key: "auditHistory",
-                    label: "最近编译",
-                    children
-                })
-            }
+            newMenu.push({
+                key: "auditHistory",
+                label: "最近编译",
+                children
+            })
         }
 
         return newMenu
@@ -741,7 +733,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                             <div className={styles["extra"]}>
                                 <Tooltip title={"编译当前项目"}>
                                     <YakitButton
-                                        disabled={loadTreeType === "audit"}
+                                        disabled={loadTreeType === "audit" || fileTree.length === 0}
                                         type='text2'
                                         icon={<OutlinCompileIcon />}
                                         onClick={() => emiter.emit("onOpenAuditModal", "init")}

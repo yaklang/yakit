@@ -13,14 +13,16 @@ import {instance} from "@viz-js/viz"
 import {failed} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 interface FlowChartBoxProps {
     onDetail: (data: CodeRangeProps) => void
     graph?: string
     graphInfo?: GraphInfoProps[]
+    node_id?: string
 }
 
 export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
-    const {onDetail, graph, graphInfo} = props
+    const {onDetail, graph, graphInfo, node_id} = props
     const svgBoxRef = useRef<HTMLDivElement>(null)
     const svgRef = useRef<any>(null)
     const [nodeId, setNodeId] = useState<string>()
@@ -29,6 +31,8 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     const onElementStyle = useMemoizedFn((id, stroke, fill) => {
         // 获取 id 为 node 的元素
         const nodeElement = document.getElementById(id)
+        console.log("ooo", nodeElement)
+
         if (nodeElement) {
             // 查找该元素下的所有 ellipse 标签
             const ellipses = nodeElement.getElementsByTagName("ellipse")
@@ -37,6 +41,32 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
             for (let i = 0; i < ellipses.length; i++) {
                 ellipses[i].style.stroke = stroke
                 ellipses[i].style.fill = fill
+            }
+        }
+    })
+
+    // 初始默认样式
+    const onInitSvgStyle = useMemoizedFn((id?: string) => {
+        if (id) {
+            const titles = document.getElementsByTagName("title")
+            // 遍历所有 <title> 元素
+            for (let i = 0; i < titles.length; i++) {
+                if (titles[i].textContent === "n1") {
+                    // 获取匹配的 <title> 元素的父元素
+                    const parentElement = titles[i].parentElement
+                    if (parentElement) {
+                        // 新增class用于屏蔽通用hover样式
+                        parentElement.classList.add("node-main")
+                        // 查找该元素下的所有 ellipse 标签
+                        const ellipses = parentElement.getElementsByTagName("ellipse")
+                        // 遍历所有找到的 ellipse 标签，并添加样式
+                        for (let i = 0; i < ellipses.length; i++) {
+                            ellipses[i].style.stroke = "#8863F7"
+                            ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+                        }
+                    }
+                    break // 找到匹配的元素后停止遍历
+                }
             }
         }
     })
@@ -59,7 +89,9 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
             const titleElement = target.parentNode.querySelector("title")
             if (titleElement) {
                 const titleText = titleElement.textContent
-                console.log("click---", titleText, nodeId)
+                console.log("click---", titleText, node_id)
+                // 本身节点不用点击展开详情
+                if (titleText === node_id) return
                 if (titleText === nodeId) {
                     setNodeId(undefined)
                     onChangeSvgStyle()
@@ -88,7 +120,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 }
                 // 新增svg子元素
                 svgBoxRef.current.appendChild(svg)
-                console.log("ppp", svg)
+                onInitSvgStyle(node_id)
             }
         })
     }, [graph])
@@ -106,7 +138,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     const [scale, setScale] = useState(1) // 初始缩放比例为1
     const [dragging, setDragging] = useState(false) // 是否正在拖动
     const [offset, setOffset] = useState({x: 0, y: 0}) // 鼠标拖动的偏移量
-    const [isAllowHand, setAllowHand] = useState<boolean>(false) //是否允许拖动
 
     // 放大
     const handleZoomIn = useMemoizedFn(() => {
@@ -122,9 +153,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         if (svgRef.current && svgBoxRef.current) {
             const svg = svgRef.current as SVGSVGElement
             svg.style.transform = `scale(${scale})`
-            if (isAllowHand) {
-                svgBoxRef.current.style.cursor = dragging ? "grabbing" : "grab"
-            }
+            svgBoxRef.current.style.cursor = dragging ? "grabbing" : "grab"
             // console.log("uuu", offset)
             svg.style.position = "relative"
             svg.style.left = `${offset.x}px`
@@ -134,7 +163,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
 
     // 处理鼠标按下事件
     const handleMouseDown = (e) => {
-        if (!isAllowHand) return
         setDragging(true)
         firstOffsetRef.current = {
             x: e.nativeEvent.offsetX,
@@ -144,7 +172,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
 
     // 处理鼠标抬起事件
     const handleMouseUp = () => {
-        if (!isAllowHand) return
         setDragging(false)
         firstOffsetRef.current = undefined
     }
@@ -152,7 +179,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     // 处理鼠标移动事件
     const handleMouseMove = useThrottleFn(
         (e) => {
-            if (!isAllowHand) return
             if (dragging && firstOffsetRef.current) {
                 const newOffsetX = e.nativeEvent.offsetX
                 const newOffsetY = e.nativeEvent.offsetY
@@ -167,22 +193,26 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         {wait: 200}
     ).run
 
-    const handleHand = useMemoizedFn(() => {
-        setAllowHand(!isAllowHand)
-    })
-
     return (
         <div className={styles["flow-chart-box"]}>
             <div className={styles["header"]}>
                 <div className={styles["relative-box"]}>
                     <div className={styles["absolute-box"]}>
-                        <div className={styles["title"]}>Syntax Flow 审计过程</div>
+                        <div className={styles["title"]}>
+                            Syntax Flow 审计过程
+                            <Tooltip
+                                title={
+                                    <div>
+                                        <div>黑色箭头代表数据流分析路径</div>
+                                        <div>红色箭头代表跨数据流分析路径</div>
+                                        <div>紫色节点代表审计结果</div>
+                                    </div>
+                                }
+                            >
+                                <QuestionMarkCircleIcon />
+                            </Tooltip>
+                        </div>
                         <div className={styles["extra"]}>
-                            <YakitButton
-                                type={isAllowHand ? "text" : "text2"}
-                                icon={<OutlineHandIcon />}
-                                onClick={handleHand}
-                            />
                             <YakitButton type='text2' icon={<OutlineZoominIcon />} onClick={handleZoomIn} />
                             <YakitButton type='text2' icon={<OutlineZoomoutIcon />} onClick={handleZoomOut} />
                         </div>
@@ -190,7 +220,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 </div>
             </div>
             <div
-                style={isAllowHand ? {cursor: "grab"} : {cursor: "unset"}}
+                style={{cursor: "grab"} }
                 className={styles["svg-box"]}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
@@ -329,7 +359,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             <div className={styles["header"]}>
                 <div className={styles["relative-box"]}>
                     <div className={styles["absolute-box"]}>
-                        <div className={styles["title"]}>审计详情</div>
+                        <div className={styles["title"]}>审计结果</div>
                         <div className={styles["extra"]}>
                             <YakitButton
                                 type='text2'
@@ -368,7 +398,9 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                             {contentInfo && <div className={styles["ir-code-box"]}>{contentInfo?.ir_code}</div>}
                         </div>
                     }
-                    secondNode={<FlowChartBox onDetail={onDetail} graph={graph} graphInfo={graphInfo} />}
+                    secondNode={
+                        <FlowChartBox onDetail={onDetail} graph={graph} graphInfo={graphInfo} node_id={nodeId} />
+                    }
                 />
             </div>
         </div>

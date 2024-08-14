@@ -24,6 +24,9 @@
                     font-size: 12px;
                     font-weight: 600;
                     line-height: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
                 }
             }
         }
@@ -39,7 +42,7 @@
             flex-direction: column;
             gap: 8px;
             .url-box {
-                color: #f28b44;
+                color: rgb(136, 99, 247);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;
@@ -110,6 +113,12 @@
                     cursor: pointer;
                     &:hover {
                         fill: var(--yakit-primary-5);
+                    }
+                }
+                .node-main text {
+                    cursor: unset;
+                    &:hover {
+                        fill: #31343f;
                     }
                 }
             }

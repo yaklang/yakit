@@ -237,6 +237,30 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
 }
 
 /**
+ * @name 删除已编译项目
+ */
+export const grpcFetchDeleteAudit: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const params = {
+            Method: "DELETE",
+            Url: {
+                Schema: "ssadb",
+                Path: path,
+                Query: [{Key: "trash", Value: "true"}]
+            }
+        }
+        try {
+            const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            console.log("删除已编译项目", params, list)
+            const data: FileNodeMapProps[] = initFileTreeData(list, path)
+            resolve(data)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
  * @name 粘贴文件
  */
 export const grpcFetchPasteFile: (

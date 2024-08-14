@@ -133,7 +133,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     if (callback) callback(res)
                 })
                 .catch((error) => {
-                    yakitNotify("error", `获取文件列表失败: ${error}`)
+                    yakitNotify("error", `获取文件项目失败: ${error}`)
                     if (callback) callback([])
                 })
         } else {
@@ -142,7 +142,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     if (callback) callback(res.data)
                 })
                 .catch((error) => {
-                    yakitNotify("error", `获取审计列表失败: ${error}`)
+                    if(error.toString().includes("record not found")){
+                        yakitNotify("error", `获取审计项目：该项目 ${path} 已被删除。`)
+                    }
+                    else{
+                        yakitNotify("error", `获取审计项目失败: ${error}`)
+                    }
                     if (callback) callback([])
                 })
         }

@@ -268,7 +268,7 @@
             font-weight: 600;
             line-height: 16px;
             position: fixed;
-            width: calc(100% - 40px);
+            width: calc(100% - 32px);
             background: #ffffff;
             z-index: 1;
             border-bottom: 1px solid #eaecf3;
@@ -276,7 +276,7 @@
                 flex: 1;
                 display: flex;
                 flex-direction: row;
-                gap: 8px;
+                gap: 4px;
                 align-items: center;
             }
             .audit-path {
@@ -303,7 +303,7 @@
                     flex: 1;
                     display: flex;
                     flex-direction: row;
-                    gap: 8px;
+                    gap: 4px;
                     align-items: center;
                 }
                 .audit-path {
