@@ -583,8 +583,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
-    /**@name 是否刷新高级配置中的代理列表 */
-    const [droppedCount, setDroppedCount] = useState(0)
 
     // state
     const [loading, setLoading] = useState(false)
@@ -850,7 +848,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         resetResponse()
         setHistoryTask(undefined)
         setLoading(true)
-        setDroppedCount(0)
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, tokenRef.current).then(() => {
             ipcRenderer
@@ -909,7 +906,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setDefaultResponseSearch(affixSearch)
 
         setLoading(true)
-        setDroppedCount(0)
 
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
@@ -970,7 +966,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
-    const dCountRef = useRef<number>(0)
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
@@ -1021,8 +1016,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 reset()
             }
 
-            if (onIsDropped(data)) return
-
             const r = {
                 // 6.16
                 ...data,
@@ -1059,7 +1052,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             successCount = 0
             failedCount = 0
-            dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
                 setIsPause(true)
@@ -1102,28 +1094,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onlyOneResponse = useMemo(() => {
         return !loading && failedFuzzer.length + successFuzzer.length === 1
     }, [loading, failedFuzzer, successFuzzer])
-
-    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
-    const onIsDropped = useMemoizedFn((data) => {
-        if (advancedConfigValue.matchers?.length > 0) {
-            // 设置了 matchers
-            const hit = data["MatchedByMatcher"] === true
-            // 丢包的条件：
-            //   1. 命中过滤器，同时过滤模式设置为丢弃
-            //   2. 未命中过滤器，过滤模式设置为保留
-            if (
-                (hit && advancedConfigValue.filterMode === "drop") ||
-                (!hit && advancedConfigValue.filterMode === "match")
-            ) {
-                // 丢弃不匹配的内容
-                dCountRef.current++
-                setDroppedCount(dCountRef.current)
-                return true
-            }
-            return false
-        }
-        return false
-    })
 
     const sendFuzzerSettingInfo = useDebounceFn(
         () => {
@@ -1776,7 +1746,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </YakitButton>
                             )}
                             <FuzzerExtraShow
-                                droppedCount={droppedCount}
                                 advancedConfigValue={advancedConfigValue}
                                 onlyOneResponse={onlyOneResponse}
                                 httpResponse={httpResponse}
@@ -2012,16 +1981,14 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
 }
 
 interface FuzzerExtraShowProps {
-    droppedCount: number
     advancedConfigValue: AdvancedConfigValueProps
     onlyOneResponse: boolean
     httpResponse: FuzzerResponse
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
-    const {droppedCount, advancedConfigValue, onlyOneResponse, httpResponse} = props
+    const {advancedConfigValue, onlyOneResponse, httpResponse} = props
     return (
         <div className={styles["display-flex"]}>
-            {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
             {advancedConfigValue.proxy.length > 0 && (
                 <Tooltip title={advancedConfigValue.proxy}>
                     <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
