@@ -360,10 +360,9 @@ module.exports = {
         // 判断历史引擎版本是否存在以及正确性
         const asyncYakEngineVersionExistsAndCorrectness = (version) => {
             const dest = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 try {
-                    const url = getCheckTextUrl()
-
+                    const url = await getCheckTextUrl(version)
                     if (url === "") {
                         reject(`Unsupported platform: ${process.platform}`)
                     }

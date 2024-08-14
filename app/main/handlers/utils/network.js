@@ -83,7 +83,7 @@ async function getAvailableOSSDomain() {
 }
 
 /**获取校验url */
-const getCheckTextUrl = async () => {
+const getCheckTextUrl = async (version) => {
     const domain = await getAvailableOSSDomain();
     let url = ''
     switch (process.platform) {
