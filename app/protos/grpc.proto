@@ -4203,6 +4203,7 @@ message HTTPResponseMatcher {
   string ExprType = 9;
 
   string HitColor = 10;
+  // retain:保留 discard:丢弃 不传就是匹配
   string Action = 11;
 }
 
