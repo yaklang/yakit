@@ -27,6 +27,7 @@ export interface WebFuzzerNewEditorProps {
     setHotPatchCode: (s: string) => void
     setHotPatchCodeWithParamGetter: (s: string) => void
     firstNodeExtra?: () => JSX.Element
+    pageId:string
 }
 export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -39,7 +40,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             hotPatchCodeWithParamGetter,
             setHotPatchCode,
             setHotPatchCodeWithParamGetter,
-            firstNodeExtra
+            firstNodeExtra,
+            pageId
         } = props
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
 
@@ -192,7 +194,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 }}
                 editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                 extraEditorProps={{
-                    isShowSelectRangeMenu: true
+                    isShowSelectRangeMenu: true,
+                    pageId,
                 }}
                 extraEnd={firstNodeExtra && firstNodeExtra()}
                 url={url}

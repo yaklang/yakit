@@ -567,6 +567,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /** 编码按钮 */
     codingBtn?: ReactElement
     url?: string
+    pageId?: string
 }
 
 export type RenderTypeOptionVal = "beautify" | "render"
