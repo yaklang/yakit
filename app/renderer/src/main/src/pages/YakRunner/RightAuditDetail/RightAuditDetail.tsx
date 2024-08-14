@@ -105,6 +105,18 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         }
     })
 
+    const onRefreshAuditDetailFun = useMemoizedFn(()=>{
+        setNodeId(undefined)
+    })
+
+    useEffect(() => {
+        // 打开编译右侧详情
+        emiter.on("onRefreshAuditDetail", onRefreshAuditDetailFun)
+        return () => {
+            emiter.off("onRefreshAuditDetail", onRefreshAuditDetailFun)
+        }
+    }, [])
+
     useEffect(() => {
         if (!graph) return
         instance().then((viz) => {
@@ -225,6 +237,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseUp}
                 ref={svgBoxRef}
             />
             {nodeId && (

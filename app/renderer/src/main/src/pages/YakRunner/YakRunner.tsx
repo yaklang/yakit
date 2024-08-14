@@ -210,10 +210,17 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
         insertFileMap(keys[index])
     })
-    useEffect(() => {
-        loadIndexRef.current = 0
+
+    const clearMap = useMemoizedFn(()=>{
         clearMapFileDetail()
         clearMapFolderDetail()
+        clearMapAuditDetail()
+        clearMapAuditChildDetail()
+    })
+
+    useEffect(() => {
+        loadIndexRef.current = 0
+        clearMap()
         let id = setInterval(() => {
             loadFileMap()
         }, 100)
@@ -229,8 +236,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             return
         }
         loadIndexRef.current = 0
-        clearMapFileDetail()
-        clearMapFolderDetail()
+        clearMap()
         // FileTree缓存清除
         emiter.emit("onResetFileTree")
     })
@@ -966,6 +972,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
             setAuditRightParams(data)
             setShowAuditDetail(true)
+            emiter.emit("onRefreshAuditDetail")
         } catch (error) {}
     })
 
