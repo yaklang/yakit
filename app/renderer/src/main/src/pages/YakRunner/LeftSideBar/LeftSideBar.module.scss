@@ -9,7 +9,7 @@
         flex-direction: column;
         align-items: flex-start;
         background: #f8f8f8;
-        // border-right: 1px solid #eaecf3;
+        border-right: 1px solid #eaecf3;
     }
 
     &-item {
@@ -60,7 +60,7 @@
         background-color: rgba(204, 210, 222, 0.5);
         cursor: not-allowed;
     }
-    
+
     &-item-active:hover {
         background-color: var(--yakit-primary-4);
     }
@@ -90,6 +90,6 @@
     }
 }
 
-.hidden{
+.hidden {
     border-right: 1px solid var(--yakit-background-color);
 }

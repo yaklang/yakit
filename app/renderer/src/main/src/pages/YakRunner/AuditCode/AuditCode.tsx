@@ -272,7 +272,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 
             if (itemDetail.ResourceType === "variable" || itemDetail.ResourceType === TopId) {
                 obj.children = initAuditTree(childArr, depth + 1)
-                obj.isLeaf = false
+                // 数量为0时不展开 message除外
+                if (parseInt(obj.Size + "") === 0 && itemDetail.ResourceType !== TopId) {
+                    obj.isLeaf = true
+                } else {
+                    obj.isLeaf = false
+                }
             } else {
                 obj.isLeaf = true
             }
@@ -424,6 +429,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
                 // 变量
                 if (ResourceType === "variable") {
+                    console.log("yyy", Size, parseInt(Size + ""))
+
                     const id = `${path}${ResourceName}`
                     variableIds.push(id)
                     setMapAuditDetail(id, {
@@ -760,8 +767,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         try {
             await grpcFetchDeleteAudit(path)
             getAduitList()
-            console.log("ooo",path,projectNmae);
-            
+            console.log("ooo", path, projectNmae)
+
             if (path === `/${projectNmae}`) {
                 setLoadTreeType && setLoadTreeType("file")
                 setFileTree && setFileTree([])
@@ -773,7 +780,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     })
 
     return (
-        <div className={styles["audit-history-table"]} onKeyDown={(event)=>event.stopPropagation()}>
+        <div className={styles["audit-history-table"]} onKeyDown={(event) => event.stopPropagation()}>
             <div className={styles["header"]}>
                 <div className={styles["main"]}>
                     <div className={styles["title"]}>已编译项目</div>
@@ -854,14 +861,16 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     <div className={styles["audit-path"]}>{obj.path}</div>
                                     <div className={styles["audit-time"]}>{obj.time}</div>
                                     <div className={styles["audit-opt"]}>
-                                        <YakitButton
-                                            type='text'
-                                            icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
-                                            onClick={() => {
-                                                emiter.emit("onOpenAuditTree", item.ResourceName)
-                                                onClose()
-                                            }}
-                                        />
+                                        <Tooltip title={"打开项目"}>
+                                            <YakitButton
+                                                type='text'
+                                                icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
+                                                onClick={() => {
+                                                    emiter.emit("onOpenAuditTree", item.ResourceName)
+                                                    onClose()
+                                                }}
+                                            />
+                                        </Tooltip>
                                         <Divider type={"vertical"} style={{margin: 0}} />
                                         {/* <YakitPopconfirm
                                         title={
