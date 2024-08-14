@@ -460,14 +460,20 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
     return fuzzerRequests
 }
 
-export const newWebFuzzerTab = (isHttps: boolean, request: string, openFlag?: boolean, downstreamProxyStr?: string) => {
+export const newWebFuzzerTab = (params: {
+    isHttps?: boolean
+    request?: string
+    downstreamProxyStr?: string
+    shareContent?: string
+    openFlag: boolean
+}) => {
     return ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
-            data: {isHttps: isHttps, request: request, openFlag, downstreamProxyStr}
+            data: {...params}
         })
         .then(() => {
-            openFlag === false && info("发送成功")
+            params.openFlag && info("发送成功")
         })
 }
 
@@ -1834,6 +1840,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 setHotPatchCode={setHotPatchCode}
                                 setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                                 firstNodeExtra={firstNodeExtra}
+                                pageId={props.id}
                             />
                         }
                         secondNode={

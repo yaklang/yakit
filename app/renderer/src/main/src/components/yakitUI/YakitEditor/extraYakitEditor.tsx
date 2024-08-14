@@ -8,7 +8,7 @@ import {
 } from "./YakitEditorType"
 import {YakitEditor} from "./YakitEditor"
 import {failed, info} from "@/utils/notification"
-import {newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {ShareValueProps, newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {StringToUint8Array} from "@/utils/str"
 import {callCopyToClipboard} from "@/utils/basic"
@@ -18,6 +18,10 @@ import {Modal} from "antd"
 import {execAutoDecode} from "@/utils/encodec"
 import {YakitSystem} from "@/yakitGVDefine"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {defaultAdvancedConfigShow} from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -33,6 +37,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     webFuzzerCallBack?: () => void
     downstreamProxyStr?: string
     url?: string
+    pageId?: string
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -50,8 +55,16 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webFuzzerCallBack,
         downstreamProxyStr = "",
         url,
+        pageId,
         ...restProps
     } = props
+
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
 
     const [system, setSystem] = useState<YakitSystem>("Darwin")
 
@@ -256,23 +269,60 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
-                    try {
-                        const text = webFuzzerValue || editor.getModel()?.getValue() || ""
-                        if (!text) {
-                            info("数据包为空")
-                            return
+                    if (pageId) {
+                        const pageInfo: PageNodeItemProps | undefined = queryPagesDataById(
+                            YakitRoute.HTTPFuzzer,
+                            pageId
+                        )
+                        if (pageInfo && pageInfo.pageParamsInfo.webFuzzerPageInfo) {
+                            const {advancedConfigValue, request} = pageInfo.pageParamsInfo.webFuzzerPageInfo
+                            const params: ShareValueProps = {
+                                advancedConfigShow: defaultAdvancedConfigShow,
+                                request,
+                                advancedConfiguration: advancedConfigValue
+                            }
+                            const openFlag = key === "发送并跳转"
+                            ipcRenderer
+                                .invoke("send-to-tab", {
+                                    type: "fuzzer",
+                                    data: {
+                                        shareContent: JSON.stringify(params),
+                                        openFlag
+                                    }
+                                })
+                                .then(() => {
+                                    webFuzzerCallBack && webFuzzerCallBack()
+                                })
                         }
-                        if (key === "发送并跳转") {
-                            newWebFuzzerTab(defaultHttps || false, text, true, downstreamProxyStr).finally(() => {
-                                webFuzzerCallBack && webFuzzerCallBack()
-                            })
-                        } else if (key === "仅发送") {
-                            newWebFuzzerTab(defaultHttps || false, text, false, downstreamProxyStr).finally(() => {
-                                webFuzzerCallBack && webFuzzerCallBack()
-                            })
+                    } else {
+                        try {
+                            const text = webFuzzerValue || editor.getModel()?.getValue() || ""
+                            if (!text) {
+                                info("数据包为空")
+                                return
+                            }
+                            if (key === "发送并跳转") {
+                                newWebFuzzerTab({
+                                    isHttps: defaultHttps || false,
+                                    request: text,
+                                    downstreamProxyStr,
+                                    openFlag: true
+                                }).finally(() => {
+                                    webFuzzerCallBack && webFuzzerCallBack()
+                                })
+                            } else if (key === "仅发送") {
+                                newWebFuzzerTab({
+                                    isHttps: defaultHttps || false,
+                                    request: text,
+                                    downstreamProxyStr,
+                                    openFlag: false
+                                }).finally(() => {
+                                    webFuzzerCallBack && webFuzzerCallBack()
+                                })
+                            }
+                        } catch (e) {
+                            failed("editor exec new-open-fuzzer failed")
                         }
-                    } catch (e) {
-                        failed("editor exec new-open-fuzzer failed")
                     }
                 }
             }
@@ -296,7 +346,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 return ac
             }, {}) as OtherMenuListProps
         }
-        
+
         return menuItems
     }, [
         defaultHttps,

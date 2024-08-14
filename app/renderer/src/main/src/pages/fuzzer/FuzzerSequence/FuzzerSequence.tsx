@@ -1710,7 +1710,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         }
         const {request, advancedConfigValue, pageId} = requestInfo || {
             request: "",
-            advancedConfigValue: {...defaultAdvancedConfigValue}
+            advancedConfigValue: {...defaultAdvancedConfigValue},
+            pageId:''
         }
         const [showSuccess, setShowSuccess] = useState(true)
         const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
@@ -1986,6 +1987,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                             firstNodeExtra={firstNodeExtra}
+                            pageId={pageId}
                         />
                     }
                     secondNode={
