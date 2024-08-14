@@ -25,6 +25,7 @@ import {isEnpriTraceAgent} from "@/utils/envfile"
 import cloneDeep from "lodash/cloneDeep"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 
 const {ipcRenderer} = window.require("electron")
 const defLimit = 20
@@ -453,7 +454,8 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             }
             setSendPopoverVisible(false)
         })
-        const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
+        const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+            let sort = {...newSort}
             if (sort.order === "none") {
                 sort.order = "desc"
                 sort.orderBy = "id"
@@ -514,23 +516,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                                     {tableTitle ? (
                                         tableTitle
                                     ) : (
-                                        <div className={styles["virtual-table-heard-right"]}>
-                                            <div className={styles["virtual-table-heard-right-item"]}>
-                                                <span className={styles["virtual-table-heard-right-text"]}>Total</span>
-                                                <span className={styles["virtual-table-heard-right-number"]}>
-                                                    {total}
-                                                </span>
-                                            </div>
-                                            <Divider type='vertical' />
-                                            <div className={styles["virtual-table-heard-right-item"]}>
-                                                <span className={styles["virtual-table-heard-right-text"]}>
-                                                    Selected
-                                                </span>
-                                                <span className={styles["virtual-table-heard-right-number"]}>
-                                                    {selectNum}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <TableTotalAndSelectNumber total={total} selectNum={selectNum} />
                                     )}
                                     <div className={styles["table-head-extra"]}>
                                         <ExportExcel

@@ -12,7 +12,9 @@ export interface PluginExecuteResultProps {
 }
 
 export interface VulnerabilitiesRisksTableProps {
-    riskState: StreamResult.Risk[]
+    runtimeId: string
+    allTotal: number
+    setAllTotal: (n: number) => void
 }
 
 export interface PluginExecuteLogProps {

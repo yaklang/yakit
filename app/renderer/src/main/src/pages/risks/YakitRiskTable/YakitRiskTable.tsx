@@ -9,11 +9,19 @@ import {
 import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {Risk} from "../schema"
-import {Descriptions, Divider, Form, Tooltip} from "antd"
+import {Badge, Descriptions, Divider, Form, Tooltip} from "antd"
 import {YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useControllableValue, useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {
+    useControllableValue,
+    useCreation,
+    useDebounceEffect,
+    useDebounceFn,
+    useInViewport,
+    useInterval,
+    useMemoizedFn
+} from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
@@ -21,6 +29,7 @@ import {
     OutlineEyeIcon,
     OutlineOpenIcon,
     OutlinePlayIcon,
+    OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
@@ -42,6 +51,7 @@ import {
     apiQueryAvailableRiskType,
     apiQueryRiskTags,
     apiQueryRisks,
+    apiQueryRisksIncrementOrderDesc,
     apiSetTagForRisk
 } from "./utils"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -73,6 +83,8 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import ReactResizeDetector from "react-resize-detector"
+import {serverPushStatus} from "@/utils/duplex/duplex"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -218,8 +230,18 @@ const yakitRiskCellStyle = {
         }
     }
 }
+const defLimit = 20
 export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) => {
-    const {advancedQuery, setAdvancedQuery, setRiskLoading} = props
+    const {
+        advancedQuery,
+        setAdvancedQuery,
+        setRiskLoading,
+        renderTitle,
+        riskWrapperClassName = "",
+        tableVirtualResizeProps,
+        yakitRiskDetailsBorder = true,
+        excludeColumnsKey = []
+    } = props
     const [loading, setLoading] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -246,16 +268,31 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
 
     const [tag, setTag] = useState<FieldGroup[]>([])
 
+    const [interval, setInterval] = useState<number | undefined>(undefined) // 控制 Interval
+    const [offsetDataInTop, setOffsetDataInTop] = useState<Risk[]>([])
+    const [allTotal, setAllTotal] = useControllableValue<number>(props, {
+        defaultValue: 0,
+        valuePropName: "allTotal",
+        trigger: "setAllTotal"
+    })
+
     const riskTableRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskTableRef)
+
+    const prePage = useRef<number>(0)
+    const afterId = useRef<number>(0)
+    const beforeId = useRef<number>(0)
+    const tableRef = useRef<any>(null)
+    const defLimitRef = useRef<number>(defLimit)
+    const limitRef = useRef<number>(defLimit)
+    const tableBodyHeightRef = useRef<number>(0)
+    const isInitRequestRef = useRef<boolean>(true)
+
     // 选中插件的数量
     const selectNum = useMemo(() => {
-        if (allCheck) return response.Total
+        if (allCheck) return allTotal
         else return selectList.length
-    }, [allCheck, selectList, response.Total])
-    const total = useCreation(() => {
-        return +response.Total
-    }, [response.Total])
+    }, [allCheck, selectList, allTotal])
     useEffect(() => {
         if (inViewport) {
             getRiskTags()
@@ -268,14 +305,99 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     }, [inViewport])
     useDebounceEffect(
         () => {
-            if (inViewport) update(1)
+            // 初次不通过此处请求数据
+            if (!isInitRequestRef.current) {
+                onRefRiskList()
+            }
         },
-        [query, type, inViewport],
+        [query, type],
         {
             wait: 200,
             leading: true
         }
     )
+    useEffect(() => {
+        // 组件存在既不卸载
+        emiter.on("onRefreshQueryNewRisk", onStartInterval)
+        return () => {
+            emiter.off("onRefreshQueryNewRisk", onStartInterval)
+        }
+    }, [])
+
+    useInterval(() => {
+        if (beforeId.current) {
+            getIncrementInTop()
+        }
+    }, interval)
+
+    const intervalRedDot = useCreation(() => {
+        return offsetDataInTop.length && !interval ? 1000 : undefined
+    }, [offsetDataInTop, interval])
+    useInterval(() => {
+        const scrollTop = getScrollTop()
+        if (inViewport && scrollTop < 10 && offsetDataInTop?.length > 0) {
+            // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
+            setResponse({
+                ...response,
+                Data: [...offsetDataInTop, ...response.Data]
+            })
+            setOffsetDataInTop([])
+            return
+        }
+    }, intervalRedDot)
+    /**开启实时数据刷新 */
+    const onStartInterval = useMemoizedFn(() => {
+        setInterval(1000)
+    })
+    const getScrollTop = useMemoizedFn(() => {
+        return tableRef.current?.containerRef?.scrollTop || 0
+    })
+    /**获取滚动条在顶部的数据 */
+    const getIncrementInTop = useMemoizedFn(() => {
+        let params: QueryRisksRequest = {
+            ...getQuery(),
+            Pagination: {
+                Limit: 20,
+                Page: 1,
+                Order: query.Pagination.Order,
+                OrderBy: query.Pagination.OrderBy
+            },
+            FromId: afterId.current ? afterId.current : 0
+        }
+        if (params.Pagination.Order === "asc" || params.Pagination.OrderBy !== "id") {
+            // 升序时，顶部不实时刷新，避免数据混乱
+            // 排序字段为Id才实时刷新数据
+            return
+        }
+        const scrollTop = getScrollTop()
+        if (inViewport && scrollTop < 10 && offsetDataInTop?.length > 0) {
+            // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
+            setResponse({
+                ...response,
+                Data: [...offsetDataInTop, ...response.Data]
+            })
+            setOffsetDataInTop([])
+            return
+        }
+        apiQueryRisksIncrementOrderDesc(params).then((rsp) => {
+            if (rsp.Data.length > 0) {
+                afterId.current = rsp.Data[0].Id
+            } else {
+                serverPushStatus && setInterval(undefined)
+            }
+            const newData = getResData(rsp.Data)
+            const newTotal = allTotal + rsp.Data.length
+            if (scrollTop < 10) {
+                setResponse({
+                    ...response,
+                    Data: [...newData, ...response.Data]
+                })
+            } else {
+                setOffsetDataInTop([...newData, ...offsetDataInTop])
+            }
+            setAllTotal(newTotal)
+        })
+    })
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         const tagTable = tag.map((item) => ({
             value: item.Name,
@@ -287,14 +409,18 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             label: item.Verbose,
             total: item.Total
         }))
-        return [
+        const columnArr: ColumnsTypeProps[] = [
             {
                 title: "序号",
                 dataKey: "Id",
                 fixed: "left",
                 ellipsis: false,
                 width: 96,
-                enableDrag: false
+                enableDrag: false,
+                sorterProps: {
+                    sorter: true,
+                    sorterKey: "id"
+                }
             },
             {
                 title: "标题",
@@ -440,7 +566,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 )
             }
         ]
-    }, [riskTypeVerbose, tag])
+        return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
+    }, [riskTypeVerbose, tag, excludeColumnsKey])
     /**复测 */
     const onRetest = useMemoizedFn((record: Risk) => {
         if (record.YakScriptUUID || record.FromYakScript) {
@@ -462,9 +589,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onRefRiskList = useDebounceFn(
         () => {
+            limitRef.current = defLimitRef.current
+            setOffsetDataInTop([])
             update(1)
+            getTotal()
         },
-        {wait: 200}
+        {wait: 200, leading: true}
     ).run
     const getRiskTags = useMemoizedFn(() => {
         apiQueryRiskTags().then((res) => {
@@ -640,7 +770,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     Pagination: {
                         ...query.Pagination,
                         Page: 1,
-                        Limit: total
+                        Limit: allTotal
                     }
                 }
                 apiQueryRisks(exportQuery).then((res) => {
@@ -680,7 +810,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 Pagination: {
                     ...query.Pagination,
                     Page: 1,
-                    Limit: total
+                    Limit: allTotal
                 }
             }
             const res = await apiQueryRisks(exportQuery)
@@ -709,7 +839,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
             case "noResetRefresh":
-                update(1)
+                onRefRiskList()
                 break
             case "resetRefresh":
                 onResetRefresh()
@@ -722,12 +852,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const onResetRefresh = useMemoizedFn(() => {
         setQuery(cloneDeep(defQueryRisksRequest))
     })
-    const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
+    const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+        let sort = {...newSort}
         if (sort.order === "none") {
             sort.order = "desc"
-            sort.orderBy = "created_at"
+            sort.orderBy = "id"
         }
-        setQuery({
+        const newQuery = {
             ...query,
             ...filter,
             Pagination: {
@@ -735,7 +866,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 Order: sort.order,
                 OrderBy: sort.orderBy
             }
-        })
+        }
+        setOffsetDataInTop([]) // 排序条件变化，清空缓存的实时数据
+        setQuery(newQuery)
+        limitRef.current = defLimitRef.current
     })
     const getQuerySeverity = useMemoizedFn((list: string[]) => {
         return SeverityMapTag.filter((ele) => list.includes(ele.name))
@@ -761,44 +895,95 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
         return finalParams
     })
+    const getResData = useMemoizedFn((data: Risk[]) => {
+        const resData = (data || []).map((ele) => ({
+            ...ele,
+            cellClassName: ele.IsRead ? "" : styles["yakit-risk-table-cell-unread"]
+        }))
+        return resData
+    })
     const update = useMemoizedFn((page?: number) => {
-        setLoading(true)
         const paginationProps = {
             ...query.Pagination,
-            Page: page || 1,
-            Limit: query.Pagination.Limit
+            Page: 1,
+            Limit: limitRef.current
         }
         const finalParams: QueryRisksRequest = {
             ...getQuery(),
             Pagination: paginationProps
         }
+        const isInit = page === 1
+        if (query.Pagination.Order === "asc") {
+            finalParams.FromId = isInit ? 0 : afterId.current
+        } else {
+            finalParams.UntilId = isInit ? 0 : beforeId.current
+        }
+        if (isInit) {
+            setLoading(true)
+            prePage.current = 0
+        }
+
         apiQueryRisks(finalParams)
             .then((res) => {
-                const newPage = +res.Pagination.Page
-                const resData = res.Data.map((ele) => ({
-                    ...ele,
-                    cellClassName: ele.IsRead ? "" : styles["yakit-risk-table-cell-unread"]
-                }))
-                const d = newPage === 1 ? resData : (response?.Data || []).concat(resData)
+                // const newPage = +res.Pagination.Page
+                const resData = getResData(res.Data)
+                const d = isInit ? resData : (response?.Data || []).concat(resData)
+                prePage.current += 1
                 setResponse({
                     ...res,
-                    Data: d
+                    Data: d,
+                    Pagination: {
+                        ...res.Pagination,
+                        Page: prePage.current // 虚假的page，只是为了让表格滚动加载下一页数据
+                    }
                 })
-                if (newPage === 1) {
+                if (isInit) {
                     setIsRefresh(!isRefresh)
                     setSelectList([])
                     setAllCheck(false)
+                    setCurrentSelectItem(undefined)
                 } else {
                     if (allCheck) {
                         setSelectList(d)
                     }
                 }
 
-                if (+res.Total !== selectList.length) {
-                    setAllCheck(false)
+                limitRef.current = defLimit
+                if (query.Pagination.Order === "asc") {
+                    if (isInit) {
+                        beforeId.current = (res.Data[0] && res.Data[0].Id) || 0
+                        onTableResize(undefined, tableBodyHeightRef.current)
+                    }
+                    afterId.current = (res.Data[res.Data.length - 1] && res.Data[res.Data.length - 1].Id) || 0
+                } else {
+                    if (isInit) {
+                        afterId.current = (res.Data[0] && res.Data[0].Id) || 0
+                        onTableResize(undefined, tableBodyHeightRef.current)
+                    }
+                    beforeId.current = (res.Data[res.Data.length - 1] && res.Data[res.Data.length - 1].Id) || 0
                 }
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    /**
+     * 1.获取所有数据，带查询条件
+     * 2.获取数据总数，因为有FromId/UntilId字段查询回来的总数并不是真正的总数
+     */
+    const getTotal = useMemoizedFn(() => {
+        const params: QueryRisksRequest = {
+            ...getQuery(),
+            Pagination: {
+                ...query.Pagination,
+                Page: 1,
+                Limit: 1
+            }
+        }
+        apiQueryRisks(params).then((allRes) => {
+            setAllTotal(+allRes.Total)
+            if (+allRes.Total !== selectList.length) {
+                setAllCheck(false)
+            }
+        })
     })
     const onSearch = useMemoizedFn((val) => {
         setQuery({
@@ -855,12 +1040,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
     const onAllRead = useMemoizedFn(() => {
         apiNewRiskRead({Ids: []}).then(() => {
-            update(1)
+            onRefRiskList()
             emiter.emit("onRefRisksRead", JSON.stringify({Id: "", isAllRead: true}))
         })
     })
     const onExpend = useMemoizedFn(() => {
-        setAdvancedQuery(true)
+        if (setAdvancedQuery) setAdvancedQuery(true)
     })
     const onRowContextMenu = useMemoizedFn((rowData: Risk) => {
         if (!rowData) return
@@ -919,8 +1104,39 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         const index = response?.Data.findIndex((item) => item.Id === info.Id)
         if (index !== -1) setScrollToIndex(index)
     })
+    /**table所在的div大小发生变化 */
+    const onTableResize = useMemoizedFn((width, height) => {
+        if (!height) {
+            return
+        }
+        const tableCellHeight = 28
+        const limit = Math.trunc(height / tableCellHeight) + 10
+        defLimitRef.current = limit
+        isInitRequestRef.current = false
+        tableBodyHeightRef.current = height
+        if (allTotal === 0) {
+            // init
+            onRefRiskList()
+            return
+        } else if (tableBodyHeightRef.current < height) {
+            // 窗口由小变大时 重新拉取数据
+            const length = response.Data.length
+            const h = length * tableCellHeight
+            if (h < height) {
+                update()
+            }
+            return
+        }
+    })
     return (
-        <div className={styles["yakit-risk-table"]} ref={riskTableRef}>
+        <div className={classNames(styles["yakit-risk-table"], riskWrapperClassName)} ref={riskTableRef}>
+            <ReactResizeDetector
+                onResize={onTableResize}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
             <YakitResizeBox
                 firstMinSize={160}
                 secondMinSize={200}
@@ -933,131 +1149,140 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }}
                 firstNode={
                     <TableVirtualResize<Risk>
+                        ref={tableRef}
                         scrollToIndex={scrollToIndex}
-                        query={{...query}}
+                        query={query}
                         loading={loading}
                         isRefresh={isRefresh}
                         titleHeight={32}
                         renderTitle={
-                            <div className={styles["table-renderTitle"]}>
-                                <div className={styles["table-renderTitle-left"]}>
-                                    {!advancedQuery && (
-                                        <Tooltip
-                                            title='展开筛选'
-                                            placement='topLeft'
-                                            overlayClassName='plugins-tooltip'
-                                        >
-                                            <YakitButton
-                                                type='text2'
-                                                onClick={onExpend}
-                                                icon={<OutlineOpenIcon onClick={onExpend} />}
-                                            ></YakitButton>
-                                        </Tooltip>
-                                    )}
-                                    <div className={styles["table-renderTitle-text"]}>风险与漏洞</div>
-                                    <YakitRadioButtons
-                                        value={type}
-                                        onChange={(e) => {
-                                            setType(e.target.value)
-                                        }}
-                                        buttonStyle='solid'
-                                        options={[
-                                            {
-                                                value: "all",
-                                                label: "全部"
-                                            },
-                                            {
-                                                value: "false",
-                                                label: "未读"
-                                            }
-                                        ]}
-                                    />
-                                    <div className={styles["virtual-table-heard-right"]}>
-                                        <div className={styles["virtual-table-heard-right-item"]}>
-                                            <span className={styles["virtual-table-heard-right-text"]}>Total</span>
-                                            <span className={styles["virtual-table-heard-right-number"]}>
-                                                {response.Total}
-                                            </span>
-                                        </div>
-                                        <Divider type='vertical' />
-                                        <div className={styles["virtual-table-heard-right-item"]}>
-                                            <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
-                                            <span className={styles["virtual-table-heard-right-number"]}>
-                                                {selectNum}
-                                            </span>
+                            renderTitle ? (
+                                renderTitle
+                            ) : (
+                                <div className={styles["table-renderTitle"]}>
+                                    <div className={styles["table-renderTitle-left"]}>
+                                        {!advancedQuery && (
+                                            <Tooltip
+                                                title='展开筛选'
+                                                placement='topLeft'
+                                                overlayClassName='plugins-tooltip'
+                                            >
+                                                <YakitButton
+                                                    type='text2'
+                                                    onClick={onExpend}
+                                                    icon={<OutlineOpenIcon onClick={onExpend} />}
+                                                ></YakitButton>
+                                            </Tooltip>
+                                        )}
+                                        <div className={styles["table-renderTitle-text"]}>风险与漏洞</div>
+                                        <YakitRadioButtons
+                                            value={type}
+                                            onChange={(e) => {
+                                                setType(e.target.value)
+                                            }}
+                                            buttonStyle='solid'
+                                            options={[
+                                                {
+                                                    value: "all",
+                                                    label: "全部"
+                                                },
+                                                {
+                                                    value: "false",
+                                                    label: "未读"
+                                                }
+                                            ]}
+                                        />
+                                        <div className={styles["virtual-table-heard-right"]}>
+                                            <div className={styles["virtual-table-heard-right-item"]}>
+                                                <span className={styles["virtual-table-heard-right-text"]}>Total</span>
+                                                <span className={styles["virtual-table-heard-right-number"]}>
+                                                    {response.Total}
+                                                </span>
+                                            </div>
+                                            <Divider type='vertical' />
+                                            <div className={styles["virtual-table-heard-right-item"]}>
+                                                <span className={styles["virtual-table-heard-right-text"]}>
+                                                    Selected
+                                                </span>
+                                                <span className={styles["virtual-table-heard-right-number"]}>
+                                                    {selectNum}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className={styles["table-head-extra"]}>
-                                    <YakitInput.Search
-                                        value={keywords}
-                                        onChange={(e) => setKeywords(e.target.value)}
-                                        placeholder='请输入关键词搜索'
-                                        onSearch={onSearch}
-                                        onPressEnter={onPressEnter}
-                                    />
-                                    <Divider type='vertical' style={{margin: 0}} />
-                                    <FuncBtn
-                                        maxWidth={1200}
-                                        type='outline2'
-                                        icon={<OutlineEyeIcon />}
-                                        onClick={onAllRead}
-                                        name='全部已读'
-                                    />
-                                    <YakitDropdownMenu
-                                        menu={{
-                                            data: batchExportMenuData,
-                                            onClick: ({key}) => {
-                                                onExportMenuSelect(key)
-                                            }
-                                        }}
-                                        dropdown={{
-                                            trigger: ["hover"],
-                                            placement: "bottom",
-                                            disabled: total === 0
-                                        }}
-                                    >
+                                    <div className={styles["table-head-extra"]}>
+                                        <YakitInput.Search
+                                            value={keywords}
+                                            onChange={(e) => setKeywords(e.target.value)}
+                                            placeholder='请输入关键词搜索'
+                                            onSearch={onSearch}
+                                            onPressEnter={onPressEnter}
+                                        />
+                                        <Divider type='vertical' style={{margin: 0}} />
                                         <FuncBtn
                                             maxWidth={1200}
                                             type='outline2'
-                                            icon={<OutlineExportIcon />}
-                                            name=' 导出为...'
-                                            disabled={total === 0}
+                                            icon={<OutlineEyeIcon />}
+                                            onClick={onAllRead}
+                                            name='全部已读'
                                         />
-                                    </YakitDropdownMenu>
-                                    <YakitPopconfirm
-                                        title={
-                                            allCheck
-                                                ? "确定删除所有风险与漏洞吗? 不可恢复"
-                                                : "确定删除选择的风险与漏洞吗?不可恢复"
-                                        }
-                                        onConfirm={onRemove}
-                                    >
-                                        <FuncBtn
-                                            maxWidth={1200}
-                                            type='outline1'
-                                            colors='danger'
-                                            icon={<OutlineTrashIcon />}
-                                            disabled={total === 0}
-                                            name={selectNum === 0 ? "清空" : "删除"}
-                                        />
-                                    </YakitPopconfirm>
-                                    <YakitDropdownMenu
-                                        menu={{
-                                            data: batchRefreshMenuData,
-                                            onClick: ({key}) => {
-                                                onRefreshMenuSelect(key)
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: batchExportMenuData,
+                                                onClick: ({key}) => {
+                                                    onExportMenuSelect(key)
+                                                }
+                                            }}
+                                            dropdown={{
+                                                trigger: ["hover"],
+                                                placement: "bottom",
+                                                disabled: allTotal === 0
+                                            }}
+                                        >
+                                            <FuncBtn
+                                                maxWidth={1200}
+                                                type='outline2'
+                                                icon={<OutlineExportIcon />}
+                                                name=' 导出为...'
+                                                disabled={allTotal === 0}
+                                            />
+                                        </YakitDropdownMenu>
+                                        <YakitPopconfirm
+                                            title={
+                                                allCheck
+                                                    ? "确定删除所有风险与漏洞吗? 不可恢复"
+                                                    : "确定删除选择的风险与漏洞吗?不可恢复"
                                             }
-                                        }}
-                                        dropdown={{
-                                            trigger: ["hover"],
-                                            placement: "bottom"
-                                        }}
-                                    >
-                                        <YakitButton type='primary' icon={<SolidRefreshIcon />} />
-                                    </YakitDropdownMenu>
+                                            onConfirm={onRemove}
+                                        >
+                                            <FuncBtn
+                                                maxWidth={1200}
+                                                type='outline1'
+                                                colors='danger'
+                                                icon={<OutlineTrashIcon />}
+                                                disabled={allTotal === 0}
+                                                name={selectNum === 0 ? "清空" : "删除"}
+                                            />
+                                        </YakitPopconfirm>
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: batchRefreshMenuData,
+                                                onClick: ({key}) => {
+                                                    onRefreshMenuSelect(key)
+                                                }
+                                            }}
+                                            dropdown={{
+                                                trigger: ["hover"],
+                                                placement: "bottom"
+                                            }}
+                                        >
+                                            <Badge dot={offsetDataInTop.length > 0} offset={[-5, 4]}>
+                                                <YakitButton type='text2' icon={<OutlineRefreshIcon />} />
+                                            </Badge>
+                                        </YakitDropdownMenu>
+                                    </div>
                                 </div>
-                            </div>
+                            )
                         }
                         renderKey='Id'
                         data={response.Data}
@@ -1069,7 +1294,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             onChangeCheckboxSingle
                         }}
                         pagination={{
-                            total,
+                            total: allTotal,
                             limit: response.Pagination.Limit,
                             page: response.Pagination.Page,
                             onChange: (page) => update(page)
@@ -1080,6 +1305,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         useUpAndDown
                         onChange={onTableChange}
                         onRowContextMenu={onRowContextMenu}
+                        {...(tableVirtualResizeProps || {})}
                     />
                 }
                 secondNode={
@@ -1088,6 +1314,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             info={currentSelectItem}
                             className={styles["yakit-risk-details"]}
                             onClickIP={onClickIP}
+                            border={yakitRiskDetailsBorder}
                         />
                     )
                 }
@@ -1171,7 +1398,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose, className = ""} = props
+    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose, className = "", border = true} = props
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
@@ -1255,7 +1482,16 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     })
     return (
         <>
-            <div className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", className)}>
+            <div
+                className={classNames(
+                    styles["yakit-risk-details-content"],
+                    "yakit-descriptions",
+                    {
+                        [styles["yakit-risk-details-content-no-border"]]: !border
+                    },
+                    className
+                )}
+            >
                 <div className={styles["content-heard"]}>
                     <div className={styles["content-heard-severity"]}>
                         {severityInfo.icon}

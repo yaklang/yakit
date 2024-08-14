@@ -149,6 +149,9 @@ $keyColor: map-keys($tagColor);
         width: 100%;
     }
 }
+.yakit-risk-details-content-no-border {
+    border: 0;
+}
 
 .table-renderTitle {
     display: flex;
