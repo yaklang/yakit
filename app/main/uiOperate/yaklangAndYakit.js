@@ -91,21 +91,25 @@ module.exports = (win, getClient) => {
 
     const asyncFetchCheckYaklangSource = (version) => {
         return new Promise(async (resolve, reject) => {
-            const url = await getCheckTextUrl(version)
-            if (url === '') {
-                reject(`Unsupported platform: ${process.platform}`)
+            try {
+                const url = await getCheckTextUrl(version)
+                if (url === '') {
+                    reject(`Unsupported platform: ${process.platform}`)
+                }
+                let rsp = https.get(url)
+                rsp.on("response", (rsp) => {
+                    rsp.on("data", (data) => {
+                        if (rsp.statusCode == 200) {
+                            resolve(Buffer.from(data).toString("utf8"))
+                        } else {
+                            reject('校验值不存在')
+                        }
+                    }).on("error", (err) => reject(err))
+                })
+                rsp.on("error", reject)
+            } catch (error) {
+                reject(error)
             }
-            let rsp = https.get(url)
-            rsp.on("response", (rsp) => {
-                rsp.on("data", (data) => {
-                    if (rsp.statusCode == 200) {
-                        resolve(Buffer.from(data).toString("utf8"))
-                    } else {
-                        reject('校验值不存在')
-                    }
-                }).on("error", (err) => reject(err))
-            })
-            rsp.on("error", reject)
         })
     }
     /** 校验Yaklang来源是否正确 */
