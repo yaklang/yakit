@@ -115,6 +115,28 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                 return <></>
         }
     })
+
+    // 获取详情
+    const getDetail = useMemo(() => {
+        try {
+            if (info.ResourceType === "value") {
+                const arr = info.Extra.filter((item) => item.Key === "code_range")
+                if (arr.length > 0) {
+                    const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                    const {url, start_line, start_column, end_line, end_column} = item
+                    const lastSlashIndex = url.lastIndexOf("/")
+                    const fileName = url.substring(lastSlashIndex + 1)
+                    return {
+                        fileName,
+                        start_line,
+                        url
+                    }
+                }
+            }
+            return undefined
+        } catch (error) {}
+    }, [info])
+
     return (
         <>
             {info.isBottom ? (
@@ -140,11 +162,18 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                     </div>
 
                     <div className={styles["node-content"]}>
-                        <div
-                            className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}
-                            title={info.name}
-                        >
-                            {info.name}
+                        <div className={classNames(styles["content-body"])}>
+                            <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>
+                                {info.name}
+                            </div>
+
+                            {getDetail && (
+                                <Tooltip title={getDetail.url}>
+                                    <div
+                                        className={classNames(styles["detail"], "yakit-content-single-ellipsis")}
+                                    >{`${getDetail.fileName}:${getDetail.start_line}`}</div>
+                                </Tooltip>
+                            )}
                         </div>
                         {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
                     </div>
