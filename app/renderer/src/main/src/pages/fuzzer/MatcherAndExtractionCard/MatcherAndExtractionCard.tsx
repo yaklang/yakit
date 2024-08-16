@@ -18,7 +18,8 @@ import {
     ExtractionResultsContentProps,
     MatcherAndExtractionDrawerProps,
     MatcherAndExtractionValueProps,
-    MatcherCollapseRefProps
+    MatcherCollapseRefProps,
+    FilterEmptySubMatcherFunctionProps
 } from "./MatcherAndExtractionCardType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {NewHTTPPacketEditor} from "@/utils/editors"
@@ -111,7 +112,16 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
 
 export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.memo(
     React.forwardRef((props, ref) => {
-        const {onClose, onSave, extractorValue, matcherValue, defActiveKey, httpResponse, defActiveType, defActiveKeyAndOrder} = props
+        const {
+            onClose,
+            onSave,
+            extractorValue,
+            matcherValue,
+            defActiveKey,
+            httpResponse,
+            defActiveType,
+            defActiveKeyAndOrder
+        } = props
         const [type, setType] = useState<MatchingAndExtraction>(defActiveType)
         const [matcher, setMatcher] = useState<MatcherValueProps>(matcherValue)
         const [extractor, setExtractor] = useState<ExtractorValueProps>(extractorValue)
@@ -501,6 +511,19 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
 const isMatcherEmpty = (matchersList) => {
     return matchersList?.filter((i) => !((i?.Group || []).map((i) => i.trim()).join("") === "")).length <= 0
 }
+export const onFilterEmptySubMatcher = (param: FilterEmptySubMatcherFunctionProps) => {
+    const {matchers, index, subIndex} = param
+    let newMatchers: HTTPResponseMatcher[] = []
+    matchers.forEach((m, n) => {
+        if (n === index) {
+            m.SubMatchers = m.SubMatchers.filter((_, s) => s !== subIndex)
+        }
+        if (m.SubMatchers.length > 0) {
+            newMatchers = [...newMatchers, {...m}]
+        }
+    })
+    return newMatchers
+}
 export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
     forwardRef((props, ref) => {
         const {type, matcher, setMatcher, notEditable, defActiveKeyAndOrder, httpResponse, isSmallMode} = props
@@ -603,10 +626,15 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
         const onRemoveSubMatcher = useMemoizedFn((number: number, subIndex: number) => {
             if (notEditable) return
             try {
-                matcher.matchersList[number].SubMatchers.splice(subIndex, 1)
+                const params :FilterEmptySubMatcherFunctionProps= {
+                    matchers: matcher.matchersList,
+                    index: number,
+                    subIndex
+                }
+                const newMatchers = onFilterEmptySubMatcher(params)
                 setMatcher({
                     ...matcher,
-                    matchersList: [...matcher.matchersList]
+                    matchersList: [...newMatchers]
                 })
                 if (subIndex === 0) {
                     setActiveKey(number, `ID:${subIndex + 1}`)
@@ -1250,7 +1278,7 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
         extractorValue,
         onClose,
         onSave,
-        defActiveKeyAndOrder,
+        defActiveKeyAndOrder
     } = props
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({

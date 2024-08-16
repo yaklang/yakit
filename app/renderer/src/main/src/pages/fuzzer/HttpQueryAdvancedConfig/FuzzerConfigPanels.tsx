@@ -5,9 +5,13 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {Divider, Form} from "antd"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {HTTPResponseMatcher, MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    FilterEmptySubMatcherFunctionProps,
+    HTTPResponseMatcher,
+    MatchingAndExtraction
+} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {ExtractionResultsContent} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {ExtractionResultsContent, onFilterEmptySubMatcher} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {ExtractorsList, MatchersList} from "./HttpQueryAdvancedConfig"
 import {AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {StringToUint8Array} from "@/utils/str"
@@ -41,15 +45,12 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
         onChangeValue(restValue)
     })
     const onRemoveMatcher = useMemoizedFn((index: number, subIndex: number) => {
-        let newMatchers: HTTPResponseMatcher[] = []
-        matchers.forEach((m, n) => {
-            if (n === index) {
-                m.SubMatchers = m.SubMatchers.filter((_, s) => s !== subIndex)
-            }
-            if (m.SubMatchers.length > 0) {
-                newMatchers = [...newMatchers, {...m}]
-            }
-        })
+        const params: FilterEmptySubMatcherFunctionProps = {
+            matchers,
+            index,
+            subIndex
+        }
+        const newMatchers = onFilterEmptySubMatcher(params)
         form.setFieldsValue({
             matchers: newMatchers
         })

@@ -1,6 +1,11 @@
 import {ReactNode} from "react"
 import {FilterMode} from "../HTTPFuzzerPage"
 
+export interface FilterEmptySubMatcherFunctionProps {
+    matchers: HTTPResponseMatcher[]
+    index: number
+    subIndex: number
+}
 export type MatchingAndExtraction = "matchers" | "extractors"
 
 export interface MatcherActiveKey {
