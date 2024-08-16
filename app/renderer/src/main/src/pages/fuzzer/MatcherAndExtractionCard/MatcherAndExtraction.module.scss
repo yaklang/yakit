@@ -64,6 +64,7 @@
     .matching-extraction-content {
         position: relative;
         overflow-y: auto;
+        padding: 8px;
         :global {
             .ant-collapse-item > .ant-collapse-header {
                 border-top: 0;
@@ -91,22 +92,35 @@
             }
         }
 
+        .matching-list-item {
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
         .matching-extraction-condition {
             @extend .flex-space-between-and-center;
             padding: 12px 12px 8px;
-            position: sticky;
-            top: 0;
-            z-index: 2;
             background-color: #fff;
-            .condition-mode {
-                @extend .flex-space-between-and-center;
-                .condition-mode-text {
-                    font-weight: 400;
-                    font-size: 12px;
-                    line-height: 16px;
-                    margin-right: 4px;
-                    color: var(--yakit-header-color);
+            border-radius: 8px;
+            flex-wrap: wrap;
+            gap: 8px 0;
+            .matching-extraction-condition-left {
+                @extend .flex-center;
+                gap: 8px;
+                .condition-mode {
+                    @extend .flex-center;
+                    .condition-mode-text {
+                        font-weight: 400;
+                        font-size: 12px;
+                        line-height: 16px;
+                        margin-right: 4px;
+                        color: var(--yakit-header-color);
+                    }
                 }
+            }
+            .matching-extraction-condition-right {
+                @extend .flex-center;
+                gap: 8px;
             }
         }
         .matcher-extraction-collapse {

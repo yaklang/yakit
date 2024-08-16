@@ -4,7 +4,8 @@ import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdva
 import {
     MatcherAndExtractionRefProps,
     MatcherValueProps,
-    ExtractorValueProps
+    ExtractorValueProps,
+    MatcherActiveKey
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 /**
@@ -146,6 +147,7 @@ export interface SequenceResponseProps {
     onSaveMatcherAndExtractionDrawer: (m: MatcherValueProps, e: ExtractorValueProps) => void
     activeType: MatchingAndExtraction
     activeKey: string
+    defActiveKeyAndOrder:MatcherActiveKey
 }
 
 export interface SequenceResponseRefProps {

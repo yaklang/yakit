@@ -106,10 +106,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
         }
     ],
     // 匹配器
-    filterMode: "onlyMatch",
     matchers: [],
-    matchersCondition: "and",
-    hitColor: "red",
     // 提取器
     extractors: []
 }

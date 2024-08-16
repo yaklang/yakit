@@ -5,9 +5,9 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {Divider, Form} from "antd"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {HTTPResponseMatcher, MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {ColorSelect, ExtractionResultsContent} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {ExtractionResultsContent} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {ExtractorsList, MatchersList} from "./HttpQueryAdvancedConfig"
 import {AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {StringToUint8Array} from "@/utils/str"
@@ -15,39 +15,57 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
-import {
-    filterModeOptions,
-    matchersConditionOptions,
-    defMatcherAndExtractionCode
-} from "../MatcherAndExtractionCard/constants"
+import {defMatcherAndExtractionCode} from "../MatcherAndExtractionCard/constants"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
+export interface MatchersPanelEditProps {
+    order: number
+    subIndex: number
+    type: MatchingAndExtraction
+}
 interface MatchersPanelProps {
     onAddMatchingAndExtractionCard: (type: MatchingAndExtraction) => void
-    onEdit: (index: number, type: MatchingAndExtraction) => void
+    onEdit: (params: MatchersPanelEditProps) => void
     onSetValue?: (v: AdvancedConfigValueProps) => void
 }
 export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) => {
     const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
     const form = Form.useFormInstance()
-    const filterMode = Form.useWatch("filterMode", form)
-    const matchersCondition = Form.useWatch("matchersCondition", form)
-    const hitColor = Form.useWatch("hitColor", form)
-    const matchers = Form.useWatch("matchers", form) || []
+    const matchers: HTTPResponseMatcher[] = Form.useWatch("matchers", form) || []
     const onReset = useMemoizedFn((restValue) => {
         form.setFieldsValue({
             ...restValue
         })
         onChangeValue(restValue)
     })
-    const onRemoveMatcher = useMemoizedFn((i) => {
-        const newMatchers = matchers.filter((m, n) => n !== i)
+    const onRemoveMatcher = useMemoizedFn((index: number, subIndex: number) => {
+        let newMatchers: HTTPResponseMatcher[] = []
+        matchers.forEach((m, n) => {
+            if (n === index) {
+                m.SubMatchers = m.SubMatchers.filter((_, s) => s !== subIndex)
+            }
+            if (m.SubMatchers.length > 0) {
+                newMatchers = [...newMatchers, {...m}]
+            }
+        })
         form.setFieldsValue({
             matchers: newMatchers
         })
         onChangeValue(newMatchers)
+    })
+    /**修改值 */
+    const onChangeMatcher = useMemoizedFn((params: {index: number; value: string; fileId: string}) => {
+        const {index, value, fileId} = params
+        matchers[index] = {
+            ...matchers[index],
+            [fileId]: value
+        }
+        form.setFieldsValue({
+            matchers
+        })
+        onChangeValue(matchers)
     })
     /** setFieldsValue不会触发Form onValuesChange，抛出去由外界自行解决 */
     const onChangeValue = useMemoizedFn((restValue) => {
@@ -59,17 +77,15 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
             })
         }
     })
-    const onEditMatcher = useMemoizedFn((index: number) => {
-        onEdit(index, "matchers")
+    /**打开匹配器的框进行修改 */
+    const onEditMatcher = useMemoizedFn((index: number, subIndex: number) => {
+        onEdit({order: index, subIndex, type: "matchers"})
     })
     const matcherValue = useCreation(() => {
         return {
-            matchersList: matchers,
-            filterMode,
-            matchersCondition,
-            hitColor
+            matchersList: matchers
         }
-    }, [matchers, filterMode, matchersCondition, hitColor])
+    }, [matchers])
     return (
         <>
             <YakitPanel
@@ -89,10 +105,7 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                             onClick={(e) => {
                                 e.stopPropagation()
                                 const restValue = {
-                                    matchers: [],
-                                    filterMode: "onlyMatch",
-                                    hitColor: "red",
-                                    matchersCondition: "and"
+                                    matchers: []
                                 }
                                 onReset(restValue)
                             }}
@@ -117,33 +130,21 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
                 }
                 className={styles["panel-wrapper"]}
             >
-                <div className={styles["matchers-heard"]}>
-                    <div className={styles["matchers-heard-left"]}>
-                        <Form.Item name='filterMode' noStyle>
-                            <YakitRadioButtons buttonStyle='solid' options={filterModeOptions} size='small' />
-                        </Form.Item>
-                        {filterMode === "onlyMatch" && (
-                            <Form.Item name='hitColor' noStyle>
-                                <ColorSelect size='small' />
-                            </Form.Item>
-                        )}
-                    </div>
-                    <Form.Item name='matchersCondition' noStyle>
-                        <YakitRadioButtons buttonStyle='solid' options={matchersConditionOptions} size='small' />
-                    </Form.Item>
-                </div>
                 <MatchersList
                     matcherValue={matcherValue}
                     onAdd={() => onAddMatchingAndExtractionCard("matchers")}
                     onRemove={onRemoveMatcher}
                     onEdit={onEditMatcher}
+                    onChangeMatcher={onChangeMatcher}
                 />
             </YakitPanel>
         </>
     )
 })
 
-interface ExtractorsPanelProps extends MatchersPanelProps {}
+interface ExtractorsPanelProps extends Omit<MatchersPanelProps, "onEdit"> {
+    onEdit: (index: number, type: MatchingAndExtraction) => void
+}
 export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props) => {
     const {onAddMatchingAndExtractionCard, onEdit, onSetValue, ...restProps} = props
     const form = Form.useFormInstance()

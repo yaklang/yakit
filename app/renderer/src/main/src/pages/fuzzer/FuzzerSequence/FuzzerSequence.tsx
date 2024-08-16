@@ -72,7 +72,8 @@ import {
     ExtractorValueProps,
     MatchingAndExtraction,
     MatcherAndExtractionRefProps,
-    MatcherAndExtractionValueProps
+    MatcherAndExtractionValueProps,
+    MatcherActiveKey
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {InheritLineIcon, InheritArrowIcon} from "./icon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -177,6 +178,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
     const [activeKey, setActiveKey] = useState<string>("ID:0")
+    const [defActiveKeyAndOrder, setDefActiveKeyAndOrder] = useState<MatcherActiveKey>({
+        order: 0,
+        defActiveKey: "ID:0"
+    }) // 匹配器
     const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
 
@@ -867,7 +872,19 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const onDebug = useMemoizedFn((value: DebugProps) => {
         setMatcherAndExtractionHttpResponse(value.httpResponse)
         setActiveType(value.type)
-        setActiveKey(value.activeKey)
+        switch (value.type) {
+            case "extractors":
+                setActiveKey(value.activeKey)
+                break
+            case "matchers":
+                setDefActiveKeyAndOrder({
+                    order: value.order || 0,
+                    defActiveKey: value.activeKey
+                })
+                break
+            default:
+                break
+        }
         if (currentSelectResponse) {
             const count = currentSelectResponse.failedCount + currentSelectResponse.successCount
             if (count === 1) {
@@ -903,10 +920,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                             ...currentItem.pageParamsInfo.webFuzzerPageInfo,
                             advancedConfigValue: {
                                 ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
-                                filterMode: matcher.filterMode,
                                 matchers: matcher.matchersList || [],
-                                matchersCondition: matcher.matchersCondition,
-                                hitColor: matcher.hitColor || "red",
                                 extractors: extractor.extractorList || []
                             }
                         }
@@ -935,10 +949,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     /**提取器和匹配器的值 */
     const matcherAndExtractionValue: MatcherAndExtractionValueProps = useCreation(() => {
         const matchData: MatcherValueProps = {
-            filterMode: "drop",
-            matchersList: [],
-            matchersCondition: "and",
-            hitColor: "red"
+            matchersList: []
         }
         const extractorData: ExtractorValueProps = {
             extractorList: []
@@ -957,10 +968,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 advancedConfigValue: {...defaultAdvancedConfigValue}
             }
             data.matcher = {
-                filterMode: advancedConfigValue.filterMode,
-                matchersList: advancedConfigValue.matchers || [],
-                matchersCondition: advancedConfigValue.matchersCondition,
-                hitColor: advancedConfigValue.hitColor || "red"
+                matchersList: advancedConfigValue.matchers || []
             }
             data.extractor = {
                 extractorList: advancedConfigValue.extractors || []
@@ -1176,7 +1184,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                     setShowAllDataRes(true)
                                 }}
                                 onDebug={(response) => {
-                                    onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0"})
+                                    onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0", order: 0})
                                 }}
                                 matcherValue={matcherAndExtractionValue.matcher}
                                 extractorValue={matcherAndExtractionValue.extractor}
@@ -1185,6 +1193,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 onSaveMatcherAndExtractionDrawer={onSaveMatcherAndExtractionDrawer}
                                 activeType={activeType}
                                 activeKey={activeKey}
+                                defActiveKeyAndOrder={defActiveKeyAndOrder}
                             />
                         </>
                     ) : (
@@ -1229,6 +1238,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 extractorValue={matcherAndExtractionValue.extractor}
                 onClose={onCloseMatcherAndExtractionDrawer}
                 onSave={onSaveMatcherAndExtractionDrawer}
+                defActiveKeyAndOrder={defActiveKeyAndOrder}
             />
         </>
     )
@@ -1646,7 +1656,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             extractorValue,
             onSaveMatcherAndExtractionDrawer,
             activeKey,
-            activeType
+            activeType,
+            defActiveKeyAndOrder
         } = props
         const {
             id: responseInfoId,
@@ -1962,6 +1973,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                     extractorValue={extractorValue}
                                     defActiveKey={activeKey}
                                     defActiveType={activeType}
+                                    defActiveKeyAndOrder={defActiveKeyAndOrder}
                                     onSaveMatcherAndExtraction={onSaveMatcherAndExtractionDrawer}
                                     showExtra={showExtra}
                                     setShowExtra={setShowExtra}

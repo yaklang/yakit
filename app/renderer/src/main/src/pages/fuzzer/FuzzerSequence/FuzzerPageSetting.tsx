@@ -11,7 +11,12 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {yakitFailed} from "@/utils/notification"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {ExtractorsPanel, MatchersPanel, VariablePanel} from "../HttpQueryAdvancedConfig/FuzzerConfigPanels"
+import {
+    ExtractorsPanel,
+    MatchersPanel,
+    MatchersPanelEditProps,
+    VariablePanel
+} from "../HttpQueryAdvancedConfig/FuzzerConfigPanels"
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
 
@@ -19,6 +24,8 @@ export interface DebugProps {
     httpResponse: string
     type: MatchingAndExtraction
     activeKey: string
+    /**匹配器的排序 */
+    order?: number
 }
 interface FuzzerPageSettingProps {
     pageId: string
@@ -107,12 +114,22 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
         setActiveKey(key)
         setRemoteValue(RemoteGV.FuzzerSequenceSettingShow, JSON.stringify(key))
     })
-    /**修改匹配器和提取器 */
-    const onEdit = useMemoizedFn((index, type: MatchingAndExtraction) => {
+    /**修改提取器 */
+    const onEditExtractors = useMemoizedFn((index, type: MatchingAndExtraction) => {
         onDebug({
             httpResponse: defaultHttpResponse,
             type,
             activeKey: `ID:${index}`
+        })
+    })
+    /**修改匹配器 */
+    const onEditMatchers = useMemoizedFn((params: MatchersPanelEditProps) => {
+        const {order, type, subIndex} = params
+        onDebug({
+            httpResponse: defaultHttpResponse,
+            type,
+            activeKey: `ID:${subIndex}`,
+            order
         })
     })
     const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
@@ -159,13 +176,13 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
                     <MatchersPanel
                         key='匹配器'
                         onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
-                        onEdit={onEdit}
+                        onEdit={onEditMatchers}
                         onSetValue={onSetValue}
                     />
                     <ExtractorsPanel
                         key='数据提取器'
                         onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
-                        onEdit={onEdit}
+                        onEdit={onEditExtractors}
                         onSetValue={onSetValue}
                     />
                     <VariablePanel

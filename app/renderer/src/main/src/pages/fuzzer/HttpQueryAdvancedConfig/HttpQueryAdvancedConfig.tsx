@@ -23,6 +23,7 @@ import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQuer
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
+    ColorSelect,
     ExtractorItem,
     MatcherAndExtractionDrawer,
     MatcherItem
@@ -31,6 +32,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import classNames from "classnames"
 import {
     ExtractorValueProps,
+    MatcherActiveKey,
     MatcherValueProps,
     MatchingAndExtraction
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
@@ -46,9 +48,14 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
-import {ExtractorsPanel, MatchersPanel, VariablePanel} from "./FuzzerConfigPanels"
+import {ExtractorsPanel, MatchersPanel, MatchersPanelEditProps, VariablePanel} from "./FuzzerConfigPanels"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
-import {matcherTypeList, extractorTypeList} from "../MatcherAndExtractionCard/constants"
+import {
+    matcherTypeList,
+    extractorTypeList,
+    filterModeOptions,
+    matchersConditionOptions
+} from "../MatcherAndExtractionCard/constants"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -103,7 +110,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
-    const [defActiveKey, setDefActiveKey] = useState<string>("")
+    const [defActiveKey, setDefActiveKey] = useState<string>("") // 提取器
+    const [defActiveKeyAndOrder, setDefActiveKeyAndOrder] = useState<MatcherActiveKey>({
+        order: 0,
+        defActiveKey: ""
+    }) // 匹配器
     const [type, setType] = useState<MatchingAndExtraction>("matchers")
 
     const [httpResponse, setHttpResponse] = useState<string>(defaultHttpResponse)
@@ -122,12 +133,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const etcHosts = useMemo(() => advancedConfigValue.etcHosts || [], [advancedConfigValue.etcHosts])
     const matchersList = useMemo(() => advancedConfigValue.matchers || [], [advancedConfigValue.matchers])
     const extractorList = useMemo(() => advancedConfigValue.extractors || [], [advancedConfigValue.extractors])
-    const matchersCondition = useMemo(
-        () => advancedConfigValue.matchersCondition,
-        [advancedConfigValue.matchersCondition]
-    )
-    const filterMode = useMemo(() => advancedConfigValue.filterMode, [advancedConfigValue.filterMode])
-    const hitColor = useMemo(() => advancedConfigValue.hitColor || "red", [advancedConfigValue.hitColor])
     const batchTarget = useMemo(
         () => advancedConfigValue.batchTarget || new Uint8Array(),
         [advancedConfigValue.batchTarget]
@@ -213,7 +218,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             onSwitchCollapse([...activeKey, keyMap[type]])
         }
         if (outsideShowResponseMatcherAndExtraction) {
-            if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction(type, "ID:0")
+            if (onShowResponseMatcherAndExtraction)
+                onShowResponseMatcherAndExtraction({
+                    activeType: type,
+                    activeKey: "ID:0",
+                    order: 0
+                })
         } else {
             setType(type)
             setVisibleDrawer(true)
@@ -234,14 +244,48 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     }, [])
 
-    /**修改匹配器和提取器 */
-    const onEdit = useMemoizedFn((index, type: MatchingAndExtraction) => {
+    /**修改提取器 */
+    const onEditExtractors = useMemoizedFn((index, type: MatchingAndExtraction) => {
+        onEditMatchersAndExtractors({
+            order: 0,
+            subIndex: index,
+            type
+        })
+    })
+    /**修改匹配器 */
+    const onEditMatchers = useMemoizedFn((params: MatchersPanelEditProps) => {
+        const {order, subIndex, type} = params
+        onEditMatchersAndExtractors({
+            order,
+            subIndex,
+            type
+        })
+    })
+    const onEditMatchersAndExtractors = useMemoizedFn((params: MatchersPanelEditProps) => {
+        const {order, subIndex, type} = params
         if (outsideShowResponseMatcherAndExtraction) {
-            if (onShowResponseMatcherAndExtraction) onShowResponseMatcherAndExtraction("matchers", `ID:${index}`)
+            if (onShowResponseMatcherAndExtraction)
+                onShowResponseMatcherAndExtraction({
+                    activeType: "matchers",
+                    activeKey: `ID:${subIndex}`,
+                    order
+                })
         } else {
             setVisibleDrawer(true)
-            setDefActiveKey(`ID:${index}`)
             setType(type)
+            switch (type) {
+                case "extractors":
+                    setDefActiveKey(`ID:${subIndex}`)
+                    break
+                case "matchers":
+                    setDefActiveKeyAndOrder({
+                        order,
+                        defActiveKey: `ID:${subIndex}`
+                    })
+                    break
+                default:
+                    break
+            }
         }
     })
     const retryActive: string[] = useMemo(() => {
@@ -282,9 +326,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         const v = form.getFieldsValue()
         onSetValue({
             ...v,
-            filterMode: matcher.filterMode,
-            hitColor: matcher.hitColor || "red",
-            matchersCondition: matcher.matchersCondition,
             matchers: matcher.matchersList || [],
             extractors: extractor.extractorList || []
         })
@@ -846,13 +887,13 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <MatchersPanel
                                 key='匹配器'
                                 onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
-                                onEdit={onEdit}
+                                onEdit={onEditMatchers}
                                 onSetValue={onSetValue}
                             />
                             <ExtractorsPanel
                                 key='数据提取器'
                                 onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
-                                onEdit={onEdit}
+                                onEdit={onEditExtractors}
                                 onSetValue={onSetValue}
                             />
                             <VariablePanel
@@ -1074,7 +1115,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 defActiveType={type}
                 httpResponse={httpResponse}
                 defActiveKey={defActiveKey}
-                matcherValue={{filterMode, matchersList: matchersList || [], matchersCondition, hitColor}}
+                defActiveKeyAndOrder={defActiveKeyAndOrder}
+                matcherValue={{matchersList: matchersList || []}}
                 extractorValue={{extractorList: extractorList || []}}
                 onClose={onClose}
                 onSave={onSave}
@@ -1206,12 +1248,13 @@ export const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props
 interface MatchersListProps {
     matcherValue: MatcherValueProps
     onAdd: () => void
-    onRemove: (index: number) => void
-    onEdit: (index: number) => void
+    onRemove: (index: number, subIndex: number) => void
+    onEdit: (index: number, subIndex: number) => void
+    onChangeMatcher: (params: {index: number; value: string; fileId: string}) => void
 }
 /**匹配器 */
 export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
-    const {matcherValue, onAdd, onRemove, onEdit} = props
+    const {matcherValue, onAdd, onRemove, onEdit, onChangeMatcher} = props
     const {matchersList} = matcherValue
     return (
         <>
@@ -1220,26 +1263,82 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                     <>
                         {matchersList.map((matcherItem, index) => (
                             <Form.Item noStyle key={`ID:${index}`}>
-                                <div className={styles["matchersList-item"]} key={`ID:${index}`}>
-                                    <div className={styles["matchersList-item-heard"]}>
-                                        <span className={styles["item-id"]}>ID&nbsp;{index}</span>
-                                        <span>
-                                            [{matcherTypeList.find((e) => e.value === matcherItem.MatcherType)?.label}]
-                                        </span>
-                                        <span className={styles["item-number"]}>{matcherItem.Group?.length}</span>
-                                    </div>
-                                    <MatchersAndExtractorsListItemOperate
-                                        onRemove={() => onRemove(index)}
-                                        onEdit={() => onEdit(index)}
-                                        popoverContent={
-                                            <MatcherItem
-                                                matcherItem={matcherItem}
-                                                onEdit={() => {}}
-                                                notEditable={true}
-                                                httpResponse=''
+                                <div className={styles["matchers-item"]}>
+                                    <div className={styles["matchers-heard"]}>
+                                        <div className={styles["matchers-heard-left"]}>
+                                            <YakitRadioButtons
+                                                buttonStyle='solid'
+                                                options={filterModeOptions}
+                                                size='small'
+                                                value={matcherItem.filterMode}
+                                                onChange={(e) => {
+                                                    onChangeMatcher({
+                                                        index,
+                                                        value: e.target.value,
+                                                        fileId: "filterMode"
+                                                    })
+                                                }}
                                             />
-                                        }
-                                    />
+                                            {matcherItem.filterMode === "onlyMatch" && (
+                                                <ColorSelect
+                                                    size='small'
+                                                    value={matcherItem.HitColor}
+                                                    onChange={(value) => {
+                                                        onChangeMatcher({
+                                                            index,
+                                                            value,
+                                                            fileId: "HitColor"
+                                                        })
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                        <YakitRadioButtons
+                                            buttonStyle='solid'
+                                            options={matchersConditionOptions}
+                                            size='small'
+                                            value={matcherItem.SubMatcherCondition}
+                                            onChange={(e) => {
+                                                onChangeMatcher({
+                                                    index,
+                                                    value: e.target.value,
+                                                    fileId: "SubMatcherCondition"
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                    {matcherItem.SubMatchers.map((subItem, subIndex) => (
+                                        <React.Fragment key={`ID:${subIndex}`}>
+                                            <div className={styles["matchersList-item"]} key={`ID:${subIndex}`}>
+                                                <div className={styles["matchersList-item-heard"]}>
+                                                    <span className={styles["item-id"]}>ID&nbsp;{subIndex}</span>
+                                                    <span>
+                                                        [
+                                                        {
+                                                            matcherTypeList.find((e) => e.value === subItem.MatcherType)
+                                                                ?.label
+                                                        }
+                                                        ]
+                                                    </span>
+                                                    <span className={styles["item-number"]}>
+                                                        {subItem.Group?.length}
+                                                    </span>
+                                                </div>
+                                                <MatchersAndExtractorsListItemOperate
+                                                    onRemove={() => onRemove(index, subIndex)}
+                                                    onEdit={() => onEdit(index, subIndex)}
+                                                    popoverContent={
+                                                        <MatcherItem
+                                                            matcherItem={subItem}
+                                                            onEdit={() => {}}
+                                                            notEditable={true}
+                                                            httpResponse=''
+                                                        />
+                                                    }
+                                                />
+                                            </div>
+                                        </React.Fragment>
+                                    ))}
                                 </div>
                             </Form.Item>
                         ))}
