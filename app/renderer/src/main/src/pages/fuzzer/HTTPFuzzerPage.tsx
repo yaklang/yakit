@@ -421,7 +421,8 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
     if (value.matchers?.length > 0) {
         const matchers: HTTPResponseMatcher[] = value.matchers.map((ele) => ({
             ...ele,
-            Action: getAction(ele.filterMode)
+            Action: getAction(ele.filterMode),
+            HitColor:!!getAction(ele.filterMode)?'':ele.HitColor,//只有仅匹配才传颜色
         }))
         fuzzerRequests.Matchers = matchers
     }
