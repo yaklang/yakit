@@ -338,10 +338,12 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         Group: subItem.Group.filter((g) => g !== "")
                     })
                 })
-                newMatchersList.push({
-                    ...item,
-                    SubMatchers: subMatcher
-                })
+                if (subMatcher.length > 0) {
+                    newMatchersList.push({
+                        ...item,
+                        SubMatchers: subMatcher
+                    })
+                }
             })
             const newExtractorList: HTTPResponseExtractor[] = []
             extractor.extractorList.forEach((item) => {
@@ -626,7 +628,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
         const onRemoveSubMatcher = useMemoizedFn((number: number, subIndex: number) => {
             if (notEditable) return
             try {
-                const params :FilterEmptySubMatcherFunctionProps= {
+                const params: FilterEmptySubMatcherFunctionProps = {
                     matchers: matcher.matchersList,
                     index: number,
                     subIndex
