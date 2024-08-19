@@ -873,29 +873,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             isCache = true,
             downstreamProxyStr = ""
         } = res || {}
-        const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
-            proxy: [],
-            dnsServers: [],
-            etcHosts: [],
-            advancedConfigShow: null,
-            resNumlimit: DefFuzzerTableMaxData
-        }
-        let newAdvancedConfigValue = {
-            ...advancedConfigValue
-        }
-        if (isCache) {
-            newAdvancedConfigValue.proxy = cacheData.proxy
-            newAdvancedConfigValue.dnsServers = cacheData.dnsServers
-            newAdvancedConfigValue.etcHosts = cacheData.etcHosts
-            newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
-        }
-        let newAdvancedConfigShow = cacheData.advancedConfigShow
-        let newIsHttps = !!isHttps
-        let newIsGmTLS = !!isGmTLS
-        let newRequest = request || defaultPostTemplate
-        // 有分享内容，数据以分享内容为准
-        if (res.hasOwnProperty("shareContent")) {
-            try {
+        try {
+            const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
+                proxy: [],
+                dnsServers: [],
+                etcHosts: [],
+                advancedConfigShow: null,
+                resNumlimit: DefFuzzerTableMaxData
+            }
+            let newAdvancedConfigValue = {
+                ...advancedConfigValue
+            }
+            if (isCache) {
+                newAdvancedConfigValue.proxy = cacheData.proxy
+                newAdvancedConfigValue.dnsServers = cacheData.dnsServers
+                newAdvancedConfigValue.etcHosts = cacheData.etcHosts
+                newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
+            }
+            let newAdvancedConfigShow = cacheData.advancedConfigShow
+            let newIsHttps = !!isHttps
+            let newIsGmTLS = !!isGmTLS
+            let newRequest = request || defaultPostTemplate
+            // 有分享内容，数据以分享内容为准
+            if (res.hasOwnProperty("shareContent")) {
                 const shareContent: ShareValueProps = JSON.parse(res.shareContent)
                 newIsHttps = shareContent.advancedConfiguration.isHttps
                 newIsGmTLS = shareContent.advancedConfiguration.isGmTLS
@@ -910,27 +910,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         rule: true
                     }
                 }
-            } catch (error) {}
-        }
-        if (downstreamProxyStr) {
-            newAdvancedConfigValue.proxy = [downstreamProxyStr]
-        }
-        openMenuPage(
-            {route: YakitRoute.HTTPFuzzer},
-            {
-                openFlag,
-                pageParams: {
-                    request: newRequest,
-                    system: system,
-                    advancedConfigValue: {
-                        ...newAdvancedConfigValue,
-                        isHttps: newIsHttps,
-                        isGmTLS: newIsGmTLS
-                    },
-                    advancedConfigShow: newAdvancedConfigShow
-                }
             }
-        )
+            if (downstreamProxyStr) {
+                newAdvancedConfigValue.proxy = [downstreamProxyStr]
+            }
+            openMenuPage(
+                {route: YakitRoute.HTTPFuzzer},
+                {
+                    openFlag,
+                    pageParams: {
+                        request: newRequest,
+                        system: system,
+                        advancedConfigValue: {
+                            ...newAdvancedConfigValue,
+                            isHttps: newIsHttps,
+                            isGmTLS: newIsGmTLS
+                        },
+                        advancedConfigShow: newAdvancedConfigShow
+                    }
+                }
+            )
+        } catch (error) {
+            yakitNotify('error',`打开WF失败:${error}`)
+        }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
     const addWebsocketFuzzer = useMemoizedFn(
