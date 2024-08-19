@@ -25,7 +25,7 @@ export interface FileDetailInfo {
     /** 代码 */
     code: string
     /** 文件语言 */
-    language: string
+    language?: string
     /** 打开文件的时间戳（用于打开编辑器列表排序） */
     openTimestamp: number
     /** 文件是否为文本文件 */

@@ -153,7 +153,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     /** 编辑器语言 */
     const language = useMemo(() => {
-        return GetPluginLanguage(type || "http")
+        if(type){
+            return GetPluginLanguage(type)
+        }
     }, [type])
 
     useMemo(() => {

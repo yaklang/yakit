@@ -1173,7 +1173,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     editorDidMount={(editor) => {
                         setReqEditor(editor)
                     }}
-                    type={editorInfo?.language || "yak"}
+                    type={editorInfo?.language}
                     value={editorInfo?.code || ""}
                     setValue={(content: string) => {
                         updateAreaInputInfo(content)
@@ -1390,7 +1390,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     ...info,
                     path,
                     isUnSave: false,
-                    language: monacaLanguageType(suffix || "")
+                    language: monacaLanguageType(suffix)
                 }
                 const parentPath = await getPathParent(file.path)
                 const parentDetail = getMapFileDetail(parentPath)
