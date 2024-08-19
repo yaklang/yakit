@@ -75,6 +75,7 @@ export interface YakitEditorProps {
     editorId?: string
 
     highLightText?: HighLightText[] | Selection[]
+    highLightClass?: string
 }
 
 /**

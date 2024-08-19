@@ -88,6 +88,8 @@ import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {clearMapAuditChildDetail} from "./AuditCode/AuditTree/ChildMap"
 import {clearMapAuditDetail} from "./AuditCode/AuditTree/AuditMap"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
+import {isCommunityEdition} from "@/utils/envfile"
+import {WaterMark} from "@ant-design/pro-layout"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -142,10 +144,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     if (callback) callback(res.data)
                 })
                 .catch((error) => {
-                    if(error.toString().includes("record not found")){
+                    if (error.toString().includes("record not found")) {
                         yakitNotify("error", `获取审计项目：该项目 ${path} 已被删除。`)
-                    }
-                    else{
+                    } else {
                         yakitNotify("error", `获取审计项目失败: ${error}`)
                     }
                     if (callback) callback([])
@@ -211,7 +212,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         insertFileMap(keys[index])
     })
 
-    const clearMap = useMemoizedFn(()=>{
+    const clearMap = useMemoizedFn(() => {
         clearMapFileDetail()
         clearMapFolderDetail()
         clearMapAuditDetail()
@@ -345,12 +346,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             if (file) {
                 let cacheAreaInfo = areaInfo
                 // 如若存在高亮显示 则注入
-                if(highLightRange){
-                    cacheAreaInfo = updateAreaFileInfo(areaInfo, {...file,highLightRange}, file.path)
+                if (highLightRange) {
+                    cacheAreaInfo = updateAreaFileInfo(areaInfo, {...file, highLightRange}, file.path)
                 }
                 const newAreaInfo = setAreaFileActive(cacheAreaInfo, path)
                 setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile({...file,highLightRange})
+                setActiveFile && setActiveFile({...file, highLightRange})
             } else {
                 // 如若为打开外部文件 则无需校验是否为审计树 直接按照文件树打开
                 const fileSourceType = isOutside ? "file" : loadTreeType
@@ -1075,120 +1076,131 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     }, [])
 
-    return (
-        <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
-                <div className={styles["yak-runner-body"]}>
-                    <YakitResizeBox
-                        freeze={!isUnShow}
-                        firstRatio={isUnShow ? "25px" : "300px"}
-                        firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
-                        lineDirection='right'
-                        firstMinSize={isUnShow ? 25 : 200}
-                        lineStyle={{width: 4}}
-                        secondMinSize={480}
-                        firstNode={
-                            <LeftSideBar
-                                addFileTab={addFileTab}
-                                isUnShow={isUnShow}
-                                setUnShow={setUnShow}
-                                active={active}
-                                setActive={setActive}
-                            />
-                        }
-                        secondNodeStyle={
-                            isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
-                        }
-                        secondNode={
-                            <YakitResizeBox
-                                freeze={isShowAuditDetail}
-                                secondRatio={!isShowAuditDetail ? "0px" : "300px"}
-                                lineDirection='left'
-                                firstMinSize={300}
-                                lineStyle={{width: 4}}
-                                firstNodeStyle={!isShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}}
-                                secondNodeStyle={
-                                    !isShowAuditDetail
-                                        ? {padding: 0, maxWidth: 0, minWidth: 0}
-                                        : {overflow: "unset", padding: 0}
-                                }
-                                firstNode={
-                                    <div
-                                        className={classNames(styles["yak-runner-code"], {
-                                            [styles["yak-runner-code-offset"]]: !isUnShow
-                                        })}
-                                    >
-                                        <div className={styles["code-container"]}>
-                                            {onFixedEditorDetails(onChangeArea())}
-                                        </div>
-                                    </div>
-                                }
-                                secondNode={
-                                    <RightAuditDetail
-                                        auditRightParams={auditRightParams}
-                                        isShowAuditDetail={isShowAuditDetail}
-                                        setShowAuditDetail={setShowAuditDetail}
-                                    />
-                                }
-                            />
-                        }
-                    />
-                </div>
+    const waterMarkStr = useMemo(() => {
+        if (isCommunityEdition() && loadTreeType === "audit") {
+            return "技术浏览版仅供技术交流使用"
+        }
+        return " "
+    }, [loadTreeType])
 
-                <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
-            </div>
-            {/* 文件过大提示框 */}
-            <YakitHint
-                visible={isShowFileHint}
-                title='文件警告'
-                content='文件过大，无法使用YakRunner进行操作'
-                cancelButtonProps={{style: {display: "none"}}}
-                onOk={() => {
-                    setShowFileHint(false)
-                }}
-                okButtonText={"知道了"}
-            />
-            {/* 编译项目弹窗 */}
-            {isShowCompileModal && (
+    return (
+        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
+            <YakRunnerContext.Provider value={{store, dispatcher}}>
+                <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
+                    
+                    <div className={styles["yak-runner-body"]}>
+                        <YakitResizeBox
+                            freeze={!isUnShow}
+                            firstRatio={isUnShow ? "25px" : "300px"}
+                            firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
+                            lineDirection='right'
+                            firstMinSize={isUnShow ? 25 : 200}
+                            lineStyle={{width: 4}}
+                            secondMinSize={480}
+                            firstNode={
+                                <LeftSideBar
+                                    addFileTab={addFileTab}
+                                    isUnShow={isUnShow}
+                                    setUnShow={setUnShow}
+                                    active={active}
+                                    setActive={setActive}
+                                />
+                            }
+                            secondNodeStyle={
+                                isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
+                            }
+                            secondNode={
+                                <YakitResizeBox
+                                    freeze={isShowAuditDetail}
+                                    secondRatio={!isShowAuditDetail ? "0px" : "300px"}
+                                    lineDirection='left'
+                                    firstMinSize={300}
+                                    lineStyle={{width: 4}}
+                                    firstNodeStyle={!isShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}}
+                                    secondNodeStyle={
+                                        !isShowAuditDetail
+                                            ? {padding: 0, maxWidth: 0, minWidth: 0}
+                                            : {overflow: "unset", padding: 0}
+                                    }
+                                    firstNode={
+                                        <div
+                                            className={classNames(styles["yak-runner-code"], {
+                                                [styles["yak-runner-code-offset"]]: !isUnShow
+                                            })}
+                                        >
+                                            <div className={styles["code-container"]}>
+                                                {onFixedEditorDetails(onChangeArea())}
+                                            </div>
+                                        </div>
+                                    }
+                                    secondNode={
+                                        <RightAuditDetail
+                                            auditRightParams={auditRightParams}
+                                            isShowAuditDetail={isShowAuditDetail}
+                                            setShowAuditDetail={setShowAuditDetail}
+                                        />
+                                    }
+                                />
+                            }
+                        />
+                    </div>
+
+                    <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
+                    
+                </div>
+                {/* 文件过大提示框 */}
+                <YakitHint
+                    visible={isShowFileHint}
+                    title='文件警告'
+                    content='文件过大，无法使用YakRunner进行操作'
+                    cancelButtonProps={{style: {display: "none"}}}
+                    onOk={() => {
+                        setShowFileHint(false)
+                    }}
+                    okButtonText={"知道了"}
+                />
+                {/* 编译项目弹窗 */}
+                {isShowCompileModal && (
+                    <YakitModal
+                        visible={isShowCompileModal}
+                        bodyStyle={{padding: 0}}
+                        title={"编译项目"}
+                        footer={null}
+                        onCancel={onCloseCompileModal}
+                        maskClosable={false}
+                    >
+                        <AuditModalForm
+                            isInitDefault={isInitDefault}
+                            onCancle={onCloseCompileModal}
+                            isExecuting={isExecuting}
+                            onStartAudit={onStartAudit}
+                        />
+                    </YakitModal>
+                )}
+                {/* 编译项目进度条弹窗 */}
                 <YakitModal
-                    visible={isShowCompileModal}
-                    bodyStyle={{padding: 0}}
-                    title={"编译项目"}
+                    centered
+                    getContainer={document.getElementById("new-payload") || document.body}
+                    visible={isShowRunAuditModal}
+                    title={null}
                     footer={null}
-                    onCancel={onCloseCompileModal}
-                    maskClosable={false}
+                    width={520}
+                    type='white'
+                    closable={false}
+                    hiddenHeader={true}
+                    bodyStyle={{padding: 0}}
                 >
-                    <AuditModalForm
-                        isInitDefault={isInitDefault}
-                        onCancle={onCloseCompileModal}
-                        isExecuting={isExecuting}
-                        onStartAudit={onStartAudit}
+                    <UploadStatusInfo
+                        title={"项目编译中..."}
+                        streamData={exportStreamData}
+                        cancelRun={() => {
+                            onCancelAudit()
+                        }}
+                        logInfo={logInfoRef.current}
+                        showDownloadDetail={false}
                     />
                 </YakitModal>
-            )}
-            {/* 编译项目进度条弹窗 */}
-            <YakitModal
-                centered
-                getContainer={document.getElementById("new-payload") || document.body}
-                visible={isShowRunAuditModal}
-                title={null}
-                footer={null}
-                width={520}
-                type='white'
-                closable={false}
-                hiddenHeader={true}
-                bodyStyle={{padding: 0}}
-            >
-                <UploadStatusInfo
-                    title={"项目编译中..."}
-                    streamData={exportStreamData}
-                    cancelRun={() => {
-                        onCancelAudit()
-                    }}
-                    logInfo={logInfoRef.current}
-                    showDownloadDetail={false}
-                />
-            </YakitModal>
-        </YakRunnerContext.Provider>
+            </YakRunnerContext.Provider>
+        </WaterMark>
     )
 }

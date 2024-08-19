@@ -140,7 +140,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         rangeNode,
         overLine = 3,
         editorId,
-        highLightText = []
+        highLightText = [],
+        highLightClass
     } = props
 
     const systemRef = useRef<YakitSystem>("Darwin")
@@ -153,7 +154,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     /** 编辑器语言 */
     const language = useMemo(() => {
-        if(type){
+        if (type) {
             return GetPluginLanguage(type)
         }
     }, [type])
@@ -737,200 +738,220 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         if (!model) {
             return
         }
-        
+
         let current: string[] = []
-        if (props.type === "http" || props.type === "html") {
-            /** 随机上下文ID */
-            const randomStr = randomString(10)
-            /** 对于需要自定义命令的快捷键生成对应的上下文ID */
-            let yakitEditor = editor.createContextKey(randomStr, false)
-            // @ts-ignore
-            yakitEditor.set(true)
-            /* limited paste by interval */
-            let lastPasteTime = 0
-            let pasteLimitInterval = 80
-            editor.addCommand(
-                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
-                () => {
-                    const current = new Date().getTime()
-                    const currentInterval = current - lastPasteTime
-                    if (currentInterval < pasteLimitInterval) {
-                        pasteWarning.run()
-                    } else {
-                        lastPasteTime = current
-                        editor.trigger("keyboard", "editor.action.clipboardPasteAction", {})
-                    }
-                },
-                randomStr
-            )
-            const generateDecorations = (): YakitIModelDecoration[] => {
-                // const text = model.getValue();
-                const endsp = model.getPositionAt(1800)
-                const text =
-                    endsp.lineNumber === 1
-                        ? model.getValueInRange({
-                              startLineNumber: 1,
-                              startColumn: 1,
-                              endLineNumber: 1,
-                              endColumn: endsp.column
-                          })
-                        : model.getValueInRange({
-                              startLineNumber: 1,
-                              startColumn: 1,
-                              endLineNumber: endsp.lineNumber,
-                              endColumn: endsp.column
-                          })
 
-                const dec: YakitIModelDecoration[] = []
-                if (props.type === "http") {
-                    ;(() => {
-                        try {//http
-                            ;[{regexp: /\nContent-Length:\s*?\d+/, classType: "content-length"}].map((detail) => {
-                                // handle content-length
-                                const match = detail.regexp.exec(text)
-                                if (!match) {
-                                    return
-                                }
-                                const start = model.getPositionAt(match.index)
-                                const end = model.getPositionAt(match.index + match[0].indexOf(":"))
-                                dec.push({
-                                    id: detail.classType + match.index,
-                                    ownerId: 0,
-                                    range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                    options: {afterContentClassName: detail.classType}
-                                } as YakitIModelDecoration)
-                            })
-                        } catch (e) {}
-                    })()
-                    ;(() => {
-                        try {//http
-                            ;[{regexp: /\nHost:\s*?.+/, classType: "host"}].map((detail) => {
-                                // handle host
-                                const match = detail.regexp.exec(text)
-                                if (!match) {
-                                    return
-                                }
-                                const start = model.getPositionAt(match.index)
-                                const end = model.getPositionAt(match.index + match[0].indexOf(":"))
-                                dec.push({
-                                    id: detail.classType + match.index,
-                                    ownerId: 0,
-                                    range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                    options: {afterContentClassName: detail.classType}
-                                } as YakitIModelDecoration)
-                            })
-                        } catch (e) {}
-                    })()
+        /** 随机上下文ID */
+        const randomStr = randomString(10)
+        /** 对于需要自定义命令的快捷键生成对应的上下文ID */
+        let yakitEditor = editor.createContextKey(randomStr, false)
+        // @ts-ignore
+        yakitEditor.set(true)
+        /* limited paste by interval */
+        let lastPasteTime = 0
+        let pasteLimitInterval = 80
+        editor.addCommand(
+            monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
+            () => {
+                const current = new Date().getTime()
+                const currentInterval = current - lastPasteTime
+                if (currentInterval < pasteLimitInterval) {
+                    pasteWarning.run()
+                } else {
+                    lastPasteTime = current
+                    editor.trigger("keyboard", "editor.action.clipboardPasteAction", {})
                 }
-                if (props.type === "html" || props.type === "http") {
-                    ;(() => { // http html
-                        const text = model.getValue()
-                        let match
-                        const regex = /(\\u[\dabcdef]{4})+/gi
+            },
+            randomStr
+        )
+        const generateDecorations = (): YakitIModelDecoration[] => {
+            // const text = model.getValue();
+            const endsp = model.getPositionAt(1800)
+            const dec: YakitIModelDecoration[] = []
+            const text =
+                endsp.lineNumber === 1
+                    ? model.getValueInRange({
+                          startLineNumber: 1,
+                          startColumn: 1,
+                          endLineNumber: 1,
+                          endColumn: endsp.column
+                      })
+                    : model.getValueInRange({
+                          startLineNumber: 1,
+                          startColumn: 1,
+                          endLineNumber: endsp.lineNumber,
+                          endColumn: endsp.column
+                      })
 
-                        while ((match = regex.exec(text)) !== null) {
+            if (props.type === "http") {
+                ;(() => {
+                    try {
+                        //http
+                        ;[{regexp: /\nContent-Length:\s*?\d+/, classType: "content-length"}].map((detail) => {
+                            // handle content-length
+                            const match = detail.regexp.exec(text)
+                            if (!match) {
+                                return
+                            }
                             const start = model.getPositionAt(match.index)
-                            const end = model.getPositionAt(match.index + match[0].length)
-                            const decoded = match[0]
-                                .split("\\u")
-                                .filter(Boolean)
-                                .map((hex) => String.fromCharCode(parseInt(hex, 16)))
-                                .join("")
+                            const end = model.getPositionAt(match.index + match[0].indexOf(":"))
                             dec.push({
-                                id: "decode" + match.index,
-                                ownerId: 1,
+                                id: detail.classType + match.index,
+                                ownerId: 0,
                                 range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                options: {
-                                    className: "unicode-decode",
-                                    hoverMessage: {value: decoded},
-                                    afterContentClassName: "unicode-decode",
-                                    after: {content: decoded, inlineClassName: "unicode-decode-after"}
-                                }
-                            } as IModelDecoration)
-                        }
-                    })()
-                }
-                ;(() => {// all 
-                    const keywordRegExp = /\r?\n/g
-                    let match
-                    let count = 0
-                    while ((match = keywordRegExp.exec(text)) !== null) {
-                        count++
-                        const start = model.getPositionAt(match.index)
-                        const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf"
-                        const end = model.getPositionAt(match.index + match[0].length)
-                        dec.push({
-                            id: "keyword" + match.index,
-                            ownerId: 2,
-                            range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                            options: {beforeContentClassName: className}
-                        } as YakitIModelDecoration)
-                        if (count > 19) {
-                            return
-                        }
-                    }
+                                options: {afterContentClassName: detail.classType}
+                            } as YakitIModelDecoration)
+                        })
+                    } catch (e) {}
                 })()
-                ;(() => {//all
-                    highLightTextFun().forEach((item) => {
-                        const {startOffset = 0, highlightLength = 0, hoverVal = "", startLineNumber, startColumn, endLineNumber, endColumn} = item
-                        let range = {
-                            startLineNumber:0,
-                            startColumn:0,
-                            endLineNumber:0,
-                            endColumn:0
-                        }
-                        if(typeof startLineNumber === "number"){
-                            range.startLineNumber = startLineNumber
-                            range.startColumn = startColumn
-                            range.endLineNumber = endLineNumber
-                            range.endColumn = endColumn
-                        }
-                        else{
-                          // 获取偏移量对应的位置
-                            const startPosition = model.getPositionAt(Number(startOffset))
-                            const endPosition = model.getPositionAt(Number(startOffset) + Number(highlightLength))  
-                            range.startLineNumber = startPosition.lineNumber
-                            range.startColumn = startPosition.column
-                            range.endLineNumber = endPosition.lineNumber
-                            range.endColumn = endPosition.column
-                        }
+                ;(() => {
+                    try {
+                        //http
+                        ;[{regexp: /\nHost:\s*?.+/, classType: "host"}].map((detail) => {
+                            // handle host
+                            const match = detail.regexp.exec(text)
+                            if (!match) {
+                                return
+                            }
+                            const start = model.getPositionAt(match.index)
+                            const end = model.getPositionAt(match.index + match[0].indexOf(":"))
+                            dec.push({
+                                id: detail.classType + match.index,
+                                ownerId: 0,
+                                range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                                options: {afterContentClassName: detail.classType}
+                            } as YakitIModelDecoration)
+                        })
+                    } catch (e) {}
+                })()
+            }
+            if (props.type === "html" || props.type === "http") {
+                ;(() => {
+                    // http html
+                    const text = model.getValue()
+                    let match
+                    const regex = /(\\u[\dabcdef]{4})+/gi
 
-                        // 创建装饰选项
+                    while ((match = regex.exec(text)) !== null) {
+                        const start = model.getPositionAt(match.index)
+                        const end = model.getPositionAt(match.index + match[0].length)
+                        const decoded = match[0]
+                            .split("\\u")
+                            .filter(Boolean)
+                            .map((hex) => String.fromCharCode(parseInt(hex, 16)))
+                            .join("")
                         dec.push({
-                            id: "hight-light-text_" + range.startLineNumber + "_" + range.startColumn + "_" + range.endLineNumber + "_" + range.endColumn,
-                            ownerId: 3,
-                            range: new monaco.Range(
-                                range.startLineNumber,
-                                range.startColumn,
-                                range.endLineNumber,
-                                range.endColumn
-                            ),
+                            id: "decode" + match.index,
+                            ownerId: 1,
+                            range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
                             options: {
-                                isWholeLine: false,
-                                className: "hight-light-bg-color",
-                                hoverMessage: [{value: hoverVal, isTrusted: true}]
+                                className: "unicode-decode",
+                                hoverMessage: {value: decoded},
+                                afterContentClassName: "unicode-decode",
+                                after: {content: decoded, inlineClassName: "unicode-decode-after"}
                             }
                         } as IModelDecoration)
-                    })
+                    }
                 })()
+            }
+            ;(() => {
+                // all
+                const keywordRegExp = /\r?\n/g
+                let match
+                let count = 0
+                while ((match = keywordRegExp.exec(text)) !== null) {
+                    count++
+                    const start = model.getPositionAt(match.index)
+                    const className: "crlf" | "lf" = match[0] === "\r\n" ? "crlf" : "lf"
+                    const end = model.getPositionAt(match.index + match[0].length)
+                    dec.push({
+                        id: "keyword" + match.index,
+                        ownerId: 2,
+                        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                        options: {beforeContentClassName: className}
+                    } as YakitIModelDecoration)
+                    if (count > 19) {
+                        return
+                    }
+                }
+            })()
+            ;(() => {
+                //all
+                highLightTextFun().forEach((item) => {
+                    const {
+                        startOffset = 0,
+                        highlightLength = 0,
+                        hoverVal = "",
+                        startLineNumber,
+                        startColumn,
+                        endLineNumber,
+                        endColumn
+                    } = item
+                    let range = {
+                        startLineNumber: 0,
+                        startColumn: 0,
+                        endLineNumber: 0,
+                        endColumn: 0
+                    }
+                    if (typeof startLineNumber === "number") {
+                        range.startLineNumber = startLineNumber
+                        range.startColumn = startColumn
+                        range.endLineNumber = endLineNumber
+                        range.endColumn = endColumn
+                    } else {
+                        // 获取偏移量对应的位置
+                        const startPosition = model.getPositionAt(Number(startOffset))
+                        const endPosition = model.getPositionAt(Number(startOffset) + Number(highlightLength))
+                        range.startLineNumber = startPosition.lineNumber
+                        range.startColumn = startPosition.column
+                        range.endLineNumber = endPosition.lineNumber
+                        range.endColumn = endPosition.column
+                    }
 
-                return dec
-            }
-            
-            deltaDecorationsRef.current = () => {
-                current = model.deltaDecorations(current, generateDecorations())
-            }
-            // editor.onMouseDown(()=>{
-            //     const dec: YakitIModelDecoration[] = []
-            //     // back 
-            //     dec.push(generateDecorations())
-            //     current = model.deltaDecorations(current, dec)
-            // })
-            editor.onDidChangeModelContent(() => {
-                current = model.deltaDecorations(current, generateDecorations())
-            })
+                    // 创建装饰选项
+                    dec.push({
+                        id:
+                            "hight-light-text_" +
+                            range.startLineNumber +
+                            "_" +
+                            range.startColumn +
+                            "_" +
+                            range.endLineNumber +
+                            "_" +
+                            range.endColumn,
+                        ownerId: 3,
+                        range: new monaco.Range(
+                            range.startLineNumber,
+                            range.startColumn,
+                            range.endLineNumber,
+                            range.endColumn
+                        ),
+                        options: {
+                            isWholeLine: false,
+                            className: highLightClass ? highLightClass : "hight-light-default-bg-color",
+                            hoverMessage: [{value: hoverVal, isTrusted: true}]
+                        }
+                    } as IModelDecoration)
+                })
+            })()
+
+            return dec
+        }
+
+        deltaDecorationsRef.current = () => {
             current = model.deltaDecorations(current, generateDecorations())
         }
+        // editor.onMouseDown(()=>{
+        //     const dec: YakitIModelDecoration[] = []
+        //     // back
+        //     dec.push(generateDecorations())
+        //     current = model.deltaDecorations(current, dec)
+        // })
+        editor.onDidChangeModelContent(() => {
+            current = model.deltaDecorations(current, generateDecorations())
+        })
+        current = model.deltaDecorations(current, generateDecorations())
+
         return () => {
             try {
                 editor.dispose()

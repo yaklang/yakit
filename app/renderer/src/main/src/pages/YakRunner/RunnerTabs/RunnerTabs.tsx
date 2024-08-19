@@ -981,7 +981,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         (content: string) => {
             if (editorInfo?.path) {
                 const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo.path)
-                console.log("更新编辑器文件内容", newAreaInfo)
+                // console.log("更新编辑器文件内容", newAreaInfo)
                 setAreaInfo && setAreaInfo(newAreaInfo)
             }
         },
@@ -1006,8 +1006,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 更新当前底部展示信息
     const updateBottomEditorDetails = useDebounceFn(
         async () => {
-            console.log("更新当前底部展示信息---")
-
             if (!editorInfo) return
             let newActiveFile = editorInfo
             // 注入语法检查结果
@@ -1128,9 +1126,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onJumpEditorDetailFun = useMemoizedFn((data) => {
         try {
             const obj: JumpToEditorProps = JSON.parse(data)
-            const {id, selections} = obj
+            const {id,isSelect = true, selections} = obj
             if (reqEditor && editorInfo?.path === id) {
-                reqEditor.setSelection(selections)
+                if(isSelect){
+                    reqEditor.setSelection(selections)
+                }
                 reqEditor.revealLineInCenter(selections.startLineNumber)
             }
         } catch (error) {}
@@ -1179,6 +1179,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                         updateAreaInputInfo(content)
                     }}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
+                    highLightClass="hight-light-yak-runner-color"
                 />
             )}
         </div>

@@ -780,7 +780,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 height={showHeight + 26}
                 visible={visible}
                 bodyStyle={{padding: 0}}
-                className={classNames(styles["audit-dhistory-drawer"])}
+                className={classNames(styles["audit-history-drawer"])}
                 onClose={onCloseDrawer}
             >
                 <AuditHistoryTable visible={visible} onClose={onCloseDrawer} />
