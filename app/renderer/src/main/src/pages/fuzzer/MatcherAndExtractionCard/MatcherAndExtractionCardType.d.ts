@@ -1,8 +1,17 @@
 import {ReactNode} from "react"
 import {FilterMode} from "../HTTPFuzzerPage"
 
+export interface FilterEmptySubMatcherFunctionProps {
+    matchers: HTTPResponseMatcher[]
+    index: number
+    subIndex: number
+}
 export type MatchingAndExtraction = "matchers" | "extractors"
 
+export interface MatcherActiveKey {
+    order: number
+    defActiveKey: string
+}
 export interface MatcherAndExtractionCardProps extends MatcherAndExtractionProps {}
 
 export interface MatcherAndExtractionProps {
@@ -14,6 +23,7 @@ export interface MatcherAndExtractionProps {
     extractorValue: ExtractorValueProps
     defActiveKey: string
     defActiveType: MatchingAndExtraction
+    defActiveKeyAndOrder: MatcherActiveKey
 }
 
 export interface MatcherAndExtractionRefProps {
@@ -25,10 +35,6 @@ export interface MatcherAndExtractionValueProps {
 }
 
 export interface MatcherValueProps {
-    filterMode: FilterMode
-    /**@name filterMode为onlyMatch,才会设置该值*/
-    hitColor: string
-    matchersCondition: "and" | "or"
     matchersList: HTTPResponseMatcher[]
 }
 
@@ -37,15 +43,22 @@ export interface ExtractorValueProps {
 }
 
 export interface MatcherCollapseProps extends MatcherAndExtractorProps {
+    ref?: React.ForwardedRef<MatcherCollapseRefProps>
     matcher: MatcherValueProps
     setMatcher: (m: MatcherValueProps) => void
     httpResponse: string
+    defActiveKeyAndOrder: MatcherActiveKey
+}
+
+export interface MatcherCollapseRefProps {
+    setActiveKey: (o: number, a: string) => void
 }
 
 export interface ExtractorCollapseProps extends MatcherAndExtractorProps {
     extractor: ExtractorValueProps
     setExtractor: (e: ExtractorValueProps) => void
     httpResponse: string
+    defActiveKey: string
 }
 
 interface MatcherAndExtractorProps {
@@ -53,7 +66,6 @@ interface MatcherAndExtractorProps {
     type: MatchingAndExtraction
     /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
     notEditable?: boolean
-    defActiveKey: string
 }
 
 export interface HTTPResponseMatcher {
@@ -66,6 +78,12 @@ export interface HTTPResponseMatcher {
     GroupEncoding: string
     Negative: boolean
     ExprType: string
+    HitColor: string
+    /**@name retain:保留 discard:丢弃 不传就是匹配 */
+    Action: string
+
+    /**@name 前端使用 过滤器模式 */
+    filterMode: FilterMode
 }
 
 export interface HTTPResponseExtractor {
@@ -134,9 +152,12 @@ export interface MatcherAndExtractionDrawerProps {
     visibleDrawer: boolean
     defActiveType: MatchingAndExtraction
     httpResponse: string
+    /**提取器默认选中 */
     defActiveKey: string
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     onClose: () => void
     onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void
+    /**匹配器默认选中 */
+    defActiveKeyAndOrder: MatcherActiveKey
 }

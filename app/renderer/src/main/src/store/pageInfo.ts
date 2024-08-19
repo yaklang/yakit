@@ -475,7 +475,8 @@ export const saveFuzzerCache = debounce(
                         isHttps: advancedConfigValue.isHttps,
                         request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
                         params: advancedConfigValue.params,
-                        extractors: advancedConfigValue.extractors
+                        extractors: advancedConfigValue.extractors,
+                        matchers: advancedConfigValue.matchers
                     },
                     sortFieId: ele.sortFieId,
                     verbose: ele.pageName,

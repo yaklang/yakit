@@ -48,7 +48,6 @@ import {
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
-import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -72,13 +71,15 @@ import {HttpQueryAdvancedConfig} from "./HttpQueryAdvancedConfig/HttpQueryAdvanc
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps,
-    FuzzTagMode
+    FuzzTagMode,
+    ShowResponseMatcherAndExtractionProps
 } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
     ExtractorValueProps,
     HTTPResponseExtractor,
     HTTPResponseMatcher,
+    MatcherActiveKey,
     MatcherAndExtractionRefProps,
     MatcherAndExtractionValueProps,
     MatcherValueProps,
@@ -112,7 +113,6 @@ import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPa
 import {createRoot} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {YakitWindow} from "@/components/yakitUI/YakitWindow/YakitWindow"
 import blastingIdmp4 from "@/assets/blasting-id.mp4"
 import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
@@ -125,8 +125,6 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "../spaceEngine/utils"
-import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {
     DefFuzzerTableMaxData,
     defaultAdvancedConfigShow,
@@ -188,8 +186,6 @@ export interface RedirectRequestParams {
     Proxy: string
     Extractors: HTTPResponseExtractor[]
     Matchers: HTTPResponseMatcher[]
-    MatchersCondition: string
-    HitColor: string
     Params: FuzzerParamItem[]
     IsGmTLS: boolean
 }
@@ -297,7 +293,7 @@ export interface FuzzerRequestProps {
     RepeatTimes: number
     Extractors: HTTPResponseExtractor[]
     Matchers: HTTPResponseMatcher[]
-    MatchersCondition: string
+    MatchersCondition?: string
     IsGmTLS: boolean
 
     HitColor?: string
@@ -354,6 +350,17 @@ export function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
             failed("复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
         })
 }
+
+const getAction = (mode) => {
+    switch (mode) {
+        case "drop":
+            return "discard"
+        case "match":
+            return "retain"
+        default:
+            return ""
+    }
+}
 /**
  * @description 前端类型转为HTTPFuzzer/HTTPFuzzerSequence接口需要的类型 advancedConfigValue类型转为FuzzerRequests类型
  * @param {AdvancedConfigValueProps} value
@@ -406,13 +413,19 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
             })),
         MutateMethods: [],
         //匹配器
-        Matchers: value.matchers,
-        MatchersCondition: value.matchersCondition,
-        HitColor: value.filterMode === "onlyMatch" ? value.hitColor : "",
+        Matchers: [],
         //提取器
         Extractors: value.extractors
     }
 
+    if (value.matchers?.length > 0) {
+        const matchers: HTTPResponseMatcher[] = value.matchers.map((ele) => ({
+            ...ele,
+            Action: getAction(ele.filterMode),
+            HitColor:!!getAction(ele.filterMode)?'':ele.HitColor,//只有仅匹配才传颜色
+        }))
+        fuzzerRequests.Matchers = matchers
+    }
     let mutateMethods: any[] = []
     const getArr = (value.methodGet || []).filter((ele) => ele.Key || ele.Value)
     const postArr = (value.methodPost || []).filter((ele) => ele.Key || ele.Value)
@@ -583,8 +596,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
-    /**@name 是否刷新高级配置中的代理列表 */
-    const [droppedCount, setDroppedCount] = useState(0)
 
     // state
     const [loading, setLoading] = useState(false)
@@ -615,6 +626,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // Matching And Extraction
     const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
     const [activeKey, setActiveKey] = useState<string>("")
+    const [defActiveKeyAndOrder, setDefActiveKeyAndOrder] = useState<MatcherActiveKey>({
+        order: 0,
+        defActiveKey: ""
+    }) // 匹配器
 
     const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
@@ -850,7 +865,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         resetResponse()
         setHistoryTask(undefined)
         setLoading(true)
-        setDroppedCount(0)
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, tokenRef.current).then(() => {
             ipcRenderer
@@ -872,9 +886,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 .then((data: MatcherAndExtractionValueProps) => {
                     setAdvancedConfigValue({
                         ...advancedConfigValue,
-                        filterMode: data.matcher.filterMode || "drop",
-                        hitColor: data.matcher.hitColor || "red",
-                        matchersCondition: data.matcher.matchersCondition || "and",
                         matchers: data.matcher.matchersList || [],
                         extractors: data.extractor.extractorList || []
                     })
@@ -909,7 +920,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setDefaultResponseSearch(affixSearch)
 
         setLoading(true)
-        setDroppedCount(0)
 
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
@@ -970,7 +980,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
-    const dCountRef = useRef<number>(0)
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
@@ -1021,8 +1030,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 reset()
             }
 
-            if (onIsDropped(data)) return
-
             const r = {
                 // 6.16
                 ...data,
@@ -1059,7 +1066,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             successCount = 0
             failedCount = 0
-            dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
                 setIsPause(true)
@@ -1102,28 +1108,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onlyOneResponse = useMemo(() => {
         return !loading && failedFuzzer.length + successFuzzer.length === 1
     }, [loading, failedFuzzer, successFuzzer])
-
-    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
-    const onIsDropped = useMemoizedFn((data) => {
-        if (advancedConfigValue.matchers?.length > 0) {
-            // 设置了 matchers
-            const hit = data["MatchedByMatcher"] === true
-            // 丢包的条件：
-            //   1. 命中过滤器，同时过滤模式设置为丢弃
-            //   2. 未命中过滤器，过滤模式设置为保留
-            if (
-                (hit && advancedConfigValue.filterMode === "drop") ||
-                (!hit && advancedConfigValue.filterMode === "match")
-            ) {
-                // 丢弃不匹配的内容
-                dCountRef.current++
-                setDroppedCount(dCountRef.current)
-                return true
-            }
-            return false
-        }
-        return false
-    })
 
     const sendFuzzerSettingInfo = useDebounceFn(
         () => {
@@ -1273,7 +1257,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onGetFormValue = useMemoizedFn((val: AdvancedConfigValueProps) => {
         const newValue: AdvancedConfigValueProps = {
             ...val,
-            hitColor: val.hitColor || "red",
             fuzzTagMode: val.fuzzTagMode === undefined ? "standard" : val.fuzzTagMode,
             fuzzTagSyncIndex: !!val.fuzzTagSyncIndex,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
@@ -1292,10 +1275,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [successFuzzer])
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
-    const onShowResponseMatcherAndExtraction = useMemoizedFn((activeType: MatchingAndExtraction, activeKey: string) => {
+    const onShowResponseMatcherAndExtraction = useMemoizedFn((params:ShowResponseMatcherAndExtractionProps) => {
+        const {activeType,activeKey,order}=params;
         setShowMatcherAndExtraction(true)
         setActiveType(activeType)
-        setActiveKey(activeKey)
+        switch (activeType) {
+            case "extractors":
+                setActiveKey(activeKey)
+                break
+            case "matchers":
+                setDefActiveKeyAndOrder({
+                    order:order||0,
+                    defActiveKey:activeKey
+                })
+                break
+            default:
+                break
+        }
     })
     const setHotPatchCode = useMemoizedFn((v: string) => {
         hotPatchCodeRef.current = v
@@ -1751,11 +1747,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             Proxy: advancedConfigValue.proxy.join(","),
                                             Extractors: advancedConfigValue.extractors,
                                             Matchers: advancedConfigValue.matchers,
-                                            MatchersCondition: advancedConfigValue.matchersCondition,
-                                            HitColor:
-                                                advancedConfigValue.filterMode === "onlyMatch"
-                                                    ? advancedConfigValue.hitColor
-                                                    : "",
                                             Params: advancedConfigValue.params || []
                                         }
                                         ipcRenderer
@@ -1776,7 +1767,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </YakitButton>
                             )}
                             <FuzzerExtraShow
-                                droppedCount={droppedCount}
                                 advancedConfigValue={advancedConfigValue}
                                 onlyOneResponse={onlyOneResponse}
                                 httpResponse={httpResponse}
@@ -1858,22 +1848,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         showExtra={showExtra}
                                         setShowExtra={setShowExtra}
                                         matcherValue={{
-                                            hitColor: advancedConfigValue.hitColor || "red",
-                                            matchersCondition: advancedConfigValue.matchersCondition || "and",
-                                            matchersList: advancedConfigValue.matchers || [],
-                                            filterMode: advancedConfigValue.filterMode || "drop"
+                                            matchersList: advancedConfigValue.matchers || []
                                         }}
                                         extractorValue={{
                                             extractorList: advancedConfigValue.extractors || []
                                         }}
                                         defActiveKey={activeKey}
                                         defActiveType={activeType}
+                                        defActiveKeyAndOrder={defActiveKeyAndOrder}
                                         onSaveMatcherAndExtraction={(matcher, extractor) => {
                                             setAdvancedConfigValue({
                                                 ...advancedConfigValue,
-                                                filterMode: matcher.filterMode,
-                                                hitColor: matcher.hitColor || "red",
-                                                matchersCondition: matcher.matchersCondition,
                                                 matchers: matcher.matchersList,
                                                 extractors: extractor.extractorList
                                             })
@@ -2012,16 +1997,14 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
 }
 
 interface FuzzerExtraShowProps {
-    droppedCount: number
     advancedConfigValue: AdvancedConfigValueProps
     onlyOneResponse: boolean
     httpResponse: FuzzerResponse
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
-    const {droppedCount, advancedConfigValue, onlyOneResponse, httpResponse} = props
+    const {advancedConfigValue, onlyOneResponse, httpResponse} = props
     return (
         <div className={styles["display-flex"]}>
-            {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
             {advancedConfigValue.proxy.length > 0 && (
                 <Tooltip title={advancedConfigValue.proxy}>
                     <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
@@ -2803,6 +2786,7 @@ interface ResponseViewerProps {
     extractorValue: ExtractorValueProps
     defActiveKey: string
     defActiveType: MatchingAndExtraction
+    defActiveKeyAndOrder:MatcherActiveKey
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
     webFuzzerValue: string
     isHttps?: boolean
@@ -2825,6 +2809,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             matcherValue,
             defActiveKey,
             defActiveType,
+            defActiveKeyAndOrder,
             onSaveMatcherAndExtraction,
             showResponseInfoSecondEditor,
             setShowResponseInfoSecondEditor,
@@ -2841,15 +2826,22 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             trigger: "setShowMatcherAndExtraction"
         })
         const [reason, setReason] = useState<string>("未知原因")
-
+        
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
+        const [activeKeyAndOrder, setDefActiveKeyAndOrder] = useState<MatcherActiveKey>({
+            order:0,
+            defActiveKey:''
+        })
         useEffect(() => {
             setActiveKey(defActiveKey)
         }, [defActiveKey])
         useEffect(() => {
             setActiveType(defActiveType)
         }, [defActiveType])
+        useEffect(() => {
+            setDefActiveKeyAndOrder(defActiveKeyAndOrder)
+        }, [defActiveKeyAndOrder])
 
         useEffect(() => {
             try {
@@ -3071,6 +3063,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     extractorValue={extractorValue}
                                     defActiveKey={activeKey}
                                     defActiveType={activeType}
+                                    defActiveKeyAndOrder={activeKeyAndOrder}
                                 />
                             ) : (
                                 <></>

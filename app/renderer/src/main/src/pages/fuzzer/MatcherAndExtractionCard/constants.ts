@@ -27,18 +27,38 @@ export const matchersConditionOptions = [
         label: "OR"
     }
 ]
-
-export const defaultMatcherItem: HTTPResponseMatcher = {
+export const defaultSubMatcherItem: HTTPResponseMatcher = {
     MatcherType: "word",
     ExprType: "nuclei-dsl",
     Scope: "body",
     Group: [""],
     Condition: "and",
     Negative: false,
-    // ---------
     SubMatchers: [],
     SubMatcherCondition: "",
-    GroupEncoding: ""
+    GroupEncoding: "",
+    HitColor: "",
+    Action: "",
+    filterMode:'onlyMatch'
+}
+export const defaultMatcherItem: HTTPResponseMatcher = {
+    MatcherType: "",
+    ExprType: "",
+    Scope: "",
+    Group: [""],
+    Condition: "",
+    Negative: false,
+    // ---------
+    SubMatchers: [
+        {
+            ...defaultSubMatcherItem
+        }
+    ],
+    SubMatcherCondition: "and",
+    GroupEncoding: "",
+    HitColor: "red",
+    Action: "",
+    filterMode:'onlyMatch'
 }
 
 export const defaultExtractorItem: HTTPResponseExtractor = {

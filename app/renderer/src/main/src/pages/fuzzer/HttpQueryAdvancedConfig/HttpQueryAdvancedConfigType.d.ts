@@ -53,14 +53,6 @@ export interface AdvancedConfigValueProps {
         statusCode: string
         keyWord: string
     }
-    // 过滤配置 0612 不要了
-    // filterMode: "drop" | "match"
-    // statusCode: string
-    // regexps: string
-    // keyWord: string
-    // /**@name 转换后转给后端的的响应大小最大值 */
-    // minBodySize: number
-    // /**@name 转换后转给后端的的响应大小最小值 */
     maxBodySize: number
 
     // dns config
@@ -73,10 +65,7 @@ export interface AdvancedConfigValueProps {
     headers: KVPair[]
     cookie: KVPair[]
     // 匹配器
-    filterMode: FilterMode
     matchers: HTTPResponseMatcher[]
-    matchersCondition: "and" | "or"
-    hitColor: string
     //提取器
     extractors: HTTPResponseExtractor[]
 
@@ -93,6 +82,12 @@ export interface FuzzerParamItem {
     Type: string
 }
 
+export interface ShowResponseMatcherAndExtractionProps {
+    activeType: MatchingAndExtraction
+    activeKey: string
+    /**只有 activeType为matchers 必传 */
+    order?: number
+}
 export interface HttpQueryAdvancedConfigProps {
     advancedConfigValue: AdvancedConfigValueProps
     visible: boolean
@@ -103,7 +98,7 @@ export interface HttpQueryAdvancedConfigProps {
     /**@name 与onShowShowResponseMatcherAndExtraction配合使用 */
     outsideShowResponseMatcherAndExtraction?: boolean
     /**@name  webfuzzer如果有响应信息,就在响应信息下方展示匹配器和提取器;需与outsideShowResponseMatcherAndExtraction配合使用*/
-    onShowResponseMatcherAndExtraction?: (activeType: MatchingAndExtraction, activeKey: string) => void
+    onShowResponseMatcherAndExtraction?: (params: ShowResponseMatcherAndExtractionProps) => void
     inViewportCurrent?: boolean
     id: string
     matchSubmitFun: () => void
