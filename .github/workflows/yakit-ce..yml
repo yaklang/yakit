@@ -5,8 +5,6 @@ on:
     push:
         branches:
             - "ci/ce-*"
-        tags:
-            - "v*"
         tags-ignore:
             - "v*-ee"
 
@@ -223,7 +221,7 @@ jobs:
                   path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-linux-legacy-arm64.AppImage
 
     publish_yakit_ce_to_oss:
-        if: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/ci/ce-ggg') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         needs:
             - build_yakit
         runs-on: ubuntu-latest
