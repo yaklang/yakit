@@ -378,7 +378,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                     path,
                     parent: parent || null,
-                    language: monacaLanguageType(suffix || ""),
+                    language: monacaLanguageType(suffix),
                     highLightRange
                 }
                 // 注入语法检测

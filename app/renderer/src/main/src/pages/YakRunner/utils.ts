@@ -1020,15 +1020,11 @@ export const loadAuditFromYakURLRaw = (
 /**
  * @name 编辑器代码类型判断
  */
-export const monacaLanguageType = (suffix: string) => {
+export const monacaLanguageType = (suffix?: string) => {
     switch (suffix) {
         case "yak":
             return "yak"
-        case "java":
-            return "java"
-        case "xml":
-            return "xml"
         default:
-            return "text"
+            return undefined
     }
 }
