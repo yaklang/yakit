@@ -62,6 +62,8 @@ export enum RemoteGV {
     FuzzerCacheHistoryList = "fuzzer-list-cache-history-list",
     /** @name webFuzzer页面以及每个页面的数据缓存字段 */
     FuzzerCache = "fuzzer-list-cache",
+    /** @name webFuzzer序列的缓存历史缓存记录 */
+    FuzzerSequenceCacheHistoryList = "fuzzer_sequence_cache-history-list",
     /** @name webFuzzer序列的缓存字段 */
     FuzzerSequenceCache = "fuzzer_sequence_cache",
     /** @name history页面左侧tabs */
@@ -99,15 +101,15 @@ export enum RemoteGV {
     /**@name RiskPage页面中,高级查询内容的显/隐 */
     RiskQueryShow = "risk-query-show",
     /**@name Home开始扫描 */
-    HomeStartScanning="home_start_scanning",
+    HomeStartScanning = "home_start_scanning",
     /**@name xterm全局配置(字体样式、字体大小) */
-    YakitXtermSetting="yakit_xterm_setting",
+    YakitXtermSetting = "yakit_xterm_setting",
     /**@name 端口监听器缓存的监听主机 */
-    ReverseShellReceiverHostList="reverse-shell-receiver-host-list",
+    ReverseShellReceiverHostList = "reverse-shell-receiver-host-list",
     /**@name YakitDraggerContent组件限制文件大小 */
     YakitDraggerContentFileLimit = "yakit_dragger_content_file_limit",
     /**@name mitm禁用初始页 */
-    MITMDisableCACertPage = "mitm_disable_CACertPage",
+    MITMDisableCACertPage = "mitm_disable_CACertPage"
 }
 
 /** 项目逻辑全局变量 */

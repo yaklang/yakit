@@ -85,7 +85,11 @@ import {FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData} from "@/pages
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
-import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSequence"
+import {
+    FuzzerSequenceCacheDataProps,
+    getFuzzerSequenceProcessedCacheData,
+    useFuzzerSequence
+} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {RemoteGV} from "@/yakitGV"
@@ -1584,28 +1588,36 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setFuzzerSequenceCacheData, clearFuzzerSequence, addFuzzerSequenceCacheData} = useFuzzerSequence(
-        (s) => ({
-            setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
-            clearFuzzerSequence: s.clearFuzzerSequence,
-            addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData
-        }),
-        shallow
-    )
+    const {setFuzzerSequenceCacheData, clearFuzzerSequence, addFuzzerSequenceCacheData, fuzzerSequenceCacheData} =
+        useFuzzerSequence(
+            (s) => ({
+                setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
+                clearFuzzerSequence: s.clearFuzzerSequence,
+                addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData,
+                fuzzerSequenceCacheData: s.fuzzerSequenceCacheData
+            }),
+            shallow
+        )
     useInterval(
         () => {
+            /**
+             * 1.目前只缓存一个历史，后续可能会缓存多个历史供用户选择；
+             * 2.多个历史缓存需要考虑后端接口在数据过大的时候会报错，给不了前端数据的问题
+             * 3.多个历史记录缓存还需要考虑前端的WF和序列组之间数据的对应关系
+             * */
             const pageWF = cachePages.get(YakitRoute.HTTPFuzzer)
             const {pageList = []} = pageWF || {
                 pageList: []
             }
             if (pageList.length > 0) {
-                const cache = getFuzzerProcessedCacheData(pageList)
-                /**
-                 * 1.目前只缓存一个历史，后续可能会缓存多个历史供用户选择；
-                 * 2.多个历史缓存需要考虑后端接口在数据过大的时候会报错，给不了前端数据的问题
-                 * */
-                const historyList = [cache]
+                const cacheWF = getFuzzerProcessedCacheData(pageList)
+                const historyList = [cacheWF]
                 setRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList, JSON.stringify(historyList))
+            }
+            if (fuzzerSequenceCacheData.length > 0) {
+                const cacheSequence = getFuzzerSequenceProcessedCacheData(fuzzerSequenceCacheData)
+                const historySequenceList = [cacheSequence]
+                setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
             }
         },
         1000 * 60 * 10 /** 每10分钟执行一次*/,
@@ -1655,13 +1667,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
             try {
-                clearFuzzerSequence()
                 const cache = JSON.parse(res || "[]")
-                setFuzzerSequenceCacheData(cache)
+                onSetFuzzerSequenceCacheData(cache)
             } catch (error) {
                 yakitNotify("error", "webFuzzer序列化获取缓存数据解析失败:" + error)
             }
         })
+    })
+
+    const onSetFuzzerSequenceCacheData = useMemoizedFn((cache) => {
+        clearFuzzerSequence()
+        setFuzzerSequenceCacheData(cache)
     })
 
     // 获取数据库中缓存的web-fuzzer页面信息
@@ -1999,25 +2015,32 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
         }
     })
-    const onRestoreHTTPFuzzer = useMemoizedFn(() => {
-        getRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList).then(async (res) => {
-            if (!!res) {
-                try {
-                    const list = JSON.parse(res)
-                    if (list?.length > 0) {
-                        const item = list[0]
-                        setLoading(true)
-                        // console.log("onRestoreHTTPFuzzer-item", item)
-                        await fetchFuzzerList(item)
-                        setTimeout(() => setLoading(false), 200)
-                    }
-                } catch (error) {
-                    yakitNotify("error", `WF历史数据恢复失败:${error}`)
+    const onRestoreHTTPFuzzer = useMemoizedFn(async () => {
+        try {
+            setLoading(true)
+            const resWF = await getRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList)
+            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList)
+            if (!!resWF) {
+                const listWF = JSON.parse(resWF)
+                if (listWF?.length > 0) {
+                    const itemWF = listWF[0]
+                    await fetchFuzzerList(itemWF)
+                }
+            }
+            if (!!resSequence) {
+                const listSequence = JSON.parse(resSequence)
+                if (listSequence?.length > 0) {
+                    const itemSequence = listSequence[0]
+                    await onSetFuzzerSequenceCacheData(itemSequence)
                 }
             } else {
                 yakitNotify("error", "历史记录为空")
             }
-        })
+
+            setTimeout(() => setLoading(false), 200)
+        } catch (error) {
+            yakitNotify("error", `WF历史数据恢复失败:${error}`)
+        }
     })
     return (
         <Content>
