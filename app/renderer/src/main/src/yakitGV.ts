@@ -58,6 +58,8 @@ export enum RemoteGV {
     /** @name chat-cs聊天记录 */
     ChatCSStorage = "chat-cs-storage",
 
+    /** @name webFuzzer页面的二级菜单tab数据历史缓存记录 */
+    FuzzerCacheHistoryList = "fuzzer-list-cache-history-list",
     /** @name webFuzzer页面以及每个页面的数据缓存字段 */
     FuzzerCache = "fuzzer-list-cache",
     /** @name webFuzzer序列的缓存字段 */

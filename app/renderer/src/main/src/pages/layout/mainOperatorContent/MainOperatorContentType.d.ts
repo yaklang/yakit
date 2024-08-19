@@ -61,6 +61,7 @@ export interface PageCache {
     singleNode: boolean | undefined
     multipleNode: MultipleNodeInfo[] | any[]
     multipleLength?: number
+    /**@deprecated */
     hideAdd?: boolean
     pageParams?: ComponentParams
     openFlag?: boolean
@@ -94,6 +95,8 @@ export interface TabContentProps {
     openMultipleMenuPage: (route: RouteToPageProps) => void
 
     onRemove: (p: PageCache) => void
+    /**从历史中恢复tab数据 */
+    onRestoreHistory: (v: YakitRoute | string) => void
 }
 
 /**
@@ -104,6 +107,8 @@ export interface TabChildrenProps {
     currentTabKey: YakitRoute | string
     openMultipleMenuPage: (route: RouteToPageProps) => void
     onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
+    /**从历史中恢复tab数据 */
+    onRestoreHistory: (v: YakitRoute | string) => void
 }
 
 /**
@@ -150,6 +155,8 @@ export interface SubTabListProps {
     onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
     pageItem: PageCache
     index: number
+    /**从历史中恢复tab数据 */
+    onRestoreHistory: (v: YakitRoute | string) => void
 }
 
 export interface SubTabsProps {
@@ -167,6 +174,8 @@ export interface SubTabsProps {
 
     openMultipleMenuPage: (route: RouteToPageProps) => void
     onSetPageCache: (m: MultipleNodeInfo[]) => void
+    /**从历史中恢复tab数据 */
+    onRestoreHistory: (v: YakitRoute | string) => void
 }
 /**
  * @description 二级tab item
@@ -187,7 +196,7 @@ export interface SubTabItemProps {
     onContextMenu: (e: React.MouseEvent, subItem: MultipleNodeInfo) => void
     combineColor?: string
     /**是否可以拖拽 */
-    isDragDisabled:boolean
+    isDragDisabled: boolean
 }
 /**
  * @description 组

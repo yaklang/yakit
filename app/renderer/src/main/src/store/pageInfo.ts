@@ -462,7 +462,7 @@ export const saveFuzzerCache = debounce(
             const {pageList = []} = selectedState || {
                 pageList: []
             }
-            const cache = getFuzzerCacheData(pageList)
+            const cache = getFuzzerProcessedCacheData(pageList)
             setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
         } catch (error) {
             yakitNotify("error", "webFuzzer缓存数据失败:" + error)
@@ -473,7 +473,7 @@ export const saveFuzzerCache = debounce(
 )
 
 /**处理WF需要缓存的数据 */
-export const getFuzzerCacheData = (pageList) => {
+export const getFuzzerProcessedCacheData = (pageList) => {
     const cache = pageList.map((ele) => {
         const advancedConfigValue =
             ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue

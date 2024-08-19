@@ -266,7 +266,7 @@ $keyColor: map-keys($colors);
             height: 32px;
             background-color: var(--yakit-card-background-color);
 
-            max-width: calc(100% - 32px);
+            max-width: calc(100% - 64px);
             overflow-y: hidden;
             overflow-x: auto;
             scroll-behavior: smooth;
@@ -356,7 +356,7 @@ $keyColor: map-keys($colors);
             max-width: 100%;
         }
         .tab-menu-sub-maxWidth-64{
-            max-width: calc(100% - 64px);
+            max-width: calc(100% - 96px);
         }
         .tab-menu-sub-expand {
             max-width: calc(100% - 32px);
