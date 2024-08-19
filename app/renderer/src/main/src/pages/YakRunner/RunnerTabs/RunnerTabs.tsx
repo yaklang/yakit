@@ -655,29 +655,36 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
     return (
         <div className={classNames(styles["runner-tabs"], wrapperClassName || "")}>
-            <RunnerTabBar
-                tabsId={tabsId}
-                tabsList={tabsList}
-                extra={extraDom()}
-                handleContextMenu={handleContextMenu}
-                onRemoveCurrent={onRemoveCurrent}
-            />
+            {tabsList.length > 0 ? (
+                <>
+                    <RunnerTabBar
+                        tabsId={tabsId}
+                        tabsList={tabsList}
+                        extra={extraDom()}
+                        handleContextMenu={handleContextMenu}
+                        onRemoveCurrent={onRemoveCurrent}
+                    />
 
-            <div className={styles["tabs-pane"]}>
-                <RunnerTabPane tabsId={tabsId} />
-            </div>
-            {modalInfo && (
-                <YakitRunnerSaveModal
-                    isShowModal={isShowModal}
-                    setShowModal={setShowModal}
-                    info={modalInfo}
-                    onRemoveFun={onRemoveFun}
-                    waitSaveList={waitSaveList}
-                    setWaitSaveList={setWaitSaveList}
-                    setWaitRemoveOtherItem={setWaitRemoveOtherItem}
-                    setWaitRemoveAll={setWaitRemoveAll}
-                />
+                    <div className={styles["tabs-pane"]}>
+                        <RunnerTabPane tabsId={tabsId} />
+                    </div>
+                    {modalInfo && (
+                        <YakitRunnerSaveModal
+                            isShowModal={isShowModal}
+                            setShowModal={setShowModal}
+                            info={modalInfo}
+                            onRemoveFun={onRemoveFun}
+                            waitSaveList={waitSaveList}
+                            setWaitSaveList={setWaitSaveList}
+                            setWaitRemoveOtherItem={setWaitRemoveOtherItem}
+                            setWaitRemoveAll={setWaitRemoveAll}
+                        />
+                    )}
+                </>
+            ) : (
+                <></>
             )}
+            <></>
         </div>
     )
 })
@@ -972,9 +979,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 优化性能 减少卡顿
     const updateAreaFun = useDebounceFn(
         (content: string) => {
-            const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo?.path)
-            console.log("更新编辑器文件内容", newAreaInfo)
-            setAreaInfo && setAreaInfo(newAreaInfo)
+            if (editorInfo?.path) {
+                const newAreaInfo = updateAreaFileInfo(areaInfo, {code: content}, editorInfo.path)
+                console.log("更新编辑器文件内容", newAreaInfo)
+                setAreaInfo && setAreaInfo(newAreaInfo)
+            }
         },
         {
             wait: 200
@@ -1141,6 +1150,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         const newAreaInfo = updateAreaFileInfo(areaInfo, {...editorInfo, isPlainText: true}, editorInfo.path)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1168,6 +1178,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     setValue={(content: string) => {
                         updateAreaInputInfo(content)
                     }}
+                    highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                 />
             )}
         </div>

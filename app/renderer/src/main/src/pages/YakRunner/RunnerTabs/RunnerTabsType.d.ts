@@ -40,6 +40,8 @@ export interface FileDetailInfo {
     position?: CursorPosition
     /** 当前选择区域 */
     selections?: Selection
+    /** 高亮显示区域 */
+    highLightRange?: Selection
     /** 是否未保存（用于临时文件创建） */
     isUnSave?: boolean
     /** 是否已被外部删除（文件树监控-删除） */

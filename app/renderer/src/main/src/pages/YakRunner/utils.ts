@@ -500,7 +500,7 @@ export const judgeAreaExistAuditPath = (areaInfo: AreaInfoProps[]): Promise<stri
  * @name 更新分栏数据里某个节点的file数据
  */
 // 根据path更新指定内容
-export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFileDetailInfo, path?: string) => {
+export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFileDetailInfo, path: string) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     newAreaInfo.forEach((item, index) => {
         item.elements.forEach((itemIn, indexIn) => {

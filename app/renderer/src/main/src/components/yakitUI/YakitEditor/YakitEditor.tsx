@@ -66,7 +66,6 @@ import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {HighLightText} from "@/components/HTTPFlowDetail"
 import {useStore} from "@/store/editorState"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
@@ -736,6 +735,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         if (!model) {
             return
         }
+        
         let current: string[] = []
         if (props.type === "http" || props.type === "html") {
             /** 随机上下文ID */
@@ -782,7 +782,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const dec: YakitIModelDecoration[] = []
                 if (props.type === "http") {
                     ;(() => {
-                        try {
+                        try {//http
                             ;[{regexp: /\nContent-Length:\s*?\d+/, classType: "content-length"}].map((detail) => {
                                 // handle content-length
                                 const match = detail.regexp.exec(text)
@@ -801,7 +801,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         } catch (e) {}
                     })()
                     ;(() => {
-                        try {
+                        try {//http
                             ;[{regexp: /\nHost:\s*?.+/, classType: "host"}].map((detail) => {
                                 // handle host
                                 const match = detail.regexp.exec(text)
@@ -821,7 +821,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     })()
                 }
                 if (props.type === "html" || props.type === "http") {
-                    ;(() => {
+                    ;(() => { // http html
                         const text = model.getValue()
                         let match
                         const regex = /(\\u[\dabcdef]{4})+/gi
@@ -848,7 +848,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         }
                     })()
                 }
-                ;(() => {
+                ;(() => {// all 
                     const keywordRegExp = /\r?\n/g
                     let match
                     let count = 0
@@ -868,21 +868,40 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         }
                     }
                 })()
-                ;(() => {
-                    highLightTextFun().forEach(({startOffset = 0, highlightLength = 0, hoverVal = ""}) => {
-                        // 获取偏移量对应的位置
-                        const startPosition = model.getPositionAt(Number(startOffset))
-                        const endPosition = model.getPositionAt(Number(startOffset) + Number(highlightLength))
+                ;(() => {//all
+                    highLightTextFun().forEach((item) => {
+                        const {startOffset = 0, highlightLength = 0, hoverVal = "", startLineNumber, startColumn, endLineNumber, endColumn} = item
+                        let range = {
+                            startLineNumber:0,
+                            startColumn:0,
+                            endLineNumber:0,
+                            endColumn:0
+                        }
+                        if(typeof startLineNumber === "number"){
+                            range.startLineNumber = startLineNumber
+                            range.startColumn = startColumn
+                            range.endLineNumber = endLineNumber
+                            range.endColumn = endColumn
+                        }
+                        else{
+                          // 获取偏移量对应的位置
+                            const startPosition = model.getPositionAt(Number(startOffset))
+                            const endPosition = model.getPositionAt(Number(startOffset) + Number(highlightLength))  
+                            range.startLineNumber = startPosition.lineNumber
+                            range.startColumn = startPosition.column
+                            range.endLineNumber = endPosition.lineNumber
+                            range.endColumn = endPosition.column
+                        }
 
                         // 创建装饰选项
                         dec.push({
-                            id: "hight-light-text_" + startOffset + "_" + highlightLength + "_" + hoverVal,
+                            id: "hight-light-text_" + range.startLineNumber + "_" + range.startColumn + "_" + range.endLineNumber + "_" + range.endColumn,
                             ownerId: 3,
                             range: new monaco.Range(
-                                startPosition.lineNumber,
-                                startPosition.column,
-                                endPosition.lineNumber,
-                                endPosition.column
+                                range.startLineNumber,
+                                range.startColumn,
+                                range.endLineNumber,
+                                range.endColumn
                             ),
                             options: {
                                 isWholeLine: false,
@@ -895,10 +914,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
                 return dec
             }
-
+            
             deltaDecorationsRef.current = () => {
                 current = model.deltaDecorations(current, generateDecorations())
             }
+            // editor.onMouseDown(()=>{
+            //     const dec: YakitIModelDecoration[] = []
+            //     // back 
+            //     dec.push(generateDecorations())
+            //     current = model.deltaDecorations(current, dec)
+            // })
             editor.onDidChangeModelContent(() => {
                 current = model.deltaDecorations(current, generateDecorations())
             })

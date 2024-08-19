@@ -1,5 +1,5 @@
 import {FileNodeProps} from "./FileTree/FileTreeType"
-import { FileDetailInfo } from "./RunnerTabs/RunnerTabsType";
+import {FileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
 import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 export interface YakRunnerProps {
     initCode?: YakRunnerCodeProps
@@ -34,9 +34,9 @@ export interface YakRunnerHistoryProps {
 
 export interface TabFileProps {
     // 窗口唯一标识符
-    id: string;
-    // 窗口中打开的文件列表          
-    files:FileDetailInfo[]
+    id: string
+    // 窗口中打开的文件列表
+    files: FileDetailInfo[]
 }
 
 // 编辑器分块信息
@@ -50,6 +50,7 @@ export interface OpenFileByPathProps {
         path: string
         name: string
         parent?: string | null
+        highLightRange?: Selection
     }
     // 是否记录历史
     isHistory?: boolean

@@ -349,22 +349,16 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
         const OpenFileByPathParams: OpenFileByPathProps = {
             params: {
                 path: url,
-                name
-            }
-        }
-        emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-        setTimeout(() => {
-            const obj: JumpToEditorProps = {
-                selections: {
+                name,
+                highLightRange:{
                     startLineNumber: start_line,
                     startColumn: start_column,
                     endLineNumber: end_line,
                     endColumn: end_column
-                },
-                id: url
+                }
             }
-            emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
-        }, 100)
+        }
+        emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
     })
 
     return (
