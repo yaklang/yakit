@@ -1213,7 +1213,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     // webFuzzer页面二级tab名称改为WF，特殊
                     verbose =
                         nodeParams?.verbose ||
-                        `WF-[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
+                        `[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
                 }
                 const node: MultipleNodeInfo = {
                     id: tabId,
