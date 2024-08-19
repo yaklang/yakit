@@ -1627,23 +1627,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const unFuzzerCacheData = useRef<any>(null)
     // web-fuzzer多开页面缓存数据
     useEffect(() => {
-        if (!isEnpriTraceAgent()) {
-            // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
-            if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
-                // 触发获取web-fuzzer的缓存
-                setLoading(true)
-                getRemoteProjectValue(RemoteGV.FuzzerCache)
-                    .then((res: any) => {
-                        try {
-                            const cache = JSON.parse(res)
-                            fetchFuzzerList(cache)
-                        } catch (error) {}
-                    })
-                    .catch((e) => {})
-                    .finally(() => setTimeout(() => setLoading(false), 200))
-            }
-        }
-        getFuzzerSequenceCache()
+        onInitFuzzer()
         // 开启fuzzer-tab页内数据的订阅事件
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
@@ -1663,7 +1647,25 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     }, [])
-
+    const onInitFuzzer = useMemoizedFn(() => {
+        if (!isEnpriTraceAgent()) {
+            // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
+            if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
+                // 触发获取web-fuzzer的缓存
+                setLoading(true)
+                getRemoteProjectValue(RemoteGV.FuzzerCache)
+                    .then((res: any) => {
+                        try {
+                            const cache = JSON.parse(res)
+                            fetchFuzzerList(cache)
+                        } catch (error) {}
+                    })
+                    .catch((e) => {})
+                    .finally(() => setTimeout(() => setLoading(false), 200))
+            }
+        }
+        getFuzzerSequenceCache()
+    })
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
             try {
