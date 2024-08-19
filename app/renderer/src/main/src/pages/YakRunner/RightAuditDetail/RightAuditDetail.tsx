@@ -346,19 +346,29 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     const onDetail = useMemoizedFn(async (data: CodeRangeProps) => {
         const {url, start_line, start_column, end_line, end_column} = data
         const name = await getNameByPath(url)
+        const highLightRange = {
+            startLineNumber: start_line,
+            startColumn: start_column,
+            endLineNumber: end_line,
+            endColumn: end_column
+        }
         const OpenFileByPathParams: OpenFileByPathProps = {
             params: {
                 path: url,
                 name,
-                highLightRange:{
-                    startLineNumber: start_line,
-                    startColumn: start_column,
-                    endLineNumber: end_line,
-                    endColumn: end_column
-                }
+                highLightRange
             }
         }
         emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+        // 纯跳转行号
+        setTimeout(() => {
+            const obj: JumpToEditorProps = {
+                selections: highLightRange,
+                id: url,
+                isSelect: false
+            }
+            emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+        }, 100)
     })
 
     return (

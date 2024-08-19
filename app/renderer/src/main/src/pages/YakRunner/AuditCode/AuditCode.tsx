@@ -216,19 +216,29 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 const {url, start_line, start_column, end_line, end_column} = item
                 const name = await getNameByPath(url)
                 // console.log("monaca跳转", item, name)
+                const highLightRange = {
+                    startLineNumber: start_line,
+                    startColumn: start_column,
+                    endLineNumber: end_line,
+                    endColumn: end_column
+                }
                 const OpenFileByPathParams: OpenFileByPathProps = {
                     params: {
                         path: url,
                         name,
-                        highLightRange:{
-                            startLineNumber: start_line,
-                            startColumn: start_column,
-                            endLineNumber: end_line,
-                            endColumn: end_column
-                        }
+                        highLightRange
                     }
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                // 纯跳转行号
+                setTimeout(() => {
+                    const obj: JumpToEditorProps = {
+                        selections: highLightRange,
+                        id: url,
+                        isSelect: false
+                    }
+                    emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+                }, 100)
             }
         } catch (error) {}
     })
@@ -892,7 +902,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     <div className={styles["audit-path"]}>{obj.path}</div>
                                     <div className={styles["audit-time"]}>{obj.time}</div>
                                     <div className={styles["audit-opt"]}>
-                                        <Tooltip title={"打开项目"}>
+                                        {/* 此处的Tooltip会导致页面抖动(待处理) */}
+                                        {/* <Tooltip title={"打开项目"}> */}
                                             <YakitButton
                                                 type='text'
                                                 icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
@@ -901,7 +912,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                                     onClose()
                                                 }}
                                             />
-                                        </Tooltip>
+                                        {/* </Tooltip> */}
                                         <Divider type={"vertical"} style={{margin: 0}} />
                                         {/* <YakitPopconfirm
                                         title={
