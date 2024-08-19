@@ -219,22 +219,16 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 const OpenFileByPathParams: OpenFileByPathProps = {
                     params: {
                         path: url,
-                        name
-                    }
-                }
-                emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-                setTimeout(() => {
-                    const obj: JumpToEditorProps = {
-                        selections: {
+                        name,
+                        highLightRange:{
                             startLineNumber: start_line,
                             startColumn: start_column,
                             endLineNumber: end_line,
                             endColumn: end_column
-                        },
-                        id: url
+                        }
                     }
-                    emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
-                }, 100)
+                }
+                emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
         } catch (error) {}
     })
@@ -277,6 +271,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const {projectNmae, loadTreeType} = useStore()
 
     const [value, setValue] = useState<string>("")
+    const [loading, setLoading] = useState<boolean>(false)
+    const [isShowEmpty,setShowEmpty] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
 
@@ -425,6 +421,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 
     const onSubmit = useMemoizedFn(async () => {
         resetMap()
+        setLoading(true)
+        setShowEmpty(false)
         const path: string = "/"
         const params: AuditYakUrlProps = {
             Schema: "syntaxflow",
@@ -458,8 +456,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
                 // 变量
                 if (ResourceType === "variable") {
-                    console.log("yyy", Size, parseInt(Size + ""))
-
                     const id = `${path}${ResourceName}`
                     variableIds.push(id)
                     setMapAuditDetail(id, {
@@ -490,6 +486,10 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             setMapAuditChildDetail("/", [...topIds, ...variableIds])
             emiter.emit("onRefreshAuditTree")
         }
+        else{
+            setShowEmpty(true)
+        }
+        setLoading(false)
     })
 
     const onJump = useMemoizedFn((v: AuditNodeProps) => {
@@ -504,56 +504,58 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     })
     return (
-        <div className={styles["audit-code"]}>
-            <div className={styles["header"]}>
-                <div className={styles["title"]}>代码审计</div>
-            </div>
-            <>
-                {loadTreeType === "audit" ? (
-                    <>
-                        <div className={styles["textarea-box"]}>
-                            <YakitTextArea
-                                textAreaSize='small'
-                                value={value}
-                                setValue={setValue}
-                                isLimit={false}
-                                onSubmit={onSubmit}
-                                submitTxt={"开始审计"}
-                                rows={1}
-                                isAlwaysShow={true}
-                                placeholder='请输入审计规则...'
+        <YakitSpin spinning={loading}>
+            <div className={styles["audit-code"]}>
+                <div className={styles["header"]}>
+                    <div className={styles["title"]}>代码审计</div>
+                </div>
+                <>
+                    {loadTreeType === "audit" ? (
+                        <>
+                            <div className={styles["textarea-box"]}>
+                                <YakitTextArea
+                                    textAreaSize='small'
+                                    value={value}
+                                    setValue={setValue}
+                                    isLimit={false}
+                                    onSubmit={onSubmit}
+                                    submitTxt={"开始审计"}
+                                    rows={1}
+                                    isAlwaysShow={true}
+                                    placeholder='请输入审计规则...'
+                                />
+                            </div>
+
+                            {isShowEmpty?<div className={styles['no-data']}>暂无数据</div>:<AuditTree
+                                data={auditDetailTree}
+                                expandedKeys={expandedKeys}
+                                setExpandedKeys={setExpandedKeys}
+                                onLoadData={onLoadData}
+                                foucsedKey={foucsedKey}
+                                setFoucsedKey={setFoucsedKey}
+                                onJump={onJump}
+                            />}
+                        </>
+                    ) : (
+                        <div className={styles["no-audit"]}>
+                            <YakitEmpty
+                                title='请先编译项目'
+                                description='需要编译过的项目，才可使用代码审计功能'
+                                children={
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlinCompileIcon />}
+                                        onClick={() => emiter.emit("onOpenAuditModal", "init")}
+                                    >
+                                        编译当前项目
+                                    </YakitButton>
+                                }
                             />
                         </div>
-
-                        <AuditTree
-                            data={auditDetailTree}
-                            expandedKeys={expandedKeys}
-                            setExpandedKeys={setExpandedKeys}
-                            onLoadData={onLoadData}
-                            foucsedKey={foucsedKey}
-                            setFoucsedKey={setFoucsedKey}
-                            onJump={onJump}
-                        />
-                    </>
-                ) : (
-                    <div className={styles["no-audit"]}>
-                        <YakitEmpty
-                            title='请先编译项目'
-                            description='需要编译过的项目，才可使用代码审计功能'
-                            children={
-                                <YakitButton
-                                    type='outline1'
-                                    icon={<OutlinCompileIcon />}
-                                    onClick={() => emiter.emit("onOpenAuditModal", "init")}
-                                >
-                                    编译当前项目
-                                </YakitButton>
-                            }
-                        />
-                    </div>
-                )}
-            </>
-        </div>
+                    )}
+                </>
+            </div>
+        </YakitSpin>
     )
 }
 

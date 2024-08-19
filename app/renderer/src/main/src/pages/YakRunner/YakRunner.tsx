@@ -338,16 +338,20 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const onOpenFileByPathFun = useMemoizedFn(async (data) => {
         try {
             const {params, isHistory, isOutside} = JSON.parse(data) as OpenFileByPathProps
-            const {path, name, parent} = params
+            const {path, name, parent, highLightRange} = params
 
             // 校验是否已存在 如若存在则不创建只定位
             const file = await judgeAreaExistFilePath(areaInfo, path)
             if (file) {
-                const newAreaInfo = setAreaFileActive(areaInfo, path)
+                let cacheAreaInfo = areaInfo
+                // 如若存在高亮显示 则注入
+                if(highLightRange){
+                    cacheAreaInfo = updateAreaFileInfo(areaInfo, {...file,highLightRange}, file.path)
+                }
+                const newAreaInfo = setAreaFileActive(cacheAreaInfo, path)
                 setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile(file)
+                setActiveFile && setActiveFile({...file,highLightRange})
             } else {
-                console.log("oioi", path)
                 // 如若为打开外部文件 则无需校验是否为审计树 直接按照文件树打开
                 const fileSourceType = isOutside ? "file" : loadTreeType
                 const {size, isPlainText} = await getCodeSizeByPath(path, fileSourceType)
@@ -360,8 +364,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     ipcRenderer.invoke("cancel-ReadFile")
                 }
                 isReadingRef.current = true
-                console.log("xiix", path)
-
                 const code = await getCodeByPath(path, loadTreeType)
                 isReadingRef.current = false
                 const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
@@ -376,8 +378,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                     path,
                     parent: parent || null,
-                    language: monacaLanguageType(suffix || "")
-                    // 此处需要后缀swich判断
+                    language: monacaLanguageType(suffix || ""),
+                    highLightRange
                 }
                 // 注入语法检测
                 const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
@@ -710,7 +712,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
 
     const handleKeyPress = (event) => {
-        event.stopPropagation()
+        // 此处的event.stopPropagation会导致文件树重命名回车失效
+        // event.stopPropagation()
         // console.log("Key keydown:", event)
         // 此处在使用key时发现字母竟区分大小写-故使用which替换
         const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
@@ -1153,6 +1156,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     title={"编译项目"}
                     footer={null}
                     onCancel={onCloseCompileModal}
+                    maskClosable={false}
                 >
                     <AuditModalForm
                         isInitDefault={isInitDefault}
