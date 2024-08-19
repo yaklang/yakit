@@ -6,7 +6,7 @@ on:
         branches:
             - "ci/ee-*"
         tags:
-            - "vee*"
+            - "v*-ee"
 
 jobs:
     build_yakit:
@@ -272,15 +272,13 @@ jobs:
                       *:/vip/${{ steps.generate_version.outputs.value }}/
 
             - name: Update OSS latest file
-              run: echo ${{ steps.generate_version.outputs.value }}
-            # - name: Update OSS latest file
-            #   run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
-            # - name: Upload Yakit Version to oss
-            #   uses: tvrcgo/upload-to-oss@master
-            #   with:
-            #       key-id: ${{ secrets.OSS_KEY_ID }}
-            #       key-secret: ${{ secrets.OSS_KEY_SECRET }}
-            #       region: oss-accelerate
-            #       bucket: yaklang
-            #       assets: |
-            #           ./yakit-version.txt:/yak/latest/yakit-version.txt
+              run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
+            - name: Upload Yakit Version to oss
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      ./yakit-version.txt:/vip/latest/yakit-version.txt

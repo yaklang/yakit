@@ -7,6 +7,8 @@ on:
             - "ci/ce-*"
         tags:
             - "v*"
+        tags-ignore:
+            - "v*-ee"
 
 jobs:
     build_yakit:
