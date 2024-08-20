@@ -30,6 +30,7 @@ import {
 import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition} from "@/utils/envfile"
 import {
     useCreation,
+    useDebounceFn,
     useGetState,
     useInViewport,
     useInterval,
@@ -1647,24 +1648,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     }, [])
-    const onInitFuzzer = useMemoizedFn(() => {
+    const onInitFuzzer = useMemoizedFn(async () => {
         if (!isEnpriTraceAgent()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
                 // 触发获取web-fuzzer的缓存
-                setLoading(true)
-                getRemoteProjectValue(RemoteGV.FuzzerCache)
-                    .then((res: any) => {
-                        try {
-                            const cache = JSON.parse(res)
-                            fetchFuzzerList(cache)
-                        } catch (error) {}
-                    })
-                    .catch((e) => {})
-                    .finally(() => setTimeout(() => setLoading(false), 200))
+                try {
+                    setLoading(true)
+                    const cacheTabKey: YakitRoute | string = await getRemoteProjectValue(RemoteGV.SelectFirstMenuTabKey)
+                    if (cacheTabKey === YakitRoute.HTTPFuzzer) {
+                        const res = await getRemoteProjectValue(RemoteGV.FuzzerCache)
+                        const cache = JSON.parse(res)
+                        await fetchFuzzerList(cache)
+                    }
+                    setTimeout(() => setLoading(false), 200)
+                } catch (error) {
+                    setLoading(false)
+                    yakitNotify("error", `onInitFuzzer初始化WF数据失败:${error}`)
+                }
             }
+            getFuzzerSequenceCache()
         }
-        getFuzzerSequenceCache()
     })
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
@@ -2458,12 +2462,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const [inViewport = true] = useInViewport(tabsRef)
 
     useEffect(() => {
+        // 切换一级页面时,缓存当前选择的key
+        onSetSelectFirstMenuTabKey(currentTabKey)
+        // 切换一级页面时聚焦
+        const key = routeConvertKey(pageItem.route, pageItem.pluginName)
+        if (currentTabKey === key) {
+            onFocusPage()
+        }
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             emiter.on("sendSwitchSequenceToMainOperatorContent", onSetType)
         }
         emiter.on("switchSubMenuItem", onSelectSubMenuById)
         ipcRenderer.on("fetch-add-group", onAddGroup)
-
         return () => {
             emiter.off("sendSwitchSequenceToMainOperatorContent", onSetType)
             emiter.off("switchSubMenuItem", onSelectSubMenuById)
@@ -2475,14 +2485,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode || [])
     }, [pageItem.multipleNode])
-
-    // 切换一级页面时聚焦
-    useEffect(() => {
-        const key = routeConvertKey(pageItem.route, pageItem.pluginName)
-        if (currentTabKey === key) {
-            onFocusPage()
-        }
-    }, [currentTabKey])
 
     useEffect(() => {
         // 新增的时候选中的item
@@ -2509,6 +2511,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             emiter.emit("onRefVariableActiveKey")
         }
     }, [type])
+    /**缓存当前一级菜单选中的key */
+    const onSetSelectFirstMenuTabKey = useDebounceFn(
+        (tabKey: YakitRoute | string) => {
+            setRemoteProjectValue(RemoteGV.SelectFirstMenuTabKey, tabKey)
+        },
+        {wait: 200, leading: true}
+    ).run
     const onSetType = useMemoizedFn((res) => {
         if (!inViewport) return
         try {
