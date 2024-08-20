@@ -882,6 +882,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             downstreamProxyStr = ""
         } = res || {}
         try {
+            const isExistWF = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
+            if (!isExistWF) {
+                await onInitFuzzer()
+            }
             const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
                 proxy: [],
                 dnsServers: [],
@@ -1628,7 +1632,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const unFuzzerCacheData = useRef<any>(null)
     // web-fuzzer多开页面缓存数据
     useEffect(() => {
-        onInitFuzzer()
+        getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
+            .then((cacheTabKey) => {
+                /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
+                if (!cacheTabKey || cacheTabKey === YakitRoute.HTTPFuzzer) {
+                    onInitFuzzer()
+                }
+            })
+            .catch((error) => {
+                yakitNotify("error", `SelectFirstMenuTabKey获取数据失败:${error}`)
+            })
+
         // 开启fuzzer-tab页内数据的订阅事件
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
@@ -1655,12 +1669,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 触发获取web-fuzzer的缓存
                 try {
                     setLoading(true)
-                    const cacheTabKey: YakitRoute | string = await getRemoteProjectValue(RemoteGV.SelectFirstMenuTabKey)
-                    if (cacheTabKey === YakitRoute.HTTPFuzzer) {
-                        const res = await getRemoteProjectValue(RemoteGV.FuzzerCache)
-                        const cache = JSON.parse(res)
-                        await fetchFuzzerList(cache)
-                    }
+                    const res = await getRemoteProjectValue(RemoteGV.FuzzerCache)
+                    const cache = JSON.parse(res)
+                    await fetchFuzzerList(cache)
                     setTimeout(() => setLoading(false), 200)
                 } catch (error) {
                     setLoading(false)
@@ -2514,7 +2525,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     /**缓存当前一级菜单选中的key */
     const onSetSelectFirstMenuTabKey = useDebounceFn(
         (tabKey: YakitRoute | string) => {
-            setRemoteProjectValue(RemoteGV.SelectFirstMenuTabKey, tabKey)
+            setRemoteValue(RemoteGV.SelectFirstMenuTabKey, tabKey)
         },
         {wait: 200, leading: true}
     ).run
