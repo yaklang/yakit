@@ -1672,13 +1672,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     const res = await getRemoteProjectValue(RemoteGV.FuzzerCache)
                     const cache = JSON.parse(res)
                     await fetchFuzzerList(cache)
+                    await getFuzzerSequenceCache()
                     setTimeout(() => setLoading(false), 200)
                 } catch (error) {
                     setLoading(false)
                     yakitNotify("error", `onInitFuzzer初始化WF数据失败:${error}`)
                 }
             }
-            getFuzzerSequenceCache()
         }
     })
     const getFuzzerSequenceCache = useMemoizedFn(() => {
