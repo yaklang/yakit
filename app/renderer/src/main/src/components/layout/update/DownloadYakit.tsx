@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName} from "@/utils/envfile"
+import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName, isEnpriTrace} from "@/utils/envfile"
 import {success, failed} from "@/utils/notification"
 import {CodeGV} from "@/yakitGV"
 import {YakitSystem, DownloadingState} from "@/yakitGVDefine"
@@ -54,7 +54,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
      */
     useEffect(() => {
         if (visible) {
-            if (isCommunityEdition()) {
+            if (isCommunityEdition() || isEnpriTrace()) {
                 isBreakRef.current = true
                 setDownloadProgress(undefined)
                 grpcFetchLatestYakitVersion()
