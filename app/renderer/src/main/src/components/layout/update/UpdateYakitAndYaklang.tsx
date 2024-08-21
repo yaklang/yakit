@@ -326,7 +326,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                 </>
                             ) : installYakit ? (
                                 <div className={styles["hint-right-download"]}>
-                                    <div className={styles["hint-right-title"]}>Yakit下载中...</div>
+                                    <div className={styles["hint-right-title"]}>{getReleaseEditionName()} 下载中...</div>
                                     <div className={styles["download-progress"]}>
                                         <Progress
                                             strokeColor='#F28B44'

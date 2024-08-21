@@ -5,6 +5,9 @@ const url = require("url")
 const process = require("process")
 const {requestWithProgress} = require("./requestWithProgress")
 const events = require("events")
+const fs = require("fs")
+const path = require("path")
+const {loadExtraFilePath} = require("../../filePath")
 
 const ossDomains = [
     "aliyun-oss.yaklang.com",
@@ -200,7 +203,14 @@ const getYakitCommunityDownloadUrl = async (version) => {
 /** Yakit EE 版本下载地址 */
 const getYakitEEDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
-    const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
+    let system_mode = ""
+    try {
+        system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
+    } catch (error) {
+        console.log("error", error)
+    }
+    const suffix = system_mode === "legacy" ? "-legacy" : ""
+
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
