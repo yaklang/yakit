@@ -1,29 +1,34 @@
 // const https = require("https");
 // const {caBundle} = require("../missedCABundle");
-const axios = require("axios");
-const url = require("url");
-const process = require("process");
-const { requestWithProgress } = require("./requestWithProgress");
-const events = require("events");
+const axios = require("axios")
+const url = require("url")
+const process = require("process")
+const {requestWithProgress} = require("./requestWithProgress")
+const events = require("events")
 
-const ossDomains = ["aliyun-oss.yaklang.com", "yaklang.oss-cn-beijing.aliyuncs.com", "yaklang.oss-accelerate.aliyuncs.com"];
+const ossDomains = [
+    "aliyun-oss.yaklang.com",
+    "yaklang.oss-cn-beijing.aliyuncs.com",
+    "yaklang.oss-accelerate.aliyuncs.com"
+]
 
 const getHttpsAgentByDomain = (domain) => {
     // if (domain.endsWith('.yaklang.com')) {
     //     console.info(`use ssl ca-bundle for ${domain}`);
     //     return new https.Agent({ca: caBundle, rejectUnauthorized: true}) // unsafe...
     // }
-    console.info(`skip ssl ca-bundle for ${domain}`);
+    console.info(`skip ssl ca-bundle for ${domain}`)
     return undefined
 }
 
 const config = {
-    initializedOSSDomain: false, currentOSSDomain: "",
+    initializedOSSDomain: false,
+    currentOSSDomain: "",
     fetchingOSSDomain: false,
     fetchOSSDomainEventEmitter: new events.EventEmitter()
-};
+}
 
-
+/** 初始化 oss 配置信息 */
 async function getAvailableOSSDomain() {
     console.info("start to fetch oss domain for download extra resources")
     try {
@@ -48,19 +53,19 @@ async function getAvailableOSSDomain() {
             })
         }
 
-        config.fetchingOSSDomain = true;
+        config.fetchingOSSDomain = true
 
         try {
             for (const domain of ossDomains) {
-                const url = `https://${domain}/yak/latest/version.txt`;
+                const url = `https://${domain}/yak/latest/version.txt`
                 try {
                     console.info(`start to do axios.get to ${url}`)
-                    const response = await axios.get(url, { httpsAgent: getHttpsAgentByDomain(domain) });
+                    const response = await axios.get(url, {httpsAgent: getHttpsAgentByDomain(domain)})
                     if (response.status !== 200) {
-                        console.error(`Failed to access (StatusCode) ${url}: ${response.status}`);
+                        console.error(`Failed to access (StatusCode) ${url}: ${response.status}`)
                         continue
                     }
-                    config.currentOSSDomain = domain;
+                    config.currentOSSDomain = domain
                     config.initializedOSSDomain = true
                     break
                 } catch (e) {
@@ -74,7 +79,7 @@ async function getAvailableOSSDomain() {
         } catch (e) {
             return "yaklang.oss-accelerate.aliyuncs.com"
         } finally {
-            config.fetchingOSSDomain = false;
+            config.fetchingOSSDomain = false
             config.fetchOSSDomainEventEmitter.emit("done")
         }
     } catch (e) {
@@ -84,8 +89,8 @@ async function getAvailableOSSDomain() {
 
 /**获取校验url */
 const getCheckTextUrl = async (version) => {
-    const domain = await getAvailableOSSDomain();
-    let url = ''
+    const domain = await getAvailableOSSDomain()
+    let url = ""
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
@@ -109,10 +114,11 @@ const getCheckTextUrl = async (version) => {
     }
     return url
 }
+/** 获取最新 yak 版本号 */
 const fetchLatestYakEngineVersion = async () => {
-    const domain = await getAvailableOSSDomain();
-    const versionUrl = `https://${domain}/yak/latest/version.txt`;
-    return axios.get(versionUrl, { httpsAgent: getHttpsAgentByDomain(domain) }).then(response => {
+    const domain = await getAvailableOSSDomain()
+    const versionUrl = `https://${domain}/yak/latest/version.txt`
+    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then((response) => {
         const versionData = `${response.data}`.trim()
         if (versionData.length > 0) {
             return versionData.startsWith("v") ? versionData : `v${versionData}`
@@ -121,11 +127,11 @@ const fetchLatestYakEngineVersion = async () => {
         }
     })
 }
-
+/** 获取最新 yakit 版本号 */
 const fetchLatestYakitVersion = async () => {
-    const domain = await getAvailableOSSDomain();
-    const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`;
-    return axios.get(versionUrl, { httpsAgent: getHttpsAgentByDomain(domain) }).then(response => {
+    const domain = await getAvailableOSSDomain()
+    const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
+    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then((response) => {
         const versionData = `${response.data}`.trim()
         if (versionData.length > 0) {
             return versionData.startsWith("v") ? versionData : `v${versionData}`
@@ -134,11 +140,11 @@ const fetchLatestYakitVersion = async () => {
         }
     })
 }
-
+/** 获取最新 yakit EE 版本号 */
 const fetchLatestYakitEEVersion = async () => {
-    const domain = await getAvailableOSSDomain();
-    const versionUrl = `https://${domain}/yak/latest/yakit-ee-version.txt`;
-    return axios.get(versionUrl, { httpsAgent: getHttpsAgentByDomain(domain) }).then(response => {
+    const domain = await getAvailableOSSDomain()
+    const versionUrl = `https://${domain}/vip/latest/yakit-version.txt`
+    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then((response) => {
         const versionData = `${response.data}`.trim()
         if (versionData.length > 0) {
             return versionData.startsWith("v") ? versionData : `v${versionData}`
@@ -147,9 +153,9 @@ const fetchLatestYakitEEVersion = async () => {
         }
     })
 }
-
+/** 引擎下载地址 */
 const getYakEngineDownloadUrl = async (version) => {
-    const domain = await getAvailableOSSDomain();
+    const domain = await getAvailableOSSDomain()
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
@@ -169,61 +175,93 @@ const getYakEngineDownloadUrl = async (version) => {
             throw new Error(`Unsupported platform: ${process.platform}`)
     }
 }
-
+/** Yakit CE 版本下载地址 */
 const getYakitCommunityDownloadUrl = async (version) => {
-    const domain = await getAvailableOSSDomain();
+    const domain = await getAvailableOSSDomain()
+    const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `https://${domain}/yak/${version}/Yakit-${version}-darwin-arm64.dmg`
+                return `https://${domain}/yak/${version}/Yakit-${version}-darwin${suffix}-arm64.dmg`
             } else {
-                return `https://${domain}/yak/${version}/Yakit-${version}-darwin-x64.dmg`
+                return `https://${domain}/yak/${version}/Yakit-${version}-darwin${suffix}-x64.dmg`
             }
         case "win32":
-            return `https://${domain}/yak/${version}/Yakit-${version}-windows-amd64.exe`
+            return `https://${domain}/yak/${version}/Yakit-${version}-windows${suffix}-amd64.exe`
         case "linux":
             if (process.arch === "arm64") {
-                return `https://${domain}/yak/${version}/Yakit-${version}-linux-arm64.AppImage`
+                return `https://${domain}/yak/${version}/Yakit-${version}-linux${suffix}-arm64.AppImage`
             } else {
-                return `https://${domain}/yak/${version}/Yakit-${version}-linux-amd64.AppImage`
+                return `https://${domain}/yak/${version}/Yakit-${version}-linux${suffix}-amd64.AppImage`
             }
     }
     throw new Error(`Unsupported platform: ${process.platform}`)
 }
-
+/** Yakit EE 版本下载地址 */
 const getYakitEEDownloadUrl = async (version) => {
-    const domain = await getAvailableOSSDomain();
+    const domain = await getAvailableOSSDomain()
+    const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
     switch (process.platform) {
         case "darwin":
-            return `https://${domain}/yak/${version}/Yakit-EE-${version}-darwin-x64.dmg`
+            if (process.arch === "arm64") {
+                return `https://${domain}/vip/${version}/EnpriTrace-${version}-darwin${suffix}-arm64.dmg`
+            } else {
+                return `https://${domain}/vip/${version}/EnpriTrace-${version}-darwin${suffix}-x64.dmg`
+            }
         case "win32":
-            return `https://${domain}/yak/${version}/Yakit-EE-${version}-windows-amd64.exe`
+            return `https://${domain}/vip/${version}/EnpriTrace-${version}-windows${suffix}-amd64.exe`
         case "linux":
-            return `https://${domain}/yak/${version}/Yakit-EE-${version}-linux-amd64.AppImage`
+            if (process.arch === "arm64") {
+                return `https://${domain}/vip/${version}/EnpriTrace-${version}-linux${suffix}-arm64.AppImage`
+            } else {
+                return `https://${domain}/vip/${version}/EnpriTrace-${version}-linux${suffix}-amd64.AppImage`
+            }
     }
     throw new Error(`Unsupported platform: ${process.platform}`)
 }
-
+/** 下载引擎进度 */
 const downloadYakEngine = async (version, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = await getYakEngineDownloadUrl(version);
-    requestWithProgress(downloadUrl, destination, {
-        httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host),
-    }, progressHandler, onFinished, onError)
+    const downloadUrl = await getYakEngineDownloadUrl(version)
+    requestWithProgress(
+        downloadUrl,
+        destination,
+        {
+            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+        },
+        progressHandler,
+        onFinished,
+        onError
+    )
 }
+/** 下载 Yakit CE 进度 */
 const downloadYakitCommunity = async (version, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = await getYakitCommunityDownloadUrl(version);
+    const downloadUrl = await getYakitCommunityDownloadUrl(version)
 
     console.info(`start to download yakit community: ${downloadUrl}`)
-    requestWithProgress(downloadUrl, destination, {
-        httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host),
-    }, progressHandler, onFinished, onError)
+    requestWithProgress(
+        downloadUrl,
+        destination,
+        {
+            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+        },
+        progressHandler,
+        onFinished,
+        onError
+    )
 }
-
+/** 下载 Yakit EE 进度 */
 const downloadYakitEE = async (version, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = await getYakitEEDownloadUrl(version);
-    requestWithProgress(downloadUrl, destination, {
-        httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host),
-    }, progressHandler, onFinished, onError)
+    const downloadUrl = await getYakitEEDownloadUrl(version)
+    requestWithProgress(
+        downloadUrl,
+        destination,
+        {
+            httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host)
+        },
+        progressHandler,
+        onFinished,
+        onError
+    )
 }
 
 module.exports = {
@@ -236,5 +274,5 @@ module.exports = {
     downloadYakitEE,
     getYakitCommunityDownloadUrl,
     getYakEngineDownloadUrl,
-    getYakitEEDownloadUrl,
+    getYakitEEDownloadUrl
 }

@@ -405,7 +405,7 @@ module.exports = {
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, isEnterprise) {
             return new Promise(async (resolve, reject) => {
-                // format version
+                // format version，下载的版本号里不能存在 V
                 if (version.startsWith("v")) {
                     version = version.substr(1)
                 }
@@ -423,7 +423,6 @@ module.exports = {
                 }
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
-
 
                 if (isEnterprise) {
                     await downloadYakitEE(version, dest, state => {

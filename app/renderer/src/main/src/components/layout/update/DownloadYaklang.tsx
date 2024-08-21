@@ -11,6 +11,7 @@ import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {safeFormatDownloadProcessState} from "../utils"
+import {grpcFetchLatestYakVersion} from "@/apiUtils/grpc"
 
 import classNames from "classnames"
 import styles from "./DownloadYaklang.module.scss"
@@ -54,14 +55,12 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
         setIsFailed(false)
         setDownloadProgress(undefined)
 
-        ipcRenderer
-            .invoke("fetch-latest-yaklang-version")
+        grpcFetchLatestYakVersion()
             .then((data: string) => {
-                yakLangVersion.current = data.startsWith("v") ? data.slice(1) : data
+                yakLangVersion.current = data
             })
             .catch((e: any) => {
                 if (isBreakRef.current) return
-                failed(`获取引擎最新版本失败 ${e}`)
                 setIsFailed(true)
                 isTry = true
             })
@@ -232,9 +231,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                                             <YakitButton
                                                 size='max'
                                                 type='outline2'
-                                                onClick={() =>
-                                                    yaklangSpecifyVersion ? downloadYak() : fetchVersion()
-                                                }
+                                                onClick={() => (yaklangSpecifyVersion ? downloadYak() : fetchVersion())}
                                             >
                                                 重试
                                             </YakitButton>

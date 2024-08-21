@@ -1,11 +1,15 @@
-const { ipcMain, app } = require("electron")
+const {ipcMain, app} = require("electron")
 const path = require("path")
 const fs = require("fs")
 const https = require("https")
-const process = require("process");
-const { getLocalYaklangEngine, loadExtraFilePath } = require("../filePath")
-const { fetchLatestYakEngineVersion } = require("../handlers/utils/network")
-const { getCheckTextUrl } = require("../handlers/utils/network")
+const process = require("process")
+const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath")
+const {
+    fetchLatestYakEngineVersion,
+    fetchLatestYakitEEVersion,
+    fetchLatestYakitVersion
+} = require("../handlers/utils/network")
+const {getCheckTextUrl} = require("../handlers/utils/network")
 
 module.exports = (win, getClient) => {
     /** yaklang引擎是否安装 */
@@ -32,20 +36,21 @@ module.exports = (win, getClient) => {
     })
 
     /** 获取Yakit最新版本号 */
-    const asyncFetchLatestYakitVersion = () => {
+    const asyncFetchLatestYakitVersion = (isEnterprise) => {
         return new Promise((resolve, reject) => {
-            let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/yakit-version.txt")
-            rsp.on("response", (rsp) => {
-                rsp.on("data", (data) => {
-                    resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
-                }).on("error", (err) => reject(err))
-            })
-            rsp.on("error", reject)
+            const fetchPromise = isEnterprise ? fetchLatestYakitEEVersion : fetchLatestYakitVersion
+            fetchPromise()
+                .then((version) => {
+                    resolve(version)
+                })
+                .catch((e) => {
+                    reject(e)
+                })
         })
     }
     /** 获取Yakit最新版本号 */
-    ipcMain.handle("fetch-latest-yakit-version", async (e) => {
-        return await asyncFetchLatestYakitVersion()
+    ipcMain.handle("fetch-latest-yakit-version", async (e, isEnterprise) => {
+        return await asyncFetchLatestYakitVersion(isEnterprise)
     })
 
     /** 获取Yakit本地版本号 */
@@ -93,7 +98,7 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             try {
                 const url = await getCheckTextUrl(version)
-                if (url === '') {
+                if (url === "") {
                     reject(`Unsupported platform: ${process.platform}`)
                 }
                 let rsp = https.get(url)
@@ -102,7 +107,7 @@ module.exports = (win, getClient) => {
                         if (rsp.statusCode == 200) {
                             resolve(Buffer.from(data).toString("utf8"))
                         } else {
-                            reject('校验值不存在')
+                            reject("校验值不存在")
                         }
                     }).on("error", (err) => reject(err))
                 })

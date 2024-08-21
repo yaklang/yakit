@@ -32,10 +32,10 @@ import cloneDeep from "lodash/cloneDeep"
 import {PluginGroupList} from "./local/PluginsLocalType"
 import {HTTPRequestParameters} from "@/types/http-api"
 import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
-import {APIFunc, APIOptionalFunc} from "../pluginHub/utils/apiType"
 import {KVPair} from "@/models/kv"
 import {YakParamProps} from "./pluginsType"
 import {delInvalidPluginExecuteParams} from "../pluginEditor/utils/convert"
+import {APIFunc, APIOptionalFunc} from "@/apiUtils/type"
 
 const {ipcRenderer} = window.require("electron")
 

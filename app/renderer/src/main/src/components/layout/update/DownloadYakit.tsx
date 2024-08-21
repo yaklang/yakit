@@ -13,6 +13,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {safeFormatDownloadProcessState} from "../utils"
+import {grpcFetchLatestYakitVersion} from "@/apiUtils/grpc"
 
 import classNames from "classnames"
 import styles from "./DownloadYakit.module.scss"
@@ -56,8 +57,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
             if (isCommunityEdition()) {
                 isBreakRef.current = true
                 setDownloadProgress(undefined)
-                ipcRenderer
-                    .invoke("fetch-latest-yakit-version")
+                grpcFetchLatestYakitVersion()
                     .then((data: string) => {
                         let version = data
                         if (version.startsWith("v")) version = version.slice(1)
@@ -89,7 +89,6 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                     })
                     .catch((e: any) => {
                         if (!isBreakRef.current) return
-                        failed(`${e}`)
                         setVisible(false)
                     })
             }

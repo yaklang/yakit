@@ -5,6 +5,7 @@ import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {ReportBug, FeatureRequest, LocalInfoProps} from "@/utils/template/issues"
 import {useMemoizedFn} from "ahooks"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
+import {grpcFetchLocalYakitVersion, grpcFetchLocalYakVersion} from "@/apiUtils/grpc"
 
 import classNames from "classnames"
 import styles from "./HelpDoc.module.scss"
@@ -35,8 +36,7 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     }, [system, arch, currentYakit, currentYaklang])
 
     useEffect(() => {
-        ipcRenderer
-            .invoke("fetch-yakit-version")
+        grpcFetchLocalYakitVersion(true)
             .then((res) => {
                 setCurrentYakit(res)
             })
@@ -44,8 +44,7 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        ipcRenderer
-            .invoke("get-current-yak")
+        grpcFetchLocalYakVersion(true)
             .then((data: string) => {
                 setCurrentYaklang(data)
             })

@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
 import {MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon, YakitCopySvgIcon, YaklangInstallHintSvgIcon} from "../icons"
 import {Checkbox, Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -15,10 +15,11 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {safeFormatDownloadProcessState} from "../utils"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
+import {grpcFetchLatestYakVersion} from "@/apiUtils/grpc"
+import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
-import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -195,15 +196,13 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
 
     /** 获取引擎线上最新版本 */
     const fetchEngineLatestVersion = useMemoizedFn((callback?: () => any) => {
-        ipcRenderer
-            .invoke("fetch-latest-yaklang-version")
+        grpcFetchLatestYakVersion()
             .then((data: string) => {
                 if (isBreakDownload.current) return
-                latestVersionRef.current = data.startsWith("v") ? data.slice(1) : data
+                latestVersionRef.current = data
                 if (callback) callback()
             })
             .catch((e: any) => {
-                failed(`获取线上引擎最新版本失败 ${e}`)
                 onInstallClose()
                 checkEngineDownloadLatestVersionCancel()
             })
@@ -653,9 +652,8 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
     })
 
     useEffect(() => {
-        ipcRenderer
-            .invoke("fetch-latest-yaklang-version")
-            .then((data: string) => setLatestVersion(data.startsWith("v") ? data.slice(1) : data))
+        grpcFetchLatestYakVersion(true)
+            .then((data: string) => setLatestVersion(data))
             .catch((e: any) => {})
     }, [])
 

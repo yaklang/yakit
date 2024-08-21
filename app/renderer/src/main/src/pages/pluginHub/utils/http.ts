@@ -1,6 +1,6 @@
+import {APIFunc} from "@/apiUtils/type"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {APIFunc} from "./apiType"
 import {yakitNotify} from "@/utils/notification"
 
 /**

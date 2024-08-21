@@ -15,8 +15,8 @@ import {apiDownloadPluginMine} from "../utils"
 import {YakExtraParamProps} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {Uint8ArrayToString} from "@/utils/str"
-import {APIFunc} from "@/pages/pluginHub/utils/apiType"
 import {pluginParamsConvertLocalToOnline, riskDetailConvertLocalToOnline} from "@/pages/pluginEditor/utils/convert"
+import {APIFunc} from "@/apiUtils/type"
 
 const {ipcRenderer} = window.require("electron")
 

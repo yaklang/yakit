@@ -72,7 +72,7 @@ import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
 import {Tooltip} from "antd"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {clearTerminalMap, getMapAllTerminalKey} from "@/pages/YakRunner/BottomEditorDetails/TerminalBox/TerminalMap"
-import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import {grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/grpc"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -200,7 +200,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setArch(cpuArch)
         } catch (error) {}
         try {
-            const isInstalled = await ipcRenderer.invoke("is-yaklang-engine-installed")
+            const isInstalled = await grpcFetchYakInstallResult(true)
             isEngineInstalled.current = isInstalled
         } catch (error) {}
 
@@ -353,13 +353,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
             const waitTime: number = 20000
             const id = setInterval(() => {
-                ipcRenderer.invoke("is-yaklang-engine-installed").then((flag: boolean) => {
-                    if (isEngineInstalled.current === flag) return
-                    isEngineInstalled.current = flag
-                    isInitLocalLink.current = true
-                    // 清空主进程yaklang版本缓存
-                    ipcRenderer.invoke("clear-local-yaklang-version-cache")
-                })
+                grpcFetchYakInstallResult(true)
+                    .then((flag: boolean) => {
+                        if (isEngineInstalled.current === flag) return
+                        isEngineInstalled.current = flag
+                        isInitLocalLink.current = true
+                        // 清空主进程yaklang版本缓存
+                        ipcRenderer.invoke("clear-local-yaklang-version-cache")
+                    })
+                    .catch()
             }, waitTime)
             return () => {
                 clearInterval(id)
@@ -616,10 +618,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>("")
     const yaklangLastVersionRef = useRef<string>("")
     useEffect(() => {
-        ipcRenderer
-            .invoke("fetch-latest-yaklang-version")
+        grpcFetchLatestYakVersion(true)
             .then((data: string) => {
-                const v = data.startsWith("v") ? data.slice(1) : data
+                const v = data
                 yaklangLastVersionRef.current = v
             })
             .catch((err) => {})
