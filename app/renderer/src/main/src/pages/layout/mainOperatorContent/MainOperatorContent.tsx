@@ -2043,12 +2043,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     const itemWF = listWF[0]
                     await fetchFuzzerList(itemWF)
                 }
-            }
-            if (!!resSequence) {
-                const listSequence = JSON.parse(resSequence)
-                if (listSequence?.length > 0) {
-                    const itemSequence = listSequence[0]
-                    await onSetFuzzerSequenceCacheData(itemSequence)
+                if (!!resSequence) {
+                    const listSequence = JSON.parse(resSequence)
+                    if (listSequence?.length > 0) {
+                        const itemSequence = listSequence[0]
+                        await onSetFuzzerSequenceCacheData(itemSequence)
+                    }
                 }
             } else {
                 yakitNotify("error", "历史记录为空")
