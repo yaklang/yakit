@@ -272,8 +272,8 @@ jobs:
                       *:/vip/${{ steps.generate_version.outputs.value }}/
 
             - name: Update OSS latest file
-              run: echo ${{ steps.fetchtag_release.outputs.value }} > ./yakit-version.txt
-            - name: Upload Yakit Version to oss
+              run: echo ${{ steps.generate_version.outputs.value }} > ./yakit-version.txt
+            - name: Upload EE Yakit Version to oss
               uses: tvrcgo/upload-to-oss@master
               with:
                   key-id: ${{ secrets.OSS_KEY_ID }}
