@@ -5,7 +5,13 @@ import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerType"
 import {StringToUint8Array} from "@/utils/str"
 import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
-import {OutlineHandIcon, OutlineXIcon, OutlineZoominIcon, OutlineZoomoutIcon} from "@/assets/icon/outline"
+import {
+    OutlineCollectionIcon,
+    OutlineHandIcon,
+    OutlineXIcon,
+    OutlineZoominIcon,
+    OutlineZoomoutIcon
+} from "@/assets/icon/outline"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Tooltip} from "antd"
@@ -14,15 +20,167 @@ import {failed} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
+import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} from "./GraphInfoMap"
+import {CollapseList} from "../CollapseList/CollapseList"
+
+interface AuditResultItemProps {
+    onDetail: (data: CodeRangeProps) => void
+    nodeId?: string
+    data: GraphInfoProps[]
+    title: string
+    resultKey?: string | string[]
+    setResultKey: (v: string | string[]) => void
+}
+
+export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
+    const {onDetail, nodeId, data, title, resultKey,setResultKey} = props
+
+    const titleRender = (info: GraphInfoProps) => {
+        const {ir_code, code_range, node_id} = info
+        const lastSlashIndex = code_range.url.lastIndexOf("/")
+        const fileName = code_range.url.substring(lastSlashIndex + 1)
+        return (
+            <div className={styles["result-render"]}>
+                <div className={classNames(styles["title"], "yakit-single-line-ellipsis")}>{ir_code}</div>
+                <Tooltip placement='topLeft' title={`${code_range.url}:${code_range.start_line}`}>
+                    <div
+                        className={classNames(styles["url-box"], "yakit-single-line-ellipsis", {
+                            [styles["active-url-box"]]: node_id === nodeId
+                        })}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onDetail(code_range)
+                        }}
+                    >
+                        {fileName}:{code_range.start_line}
+                    </div>
+                </Tooltip>
+            </div>
+        )
+    }
+
+    const renderItem = (info: GraphInfoProps) => {
+        return <div className={styles["ir-code-box"]}>{info.source_code}</div>
+    }
+
+    return (
+        <div className={styles["audit-result-item"]}>
+            <CollapseList
+                type='sideBar'
+                panelKey={title}
+                list={data}
+                titleRender={titleRender}
+                renderItem={renderItem}
+                collapseProps={{
+                    activeKey: resultKey,
+                    onChange: (v) => {
+                        setResultKey(v)
+                    }
+                }}
+            />
+        </div>
+    )
+}
+
+interface AuditResultBoxProps {
+    onDetail: (data: CodeRangeProps) => void
+    nodeId?: string
+    graphLine?: string[][]
+    message: string
+    activeKey?: string | string[]
+    setActiveKey: (v: string | string[]) => void
+}
+
+interface InitDataProps {
+    title: string
+    children: GraphInfoProps[]
+    nodeId?: string
+}
+
+export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
+    const {onDetail, nodeId, graphLine, message, activeKey, setActiveKey} = props
+    const [resultKey, setResultKey] = useState<string | string[]>()
+
+    useUpdateEffect(()=>{
+        if(activeKey === undefined){
+            setResultKey(undefined)
+        }
+    },[activeKey])
+
+    const getChildren = useMemoizedFn((data: string[]) => {
+        const children = data
+            .map((itemIn) => {
+                const detail = getMapGraphInfoDetail(itemIn)
+                if (detail) {
+                    return {
+                        ...detail
+                    }
+                }
+                return
+            })
+            .filter((item) => item !== undefined) as GraphInfoProps[]
+        return children
+    })
+
+    const initData: InitDataProps[] = useMemo(() => {
+        if (graphLine) {
+            return graphLine.map((item, index) => {
+                return {
+                    title: `路径${index + 1}`,
+                    children: getChildren(item)
+                }
+            })
+        }
+        return []
+    }, [graphLine])
+
+    const titleRender = (info: InitDataProps) => {
+        return <div className={styles["title-render"]}>{info.title}</div>
+    }
+
+    const renderItem = (info: InitDataProps) => {
+        return (
+            <AuditResultItem
+                data={info.children}
+                onDetail={onDetail}
+                title={info.title}
+                nodeId={nodeId}
+                resultKey={resultKey}
+                setResultKey={setResultKey}
+            />
+        )
+    }
+
+    return (
+        <div className={styles["audit-result-box"]}>
+            {message && <div className={styles["message-box"]}>{message}</div>}
+            {/* 以下为折叠面板 */}
+            <CollapseList
+                type='output'
+                onlyKey='title'
+                list={initData}
+                titleRender={titleRender}
+                renderItem={renderItem}
+                collapseProps={{
+                    activeKey,
+                    onChange: (v) => {
+                        setActiveKey(v)
+                    }
+                }}
+            />
+        </div>
+    )
+}
+
 interface FlowChartBoxProps {
     onDetail: (data: CodeRangeProps) => void
     graph?: string
-    graphInfo?: GraphInfoProps[]
+    refresh: boolean
     node_id?: string
 }
 
 export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
-    const {onDetail, graph, graphInfo, node_id} = props
+    const {onDetail, graph, refresh, node_id} = props
     const svgBoxRef = useRef<HTMLDivElement>(null)
     const svgRef = useRef<any>(null)
     const [nodeId, setNodeId] = useState<string>()
@@ -105,7 +263,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         }
     })
 
-    const onRefreshAuditDetailFun = useMemoizedFn(()=>{
+    const onRefreshAuditDetailFun = useMemoizedFn(() => {
         setNodeId(undefined)
     })
 
@@ -138,13 +296,11 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     }, [graph])
 
     const contentInfo = useMemo(() => {
-        if (graphInfo && nodeId) {
-            const arr = graphInfo.filter((item) => item.node_id === nodeId)
-            if (arr.length > 0) {
-                return arr[0]
-            }
+        if (nodeId) {
+            const result = getMapGraphInfoDetail(nodeId)
+            return result
         }
-    }, [graphInfo, nodeId])
+    }, [refresh, nodeId])
 
     const firstOffsetRef = useRef<{x: number; y: number}>()
     const [scale, setScale] = useState(1) // 初始缩放比例为1
@@ -232,7 +388,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 </div>
             </div>
             <div
-                style={{cursor: "grab"} }
+                style={{cursor: "grab"}}
                 className={styles["svg-box"]}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
@@ -282,8 +438,9 @@ export interface CodeRangeProps {
     end_line: number
 }
 
-interface GraphInfoProps {
+export interface GraphInfoProps {
     code_range: CodeRangeProps
+    source_code: string
     node_id: string
     ir_code: string
 }
@@ -297,9 +454,11 @@ interface RightSideBarProps {
 export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     const {auditRightParams, isShowAuditDetail, setShowAuditDetail} = props
     const [graph, setGraph] = useState<string>()
-    const [graphInfo, setGraphInfo] = useState<GraphInfoProps[]>()
+    const [graphLine, setGraphLine] = useState<string[][]>()
     const [message, setMessage] = useState<string>("")
     const [nodeId, setNodeId] = useState<string>()
+    const [refresh, setRefresh] = useState<boolean>(false)
+    const [activeKey, setActiveKey] = useState<string | string[]>()
 
     useEffect(() => {
         if (isShowAuditDetail && auditRightParams) {
@@ -308,6 +467,8 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     }, [isShowAuditDetail, auditRightParams])
 
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
+        clearMapGraphInfoDetail()
+        setActiveKey(undefined)
         const {Schema, Location, Path, Body} = params
         const body = StringToUint8Array(Body)
         const result = await loadAuditFromYakURLRaw({Schema, Location, Path}, body)
@@ -319,8 +480,10 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 }
                 if (item.Key === "graph_info") {
                     try {
-                        let graph_info = JSON.parse(item.Value)
-                        setGraphInfo(graph_info)
+                        let graph_info: GraphInfoProps[] = JSON.parse(item.Value)
+                        graph_info.forEach((item) => {
+                            setMapGraphInfoDetail(item.node_id, item)
+                        })
                     } catch (error) {}
                 }
                 if (item.Key === "message") {
@@ -329,18 +492,16 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 if (item.Key === "node_id") {
                     setNodeId(item.Value)
                 }
+                if (item.Key === "graph_line") {
+                    try {
+                        let graph_info = JSON.parse(item.Value)
+                        setGraphLine(graph_info)
+                    } catch (error) {}
+                }
             })
+            setRefresh(!refresh)
         }
     })
-
-    const contentInfo = useMemo(() => {
-        if (graphInfo && nodeId) {
-            const arr = graphInfo.filter((item) => item.node_id === nodeId)
-            if (arr.length > 0) {
-                return arr[0]
-            }
-        }
-    }, [graphInfo, nodeId])
 
     // 跳转详情
     const onDetail = useMemoizedFn(async (data: CodeRangeProps) => {
@@ -359,6 +520,8 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 highLightRange
             }
         }
+        console.log("跳转详情",OpenFileByPathParams);
+        
         emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
         // 纯跳转行号
         setTimeout(() => {
@@ -378,6 +541,14 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     <div className={styles["absolute-box"]}>
                         <div className={styles["title"]}>审计结果</div>
                         <div className={styles["extra"]}>
+                            <YakitButton
+                                type='text2'
+                                icon={<OutlineCollectionIcon />}
+                                disabled={(graphLine || []).length === 0}
+                                onClick={() => {
+                                    setActiveKey(undefined)
+                                }}
+                            />
                             <YakitButton
                                 type='text2'
                                 icon={<OutlineXIcon />}
@@ -400,24 +571,16 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     secondNodeStyle={{padding: 0}}
                     secondMinSize={350}
                     firstNode={
-                        <div className={styles["content"]}>
-                            {contentInfo && (
-                                <Tooltip placement='topLeft' title={contentInfo.code_range.url}>
-                                    <div
-                                        className={classNames(styles["url-box"], "yakit-single-line-ellipsis")}
-                                        onClick={() => onDetail(contentInfo.code_range)}
-                                    >
-                                        {contentInfo.code_range.url}
-                                    </div>
-                                </Tooltip>
-                            )}
-                            {message && <div className={styles["message-box"]}>{message}</div>}
-                            {contentInfo && <div className={styles["ir-code-box"]}>{contentInfo?.ir_code}</div>}
-                        </div>
+                        <AuditResultBox
+                            activeKey={activeKey}
+                            setActiveKey={setActiveKey}
+                            onDetail={onDetail}
+                            graphLine={graphLine}
+                            message={message}
+                            nodeId={nodeId}
+                        />
                     }
-                    secondNode={
-                        <FlowChartBox onDetail={onDetail} graph={graph} graphInfo={graphInfo} node_id={nodeId} />
-                    }
+                    secondNode={<FlowChartBox onDetail={onDetail} graph={graph} refresh={refresh} node_id={nodeId} />}
                 />
             </div>
         </div>

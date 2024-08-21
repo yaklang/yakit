@@ -23,7 +23,7 @@ const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 
 export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
-    const {type = "sideBar", onlyKey, list, titleRender, renderItem, collapseProps, isShowBottom} = props
+    const {type = "sideBar", panelKey, onlyKey = "", list, titleRender, renderItem, collapseProps, isShowBottom} = props
 
     const wrapperClassName = useMemo(() => {
         if (type === "sideBar") return styles["collapse-list-side-bar"]
@@ -48,7 +48,10 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
             >
                 {list.map((item, index) => {
                     return (
-                        <Panel header={titleRender(item)} key={item[onlyKey] || `collapse-list-${index}`}>
+                        <Panel
+                            header={titleRender(item)}
+                            key={item[onlyKey] || `${panelKey || "collapse-list"}-${index}`}
+                        >
                             <div
                                 className={classNames(styles["list-item-render"], {
                                     [styles["list-item-render-sideBar"]]: type === "sideBar"
