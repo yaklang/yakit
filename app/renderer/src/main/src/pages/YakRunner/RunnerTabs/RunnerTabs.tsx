@@ -949,8 +949,14 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             item.elements.forEach((itemIn) => {
                 if (itemIn.id === tabsId) {
                     itemIn.files.forEach((file) => {
-                        // 仅初次进入 或切换时更新详情
-                        if (file.isActive && (!editorInfo || (editorInfo && editorInfo.path !== file.path))) {
+                        // 仅初次进入 或(切换/更新高亮显示区域)时更新详情
+                        if (
+                            file.isActive &&
+                            (!editorInfo ||
+                                (editorInfo && editorInfo.path !== file.path) ||
+                                (editorInfo &&
+                                    JSON.stringify(editorInfo.highLightRange) !== JSON.stringify(file.highLightRange)))
+                        ) {
                             // 更新编辑器展示项
                             setEditorInfo(file)
                             setAllowBinary(false)
@@ -1126,9 +1132,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onJumpEditorDetailFun = useMemoizedFn((data) => {
         try {
             const obj: JumpToEditorProps = JSON.parse(data)
-            const {id,isSelect = true, selections} = obj
+            const {id, isSelect = true, selections} = obj
             if (reqEditor && editorInfo?.path === id) {
-                if(isSelect){
+                if (isSelect) {
                     reqEditor.setSelection(selections)
                 }
                 reqEditor.revealLineInCenter(selections.startLineNumber)
@@ -1179,7 +1185,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                         updateAreaInputInfo(content)
                     }}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
-                    highLightClass="hight-light-yak-runner-color"
+                    highLightClass='hight-light-yak-runner-color'
                 />
             )}
         </div>

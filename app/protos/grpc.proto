@@ -1975,10 +1975,22 @@ message YaklangInspectInformationRequest {
 
 message YaklangLanguageSuggestionRequest {
   string InspectType = 1;// completion(补全) / hover(提示) / signature(签名) / definition(找定义) / reference(找引用)
+
+  // {
+  // from source code : support all InspectType
   string YakScriptType = 2;
   string YakScriptCode = 3;
-  Range Range = 4;
-  string ModelID = 5;
+  // }
+
+  Range Range = 4; // selected range 
+  string ModelID = 5; // monaco model id 
+
+  // {
+  // from database : support getReference 
+  // if set this progranName will use this from database 
+  string ProgramName = 6; 
+  string FileName = 7;
+  // } 
 }
 
 

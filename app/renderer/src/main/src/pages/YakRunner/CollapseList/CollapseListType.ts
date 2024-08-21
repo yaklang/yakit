@@ -1,6 +1,6 @@
-import { CollapseProps } from "antd"
+import {CollapseProps} from "antd"
 import {ReactNode} from "react"
-import { Selection } from "../RunnerTabs/RunnerTabsType";
+import {Selection} from "../RunnerTabs/RunnerTabsType"
 
 export interface CollapseListProp<T> {
     /**
@@ -9,7 +9,8 @@ export interface CollapseListProp<T> {
      * @default sideBar
      */
     type?: "sideBar" | "output"
-    onlyKey: string
+    panelKey?: string
+    onlyKey?: string
     list: T[]
     titleRender: (info: T) => ReactNode
     renderItem: (info: T) => ReactNode

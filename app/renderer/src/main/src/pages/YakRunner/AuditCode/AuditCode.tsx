@@ -168,7 +168,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                             </div>
 
                             {getDetail && (
-                                <Tooltip title={getDetail.url}>
+                                <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
                                     <div
                                         className={classNames(styles["detail"], "yakit-content-single-ellipsis")}
                                     >{`${getDetail.fileName}:${getDetail.start_line}`}</div>
