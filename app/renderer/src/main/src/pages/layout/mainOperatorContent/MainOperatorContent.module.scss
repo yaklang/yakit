@@ -266,7 +266,7 @@ $keyColor: map-keys($colors);
             height: 32px;
             background-color: var(--yakit-card-background-color);
 
-            max-width: calc(100% - 64px);
+            max-width: calc(100% - 32px);
             overflow-y: hidden;
             overflow-x: auto;
             scroll-behavior: smooth;
@@ -341,10 +341,10 @@ $keyColor: map-keys($colors);
                 }
             }
             .tab-menu-sub-group-disable-drag {
-                cursor:auto;
+                cursor: auto;
                 .tab-menu-sub-group-name {
                     height: auto;
-                    cursor:auto;
+                    cursor: auto;
                 }
                 .tab-menu-sub-group-children {
                     flex-wrap: wrap;
@@ -355,7 +355,10 @@ $keyColor: map-keys($colors);
         .tab-menu-sub-width {
             max-width: 100%;
         }
-        .tab-menu-sub-maxWidth-64{
+        .tab-menu-sub-maxWidth-64 {
+            max-width: calc(100% - 64px);
+        }
+        .tab-menu-sub-maxWidth-96 {
             max-width: calc(100% - 96px);
         }
         .tab-menu-sub-expand {
@@ -433,7 +436,7 @@ $keyColor: map-keys($colors);
         user-select: none;
 
         position: absolute;
-        right: 96px;
+        right: 64px;
         z-index: 11;
 
         svg {
@@ -447,6 +450,10 @@ $keyColor: map-keys($colors);
             bottom: 0px;
             z-index: 2;
         }
+    }
+
+    .outline-chevron-double-right-wf {
+        right: 96px;
     }
 
     .outline-chevron-double-display-none {
@@ -467,7 +474,7 @@ $keyColor: map-keys($colors);
     position: relative;
     overflow: hidden;
     max-width: 200px;
-    min-width: 64px;
+    min-width: 32px;
     // width: fit-content;
     justify-content: space-between;
     background-color: var(--yakit-card-background-color);
@@ -570,7 +577,7 @@ $keyColor: map-keys($colors);
     }
 }
 
-.tab-menu-sub-item-disable-drag{
+.tab-menu-sub-item-disable-drag {
     flex: 0 1 auto;
 }
 

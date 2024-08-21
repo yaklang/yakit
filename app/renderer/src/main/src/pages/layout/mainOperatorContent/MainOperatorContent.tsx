@@ -4028,6 +4028,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const isShowExpandIcon = useCreation(() => {
             return scroll.scrollLeft > 0 || scroll.scrollRight > 0
         }, [scroll.scrollLeft, scroll.scrollRight])
+        const isWebFuzzerRoute = useCreation(() => {
+            return currentTabKey === YakitRoute.HTTPFuzzer
+        }, [currentTabKey])
         return (
             <DragDropContext
                 onDragEnd={onSubMenuDragEnd}
@@ -4058,7 +4061,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 <div
                                     className={classNames(styles["tab-menu-sub"], {
                                         [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true,
-                                        [styles["tab-menu-sub-maxWidth-64"]]: isShowExpandIcon,
+                                        [styles["tab-menu-sub-maxWidth-64"]]: isWebFuzzerRoute, // WF页面二级菜单的默认占位最大宽度
+                                        [styles["tab-menu-sub-maxWidth-64"]]: isShowExpandIcon && !isWebFuzzerRoute, // 除了WF页面，其他多开页面二级菜单展开后占位最大宽度
+                                        [styles["tab-menu-sub-maxWidth-96"]]: isShowExpandIcon && isWebFuzzerRoute, // WF页面二级菜单展开后占位最大宽度
                                         [styles["tab-menu-sub-expand"]]: isExpand
                                     })}
                                     id={`tab-menu-sub-${pageItem.route}`}
@@ -4107,7 +4112,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 <div
                                     className={classNames(styles["outline-chevron-double-right"], {
                                         [styles["outline-chevron-double-display-none"]]:
-                                            scroll.scrollRight <= 0 || isExpand
+                                            scroll.scrollRight <= 0 || isExpand,
+                                        [styles["outline-chevron-double-right-wf"]]: isWebFuzzerRoute
                                     })}
                                     ref={scrollRightIconRef}
                                 >
@@ -4131,7 +4137,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                             />
                                         )
                                     )}
-                                    {currentTabKey === YakitRoute.HTTPFuzzer && (
+                                    {isWebFuzzerRoute && (
                                         <Tooltip title='恢复WebFuzzer标签页' placement={isExpand ? "left" : "top"}>
                                             <OutlineRefreshIcon
                                                 className={styles["extra-operate-icon"]}
