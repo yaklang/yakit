@@ -729,7 +729,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         console.log("newkey---", newkey, arr)
         if (!arr) return
         // 屏蔽所有Input输入框引起的快捷键 PS:monaca除外
-        // if (event.target.localName === "textarea" && event.target?.ariaRoleDescription !== "editor") return
+        if (["textarea","input"].includes(event.target.localName) && event.target?.ariaRoleDescription !== "editor") return
         // 文件树相关快捷键只在文件树控件展示时生效
         if (fileTreeEvent.includes(newkey) && (getActive() !== "file-tree" || getLoadTreeType() === "audit")) return
         // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
