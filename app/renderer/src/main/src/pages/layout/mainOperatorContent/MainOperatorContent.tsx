@@ -1625,7 +1625,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
             }
         },
-        1000 * 60 * 10 /** 每10分钟执行一次*/,
+        1000 * 60 * 5 /** 每5分钟执行一次*/,
         {immediate: true}
     )
     // fuzzer-tab页数据订阅事件
@@ -4138,7 +4138,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                         )
                                     )}
                                     {isWebFuzzerRoute && (
-                                        <Tooltip title='恢复WebFuzzer标签页' placement={isExpand ? "left" : "top"}>
+                                        <Tooltip title='恢复WebFuzzer标签页;5分钟更新一次历史数据' placement={isExpand ? "left" : "top"}>
                                             <OutlineRefreshIcon
                                                 className={styles["extra-operate-icon"]}
                                                 onClick={() => onRestoreHistory(currentTabKey)}
