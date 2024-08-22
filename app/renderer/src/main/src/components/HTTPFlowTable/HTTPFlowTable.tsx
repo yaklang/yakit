@@ -1045,6 +1045,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             return
         }
 
+        // 来源为插件执行时 使其部分筛选条件失效
+        if(toPlugin){
+            query = {
+                ...query,
+                ExcludeInUrl: [],
+                ExcludePath: [],
+                ExcludeSuffix: [],
+                ExcludeContentType:[],
+                IncludeInUrl: [],
+                IncludePath: [],
+                IncludeSuffix: [],
+                SearchContentType: ""
+            }
+        }
+
         if (isGrpcRef.current) return
         isGrpcRef.current = true
 
