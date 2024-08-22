@@ -456,7 +456,11 @@
                 align-items: center;
                 cursor: pointer;
                 .edit-icon {
-                    color: var(--yakit-primary-5);
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                        color: var(--yakit-primary-5);
+                    }
                 }
             }
         }

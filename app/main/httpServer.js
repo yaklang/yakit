@@ -1,10 +1,16 @@
 const axios = require("axios")
-const https = require('https');
-const {ipcMain, webContents} = require("electron")
+const https = require("https")
+const {ipcMain} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
 
 // 请求超时时间
 const DefaultTimeOut = 30 * 1000
+
+// 软件启动后判断是 CE 版本还是 EE 版本
+ipcMain.handle("is-enpritrace-to-domain", (event, flag) => {
+    HttpSetting.httpBaseURL = flag ? "https://vip.yaklang.com" : "https://www.yaklang.com"
+    return true
+})
 
 ipcMain.on("sync-edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
@@ -16,7 +22,7 @@ const service = axios.create({
     baseURL: `${HttpSetting.httpBaseURL}/api/`,
     timeout: DefaultTimeOut, // 请求超时时间
     maxBodyLength: Infinity, //设置适当的大小
-    httpsAgent: new https.Agent({rejectUnauthorized: false}), // 忽略 HTTPS 错误
+    httpsAgent: new https.Agent({rejectUnauthorized: false}) // 忽略 HTTPS 错误
 })
 
 // request拦截器,拦截每一个请求加上请求头
@@ -68,7 +74,7 @@ service.interceptors.response.use(
             }
             return Promise.resolve(res)
         }
-        if(error.response && error.response.status === 501 && error.response.data){
+        if (error.response && error.response.status === 501 && error.response.data) {
             const res = {
                 code: 501,
                 message: error.response.data,
@@ -82,17 +88,17 @@ service.interceptors.response.use(
         return Promise.reject(error)
     }
 )
-let cancelTokenSource = null;
-function httpApi(method, url, params, headers, isAddParams = true,timeout = DefaultTimeOut) {
+let cancelTokenSource = null
+function httpApi(method, url, params, headers, isAddParams = true, timeout = DefaultTimeOut) {
     if (!["get", "post"].includes(method)) {
         return Promise.reject(`call yak echo failed: ${e}`)
     }
     // 如果有当前的请求，取消它
     if (cancelTokenSource) {
-        cancelTokenSource.cancel('Operation canceled due to new request.');
+        cancelTokenSource.cancel("Operation canceled due to new request.")
     }
     // 创建一个新的CancelToken
-    cancelTokenSource = axios.CancelToken.source();
+    cancelTokenSource = axios.CancelToken.source()
     return service({
         url: url,
         method: method,
@@ -100,10 +106,10 @@ function httpApi(method, url, params, headers, isAddParams = true,timeout = Defa
         params: isAddParams ? params : undefined,
         data: method === "post" ? params : undefined,
         timeout,
-        cancelToken: cancelTokenSource.token,
+        cancelToken: cancelTokenSource.token
     }).finally(() => {
         // 请求完成后清理cancelTokenSource
-        cancelTokenSource = null;
+        cancelTokenSource = null
     })
 }
 

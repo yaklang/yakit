@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName} from "@/utils/envfile"
+import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName, isEnpriTrace} from "@/utils/envfile"
 import {success, failed} from "@/utils/notification"
 import {CodeGV} from "@/yakitGV"
 import {YakitSystem, DownloadingState} from "@/yakitGVDefine"
@@ -13,6 +13,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {safeFormatDownloadProcessState} from "../utils"
+import {grpcFetchLatestYakitVersion} from "@/apiUtils/grpc"
 
 import classNames from "classnames"
 import styles from "./DownloadYakit.module.scss"
@@ -53,11 +54,10 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
      */
     useEffect(() => {
         if (visible) {
-            if (isCommunityEdition()) {
+            if (isCommunityEdition() || isEnpriTrace()) {
                 isBreakRef.current = true
                 setDownloadProgress(undefined)
-                ipcRenderer
-                    .invoke("fetch-latest-yakit-version")
+                grpcFetchLatestYakitVersion()
                     .then((data: string) => {
                         let version = data
                         if (version.startsWith("v")) version = version.slice(1)
@@ -89,7 +89,6 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                     })
                     .catch((e: any) => {
                         if (!isBreakRef.current) return
-                        failed(`${e}`)
                         setVisible(false)
                     })
             }

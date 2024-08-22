@@ -21,7 +21,7 @@ import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {Tooltip, Row, Col} from "antd"
-import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
@@ -35,6 +35,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {grpcFetchLocalYakVersion} from "@/apiUtils/grpc"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -253,8 +254,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const [showCheckEngine, setShowCheckEngine] = useState<boolean>(false)
     const getCurrentYak = () => {
         return new Promise((resolve, reject) => {
-            ipcRenderer
-                .invoke("get-current-yak")
+            grpcFetchLocalYakVersion(true)
                 .then((res: string) => {
                     if (res) {
                         const v = res.startsWith("v") ? res.slice(1) : res

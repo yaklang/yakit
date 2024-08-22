@@ -1,7 +1,7 @@
-appId: "io.yaklang.enpritrace"
+appId: "io.yaklang.enpritraceagent"
 extraMetadata:
-    name: enpritrace
-productName: "EnpriTrace"
+    name: enpritraceagent
+productName: "EnpriTraceAgent"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
@@ -13,6 +13,8 @@ extraFiles:
       to: "bins/flag.txt"
     - from: "bins/engine-version.txt"
       to: "bins/engine-version.txt"
+    - from: "bins/yakit-system-mode.txt"
+      to: "bins/yakit-system-mode.txt"
     - from: "bins/resources"
       to: "bins/resources"
       filter:
@@ -60,15 +62,14 @@ mac:
           arch:
               - x64
               - arm64
-    icon: "app/assets/yakiteelogo.icns"
+    icon: "app/assets/yakitselogo.icns"
 
 linux:
     target:
         - target: AppImage
           arch:
               - x64
-              - arm64
-    icon: "app/assets/yakiteelogo.icns"
+    icon: "app/assets/yakitselogo.icns"
 
 win:
     # requestedExecutionLevel: requireAdministrator
@@ -76,15 +77,15 @@ win:
         - target: nsis
           arch:
               - x64
-    icon: "app/assets/yakiteelogo.ico"
+    icon: "app/assets/yakitselogo.ico"
 
 nsis:
     oneClick: false
     perMachine: false
     deleteAppDataOnUninstall: true
     allowToChangeInstallationDirectory: true
-    installerIcon: app/assets/yakiteelogo.ico
-    uninstallerIcon: app/assets/yakiteelogo.ico
+    installerIcon: app/assets/yakitselogo.ico
+    uninstallerIcon: app/assets/yakitselogo.ico
     unicode: true
     include: build/yakit_build.nsh
     license: LICENSE.md
@@ -92,7 +93,7 @@ nsis:
     createDesktopShortcut: false
     createStartMenuShortcut: true
 
-beforePack: "buildHooks/before_pack.js"
+beforePack: "buildHooks/legacy_before_pack.js"
 
 releaseInfo:
     releaseName: ${version}

@@ -4,7 +4,7 @@ import {LocalGVS} from "@/enums/localGlobal"
 import {getLocalValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {getRandomLocalEnginePort} from "../WelcomeConsoleUtil"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import {failed, info, yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {UpdateYakitAndYaklang} from "../update/UpdateYakitAndYaklang"
@@ -12,6 +12,12 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import {handleFetchIsDev, SystemInfo} from "@/constants/hardware"
+import {
+    grpcFetchLatestYakitVersion,
+    grpcFetchLatestYakVersion,
+    grpcFetchLocalYakitVersion,
+    grpcFetchLocalYakVersion
+} from "@/apiUtils/grpc"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -125,13 +131,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleFetchYakitAndYaklangLocalVersion = useMemoizedFn(
             async (callback?: () => any, checkEngine?: boolean) => {
                 try {
-                    let localYakit = (await ipcRenderer.invoke("fetch-yakit-version")) || ""
+                    let localYakit = (await grpcFetchLocalYakitVersion(true)) || ""
                     setCurrentYakit(localYakit)
                 } catch (error) {}
 
                 try {
                     setLog(["获取引擎版本号..."])
-                    let localYaklang = (await ipcRenderer.invoke("get-current-yak")) || ""
+                    let localYaklang = (await grpcFetchLocalYakVersion(true)) || ""
                     localYaklang = localYaklang.startsWith("v") ? localYaklang.slice(1) : localYaklang
                     setLog(["获取引擎版本号...", `引擎版本号——${localYaklang}`, "准备开始本地连接中"])
                     setCurrentYaklang(localYaklang)
@@ -259,8 +265,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         }, [])
 
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {
-            if (!isCommunityEdition()) {
-                // 非CE版本不检查更新
+            if (isEnpriTraceAgent()) {
+                // SE版本不检查更新
                 preventUpdateHint.current = true
                 return
             }
@@ -268,19 +274,16 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 if (val) preventUpdateHint.current = true
 
                 if (!val) {
-                    ipcRenderer
-                        .invoke("fetch-latest-yakit-version")
-                        .then((data: string) => {
+                    grpcFetchLatestYakitVersion(true)
+                        .then((data) => {
                             if (preventUpdateHint.current) return
                             setLatestYakit(data || "")
                         })
                         .catch((err) => {})
-
-                    ipcRenderer
-                        .invoke("fetch-latest-yaklang-version")
+                    grpcFetchLatestYakVersion(true)
                         .then((data: string) => {
                             if (preventUpdateHint.current) return
-                            setLatestYaklang(data.startsWith("v") ? data.slice(1) : data)
+                            setLatestYaklang(data)
                         })
                         .catch((err) => {})
 
@@ -308,7 +311,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         // 初始化后的本地连接-前置项检查
         const initLink = useMemoizedFn(() => {
             isShowedUpdateHint.current = false
-            preventUpdateHint.current = isCommunityEdition() ? false : true
+            preventUpdateHint.current = !isEnpriTraceAgent() ? false : true
             checkEngineSourcePreventLinkLocalEnging.current = false
             handleCheckDataBase()
         })
@@ -341,7 +344,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /** ---------- 软件自启的更新检测弹框 Start ---------- */
         const isShowUpdate = useMemo(() => {
-            if (!isCommunityEdition()) return false
+            if (isEnpriTraceAgent()) return false
             if (!!currentYakit && !!latestYakit && `v${currentYakit}` !== latestYakit) {
                 isShowedUpdateHint.current = true
                 return true
@@ -389,7 +392,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         return (
             <>
-                {isCommunityEdition() && (
+                {!isEnpriTraceAgent() && isShowUpdate && (
                     <UpdateYakitAndYaklang
                         currentYakit={currentYakit}
                         latestYakit={latestYakit}

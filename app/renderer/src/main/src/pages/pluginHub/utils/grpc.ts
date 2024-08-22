@@ -1,6 +1,6 @@
+import {APIFunc} from "@/apiUtils/type"
 import {YakScript} from "@/pages/invoker/schema"
 import {yakitNotify} from "@/utils/notification"
-import {APIFunc} from "./apiType"
 
 const {ipcRenderer} = window.require("electron")
 

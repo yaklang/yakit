@@ -7,7 +7,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {failed, success} from "@/utils/notification"
 import {getReleaseEditionName, isEnterpriseEdition} from "@/utils/envfile"
-import {FetchUpdateContentProp, UpdateContentProp} from "../FuncDomain"
+import {UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 import {LocalGVS} from "@/enums/localGlobal"
 import {safeFormatDownloadProcessState} from "../utils"
@@ -61,7 +61,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
     })
 
     const removePrefixV = (version: string) => {
-        return version.startsWith('v') ? version.slice(1) : version
+        return version.startsWith("v") ? version.slice(1) : version
     }
 
     const yakitContent: string[] = useMemo(() => {
@@ -254,7 +254,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
         let version = latestYaklang
         if (version.startsWith("v")) version = version.slice(1)
         ipcRenderer.invoke("cancel-download-yak-engine-version", version)
-    
+
         setYaklangLoading(true)
         isYaklangBreak.current = true
         setInstallYaklang(false)
@@ -284,7 +284,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
             .finally(() => {
                 setTimeout(() => {
                     yaklangLater()
-                }, 50);
+                }, 50)
             })
     })
 
@@ -326,7 +326,7 @@ export const UpdateYakitAndYaklang: React.FC<UpdateYakitAndYaklangProps> = React
                                 </>
                             ) : installYakit ? (
                                 <div className={styles["hint-right-download"]}>
-                                    <div className={styles["hint-right-title"]}>Yakit下载中...</div>
+                                    <div className={styles["hint-right-title"]}>{getReleaseEditionName()} 下载中...</div>
                                     <div className={styles["download-progress"]}>
                                         <Progress
                                             strokeColor='#F28B44'
