@@ -726,10 +726,16 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         activeKey.push(which)
         const newkey = keySortHandle(activeKey).join("-")
         let arr = getKeyboard(newkey)
-        console.log("newkey---", newkey, arr)
+        // console.log("newkey---", newkey, arr)
         if (!arr) return
-        // 屏蔽所有Input输入框引起的快捷键 PS:monaca除外
-        if (["textarea","input"].includes(event.target.localName) && event.target?.ariaRoleDescription !== "editor") return
+        // 屏蔽所有Input输入框引起的快捷键 PS:monaca/xterm 除外
+        if (
+            ["textarea", "input"].includes(event.target.localName) &&
+            event.target?.ariaRoleDescription !== "editor" &&
+            event.target?.className !== "xterm-helper-textarea"
+        )   return  
+        // 审计模式时 终端对应快捷键需屏蔽
+        if (getLoadTreeType() === "audit" && newkey === "17-192") return
         // 文件树相关快捷键只在文件树控件展示时生效
         if (fileTreeEvent.includes(newkey) && (getActive() !== "file-tree" || getLoadTreeType() === "audit")) return
         // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
@@ -1087,7 +1093,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <YakRunnerContext.Provider value={{store, dispatcher}}>
                 <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
-                    
                     <div className={styles["yak-runner-body"]}>
                         <YakitResizeBox
                             freeze={!isUnShow}
@@ -1146,7 +1151,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     </div>
 
                     <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
-                    
                 </div>
                 {/* 文件过大提示框 */}
                 <YakitHint
