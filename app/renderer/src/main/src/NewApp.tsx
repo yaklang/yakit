@@ -8,11 +8,11 @@ import {API} from "./services/swagger/resposeType"
 import {useStore, yakitDynamicStatus} from "./store"
 import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+import {isCommunityEdition} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
-import {NowProjectDescription, coordinate} from "./pages/globalVariable"
+import {coordinate} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
@@ -41,6 +41,8 @@ function NewApp() {
         // 解压命令执行引擎脚本压缩包
         ipcRenderer.invoke("generate-start-engine")
         handleFetchSystemInfo()
+        // 告诉主进程软件的版本(CE|EE)
+        ipcRenderer.invoke("is-enpritrace-to-domain", !isCommunityEdition())
     }, [])
 
     /**
@@ -186,7 +188,7 @@ function NewApp() {
                             companyHeadImg: res.from_platform === "company" ? res.head_img : null,
                             role: res.role,
                             user_id: res.user_id,
-                            token: resToken,
+                            token: resToken
                         }
                         ipcRenderer.sendSync("sync-update-user", user)
                         setStoreUserInfo(user)
@@ -259,7 +261,7 @@ function NewApp() {
         })
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
-            if(token && token.length > 0){
+            if (token && token.length > 0) {
                 aboutLoginUpload(token)
                 loginHTTPFlowsToOnline(token)
             }
@@ -268,7 +270,7 @@ function NewApp() {
             ipcRenderer.removeAllListeners("close-windows-renderer")
             ipcRenderer.removeAllListeners("minimize-windows-renderer")
         }
-    }, [dynamicStatus.isDynamicStatus,userInfo])
+    }, [dynamicStatus.isDynamicStatus, userInfo])
 
     if (!agreed) {
         return (
