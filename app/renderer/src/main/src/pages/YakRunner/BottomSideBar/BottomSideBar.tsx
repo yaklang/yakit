@@ -18,7 +18,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     const {onOpenEditorDetails} = props
-    const {activeFile} = useStore()
+    const {activeFile, loadTreeType} = useStore()
     const showSyntaxInfo = useMemo(() => {
         let data = {
             hint: 0,
@@ -47,17 +47,17 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
         return data
     }, [activeFile])
 
-    const showLocationInfo = useMemo(()=>{
+    const showLocationInfo = useMemo(() => {
         let data = {
-            lineNumber:1,
-            column:1
+            lineNumber: 1,
+            column: 1
         }
-        if(activeFile?.position){
+        if (activeFile?.position) {
             data.lineNumber = activeFile.position.lineNumber
             data.column = activeFile.position.column
         }
         return data
-    },[activeFile?.position])
+    }, [activeFile?.position])
     return (
         <div className={styles["bottom-side-bar"]}>
             {/* 语法检查|终端|帮助信息 */}
@@ -109,15 +109,17 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                         {showSyntaxInfo.hint}
                     </div>
                 </div>
-                <div
-                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
-                    onClick={() => {
-                        onOpenEditorDetails("terminal")
-                    }}
-                >
-                    <OutlineCodeIcon />
-                    终端
-                </div>
+                {loadTreeType === "file" && (
+                    <div
+                        className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                        onClick={() => {
+                            onOpenEditorDetails("terminal")
+                        }}
+                    >
+                        <OutlineCodeIcon />
+                        终端
+                    </div>
+                )}
                 <div
                     className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
                     onClick={() => {
@@ -130,7 +132,9 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             </div>
 
             {/* 光标位置 */}
-            <div className={styles["bottom-side-bar-right"]}>{`行 ${showLocationInfo.lineNumber}，  列 ${showLocationInfo.column}`}</div>
+            <div
+                className={styles["bottom-side-bar-right"]}
+            >{`行 ${showLocationInfo.lineNumber}，  列 ${showLocationInfo.column}`}</div>
         </div>
     )
 }
