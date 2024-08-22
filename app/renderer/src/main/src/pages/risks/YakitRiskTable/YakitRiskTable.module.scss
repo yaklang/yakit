@@ -141,6 +141,19 @@ $keyColor: map-keys($tagColor);
             }
         }
     }
+    .content-resize-first {
+        @extend %display-column-center;
+        height: 100%;
+        overflow: hidden;
+        &-heard {
+            @extend %display-flex-center;
+        }
+    }
+    .content-resize-second {
+        @extend %display-column-center;
+        overflow-y: auto;
+        height: 100%;
+    }
     .no-more {
         font-size: 12px;
         color: var(--yakit-helper-text-color);

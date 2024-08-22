@@ -85,6 +85,7 @@ import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
+import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -1394,7 +1395,27 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose, className = "", border = true} = props
+    const {info, isShowTime = true, className = "", border = true} = props
+    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("request")
+    const [isShowCode, setIsShowCode] = useState<boolean>(true)
+    const descriptionsRef = useRef<HTMLDivElement>(null)
+    const descriptionsDivWidth = useListenWidth(descriptionsRef)
+
+    useEffect(() => {
+        const isRequestString = !!requestString(info)
+        const isResponseString = !!responseString(info)
+        if (isRequestString) {
+            setCurrentSelectShowType("request")
+        } else if (isResponseString) {
+            setCurrentSelectShowType("response")
+        }
+        if (isRequestString || isResponseString) {
+            setIsShowCode(true)
+        } else {
+            setIsShowCode(false)
+        }
+    }, [info])
+
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
@@ -1424,58 +1445,78 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             name: severity?.name || info?.Severity || "-"
         }
     }, [info.Severity])
-    const items: ReactNode[] = useMemo(() => {
-        const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
-        const itemList: ReactNode[] = []
-        if ((info?.Request || []).length > 0) {
-            itemList.push(
-                <Descriptions.Item key='Request' label='Request' span={3}>
-                    <div style={{height: 300}}>
-                        {quotedRequest ? (
-                            <div>{quotedRequest}</div>
-                        ) : (
-                            <NewHTTPPacketEditor
-                                defaultHttps={isHttps}
-                                originValue={Uint8ArrayToString(info?.Request || new Uint8Array())}
-                                readOnly={true}
-                                noHeader={true}
-                                webFuzzerCallBack={() => {
-                                    onClose && onClose()
-                                }}
-                            />
-                        )}
-                    </div>
-                </Descriptions.Item>
-            )
-        }
-        if ((info?.Response || []).length > 0) {
-            itemList.push(
-                <Descriptions.Item key='Response' label='Response' span={3}>
-                    <div style={{height: 300}}>
-                        {quotedResponse ? (
-                            <div>{quotedResponse}</div>
-                        ) : (
-                            <NewHTTPPacketEditor
-                                defaultHttps={isHttps}
-                                webFuzzerValue={Uint8ArrayToString(info?.Request || new Uint8Array())}
-                                originValue={Uint8ArrayToString(info?.Response || new Uint8Array())}
-                                readOnly={true}
-                                noHeader={true}
-                                webFuzzerCallBack={() => {
-                                    onClose && onClose()
-                                }}
-                            />
-                        )}
-                    </div>
-                </Descriptions.Item>
-            )
-        }
-
-        return itemList
-    }, [info, quotedResponse])
     const onClickIP = useMemoizedFn(() => {
         if (props.onClickIP) props.onClickIP(info)
     })
+    const column = useCreation(() => {
+        if (descriptionsDivWidth > 600) return 3
+        return 1
+    }, [descriptionsDivWidth])
+    const codeNode = useMemoizedFn(() => {
+        const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
+        const extraParams = {
+            originValue: currentSelectShowType === "request" ? requestString(info) : responseString(info),
+            webFuzzerValue: currentSelectShowType === "request" ? "" : requestString(info)
+        }
+        return (
+            <NewHTTPPacketEditor
+                defaultHttps={isHttps}
+                readOnly={true}
+                isShowBeautifyRender={true}
+                showDefaultExtra={true}
+                hideSearch={true}
+                noHex={true}
+                noModeTag={true}
+                simpleMode={true}
+                bordered={false}
+                isResponse={currentSelectShowType === "response"}
+                title={
+                    <div className={styles["content-resize-first-heard"]}>
+                        <YakitRadioButtons
+                            size='small'
+                            value={currentSelectShowType}
+                            onChange={(e) => {
+                                setCurrentSelectShowType(e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: "request",
+                                    label: "请求"
+                                },
+                                {
+                                    value: "response",
+                                    label: "响应"
+                                }
+                            ]}
+                        />
+                    </div>
+                }
+                {...extraParams}
+            />
+        )
+    })
+    const requestString = useMemoizedFn((info) => {
+        return Uint8ArrayToString(info?.Request || new Uint8Array())
+    })
+    const responseString = useMemoizedFn((info) => {
+        return Uint8ArrayToString(info?.Response || new Uint8Array())
+    })
+    const extraResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%",
+            lineStyle: {},
+            firstNodeStyle: {}
+        }
+        if (!isShowCode) {
+            p.firstRatio = "0%"
+            p.secondRatio = "100%"
+            p.lineStyle = {display: "none"}
+            p.firstNodeStyle = {display: "none"}
+        }
+        return p
+    }, [isShowCode])
     return (
         <>
             <div
@@ -1528,50 +1569,68 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                     </span>
                                 </>
                             )}
+                            {!isShowCode && (
+                                <>
+                                    <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                                    <YakitTag color='warning'>无请求和响应数据</YakitTag>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
-                <Descriptions bordered size='small' column={3}>
-                    {/* <Descriptions.Item label='IP' contentStyle={{minWidth: 120}}>
-                        {info.IP || "-"}
-                    </Descriptions.Item> */}
-                    {/* <Descriptions.Item label='ID'>{info.Id || "-"}</Descriptions.Item> */}
-                    {/* <Descriptions.Item label='端口'>{info.Port || "-"}</Descriptions.Item> */}
-                    <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
-                    <Descriptions.Item label='类型'>
-                        {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
-                    </Descriptions.Item>
-                    <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
-                    <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
-                        {info?.ReverseToken || "-"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                    <Descriptions.Item label='验证状态'>
-                        <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
-                            {!info.WaitingVerified ? "已验证" : "未验证"}
-                        </YakitTag>
-                    </Descriptions.Item>
+                <YakitResizeBox
+                    firstNode={<div className={styles["content-resize-first"]}>{codeNode()}</div>}
+                    secondNode={
+                        <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+                            <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
+                                <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
+                                <Descriptions.Item label='类型'>
+                                    {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                                <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
+                                    {info?.ReverseToken || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
+                                <Descriptions.Item label='验证状态'>
+                                    <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
+                                        {!info.WaitingVerified ? "已验证" : "未验证"}
+                                    </YakitTag>
+                                </Descriptions.Item>
 
-                    <>
-                        <Descriptions.Item label='漏洞描述' span={3} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Description || "-"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label='解决方案' span={3} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Solution || "-"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label='Parameter' span={3}>
-                            {info.Parameter || "-"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label='Payload' span={3}>
-                            {info.Payload || "-"}
-                        </Descriptions.Item>
-                        {items}
-                        <Descriptions.Item label='详情' span={3}>
-                            <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Details}` || "-"}</div>
-                        </Descriptions.Item>
-                    </>
-                </Descriptions>
-                <div className={styles["no-more"]}>暂无更多</div>
+                                <>
+                                    <Descriptions.Item
+                                        label='漏洞描述'
+                                        span={column}
+                                        contentStyle={{whiteSpace: "pre-wrap"}}
+                                    >
+                                        {info.Description || "-"}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item
+                                        label='解决方案'
+                                        span={column}
+                                        contentStyle={{whiteSpace: "pre-wrap"}}
+                                    >
+                                        {info.Solution || "-"}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label='Parameter' span={column}>
+                                        {info.Parameter || "-"}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label='Payload' span={column}>
+                                        {info.Payload || "-"}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label='详情' span={column}>
+                                        <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Details}` || "-"}</div>
+                                    </Descriptions.Item>
+                                </>
+                            </Descriptions>
+                            <div className={styles["no-more"]}>暂无更多</div>
+                        </div>
+                    }
+                    firstMinSize={200}
+                    secondMinSize={400}
+                    {...extraResizeBoxProps}
+                />
             </div>
         </>
     )
