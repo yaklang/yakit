@@ -533,7 +533,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
                 if (LParenMatch) {
                     newPosition = LParenMatch.range.getStartPosition();
                 }
-                const RParenMatch = model.findNextMatch(")", position, false, false, null, false);
+                const RParenMatch = model.findNextMatch(")", newPosition, false, false, null, false);
                 // 如果找到了右括号，证明是一个完整的函数调用，可以设置editorToSignatureHelpRangeMap
                 if (RParenMatch) {
                     const RParenPosition = RParenMatch.range.getStartPosition();
