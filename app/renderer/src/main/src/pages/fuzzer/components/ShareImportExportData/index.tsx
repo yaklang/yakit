@@ -28,6 +28,7 @@ import {randomString} from "@/utils/randomUtil"
 import {generateGroupId} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorContentType"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
+import {FuncBtn} from "@/pages/plugins/funcTemplate"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -328,27 +329,33 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
     return (
         <>
             {supportShare && (
-                <YakitButton
+                <FuncBtn
+                    maxWidth={1600}
                     type='outline2'
                     icon={<OutlineShareIcon />}
-                    style={{marginRight: 8}}
                     onClick={handleShare}
+                    name='分享'
+                    style={{marginRight: 8}}
                 />
             )}
             {supportExport && (
-                <YakitButton
+                <FuncBtn
+                    maxWidth={1600}
                     type='outline2'
                     icon={<OutlineExportIcon />}
                     style={{marginRight: 8}}
                     onClick={handlExport}
+                    name='导出'
                     onContextMenuCapture={handlExport}
                 />
             )}
             {supportImport && (
-                <YakitButton
+                <FuncBtn
+                    maxWidth={1600}
                     type='outline2'
                     icon={<OutlineImportIcon />}
                     onClick={handlImport}
+                    name='导入'
                     onContextMenuCapture={handlImport}
                 />
             )}
