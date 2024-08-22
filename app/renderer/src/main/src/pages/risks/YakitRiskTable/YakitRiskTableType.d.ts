@@ -55,12 +55,11 @@ export interface YakitRiskDetailsProps {
     className?: string
     info: Risk
     isShowTime?: boolean
-    shrink?: boolean
-    quotedRequest?: string
-    quotedResponse?: string
-    onClose?: () => void
+    shrink?: ConstrainBoolean
     onClickIP?: (info: Risk) => void
     border?: boolean
+    isShowExtra?: boolean
+    onRetest?: (info: Risk) => void
 }
 
 export interface YakitRiskSelectTagProps {
