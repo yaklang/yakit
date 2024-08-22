@@ -58,6 +58,8 @@ export interface YakitRiskDetailsProps {
     shrink?: ConstrainBoolean
     onClickIP?: (info: Risk) => void
     border?: boolean
+    isShowExtra?: boolean
+    onRetest?: (info: Risk) => void
 }
 
 export interface YakitRiskSelectTagProps {

@@ -1308,6 +1308,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             className={styles["yakit-risk-details"]}
                             onClickIP={onClickIP}
                             border={yakitRiskDetailsBorder}
+                            isShowExtra={!excludeColumnsKey.includes("action")}
+                            onRetest={onRetest}
                         />
                     )
                 }
@@ -1391,7 +1393,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-    const {info, isShowTime = true, className = "", border = true} = props
+    const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest} = props
     const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("request")
     const [isShowCode, setIsShowCode] = useState<boolean>(true)
     const descriptionsRef = useRef<HTMLDivElement>(null)
@@ -1526,53 +1528,69 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                 )}
             >
                 <div className={styles["content-heard"]}>
-                    <div className={styles["content-heard-severity"]}>
-                        {severityInfo.icon}
-                        <span
-                            className={classNames(
-                                styles["content-heard-severity-name"],
-                                styles[`severity-${severityInfo.tag}`]
-                            )}
-                        >
-                            {severityInfo.name}
-                        </span>
-                    </div>
-                    <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
-                    <div className={styles["content-heard-body"]}>
-                        <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
-                            {info.Title || "-"}
-                        </div>
-                        <div className={styles["content-heard-body-description"]}>
-                            <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
-                                ID:{info.Id}
-                            </YakitTag>
-                            <span>IP:{info.IP || "-"}</span>
-                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["description-port"]}>端口:{info.Port || "-"}</span>
-                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["url-info"]}>
-                                URL:
-                                <span className={classNames(styles["url"], "content-ellipsis")}>
-                                    {info?.Url || "-"}
-                                </span>
-                                <CopyComponents copyText={info?.Url || "-"} />
+                    <div className={styles["content-heard-left"]}>
+                        <div className={styles["content-heard-severity"]}>
+                            {severityInfo.icon}
+                            <span
+                                className={classNames(
+                                    styles["content-heard-severity-name"],
+                                    styles[`severity-${severityInfo.tag}`]
+                                )}
+                            >
+                                {severityInfo.name}
                             </span>
-                            {isShowTime && (
-                                <>
-                                    <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                                    <span className={styles["content-heard-body-time"]}>
-                                        发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                        </div>
+                        <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
+                        <div className={styles["content-heard-body"]}>
+                            <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
+                                {info.Title || "-"}
+                            </div>
+                            <div className={styles["content-heard-body-description"]}>
+                                <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
+                                    ID:{info.Id}
+                                </YakitTag>
+                                <span>IP:{info.IP || "-"}</span>
+                                <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                                <span className={styles["description-port"]}>端口:{info.Port || "-"}</span>
+                                <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                                <span className={styles["url-info"]}>
+                                    URL:
+                                    <span className={classNames(styles["url"], "content-ellipsis")}>
+                                        {info?.Url || "-"}
                                     </span>
-                                </>
-                            )}
-                            {!isShowCode && (
-                                <>
-                                    <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                                    <YakitTag color='warning'>无请求和响应数据</YakitTag>
-                                </>
-                            )}
+                                    <CopyComponents copyText={info?.Url || "-"} />
+                                </span>
+                                {isShowTime && (
+                                    <>
+                                        <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                                        <span className={styles["content-heard-body-time"]}>
+                                            发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                                        </span>
+                                    </>
+                                )}
+                                {!isShowCode && (
+                                    <>
+                                        <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                                        <YakitTag color='warning'>无数据包</YakitTag>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
+                    {isShowExtra && (
+                        <div className={styles["content-heard-right"]}>
+                            <FuncBtn
+                                maxWidth={1200}
+                                type='outline2'
+                                icon={<OutlinePlayIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (onRetest) onRetest(info)
+                                }}
+                                name='复测'
+                            />
+                        </div>
+                    )}
                 </div>
                 <YakitResizeBox
                     firstNode={<div className={styles["content-resize-first"]}>{codeNode()}</div>}
