@@ -4,11 +4,13 @@ module.exports = async function (context) {
         3: "arm64",
     };
     const arch = archMap[context.arch];
+    const baseInfo = context.packager.appInfo;
+    const productVersion =
+        baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
 
     /** win32 */
     const win32Config = context.electronPlatformName === "win32" ? context.packager.config.win : null;
     if (win32Config) {
-        const baseInfo = context.packager.appInfo;
         win32Config.extraFiles = [
             {
                 from: "bins/flag.windows.txt",
@@ -19,10 +21,7 @@ module.exports = async function (context) {
                 to: "bins/yak.zip",
             },
         ];
-        const productVersion =
-            baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
         win32Config.artifactName = `${"${productName}"}-${productVersion}-windows-legacy-amd64.${"${ext}"}`;
-
         context.packager.config.win = win32Config;
     }
 
@@ -36,9 +35,6 @@ module.exports = async function (context) {
                 to: "bins/flag.linux.txt",
             },
         ];
-        const baseInfo = context.packager.appInfo;
-        const productVersion =
-            baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
         switch (arch) {
             case "arm64":
                 linuxConfig.artifactName = `${"${productName}"}-${productVersion}-linux-legacy-arm64.${"${ext}"}`;
@@ -77,9 +73,6 @@ module.exports = async function (context) {
                 to: "bins/flag.darwin.txt",
             },
         ];
-        const baseInfo = context.packager.appInfo;
-        const productVersion =
-            baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
         macConfig.artifactName = `${"${productName}"}-${productVersion}-darwin-legacy-${"${arch}"}.${"${ext}"}`;
         switch (arch) {
             case "arm64":
