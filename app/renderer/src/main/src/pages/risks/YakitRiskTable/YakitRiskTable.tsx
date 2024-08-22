@@ -1015,10 +1015,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         if (val?.Id !== currentSelectItem?.Id) {
             setCurrentSelectItem(val)
         }
-        if (!currentSelectItem) {
-            const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
-        }
-
         if (!val.IsRead) {
             apiNewRiskRead({Ids: [val.Id]}).then(() => {
                 setResponse({
@@ -1617,7 +1613,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                         {info.Parameter || "-"}
                                     </Descriptions.Item>
                                     <Descriptions.Item label='Payload' span={column}>
-                                        {info.Payload || "-"}
+                                        <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
                                     </Descriptions.Item>
                                     <Descriptions.Item label='详情' span={column}>
                                         <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Details}` || "-"}</div>
