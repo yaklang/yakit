@@ -524,10 +524,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
                 title: "发现时间",
                 dataKey: "CreatedAt",
-                sorterProps: {
-                    sorter: true,
-                    sorterKey: "created_at"
-                },
                 render: (text) => (text ? formatTimestamp(text) : "-")
             },
             {

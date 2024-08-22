@@ -462,28 +462,7 @@ export const saveFuzzerCache = debounce(
             const {pageList = []} = selectedState || {
                 pageList: []
             }
-            const cache = pageList.map((ele) => {
-                const advancedConfigValue =
-                    ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
-                return {
-                    groupChildren: [],
-                    groupId: ele.pageGroupId,
-                    id: ele.pageId,
-                    pageParams: {
-                        actualHost: advancedConfigValue.actualHost || "",
-                        id: ele.pageId,
-                        isHttps: advancedConfigValue.isHttps,
-                        request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
-                        params: advancedConfigValue.params,
-                        extractors: advancedConfigValue.extractors,
-                        matchers: advancedConfigValue.matchers
-                    },
-                    sortFieId: ele.sortFieId,
-                    verbose: ele.pageName,
-                    expand: ele.expand,
-                    color: ele.color
-                }
-            })
+            const cache = getFuzzerProcessedCacheData(pageList)
             setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
         } catch (error) {
             yakitNotify("error", "webFuzzer缓存数据失败:" + error)
@@ -493,59 +472,29 @@ export const saveFuzzerCache = debounce(
     {leading: true}
 )
 
-/**
- * 下面注释的代码含义
- * fuzzer-tab页内数据的订阅事件，订阅数据包括request、请求参数、序列组配置信息等
- * 注释原因：
- * 软件打开后，这个订阅就会启动，导致还没连接引擎时就请求引擎相关接口，导致控制台报错
- */
-// try {
-//     const unFuzzerCacheData = usePageInfo.subscribe(
-//         // (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
-//         (state) => state.pages.get("httpFuzzer") || [], // 因为循环引用导致开发环境热加载YakitRoute.HTTPFuzzer为undefined
-//         (selectedState, previousSelectedState) => {
-//             saveFuzzerCache(selectedState)
-//         }
-//     )
-
-//     const saveFuzzerCache = debounce(
-//         (selectedState: PageProps) => {
-//             try {
-//                 const {pageList = []} = selectedState || {
-//                     pageList: []
-//                 }
-//                 const cache = pageList.map((ele) => {
-//                     const advancedConfigValue =
-//                         ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
-//                     return {
-//                         groupChildren: [],
-//                         groupId: ele.pageGroupId,
-//                         id: ele.pageId,
-//                         pageParams: {
-//                             actualHost: advancedConfigValue.actualHost || "",
-//                             id: ele.pageId,
-//                             isHttps: advancedConfigValue.isHttps,
-//                             request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
-//                             params: advancedConfigValue.params,
-//                             extractors: advancedConfigValue.extractors
-//                         },
-//                         sortFieId: ele.sortFieId,
-//                         verbose: ele.pageName,
-//                         expand: ele.expand,
-//                         color: ele.color
-//                     }
-//                 })
-//                 // console.log("saveFuzzerCache", cache)
-//                 // console.table(pageList)
-//                 console.log("cache", cache)
-//                 setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
-//             } catch (error) {
-//                 yakitNotify("error", "webFuzzer缓存数据失败:" + error)
-//             }
-//         },
-//         500,
-//         {leading: true}
-//     )
-// } catch (error) {
-//     yakitNotify("error", "page-info缓存数据错误:" + error)
-// }
+/**处理WF需要缓存的数据 */
+export const getFuzzerProcessedCacheData = (pageList) => {
+    const cache = pageList.map((ele) => {
+        const advancedConfigValue =
+            ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
+        return {
+            groupChildren: [],
+            groupId: ele.pageGroupId,
+            id: ele.pageId,
+            pageParams: {
+                actualHost: advancedConfigValue.actualHost || "",
+                id: ele.pageId,
+                isHttps: advancedConfigValue.isHttps,
+                request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
+                params: advancedConfigValue.params,
+                extractors: advancedConfigValue.extractors,
+                matchers: advancedConfigValue.matchers
+            },
+            sortFieId: ele.sortFieId,
+            verbose: ele.pageName,
+            expand: ele.expand,
+            color: ele.color
+        }
+    })
+    return cache
+}

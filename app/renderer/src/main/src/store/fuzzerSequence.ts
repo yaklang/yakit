@@ -182,7 +182,7 @@ try {
 
     const saveFuzzerSequenceCache = debounce(
         (selectedState) => {
-            const sequenceCache = selectedState.filter((ele) => ele.cacheData.length > 0)
+            const sequenceCache = getFuzzerSequenceProcessedCacheData(selectedState)
             // console.log("saveFuzzerSequenceCache", sequenceCache)
             setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(sequenceCache)).catch((error) => {})
         },
@@ -191,4 +191,10 @@ try {
     )
 } catch (error) {
     yakitNotify("error", "webFuzzer序列化数据缓存数据失败:" + error)
+}
+
+/**处理WF-Sequence需要缓存的数据 */
+export const getFuzzerSequenceProcessedCacheData = (selectedState) => {
+    const sequenceCache = selectedState.filter((ele) => ele.cacheData.length > 0)
+    return sequenceCache
 }

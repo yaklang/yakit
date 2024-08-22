@@ -30,8 +30,10 @@ import {
 import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition} from "@/utils/envfile"
 import {
     useCreation,
+    useDebounceFn,
     useGetState,
     useInViewport,
+    useInterval,
     useLongPress,
     useMemoizedFn,
     useThrottleFn,
@@ -56,7 +58,7 @@ import {SubscribeCloseType, YakitSecondaryConfirmProps, useSubscribeClose} from 
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultUserInfo} from "@/pages/MainOperator"
 import {useStore} from "@/store"
-import {getRemoteProjectValue, getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue} from "@/utils/kv"
 import {GroupCount, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -75,6 +77,7 @@ import {
     OutlineChevrondoubleleftIcon,
     OutlineChevrondoublerightIcon,
     OutlinePlusIcon,
+    OutlineRefreshIcon,
     OutlineSortascendingIcon,
     OutlineSortdescendingIcon
 } from "@/assets/icon/outline"
@@ -83,7 +86,11 @@ import {FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData} from "@/pages
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
-import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSequence"
+import {
+    FuzzerSequenceCacheDataProps,
+    getFuzzerSequenceProcessedCacheData,
+    useFuzzerSequence
+} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {RemoteGV} from "@/yakitGV"
@@ -95,6 +102,7 @@ import {
     PluginHubPageInfoProps,
     RiskPageInfoProps,
     defPage,
+    getFuzzerProcessedCacheData,
     saveFuzzerCache,
     usePageInfo
 } from "@/store/pageInfo"
@@ -873,29 +881,33 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             isCache = true,
             downstreamProxyStr = ""
         } = res || {}
-        const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
-            proxy: [],
-            dnsServers: [],
-            etcHosts: [],
-            advancedConfigShow: null,
-            resNumlimit: DefFuzzerTableMaxData
-        }
-        let newAdvancedConfigValue = {
-            ...advancedConfigValue
-        }
-        if (isCache) {
-            newAdvancedConfigValue.proxy = cacheData.proxy
-            newAdvancedConfigValue.dnsServers = cacheData.dnsServers
-            newAdvancedConfigValue.etcHosts = cacheData.etcHosts
-            newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
-        }
-        let newAdvancedConfigShow = cacheData.advancedConfigShow
-        let newIsHttps = !!isHttps
-        let newIsGmTLS = !!isGmTLS
-        let newRequest = request || defaultPostTemplate
-        // 有分享内容，数据以分享内容为准
-        if (res.hasOwnProperty("shareContent")) {
-            try {
+        try {
+            const isExistWF = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
+            if (!isExistWF) {
+                await onInitFuzzer()
+            }
+            const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
+                proxy: [],
+                dnsServers: [],
+                etcHosts: [],
+                advancedConfigShow: null,
+                resNumlimit: DefFuzzerTableMaxData
+            }
+            let newAdvancedConfigValue = {
+                ...advancedConfigValue
+            }
+            if (isCache) {
+                newAdvancedConfigValue.proxy = cacheData.proxy
+                newAdvancedConfigValue.dnsServers = cacheData.dnsServers
+                newAdvancedConfigValue.etcHosts = cacheData.etcHosts
+                newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
+            }
+            let newAdvancedConfigShow = cacheData.advancedConfigShow
+            let newIsHttps = !!isHttps
+            let newIsGmTLS = !!isGmTLS
+            let newRequest = request || defaultPostTemplate
+            // 有分享内容，数据以分享内容为准
+            if (res.hasOwnProperty("shareContent")) {
                 const shareContent: ShareValueProps = JSON.parse(res.shareContent)
                 newIsHttps = shareContent.advancedConfiguration.isHttps
                 newIsGmTLS = shareContent.advancedConfiguration.isGmTLS
@@ -910,27 +922,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         rule: true
                     }
                 }
-            } catch (error) {}
-        }
-        if (downstreamProxyStr) {
-            newAdvancedConfigValue.proxy = [downstreamProxyStr]
-        }
-        openMenuPage(
-            {route: YakitRoute.HTTPFuzzer},
-            {
-                openFlag,
-                pageParams: {
-                    request: newRequest,
-                    system: system,
-                    advancedConfigValue: {
-                        ...newAdvancedConfigValue,
-                        isHttps: newIsHttps,
-                        isGmTLS: newIsGmTLS
-                    },
-                    advancedConfigShow: newAdvancedConfigShow
-                }
             }
-        )
+            if (downstreamProxyStr) {
+                newAdvancedConfigValue.proxy = [downstreamProxyStr]
+            }
+            openMenuPage(
+                {route: YakitRoute.HTTPFuzzer},
+                {
+                    openFlag,
+                    pageParams: {
+                        request: newRequest,
+                        system: system,
+                        advancedConfigValue: {
+                            ...newAdvancedConfigValue,
+                            isHttps: newIsHttps,
+                            isGmTLS: newIsGmTLS
+                        },
+                        advancedConfigShow: newAdvancedConfigShow
+                    }
+                }
+            )
+        } catch (error) {
+            yakitNotify("error", `打开WF失败:${error}`)
+        }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
     const addWebsocketFuzzer = useMemoizedFn(
@@ -1204,7 +1218,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     // webFuzzer页面二级tab名称改为WF，特殊
                     verbose =
                         nodeParams?.verbose ||
-                        `WF-[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
+                        `[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
                 }
                 const node: MultipleNodeInfo = {
                     id: tabId,
@@ -1421,9 +1435,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const {getSubscribeClose, removeSubscribeClose} = useSubscribeClose()
-    const {clearDataByRoute} = usePageInfo(
+    const {clearDataByRoute, cachePages} = usePageInfo(
         (s) => ({
-            clearDataByRoute: s.clearDataByRoute
+            clearDataByRoute: s.clearDataByRoute,
+            cachePages: s.pages
         }),
         shallow
     )
@@ -1578,29 +1593,44 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setFuzzerSequenceCacheData, clearFuzzerSequence, addFuzzerSequenceCacheData} = useFuzzerSequence(
-        (s) => ({
-            setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
-            clearFuzzerSequence: s.clearFuzzerSequence,
-            addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData
-        }),
-        shallow
+    const {setFuzzerSequenceCacheData, clearFuzzerSequence, addFuzzerSequenceCacheData, fuzzerSequenceCacheData} =
+        useFuzzerSequence(
+            (s) => ({
+                setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
+                clearFuzzerSequence: s.clearFuzzerSequence,
+                addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData,
+                fuzzerSequenceCacheData: s.fuzzerSequenceCacheData
+            }),
+            shallow
+        )
+    useInterval(
+        () => {
+            onCacheHistoryWF()
+        },
+        1000 * 60 * 5, /** 每5分钟执行一次*/
+        {immediate: true}
     )
     // fuzzer-tab页数据订阅事件
     const unFuzzerCacheData = useRef<any>(null)
     // web-fuzzer多开页面缓存数据
     useEffect(() => {
-        if (!isEnpriTraceAgent()) {
-            // 触发获取web-fuzzer的缓存
-            fetchFuzzerList()
-        }
-        getFuzzerSequenceCache()
+        getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
+            .then((cacheTabKey) => {
+                /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
+                if (!cacheTabKey || cacheTabKey === YakitRoute.HTTPFuzzer) {
+                    onInitFuzzer()
+                }
+            })
+            .catch((error) => {
+                yakitNotify("error", `SelectFirstMenuTabKey获取数据失败:${error}`)
+            })
+
         // 开启fuzzer-tab页内数据的订阅事件
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
         }
         unFuzzerCacheData.current = usePageInfo.subscribe(
-            (state) => state.pages.get("httpFuzzer") || [],
+            (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
             (selectedState, previousSelectedState) => {
                 saveFuzzerCache(selectedState)
             }
@@ -1614,26 +1644,67 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     }, [])
-
+    /**
+     * 1.目前只缓存一个历史，后续可能会缓存多个历史供用户选择；
+     * 2.多个历史缓存需要考虑后端接口在数据过大的时候会报错，给不了前端数据的问题
+     * 3.多个历史记录缓存还需要考虑前端的WF和序列组之间数据的对应关系
+     * */
+    const onCacheHistoryWF = useMemoizedFn(async () => {
+        try {
+            // WF
+            const resWF = await getRemoteProjectValue(RemoteGV.FuzzerCache)
+            const cacheWF = JSON.parse(resWF || "[]")
+            if (cacheWF.length > 0) {
+                const historyList = [cacheWF]
+                setRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList, JSON.stringify(historyList))
+            }
+            // FuzzerSequence
+            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCache)
+            const cacheSequence = JSON.parse(resSequence || "[]")
+            if (cacheSequence.length > 0) {
+                const historySequenceList = [cacheSequence]
+                setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
+            }
+        } catch (error) {}
+    })
+    const onInitFuzzer = useMemoizedFn(async () => {
+        if (!isEnpriTraceAgent()) {
+            // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
+            if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
+                // 触发获取web-fuzzer的缓存
+                try {
+                    setLoading(true)
+                    const res = await getRemoteProjectValue(RemoteGV.FuzzerCache)
+                    const cache = JSON.parse(res || "[]")
+                    await fetchFuzzerList(cache)
+                    await getFuzzerSequenceCache()
+                    setTimeout(() => setLoading(false), 200)
+                } catch (error) {
+                    setLoading(false)
+                    yakitNotify("error", `onInitFuzzer初始化WF数据失败:${error}`)
+                }
+            }
+        }
+    })
     const getFuzzerSequenceCache = useMemoizedFn(() => {
         getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
             try {
-                clearFuzzerSequence()
                 const cache = JSON.parse(res || "[]")
-                setFuzzerSequenceCacheData(cache)
+                onSetFuzzerSequenceCacheData(cache)
             } catch (error) {
                 yakitNotify("error", "webFuzzer序列化获取缓存数据解析失败:" + error)
             }
         })
     })
 
-    // 获取数据库中缓存的web-fuzzer页面信息
-    const fetchFuzzerList = useMemoizedFn(async () => {
-        try {
-            // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
-            if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1) return
+    const onSetFuzzerSequenceCacheData = useMemoizedFn((cache) => {
+        clearFuzzerSequence()
+        setFuzzerSequenceCacheData(cache)
+    })
 
-            setLoading(true)
+    // 获取数据库中缓存的web-fuzzer页面信息
+    const fetchFuzzerList = useMemoizedFn(async (cache) => {
+        try {
             const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
                 proxy: [],
                 dnsServers: [],
@@ -1647,125 +1718,119 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 etcHosts: cacheData.etcHosts,
                 resNumlimit: cacheData.resNumlimit
             }
-            getRemoteProjectValue(RemoteGV.FuzzerCache)
-                .then((res: any) => {
-                    clearAllData()
-                    const cache = JSON.parse(res || "[]")
-                    // 菜单在代码内的名字
-                    const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
-                    const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
-                    const tabName = routeKeyToLabel.get(key) || menuName
-                    let pageNodeInfo: PageProps = {
-                        ...cloneDeep(defPage),
-                        currentSelectPageId: getCurrentSelectPageId(YakitRoute.HTTPFuzzer) || "",
-                        routeKey: YakitRoute.HTTPFuzzer
-                    }
-                    let multipleNodeListLength: number = 0
-                    const multipleNodeList: MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
-                    const pLength = multipleNodeList.length
-                    for (let index = 0; index < pLength; index++) {
-                        const parentItem: MultipleNodeInfo = multipleNodeList[index]
-                        const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
-                        const cLength = childrenList.length
-                        const groupChildrenList: MultipleNodeInfo[] = []
+            clearAllData()
+            // 菜单在代码内的名字
+            const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
+            const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
+            const tabName = routeKeyToLabel.get(key) || menuName
+            let pageNodeInfo: PageProps = {
+                ...cloneDeep(defPage),
+                currentSelectPageId: getCurrentSelectPageId(YakitRoute.HTTPFuzzer) || "",
+                routeKey: YakitRoute.HTTPFuzzer
+            }
+            let multipleNodeListLength: number = 0
+            const multipleNodeList: MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
+            const pLength = multipleNodeList.length
+            for (let index = 0; index < pLength; index++) {
+                const parentItem: MultipleNodeInfo = multipleNodeList[index]
+                const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
+                const cLength = childrenList.length
+                const groupChildrenList: MultipleNodeInfo[] = []
 
-                        for (let j = 0; j < cLength; j++) {
-                            const childItem: MultipleNodeInfo = childrenList[j]
-                            const nodeItem = {
-                                ...childItem
-                            }
-                            groupChildrenList.push({...nodeItem})
-                            const newNodeItem = {
-                                id: `${randomString(8)}-${j + 1}`,
-                                routeKey: YakitRoute.HTTPFuzzer,
-                                pageGroupId: nodeItem.groupId,
+                for (let j = 0; j < cLength; j++) {
+                    const childItem: MultipleNodeInfo = childrenList[j]
+                    const nodeItem = {
+                        ...childItem
+                    }
+                    groupChildrenList.push({...nodeItem})
+                    const newNodeItem = {
+                        id: `${randomString(8)}-${j + 1}`,
+                        routeKey: YakitRoute.HTTPFuzzer,
+                        pageGroupId: nodeItem.groupId,
+                        pageId: nodeItem.id,
+                        pageName: nodeItem.verbose,
+                        pageParamsInfo: {
+                            webFuzzerPageInfo: {
                                 pageId: nodeItem.id,
-                                pageName: nodeItem.verbose,
-                                pageParamsInfo: {
-                                    webFuzzerPageInfo: {
-                                        pageId: nodeItem.id,
-                                        advancedConfigValue: {
-                                            ...defaultAdvancedConfigValue,
-                                            ...defaultCache,
-                                            ...nodeItem.pageParams
-                                        },
-                                        advancedConfigShow: cacheData.advancedConfigShow,
-                                        request: nodeItem.pageParams?.request || ""
-                                    }
+                                advancedConfigValue: {
+                                    ...defaultAdvancedConfigValue,
+                                    ...defaultCache,
+                                    ...nodeItem.pageParams
                                 },
-                                sortFieId: nodeItem.sortFieId,
-                                expand: nodeItem.expand,
-                                color: nodeItem.color
+                                advancedConfigShow: cacheData.advancedConfigShow,
+                                request: nodeItem.pageParams?.request || ""
                             }
-                            pageNodeInfo.pageList.push(newNodeItem)
-                        }
-                        if (cLength > 0) {
-                            multipleNodeListLength += cLength
-                        } else {
-                            multipleNodeListLength += 1
-                            parentItem.pageParams = {
-                                ...parentItem.pageParams
-                            }
-                        }
-                        parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
+                        },
+                        sortFieId: nodeItem.sortFieId,
+                        expand: nodeItem.expand,
+                        color: nodeItem.color
+                    }
+                    pageNodeInfo.pageList.push(newNodeItem)
+                }
+                if (cLength > 0) {
+                    multipleNodeListLength += cLength
+                } else {
+                    multipleNodeListLength += 1
+                    parentItem.pageParams = {
+                        ...parentItem.pageParams
+                    }
+                }
+                parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
 
-                        const pageListItem = {
-                            id: `${randomString(8)}-${index + 1}`,
-                            routeKey: YakitRoute.HTTPFuzzer,
-                            pageGroupId: parentItem.groupId,
+                const pageListItem = {
+                    id: `${randomString(8)}-${index + 1}`,
+                    routeKey: YakitRoute.HTTPFuzzer,
+                    pageGroupId: parentItem.groupId,
+                    pageId: parentItem.id,
+                    pageName: parentItem.verbose,
+                    pageParamsInfo: {
+                        webFuzzerPageInfo: {
                             pageId: parentItem.id,
-                            pageName: parentItem.verbose,
-                            pageParamsInfo: {
-                                webFuzzerPageInfo: {
-                                    pageId: parentItem.id,
-                                    advancedConfigValue: {
-                                        ...defaultAdvancedConfigValue,
-                                        ...defaultCache,
-                                        ...parentItem.pageParams
-                                    },
-                                    advancedConfigShow: cacheData.advancedConfigShow,
-                                    request: parentItem.pageParams?.request || ""
-                                }
+                            advancedConfigValue: {
+                                ...defaultAdvancedConfigValue,
+                                ...defaultCache,
+                                ...parentItem.pageParams
                             },
-                            sortFieId: parentItem.sortFieId,
-                            expand: parentItem.expand,
-                            color: parentItem.color
+                            advancedConfigShow: cacheData.advancedConfigShow,
+                            request: parentItem.pageParams?.request || ""
                         }
-                        pageNodeInfo.pageList.push({...pageListItem})
-                    }
-                    const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
-                    if (newMultipleNodeList.length === 0) return
-                    // console.log("multipleNodeList", multipleNodeList)
-                    // console.log("pageNodeInfo", pageNodeInfo)
-                    const webFuzzerPage = {
-                        routeKey: key,
-                        verbose: tabName,
-                        menuName: menuName,
-                        route: YakitRoute.HTTPFuzzer,
-                        pluginId: undefined,
-                        pluginName: undefined,
-                        singleNode: undefined,
-                        multipleNode: multipleNodeList,
-                        multipleLength: multipleNodeListLength
-                    }
-                    const oldPageCache = [...pageCache]
-                    const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
-                    if (index === -1) {
-                        oldPageCache.push(webFuzzerPage)
-                    } else {
-                        oldPageCache.splice(index, 1, webFuzzerPage)
-                    }
-                    setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
-                    setPageCache(oldPageCache)
-                    setCurrentTabKey(key)
-                    const lastPage = multipleNodeList[multipleNodeList.length - 1]
-                    if (lastPage && lastPage.id.includes("group")) {
-                        // 最后一个是组的时候，需要设置当前选中组
-                        setSelectGroupId(YakitRoute.HTTPFuzzer, lastPage.id)
-                    }
-                })
-                .catch((e) => {})
-                .finally(() => setTimeout(() => setLoading(false), 200))
+                    },
+                    sortFieId: parentItem.sortFieId,
+                    expand: parentItem.expand,
+                    color: parentItem.color
+                }
+                pageNodeInfo.pageList.push({...pageListItem})
+            }
+            const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
+            if (newMultipleNodeList.length === 0) return
+            // console.log("multipleNodeList", multipleNodeList)
+            // console.log("pageNodeInfo", pageNodeInfo)
+            const webFuzzerPage = {
+                routeKey: key,
+                verbose: tabName,
+                menuName: menuName,
+                route: YakitRoute.HTTPFuzzer,
+                pluginId: undefined,
+                pluginName: undefined,
+                singleNode: undefined,
+                multipleNode: multipleNodeList,
+                multipleLength: multipleNodeListLength
+            }
+            const oldPageCache = [...pageCache]
+            const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
+            if (index === -1) {
+                oldPageCache.push(webFuzzerPage)
+            } else {
+                oldPageCache.splice(index, 1, webFuzzerPage)
+            }
+            setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
+            setPageCache(oldPageCache)
+            setCurrentTabKey(key)
+            const lastPage = multipleNodeList[multipleNodeList.length - 1]
+            if (lastPage && lastPage.id.includes("group")) {
+                // 最后一个是组的时候，需要设置当前选中组
+                setSelectGroupId(YakitRoute.HTTPFuzzer, lastPage.id)
+            }
         } catch (error) {
             yakitNotify("error", "fetchFuzzerList失败:" + error)
         }
@@ -1961,6 +2026,44 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
     }, [pageCache])
+    /**从历史记录中恢复上一次的数据 */
+    const onRestoreHistory = useMemoizedFn((routeKey: YakitRoute) => {
+        switch (routeKey) {
+            case YakitRoute.HTTPFuzzer:
+                onRestoreHTTPFuzzer()
+                break
+
+            default:
+                break
+        }
+    })
+    const onRestoreHTTPFuzzer = useMemoizedFn(async () => {
+        try {
+            setLoading(true)
+            const resWF = await getRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList)
+            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList)
+            if (!!resWF) {
+                const listWF = JSON.parse(resWF)
+                if (listWF?.length > 0) {
+                    const itemWF = listWF[0]
+                    await fetchFuzzerList(itemWF)
+                }
+                if (!!resSequence) {
+                    const listSequence = JSON.parse(resSequence)
+                    if (listSequence?.length > 0) {
+                        const itemSequence = listSequence[0]
+                        await onSetFuzzerSequenceCacheData(itemSequence)
+                    }
+                }
+            } else {
+                yakitNotify("error", "历史记录为空")
+            }
+
+            setTimeout(() => setLoading(false), 200)
+        } catch (error) {
+            yakitNotify("error", `WF历史数据恢复失败:${error}`)
+        }
+    })
     return (
         <Content>
             <YakitSpin spinning={loading}>
@@ -1979,6 +2082,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                         onBeforeRemovePage(removeItem)
                     }}
+                    onRestoreHistory={onRestoreHistory}
                 />
             </YakitSpin>
             <YakitModal
@@ -2032,7 +2136,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 })
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
-    const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage} = props
+    const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage, onRestoreHistory} =
+        props
     const {updateMenuBodyHeight} = useMenuHeight(
         (s) => ({
             updateMenuBodyHeight: s.updateMenuBodyHeight
@@ -2073,6 +2178,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
             firstTabMenuBodyHeight: height
         })
     })
+
     return (
         <div className={styles["tab-menu"]}>
             <ReactResizeDetector
@@ -2098,13 +2204,14 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
                 currentTabKey={currentTabKey}
                 openMultipleMenuPage={openMultipleMenuPage}
                 onSetPageCache={onSetPageCache}
+                onRestoreHistory={onRestoreHistory}
             />
         </div>
     )
 })
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
-    const {pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache} = props
+    const {pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory} = props
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -2133,6 +2240,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                                 pageItem={pageItem}
                                 index={index}
                                 onSetPageCache={onSetPageCache}
+                                onRestoreHistory={onRestoreHistory}
                             />
                         )}
                     </div>
@@ -2353,7 +2461,7 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
 })
 
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
-    const {pageItem, index, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache} = props
+    const {pageItem, index, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory} = props
     // webFuzzer 序列化
     const [type, setType] = useState<WebFuzzerType>("config")
 
@@ -2370,12 +2478,18 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const [inViewport = true] = useInViewport(tabsRef)
 
     useEffect(() => {
+        // 切换一级页面时,缓存当前选择的key
+        onSetSelectFirstMenuTabKey(currentTabKey)
+        // 切换一级页面时聚焦
+        const key = routeConvertKey(pageItem.route, pageItem.pluginName)
+        if (currentTabKey === key) {
+            onFocusPage()
+        }
         if (currentTabKey === YakitRoute.HTTPFuzzer) {
             emiter.on("sendSwitchSequenceToMainOperatorContent", onSetType)
         }
         emiter.on("switchSubMenuItem", onSelectSubMenuById)
         ipcRenderer.on("fetch-add-group", onAddGroup)
-
         return () => {
             emiter.off("sendSwitchSequenceToMainOperatorContent", onSetType)
             emiter.off("switchSubMenuItem", onSelectSubMenuById)
@@ -2387,14 +2501,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         // 处理外部新增一个二级tab
         setSubPage(pageItem.multipleNode || [])
     }, [pageItem.multipleNode])
-
-    // 切换一级页面时聚焦
-    useEffect(() => {
-        const key = routeConvertKey(pageItem.route, pageItem.pluginName)
-        if (currentTabKey === key) {
-            onFocusPage()
-        }
-    }, [currentTabKey])
 
     useEffect(() => {
         // 新增的时候选中的item
@@ -2421,6 +2527,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             emiter.emit("onRefVariableActiveKey")
         }
     }, [type])
+    /**缓存当前一级菜单选中的key */
+    const onSetSelectFirstMenuTabKey = useDebounceFn(
+        (tabKey: YakitRoute | string) => {
+            setRemoteValue(RemoteGV.SelectFirstMenuTabKey, tabKey)
+        },
+        {wait: 200, leading: true}
+    ).run
     const onSetType = useMemoizedFn((res) => {
         if (!inViewport) return
         try {
@@ -2489,6 +2602,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             }
         } catch (error) {}
     })
+
     return (
         <div
             ref={tabsRef}
@@ -2510,6 +2624,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 setType={setType}
                 openMultipleMenuPage={openMultipleMenuPage}
                 onSetPageCache={(list) => onSetPageCache(list, index)}
+                onRestoreHistory={onRestoreHistory}
             />
             <div className={styles["render-sub-page"]}>
                 <RenderSubPage
@@ -2536,7 +2651,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             selectSubMenu,
             setSelectSubMenu,
             onSetPageCache,
-            openMultipleMenuPage
+            openMultipleMenuPage,
+            onRestoreHistory
         } = props
 
         //拖拽组件相关
@@ -3917,6 +4033,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const isShowExpandIcon = useCreation(() => {
             return scroll.scrollLeft > 0 || scroll.scrollRight > 0
         }, [scroll.scrollLeft, scroll.scrollRight])
+        const isWebFuzzerRoute = useCreation(() => {
+            return currentTabKey === YakitRoute.HTTPFuzzer
+        }, [currentTabKey])
         return (
             <DragDropContext
                 onDragEnd={onSubMenuDragEnd}
@@ -3947,7 +4066,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 <div
                                     className={classNames(styles["tab-menu-sub"], {
                                         [styles["tab-menu-sub-width"]]: pageItem.hideAdd === true,
-                                        [styles["tab-menu-sub-maxWidth-64"]]: isShowExpandIcon,
+                                        [styles["tab-menu-sub-maxWidth-64"]]: isWebFuzzerRoute, // WF页面二级菜单的默认占位最大宽度
+                                        [styles["tab-menu-sub-maxWidth-64"]]: isShowExpandIcon && !isWebFuzzerRoute, // 除了WF页面，其他多开页面二级菜单展开后占位最大宽度
+                                        [styles["tab-menu-sub-maxWidth-96"]]: isShowExpandIcon && isWebFuzzerRoute, // WF页面二级菜单展开后占位最大宽度
                                         [styles["tab-menu-sub-expand"]]: isExpand
                                     })}
                                     id={`tab-menu-sub-${pageItem.route}`}
@@ -3996,7 +4117,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 <div
                                     className={classNames(styles["outline-chevron-double-right"], {
                                         [styles["outline-chevron-double-display-none"]]:
-                                            scroll.scrollRight <= 0 || isExpand
+                                            scroll.scrollRight <= 0 || isExpand,
+                                        [styles["outline-chevron-double-right-wf"]]: isWebFuzzerRoute
                                     })}
                                     ref={scrollRightIconRef}
                                 >
@@ -4020,6 +4142,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                             />
                                         )
                                     )}
+                                    {isWebFuzzerRoute && (
+                                        <Tooltip
+                                            title='恢复WebFuzzer标签页;5分钟更新一次历史数据'
+                                            placement={isExpand ? "left" : "top"}
+                                        >
+                                            <OutlineRefreshIcon
+                                                className={styles["extra-operate-icon"]}
+                                                onClick={() => onRestoreHistory(currentTabKey)}
+                                            />
+                                        </Tooltip>
+                                    )}
+
                                     {pageItem.hideAdd !== true && (
                                         <OutlinePlusIcon
                                             className={styles["extra-operate-icon"]}
