@@ -81,41 +81,43 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                     </YakitCheckableTag>
                 ))}
             </div>
-            <YakitDropdownMenu
-                menu={{
-                    data: [
-                        {
-                            key: "resetId",
-                            label: "重置请求 ID"
-                        },
-                        {
-                            key: "noResetId",
-                            label: "不重置请求 ID"
+            <div className={styles["mitm-log-heard-right"]}>
+                <YakitDropdownMenu
+                    menu={{
+                        data: [
+                            {
+                                key: "resetId",
+                                label: "重置请求 ID"
+                            },
+                            {
+                                key: "noResetId",
+                                label: "不重置请求 ID"
+                            }
+                        ],
+                        onClick: ({key}) => {
+                            switch (key) {
+                                case "resetId":
+                                    cleanMitmLogTableData({DeleteAll: true})
+                                    break
+                                case "noResetId":
+                                    cleanMitmLogTableData({Filter: {}, DeleteAll: false})
+                                    break
+                                default:
+                                    break
+                            }
                         }
-                    ],
-                    onClick: ({key}) => {
-                        switch (key) {
-                            case "resetId":
-                                cleanMitmLogTableData({DeleteAll: true})
-                                break
-                            case "noResetId":
-                                cleanMitmLogTableData({Filter: {}, DeleteAll: false})
-                                break
-                            default:
-                                break
-                        }
-                    }
-                }}
-                dropdown={{
-                    trigger: ["click"],
-                    placement: "bottom"
-                }}
-            >
-                <YakitButton type='outline1' colors='danger'>
-                    清空
-                </YakitButton>
-            </YakitDropdownMenu>
-            <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
+                    }}
+                    dropdown={{
+                        trigger: ["click"],
+                        placement: "bottom"
+                    }}
+                >
+                    <YakitButton type='outline1' colors='danger'>
+                        清空
+                    </YakitButton>
+                </YakitDropdownMenu>
+                <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
+            </div>
         </div>
     )
 })
