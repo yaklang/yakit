@@ -1,0 +1,18 @@
+.wf-syn-setting {
+    display: flex;
+    flex-direction: column;
+    .setting-type-form-item {
+        :global {
+            .ant-form-item-control-input-content {
+                display: flex;
+                align-items: center;
+            }
+        }
+    }
+    .setting-footer {
+        display: flex;
+        justify-content: flex-end;
+        flex: 1;
+        gap: 12px;
+    }
+}
