@@ -191,6 +191,8 @@ export const setUpYaklangMonaco = () => {
         digits: /\d+(_+\d+)*/,
         symbols: /[=><!~?:&|+\-*\/\^%]+/,
         escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4})/,
+
+        docIdentifierName: /[a-zA-Z_\u0080-\ufffe][a-zA-Z0-9_\u0080-\ufffe]*/,
         inlineExpr: /\$\{[^}]*\}/,
         invalidInlineExpr: /\$\{[^}]*$/,
         tokenizer: {
@@ -204,6 +206,8 @@ export const setUpYaklangMonaco = () => {
                 [/x"/, 'string.quoted.double.js', '@xstring'],
                 [/x'/, 'string.quoted.single.js', '@xstring2'],
                 [/x`/, 'string', '@xrawstring'],
+                // doc-strings
+                [/<<<\s*(['"]?)(@docIdentifierName)(\1)/, 'string.heredoc.delimiter', '@heredoc.$2'],
                 // identifiers and keywords
                 [/_(?!\w)/, 'keyword.$0'],
                 [
@@ -303,6 +307,7 @@ export const setUpYaklangMonaco = () => {
                 [/./, "bold-keyword"]
             ],
 
+           
 
             whitespace: [
                 [/[ \t\r\n]+/, ''],
@@ -396,7 +401,15 @@ export const setUpYaklangMonaco = () => {
                 [/[^`]/, 'string'],
                 [/`/, 'string', '@pop']
             ],
-
+            heredoc: [
+                [/^\s*(@docIdentifierName)/, {
+                    cases: {
+                    '$1==$S2': { token: 'string.heredoc.delimiter', next: '@pop' },
+                    '@default': 'string'
+                    }
+                }],
+                [/./, 'string'],
+            ],
 
         }
     })

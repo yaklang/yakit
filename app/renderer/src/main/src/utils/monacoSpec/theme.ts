@@ -181,6 +181,10 @@ monaco.editor.defineTheme("kurior", {
             "token": "string.inline.expr"
         },
         {
+            "foreground": "#808080",
+            "token": "string.heredoc.delimiter"
+        },
+        {
             "foreground": "#FF0000",
             "token": "string.invalid"
         },
