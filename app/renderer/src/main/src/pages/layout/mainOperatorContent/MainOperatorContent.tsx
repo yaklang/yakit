@@ -1605,27 +1605,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     useInterval(
         () => {
-            /**
-             * 1.目前只缓存一个历史，后续可能会缓存多个历史供用户选择；
-             * 2.多个历史缓存需要考虑后端接口在数据过大的时候会报错，给不了前端数据的问题
-             * 3.多个历史记录缓存还需要考虑前端的WF和序列组之间数据的对应关系
-             * */
-            const pageWF = cachePages.get(YakitRoute.HTTPFuzzer)
-            const {pageList = []} = pageWF || {
-                pageList: []
-            }
-            if (pageList.length > 0) {
-                const cacheWF = getFuzzerProcessedCacheData(pageList)
-                const historyList = [cacheWF]
-                setRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList, JSON.stringify(historyList))
-            }
-            if (fuzzerSequenceCacheData.length > 0) {
-                const cacheSequence = getFuzzerSequenceProcessedCacheData(fuzzerSequenceCacheData)
-                const historySequenceList = [cacheSequence]
-                setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
-            }
+            onCacheHistoryWF()
         },
-        1000 * 60 * 5 /** 每5分钟执行一次*/,
+        1000 * 60 * 5, /** 每5分钟执行一次*/
         {immediate: true}
     )
     // fuzzer-tab页数据订阅事件
@@ -1662,6 +1644,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     }, [])
+    /**
+     * 1.目前只缓存一个历史，后续可能会缓存多个历史供用户选择；
+     * 2.多个历史缓存需要考虑后端接口在数据过大的时候会报错，给不了前端数据的问题
+     * 3.多个历史记录缓存还需要考虑前端的WF和序列组之间数据的对应关系
+     * */
+    const onCacheHistoryWF = useMemoizedFn(async () => {
+        try {
+            // WF
+            const resWF = await getRemoteProjectValue(RemoteGV.FuzzerCache)
+            const cacheWF = JSON.parse(resWF || "[]")
+            if (cacheWF.length > 0) {
+                const historyList = [cacheWF]
+                setRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList, JSON.stringify(historyList))
+            }
+            // FuzzerSequence
+            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCache)
+            const cacheSequence = JSON.parse(resSequence || "[]")
+            if (cacheSequence.length > 0) {
+                const historySequenceList = [cacheSequence]
+                setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
+            }
+        } catch (error) {}
+    })
     const onInitFuzzer = useMemoizedFn(async () => {
         if (!isEnpriTraceAgent()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
@@ -1670,7 +1675,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 try {
                     setLoading(true)
                     const res = await getRemoteProjectValue(RemoteGV.FuzzerCache)
-                    const cache = JSON.parse(res)
+                    const cache = JSON.parse(res || "[]")
                     await fetchFuzzerList(cache)
                     await getFuzzerSequenceCache()
                     setTimeout(() => setLoading(false), 200)
@@ -4138,7 +4143,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                         )
                                     )}
                                     {isWebFuzzerRoute && (
-                                        <Tooltip title='恢复WebFuzzer标签页;5分钟更新一次历史数据' placement={isExpand ? "left" : "top"}>
+                                        <Tooltip
+                                            title='恢复WebFuzzer标签页;5分钟更新一次历史数据'
+                                            placement={isExpand ? "left" : "top"}
+                                        >
                                             <OutlineRefreshIcon
                                                 className={styles["extra-operate-icon"]}
                                                 onClick={() => onRestoreHistory(currentTabKey)}
