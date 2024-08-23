@@ -1590,7 +1590,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ),
             onCancel: () => m.destroy(),
             footer: null,
-            bodyStyle: {padding: 24}
+            bodyStyle: {padding: 0}
         })
     })
     const advancedConfigVisible = useCreation(() => {

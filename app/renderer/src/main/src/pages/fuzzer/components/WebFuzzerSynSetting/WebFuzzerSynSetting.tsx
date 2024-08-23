@@ -70,6 +70,7 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
     )
     const {pageId, onClose} = props
     const [loading, setLoading] = useState<boolean>(false)
+    const [currentSelectPage, setCurrentSelectPage] = useState<PageNodeItemProps>()
     const [pageList, setPageList] = useState<PageNodeItemProps[]>([])
     const [form] = Form.useForm()
     const range = Form.useWatch("range", form)
@@ -78,7 +79,9 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
         const wfPage: PageProps | undefined = pages.get(YakitRoute.HTTPFuzzer)
         if (wfPage) {
             const newPageList = wfPage.pageList.filter((ele) => !ele.pageId.endsWith("group")) // 排除组的数据
+            const currentSelectPage: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
             setPageList(newPageList)
+            setCurrentSelectPage(currentSelectPage)
         }
     }, [pages])
 
@@ -88,18 +91,23 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
     const onSyn = useMemoizedFn(() => {
         form.validateFields().then((value: WebFuzzerSynSettingFormValueProps) => {
             const wfPageList: PageProps | undefined = pages.get(YakitRoute.HTTPFuzzer)
-            const currentPage: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
             if (!wfPageList) {
                 yakitNotify("error", "WF页面数据为空")
                 return
             }
-            if (!(currentPage && currentPage.pageParamsInfo && currentPage.pageParamsInfo.webFuzzerPageInfo)) {
+            if (
+                !(
+                    currentSelectPage &&
+                    currentSelectPage.pageParamsInfo &&
+                    currentSelectPage.pageParamsInfo.webFuzzerPageInfo
+                )
+            ) {
                 yakitNotify("error", "同步数据页面未找到")
                 return
             }
             setLoading(true)
             /**处理同步内容 */
-            const advancedConfigValue = currentPage.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue
+            const advancedConfigValue = currentSelectPage.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue
             let synValue = advancedConfigValue
             if (value.type.length === 1 && value.type.includes("config")) {
                 synValue = getConfigValue(advancedConfigValue)
@@ -148,67 +156,73 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
     }, [pageList])
     return (
         <div className={styles["wf-syn-setting"]}>
-            <Form
-                form={form}
-                labelCol={{span: 4}}
-                wrapperCol={{span: 20}}
-                initialValues={{
-                    type: ["config", "rule"],
-                    range: "all",
-                    ids: []
-                }}
-            >
-                <Form.Item
-                    label='同步内容'
-                    name='type'
-                    rules={[{required: true, message: `请选中同步的内容`}]}
-                    className={styles["setting-type-form-item"]}
+            <div className={styles["tip"]}>数据来源页面标签名:{currentSelectPage?.pageName || "-"}</div>
+            <div className={styles["wf-syn-setting-content"]}>
+                <Form
+                    form={form}
+                    labelCol={{span: 4}}
+                    wrapperCol={{span: 20}}
+                    initialValues={{
+                        type: ["config", "rule"],
+                        range: "all",
+                        ids: []
+                    }}
                 >
-                    <Checkbox.Group>
-                        <div style={{display: "flex"}}>
-                            {types.map((ele) => (
-                                <YakitCheckbox key={ele.value} value={ele.value}>
-                                    {ele.label}
-                                </YakitCheckbox>
-                            ))}
-                        </div>
-                    </Checkbox.Group>
-                </Form.Item>
-                <Form.Item
-                    label='同步范围'
-                    name='range'
-                    extra={
-                        range === "batch" && (
-                            <Form.Item
-                                name='ids'
-                                style={{marginTop: 8}}
-                                rules={[{required: true, message: `请选择需要同步的页面`}]}
-                            >
-                                <YakitSelect
-                                    allowClear
-                                    mode='multiple'
-                                    options={pageListOption}
-                                    filterOption={(inputValue, option) => {
-                                        if (option?.label && typeof option?.label === "string") {
-                                            return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                                        }
-                                        return false
-                                    }}
-                                />
-                            </Form.Item>
-                        )
-                    }
-                >
-                    <YakitRadioButtons buttonStyle='solid' options={rangeList} />
-                </Form.Item>
-            </Form>
-            <div className={styles["setting-footer"]}>
-                <YakitButton type='outline1' onClick={onCancel}>
-                    取消
-                </YakitButton>
-                <YakitButton type='primary' onClick={onSyn} loading={loading}>
-                    同步
-                </YakitButton>
+                    <Form.Item
+                        label='同步内容'
+                        name='type'
+                        rules={[{required: true, message: `请选中同步的内容`}]}
+                        className={styles["setting-type-form-item"]}
+                    >
+                        <Checkbox.Group>
+                            <div style={{display: "flex"}}>
+                                {types.map((ele) => (
+                                    <YakitCheckbox key={ele.value} value={ele.value}>
+                                        {ele.label}
+                                    </YakitCheckbox>
+                                ))}
+                            </div>
+                        </Checkbox.Group>
+                    </Form.Item>
+                    <Form.Item
+                        label='同步范围'
+                        name='range'
+                        extra={
+                            range === "batch" && (
+                                <Form.Item
+                                    name='ids'
+                                    style={{marginTop: 8}}
+                                    rules={[{required: true, message: `请选择需要同步的页面`}]}
+                                >
+                                    <YakitSelect
+                                        allowClear
+                                        mode='multiple'
+                                        options={pageListOption}
+                                        filterOption={(inputValue, option) => {
+                                            if (option?.label && typeof option?.label === "string") {
+                                                return (
+                                                    option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                                                    -1
+                                                )
+                                            }
+                                            return false
+                                        }}
+                                    />
+                                </Form.Item>
+                            )
+                        }
+                    >
+                        <YakitRadioButtons buttonStyle='solid' options={rangeList} />
+                    </Form.Item>
+                </Form>
+                <div className={styles["setting-footer"]}>
+                    <YakitButton type='outline1' onClick={onCancel}>
+                        取消
+                    </YakitButton>
+                    <YakitButton type='primary' onClick={onSyn} loading={loading}>
+                        同步
+                    </YakitButton>
+                </div>
             </div>
         </div>
     )
