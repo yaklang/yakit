@@ -916,13 +916,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             finalParams.UntilId = isInit ? 0 : beforeId.current
         }
         if (isInit) {
-            setLoading(true)
             prePage.current = 0
         }
 
         apiQueryRisks(finalParams)
             .then((res) => {
-                // const newPage = +res.Pagination.Page
                 const resData = getResData(res.Data)
                 const d = isInit ? resData : (response?.Data || []).concat(resData)
                 prePage.current += 1
@@ -983,6 +981,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         })
     })
     const onSearch = useMemoizedFn((val) => {
+        setLoading(true)
         setQuery({
             ...query,
             Search: val
