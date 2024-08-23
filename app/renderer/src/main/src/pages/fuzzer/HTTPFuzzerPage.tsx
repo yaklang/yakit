@@ -140,6 +140,7 @@ import {
     defaultLabel
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {KVPair} from "@/models/kv"
+import {FuncBtn} from "../plugins/funcTemplate"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -1796,14 +1797,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             />
                             <Divider type='vertical' style={{margin: 8}} />
 
-                            <YakitButton
+                            <FuncBtn
+                                maxWidth={1600}
                                 type='outline2'
                                 icon={<OutlineSwitchhorizontalIcon />}
                                 onClick={onSynWF}
+                                name='同步配置'
                                 style={{marginRight: 8}}
-                            >
-                                同步配置
-                            </YakitButton>
+                            />
                             <YakitDropdownMenu
                                 menu={{
                                     data: [
