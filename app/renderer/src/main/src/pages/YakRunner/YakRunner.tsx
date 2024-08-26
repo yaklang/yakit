@@ -382,9 +382,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     language: monacaLanguageType(suffix),
                     highLightRange
                 }
-                // 注入语法检测
-                const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
-                const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, syntaxActiveFile, activeFile)
+                // (性能优化 为了快速打开文件 在文件打开时不注入语法检测 再文件打开后再注入语法检测)
+                // const syntaxActiveFile = {...(await getDefaultActiveFile(scratchFile))}
+                const {newAreaInfo, newActiveFile} = addAreaFileInfo(areaInfo, scratchFile, activeFile)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile(newActiveFile)
 

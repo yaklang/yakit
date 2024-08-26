@@ -941,12 +941,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         deltaDecorationsRef.current = () => {
             current = model.deltaDecorations(current, generateDecorations())
         }
-        // editor.onMouseDown(()=>{
-        //     const dec: YakitIModelDecoration[] = []
-        //     // back
-        //     dec.push(generateDecorations())
-        //     current = model.deltaDecorations(current, dec)
-        // })
+
+        editor.onMouseDown((e)=>{
+            // const dec: YakitIModelDecoration[] = []
+            // // back
+            // dec.push(generateDecorations())
+            // current = model.deltaDecorations(current, dec)
+        })
+
         editor.onDidChangeModelContent(() => {
             current = model.deltaDecorations(current, generateDecorations())
         })
