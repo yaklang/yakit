@@ -110,22 +110,6 @@ interface WebSocketEditorProps {
 }
 export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
     const {flow, value, contextMenu = {}} = props
-    // 编辑器复制Url菜单项
-    const copyUrlMenuItem: OtherMenuListProps = useMemo(() => {
-        return {
-            copyUrl: {
-                menu: [
-                    {
-                        key: "copy-url",
-                        label: "复制 URL"
-                    }
-                ],
-                onRun: (editor, key) => {
-                    callCopyToClipboard(flow.Url || "")
-                }
-            }
-        }
-    }, [flow.Url])
 
     // 发送到WS Fuzzer
     const sendWebSocketMenuItem: OtherMenuListProps = useMemo(() => {
@@ -181,7 +165,6 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
             noMiniMap={true}
             contextMenu={{
                 ...contextMenu,
-                ...copyUrlMenuItem,
                 ...sendWebSocketMenuItem
             }}
         />
