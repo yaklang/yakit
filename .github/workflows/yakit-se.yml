@@ -163,6 +163,7 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-windows-amd64.exe
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-windows-amd64.exe
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-windows-amd64.exe
+                  if-no-files-found: error
             - name: Upload Yakit(SE) Artifacts Mac(m1)
               uses: actions/upload-artifact@v4
               if: ${{ (env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal' }}
@@ -170,6 +171,7 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-darwin-arm64.dmg
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
+                  if-no-files-found: error
             - name: Upload Yakit(SE) Artifacts Mac(intel)
               uses: actions/upload-artifact@v4
               if: ${{ (env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal' }}
@@ -177,6 +179,7 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-darwin-x64.dmg
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
+                  if-no-files-found: error
             - name: Upload Yakit(SE) Artifacts Linux(amd64)
               uses: actions/upload-artifact@v4
               if: ${{ (env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'normal' }}
@@ -184,6 +187,7 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-linux-amd64.AppImage
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
+                  if-no-files-found: error
 
             - name: Upload Yakit(SE) Artifacts Legacy Windows
               uses: actions/upload-artifact@v4
@@ -192,6 +196,7 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-windows-legacy-amd64.exe
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
+                  if-no-files-found: error
             - name: Upload Yakit(SE) Artifacts Legacy Mac(m1)
               uses: actions/upload-artifact@v4
               if: ${{ (env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy' }}
@@ -199,6 +204,7 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-darwin-legacy-arm64.dmg
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
+                  if-no-files-found: error
             - name: Upload Yakit(SE) Artifacts Legacy Mac(intel)
               uses: actions/upload-artifact@v4
               if: ${{ (env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy' }}
@@ -206,6 +212,7 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-darwin-legacy-x64.dmg
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
+                  if-no-files-found: error
             - name: Upload Yakit(SE) Artifacts Legacy Linux(amd64)
               uses: actions/upload-artifact@v4
               if: ${{ (env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'legacy' }}
@@ -213,3 +220,4 @@ jobs:
                   # EnpriTraceAgent-1.3.5-0815-linux-legacy-amd64.AppImage
                   name: EnpriTraceAgent-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
                   path: ./release/EnpriTraceAgent-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
+                  if-no-files-found: error
