@@ -71,6 +71,13 @@ import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTr
 import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {FileNodeMapProps} from "../FileTree/FileTreeType"
+import {Position} from "monaco-editor"
+import {
+    getWordWithPointAtPosition,
+    YaklangLanguageFindResponse,
+    YaklangLanguageSuggestionRequest
+} from "@/utils/monacoSpec/yakCompletionSchema"
+import {getModelContext} from "@/utils/monacoSpec/yakEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -937,13 +944,15 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile, loadTreeType} = useStore()
+    const {areaInfo, activeFile, projectNmae} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     // 是否允许展示二进制
     const [allowBinary, setAllowBinary] = useState<boolean>(false)
+    
+    const nowPathRef = useRef<string>()
     useEffect(() => {
         areaInfo.forEach((item) => {
             item.elements.forEach((itemIn) => {
@@ -958,6 +967,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                                     JSON.stringify(editorInfo.highLightRange) !== JSON.stringify(file.highLightRange)))
                         ) {
                             // 更新编辑器展示项
+                            nowPathRef.current = file.path
                             setEditorInfo(file)
                             setAllowBinary(false)
                         }
@@ -1000,8 +1010,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const updateAreaInputInfo = useMemoizedFn((content: string) => {
         if (editorInfo) {
             const newEditorInfo = {...editorInfo, code: content}
-            // 未保存文件不用自动保存 审计树不用自动保存
-            if (!editorInfo?.isUnSave && loadTreeType === "file") {
+            // 未保存文件不用自动保存 审计树文件不用自动保存
+            if (!editorInfo?.isUnSave && editorInfo.fileSourceType === "file") {
                 autoSaveCurrentFile.run(newEditorInfo)
             }
             setEditorInfo(newEditorInfo)
@@ -1016,6 +1026,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             let newActiveFile = editorInfo
             // 注入语法检查结果
             newActiveFile = await getDefaultActiveFile(newActiveFile)
+            // 如若文件检查结果出来时 文件已被切走 则不再更新
+            if (newActiveFile.path !== nowPathRef.current) return
             // 更新位置信息
             if (positionRef.current) {
                 // 此处还需要将位置信息记录至areaInfo用于下次打开时直接定位光标
@@ -1029,6 +1041,53 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
             // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
             setAreaInfo && setAreaInfo(newAreaInfo)
+        },
+        {
+            wait: 200
+        }
+    ).run
+
+    // 获取编辑器中关联字符
+    const getOtherRangeByPosition = useDebounceFn(
+        async (position: Position) => {
+            const model = reqEditor?.getModel()
+            if (!model || !editorInfo || editorInfo.fileSourceType === "file") return
+            const iWord = getWordWithPointAtPosition(model, position)
+            const type = getModelContext(model, "plugin") || "yak"
+            if (iWord.word.length === 0) return
+            console.log("getOtherRangeByPosition---", {
+                InspectType: "reference",
+                YakScriptType: type,
+                YakScriptCode: model.getValue(),
+                Range: {
+                    Code: iWord.word,
+                    StartLine: position.lineNumber,
+                    StartColumn: iWord.startColumn,
+                    EndLine: position.lineNumber,
+                    EndColumn: iWord.endColumn
+                },
+                ProgramName: projectNmae,
+                FileName: editorInfo.path
+            })
+
+            await ipcRenderer
+                .invoke("YaklangLanguageFind", {
+                    InspectType: "reference",
+                    YakScriptType: type,
+                    YakScriptCode: model.getValue(),
+                    Range: {
+                        Code: iWord.word,
+                        StartLine: position.lineNumber,
+                        StartColumn: iWord.startColumn,
+                        EndLine: position.lineNumber,
+                        EndColumn: iWord.endColumn
+                    },
+                    ProgramName: projectNmae,
+                    FileName: editorInfo.path
+                } as YaklangLanguageSuggestionRequest)
+                .then((r: YaklangLanguageFindResponse) => {
+                    console.log("rrr", r)
+                })
         },
         {
             wait: 200
@@ -1052,6 +1111,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             if (!isFocus) return
             const {position} = e
             // console.log("当前光标位置：", position)
+            getOtherRangeByPosition(position)
             positionRef.current = position
             updateBottomEditorDetails()
         })
