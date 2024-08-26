@@ -266,34 +266,32 @@ jobs:
             - run: ls
               name: Ls Published Artifacts...
 
-            # - name: Create Release and Upload Assets
-            #   uses: ncipollo/release-action@v1
-            #   with:
-            #       artifacts: ./*
-            #       token: ${{ secrets.GITHUB_TOKEN }}
-            #       name: Release ${{ github.ref_name }}
-            #       tag: ${{ github.ref_name }}
+            - name: Create Release and Upload Assets
+              uses: ncipollo/release-action@v1
+              with:
+                  artifacts: ./*
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  name: Release ${{ github.ref_name }}
+                  tag: ${{ github.ref_name }}
 
-            # - name: Upload Yakit To OSS
-            #   uses: tvrcgo/upload-to-oss@master
-            #   with:
-            #       key-id: ${{ secrets.OSS_KEY_ID }}
-            #       key-secret: ${{ secrets.OSS_KEY_SECRET }}
-            #       region: oss-accelerate
-            #       bucket: yaklang
-            #       assets: |
-            #           *:/yak/${{ steps.generate_version.outputs.value }}/
+            - name: Upload Yakit To OSS
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      *:/yak/${{ steps.generate_version.outputs.value }}/
+
             - name: Update OSS latest file
-              run: echo ${{ steps.fetchtag_release.outputs.value }}
-
-            # - name: Update OSS latest file
-            #   run: echo ${{ steps.generate_version.outputs.value }} > ./yakit-version.txt
-            # - name: Upload Yakit Version to oss
-            #   uses: tvrcgo/upload-to-oss@master
-            #   with:
-            #       key-id: ${{ secrets.OSS_KEY_ID }}
-            #       key-secret: ${{ secrets.OSS_KEY_SECRET }}
-            #       region: oss-accelerate
-            #       bucket: yaklang
-            #       assets: |
-            #           ./yakit-version.txt:/yak/latest/yakit-version.txt
+              run: echo ${{ steps.generate_version.outputs.value }} > ./yakit-version.txt
+            - name: Upload Yakit Version to oss
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      ./yakit-version.txt:/yak/latest/yakit-version.txt
