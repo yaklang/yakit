@@ -1,0 +1,35 @@
+@use "../../../../theme/themeify.scss" as tools;
+
+.wf-syn-setting {
+    display: flex;
+    flex-direction: column;
+    .tip {
+        padding: 8px 24px;
+        background: tools.fetch-color-transparen(var(--yakit-color-green), 10%);
+        min-height: 32px;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-success-5);
+        border-radius: 4px;
+    }
+    .wf-syn-setting-content {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 24px 24px;
+        .setting-type-form-item {
+            :global {
+                .ant-form-item-control-input-content {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+        }
+        .setting-footer {
+            display: flex;
+            justify-content: flex-end;
+            flex: 1;
+            gap: 12px;
+        }
+    }
+}

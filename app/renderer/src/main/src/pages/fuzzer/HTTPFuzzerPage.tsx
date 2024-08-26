@@ -101,7 +101,8 @@ import {
     OutlineCodeIcon,
     OutlinePlugsIcon,
     OutlineSearchIcon,
-    OutlineFilterIcon
+    OutlineFilterIcon,
+    OutlineSwitchhorizontalIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
@@ -139,9 +140,11 @@ import {
     defaultLabel
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {KVPair} from "@/models/kv"
+import {FuncBtn} from "../plugins/funcTemplate"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
+const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1576,6 +1579,20 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             yakitFailed(error + "")
         }
     }
+    /**同步WF数据 */
+    const onSynWF = useMemoizedFn(() => {
+        const m = showYakitModal({
+            title: "同步配置",
+            content: (
+                <React.Suspense>
+                    <WebFuzzerSynSetting pageId={props.id} onClose={() => m.destroy()} />
+                </React.Suspense>
+            ),
+            onCancel: () => m.destroy(),
+            footer: null,
+            bodyStyle: {padding: 0}
+        })
+    })
     const advancedConfigVisible = useCreation(() => {
         switch (advancedConfigShowType) {
             case "config":
@@ -1779,6 +1796,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 getFuzzerRequestParams={getFuzzerRequestParams}
                             />
                             <Divider type='vertical' style={{margin: 8}} />
+
+                            <FuncBtn
+                                maxWidth={1600}
+                                type='outline2'
+                                icon={<OutlineSwitchhorizontalIcon />}
+                                onClick={onSynWF}
+                                name='同步配置'
+                                style={{marginRight: 8}}
+                            />
                             <YakitDropdownMenu
                                 menu={{
                                     data: [
