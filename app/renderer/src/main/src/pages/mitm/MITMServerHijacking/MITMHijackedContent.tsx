@@ -442,7 +442,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     />
                 )
             case "log":
-                return <MITMLogHeardExtra sourceType={sourceType} onSetSourceType={setSourceType} />
+                return <MITMLogHeardExtra sourceType={sourceType} onSetSourceType={setSourceType} setShowPluginHistoryList={setShowPluginHistoryList} />
             default:
                 break
         }
