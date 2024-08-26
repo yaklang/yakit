@@ -111,35 +111,35 @@ jobs:
               working-directory: ./
               run: yarn pack-win
 
-            # - run: yarn add electron@22.3.27
-            #   if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.COMPATIBILITY_MODE == 'legacy' }}
-            #   working-directory: ./
-            #   name: "Install Legacy Electron"
+            - run: yarn add electron@22.3.27
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.COMPATIBILITY_MODE == 'legacy' }}
+              working-directory: ./
+              name: "Install Legacy Electron"
 
-            # - name: Build Yakit Legacy (MultiPlatform)
-            #   if: ${{ env.IS_TAG_RELEASE == 'tag/v' || (env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'legacy') }}
-            #   env:
-            #       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-            #   working-directory: ./
-            #   run: yarn add -D dmg-license && yarn electron-publish-legacy
-            # - name: Build Yakit Legacy (MAC)
-            #   if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'mac' && env.COMPATIBILITY_MODE == 'legacy' }}
-            #   env:
-            #       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-            #   working-directory: ./
-            #   run: yarn pack-mac-legacy
-            # - name: Build Yakit Legacy (LINUX)
-            #   if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'linux' && env.COMPATIBILITY_MODE == 'legacy' }}
-            #   env:
-            #       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-            #   working-directory: ./
-            #   run: yarn pack-linux-legacy
-            # - name: Build Yakit Legacy (WIN)
-            #   if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'legacy' }}
-            #   env:
-            #       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-            #   working-directory: ./
-            #   run: yarn pack-win-legacy
+            - name: Build Yakit Legacy (MultiPlatform)
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || (env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'legacy') }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn add -D dmg-license && yarn electron-publish-legacy
+            - name: Build Yakit Legacy (MAC)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'mac' && env.COMPATIBILITY_MODE == 'legacy' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-mac-legacy
+            - name: Build Yakit Legacy (LINUX)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'linux' && env.COMPATIBILITY_MODE == 'legacy' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-linux-legacy
+            - name: Build Yakit Legacy (WIN)
+              if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'legacy' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: yarn pack-win-legacy
 
             - name: View Published Content
               run:
