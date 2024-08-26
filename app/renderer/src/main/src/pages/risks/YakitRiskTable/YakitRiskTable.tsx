@@ -56,7 +56,7 @@ import {
 } from "./utils"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import classNames from "classnames"
 import {
     IconSolidInfoRiskIcon,
@@ -1500,17 +1500,20 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         return Uint8ArrayToString(info?.Response || new Uint8Array())
     })
     const extraResizeBoxProps = useCreation(() => {
-        let p = {
+        let p: YakitResizeBoxProps = {
+            firstNode: <></>,
+            secondNode: <></>,
             firstRatio: "50%",
             secondRatio: "50%",
-            lineStyle: {},
-            firstNodeStyle: {}
+            lineStyle: {height: "auto"},
+            firstNodeStyle: {height: "auto"},
         }
         if (!isShowCode) {
             p.firstRatio = "0%"
             p.secondRatio = "100%"
             p.lineStyle = {display: "none"}
             p.firstNodeStyle = {display: "none"}
+            p.secondNodeStyle = {padding: 0}
         }
         return p
     }, [isShowCode])
@@ -1592,6 +1595,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     )}
                 </div>
                 <YakitResizeBox
+                    {...extraResizeBoxProps}
                     firstNode={<div className={styles["content-resize-first"]}>{codeNode()}</div>}
                     secondNode={
                         <div className={styles["content-resize-second"]} ref={descriptionsRef}>
@@ -1642,7 +1646,6 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     }
                     firstMinSize={200}
                     secondMinSize={400}
-                    {...extraResizeBoxProps}
                 />
             </div>
         </>

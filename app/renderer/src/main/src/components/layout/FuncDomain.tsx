@@ -2106,7 +2106,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                     width: "80%",
                     title: "详情",
                     content: (
-                        <div style={{overflow: "auto"}}>
+                        <div style={{overflow: "auto",maxHeight:'70vh'}}>
                             <YakitRiskDetails info={res} />
                         </div>
                     )
