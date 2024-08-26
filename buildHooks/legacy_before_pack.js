@@ -5,8 +5,15 @@ module.exports = async function (context) {
     };
     const arch = archMap[context.arch];
     const baseInfo = context.packager.appInfo;
-    const productVersion =
-        baseInfo.version.indexOf("-ee") > -1 ? baseInfo.version.replace("-ee", "") : baseInfo.version;
+    let productVersion = baseInfo.version;
+    // CE
+    if (productVersion.endsWith("-ce")) {
+        productVersion = productVersion.replace("-ce", "");
+    }
+    // EE
+    if (productVersion.endsWith("-ee")) {
+        productVersion = productVersion.replace("-ee", "");
+    }
 
     /** win32 */
     const win32Config = context.electronPlatformName === "win32" ? context.packager.config.win : null;
