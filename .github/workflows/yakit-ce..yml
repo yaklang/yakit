@@ -16,7 +16,7 @@ jobs:
             NODE_OPTIONS: --max_old_space_size=4096
             IS_TAG_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') && 'tag/v' || 'ci/ce' }} # 全版本发布
             PACKAGING_PLATFORM: ${{ contains(github.ref, 'mac') && 'mac' || contains(github.ref, 'linux') && 'linux' || contains(github.ref, 'win') && 'win' || 'mwl' }}
-            COMPATIBILITY_MODE: ${{ (startsWi th(github.ref, 'refs/heads/ci/ce-') && contains(github.ref, 'legacy')) && 'legacy' || 'normal' }}
+            COMPATIBILITY_MODE: ${{ (startsWith(github.ref, 'refs/heads/ci/ce-') && contains(github.ref, 'legacy')) && 'legacy' || 'normal' }}
 
         steps:
             - name: Show Custom ENV
