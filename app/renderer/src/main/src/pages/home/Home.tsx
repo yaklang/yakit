@@ -327,7 +327,7 @@ const Home: React.FC<HomeProp> = (props) => {
                     form.setFieldsValue({host: "127.0.0.1"})
                 }
             } else {
-                form.setFieldsValue({port: "127.0.0.1"})
+                form.setFieldsValue({host: "127.0.0.1"})
             }
         })
 
@@ -372,7 +372,7 @@ const Home: React.FC<HomeProp> = (props) => {
                         form.setFieldsValue({host: "127.0.0.1"})
                     }
                 } else {
-                    form.setFieldsValue({port: "127.0.0.1"})
+                    form.setFieldsValue({host: "127.0.0.1"})
                 }
             })
             getRemoteValue(MITMConsts.MITMDefaultPort).then((e) => {
@@ -840,8 +840,8 @@ const Home: React.FC<HomeProp> = (props) => {
                                                                         route: YakitRoute.HTTPHacker,
                                                                         params: {
                                                                             immediatelyLaunchedInfo: {
-                                                                                host: hostWatch,
-                                                                                port: portWatch,
+                                                                                host: hostWatch || "127.0.0.1",
+                                                                                port: portWatch || "8083",
                                                                                 enableInitialPlugin:
                                                                                     form.getFieldValue(
                                                                                         "enableInitialPlugin"
