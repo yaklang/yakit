@@ -1213,12 +1213,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
                 let verbose =
                     nodeParams?.verbose ||
-                    `${tabName}-[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
+                    `${tabName}-${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
                 if (route === YakitRoute.HTTPFuzzer) {
                     // webFuzzer页面二级tab名称改为WF，特殊
                     verbose =
                         nodeParams?.verbose ||
-                        `[${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}]`
+                        `${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
                 }
                 const node: MultipleNodeInfo = {
                     id: tabId,
@@ -4232,7 +4232,6 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         >
                             <div className={styles["tab-menu-item-verbose-wrapper"]}>
                                 <div className={styles["tab-menu-item-verbose"]}>
-                                    <SolidDocumentTextIcon className={styles["document-text-icon"]} />
                                     <span className='content-ellipsis'>{subItem.verbose || ""}</span>
                                 </div>
                                 <RemoveIcon
