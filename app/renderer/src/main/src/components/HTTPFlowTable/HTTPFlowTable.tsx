@@ -1064,14 +1064,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         isGrpcRef.current = true
 
         // 查询数据
-        console.log('查询条件', query);
         updateQueryParams(query)
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
-                console.log('返回数据条数', newData.length);
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
