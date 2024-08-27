@@ -68,9 +68,8 @@ export interface RunnerTabsProps {
 
 export interface RunYakParamsProps {
     Script: string
-    Params: ExecParamItem[]
-    RunnerParamRaw: string
     WorkDir?: string
+    ScriptPath: string
 }
 
 export interface RunnerTabBarProps {
