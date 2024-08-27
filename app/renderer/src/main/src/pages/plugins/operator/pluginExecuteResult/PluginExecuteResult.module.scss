@@ -127,3 +127,29 @@
     align-items: flex-start;
     gap: 8px;
 }
+
+.plugin-execute-log {
+    .log-tab-name {
+        @extend %display-flex-center;
+        .tab-number {
+            @extend %display-flex-center;
+            padding: 2px 6px;
+            background-color: var(--yakit-background-color);
+            border-radius: 8px;
+            margin-left: 8px;
+
+            color: var(--yakit-body-text-color);
+            font-size: 10px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 12px;
+            text-align: center;
+        }
+    }
+    .log-tab-name-active {
+        .tab-number {
+            background-color: var(--yakit-primary-5);
+            color: #fff;
+        }
+    }
+}
