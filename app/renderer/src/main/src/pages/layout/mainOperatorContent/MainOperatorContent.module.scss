@@ -474,7 +474,7 @@ $keyColor: map-keys($colors);
     position: relative;
     overflow: hidden;
     max-width: 200px;
-    min-width: 32px;
+    min-width: 38px;
     // width: fit-content;
     justify-content: space-between;
     background-color: var(--yakit-card-background-color);
@@ -490,6 +490,7 @@ $keyColor: map-keys($colors);
 
     span {
         min-width: 16px;
+        text-align: center;
     }
 
     &::after {
@@ -532,17 +533,6 @@ $keyColor: map-keys($colors);
 
     .remove-show-icon {
         display: flex;
-    }
-
-    .document-text-icon {
-        @extend .base-show-icon;
-        height: 16px;
-        width: 16px;
-
-        svg {
-            height: 16px;
-            width: 16px;
-        }
     }
 
     .tab-menu-sub-item-line {
