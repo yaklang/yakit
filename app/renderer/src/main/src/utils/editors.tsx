@@ -568,6 +568,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     codingBtn?: ReactElement
     url?: string
     pageId?: string
+    historyId?: number
+    isRequestFlag?: boolean
 }
 
 export type RenderTypeOptionVal = "beautify" | "render"
@@ -1188,6 +1190,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             highLightText={type === undefined ? highLightText : []}
                             downstreamProxyStr={downstreamProxyStr}
                             url={props.url}
+                            historyId={props.historyId}
+                            isRequestFlag={props.isRequestFlag}
                             {...props.extraEditorProps}
                         />
                     )}

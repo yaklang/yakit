@@ -7,7 +7,7 @@ import {
     YakitIMonacoEditor
 } from "./YakitEditorType"
 import {YakitEditor} from "./YakitEditor"
-import {failed, info} from "@/utils/notification"
+import {failed, info, yakitNotify} from "@/utils/notification"
 import {ShareValueProps, newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {StringToUint8Array} from "@/utils/str"
@@ -22,7 +22,7 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAdvancedConfigShow} from "@/defaultConstants/HTTPFuzzerPage"
-
+import {v4 as uuidv4} from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
@@ -38,6 +38,8 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     downstreamProxyStr?: string
     url?: string
     pageId?: string
+    historyId?: number
+    isRequestFlag?: boolean
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -56,6 +58,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         downstreamProxyStr = "",
         url,
         pageId,
+        historyId,
+        isRequestFlag = false,
         ...restProps
     } = props
 
@@ -141,23 +145,20 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
                     try {
-                        if (readOnly && originValueBytes) {
+                        if (readOnly && historyId) {
                             ipcRenderer
-                                .invoke("GetHTTPPacketBody", {PacketRaw: originValueBytes})
-                                .then((bytes: {Raw: Uint8Array}) => {
-                                    saveABSFileToOpen("packet-body.txt", bytes.Raw)
+                                .invoke("GetHTTPFlowBodyById", {Id: historyId, IsRequest: isRequestFlag, uuid: uuidv4()})
+                                .then(() => {
+                                    yakitNotify("success", "下载成功")
                                 })
                                 .catch((e) => {
-                                    info(`保存失败：${e}`)
+                                    yakitNotify("error", `下载body：${e}`)
                                 })
                             return
                         }
                         const text = editor.getModel()?.getValue()
                         if (!text) {
-                            Modal.info({
-                                title: "下载 Body 失败",
-                                content: <>{"无数据包-无法下载 Body"}</>
-                            })
+                            yakitNotify("info", "无数据包-无法下载 Body")
                             return
                         }
                         ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text}).then((bytes: {Raw: Uint8Array}) => {
@@ -373,7 +374,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webSocketValue,
         webFuzzerValue,
         webSocketToServer,
-        downstreamProxyStr
+        downstreamProxyStr,
+        historyId,
+        isRequestFlag
     ])
 
     return (
