@@ -147,11 +147,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             emiter.emit("onOpenBottomDetail", JSON.stringify({type: "output"}))
             let params: RunYakParamsProps = {
                 Script: newActiveFile.code,
-                Params: [],
-                RunnerParamRaw: ""
-            }
-            if (fileTree.length > 0) {
-                params.WorkDir = fileTree[0].path
+                WorkDir: newActiveFile.parent || "",
+                ScriptPath: newActiveFile.path,
             }
             ipcRenderer.invoke("exec-yak", params)
         }
