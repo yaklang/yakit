@@ -39,8 +39,15 @@ export const grpcFetchLocalYakitVersion: APINoRequestFunc<string> = (hiddenError
         ipcRenderer
             .invoke("fetch-yakit-version")
             .then((version: string) => {
+                let newVersion=version
+                // 如果存在-ce，则软件是 CE 版本
+                if(version.endsWith("-ce")){
+                    newVersion = version.replace("-ce", "")
+               }
                 // 如果存在-ee，则软件是 EE 版本
-                const newVersion = version.replace("-ee", "")
+                if(version.endsWith("-ee")){
+                     newVersion = version.replace("-ee", "")
+                }
                 resolve(newVersion)
             })
             .catch((e) => {
