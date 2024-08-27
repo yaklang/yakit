@@ -11,4 +11,5 @@ export type MitmEventProps = {
     onHasParamsJumpHistory: string
     onHistoryTagToMitm: string
     onHistorySourceTypeToMitm: string
+    onMitmClearFromPlugin?: string
 }

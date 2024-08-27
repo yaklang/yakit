@@ -506,7 +506,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
     const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
 
-    useDebounceEffect(
+    useEffect(
         () => {
             if (status === "idle") {
                 const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
@@ -530,8 +530,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 })
             }
         },
-        [status, noParamsCheckList],
-        {wait: 300}
+        [status, noParamsCheckList]
     )
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {

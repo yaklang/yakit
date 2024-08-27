@@ -1070,7 +1070,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
-
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
@@ -3444,14 +3443,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     })
 
+    const onMitmClearFromPlugin = useMemoizedFn(() => {
+        const newParams = {...params, FromPlugin: ""}
+        setParams(newParams)
+    })
+
     // mitm页面带参数插件跳转过来
     useEffect(() => {
         if (pageType === "MITM") {
             emiter.on("onHasParamsJumpHistory", onHasParamsJumpHistory)
+            emiter.on("onMitmClearFromPlugin", onMitmClearFromPlugin)
         }
         return () => {
             if (pageType === "MITM") {
                 emiter.off("onHasParamsJumpHistory", onHasParamsJumpHistory)
+                emiter.on("onMitmClearFromPlugin", onMitmClearFromPlugin)
             }
         }
     }, [pageType])

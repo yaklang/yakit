@@ -10,7 +10,7 @@ import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
-import {useCreation, useMap, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useMap, useMemoizedFn} from "ahooks"
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
@@ -27,6 +27,7 @@ import classNames from "classnames"
 import {RemoteGV} from "@/yakitGV"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import emiter from "@/utils/eventBus/eventBus"
+import {useCampare} from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -151,11 +152,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     // 是否允许获取默认勾选值
     const isDefaultCheck = useRef<boolean>(false)
-
-    const tempShowPluginHistoryRef = useRef<string>(tempShowPluginHistory)
+    
+    const compareHasParamsCheckList = useCampare(hasParamsCheckList)
     useEffect(() => {
-        tempShowPluginHistoryRef.current = tempShowPluginHistory
-    }, [tempShowPluginHistory])
+        if (hasParamsCheckList.includes(tempShowPluginHistory)) {
+            setShowPluginHistoryList([tempShowPluginHistory])
+            emiter.emit("onHasParamsJumpHistory", [tempShowPluginHistory].join(","))
+        } else {
+            setShowPluginHistoryList([])
+            emiter.emit("onHasParamsJumpHistory", "")
+        }
+    }, [compareHasParamsCheckList])
 
     // 初始化加载 hooks，设置定时更新 hooks 状态
     useEffect(() => {
@@ -232,10 +239,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             }
                         }
                     })
-                    if (tempShowPluginHistoryRef.current && hasParamsCheckArr.includes(tempShowPluginHistoryRef.current)) {
-                        setShowPluginHistoryList([tempShowPluginHistoryRef.current])
-                        emiter.emit("onHasParamsJumpHistory", [tempShowPluginHistoryRef.current].join(","))
-                    }
                     setHasParamsCheckList([...hasParamsCheckArr])
                     setNoParamsCheckList([...noParamsCheckArr])
                 })

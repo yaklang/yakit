@@ -12,9 +12,10 @@ const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
     sourceType: string
     onSetSourceType: (s: string) => void
+    setShowPluginHistoryList: (s: string[]) => void
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
-    const {sourceType, onSetSourceType} = props
+    const {sourceType, onSetSourceType, setShowPluginHistoryList} = props
     // 屏蔽数据
     const [shieldData, setShieldData] = useState<ShieldData>({
         data: []
@@ -68,6 +69,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         key={tag.value}
                         checked={!!sourceType.split(",").includes(tag.value)}
                         onChange={(checked) => {
+                            emiter.emit("onMitmClearFromPlugin")
+                            setShowPluginHistoryList([])
                             if (checked) {
                                 const selectTypeList = [...(sourceType.split(",") || []), tag.value]
                                 onSetSourceType(selectTypeList.join(","))
