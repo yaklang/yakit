@@ -785,3 +785,215 @@ const SolidYakOfficialPluginColor = () => {
 export const SolidYakOfficialPluginColorIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidYakOfficialPluginColor} {...props} />
 }
+
+const LogNodeStatusInfo = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#EAECF3' />
+        <path
+            d='M8.40005 12C8.40005 12.9941 7.59416 13.8 6.60005 13.8C5.60594 13.8 4.80005 12.9941 4.80005 12C4.80005 11.0058 5.60594 10.2 6.60005 10.2C7.59416 10.2 8.40005 11.0058 8.40005 12Z'
+            fill='#85899E'
+        />
+        <path
+            d='M13.8 12C13.8 12.9941 12.9942 13.8 12 13.8C11.0059 13.8 10.2 12.9941 10.2 12C10.2 11.0058 11.0059 10.2 12 10.2C12.9942 10.2 13.8 11.0058 13.8 12Z'
+            fill='#85899E'
+        />
+        <path
+            d='M17.4 13.8C18.3942 13.8 19.2 12.9941 19.2 12C19.2 11.0058 18.3942 10.2 17.4 10.2C16.4059 10.2 15.6 11.0058 15.6 12C15.6 12.9941 16.4059 13.8 17.4 13.8Z'
+            fill='#85899E'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/普通信息 info
+ */
+export const LogNodeStatusInfoIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusInfo} {...props} />
+}
+
+const LogNodeStatusWarning = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#FFB660' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M10.4312 5.78899C11.1194 4.56562 12.8808 4.56562 13.5689 5.78899L18.5912 14.7175C19.2661 15.9174 18.399 17.3999 17.0223 17.3999H6.97779C5.6011 17.3999 4.73402 15.9174 5.40896 14.7175L10.4312 5.78899ZM12.9 14.7C12.9 15.1971 12.497 15.6 12 15.6C11.5029 15.6 11.1 15.1971 11.1 14.7C11.1 14.203 11.5029 13.8 12 13.8C12.497 13.8 12.9 14.203 12.9 14.7ZM12 7.50005C11.5029 7.50005 11.1 7.90299 11.1 8.40005V11.1C11.1 11.5971 11.5029 12 12 12C12.497 12 12.9 11.5971 12.9 11.1V8.40005C12.9 7.90299 12.497 7.50005 12 7.50005Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/告警 warning
+ */
+export const LogNodeStatusWarningIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusWarning} {...props} />
+}
+
+const LogNodeStatusError = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#F7544A' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M12 19.2C15.9765 19.2 19.2 15.9765 19.2 12C19.2 8.0236 15.9765 4.80005 12 4.80005C8.0236 4.80005 4.80005 8.0236 4.80005 12C4.80005 15.9765 8.0236 19.2 12 19.2ZM10.8364 9.56365C10.485 9.21218 9.91512 9.21218 9.56365 9.56365C9.21218 9.91512 9.21218 10.485 9.56365 10.8364L10.7273 12L9.56365 13.1637C9.21218 13.5151 9.21218 14.085 9.56365 14.4364C9.91512 14.7879 10.485 14.7879 10.8364 14.4364L12 13.2728L13.1637 14.4364C13.5151 14.7879 14.085 14.7879 14.4364 14.4364C14.7879 14.085 14.7879 13.5151 14.4364 13.1637L13.2728 12L14.4364 10.8364C14.7879 10.485 14.7879 9.91512 14.4364 9.56365C14.085 9.21218 13.5151 9.21218 13.1637 9.56365L12 10.7273L10.8364 9.56365Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/错误 Error
+ */
+export const LogNodeStatusErrorIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusError} {...props} />
+}
+
+const LogNodeStatusSuccess = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#56C991' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M12 19.2C15.9765 19.2 19.2 15.9765 19.2 12C19.2 8.0236 15.9765 4.80005 12 4.80005C8.0236 4.80005 4.80005 8.0236 4.80005 12C4.80005 15.9765 8.0236 19.2 12 19.2ZM15.3364 10.8364C15.6879 10.485 15.6879 9.91512 15.3364 9.56365C14.985 9.21218 14.4151 9.21218 14.0637 9.56365L11.1 12.5273L9.93644 11.3637C9.58497 11.0122 9.01512 11.0122 8.66365 11.3637C8.31218 11.7151 8.31218 12.285 8.66365 12.6364L10.4637 14.4364C10.8151 14.7879 11.385 14.7879 11.7364 14.4364L15.3364 10.8364Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/成功 success
+ */
+export const LogNodeStatusSuccessIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusSuccess} {...props} />
+}
+
+const LogNodeStatusCode = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#31343F' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M4.80005 7.49995C4.80005 6.50584 5.60594 5.69995 6.60005 5.69995H17.4C18.3942 5.69995 19.2 6.50584 19.2 7.49995V16.5C19.2 17.4941 18.3942 18.3 17.4 18.3H6.60005C5.60594 18.3 4.80005 17.4941 4.80005 16.5V7.49995ZM7.76365 8.66356C8.11512 8.31208 8.68497 8.31208 9.03645 8.66356L11.7364 11.3636C12.0879 11.715 12.0879 12.2849 11.7364 12.6363L9.03645 15.3363C8.68497 15.6878 8.11512 15.6878 7.76365 15.3363C7.41218 14.9849 7.41218 14.415 7.76365 14.0636L9.82726 12L7.76365 9.93635C7.41218 9.58488 7.41218 9.01503 7.76365 8.66356ZM12.9 13.8C12.403 13.8 12 14.2029 12 14.7C12 15.197 12.403 15.6 12.9 15.6H15.6C16.0971 15.6 16.5 15.197 16.5 14.7C16.5 14.2029 16.0971 13.8 15.6 13.8H12.9Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/输出文本
+ */
+export const LogNodeStatusCodeIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusCode} {...props} />
+}
+
+const LogNodeStatusEcharts = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#8863F7' />
+        <path
+            d='M4.80005 12C4.80005 8.0236 8.0236 4.80005 12 4.80005V12H19.2C19.2 15.9765 15.9765 19.2 12 19.2C8.0236 19.2 4.80005 15.9765 4.80005 12Z'
+            fill='white'
+        />
+        <path d='M13.8 5.02681C16.3302 5.67802 18.3221 7.66994 18.9732 10.2001H13.8V5.02681Z' fill='white' />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/图表
+ */
+export const LogNodeStatusEchartsIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusEcharts} {...props} />
+}
+
+const LogNodeStatusLoading = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#FBC6A1' />
+        <circle cx='12' cy='12' r='8' fill='#F28B44' stroke='white' stroke-width='2' />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/当前节点
+ */
+export const LogNodeStatusLoadingIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusLoading} {...props} />
+}
+
+const LogNodeStatusFolderError = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#F7544A' />
+        <path
+            d='M4.79999 8.39961C4.79999 7.4055 5.60588 6.59961 6.59999 6.59961H11.1L12.9 8.39961H17.4C18.3941 8.39961 19.2 9.2055 19.2 10.1996V15.5996C19.2 16.5937 18.3941 17.3996 17.4 17.3996H6.59999C5.60588 17.3996 4.79999 16.5937 4.79999 15.5996V8.39961Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/文件夹-失败
+ */
+export const LogNodeStatusFolderErrorIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusFolderError} {...props} />
+}
+
+const LogNodeStatusFolder = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#EAECF3' />
+        <path
+            d='M4.79999 8.39961C4.79999 7.4055 5.60588 6.59961 6.59999 6.59961H11.1L12.9 8.39961H17.4C18.3941 8.39961 19.2 9.2055 19.2 10.1996V15.5996C19.2 16.5937 18.3941 17.3996 17.4 17.3996H6.59999C5.60588 17.3996 4.79999 16.5937 4.79999 15.5996V8.39961Z'
+            fill='#85899E'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/文件夹-失败
+ */
+export const LogNodeStatusFolderIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusFolder} {...props} />
+}
+
+const LogNodeStatusFileError = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#F7544A' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M6.59998 6.59981C6.59998 5.60569 7.40586 4.7998 8.39998 4.7998H12.5272C13.0046 4.7998 13.4624 4.98945 13.8 5.32701L16.8728 8.3998C17.2103 8.73737 17.4 9.19521 17.4 9.6726V17.3998C17.4 18.3939 16.5941 19.1998 15.6 19.1998H8.39998C7.40586 19.1998 6.59998 18.3939 6.59998 17.3998V6.59981ZM8.39998 11.9998C8.39998 11.5027 8.80292 11.0998 9.29998 11.0998H14.7C15.197 11.0998 15.6 11.5027 15.6 11.9998C15.6 12.4969 15.197 12.8998 14.7 12.8998H9.29998C8.80292 12.8998 8.39998 12.4969 8.39998 11.9998ZM9.29998 14.6998C8.80292 14.6998 8.39998 15.1027 8.39998 15.5998C8.39998 16.0969 8.80292 16.4998 9.29998 16.4998H14.7C15.197 16.4998 15.6 16.0969 15.6 15.5998C15.6 15.1027 15.197 14.6998 14.7 14.6998H9.29998Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/文件-失败
+ */
+export const LogNodeStatusFileErrorIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusFileError} {...props} />
+}
+
+const LogNodeStatusFile = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#EAECF3' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M6.59998 6.59981C6.59998 5.60569 7.40586 4.7998 8.39998 4.7998H12.5272C13.0046 4.7998 13.4624 4.98945 13.8 5.32701L16.8728 8.3998C17.2103 8.73737 17.4 9.19521 17.4 9.6726V17.3998C17.4 18.3939 16.5941 19.1998 15.6 19.1998H8.39998C7.40586 19.1998 6.59998 18.3939 6.59998 17.3998V6.59981ZM8.39998 11.9998C8.39998 11.5027 8.80292 11.0998 9.29998 11.0998H14.7C15.197 11.0998 15.6 11.5027 15.6 11.9998C15.6 12.4969 15.197 12.8998 14.7 12.8998H9.29998C8.80292 12.8998 8.39998 12.4969 8.39998 11.9998ZM9.29998 14.6998C8.80292 14.6998 8.39998 15.1027 8.39998 15.5998C8.39998 16.0969 8.80292 16.4998 9.29998 16.4998H14.7C15.197 16.4998 15.6 16.0969 15.6 15.5998C15.6 15.1027 15.197 14.6998 14.7 14.6998H9.29998Z'
+            fill='#85899E'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/文件-失败
+ */
+export const LogNodeStatusFileIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusFile} {...props} />
+}
+
+const LogNodeStatusMD = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='24' height='24' rx='12' fill='#4A94F8' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8.39998 4.7998C7.40586 4.7998 6.59998 5.60569 6.59998 6.59981V17.3998C6.59998 18.3939 7.40586 19.1998 8.39998 19.1998H15.6C16.5941 19.1998 17.4 18.3939 17.4 17.3998V9.6726C17.4 9.19521 17.2103 8.73737 16.8728 8.3998L13.8 5.32701C13.4624 4.98945 13.0046 4.7998 12.5272 4.7998H8.39998ZM10.02 9.6598C9.78754 9.3499 9.38288 9.22349 9.01537 9.34599C8.64786 9.46849 8.39998 9.81242 8.39998 10.1998V15.5998C8.39998 16.0969 8.80292 16.4998 9.29998 16.4998C9.79703 16.4998 10.2 16.0969 10.2 15.5998V12.8998L11.28 14.3398C11.4499 14.5664 11.7167 14.6998 12 14.6998C12.2833 14.6998 12.55 14.5664 12.72 14.3398L13.8 12.8998V15.5998C13.8 16.0969 14.2029 16.4998 14.7 16.4998C15.197 16.4998 15.6 16.0969 15.6 15.5998V10.1998C15.6 9.81242 15.3521 9.46849 14.9846 9.34599C14.6171 9.22349 14.2124 9.3499 13.98 9.6598L12 12.2998L10.02 9.6598Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/文件 markdown
+ */
+export const LogNodeStatusMDIcon = (props: Partial<IconProps>) => {
+    return <Icon component={LogNodeStatusMD} {...props} />
+}
