@@ -1033,7 +1033,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     onSetCodeValue={setCodeValue}
                                 />
                             }
-                            url={url}
                             typeOptionVal={typeOptionVal}
                             onTypeOptionVal={(typeOptionVal) => {
                                 if (typeOptionVal !== undefined) {
@@ -1044,6 +1043,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     setRemoteValue(RemoteGV.WebFuzzerEditorBeautify, "")
                                 }
                             }}
+                            url={url}
                         />
                     }
                     {...ResizeBoxProps}

@@ -88,7 +88,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             ...(contextMenu || {}),
             copyCSRF: {
                 menu: [
-                    {type: "divider"},
                     {
                         key: "csrfpoc",
                         label: "复制为 CSRF PoC"
@@ -330,7 +329,21 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
 
         if (url) {
             menuItems = Object.keys(menuItems).reduce((ac, a) => {
-                if (a === "openBrowser")
+                if (a === "copyCSRF") {
+                    ac["copyUrl"] = {
+                        menu: [
+                            {
+                                key: "copyUrl",
+                                label: "复制 URL"
+                            }
+                        ],
+                        onRun: (editor: YakitIMonacoEditor, key: string) => {
+                            callCopyToClipboard(url || "")
+                        }
+                    }
+                }
+
+                if (a === "openBrowser") {
                     ac["openURLBrowser"] = {
                         menu: [
                             {
@@ -342,6 +355,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             url && openExternalWebsite(url)
                         }
                     }
+                }
                 ac[a] = menuItems[a]
                 return ac
             }, {}) as OtherMenuListProps

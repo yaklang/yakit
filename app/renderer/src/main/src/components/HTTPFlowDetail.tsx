@@ -183,24 +183,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }, [])
 
-    // 编辑器复制Url菜单项
-    const copyUrlMenuItem: OtherMenuListProps = useMemo(() => {
-        return {
-            copyUrl: {
-                menu: [
-                    {
-                        key: "copy-url",
-                        label: "复制 URL"
-                    }
-                ],
-                onRun: (editor, key) => {
-                    callCopyToClipboard(flow?.Url || "")
-                },
-                order: 14
-            }
-        }
-    }, [flow?.Url])
-
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
     const sendCodeCompareMenuItem = (type: string) => {
@@ -395,7 +377,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     isShowSelectRangeMenu: true
                                                 }}
                                                 contextMenu={{
-                                                    ...copyUrlMenuItem,
                                                     ...sendCodeCompareMenuItem("request")
                                                 }}
                                                 url={flow.Url}
@@ -424,7 +405,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     isShowSelectRangeMenu: true
                                                 }}
                                                 contextMenu={{
-                                                    ...copyUrlMenuItem,
                                                     ...sendCodeCompareMenuItem("response")
                                                 }}
                                                 url={flow.Url}
@@ -925,24 +905,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [flow?.RawResponseBodyBase64])
 
-    // 编辑器复制Url菜单项
-    const copyUrlMenuItem: OtherMenuListProps = useMemo(() => {
-        return {
-            copyUrl: {
-                menu: [
-                    {
-                        key: "copy-url",
-                        label: "复制 URL"
-                    }
-                ],
-                onRun: (editor, key) => {
-                    callCopyToClipboard(flow?.Url || "")
-                },
-                order: 14
-            }
-        }
-    }, [flow?.Url])
-
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
     const sendCodeCompareMenuItem = (type: string) => {
@@ -1291,7 +1253,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noMinimap={true}
                         contextMenu={{
                             ...copyRequestBase64BodyMenuItem,
-                            ...copyUrlMenuItem,
                             ...sendCodeCompareMenuItem("request")
                         }}
                         // 这个为了解决不可见字符的问题
@@ -1392,7 +1353,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         })()}
                         contextMenu={{
                             ...copyResponseBase64BodyMenuItem,
-                            ...copyUrlMenuItem,
                             ...sendCodeCompareMenuItem("response")
                         }}
                         extra={secondNodeResExtraBtn()}
