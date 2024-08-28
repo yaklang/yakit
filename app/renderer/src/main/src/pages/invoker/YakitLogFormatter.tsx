@@ -21,7 +21,12 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {OutlineDocumentduplicateIcon, OutlineFolderopenIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondownIcon,
+    OutlineChevronupIcon,
+    OutlineDocumentduplicateIcon,
+    OutlineFolderopenIcon
+} from "@/assets/icon/outline"
 
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
@@ -272,11 +277,15 @@ interface FileLogShowProps {
 }
 const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
     const {title, is_dir, is_existed, file_size, description, path, timestamp} = props
+    const [expand, setExpand] = useState<boolean>(true)
     const onCopy = useMemoizedFn(() => {
         callCopyToClipboard(path)
     })
     const onOpen = useMemoizedFn(() => {
         openABSFileLocated(path)
+    })
+    const onExpand = useMemoizedFn(() => {
+        setExpand(!expand)
     })
     return (
         <div className={styles["file-body"]}>
@@ -285,7 +294,7 @@ const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
                 title={
                     <div className={styles["file-card-title"]}>
                         <span className={styles["name"]}>{title}</span>
-                        <span className={styles["file-status"]}>未创建成功</span>
+                        {!is_existed && <span className={styles["file-status"]}>未创建成功</span>}
                     </div>
                 }
                 extra={
@@ -301,20 +310,29 @@ const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
                         >
                             打开文件位置
                         </YakitButton>
+                        <YakitButton
+                            type='text2'
+                            icon={expand ? <OutlineChevrondownIcon /> : <OutlineChevronupIcon />}
+                            onClick={onExpand}
+                        />
                     </div>
                 }
                 headClassName={classNames(styles["file-card-heard"], {
                     [styles["file-card-heard-error"]]: !is_existed
                 })}
                 className={styles["file-card"]}
-                bodyClassName={styles["file-card-body"]}
+                bodyClassName={classNames(styles["file-card-body"], {
+                    [styles["file-card-body-hidden"]]: !expand
+                })}
             >
-                <div>
-                    <YakitTag>{is_dir ? "文件夹" : "非文件夹"}</YakitTag>
-                    {!file_size && <YakitTag color='blue'>{file_size}K</YakitTag>}
+                <div className={styles["file-body"]}>
+                    <div>
+                        <YakitTag>{is_dir ? "文件夹" : "非文件夹"}</YakitTag>
+                        {file_size && <YakitTag color='blue'>{file_size}K</YakitTag>}
+                    </div>
+                    {description && <div className={styles["file-description"]}>{description}</div>}
+                    {path && <div className={styles["file-path"]}>{path}</div>}
                 </div>
-                {description && <div className={styles["file-description"]}>{description}</div>}
-                {path && <div className={styles["file-path"]}>{path}</div>}
             </YakitCard>
         </div>
     )
