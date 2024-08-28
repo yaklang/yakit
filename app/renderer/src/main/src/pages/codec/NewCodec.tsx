@@ -62,7 +62,7 @@ const {YakitPanel} = YakitCollapse
 
 const SaveCodecMethods = "SaveCodecMethods"
 
-interface CodecResponseProps {
+export interface CodecResponseProps {
     Result: string
     RawResult: Uint8Array
     ResultVerbose: string
@@ -931,7 +931,7 @@ interface ExecParamItemProps {
     Value: any
 }
 
-interface CodecWorkProps {
+export interface CodecWorkProps {
     CodecType: string
     Params: ExecParamItemProps[]
     // 后面的可选参数为兼容老接口的残留(可不用)
