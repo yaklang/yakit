@@ -8,7 +8,6 @@ import {PieGraph} from "../graph/PieGraph"
 import {ExecResultLog} from "./batch/ExecMessageViewer"
 import {LogLevelToCode} from "../../components/HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer"
-import {YakEditor} from "../../utils/editors"
 import {AutoCard} from "../../components/AutoCard"
 import MDEditor from "@uiw/react-md-editor"
 import {openABSFileLocated} from "../../utils/openWebsite"
@@ -22,11 +21,15 @@ import {useMemoizedFn} from "ahooks"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {
+    OutlineArrowsexpandIcon,
     OutlineChevrondownIcon,
     OutlineChevronupIcon,
     OutlineDocumentduplicateIcon,
     OutlineFolderopenIcon
 } from "@/assets/icon/outline"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {YakEditor} from "@/utils/editors"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
@@ -96,13 +99,8 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
         case "markdown":
             return <MarkdownLogShow {...props} />
         case "text":
-            return (
-                <div style={{height: 300}}>
-                    <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
-                        <YakEditor readOnly={true} type={"http"} value={props.data} />
-                    </AutoCard>
-                </div>
-            )
+        case "code":
+            return <EditorLogShow {...props} />
         // case "success":
         //     return (
         //         <Space direction={"vertical"} style={{width: "100%"}}>
@@ -344,6 +342,36 @@ const JsonLogShow: React.FC<JsonLogShowProps> = React.memo((props) => {
         <div className={styles["json-body"]}>
             <div className={styles["json-heard"]}>{formatTime(timestamp)}</div>
             <pre className={styles["json-content"]}>{data}</pre>
+        </div>
+    )
+})
+interface EditorLogShowProps extends YakitLogFormatterProp {}
+const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
+    const {timestamp, data} = props
+
+    const onExpand = useMemoizedFn(() => {
+        const m = showYakitModal({
+            title: formatTime(timestamp),
+            width: "80vw",
+            content: (
+                <div style={{height: "80vh"}}>
+                    <YakitEditor type={"plaintext"} value={data} />
+                </div>
+            ),
+            onCancel: () => m.destroy(),
+            footer: null
+        })
+    })
+    return (
+        <div className={styles["editor-body"]}>
+            <div className={styles["editor-heard"]}>{formatTime(timestamp)}</div>
+            <div className={classNames(styles["editor-content"])}>
+                <YakitEditor type={"plaintext"} value={data} />
+            </div>
+            <div className={styles["editor-expand-text"]} onClick={onExpand}>
+                <OutlineArrowsexpandIcon className={styles["expand-icon"]} />
+                查看
+            </div>
         </div>
     )
 })

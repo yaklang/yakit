@@ -161,3 +161,29 @@
         overflow-x: auto;
     }
 }
+
+.editor-body {
+    @extend %display-column-center;
+    gap: 4px;
+    .editor-heard {
+        @extend %time-text;
+    }
+    .editor-content {
+        border: 1px solid var(--yakit-border-color);
+        border-radius: 4px;
+        height: 300px;
+    }
+    .editor-expand-text {
+        @extend %expand-text;
+        @extend %display-flex-center;
+        gap: 4px;
+        .expand-icon {
+            width: 16px;
+            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}

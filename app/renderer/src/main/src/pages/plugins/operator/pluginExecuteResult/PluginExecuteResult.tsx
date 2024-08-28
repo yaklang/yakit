@@ -361,8 +361,7 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
     const renderTabContent = useMemoizedFn((type) => {
         switch (type) {
             case "plugin-log":
-                // return <LocalPluginLog loading={loading} list={list} />
-                return <></>
+                return <LocalPluginLog loading={loading} list={list} />
             case "echarts-statistics":
                 return <></>
             case "output-text":
