@@ -68,11 +68,18 @@ jobs:
             - name: Extract Package.json Version
               id: extract_version
               uses: Saionaro/extract-package-version@v1.1.1
-            - name: Set Yakit Package.json Version
+            - name: Set Yakit-CE Package.json Version
+              uses: mad9000/actions-find-and-replace-string@5
+              id: package_ce_version
+              with:
+                  source: ${{ steps.extract_version.outputs.version }}
+                  find: "-ce"
+                  replace: ""
+            - name: Set Yakit-EE Package.json Version
               uses: mad9000/actions-find-and-replace-string@5
               id: package_version
               with:
-                  source: ${{ steps.extract_version.outputs.version }}
+                  source: ${{ steps.package_ce_version.outputs.value }}
                   find: "-ee"
                   replace: ""
             - name: Echo Yakit Package Version
