@@ -40,9 +40,9 @@
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
-    .log-time {
-        @extend %time-text;
-    }
+}
+.log-time {
+    @extend %time-text;
 }
 .md-body {
     @extend %display-column-center;

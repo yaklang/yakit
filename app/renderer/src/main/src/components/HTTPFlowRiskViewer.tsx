@@ -1,9 +1,11 @@
-import React, {useState} from "react";
-import {Button, Card, Descriptions, Divider, Space, Switch, Tag} from "antd";
-import {LogLevelToCode} from "./HTTPFlowTable/HTTPFlowTable";
-import {CopyableField} from "../utils/inputUtil";
-import {showModal} from "../utils/showModal";
-import {YakEditor} from "@/utils/editors";
+import React, {useState} from "react"
+import {Card, Divider, Space} from "antd"
+import {LogLevelToCode} from "./HTTPFlowTable/HTTPFlowTable"
+import {showModal} from "../utils/showModal"
+import {YakEditor} from "@/utils/editors"
+import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
+import {YakitSwitch} from "./yakitUI/YakitSwitch/YakitSwitch"
+import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 
 export interface HTTPFlowRiskViewerProp {
     risk: YakitHTTPFlowRisk
@@ -21,51 +23,66 @@ export interface YakitHTTPFlowRisk {
 }
 
 export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
-    const {risk} = props;
-    const {risk_name, is_https, url, highlight, request, response, fragment, level} = risk;
-    const [showFragment, setShowFragment] = useState(false);
+    const {risk} = props
+    const {risk_name, is_https, url, highlight, request, response, fragment, level} = risk
+    const [showFragment, setShowFragment] = useState(false)
 
-    return <>
-        <Card
-            style={{width: "100%"}}
-            size={"small"} title={<>
-            <Tag color={LogLevelToCode(level) as any}>{level.toUpperCase()}</Tag>
-            <span>{risk_name}</span>
-            <Divider type={"vertical"}/>
-            {
-                highlight !== "" && (fragment || []).length > 0 ?
-                    <span style={{color: "#999"}}>详情：<Switch size={"small"} checked={showFragment}
-                                                               onChange={setShowFragment}/></span> : undefined
-            }
-        </>}
-            bodyStyle={{overflow: "hidden", width: "100%"}}
-            extra={[
-                <Button type={"link"} onClick={() => {
-                    showModal({
-                        title: "JSON Object",
-                        width: "50%",
-                        content: <div style={{overflow: "auto"}}>
-                            {JSON.stringify(props.risk)}
+    return (
+        <>
+            <Card
+                style={{width: "100%"}}
+                size={"small"}
+                title={
+                    <>
+                        <YakitTag color={LogLevelToCode(level) as any}>{level.toUpperCase()}</YakitTag>
+                        <span>{risk_name}</span>
+                        <Divider type={"vertical"} />
+                        {highlight !== "" && (fragment || []).length > 0 ? (
+                            <span style={{color: "#85899e", display: "inline-flex", alignItems: "center"}}>
+                                详情：
+                                <YakitSwitch checked={showFragment} onChange={setShowFragment} />
+                            </span>
+                        ) : undefined}
+                    </>
+                }
+                bodyStyle={{overflow: "hidden", width: "100%"}}
+                extra={
+                    <YakitButton
+                        type='text'
+                        onClick={() => {
+                            showModal({
+                                title: "JSON Object",
+                                width: "50%",
+                                content: <div style={{overflow: "auto"}}>{JSON.stringify(props.risk)}</div>
+                            })
+                        }}
+                    >
+                        JSON
+                    </YakitButton>
+                }
+            >
+                <Space direction={"vertical"} style={{width: "100%"}}>
+                    <div style={{display: "flex", alignItems: "center"}}>
+                        <YakitTag>URL</YakitTag>
+                        <div style={{display: "flex", alignItems: "center"}}>
+                            :<span style={{marginLeft: 8}}>{url}</span>
+                            <CopyComponents copyText={url} />
                         </div>
-                    })
-                }}>JSON</Button>
-            ]}>
-            <Space direction={"vertical"} style={{width: "100%"}}>
-                <Descriptions bordered={false} size={"small"} column={2}>
-                    <Descriptions.Item label={<Tag>URL</Tag>} span={2}>
-                        <CopyableField text={url} width={"100%"}/>
-                    </Descriptions.Item>
-                </Descriptions>
-                {showFragment && fragment.map(i => <Card
-                    bordered={false} hoverable={true}
-                    bodyStyle={{padding: 8}}
-                >
-                    <Space direction={"vertical"} style={{width: "100%"}}>
-                        <CopyableField text={highlight}/>
-                        <YakEditor readOnly={true} value={i} type={"http"} noWordWrap={true} full={true}/>
-                    </Space>
-                </Card>)}
-            </Space>
-        </Card>
-    </>
-};
+                    </div>
+                    {showFragment &&
+                        (fragment || []).map((i) => (
+                            <Card bordered={false} hoverable={true} bodyStyle={{padding: 8}}>
+                                <Space direction={"vertical"} style={{width: "100%"}}>
+                                    <div style={{display: "flex", alignItems: "center"}}>
+                                        <span style={{marginLeft: 8}}>{highlight}</span>
+                                        <CopyComponents copyText={highlight} />
+                                    </div>
+                                    <YakEditor readOnly={true} value={i} type={"http"} noWordWrap={true} full={true} />
+                                </Space>
+                            </Card>
+                        ))}
+                </Space>
+            </Card>
+        </>
+    )
+}

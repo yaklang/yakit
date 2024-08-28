@@ -110,52 +110,59 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
         //         </Space>
         //     )
         case "json-table":
-            let obj: {head: string[]; data: string[][]} = JSON.parse(props.data)
-            return (
-                <Space direction={"vertical"} style={{width: "100%"}}>
-                    {props.timestamp > 0 && (
-                        <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>
-                    )}
-                    <Card
-                        size={"small"}
-                        title={<Tag color={"green"}>直接结果(表格)</Tag>}
-                        extra={[
-                            <Button
-                                onClick={(e) =>
-                                    showModal({
-                                        title: "JSON 数据",
-                                        content: <>{JSON.stringify(obj)}</>
-                                    })
-                                }
-                            >
-                                JSON
-                            </Button>
-                        ]}
-                    >
-                        {(obj.head || []).length > 0 && (
-                            <Row gutter={4}>
-                                {(obj.head || []).map((i) => (
-                                    <Col span={24.0 / obj.head.length}>
-                                        <div style={{border: "2px"}}>{i}</div>
-                                    </Col>
-                                ))}
-                                <Divider style={{marginTop: 4, marginBottom: 4}} />
-                            </Row>
-                        )}
-                        {(obj.data || []).length > 0 && (
-                            <>
-                                {obj.data.map((i) => (
-                                    <Row>
-                                        {(i || []).map((element) => {
-                                            return <Col span={24.0 / i.length}>{element}</Col>
-                                        })}
-                                    </Row>
-                                ))}
-                            </>
-                        )}
-                    </Card>
-                </Space>
-            )
+            try {
+                let obj: {head: string[]; data: string[][]} = JSON.parse(props.data)
+                return (
+                    <Space direction={"vertical"} style={{width: "100%"}}>
+                        {/* {props.timestamp > 0 && (
+                            <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>
+                        )} */}
+                        <div className={styles["log-time"]}>{formatTime(props.timestamp)}</div>
+                        <Card
+                            size={"small"}
+                            title={<YakitTag color='success'>直接结果(表格)</YakitTag>}
+                            extra={
+                                <YakitButton
+                                    type='outline2'
+                                    onClick={(e) =>
+                                        showModal({
+                                            title: "JSON 数据",
+                                            content: <>{JSON.stringify(obj)}</>
+                                        })
+                                    }
+                                >
+                                    JSON
+                                </YakitButton>
+                            }
+                            style={{borderRadius: 4}}
+                        >
+                            {(obj.head || []).length > 0 && (
+                                <Row gutter={4}>
+                                    {(obj.head || []).map((i) => (
+                                        <Col span={24.0 / obj.head.length}>
+                                            <div style={{border: "2px"}}>{i}</div>
+                                        </Col>
+                                    ))}
+                                    <Divider style={{marginTop: 4, marginBottom: 4}} />
+                                </Row>
+                            )}
+                            {(obj.data || []).length > 0 && (
+                                <>
+                                    {obj.data.map((i) => (
+                                        <Row>
+                                            {(i || []).map((element) => {
+                                                return <Col span={24.0 / i.length}>{element}</Col>
+                                            })}
+                                        </Row>
+                                    ))}
+                                </>
+                            )}
+                        </Card>
+                    </Space>
+                )
+            } catch (error) {
+                return <span className={styles["log-time"]}>{formatTime(props.timestamp)}</span>
+            }
         case "json-httpflow-risk":
             try {
                 return <HTTPFlowRiskViewer risk={JSON.parse(props.data) as YakitHTTPFlowRisk} />
