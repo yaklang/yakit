@@ -74,8 +74,12 @@ export interface YakitEditorProps {
     /** @name 配置项-(存在此项则将字体/换行交由emiter更新) */
     editorId?: string
 
+    /** @name 配置项-高亮显示配置 */
     highLightText?: HighLightText[] | Selection[]
     highLightClass?: string
+    /** @name 配置项-关联高亮显示配置 */
+    highLightFind?: Selection[]
+    highLightFindClass?: string
 }
 
 /**

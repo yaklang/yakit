@@ -148,7 +148,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             let params: RunYakParamsProps = {
                 Script: newActiveFile.code,
                 WorkDir: newActiveFile.parent || "",
-                ScriptPath: newActiveFile.path,
+                ScriptPath: newActiveFile.path
             }
             ipcRenderer.invoke("exec-yak", params)
         }
@@ -948,7 +948,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     // 是否允许展示二进制
     const [allowBinary, setAllowBinary] = useState<boolean>(false)
-    
+
     const nowPathRef = useRef<string>()
     useEffect(() => {
         areaInfo.forEach((item) => {
@@ -1044,6 +1044,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
     ).run
 
+    const [highLightFind, setHighLightFind] = useState<Selection[]>([])
     // 获取编辑器中关联字符
     const getOtherRangeByPosition = useDebounceFn(
         async (position: Position) => {
@@ -1055,7 +1056,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             console.log("getOtherRangeByPosition---", {
                 InspectType: "reference",
                 YakScriptType: type,
-                YakScriptCode: model.getValue(),
+                YakScriptCode: "",
+                ModelID: model.id,
                 Range: {
                     Code: iWord.word,
                     StartLine: position.lineNumber,
@@ -1071,7 +1073,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 .invoke("YaklangLanguageFind", {
                     InspectType: "reference",
                     YakScriptType: type,
-                    YakScriptCode: model.getValue(),
+                    YakScriptCode: "",
+                    ModelID: model.id,
                     Range: {
                         Code: iWord.word,
                         StartLine: position.lineNumber,
@@ -1083,7 +1086,17 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     FileName: editorInfo.path
                 } as YaklangLanguageSuggestionRequest)
                 .then((r: YaklangLanguageFindResponse) => {
-                    console.log("rrr", r)
+                    const newFind = r.Ranges.map(({StartColumn, StartLine, EndColumn, EndLine}) => ({
+                        startLineNumber: Number(StartLine),
+                        startColumn: Number(StartColumn),
+                        endLineNumber: Number(EndLine),
+                        endColumn: Number(EndColumn)
+                    }))
+                    console.log("rrr", r, newFind)
+                    setHighLightFind(newFind)
+                }).catch((err)=>{
+                    console.log("err",err);
+                    setHighLightFind([])
                 })
         },
         {
@@ -1243,6 +1256,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     }}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
+                    highLightFind={highLightFind}
                 />
             )}
         </div>
