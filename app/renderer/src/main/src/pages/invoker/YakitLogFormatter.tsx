@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {Button, Card, Col, Divider, Row, Space, Tag, Timeline} from "antd"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {showModal} from "../../utils/showModal"
@@ -98,17 +98,17 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
                     </AutoCard>
                 </div>
             )
-        case "success":
-            return (
-                <Space direction={"vertical"} style={{width: "100%"}}>
-                    {props.timestamp > 0 && (
-                        <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>
-                    )}
-                    <Card size={"small"} title={<Tag color={"green"}>模块执行结果</Tag>}>
-                        {props.data}
-                    </Card>
-                </Space>
-            )
+        // case "success":
+        //     return (
+        //         <Space direction={"vertical"} style={{width: "100%"}}>
+        //             {props.timestamp > 0 && (
+        //                 <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>
+        //             )}
+        //             <Card size={"small"} title={<Tag color={"green"}>模块执行结果</Tag>}>
+        //                 {props.data}
+        //             </Card>
+        //         </Space>
+        //     )
         case "json-table":
             let obj: {head: string[]; data: string[][]} = JSON.parse(props.data)
             return (
@@ -221,6 +221,15 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
 interface MarkdownLogShowProps extends YakitLogFormatterProp {}
 const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
     const [expand, setExpand] = useState<boolean>(false)
+    const [isShowExpand, setIsShowExpand] = useState<boolean>(true)
+    const markdownLogBodyRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        if (markdownLogBodyRef.current) {
+            const {scrollHeight, clientHeight} = markdownLogBodyRef.current
+            const isScroll = scrollHeight > clientHeight
+            setIsShowExpand(isScroll)
+        }
+    }, [])
     const onExpand = useMemoizedFn(() => {
         setExpand(!expand)
     })
@@ -231,12 +240,15 @@ const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
                 className={classNames(styles["md-content"], {
                     [styles["md-content-expand"]]: expand
                 })}
+                ref={markdownLogBodyRef}
             >
                 <MDEditor.Markdown source={props.data} />
             </div>
-            <div className={styles["md-expand-text"]} onClick={onExpand}>
-                {expand ? "收起详情" : "展开详情"}
-            </div>
+            {isShowExpand && (
+                <div className={styles["md-expand-text"]} onClick={onExpand}>
+                    {expand ? "收起详情" : "展开详情"}
+                </div>
+            )}
         </div>
     )
 })
