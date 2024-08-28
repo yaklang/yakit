@@ -141,7 +141,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         overLine = 3,
         editorId,
         highLightText = [],
-        highLightClass
+        highLightClass,
+        highLightFind = [],
+        highLightFindClass
     } = props
 
     const systemRef = useRef<YakitSystem>("Darwin")
@@ -730,6 +732,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const deltaDecorationsRef = useRef<() => any>()
     const highLightTextFun = useMemoizedFn(() => highLightText)
+    const highLightFindFun = useMemoizedFn(() => highLightFind)
     useEffect(() => {
         if (!editor) {
             return
@@ -933,6 +936,30 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         }
                     } as IModelDecoration)
                 })
+
+                highLightFindFun().forEach((item) => {
+                    const {startLineNumber, startColumn, endLineNumber, endColumn} = item
+
+                    // 创建装饰选项
+                    dec.push({
+                        id:
+                            "hight-light-find_" +
+                            startLineNumber +
+                            "_" +
+                            startColumn +
+                            "_" +
+                            endLineNumber +
+                            "_" +
+                            endColumn,
+                        ownerId: 3,
+                        range: new monaco.Range(startLineNumber, startColumn, endLineNumber, endColumn),
+                        options: {
+                            isWholeLine: false,
+                            className: highLightFindClass ? highLightFindClass : "hight-light-find-default-bg-color",
+                            hoverMessage: [{value: "", isTrusted: true}]
+                        }
+                    } as IModelDecoration)
+                })
             })()
 
             return dec
@@ -942,12 +969,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             current = model.deltaDecorations(current, generateDecorations())
         }
 
-        editor.onMouseDown((e)=>{
-            // const dec: YakitIModelDecoration[] = []
-            // // back
-            // dec.push(generateDecorations())
-            // current = model.deltaDecorations(current, dec)
-        })
 
         editor.onDidChangeModelContent(() => {
             current = model.deltaDecorations(current, generateDecorations())
@@ -964,7 +985,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         if (deltaDecorationsRef.current) {
             deltaDecorationsRef.current()
         }
-    }, [JSON.stringify(highLightText)])
+    }, [JSON.stringify(highLightText),JSON.stringify(highLightFind)])
 
     /** 右键菜单-重渲染换行符功能是否显示的开关文字内容 */
     useEffect(() => {
