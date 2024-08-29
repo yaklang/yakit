@@ -234,7 +234,7 @@ module.exports = (win, getClient) => {
                 activeRequests.delete(uuid)
                 resolve(true)
             }
-        }, 100)
+        }, 50)
     }
     let activeRequests = new Map()
     ipcMain.handle("GetHTTPFlowBodyById", (e, params) => {
