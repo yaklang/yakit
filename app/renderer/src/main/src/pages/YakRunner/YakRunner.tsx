@@ -652,8 +652,9 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 关闭文件
-    const ctrl_w = useMemoizedFn(() => {
+    const ctrl_w = useMemoizedFn((event) => { 
         if (activeFile) {
+            event.stopPropagation()
             emiter.emit("onCloseFile", activeFile.path)
         }
     })
@@ -725,14 +726,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         activeKey.push(which)
         const newkey = keySortHandle(activeKey).join("-")
         let arr = getKeyboard(newkey)
-        // console.log("newkey---", newkey, arr)
+        console.log("newkey---", newkey, arr)
         if (!arr) return
         // 屏蔽所有Input输入框引起的快捷键 PS:monaca/xterm 除外
         if (
             ["textarea", "input"].includes(event.target.localName) &&
             event.target?.ariaRoleDescription !== "editor" &&
             event.target?.className !== "xterm-helper-textarea"
-        )   return  
+        )
+            return
         // 审计模式时 终端对应快捷键需屏蔽
         if (getLoadTreeType() === "audit" && newkey === "17-192") return
         // 文件树相关快捷键只在文件树控件展示时生效
@@ -740,7 +742,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
         if (event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
         arr.forEach((item) => {
-            item.callback()
+            item.callback(event)
         })
     }
     useEffect(() => {

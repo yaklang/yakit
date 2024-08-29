@@ -1,6 +1,6 @@
-export const keyboard: Map<string, {onlyid: string; callback: () => any}[]> = new Map()
+export const keyboard: Map<string, {onlyid: string; callback: (event:any) => any}[]> = new Map()
 
-export const setKeyboard = (key: string, info: {onlyid: string; callback: () => any}) => {
+export const setKeyboard = (key: string, info: {onlyid: string; callback: (event:any) => any}) => {
     if (keyboard.has(key)) {
         const item = keyboard.get(key)
         item?.push(info)
