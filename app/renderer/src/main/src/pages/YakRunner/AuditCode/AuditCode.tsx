@@ -282,7 +282,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 
     const [value, setValue] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
-    const [isShowEmpty,setShowEmpty] = useState<boolean>(false)
+    const [isShowEmpty, setShowEmpty] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
 
@@ -443,7 +443,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         lastValue.current = value
         const result = await loadAuditFromYakURLRaw(params, body)
         console.log("result---", result)
-        if (result) {
+        if (result && result.Resources.length > 0) {
             const TopId = "top-message"
             let messageIds: string[] = []
             let variableIds: string[] = []
@@ -495,8 +495,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             }
             setMapAuditChildDetail("/", [...topIds, ...variableIds])
             emiter.emit("onRefreshAuditTree")
-        }
-        else{
+        } else {
             setShowEmpty(true)
         }
         setLoading(false)
@@ -536,15 +535,19 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                 />
                             </div>
 
-                            {isShowEmpty?<div className={styles['no-data']}>暂无数据</div>:<AuditTree
-                                data={auditDetailTree}
-                                expandedKeys={expandedKeys}
-                                setExpandedKeys={setExpandedKeys}
-                                onLoadData={onLoadData}
-                                foucsedKey={foucsedKey}
-                                setFoucsedKey={setFoucsedKey}
-                                onJump={onJump}
-                            />}
+                            {isShowEmpty ? (
+                                <div className={styles["no-data"]}>暂无数据</div>
+                            ) : (
+                                <AuditTree
+                                    data={auditDetailTree}
+                                    expandedKeys={expandedKeys}
+                                    setExpandedKeys={setExpandedKeys}
+                                    onLoadData={onLoadData}
+                                    foucsedKey={foucsedKey}
+                                    setFoucsedKey={setFoucsedKey}
+                                    onJump={onJump}
+                                />
+                            )}
                         </>
                     ) : (
                         <div className={styles["no-audit"]}>
@@ -904,14 +907,14 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     <div className={styles["audit-opt"]}>
                                         {/* 此处的Tooltip会导致页面抖动(待处理) */}
                                         {/* <Tooltip title={"打开项目"}> */}
-                                            <YakitButton
-                                                type='text'
-                                                icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
-                                                onClick={() => {
-                                                    emiter.emit("onOpenAuditTree", item.ResourceName)
-                                                    onClose()
-                                                }}
-                                            />
+                                        <YakitButton
+                                            type='text'
+                                            icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
+                                            onClick={() => {
+                                                emiter.emit("onOpenAuditTree", item.ResourceName)
+                                                onClose()
+                                            }}
+                                        />
                                         {/* </Tooltip> */}
                                         <Divider type={"vertical"} style={{margin: 0}} />
                                         {/* <YakitPopconfirm
