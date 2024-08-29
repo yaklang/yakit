@@ -190,7 +190,7 @@
         gap: 12px;
         overflow: hidden;
         .user-active-time {
-            flex: 3;
+            height: 60%;
             border-radius: 8px;
             border: 1px solid #eaecf3;
             padding: 16px 20px;
@@ -259,7 +259,7 @@
             }
         }
         .user-rise {
-            flex: 2;
+            height: 40%;
             border-radius: 8px;
             border: 1px solid #eaecf3;
             padding: 16px 20px;
