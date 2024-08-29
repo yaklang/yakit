@@ -149,7 +149,7 @@ module.exports = (win, getClient) => {
 
                 `--ignore-certificate-errors`, // 忽略 SSL 证书错误。
                 `--test-type`, // 表示这是一个测试实例。
-                `--no-sandbox`, // https://stackoverflow.com/questions/64788142/nodejs-error-connect-econnrefused-127-0-0-1port-chrome-remote-interface
+                // `--no-sandbox`, // https://stackoverflow.com/questions/64788142/nodejs-error-connect-econnrefused-127-0-0-1port-chrome-remote-interface
                 `--ignore-urlfetcher-cert-requests`, // 忽略 URL fetcher 的证书请求。
                 `--disable-webrtc`, // 禁用 WebRTC。
                 `--disable-component-extensions-with-background-pages`, // 禁用带有背景页的组件扩展。
