@@ -1084,7 +1084,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     const waterMarkStr = useMemo(() => {
         if (isCommunityEdition() && loadTreeType === "audit") {
-            return "技术浏览版仅供技术交流使用"
+            return "Yakit技术浏览版仅供技术交流使用"
         }
         return " "
     }, [loadTreeType])
