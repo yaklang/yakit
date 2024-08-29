@@ -228,18 +228,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         return () => clearInterval(id)
     }, [])
 
-    const isFirstLoadRef = useRef<boolean>(true)
     // 重置Map与轮询
-    const resetMap = useMemoizedFn((absolutePath) => {
-        // 初始加载时 无需重置（当切换时 重置）
-        if (isFirstLoadRef) {
-            isFirstLoadRef.current = false
-            return
-        }
+    const resetMap = useMemoizedFn((isFirst) => {
         loadIndexRef.current = 0
         clearMap()
         // FileTree缓存清除
-        emiter.emit("onResetFileTree")
+        isFirst && emiter.emit("onResetFileTree")
     })
 
     const startMonitorFolder = useMemoizedFn((absolutePath) => {
@@ -267,7 +261,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
     })
 
-    const onInitTreeFun = useMemoizedFn(async (rootPath) => {
+    const onInitTreeFun = useMemoizedFn(async (rootPath: string, isFirst: boolean = true) => {
         onResetAuditStatusFun()
         // 开启文件夹监听
         startMonitorFolder(rootPath)
@@ -275,7 +269,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         const lastFolder = await getNameByPath(rootPath)
 
         if (rootPath.length > 0 && lastFolder.length > 0) {
-            resetMap(rootPath)
+            resetMap(isFirst)
             const node: FileNodeMapProps = {
                 parent: null,
                 name: lastFolder,
@@ -331,6 +325,18 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         setLoadTreeType("audit")
         setProjectNmae(name)
         onInitTreeFun(`/${name}`)
+    })
+
+    // 刷新文件/审计树
+    const onRefreshTreeFun = useMemoizedFn(() => {
+        if (loadTreeType === "file") {
+            if (fileTree.length > 0) {
+                const ProjectPath = fileTree[0].path
+                onInitTreeFun(ProjectPath, false)
+            }
+        } else {
+            projectNmae && onInitTreeFun(`/${projectNmae}`, false)
+        }
     })
 
     // 是否正在读取中
@@ -407,11 +413,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.on("onOpenFileTree", onOpenFileTreeFun)
         // 监听审计树打开
         emiter.on("onOpenAuditTree", onOpenAuditTreeFun)
+        // 刷新树
+        emiter.on("onRefreshTree", onRefreshTreeFun)
         // 通过路径打开文件
         emiter.on("onOpenFileByPath", onOpenFileByPathFun)
         return () => {
             emiter.off("onOpenFileTree", onOpenFileTreeFun)
             emiter.off("onOpenAuditTree", onOpenAuditTreeFun)
+            emiter.off("onRefreshTree", onRefreshTreeFun)
             emiter.off("onOpenFileByPath", onOpenFileByPathFun)
         }
     }, [])
@@ -652,7 +661,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 关闭文件
-    const ctrl_w = useMemoizedFn((event) => { 
+    const ctrl_w = useMemoizedFn((event) => {
         if (activeFile) {
             event.stopPropagation()
             emiter.emit("onCloseFile", activeFile.path)

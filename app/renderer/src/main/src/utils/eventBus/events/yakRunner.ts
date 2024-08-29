@@ -40,6 +40,8 @@ export type YakRunnerEventProps = {
     onOpenAuditRightDetail: string
     // 打开审计树
     onOpenAuditTree: string
+    // 刷新文件/审计树
+    onRefreshTree?: string
     // 重置审计模式缓存数据
     onResetAuditStatus?: string
     // 刷新审计详情（关闭节点信息）
