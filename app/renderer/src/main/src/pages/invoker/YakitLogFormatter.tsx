@@ -17,7 +17,7 @@ import {Risk} from "../risks/schema"
 import styles from "./YakitLogFormatter.module.scss"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {
@@ -30,7 +30,10 @@ import {
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakEditor} from "@/utils/editors"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-
+import {EChartsOption} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
+import * as echarts from "echarts"
+import {SolidCalendarIcon} from "@/assets/icon/solid"
+import {isNumberNaN} from "@/utils/tool"
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
     finished?: boolean
@@ -176,47 +179,47 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
         case "json-feature":
             return <div />
         case "json-graph":
-            let graphData: GraphData = JSON.parse(props.data)
             return (
-                <Space direction={"vertical"}>
-                    {props.timestamp > 0 && (
-                        <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>
-                    )}
-                    <Card
-                        size={"small"}
-                        title={<Tag color={"green"}>直接结果(图)</Tag>}
-                        extra={[
-                            <Button
-                                onClick={(e) =>
-                                    showModal({
-                                        title: "JSON 数据",
-                                        content: <>{JSON.stringify(graphData)}</>
-                                    })
-                                }
-                            >
-                                JSON
-                            </Button>
-                        ]}
-                    >
-                        {(() => {
-                            switch (graphData.type) {
-                                case "bar":
-                                    return (
-                                        <div>
-                                            <BarGraph {...graphData} />
-                                        </div>
-                                    )
-                                case "pie":
-                                    return (
-                                        <div>
-                                            <PieGraph {...graphData} />
-                                        </div>
-                                    )
-                            }
-                            return <div>{props.data}</div>
-                        })()}
-                    </Card>
-                </Space>
+                <GraphLogShow {...props} />
+                // <Space direction={"vertical"}>
+                //     {props.timestamp > 0 && (
+                //         <YakitTag color='bluePurple'>{formatTimestamp(props.timestamp, props.onlyTime)}</YakitTag>
+                //     )}
+                //     <Card
+                //         size={"small"}
+                //         title={<Tag color={"green"}>{graphData?.name || "直接结果(图)"}</Tag>}
+                //         extra={[
+                //             <Button
+                //                 onClick={(e) =>
+                //                     showModal({
+                //                         title: "JSON 数据",
+                //                         content: <>{JSON.stringify(graphData)}</>
+                //                     })
+                //                 }
+                //             >
+                //                 JSON
+                //             </Button>
+                //         ]}
+                //     >
+                //         {(() => {
+                //             switch (graphData.type) {
+                //                 case "bar":
+                //                     return (
+                //                         <div>
+                //                             <BarGraph {...graphData} />
+                //                         </div>
+                //                     )
+                //                 case "pie":
+                //                     return (
+                //                         <div>
+                //                             <PieGraph {...graphData} />
+                //                         </div>
+                //                     )
+                //             }
+                //             return <div>{props.data}</div>
+                //         })()}
+                //     </Card>
+                // </Space>
             )
     }
     return (
@@ -373,5 +376,245 @@ const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
                 查看
             </div>
         </div>
+    )
+})
+
+interface GraphLogShowProps extends YakitLogFormatterProp {}
+const colorList = [
+    {
+        name: "purple",
+        color: "#8863f7"
+    },
+    {
+        name: "bluePurple",
+        color: "#da5fdd"
+    },
+    {
+        name: "blue",
+        color: "#4a94f8"
+    },
+    {
+        name: "lakeBlue",
+        color: "#29BCD0"
+    },
+    {
+        name: "cyan",
+        color: "#35d8ee"
+    },
+    {
+        name: "green",
+        color: "#56c991"
+    },
+    {
+        name: "red",
+        color: "#f4736b"
+    },
+    {
+        name: "orange",
+        color: "#ffb660"
+    },
+    {
+        name: "yellow",
+        color: "#ffd583"
+    },
+    {
+        name: "grey",
+        color: "#b4bbca"
+    }
+]
+const colorLength = colorList.length
+const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
+    const {data, timestamp} = props
+
+    const graphData: GraphData = useCreation(() => {
+        try {
+            return JSON.parse(data)
+        } catch (error) {
+            return {
+                type: "",
+                data: [],
+                name: "直接结果(图)"
+            }
+        }
+    }, [data])
+
+    const renderCharts = useMemoizedFn(() => {
+        switch (graphData.type) {
+            case "bar":
+                return <BarCharts graphData={graphData} />
+
+            default:
+                return <div>{props.data}</div>
+        }
+    })
+
+    return (
+        <div className={styles["graph-body"]}>
+            <div className={styles["graph-heard"]}>{formatTime(timestamp)}</div>
+            <div className={styles["graph-content"]}>
+                <div className={styles["graph-content-title"]}>
+                    <div>{graphData.name}</div>
+                    <div className={styles["time"]}>
+                        <SolidCalendarIcon />
+                        <span>{formatTimestamp(timestamp)}</span>
+                    </div>
+                </div>
+
+                {renderCharts()}
+            </div>
+        </div>
+    )
+})
+
+interface BarChartsProps {
+    graphData: GraphData
+}
+const BarCharts: React.FC<BarChartsProps> = React.memo((props) => {
+    const {graphData} = props
+    const chartRef = useRef<HTMLDivElement>(null)
+    const graphRef = useRef<echarts.ECharts>()
+    const xAxis = useCreation(() => {
+        return graphData.data.map((ele) => ele.key)
+    }, [graphData])
+    const series = useCreation(() => {
+        const seriesList = graphData.data.filter((ele) => Array.isArray(ele.value)).map((ele) => ele.value.length)
+        const seriesLength = Math.max(...seriesList, 0)
+        const series: any[] = []
+
+        if (seriesLength === 0) {
+            series.push({
+                name: 1,
+                data: graphData.data.map((ele) => (isNumberNaN(ele.value) ? 0 : ele.value)),
+                type: "bar",
+                showBackground: true,
+                backgroundStyle: {
+                    color: "#f8f8f8",
+                    borderRadius: 3
+                },
+                itemStyle: {
+                    borderRadius: 3
+                }
+            })
+        } else {
+            for (let index = 0; index < seriesLength; index++) {
+                const data: number[] = []
+                graphData.data.forEach((element) => {
+                    if (Array.isArray(element.value)) {
+                        const value = element.value[index]
+                        data.push(isNumberNaN(value) ? 0 : value)
+                    } else {
+                        if (index === 0) {
+                            data.push(isNumberNaN(element.value) ? 0 : element.value)
+                        } else {
+                            data.push(0)
+                        }
+                    }
+                })
+                series.push({
+                    name: `系列${index}`,
+                    data,
+                    type: "bar",
+                    showBackground: true,
+                    backgroundStyle: {
+                        color: "#f8f8f8",
+                        borderRadius: 3
+                    },
+                    itemStyle: {
+                        borderRadius: 3
+                    }
+                })
+            }
+        }
+        console.log("series", series)
+        return series
+    }, [graphData])
+    const legendList = useCreation(() => {
+        return series.map((ele) => ele.name)
+    }, [series])
+    const optionRef = useRef<EChartsOption>({
+        color: colorList.map((ele) => ele.color),
+        tooltip: {
+            trigger: "axis",
+            axisPointer: {
+                type: "shadow",
+                shadowStyle: {
+                    color: "rgba(234, 236, 243, 0.3)"
+                }
+            }
+        },
+        xAxis: {
+            type: "category",
+            data: xAxis,
+            axisTick: {
+                show: false
+            },
+            axisLabel: {
+                show: true,
+                color: "#85899E",
+                fontWeight: 400,
+                fontFamily: "PingFang HK",
+                fontSize: 14,
+                align: "center",
+                lineHeight: 20
+            },
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: "#EAECF3"
+                }
+            }
+        },
+        yAxis: {
+            type: "value",
+            splitLine: {
+                lineStyle: {
+                    color: "#EAECF3",
+                    width: 1,
+                    type: [10, 15],
+                    cap: "round"
+                }
+            },
+            axisLabel: {
+                show: true,
+                color: "#85899E",
+                fontWeight: 400,
+                fontFamily: "Inter",
+                fontSize: 16,
+                align: "right",
+                lineHeight: 18
+            }
+        },
+        series: []
+    })
+    useEffect(() => {
+        graphRef.current = echarts.init(chartRef.current)
+        optionRef.current.series = series || []
+        graphRef.current.setOption(optionRef.current)
+        return () => {
+            if (graphRef.current) {
+                graphRef.current.dispose()
+                graphRef.current = undefined
+            }
+        }
+    }, [])
+    return (
+        <>
+            {legendList.length > 1 && (
+                <div className={styles["graph-xAxis-list"]}>
+                    {legendList.map((item, index) => (
+                        <div key={item} className={styles["graph-xAxis-list-item"]}>
+                            <div
+                                className={classNames(
+                                    styles["circle"],
+                                    `color-bg-${colorList[index % colorLength]?.name || "purple"}`
+                                )}
+                            />
+                            {item}
+                        </div>
+                    ))}
+                </div>
+            )}
+            <div className={styles["bar-graph-charts"]} ref={chartRef}></div>
+        </>
     )
 })
