@@ -37,9 +37,9 @@ $colors: (
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
-    lakeBlue:(
-        backgroundColor: #29BCD0,
-        opacityBackgroundColor: color-mix(in srgb, #29BCD0 20%, transparent),
+    lakeBlue: (
+        backgroundColor: var(--yakit-tag-color-lake-blue),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-lake-blue) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
@@ -50,8 +50,8 @@ $colors: (
         fontWeight: normal
     ),
     bluePurple: (
-        backgroundColor: #da5fdd,
-        opacityBackgroundColor: color-mix(in srgb, #da5fdd 20%, transparent),
+        backgroundColor: var(--yakit-tag-color-blue-purple),
+        opacityBackgroundColor: color-mix(in srgb, var(--yakit-tag-color-blue-purple) 20%, transparent),
         textColor: var(--yakit-table-text-color),
         fontWeight: normal
     ),
