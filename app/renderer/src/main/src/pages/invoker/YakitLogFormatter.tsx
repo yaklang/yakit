@@ -587,7 +587,9 @@ const BarCharts: React.FC<BarChartsProps> = React.memo((props) => {
         series: []
     })
     useEffect(() => {
-        graphRef.current = echarts.init(chartRef.current)
+        if (!graphRef.current) {
+            graphRef.current = echarts.init(chartRef.current)
+        }
         optionRef.current.series = series || []
         graphRef.current.setOption(optionRef.current)
         return () => {
@@ -596,7 +598,7 @@ const BarCharts: React.FC<BarChartsProps> = React.memo((props) => {
                 graphRef.current = undefined
             }
         }
-    }, [])
+    }, [series])
     return (
         <>
             {legendList.length > 1 && (
