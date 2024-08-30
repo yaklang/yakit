@@ -147,7 +147,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const getAduitList = useMemoizedFn(async () => {
         try {
             const {res} = await grpcFetchAuditTree("/")
-            console.log("getAduitList", "/", res)
             const arr = res.Resources.map(({Path, ResourceName}) => ({
                 path: Path,
                 name: ResourceName
@@ -622,7 +621,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     // 打开历史
     const openHistory = useMemoizedFn((key: string) => {
         const filterArr = historyList.filter((item) => item.path === key)
-        console.log("打开历史---", filterArr)
 
         if (filterArr.length > 0) {
             const item = filterArr[0]

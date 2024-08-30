@@ -191,13 +191,11 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
     const size = useSize(wrapper)
 
     const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps) => {
-        console.log("handleSelect", selected, node)
         setFoucsedKey(node.id)
         onJump(node)
     })
 
     const handleExpand = useMemoizedFn((expanded: boolean, node: AuditNodeProps) => {
-        console.log("expanded", expanded, node)
         let arr = [...expandedKeys]
         if (expanded) {
             arr = arr.filter((item) => item !== node.id)
@@ -337,8 +335,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 Size: 0
             })
         }
-        console.log("initTree---", initTree)
-
         return initTree
     }, [refreshTree])
 
@@ -348,7 +344,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         return new Promise(async (resolve, reject) => {
             // 校验其子项是否存在
             const childArr = getMapAuditChildDetail(id)
-            console.log("xxx", id, childArr)
             if (id === TopId) {
                 resolve("")
                 return
@@ -366,7 +361,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     }
                     const body = StringToUint8Array(lastValue.current)
                     const result = await loadAuditFromYakURLRaw(params, body)
-                    console.log("result---", result)
                     if (result) {
                         let variableIds: string[] = []
                         result.Resources.forEach((item, index) => {
@@ -442,7 +436,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const body = StringToUint8Array(value)
         lastValue.current = value
         const result = await loadAuditFromYakURLRaw(params, body)
-        console.log("result---", result)
         if (result && result.Resources.length > 0) {
             const TopId = "top-message"
             let messageIds: string[] = []
@@ -591,7 +584,6 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
             const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目编译"}, true)
-            console.log("xxx", newPlugin)
             setLoading(false)
             setPlugin(newPlugin)
         }),
@@ -615,7 +607,6 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
             ProjectPath = fileTree[0].path
             ProjectName = await getNameByPath(ProjectPath)
         }
-        console.log("ProjectName", ProjectName, ProjectPath, requiredParams)
 
         // 必填参数
         let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
@@ -654,7 +645,6 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 [ele.Field]: value
             }
         }
-        console.log("cccc", initRequiredFormValue)
 
         form.setFieldsValue({...initRequiredFormValue})
     })
@@ -757,7 +747,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     const getAduitList = useMemoizedFn(async () => {
         try {
             const {res} = await grpcFetchAuditTree("/")
-            console.log("getAduitList***", res)
             if (search && search.length > 0) {
                 const newResources = res.Resources.filter((item) => JSON.stringify(item).includes(search))
                 const obj: RequestYakURLResponse = {
@@ -811,7 +800,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         try {
             await grpcFetchDeleteAudit(path)
             getAduitList()
-            console.log("ooo", path, projectNmae)
 
             if (path === `/${projectNmae}`) {
                 setLoadTreeType && setLoadTreeType("file")

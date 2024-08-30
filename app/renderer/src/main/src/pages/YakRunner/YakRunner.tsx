@@ -320,15 +320,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     // 加载文件树(初次加载)
     const onOpenFileTreeFun = useMemoizedFn(async (absolutePath: string) => {
-        console.log("文件树---", absolutePath)
-
+        // console.log("文件树---", absolutePath)
         setLoadTreeType("file")
         onInitTreeFun(absolutePath)
     })
 
     // 加载审计树(初次加载)
     const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
-        console.log("审计树---", name)
+        // console.log("审计树---", name)
         setLoadTreeType("audit")
         setProjectNmae(name)
         onInitTreeFun(`/${name}`)
@@ -1005,7 +1004,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         onEnd: () => {
             debugPluginStreamEvent.stop()
             setTimeout(() => {
-                console.log("onEnd---")
                 setShowRunAuditModal(false)
                 setIsExecuting(false)
             }, 300)
@@ -1029,7 +1027,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         // 当任务结束时 跳转打开编译列表
         if (progress === 1) {
             setTimeout(() => {
-                console.log("跳转打开编译列表")
                 onOpenAuditTreeFun(`${projectNmae}`)
                 emiter.emit("onRefreshAduitHistory")
             }, 300)
@@ -1045,8 +1042,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
         debugPluginStreamEvent.reset()
         setRuntimeId("")
-
-        console.log("执行:", path, requestParams)
         setProjectNmae(path)
         apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
             setIsExecuting(true)

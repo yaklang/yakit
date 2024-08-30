@@ -33,7 +33,7 @@ interface AuditResultItemProps {
 }
 
 export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
-    const {onDetail, nodeId, data, title, resultKey,setResultKey} = props
+    const {onDetail, nodeId, data, title, resultKey, setResultKey} = props
 
     const titleRender = (info: GraphInfoProps) => {
         const {ir_code, code_range, node_id} = info
@@ -101,11 +101,11 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     const {onDetail, nodeId, graphLine, message, activeKey, setActiveKey} = props
     const [resultKey, setResultKey] = useState<string | string[]>()
 
-    useUpdateEffect(()=>{
-        if(activeKey === undefined){
+    useUpdateEffect(() => {
+        if (activeKey === undefined) {
             setResultKey(undefined)
         }
-    },[activeKey])
+    }, [activeKey])
 
     const getChildren = useMemoizedFn((data: string[]) => {
         const children = data
@@ -189,7 +189,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     const onElementStyle = useMemoizedFn((id, stroke, fill) => {
         // 获取 id 为 node 的元素
         const nodeElement = document.getElementById(id)
-        console.log("ooo", nodeElement)
 
         if (nodeElement) {
             // 查找该元素下的所有 ellipse 标签
@@ -247,7 +246,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
             const titleElement = target.parentNode.querySelector("title")
             if (titleElement) {
                 const titleText = titleElement.textContent
-                console.log("click---", titleText, node_id)
                 // 本身节点不用点击展开详情
                 if (titleText === node_id) return
                 if (titleText === nodeId) {
@@ -472,7 +470,6 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
         const {Schema, Location, Path, Body} = params
         const body = StringToUint8Array(Body)
         const result = await loadAuditFromYakURLRaw({Schema, Location, Path}, body)
-        console.log("iniaaa", params, result)
         if (result && result.Resources.length > 0) {
             result.Resources[0].Extra.forEach((item) => {
                 if (item.Key === "graph") {
@@ -520,8 +517,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 highLightRange
             }
         }
-        console.log("跳转详情",OpenFileByPathParams);
-        
+
         emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
         // 纯跳转行号
         setTimeout(() => {
@@ -541,14 +537,16 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     <div className={styles["absolute-box"]}>
                         <div className={styles["title"]}>审计结果</div>
                         <div className={styles["extra"]}>
-                            <YakitButton
-                                type='text2'
-                                icon={<OutlineCollectionIcon />}
-                                disabled={(graphLine || []).length === 0}
-                                onClick={() => {
-                                    setActiveKey(undefined)
-                                }}
-                            />
+                            <Tooltip title='一键收起'>
+                                <YakitButton
+                                    type='text2'
+                                    icon={<OutlineCollectionIcon />}
+                                    disabled={(graphLine || []).length === 0}
+                                    onClick={() => {
+                                        setActiveKey(undefined)
+                                    }}
+                                />
+                            </Tooltip>
                             <YakitButton
                                 type='text2'
                                 icon={<OutlineXIcon />}

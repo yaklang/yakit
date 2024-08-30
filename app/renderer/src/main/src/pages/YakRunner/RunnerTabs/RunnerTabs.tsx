@@ -1053,21 +1053,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const iWord = getWordWithPointAtPosition(model, position)
             const type = getModelContext(model, "plugin") || "yak"
             if (iWord.word.length === 0) return
-            console.log("getOtherRangeByPosition---", {
-                InspectType: "reference",
-                YakScriptType: type,
-                YakScriptCode: "",
-                ModelID: model.id,
-                Range: {
-                    Code: iWord.word,
-                    StartLine: position.lineNumber,
-                    StartColumn: iWord.startColumn,
-                    EndLine: position.lineNumber,
-                    EndColumn: iWord.endColumn
-                },
-                ProgramName: projectNmae,
-                FileName: editorInfo.path
-            })
 
             await ipcRenderer
                 .invoke("YaklangLanguageFind", {
@@ -1092,10 +1077,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                         endLineNumber: Number(EndLine),
                         endColumn: Number(EndColumn)
                     }))
-                    console.log("rrr", r, newFind)
                     setHighLightFind(newFind)
                 }).catch((err)=>{
-                    console.log("err",err);
                     setHighLightFind([])
                 })
         },
