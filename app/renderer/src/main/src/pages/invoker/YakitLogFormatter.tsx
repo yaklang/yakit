@@ -34,6 +34,8 @@ import {EChartsOption} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPi
 import * as echarts from "echarts"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
 import {isNumberNaN} from "@/utils/tool"
+
+const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
     finished?: boolean
@@ -441,7 +443,9 @@ const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
     const renderCharts = useMemoizedFn(() => {
         switch (graphData.type) {
             case "bar":
-                return <BarCharts graphData={graphData} />
+                return <LogCharts type='bar' graphData={graphData} />
+            case "line":
+                return <LogCharts type='line' graphData={graphData} />
 
             default:
                 return <div>{props.data}</div>
@@ -460,163 +464,8 @@ const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
                     </div>
                 </div>
 
-                {renderCharts()}
+                <React.Suspense>{renderCharts()}</React.Suspense>
             </div>
         </div>
-    )
-})
-
-interface BarChartsProps {
-    graphData: GraphData
-}
-const BarCharts: React.FC<BarChartsProps> = React.memo((props) => {
-    const {graphData} = props
-    const chartRef = useRef<HTMLDivElement>(null)
-    const graphRef = useRef<echarts.ECharts>()
-    const xAxis = useCreation(() => {
-        return graphData.data.map((ele) => ele.key)
-    }, [graphData])
-    const series = useCreation(() => {
-        const seriesList = graphData.data.filter((ele) => Array.isArray(ele.value)).map((ele) => ele.value.length)
-        const seriesLength = Math.max(...seriesList, 0)
-        const series: any[] = []
-
-        if (seriesLength === 0) {
-            series.push({
-                name: 1,
-                data: graphData.data.map((ele) => (isNumberNaN(ele.value) ? 0 : ele.value)),
-                type: "bar",
-                showBackground: true,
-                backgroundStyle: {
-                    color: "#f8f8f8",
-                    borderRadius: 3
-                },
-                itemStyle: {
-                    borderRadius: 3
-                }
-            })
-        } else {
-            for (let index = 0; index < seriesLength; index++) {
-                const data: number[] = []
-                graphData.data.forEach((element) => {
-                    if (Array.isArray(element.value)) {
-                        const value = element.value[index]
-                        data.push(isNumberNaN(value) ? 0 : value)
-                    } else {
-                        if (index === 0) {
-                            data.push(isNumberNaN(element.value) ? 0 : element.value)
-                        } else {
-                            data.push(0)
-                        }
-                    }
-                })
-                series.push({
-                    name: `系列${index}`,
-                    data,
-                    type: "bar",
-                    showBackground: true,
-                    backgroundStyle: {
-                        color: "#f8f8f8",
-                        borderRadius: 3
-                    },
-                    itemStyle: {
-                        borderRadius: 3
-                    }
-                })
-            }
-        }
-        console.log("series", series)
-        return series
-    }, [graphData])
-    const legendList = useCreation(() => {
-        return series.map((ele) => ele.name)
-    }, [series])
-    const optionRef = useRef<EChartsOption>({
-        color: colorList.map((ele) => ele.color),
-        tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "shadow",
-                shadowStyle: {
-                    color: "rgba(234, 236, 243, 0.3)"
-                }
-            }
-        },
-        xAxis: {
-            type: "category",
-            data: xAxis,
-            axisTick: {
-                show: false
-            },
-            axisLabel: {
-                show: true,
-                color: "#85899E",
-                fontWeight: 400,
-                fontFamily: "PingFang HK",
-                fontSize: 14,
-                align: "center",
-                lineHeight: 20
-            },
-            axisLine: {
-                show: true,
-                lineStyle: {
-                    color: "#EAECF3"
-                }
-            }
-        },
-        yAxis: {
-            type: "value",
-            splitLine: {
-                lineStyle: {
-                    color: "#EAECF3",
-                    width: 1,
-                    type: [10, 15],
-                    cap: "round"
-                }
-            },
-            axisLabel: {
-                show: true,
-                color: "#85899E",
-                fontWeight: 400,
-                fontFamily: "Inter",
-                fontSize: 16,
-                align: "right",
-                lineHeight: 18
-            }
-        },
-        series: []
-    })
-    useEffect(() => {
-        if (!graphRef.current) {
-            graphRef.current = echarts.init(chartRef.current)
-        }
-        optionRef.current.series = series || []
-        graphRef.current.setOption(optionRef.current)
-        return () => {
-            if (graphRef.current) {
-                graphRef.current.dispose()
-                graphRef.current = undefined
-            }
-        }
-    }, [series])
-    return (
-        <>
-            {legendList.length > 1 && (
-                <div className={styles["graph-xAxis-list"]}>
-                    {legendList.map((item, index) => (
-                        <div key={item} className={styles["graph-xAxis-list-item"]}>
-                            <div
-                                className={classNames(
-                                    styles["circle"],
-                                    `color-bg-${colorList[index % colorLength]?.name || "purple"}`
-                                )}
-                            />
-                            {item}
-                        </div>
-                    ))}
-                </div>
-            )}
-            <div className={styles["bar-graph-charts"]} ref={chartRef}></div>
-        </>
     )
 })

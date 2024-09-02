@@ -1,0 +1,41 @@
+%charts {
+    height: 360px;
+}
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.graph-xAxis-list {
+    @extend %display-flex-center;
+    gap: 8px 20px;
+    border-bottom: 1px solid var(--yakit-border-color);
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+    .graph-xAxis-list-item {
+        @extend %display-flex-center;
+        gap: 8px;
+        color: var(--yakit-body-text-color);
+    }
+    .circle {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+}
+
+.bar-graph-charts {
+    @extend %charts;
+}
+
+.pie-graph-charts {
+    @extend %charts;
+}
+
+.line-graph-charts {
+    @extend %charts;
+}
