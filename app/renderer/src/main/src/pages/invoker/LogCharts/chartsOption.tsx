@@ -213,7 +213,43 @@ export const getPieOption = (graphData: GraphData) => {
     const total = graphData.data.reduce((sum, item) => sum + item.value, 0)
     const option: EChartsOption = {
         color: logChartsColorList.map((ele) => ele.color),
-
+        tooltip: {
+            trigger: "item",
+            borderWidth: 0,
+            backgroundColor: "#1E1B39",
+            confine: true,
+            borderRadius: 8,
+            formatter: (params) => {
+                return `<div
+                        style='
+                                display: flex;
+                                flex-direction: column;
+                                gap: 8px;
+                                align-items: center;
+                                max-width: 200px;
+                            '
+                    >
+                        <span
+                            style='
+                                color: #ccd2de; 
+                                font-size: 16px; 
+                                font-weight: 400; 
+                                line-height: 18px; 
+                                max-width: 200px;
+                                white-space: nowrap;
+                                text-overflow: ellipsis;
+                                overflow: hidden;
+                                word-break: break-all;
+                            '
+                        >
+                            ${params?.name}
+                        </span>
+                        <span style='color: #fff; font-size: 18px; fontWeight: 700; lineHeight: 24px'>
+                            ${params?.value}(${params?.percent}%)
+                        </span>
+                    </div>`
+            }
+        },
         series: [
             {
                 name: "total",
@@ -259,43 +295,7 @@ export const getPieOption = (graphData: GraphData) => {
                 minAngle: 5,
                 selectedMode: "multiple",
                 selectedOffset: 20,
-                tooltip: {
-                    trigger: "item",
-                    borderWidth: 0,
-                    backgroundColor: "#1E1B39",
-                    confine: true,
-                    borderRadius: 8,
-                    formatter: (params) => {
-                        return `<div
-                                style='
-                                        display: flex;
-                                        flex-direction: column;
-                                        gap: 8px;
-                                        align-items: center;
-                                        max-width: 200px;
-                                    '
-                            >
-                                <span
-                                    style='
-                                        color: #ccd2de; 
-                                        font-size: 16px; 
-                                        font-weight: 400; 
-                                        line-height: 18px; 
-                                        max-width: 200px;
-                                        white-space: nowrap;
-                                        text-overflow: ellipsis;
-                                        overflow: hidden;
-                                        word-break: break-all;
-                                    '
-                                >
-                                    ${params?.name}
-                                </span>
-                                <span style='color: #fff; font-size: 18px; fontWeight: 700; lineHeight: 24px'>
-                                    ${params?.value}(${params?.percent}%)
-                                </span>
-                            </div>`
-                    }
-                },
+
                 itemStyle: {
                     borderRadius: 4
                 },
