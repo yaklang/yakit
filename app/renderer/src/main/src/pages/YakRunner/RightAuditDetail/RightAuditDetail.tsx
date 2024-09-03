@@ -123,6 +123,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     })
 
     const initData: InitDataProps[] = useMemo(() => {
+        setResultKey(undefined)
         if (graphLine) {
             return graphLine.map((item, index) => {
                 return {
