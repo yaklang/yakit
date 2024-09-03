@@ -20,7 +20,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
@@ -423,74 +423,80 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     }, [projectNmae])
 
     const onSubmit = useMemoizedFn(async () => {
-        resetMap()
-        setLoading(true)
-        setShowEmpty(false)
-        const path: string = "/"
-        const params: AuditYakUrlProps = {
-            Schema: "syntaxflow",
-            Location: projectNmae || "",
-            Path: path
-        }
-        const body = StringToUint8Array(value)
-        lastValue.current = value
-        const result = await loadAuditFromYakURLRaw(params, body)
-        if (result && result.Resources.length > 0) {
-            const TopId = "top-message"
-            let messageIds: string[] = []
-            let variableIds: string[] = []
-            // 构造树结构
-            result.Resources.forEach((item, index) => {
-                const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
-                // 警告信息（置顶显示）前端收集折叠
-                if (ResourceType === "message") {
-                    const id = `${TopId}${path}${VerboseName}-${index}`
-                    messageIds.push(id)
-                    setMapAuditDetail(id, {
-                        parent: path,
-                        id,
-                        name: VerboseName,
-                        ResourceType,
-                        VerboseType,
-                        Size,
-                        Extra
-                    })
-                }
-                // 变量
-                if (ResourceType === "variable") {
-                    const id = `${path}${ResourceName}`
-                    variableIds.push(id)
-                    setMapAuditDetail(id, {
-                        parent: path,
-                        id,
-                        name: ResourceName,
-                        ResourceType,
-                        VerboseType,
-                        Size,
-                        Extra
-                    })
-                }
-            })
-            let topIds: string[] = []
-            if (messageIds.length > 0) {
-                topIds.push(TopId)
-                setMapAuditDetail(TopId, {
-                    parent: path,
-                    id: TopId,
-                    name: "message",
-                    ResourceType: TopId,
-                    VerboseType: "",
-                    Size: 0,
-                    Extra: []
-                })
-                setMapAuditChildDetail(TopId, messageIds)
+        try {
+            resetMap()
+            setLoading(true)
+            setShowEmpty(false)
+            const path: string = "/"
+            const params: AuditYakUrlProps = {
+                Schema: "syntaxflow",
+                Location: projectNmae || "",
+                Path: path
             }
-            setMapAuditChildDetail("/", [...topIds, ...variableIds])
-            emiter.emit("onRefreshAuditTree")
-        } else {
+            const body = StringToUint8Array(value)
+            lastValue.current = value
+            const result = await loadAuditFromYakURLRaw(params, body)
+            if (result && result.Resources.length > 0) {
+                const TopId = "top-message"
+                let messageIds: string[] = []
+                let variableIds: string[] = []
+                // 构造树结构
+                result.Resources.forEach((item, index) => {
+                    const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                    // 警告信息（置顶显示）前端收集折叠
+                    if (ResourceType === "message") {
+                        const id = `${TopId}${path}${VerboseName}-${index}`
+                        messageIds.push(id)
+                        setMapAuditDetail(id, {
+                            parent: path,
+                            id,
+                            name: VerboseName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
+                        })
+                    }
+                    // 变量
+                    if (ResourceType === "variable") {
+                        const id = `${path}${ResourceName}`
+                        variableIds.push(id)
+                        setMapAuditDetail(id, {
+                            parent: path,
+                            id,
+                            name: ResourceName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
+                        })
+                    }
+                })
+                let topIds: string[] = []
+                if (messageIds.length > 0) {
+                    topIds.push(TopId)
+                    setMapAuditDetail(TopId, {
+                        parent: path,
+                        id: TopId,
+                        name: "message",
+                        ResourceType: TopId,
+                        VerboseType: "",
+                        Size: 0,
+                        Extra: []
+                    })
+                    setMapAuditChildDetail(TopId, messageIds)
+                }
+                setMapAuditChildDetail("/", [...topIds, ...variableIds])
+                emiter.emit("onRefreshAuditTree")
+            } else {
+                setShowEmpty(true)
+            }
+            setLoading(false)
+        } catch (error: any) {
+            failed(`${error}`)
             setShowEmpty(true)
+            setLoading(false)
         }
-        setLoading(false)
     })
 
     const onJump = useMemoizedFn((v: AuditNodeProps) => {

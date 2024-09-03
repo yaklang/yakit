@@ -32,7 +32,7 @@ export const yakitFailed = (props: ArgsProps | string | React.ReactNode) => {
         message: ""
     }
     if (typeof props === "string") {
-        newProps.message = props
+        newProps.message = <div style={{whiteSpace: "pre-wrap"}}>{props}</div>
     } else if (typeof props === "object") {
         newProps = props as ArgsProps
     } else {

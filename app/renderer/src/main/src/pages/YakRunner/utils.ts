@@ -1010,7 +1010,7 @@ export const loadAuditFromYakURLRaw = (
                 resolve(rsp)
             })
             .catch((e) => {
-                resolve(null)
+                reject(e)
             })
     })
 }
