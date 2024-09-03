@@ -58,7 +58,7 @@ import useDispatcher from "../hooks/useDispatcher"
 const {ipcRenderer} = window.require("electron")
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys, onContext} = props
+    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys} = props
 
     const handleSelect = useMemoizedFn(() => {
         onSelected(true, info)
@@ -148,7 +148,6 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                     })}
                     style={{paddingLeft: (info.depth - 1) * 16 + 8}}
                     onClick={handleClick}
-                    onContextMenu={() => onContext(info)}
                 >
                     {!info.isLeaf && (
                         <div className={classNames(styles["node-switcher"], {[styles["expanded"]]: isExpanded})}>
@@ -193,6 +192,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
     const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps) => {
         setFoucsedKey(node.id)
         onJump(node)
+        onContext(node)
     })
 
     const handleExpand = useMemoizedFn((expanded: boolean, node: AuditNodeProps) => {
@@ -264,7 +264,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
                             setFoucsedKey={setFoucsedKey}
-                            onContext={onContext}
                         />
                     )
                 }}

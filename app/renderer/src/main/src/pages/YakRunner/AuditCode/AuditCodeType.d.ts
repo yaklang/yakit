@@ -24,7 +24,6 @@ export interface AuditTreeNodeProps {
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
     setFoucsedKey: (v: string) => void
-    onContext: (v:AuditNodeProps) => void
 }
 
 // Map存储列表详情
