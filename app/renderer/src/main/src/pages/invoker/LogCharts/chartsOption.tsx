@@ -210,81 +210,16 @@ export const getLineOption = (graphData: GraphData) => {
 }
 
 export const getPieOption = (graphData: GraphData) => {
-    console.log("getPieOption", graphData.data)
+    const total = graphData.data.reduce((sum, item) => sum + item.value, 0)
     const option: EChartsOption = {
         color: logChartsColorList.map((ele) => ele.color),
-        // legend: {
-        //     // type: 'scroll',
-        //     // orient: 'vertical',
-        //     // right:'20%',
-        //     // top:24,
-        //     data: graphData.data.map((ele) => ({
-        //         name: ele.key,
-        //         value: ele.value,
-        //         icon: "circle",
-        //         // itemStyle: {
-        //         //     borderWidth: 12,
-        //         //     borderColor: "red"
-        //         // },
-        //         textStyle: {
-        //             color: "#85899E",
-        //             overflow:'truncate'
-        //         }
-        //     }))
-        // },
-        tooltip: {
-            trigger: "item",
 
-            // alwaysShowContent: true,
-            // triggerOn: "click",
-            borderWidth: 0,
-            backgroundColor: "#1E1B39",
-            confine: true,
-            appendToBody: true,
-            borderRadius: 8,
-            formatter: (params) => {
-                return `<div
-                        style='
-                                display: flex;
-                                flex-direction: column;
-                                gap: 8px;
-                                align-items: center;
-                                max-width: 200px;
-                            '
-                    >
-                        <span
-                            style='
-                                color: #ccd2de; 
-                                font-size: 16px; 
-                                font-weight: 400; 
-                                line-height: 18px; 
-                                max-width: 200px;
-                                white-space: nowrap;
-                                text-overflow: ellipsis;
-                                overflow: hidden;
-                                word-break: break-all;
-                            '
-                        >
-                            ${params?.name}
-                        </span>
-                        <span style='color: #fff; font-size: 18px; fontWeight: 700; lineHeight: 24px'>
-                            ${params?.value}(${params?.percent}%)
-                        </span>
-                    </div>`
-            }
-            // extraCssText: 'width: 180px'
-            // position:  (pos, params, el, elRect, size)=> {
-            //     console.log('pos, params, el, elRect, size',pos, params, el, elRect, size)
-            //     var obj = { top: 10 };
-            //     obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
-            //     return obj;
-            //   },
-        },
         series: [
             {
                 name: "total",
                 type: "pie",
                 radius: [0, "20%"],
+                tooltip: {show: false},
                 label: {
                     position: "center",
                     formatter: ["{a|{c}}", "{b|total}"].join("\n"),
@@ -292,7 +227,7 @@ export const getPieOption = (graphData: GraphData) => {
                         a: {
                             color: "#31343F",
                             fontWeight: 700,
-                            fontSize: 44,
+                            fontSize: 38,
                             fontFamily: "Inter",
                             lineHeight: 52,
                             align: "center"
@@ -315,15 +250,52 @@ export const getPieOption = (graphData: GraphData) => {
                 itemStyle: {
                     color: "#fff"
                 },
-                data: [{value: 1481, name: "total"}]
+                data: [{value: total, name: "total"}]
             },
             {
                 name: "data",
                 type: "pie",
                 radius: ["40%", "80%"],
                 minAngle: 5,
-                selectedMode: "single",
+                selectedMode: "multiple",
                 selectedOffset: 20,
+                tooltip: {
+                    trigger: "item",
+                    borderWidth: 0,
+                    backgroundColor: "#1E1B39",
+                    confine: true,
+                    borderRadius: 8,
+                    formatter: (params) => {
+                        return `<div
+                                style='
+                                        display: flex;
+                                        flex-direction: column;
+                                        gap: 8px;
+                                        align-items: center;
+                                        max-width: 200px;
+                                    '
+                            >
+                                <span
+                                    style='
+                                        color: #ccd2de; 
+                                        font-size: 16px; 
+                                        font-weight: 400; 
+                                        line-height: 18px; 
+                                        max-width: 200px;
+                                        white-space: nowrap;
+                                        text-overflow: ellipsis;
+                                        overflow: hidden;
+                                        word-break: break-all;
+                                    '
+                                >
+                                    ${params?.name}
+                                </span>
+                                <span style='color: #fff; font-size: 18px; fontWeight: 700; lineHeight: 24px'>
+                                    ${params?.value}(${params?.percent}%)
+                                </span>
+                            </div>`
+                    }
+                },
                 itemStyle: {
                     borderRadius: 4
                 },
@@ -335,41 +307,7 @@ export const getPieOption = (graphData: GraphData) => {
                     fontSize: 16,
                     fontWeight: 700
                 },
-                tooltip: {
-                    trigger: "item",
-                    textStyle: {
-                        width: 20,
-                        // @ts-ignore
-                        overflow: "truncate"
-                    }
-                },
-                // emphasis: {
-                //     label: {
-                //         show: true,
-                //         formatter: ["{a|{b}}", "{b|{c}}"].join("\n"),
-                //         backgroundColor: "#1E1B39",
-                //         borderRadius: 8,
-                //         padding: [12, 16],
-                //         rich: {
-                //             a: {
-                //                 color: "#CCD2DE",
-                //                 fontWeight: 400,
-                //                 fontSize: 16,
-                //                 lineHeight: 18,
-                //                 align: "center"
-                //             },
-                //             b: {
-                //                 color: "#FFFFFF",
-                //                 fontWeight: 700,
-                //                 fontSize: 18,
-                //                 lineHeight: 24,
-                //                 align: "center",
-                //                 padding: [4, 0, 0, 0]
-                //             }
-                //         }
-                //     }
-                // },
-                data: graphData.data.map((ele) => ({value: ele.value, name: ele.key, select: true}))
+                data: graphData.data.map((ele) => ({value: ele.value, name: ele.key}))
             }
         ]
     }
