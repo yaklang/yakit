@@ -446,7 +446,8 @@ const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
                 return <LogCharts type='bar' graphData={graphData} />
             case "line":
                 return <LogCharts type='line' graphData={graphData} />
-
+            case "pie":
+                return <LogCharts type='pie' graphData={graphData} />
             default:
                 return <div>{props.data}</div>
         }
