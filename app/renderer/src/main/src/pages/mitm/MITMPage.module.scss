@@ -165,7 +165,7 @@
 }
 
 .infoBox {
-    background: #FFF2F0;
+    background: #fff2f0;
     color: rgba(133, 137, 158, 1);
     padding: 8px 16px;
     margin-bottom: 16px;
@@ -382,6 +382,99 @@
         }
         .ant-popover-inner-content {
             padding: 14px 0 0;
+        }
+    }
+}
+
+.chrome-launcher-params-set-wrap {
+    padding: 20px;
+    padding-top: 0;
+    height: 650px;
+    .button-add-params {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        font-size: 12px;
+
+        svg {
+            color: #fff;
+            margin-right: 4px;
+            stroke-width: 1.5px;
+        }
+    }
+
+    .table-action-icon {
+        padding: 0 4px;
+        display: flex;
+        align-items: center;
+
+        .action-icon {
+            svg {
+                width: 16px;
+                height: 16px;
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+
+        .action-icon-save {
+            svg {
+                color: var(--yakit-primary-5);
+            }
+        }
+
+        .action-icon-edit-disabled {
+            svg {
+                color: var(--yakit-disable-text-color);
+                cursor: not-allowed;
+
+                &:hover {
+                    color: var(--yakit-disable-text-color);
+                }
+            }
+        }
+
+        .action-icon-ban-disabled {
+            svg {
+                color: var(--yakit-primary-5);
+            }
+        }
+
+        span {
+            padding: 0 12px;
+            border-right: 1px solid var(--yakit-border-color);
+            color: var(--yakit-body-text-color);
+
+            &:first-child {
+                padding-left: 0;
+            }
+        }
+
+        .icon-trash {
+            color: var(--yakit-danger-5);
+        }
+
+        .action-icon-trash-disabled {
+            svg {
+                color: var(--yakit-disable-text-color);
+                cursor: not-allowed;
+
+                &:hover {
+                    color: var(--yakit-disable-text-color);
+                }
+            }
+        }
+
+        .action-icon-ban-disabled2 {
+            svg {
+                color: var(--yakit-disable-text-color);
+                cursor: not-allowed;
+
+                &:hover {
+                    color: var(--yakit-disable-text-color);
+                }
+            }
         }
     }
 }
