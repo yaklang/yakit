@@ -466,7 +466,6 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
 
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
         clearMapGraphInfoDetail()
-        setActiveKey(undefined)
         const {Schema, Location, Path, Body} = params
         const body = StringToUint8Array(Body)
         const result = await loadAuditFromYakURLRaw({Schema, Location, Path}, body)
@@ -491,9 +490,20 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 }
                 if (item.Key === "graph_line") {
                     try {
-                        let graph_info = JSON.parse(item.Value)
+                        let graph_info: string[][] = JSON.parse(item.Value)
+                        // 当数量小于等于10条时默认第一级展开
+                        if (graph_info.length > 0 && graph_info.length <= 10) {
+                            const expendKey:string[] = graph_info.map((item,index)=>`路径${index + 1}`)
+                            setActiveKey(expendKey)
+                        }
+                        else{
+                            setActiveKey(undefined)
+                        }
                         setGraphLine(graph_info)
-                    } catch (error) {}
+                    } catch (error) {
+                        setGraphLine(undefined)
+                        setActiveKey(undefined)
+                    }
                 }
             })
             setRefresh(!refresh)
