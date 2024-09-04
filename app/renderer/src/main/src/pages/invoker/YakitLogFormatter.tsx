@@ -34,6 +34,7 @@ import {EChartsOption} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPi
 import * as echarts from "echarts"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
 import {isNumberNaN} from "@/utils/tool"
+import {WordCloudCharts} from "./LogCharts/WordCloudCharts"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
 export interface YakitLogViewersProp {
@@ -443,11 +444,11 @@ const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
     const renderCharts = useMemoizedFn(() => {
         switch (graphData.type) {
             case "bar":
-                return <LogCharts type='bar' graphData={graphData} />
             case "line":
-                return <LogCharts type='line' graphData={graphData} />
             case "pie":
-                return <LogCharts type='pie' graphData={graphData} />
+                return <LogCharts type={graphData.type} graphData={graphData} />
+            case "wordcloud":
+                return <WordCloudCharts graphData={graphData} />
             default:
                 return <div>{props.data}</div>
         }

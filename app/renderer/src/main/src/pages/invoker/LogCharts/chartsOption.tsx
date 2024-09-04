@@ -11,7 +11,7 @@ const getBarSeries = (graphData) => {
 
     if (seriesLength === 0) {
         series.push({
-            name: 1,
+            name: `系列1`,
             data: graphData.data.map((ele) => (isNumberNaN(ele.value) ? 0 : ele.value)),
             type: "bar",
             showBackground: true,
@@ -304,6 +304,88 @@ export const getPieOption = (graphData: GraphData) => {
                     color: "#fff",
                     fontSize: 16,
                     fontWeight: 700
+                },
+                data: graphData.data.map((ele, index) => ({
+                    value: ele.value,
+                    name: ele.key
+                }))
+            }
+        ]
+    }
+    return option
+}
+
+export const getWordCloudOption = (graphData: GraphData) => {
+    const option: EChartsOption = {
+        tooltip: {
+            trigger: "item",
+            borderWidth: 0,
+            backgroundColor: "#1E1B39",
+            confine: true,
+            borderRadius: 8,
+            formatter: (params) => {
+                return `<div
+                        style='
+                                display: flex;
+                                flex-direction: column;
+                                gap: 8px;
+                                align-items: center;
+                                max-width: 200px;
+                            '
+                    >
+                        <span
+                            style='
+                                color: #ccd2de; 
+                                font-size: 16px; 
+                                font-weight: 400; 
+                                line-height: 18px; 
+                                max-width: 200px;
+                                white-space: nowrap;
+                                text-overflow: ellipsis;
+                                overflow: hidden;
+                                word-break: break-all;
+                            '
+                        >
+                            ${params?.name}
+                        </span>
+                        <span style='color: #fff; font-size: 18px; fontWeight: 700; lineHeight: 24px'>
+                            ${params?.value}
+                        </span>
+                    </div>`
+            }
+        },
+        series: [
+            {
+                type: "wordCloud",
+
+                shape: "circle",
+                left: "center",
+                top: "center",
+                width: "70%",
+                height: "80%",
+
+                sizeRange: [8, 60],
+                rotationRange: [-90, 90],
+                rotationStep: 45,
+                gridSize: 8,
+                drawOutOfBound: false,
+                textStyle: {
+                    fontWeight: "bold",
+                    color: () => {
+                        return (
+                            "rgb(" +
+                            [
+                                Math.round(Math.random() * 160),
+                                Math.round(Math.random() * 160),
+                                Math.round(Math.random() * 160)
+                            ].join(",") +
+                            ")"
+                        )
+                    }
+                },
+                emphasis: {
+                    focus: "self",
+                    textStyle: {}
                 },
                 data: graphData.data.map((ele, index) => ({
                     value: ele.value,

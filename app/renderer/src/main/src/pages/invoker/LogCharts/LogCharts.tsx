@@ -4,7 +4,7 @@ import * as echarts from "echarts"
 import React, {useRef, useEffect, useState} from "react"
 import styles from "./LogCharts.module.scss"
 import {logChartsColorList} from "./constant"
-import {EChartsOption, SelectChangedEvent} from "@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
+import {EChartsOption} from "@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
 import {getBarOption, getLineOption, getPieOption} from "./chartsOption"
 import {useMemoizedFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
@@ -26,7 +26,7 @@ const LogCharts: React.FC<LogChartsProps> = React.memo((props) => {
     const [legendSelectList, setLegendSelectList] = useState<string[]>([])
     const chartRef = useRef<HTMLDivElement>(null)
     const graphRef = useRef<echarts.ECharts>()
-    const optionRef = useRef<EChartsOption>()
+    const optionRef = useRef<EChartsOption>({})
 
     const pieOriginOptionRef = useRef<EChartsOption>()
     const lineOriginOptionRef = useRef<EChartsOption>()
@@ -57,6 +57,7 @@ const LogCharts: React.FC<LogChartsProps> = React.memo((props) => {
             case "bar":
             case "line":
                 if (Array.isArray(option.series)) {
+                    //@ts-ignore
                     newLegendList = (option.series || []).map((ele) => ({key: ele.name as string}))
                 }
                 break

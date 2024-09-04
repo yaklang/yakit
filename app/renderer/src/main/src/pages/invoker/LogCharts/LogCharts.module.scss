@@ -40,7 +40,6 @@
     overflow-x: auto;
 }
 .graph-charts-body {
-    // min-width: 400px;
     overflow-x: auto;
     .bar-graph-charts {
         @extend %charts;
@@ -49,6 +48,9 @@
         @extend %charts;
     }
     .pie-graph-charts {
+        @extend %charts;
+    }
+    .wordcloud-graph-charts {
         @extend %charts;
     }
 }
