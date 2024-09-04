@@ -196,6 +196,7 @@ service Yak {
   rpc ResetYakScriptGroup(ResetYakScriptGroupRequest) returns (Empty);
   rpc SetGroup(SetGroupRequest) returns (Empty);
 
+
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
   rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
@@ -2963,7 +2964,7 @@ message QueryRisksRequest {
   string IsRead = 12;
   string Title = 13;
   repeated int64 Ids = 14;
-  
+
   string RuntimeId = 15;
 }
 
@@ -3827,7 +3828,7 @@ message QueryYakScriptRequest {
   string UUID = 17;
   PluginGroup Group = 18;
   repeated string ExcludeTypes = 19;
-  int64 IsMITMParamPlugins = 20; //0->默认全部 1->是mitm带参数插件 2->mitm不带参数;
+  int64 IsMITMParamPlugins = 20; //0->默认全部 1->是mitm带参数插件 2->mitm不带参数
 }
 
 message PluginGroup {
@@ -4216,7 +4217,6 @@ message HTTPResponseMatcher {
   string ExprType = 9;
 
   string HitColor = 10;
-  // retain:保留 discard:丢弃 不传就是匹配
   string Action = 11;
 }
 
@@ -4512,6 +4512,7 @@ message FuzzerResponse {
   bool DisableRenderStyles = 52;
 
   string RuntimeID = 53;
+  bool Discard = 54;
 }
 
 message RedirectHTTPFlow {
@@ -4543,6 +4544,12 @@ message GetHTTPFlowBodyByIdRequest {
 
 message GetHTTPFlowByIdsRequest {
   repeated int64 Ids = 2;
+}
+
+message GetHTTPFlowBodyByIdRequest {
+  int64 Id = 1;
+  bool IsRequest = 2;
+  int64 BufSize = 3;
 }
 
 message QueryHTTPFlowRequest {
@@ -4711,6 +4718,7 @@ message HTTPFlow {
 
   // payloads (web fuzzer)
   repeated string Payloads = 47;
+  int64 DurationMs = 48;
 }
 
 message GetHTTPFlowBodyByIdResponse {
@@ -4725,6 +4733,12 @@ message FuzzableParam {
   bytes OriginValue = 3;
   bytes AutoTemplate = 4;
   bool IsHTTPS = 5;
+}
+
+message GetHTTPFlowBodyByIdResponse {
+   bytes Data = 1;
+   string Filename = 2; // 第一个响应里才有，应该保存的文件名
+   bool EOF = 3; // 是否是最后一个包
 }
 
 message QueryHTTPFlowResponse {
@@ -4881,9 +4895,9 @@ message MITMRequest {
   bool preferGMTLS = 48;
 
   // 代理用户名和密码
-  bool enableProxyAuth = 51;
   string proxyUsername = 49;
   string proxyPassword = 50;
+  bool enableProxyAuth = 51;
   repeated string dnsServers = 52;
   repeated KVPair hosts = 53;
 
@@ -4905,7 +4919,7 @@ message MITMRequest {
 
   // disable MITM CA Cert Page
   bool DisableCACertPage = 61;
-  
+
   // random JA3 fingerprint
   bool RandomJA3 = 62;
 }
@@ -5093,6 +5107,7 @@ message ExecParamItem {
   string Value = 2;
 }
 message ExecRequest {
+  // 执行优先级为：ScriptPath > Script > ScriptId 
   repeated ExecParamItem Params = 1;
   string Script = 2;
   string ScriptId = 3;
@@ -5103,7 +5118,7 @@ message ExecRequest {
   bool NoDividedEngine = 7;
 
   string WorkDir = 8; // 工作目录
-  string ScriptPath = 9; // 脚本位置，与Script互斥，优先使用这个
+  string ScriptPath = 9; // 脚本位置
 }
 
 message ExecResult {
@@ -5299,6 +5314,6 @@ message GenerateReverseShellCommandRequest{
 }
 
 message GenerateReverseShellCommandResponse{
-    GeneralResponse Status = 1;
-    string Result =2;
+  GeneralResponse Status = 1;
+  string Result = 2;
 }
