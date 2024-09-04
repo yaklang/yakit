@@ -28,7 +28,7 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitFormDraggerContentPath} from "@/components/yakitUI/YakitForm/YakitForm"
 import {BrutePageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -315,6 +315,8 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                 setExecuteStatus("finished")
             })
         })
+
+        const [inputType,setInputType] = useState<"content"|"path">("content")
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
             const params: StartBruteParams = {
@@ -323,6 +325,10 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                     Targets: value.Targets,
                     Type: bruteType.join(",")
                 })
+            }
+            if(inputType === "path"){
+                params.TargetFile = params.Targets
+                params.Targets = ""
             }
             streamEvent.reset()
             apiStartBrute(params, tokenRef.current).then(() => {
@@ -372,7 +378,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                         }}
                         labelWrap={true}
                     >
-                        <YakitFormDraggerContent
+                        <YakitFormDraggerContentPath
                             style={{width: "100%"}}
                             formItemProps={{
                                 name: "Targets",
@@ -387,6 +393,8 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
                             }}
                             help='可将TXT、Excel文件拖入框内或'
                             disabled={isExecuting}
+                            onTextAreaType={setInputType}
+                            textAreaType={inputType}
                         />
                         <Form.Item label={" "} colon={false}>
                             <div className={styles["form-extra"]}>

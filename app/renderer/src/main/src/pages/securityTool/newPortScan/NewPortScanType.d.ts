@@ -49,6 +49,8 @@ export interface NewPortScanExecuteFormProps {
     form: FormInstance<any>
     disabled: boolean
     extraParamsValue: PortScanExecuteExtraFormValue
+    inputType: "content"|"path"
+    setInputType: (v:"content"|"path") => void
 }
 
 export interface PortScanExecuteExtraFormValue extends PortScanParams {

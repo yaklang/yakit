@@ -90,6 +90,8 @@ export interface PluginFixFormParamsProps {
     disabled: boolean
     /**原始请求中的数据包数据 */
     rawHTTPRequest?: string
+    inputType?: "content"|"path"
+    setInputType?: (v:"content"|"path") => void
 }
 
 export type RequestType = "original" | "input" | "httpFlowId"

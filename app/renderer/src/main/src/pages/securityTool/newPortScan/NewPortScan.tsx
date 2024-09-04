@@ -28,7 +28,7 @@ import classNames from "classnames"
 import {Checkbox, Divider, Form} from "antd"
 import cloneDeep from "lodash/cloneDeep"
 import {ScanKind, ScanPortTemplate, defaultPorts} from "@/pages/portscan/PortScanPage"
-import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitFormDraggerContentPath} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {isEnpriTrace} from "@/utils/envfile"
@@ -390,6 +390,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             onCreateReportModal(params)
         })
 
+        const [inputType,setInputType] = useState<"content"|"path">("content")
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
             const filters = {...pluginListSearchInfo.filters}
@@ -403,6 +404,12 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
                 LinkPluginConfig: linkPluginConfig
             }
+            if(inputType === "path"){
+                executeParams["TargetsFile"] = executeParams["Targets"]
+                executeParams["Targets"] = ""
+            }
+            console.log("onStartExecute---",executeParams);
+            
             portScanStreamEvent.reset()
             setRuntimeId("")
             if (isEnpriTrace()) {
@@ -485,6 +492,8 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                             form={form}
                             disabled={isExecuting}
                             extraParamsValue={extraParamsValue}
+                            inputType={inputType}
+                            setInputType={setInputType}
                         />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>
@@ -539,7 +548,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 )
 
 const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo((props) => {
-    const {inViewport, disabled, form, extraParamsValue} = props
+    const {inViewport, disabled, form, extraParamsValue,inputType,setInputType} = props
     const [templatePort, setTemplatePort] = useState<string>()
 
     useEffect(() => {
@@ -583,7 +592,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
     })
     return (
         <>
-            <YakitFormDraggerContent
+            <YakitFormDraggerContentPath
                 formItemProps={{
                     name: "Targets",
                     label: "扫描目标",
@@ -596,6 +605,8 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                 }}
                 help='可将TXT、Excel文件拖入框内或'
                 disabled={disabled}
+                onTextAreaType={setInputType}
+                textAreaType={inputType}
             />
             <Form.Item label='预设端口' name='presetPort'>
                 <Checkbox.Group
