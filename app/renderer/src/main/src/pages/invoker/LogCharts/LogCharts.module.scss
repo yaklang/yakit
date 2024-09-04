@@ -20,6 +20,10 @@
         color: var(--yakit-body-text-color);
         line-height: 16px;
         cursor: pointer;
+        opacity: 0.3;
+    }
+    .graph-xAxis-list-item-active {
+        opacity: 1;
     }
     .circle {
         width: 12px;
@@ -29,21 +33,25 @@
         margin-top: 2px;
     }
 }
-
-.bar-graph-charts {
+%charts {
     flex: 1;
     height: 360px;
-}
-.line-graph-charts {
-    flex: 1;
-    height: 360px;
-}
-.pie-graph-charts {
-    min-height: 420px;
-    padding: 24px;
     min-width: 400px;
+    overflow-x: auto;
 }
-
+.graph-charts-body {
+    min-width: 300px;
+    overflow-x: auto;
+    .bar-graph-charts {
+        @extend %charts;
+    }
+    .line-graph-charts {
+        @extend %charts;
+    }
+    .pie-graph-charts {
+        @extend %charts;
+    }
+}
 .pie-tooltip {
     display: inline-flex;
     flex-direction: column;

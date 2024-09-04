@@ -4,7 +4,6 @@ import {EChartsOption} from "@/pages/risks/VulnerabilityLevelPie/VulnerabilityLe
 import {GraphData} from "@/pages/graph/base"
 import groupBy from "lodash/groupBy"
 import numeral from "numeral"
-import ReactDOM from "react-dom"
 const getBarSeries = (graphData) => {
     const seriesList = graphData.data.filter((ele) => Array.isArray(ele.value)).map((ele) => ele.value.length)
     const seriesLength = Math.max(...seriesList, 0)
@@ -292,7 +291,6 @@ export const getPieOption = (graphData: GraphData) => {
                 name: "data",
                 type: "pie",
                 radius: ["40%", "80%"],
-                minAngle: 5,
                 selectedMode: "multiple",
                 selectedOffset: 20,
 
@@ -307,7 +305,10 @@ export const getPieOption = (graphData: GraphData) => {
                     fontSize: 16,
                     fontWeight: 700
                 },
-                data: graphData.data.map((ele) => ({value: ele.value, name: ele.key}))
+                data: graphData.data.map((ele, index) => ({
+                    value: ele.value,
+                    name: ele.key
+                }))
             }
         ]
     }
