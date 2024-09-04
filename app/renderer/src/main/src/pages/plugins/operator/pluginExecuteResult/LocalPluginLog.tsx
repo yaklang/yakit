@@ -71,6 +71,7 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
                 return <LogNodeStatusErrorIcon />
             case "success":
                 return <LogNodeStatusSuccessIcon />
+            case "json":
             case "code":
             case "text":
                 return <LogNodeStatusCodeIcon />
@@ -94,7 +95,16 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
     return (
         <div className={styles["log-body"]}>
             <div className={styles["log-heard"]}>{currentTime} 日志查询结果</div>
-            <Timeline reverse={true} pending={loading} style={{marginTop: 10, marginBottom: 10}}>
+            <Timeline
+                reverse={true}
+                pending={loading}
+                pendingDot={
+                    <div className={styles["log-pending-dot"]}>
+                        <div className={styles["log-pending-dot-circle"]}></div>
+                    </div>
+                }
+                style={{margin: "10px 10px 0 8px"}}
+            >
                 {list.map((e, index) => {
                     return (
                         <Timeline.Item key={e.id} color='' dot={<>{logLevelToDot(e)}</>}>
