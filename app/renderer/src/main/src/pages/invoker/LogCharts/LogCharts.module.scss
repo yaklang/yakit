@@ -40,7 +40,7 @@
     overflow-x: auto;
 }
 .graph-charts-body {
-    min-width: 300px;
+    // min-width: 400px;
     overflow-x: auto;
     .bar-graph-charts {
         @extend %charts;
