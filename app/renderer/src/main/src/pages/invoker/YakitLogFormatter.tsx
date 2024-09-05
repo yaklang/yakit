@@ -41,7 +41,7 @@ export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
         <Timeline pending={!props.finished} reverse={true}>
             {(props.data || []).map((e) => {
                 return (
-                    <Timeline.Item color={LogLevelToCode(e.level)}>
+                    <Timeline.Item key={`${e.timestamp}-${e.level}`} color={LogLevelToCode(e.level)}>
                         <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
                     </Timeline.Item>
                 )
@@ -119,7 +119,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                                 {(obj.head || []).length > 0 && (
                                     <Row gutter={4}>
                                         {(obj.head || []).map((i) => (
-                                            <Col span={24.0 / obj.head.length}>
+                                            <Col key={i} span={24.0 / obj.head.length}>
                                                 <div style={{border: "2px"}}>{i}</div>
                                             </Col>
                                         ))}
