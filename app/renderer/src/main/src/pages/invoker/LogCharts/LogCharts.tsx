@@ -161,6 +161,7 @@ const LogCharts: React.FC<LogChartsProps> = React.memo((props) => {
                 <div className={styles["graph-xAxis-list"]}>
                     {legendList.map((item, index) => {
                         const checked = legendSelectList.includes(item.key)
+                        const name = chartsColorList[index % chartsColorListLength]?.name
                         return (
                             <div
                                 key={item.key}
@@ -170,10 +171,9 @@ const LogCharts: React.FC<LogChartsProps> = React.memo((props) => {
                                 onClick={() => onListSelect(item, checked, index)}
                             >
                                 <div
-                                    className={classNames(
-                                        styles["circle"],
-                                        `color-bg-${chartsColorList[index % chartsColorListLength]?.name || "purple"}`
-                                    )}
+                                    className={classNames(styles["circle"], `color-bg-${name || "purple"}`, {
+                                        [styles["circle-text-bg"]]: name === "text"
+                                    })}
                                 />
                                 <div>{item.key}</div>
                             </div>
