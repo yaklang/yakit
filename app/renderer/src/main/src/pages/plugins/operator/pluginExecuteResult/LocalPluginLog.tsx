@@ -20,9 +20,7 @@ import {
     LogNodeStatusWarningIcon
 } from "@/assets/icon/colors"
 
-export interface LocalPluginLogList extends StreamResult.Log {
-    id: string
-}
+export interface LocalPluginLogList extends StreamResult.Log {}
 export interface LocalPluginLogProps {
     loading: boolean
     list: LocalPluginLogList[]
@@ -108,7 +106,7 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
                 {list.map((e, index) => {
                     return (
                         <Timeline.Item key={e.id} color='' dot={<>{logLevelToDot(e)}</>}>
-                            <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} onlyTime={true} />
+                            <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
                         </Timeline.Item>
                     )
                 })}

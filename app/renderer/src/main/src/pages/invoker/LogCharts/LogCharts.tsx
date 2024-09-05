@@ -78,7 +78,7 @@ const LogCharts: React.FC<LogChartsProps> = React.memo((props) => {
                 graphRef.current = undefined
             }
         }
-    }, [graphData, type])
+    }, [])
     const onListSelect = useMemoizedFn((item: LegendListProps, checked: boolean, index: number) => {
         if (checked) {
             setLegendSelectList((v) => v.filter((ele) => ele !== item.key))

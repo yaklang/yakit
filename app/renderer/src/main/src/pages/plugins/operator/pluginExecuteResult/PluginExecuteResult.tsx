@@ -28,9 +28,6 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {CurrentHttpFlow, formatJson} from "@/pages/yakitStore/viewers/base"
-import {Timeline} from "antd"
-import {LogLevelToCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {WebTree} from "@/components/WebTree/WebTree"
 import classNames from "classnames"
@@ -39,14 +36,13 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {SolidViewgridIcon} from "@/assets/icon/solid"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {QueryPortsRequest} from "@/pages/assetViewer/PortAssetPage"
-import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {PortTable} from "@/pages/assetViewer/PortTable/PortTable"
 import {defQueryPortsRequest} from "@/pages/assetViewer/PortTable/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {yakitFailed} from "@/utils/notification"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {v4 as uuidv4} from "uuid"
 import {YakitRiskTable} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {QueryRisksRequest} from "@/pages/risks/YakitRiskTable/YakitRiskTableType"
@@ -341,20 +337,19 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
             }
         ]
     }, [])
-    const list = useCreation(() => {
+    const list: StreamResult.Log[] = useCreation(() => {
         return (messageList || [])
             .filter((i) => {
                 return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
             })
             .splice(0, 25)
-            .map((ele) => ({...ele, id: uuidv4()}))
             .reverse()
     }, [messageList])
 
-    const echartsLists = useCreation(() => {
+    const echartsLists: StreamResult.Log[] = useCreation(() => {
         return messageList.filter((ele) => ele.level === "json-graph")
     }, [messageList])
-    const textLists = useCreation(() => {
+    const textLists: StreamResult.Log[] = useCreation(() => {
         const textTypes = ["text", "code"]
         return messageList.filter((ele) => textTypes.includes(ele.level))
     }, [messageList])

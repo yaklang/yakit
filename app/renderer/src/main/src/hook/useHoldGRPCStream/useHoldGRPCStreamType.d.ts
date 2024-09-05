@@ -1,4 +1,4 @@
-import { HybridScanActiveTask } from "@/models/HybridScan"
+import {HybridScanActiveTask} from "@/models/HybridScan"
 import {Risk as RiskProps} from "@/pages/risks/schema"
 
 /** @name hooks逻辑数据 */
@@ -90,6 +90,8 @@ export declare namespace StreamResult {
 
     /** @name 数据流结果(日志信息类) */
     export interface Log {
+        /**@name 前端使用 */
+        id: string
         level: string
         /** @name 数据流信息(json化) */
         data: string | any

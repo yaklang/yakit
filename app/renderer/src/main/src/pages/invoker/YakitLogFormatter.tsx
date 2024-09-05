@@ -1,10 +1,8 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, Card, Col, Divider, Row, Space, Tag, Timeline} from "antd"
+import {Card, Col, Divider, Row, Space, Timeline} from "antd"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {showModal} from "../../utils/showModal"
 import {GraphData} from "../graph/base"
-import {BarGraph} from "../graph/BarGraph"
-import {PieGraph} from "../graph/PieGraph"
 import {ExecResultLog} from "./batch/ExecMessageViewer"
 import {LogLevelToCode} from "../../components/HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRiskViewer"
@@ -12,8 +10,6 @@ import {AutoCard} from "../../components/AutoCard"
 import MDEditor from "@uiw/react-md-editor"
 import {openABSFileLocated} from "../../utils/openWebsite"
 import {callCopyToClipboard} from "../../utils/basic"
-import {RiskDetails} from "../risks/RiskTable"
-import {Risk} from "../risks/schema"
 import styles from "./YakitLogFormatter.module.scss"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -30,13 +26,10 @@ import {
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakEditor} from "@/utils/editors"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {EChartsOption} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
-import * as echarts from "echarts"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
-import {isNumberNaN} from "@/utils/tool"
-import {WordCloudCharts} from "./LogCharts/WordCloudCharts"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
+const WordCloudCharts = React.lazy(() => import("./LogCharts/WordCloudCharts"))
 export interface YakitLogViewersProp {
     data: ExecResultLog[]
     finished?: boolean
@@ -49,12 +42,7 @@ export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
             {(props.data || []).map((e) => {
                 return (
                     <Timeline.Item color={LogLevelToCode(e.level)}>
-                        <YakitLogFormatter
-                            data={e.data}
-                            level={e.level}
-                            timestamp={e.timestamp}
-                            onlyTime={props.onlyTime}
-                        />
+                        <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
                     </Timeline.Item>
                 )
             })}
@@ -66,173 +54,116 @@ export interface YakitLogFormatterProp {
     level: string
     data: string | any
     timestamp: number
-    onlyTime?: boolean
     isCollapsed?: boolean
 }
 
-export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = (props) => {
-    switch (props.level) {
-        case "file":
-            try {
-                const obj = JSON.parse(props.data) as {
-                    title: string
-                    description: string
-                    path: string
-                    is_dir: boolean
-                    is_existed: boolean
-                    file_size: string
-                    dir: string
+export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((props) => {
+    const {level, timestamp, data} = props
+    const renderContent = useMemoizedFn(() => {
+        switch (level) {
+            case "file":
+                try {
+                    const obj = JSON.parse(data) as {
+                        title: string
+                        description: string
+                        path: string
+                        is_dir: boolean
+                        is_existed: boolean
+                        file_size: string
+                        dir: string
+                    }
+                    return <FileLogShow {...obj} timestamp={timestamp} />
+                } catch (e) {
+                    return (
+                        <div style={{height: 150}}>
+                            <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
+                                <YakEditor readOnly={true} type={"http"} value={data} />
+                            </AutoCard>
+                        </div>
+                    )
                 }
-                return <FileLogShow {...obj} timestamp={props.timestamp} />
-            } catch (e) {
+            case "json":
+                return <JsonLogShow {...props} />
+            case "markdown":
+                return <MarkdownLogShow {...props} />
+            case "text":
+            case "code":
+                return <EditorLogShow {...props} />
+            case "json-table":
+                try {
+                    let obj: {head: string[]; data: string[][]} = JSON.parse(data)
+                    return (
+                        <Space direction={"vertical"} style={{width: "100%"}}>
+                            <div className={styles["log-time"]}>{formatTime(timestamp)}</div>
+                            <Card
+                                size={"small"}
+                                title={<YakitTag color='success'>直接结果(表格)</YakitTag>}
+                                extra={
+                                    <YakitButton
+                                        type='outline2'
+                                        onClick={(e) =>
+                                            showModal({
+                                                title: "JSON 数据",
+                                                content: <>{JSON.stringify(obj)}</>
+                                            })
+                                        }
+                                    >
+                                        JSON
+                                    </YakitButton>
+                                }
+                                style={{borderRadius: 4}}
+                            >
+                                {(obj.head || []).length > 0 && (
+                                    <Row gutter={4}>
+                                        {(obj.head || []).map((i) => (
+                                            <Col span={24.0 / obj.head.length}>
+                                                <div style={{border: "2px"}}>{i}</div>
+                                            </Col>
+                                        ))}
+                                        <Divider style={{marginTop: 4, marginBottom: 4}} />
+                                    </Row>
+                                )}
+                                {(obj.data || []).length > 0 && (
+                                    <>
+                                        {obj.data.map((i, index) => (
+                                            <Row key={index}>
+                                                {(i || []).map((element) => {
+                                                    return (
+                                                        <Col key={element} span={24.0 / i.length}>
+                                                            {element}
+                                                        </Col>
+                                                    )
+                                                })}
+                                            </Row>
+                                        ))}
+                                    </>
+                                )}
+                            </Card>
+                        </Space>
+                    )
+                } catch (error) {
+                    return <span className={styles["log-time"]}>{formatTime(timestamp)}</span>
+                }
+            case "json-httpflow-risk":
+                try {
+                    return <HTTPFlowRiskViewer risk={JSON.parse(data) as YakitHTTPFlowRisk} />
+                } catch (e) {
+                    return <span className={styles["log-time"]}>{formatTime(timestamp)}</span>
+                }
+            case "json-graph":
+                return <GraphLogShow {...props} />
+            default:
                 return (
-                    <div style={{height: 150}}>
-                        <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
-                            <YakEditor readOnly={true} type={"http"} value={props.data} />
-                        </AutoCard>
+                    <div className={styles["log-info"]}>
+                        <span className={styles["log-time"]}>{formatTime(timestamp)}</span>
+                        <span style={{margin: "0 4px"}}>·</span>
+                        <span>{data}</span>
                     </div>
                 )
-            }
-
-        // case "json-risk":
-        //     try {
-        //         return <RiskDetails info={JSON.parse(props.data) as Risk} shrink={true}/>
-        //     } catch (e) {
-        //         return <div>Risk</div>
-        //     }
-        case "json":
-            return <JsonLogShow {...props} />
-        case "markdown":
-            return <MarkdownLogShow {...props} />
-        case "text":
-        case "code":
-            return <EditorLogShow {...props} />
-        // case "success":
-        //     return (
-        //         <Space direction={"vertical"} style={{width: "100%"}}>
-        //             {props.timestamp > 0 && (
-        //                 <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>
-        //             )}
-        //             <Card size={"small"} title={<Tag color={"green"}>模块执行结果</Tag>}>
-        //                 {props.data}
-        //             </Card>
-        //         </Space>
-        //     )
-        case "json-table":
-            try {
-                let obj: {head: string[]; data: string[][]} = JSON.parse(props.data)
-                return (
-                    <Space direction={"vertical"} style={{width: "100%"}}>
-                        {/* {props.timestamp > 0 && (
-                            <Tag color={"geekblue"}>{formatTimestamp(props.timestamp, props.onlyTime)}</Tag>
-                        )} */}
-                        <div className={styles["log-time"]}>{formatTime(props.timestamp)}</div>
-                        <Card
-                            size={"small"}
-                            title={<YakitTag color='success'>直接结果(表格)</YakitTag>}
-                            extra={
-                                <YakitButton
-                                    type='outline2'
-                                    onClick={(e) =>
-                                        showModal({
-                                            title: "JSON 数据",
-                                            content: <>{JSON.stringify(obj)}</>
-                                        })
-                                    }
-                                >
-                                    JSON
-                                </YakitButton>
-                            }
-                            style={{borderRadius: 4}}
-                        >
-                            {(obj.head || []).length > 0 && (
-                                <Row gutter={4}>
-                                    {(obj.head || []).map((i) => (
-                                        <Col span={24.0 / obj.head.length}>
-                                            <div style={{border: "2px"}}>{i}</div>
-                                        </Col>
-                                    ))}
-                                    <Divider style={{marginTop: 4, marginBottom: 4}} />
-                                </Row>
-                            )}
-                            {(obj.data || []).length > 0 && (
-                                <>
-                                    {obj.data.map((i) => (
-                                        <Row>
-                                            {(i || []).map((element) => {
-                                                return <Col span={24.0 / i.length}>{element}</Col>
-                                            })}
-                                        </Row>
-                                    ))}
-                                </>
-                            )}
-                        </Card>
-                    </Space>
-                )
-            } catch (error) {
-                return <span className={styles["log-time"]}>{formatTime(props.timestamp)}</span>
-            }
-        case "json-httpflow-risk":
-            try {
-                return <HTTPFlowRiskViewer risk={JSON.parse(props.data) as YakitHTTPFlowRisk} />
-            } catch (e) {
-                console.info(e)
-                return <div />
-            }
-        case "json-feature":
-            return <div />
-        case "json-graph":
-            return (
-                <GraphLogShow {...props} />
-                // <Space direction={"vertical"}>
-                //     {props.timestamp > 0 && (
-                //         <YakitTag color='bluePurple'>{formatTimestamp(props.timestamp, props.onlyTime)}</YakitTag>
-                //     )}
-                //     <Card
-                //         size={"small"}
-                //         title={<Tag color={"green"}>{graphData?.name || "直接结果(图)"}</Tag>}
-                //         extra={[
-                //             <Button
-                //                 onClick={(e) =>
-                //                     showModal({
-                //                         title: "JSON 数据",
-                //                         content: <>{JSON.stringify(graphData)}</>
-                //                     })
-                //                 }
-                //             >
-                //                 JSON
-                //             </Button>
-                //         ]}
-                //     >
-                //         {(() => {
-                //             switch (graphData.type) {
-                //                 case "bar":
-                //                     return (
-                //                         <div>
-                //                             <BarGraph {...graphData} />
-                //                         </div>
-                //                     )
-                //                 case "pie":
-                //                     return (
-                //                         <div>
-                //                             <PieGraph {...graphData} />
-                //                         </div>
-                //                     )
-                //             }
-                //             return <div>{props.data}</div>
-                //         })()}
-                //     </Card>
-                // </Space>
-            )
-    }
-    return (
-        <div className={styles["log-info"]}>
-            <span className={styles["log-time"]}>{formatTime(props.timestamp)}</span>
-            <span style={{margin: "0 4px"}}>·</span>
-            <span>{props.data}</span>
-        </div>
-    )
-}
+        }
+    })
+    return renderContent()
+})
 
 interface MarkdownLogShowProps extends YakitLogFormatterProp {}
 const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
@@ -383,49 +314,7 @@ const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
 })
 
 interface GraphLogShowProps extends YakitLogFormatterProp {}
-const colorList = [
-    {
-        name: "purple",
-        color: "#8863f7"
-    },
-    {
-        name: "bluePurple",
-        color: "#da5fdd"
-    },
-    {
-        name: "blue",
-        color: "#4a94f8"
-    },
-    {
-        name: "lakeBlue",
-        color: "#29BCD0"
-    },
-    {
-        name: "cyan",
-        color: "#35d8ee"
-    },
-    {
-        name: "green",
-        color: "#56c991"
-    },
-    {
-        name: "red",
-        color: "#f4736b"
-    },
-    {
-        name: "orange",
-        color: "#ffb660"
-    },
-    {
-        name: "yellow",
-        color: "#ffd583"
-    },
-    {
-        name: "grey",
-        color: "#b4bbca"
-    }
-]
-const colorLength = colorList.length
+
 const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
     const {data, timestamp} = props
 

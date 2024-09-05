@@ -9,7 +9,7 @@ import ReactResizeDetector from "react-resize-detector"
 interface WordCloudChartsProps {
     graphData: GraphData
 }
-export const WordCloudCharts: React.FC<WordCloudChartsProps> = React.memo((props) => {
+const WordCloudCharts: React.FC<WordCloudChartsProps> = React.memo((props) => {
     const {graphData} = props
     const chartRef = useRef<HTMLDivElement>(null)
     const graphRef = useRef<echarts.ECharts>()
@@ -26,7 +26,7 @@ export const WordCloudCharts: React.FC<WordCloudChartsProps> = React.memo((props
                 graphRef.current = undefined
             }
         }
-    }, [graphData])
+    }, [])
     return (
         <div className={styles["graph-charts-body"]}>
             <ReactResizeDetector
@@ -43,3 +43,5 @@ export const WordCloudCharts: React.FC<WordCloudChartsProps> = React.memo((props
         </div>
     )
 })
+
+export default WordCloudCharts
