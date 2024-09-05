@@ -1,8 +1,7 @@
-import {LogLevelToCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
+import {EditorLogShow, YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
 import {Timeline} from "antd"
-import React, {useEffect} from "react"
+import React from "react"
 import styles from "./LocalPluginLog.module.scss"
 import {useCreation, useMemoizedFn} from "ahooks"
 import moment from "moment"
@@ -19,13 +18,15 @@ import {
     LogNodeStatusSuccessIcon,
     LogNodeStatusWarningIcon
 } from "@/assets/icon/colors"
+import {SolidCalendarIcon} from "@/assets/icon/solid"
+import {formatTimestamp} from "@/utils/timeUtil"
 
 export interface LocalPluginLogList extends StreamResult.Log {}
 export interface LocalPluginLogProps {
     loading: boolean
     list: LocalPluginLogList[]
 }
-
+/**插件日志 */
 export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) => {
     const {loading, list} = props
     const currentTime = useCreation(() => {
@@ -111,6 +112,51 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
                     )
                 })}
             </Timeline>
+        </div>
+    )
+})
+interface LocalListProps {
+    list: LocalPluginLogList[]
+}
+/**图标统计 */
+export const LocalList: React.FC<LocalListProps> = React.memo((props) => {
+    const {list} = props
+    return (
+        <div className={styles["local-list"]}>
+            {list.map((e) => {
+                return (
+                    <React.Fragment key={e.id}>
+                        <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} showTime={false} />
+                    </React.Fragment>
+                )
+            })}
+        </div>
+    )
+})
+interface LocalTextProps {
+    list: LocalPluginLogList[]
+}
+export const LocalText: React.FC<LocalTextProps> = React.memo((props) => {
+    const {list} = props
+    return (
+        <div className={styles["local-text-list"]}>
+            {list.map((item) => {
+                return (
+                    <div key={item.id}>
+                        <div className={styles["text-heard"]}>
+                            <div className={styles["time"]}>
+                                <SolidCalendarIcon />
+                                <span>{formatTimestamp(item.timestamp)}</span>
+                            </div>
+                        </div>
+                        <EditorLogShow
+                            {...item}
+                            editorContentClassName={styles["editor-content-wrapper"]}
+                            showTime={false}
+                        />
+                    </div>
+                )
+            })}
         </div>
     )
 })

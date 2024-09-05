@@ -1,9 +1,12 @@
 @use "../../plugins.scss";
-.log-body {
+%log-body {
     padding: 12px;
     background: var(--yakit-card-background-color);
     height: 100%;
     overflow-y: auto;
+}
+.log-body {
+    @extend %log-body;
     :global {
         .ant-timeline-item-head {
             background-color: transparent;
@@ -55,5 +58,39 @@
     }
     100% {
         transform: scale(0.8);
+    }
+}
+
+.local-list {
+    @extend %log-body;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.local-text-list {
+    @extend %log-body;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    .text-heard {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        border-radius: 8px 8px 0px 0px;
+        background-color: #fff;
+
+        .time {
+            @extend %display-flex-center;
+            gap: 8px;
+
+            color: var(--yakit-body-text-color);
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+        }
+    }
+    .editor-content-wrapper {
+        border-radius: 0px 0px 8px 8px;
     }
 }

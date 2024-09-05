@@ -55,10 +55,11 @@ export interface YakitLogFormatterProp {
     data: string | any
     timestamp: number
     isCollapsed?: boolean
+    showTime?: boolean
 }
 
 export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((props) => {
-    const {level, timestamp, data} = props
+    const {level, timestamp, data, showTime = true} = props
     const renderContent = useMemoizedFn(() => {
         switch (level) {
             case "file":
@@ -72,7 +73,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                         file_size: string
                         dir: string
                     }
-                    return <FileLogShow {...obj} timestamp={timestamp} />
+                    return <FileLogShow {...obj} timestamp={timestamp} showTime={showTime} />
                 } catch (e) {
                     return (
                         <div style={{height: 150}}>
@@ -94,7 +95,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                     let obj: {head: string[]; data: string[][]} = JSON.parse(data)
                     return (
                         <Space direction={"vertical"} style={{width: "100%"}}>
-                            <div className={styles["log-time"]}>{formatTime(timestamp)}</div>
+                            {showTime && <div className={styles["log-time"]}>{formatTime(timestamp)}</div>}
                             <Card
                                 size={"small"}
                                 title={<YakitTag color='success'>直接结果(表格)</YakitTag>}
@@ -102,9 +103,11 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                                     <YakitButton
                                         type='outline2'
                                         onClick={(e) =>
-                                            showModal({
+                                            showYakitModal({
                                                 title: "JSON 数据",
-                                                content: <>{JSON.stringify(obj)}</>
+                                                content: <>{JSON.stringify(obj)}</>,
+                                                bodyStyle: {padding: 24},
+                                                footer: null
                                             })
                                         }
                                     >
@@ -155,7 +158,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
             default:
                 return (
                     <div className={styles["log-info"]}>
-                        <span className={styles["log-time"]}>{formatTime(timestamp)}</span>
+                        {showTime && <span className={styles["log-time"]}>{formatTime(timestamp)}</span>}
                         <span style={{margin: "0 4px"}}>·</span>
                         <span>{data}</span>
                     </div>
@@ -167,6 +170,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
 
 interface MarkdownLogShowProps extends YakitLogFormatterProp {}
 const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
+    const {timestamp, data, showTime = true} = props
     const [expand, setExpand] = useState<boolean>(false)
     const [isShowExpand, setIsShowExpand] = useState<boolean>(true)
     const markdownLogBodyRef = useRef<HTMLDivElement>(null)
@@ -182,14 +186,14 @@ const MarkdownLogShow: React.FC<MarkdownLogShowProps> = React.memo((props) => {
     })
     return (
         <div className={styles["md-body"]}>
-            <div className={styles["md-heard"]}>{formatTime(props.timestamp)}</div>
+            {showTime && <div className={styles["md-heard"]}>{formatTime(timestamp)}</div>}
             <div
                 className={classNames(styles["md-content"], {
                     [styles["md-content-expand"]]: expand
                 })}
                 ref={markdownLogBodyRef}
             >
-                <MDEditor.Markdown source={props.data} />
+                <MDEditor.Markdown source={data} />
             </div>
             {isShowExpand && (
                 <div className={styles["md-expand-text"]} onClick={onExpand}>
@@ -209,9 +213,10 @@ interface FileLogShowProps {
     file_size: string
     dir: string
     timestamp: number
+    showTime: boolean
 }
 const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
-    const {title, is_dir, is_existed, file_size, description, path, timestamp} = props
+    const {title, is_dir, is_existed, file_size, description, path, timestamp, showTime = true} = props
     const [expand, setExpand] = useState<boolean>(true)
     const onCopy = useMemoizedFn(() => {
         callCopyToClipboard(path)
@@ -224,7 +229,7 @@ const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
     })
     return (
         <div className={styles["file-body"]}>
-            <div className={styles["file-heard"]}>{formatTime(timestamp)}</div>
+            {showTime && <div className={styles["file-heard"]}>{formatTime(timestamp)}</div>}
             <YakitCard
                 title={
                     <div className={styles["file-card-title"]}>
@@ -274,17 +279,19 @@ const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
 })
 interface JsonLogShowProps extends YakitLogFormatterProp {}
 const JsonLogShow: React.FC<JsonLogShowProps> = React.memo((props) => {
-    const {timestamp, data} = props
+    const {timestamp, data, showTime = true} = props
     return (
         <div className={styles["json-body"]}>
-            <div className={styles["json-heard"]}>{formatTime(timestamp)}</div>
+            {showTime && <div className={styles["json-heard"]}>{formatTime(timestamp)}</div>}
             <pre className={styles["json-content"]}>{data}</pre>
         </div>
     )
 })
-interface EditorLogShowProps extends YakitLogFormatterProp {}
-const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
-    const {timestamp, data} = props
+interface EditorLogShowProps extends YakitLogFormatterProp {
+    editorContentClassName?: string
+}
+export const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
+    const {timestamp, data, showTime = true, editorContentClassName = ""} = props
 
     const onExpand = useMemoizedFn(() => {
         const m = showYakitModal({
@@ -301,8 +308,8 @@ const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
     })
     return (
         <div className={styles["editor-body"]}>
-            <div className={styles["editor-heard"]}>{formatTime(timestamp)}</div>
-            <div className={classNames(styles["editor-content"])}>
+            {showTime && <div className={styles["editor-heard"]}>{formatTime(timestamp)}</div>}
+            <div className={classNames(styles["editor-content"], editorContentClassName)}>
                 <YakitEditor type={"plaintext"} value={data} />
             </div>
             <div className={styles["editor-expand-text"]} onClick={onExpand}>
@@ -316,7 +323,7 @@ const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
 interface GraphLogShowProps extends YakitLogFormatterProp {}
 
 const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
-    const {data, timestamp} = props
+    const {data, timestamp, showTime = true} = props
 
     const graphData: GraphData = useCreation(() => {
         try {
@@ -345,7 +352,7 @@ const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
 
     return (
         <div className={styles["graph-body"]}>
-            <div className={styles["graph-heard"]}>{formatTime(timestamp)}</div>
+            {showTime && <div className={styles["graph-heard"]}>{formatTime(timestamp)}</div>}
             <div className={styles["graph-content"]}>
                 <div className={styles["graph-content-title"]}>
                     <div>{graphData.name}</div>

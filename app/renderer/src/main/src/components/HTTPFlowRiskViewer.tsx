@@ -1,11 +1,11 @@
 import React, {useState} from "react"
 import {Card, Divider, Space} from "antd"
 import {LogLevelToCode} from "./HTTPFlowTable/HTTPFlowTable"
-import {showModal} from "../utils/showModal"
 import {YakEditor} from "@/utils/editors"
 import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "./yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
+import {showYakitModal} from "./yakitUI/YakitModal/YakitModalConfirm"
 
 export interface HTTPFlowRiskViewerProp {
     risk: YakitHTTPFlowRisk
@@ -50,10 +50,11 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
                     <YakitButton
                         type='text'
                         onClick={() => {
-                            showModal({
+                            showYakitModal({
                                 title: "JSON Object",
-                                width: "50%",
-                                content: <div style={{overflow: "auto"}}>{JSON.stringify(props.risk)}</div>
+                                content: <div style={{overflow: "auto"}}>{JSON.stringify(props.risk)}</div>,
+                                bodyStyle: {padding: 24},
+                                footer: null
                             })
                         }}
                     >

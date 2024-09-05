@@ -50,7 +50,7 @@ import {defQueryRisksRequest} from "@/pages/risks/YakitRiskTable/constants"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
 import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
-import {LocalPluginLog} from "./LocalPluginLog"
+import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 
 const {TabPane} = PluginTabs
 
@@ -315,28 +315,7 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
 const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
     const {loading, messageList} = props
     const [activeKey, setActiveKey] = useState<string>("plugin-log")
-    const logTabs = useCreation(() => {
-        return [
-            {
-                name: "插件日志",
-                icon: <OutlineLogIcon />,
-                number: 0,
-                type: "plugin-log"
-            },
-            {
-                name: "图标统计",
-                icon: <OutlineChartpieIcon />,
-                number: 5,
-                type: "echarts-statistics"
-            },
-            {
-                name: "输出文本",
-                icon: <OutlineTerminalIcon />,
-                number: 3,
-                type: "output-text"
-            }
-        ]
-    }, [])
+
     const list: StreamResult.Log[] = useCreation(() => {
         return (messageList || [])
             .filter((i) => {
@@ -353,14 +332,37 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
         const textTypes = ["text", "code"]
         return messageList.filter((ele) => textTypes.includes(ele.level))
     }, [messageList])
+    const logTabs = useCreation(() => {
+        return [
+            {
+                name: "插件日志",
+                icon: <OutlineLogIcon />,
+                number: 0,
+                type: "plugin-log"
+            },
+            {
+                name: "图标统计",
+                icon: <OutlineChartpieIcon />,
+                number: echartsLists.length,
+                type: "echarts-statistics"
+            },
+            {
+                name: "输出文本",
+                icon: <OutlineTerminalIcon />,
+                number: textLists.length,
+                type: "output-text"
+            }
+        ]
+    }, [echartsLists, textLists])
+
     const renderTabContent = useMemoizedFn((type) => {
         switch (type) {
             case "plugin-log":
                 return <LocalPluginLog loading={loading} list={list} />
             case "echarts-statistics":
-                return <></>
+                return <LocalList list={echartsLists} />
             case "output-text":
-                return <></>
+                return <LocalText list={textLists} />
             default:
                 return <></>
         }
