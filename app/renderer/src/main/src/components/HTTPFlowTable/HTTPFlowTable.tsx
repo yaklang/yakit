@@ -963,6 +963,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 Tags: [...tagsFilter],
                 bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
             })
+            if(sort.orderBy === "DurationMs"){
+                sort.orderBy = "duration"
+            }
             sortRef.current = sort
             setTimeout(() => {
                 updateData()
@@ -1062,7 +1065,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
-
+        
         // 查询数据
         updateQueryParams(query)
         ipcRenderer
@@ -1858,6 +1861,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filters: contentType
             }
         }
+        const DurationMs: ColumnsTypeProps = {
+            title: "延迟(ms)",
+            dataKey: "DurationMs",
+            width: 200,
+            render: (text) => {
+                let timeMs:number = parseInt(text)
+                return <div className={style['duration-ms']}>{timeMs}</div>
+            },
+            sorterProps: {
+                sorter: true
+            }
+        }
         const UpdatedAt: ColumnsTypeProps = {
             title: "请求时间",
             dataKey: "UpdatedAt",
@@ -1938,6 +1953,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 BodyLength,
                 GetParamsTotal,
                 ContentType,
+                DurationMs,
                 UpdatedAt,
                 RequestSizeVerbose,
                 action
@@ -1955,6 +1971,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             BodyLength,
             GetParamsTotal,
             ContentType,
+            DurationMs,
             UpdatedAt,
             RequestSizeVerbose,
             action
