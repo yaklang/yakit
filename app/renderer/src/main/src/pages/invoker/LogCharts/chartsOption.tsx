@@ -300,7 +300,9 @@ export const getPieOption = (graphData: GraphData) => {
                 label: {
                     show: true,
                     position: "inside",
-                    formatter: "{d} %",
+                    formatter: (params) => {
+                        return params.percent ? `${params.percent}%` : ""
+                    },
                     color: "#fff",
                     fontSize: 16,
                     fontWeight: 700
