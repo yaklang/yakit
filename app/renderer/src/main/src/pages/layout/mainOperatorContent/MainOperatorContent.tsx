@@ -605,7 +605,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 judgeDataIsFuncOrSettingForConfirm(
                     modalProps["reset"],
                     (setting) => {
-                        onModalSecondaryConfirm(setting)
+                        onModalSecondaryConfirm(setting, isModalVisibleRef)
                     },
                     () => {}
                 )
@@ -640,7 +640,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 judgeDataIsFuncOrSettingForConfirm(
                     modalProps["reset"],
                     (setting) => {
-                        onModalSecondaryConfirm(setting)
+                        onModalSecondaryConfirm(setting, isModalVisibleRef)
                     },
                     () => {}
                 )
@@ -1074,24 +1074,28 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 远程关闭一级页面 end ---------- */
 
     /** ---------- @name 全局功能快捷键 Start ---------- */
+    const isModalVisibleRef = useRef<boolean>(false)
     const documentKeyDown = useMemoizedFn((e: KeyboardEvent) => {
         // ctrl/command + w 关闭当前页面
         e.stopPropagation()
         if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
-            if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
-            const data = KeyConvertRoute(currentTabKey)
-            if (data) {
-                const info: OnlyPageCache = {
-                    route: data.route,
-                    menuName:
-                        data.route === YakitRoute.Plugin_OP
-                            ? data.pluginName || ""
-                            : YakitRouteToPageInfo[data.route]?.label || "",
-                    pluginId: data.pluginId,
-                    pluginName: data.pluginName
+            if (!isModalVisibleRef.current) {
+                if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
+                const data = KeyConvertRoute(currentTabKey)
+                if (data) {
+                    const info: OnlyPageCache = {
+                        route: data.route,
+                        menuName:
+                            data.route === YakitRoute.Plugin_OP
+                                ? data.pluginName || ""
+                                : YakitRouteToPageInfo[data.route]?.label || "",
+                        pluginId: data.pluginId,
+                        pluginName: data.pluginName
+                    }
+                    onBeforeRemovePage(info)
+                    
                 }
-                onBeforeRemovePage(info)
             }
             return
         }
@@ -1217,8 +1221,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (route === YakitRoute.HTTPFuzzer) {
                     // webFuzzer页面二级tab名称改为WF，特殊
                     verbose =
-                        nodeParams?.verbose ||
-                        `${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
+                        nodeParams?.verbose || `${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
                 }
                 const node: MultipleNodeInfo = {
                     id: tabId,
@@ -1453,7 +1456,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     judgeDataIsFuncOrSettingForConfirm(
                         modalProps["close"],
                         (setting) => {
-                            onModalSecondaryConfirm(setting)
+                            onModalSecondaryConfirm(setting, isModalVisibleRef)
                         },
                         () => {
                             removeMenuPage(data)
@@ -1607,7 +1610,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         () => {
             onCacheHistoryWF()
         },
-        1000 * 60 * 5, /** 每5分钟执行一次*/
+        1000 * 60 * 5 /** 每5分钟执行一次*/,
         {immediate: true}
     )
     // fuzzer-tab页数据订阅事件
@@ -4606,7 +4609,8 @@ const judgeDataIsFuncOrSettingForConfirm = async (
 }
 
 // 多开页面的一级页面关闭的确认弹窗
-const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
+const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps, visibleRef?: React.MutableRefObject<boolean>) => {
+    if (visibleRef) visibleRef.current = true
     let m = YakitModalConfirm({
         width: 420,
         type: "white",
@@ -4621,6 +4625,15 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
             } else {
                 m.destroy()
             }
+            if (visibleRef) visibleRef.current = false
+        },
+        onCancel: () => {
+            if (props?.onCancel) {
+                props?.onCancel(m)
+            } else {
+                m.destroy()
+            }
+            if (visibleRef) visibleRef.current = false
         },
         content: props?.content
     })
