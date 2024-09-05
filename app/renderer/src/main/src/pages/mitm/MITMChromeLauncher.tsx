@@ -737,7 +737,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                 title={
                     <YakitInput.Search
                         style={{width: 250}}
-                        placeholder='请输入关键词搜索'
+                        placeholder='请输入参数名搜索'
                         allowClear={true}
                         onSearch={(value) => setSearchVal(value.trim())}
                     />
