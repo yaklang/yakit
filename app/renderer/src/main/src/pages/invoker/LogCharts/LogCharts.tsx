@@ -3,14 +3,14 @@ import classNames from "classnames"
 import * as echarts from "echarts"
 import React, {useRef, useEffect, useState} from "react"
 import styles from "./LogCharts.module.scss"
-import {logChartsColorList} from "./constant"
 import {EChartsOption} from "@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
 import {getBarOption, getLineOption, getPieOption} from "./chartsOption"
 import {useMemoizedFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import cloneDeep from "lodash/cloneDeep"
+import {chartsColorList} from "@/pages/globalVariable"
 
-const logChartsColorListLength = logChartsColorList.length
+const chartsColorListLength = chartsColorList.length
 
 interface LogChartsProps {
     type: "bar" | "line" | "pie"
@@ -172,9 +172,7 @@ const LogCharts: React.FC<LogChartsProps> = React.memo((props) => {
                                 <div
                                     className={classNames(
                                         styles["circle"],
-                                        `color-bg-${
-                                            logChartsColorList[index % logChartsColorListLength]?.name || "purple"
-                                        }`
+                                        `color-bg-${chartsColorList[index % chartsColorListLength]?.name || "purple"}`
                                     )}
                                 />
                                 <div>{item.key}</div>

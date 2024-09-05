@@ -1,9 +1,9 @@
 import {isNumberNaN} from "@/utils/tool"
-import {logChartsColorList} from "./constant"
 import {EChartsOption} from "@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
 import {GraphData} from "@/pages/graph/base"
 import groupBy from "lodash/groupBy"
 import numeral from "numeral"
+import {chartsColorList} from "@/pages/globalVariable"
 const getBarSeries = (graphData) => {
     const seriesList = graphData.data.filter((ele) => Array.isArray(ele.value)).map((ele) => ele.value.length)
     const seriesLength = Math.max(...seriesList, 0)
@@ -64,7 +64,7 @@ export const getBarOption = (graphData: GraphData) => {
     const xAxis = graphData.data.map((ele) => ele.key)
     const series: EChartsOption["series"] = getBarSeries(graphData)
     const option: EChartsOption = {
-        color: logChartsColorList.map((ele) => ele.color),
+        color: chartsColorList.map((ele) => ele.color),
         tooltip: {
             trigger: "axis",
             axisPointer: {
@@ -156,7 +156,7 @@ export const getLineOption = (graphData: GraphData) => {
     const xAxis = getLineSeriesAndAxis(graphData).xAxis
     const series: EChartsOption["series"] = getLineSeriesAndAxis(graphData).series
     const option: EChartsOption = {
-        color: logChartsColorList.map((ele) => ele.color),
+        color: chartsColorList.map((ele) => ele.color),
         tooltip: {
             trigger: "axis"
         },
@@ -211,7 +211,7 @@ export const getLineOption = (graphData: GraphData) => {
 export const getPieOption = (graphData: GraphData) => {
     const total = graphData.data.reduce((sum, item) => sum + item.value, 0)
     const option: EChartsOption = {
-        color: logChartsColorList.map((ele) => ele.color),
+        color: chartsColorList.map((ele) => ele.color),
         tooltip: {
             trigger: "item",
             borderWidth: 0,
@@ -315,7 +315,63 @@ export const getPieOption = (graphData: GraphData) => {
     return option
 }
 
+const wordCloudColorName = ["purple", "blue", "text"]
+const wordCloudColors = chartsColorList.filter((ele) => wordCloudColorName.includes(ele.name))
+const getBoundaries = (arr: number[]) => {
+    // 将数组按升序排序
+    arr.sort((a, b) => a - b)
+
+    // 数组长度
+    const len = arr.length
+
+    // 计算 5 等分的边界索引
+    const boundaries: number[] = []
+    for (let i = 1; i < 5; i++) {
+        // 计算每个分类的分界线索引，注意使用 Math.floor 确保取整
+        const boundaryIndex = Math.floor((i * len) / 5)
+        boundaries.push(arr[boundaryIndex])
+    }
+
+    return boundaries
+}
+const findRegion = (num, boundaries) => {
+    let alpha = 1
+    let index = -1
+    const length = boundaries.length
+    // 遍历分界线，找到数字所在区域
+    for (let i = 0; i < length; i++) {
+        if (num <= boundaries[i]) {
+            index = i + 1
+            break
+        }
+    }
+    if (index === -1) {
+        index = 5
+    }
+    switch (index) {
+        case 1:
+            alpha = 0.2
+            break
+        case 2:
+            alpha = 0.4
+            break
+        case 3:
+            alpha = 0.6
+            break
+        case 4:
+            alpha = 0.8
+            break
+        case 5:
+            alpha = 1
+            break
+        default:
+            break
+    }
+    return alpha
+}
 export const getWordCloudOption = (graphData: GraphData) => {
+    const valueList = graphData.data.map((item) => item.value) || []
+    const boundaries = getBoundaries(valueList)
     const option: EChartsOption = {
         tooltip: {
             trigger: "item",
@@ -358,39 +414,42 @@ export const getWordCloudOption = (graphData: GraphData) => {
             {
                 type: "wordCloud",
 
-                shape: "circle",
+                shape: "circle", // circle cardioid diamond pentagon
                 left: "center",
                 top: "center",
-                width: "70%",
-                height: "80%",
+                width: "100%",
+                height: "100%",
 
-                sizeRange: [8, 60],
-                rotationRange: [-90, 90],
-                rotationStep: 45,
+                sizeRange: [12, 48],
+                rotationRange: [0, 0],
                 gridSize: 8,
                 drawOutOfBound: false,
                 textStyle: {
                     fontWeight: "bold",
-                    color: () => {
-                        return (
-                            "rgb(" +
-                            [
-                                Math.round(Math.random() * 160),
-                                Math.round(Math.random() * 160),
-                                Math.round(Math.random() * 160)
-                            ].join(",") +
-                            ")"
-                        )
+                    color: (params) => {
+                        const {dataIndex, value} = params
+                        const colorItem = wordCloudColors[dataIndex % wordCloudColors.length]
+                        const {rgbaObj} = colorItem
+                        const alpha = findRegion(value, boundaries)
+                        return rgbaObj ? `rgba(${rgbaObj?.r}, ${rgbaObj?.g}, ${rgbaObj?.b}, ${alpha})` : "#8863f7"
                     }
                 },
                 emphasis: {
-                    focus: "self",
-                    textStyle: {}
+                    focus: "self"
                 },
-                data: graphData.data.map((ele, index) => ({
-                    value: ele.value,
-                    name: ele.key
-                }))
+                data: graphData.data.map((ele, index) => {
+                    const colorItem = wordCloudColors[index % wordCloudColors.length]
+                    const {rgbaColor} = colorItem
+                    return {
+                        value: ele.value,
+                        name: ele.key,
+                        emphasis: {
+                            textStyle: {
+                                color: rgbaColor
+                            }
+                        }
+                    }
+                })
             }
         ]
     }

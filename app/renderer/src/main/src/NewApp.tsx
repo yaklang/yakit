@@ -12,7 +12,7 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
-import {coordinate} from "./pages/globalVariable"
+import {coordinate, setChartsColorList} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
@@ -36,6 +36,11 @@ function NewApp() {
     /** 是否展示用户协议 */
     const [agreed, setAgreed] = useState(false)
     const {userInfo} = useStore()
+
+    //设置echarts 颜色
+    useEffect(() => {
+        setChartsColorList()
+    }, [])
 
     useEffect(() => {
         // 解压命令执行引擎脚本压缩包
