@@ -118,7 +118,7 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
 interface LocalListProps {
     list: LocalPluginLogList[]
 }
-/**图标统计 */
+/**统计图表 */
 export const LocalList: React.FC<LocalListProps> = React.memo((props) => {
     const {list} = props
     return (

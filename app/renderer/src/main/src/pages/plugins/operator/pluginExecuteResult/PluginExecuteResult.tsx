@@ -341,7 +341,7 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
                 type: "plugin-log"
             },
             {
-                name: "图标统计",
+                name: "统计图表",
                 icon: <OutlineChartpieIcon />,
                 number: echartsLists.length,
                 type: "echarts-statistics"
