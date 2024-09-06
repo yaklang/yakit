@@ -1,5 +1,6 @@
-const { ipcMain } = require("electron")
-const { Uint8ArrayToString } = require("../toolsFunc")
+const { ipcMain, dialog } = require("electron")
+const { Uint8ArrayToString, getNowTime } = require("../toolsFunc")
+const fs = require('fs');
 
 module.exports = (win, getClient) => {
     ipcMain.handle("delete-http-flows-all", async (e, params) => {
@@ -212,6 +213,82 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("GetHTTPPacketBody", async (e, params) => {
         return await asyncGetHTTPPacketBody(params)
+    })
+
+    const execWriteFile = (uuid, resolve, reject) => {
+        const context = activeRequests.get(uuid)
+        if (!context) return;
+        const timer = setInterval(() => {
+            if (context.dataChunks.length > 0) {
+                try {
+                    context.fileStream.write(context.dataChunks.shift())
+                } catch (error) {
+                    context.fileStream.end()
+                    clearInterval(timer)
+                    activeRequests.delete(uuid)
+                    reject(error)
+                }
+            } else if (context.streamEnded) {
+                context.fileStream.end()
+                clearInterval(timer)
+                activeRequests.delete(uuid)
+                resolve(true)
+            }
+        }, 50)
+    }
+    let activeRequests = new Map()
+    ipcMain.handle("GetHTTPFlowBodyById", (e, params) => {
+        return new Promise((resolve, reject) => {
+            const context = {
+                getHTTPFlowBodyByIdResponseStream: getClient().GetHTTPFlowBodyById({ Id: params.Id, IsRequest: params.IsRequest }),
+                fileStream: null,
+                dataChunks: [],
+                streamEnded: false
+            }
+
+            activeRequests.set(params.uuid, context)
+
+            context.getHTTPFlowBodyByIdResponseStream.on("data", (e) => {
+                if (!win) {
+                    return
+                }
+
+                if (e.Data) {
+                    context.dataChunks.push(e.Data)
+                }
+
+                context.streamEnded = e.EOF
+
+                // 只有第一次返回文件名
+                if (e.Filename) {
+                    const fileName = e.Filename
+                    dialog.showSaveDialog({
+                        title: '保存文件',
+                        defaultPath: fileName
+                    }).then(file => {
+                        if (!file.canceled) {
+                            const filePath = file.filePath.toString()
+                            context.fileStream = fs.createWriteStream(filePath)
+                            execWriteFile(params.uuid, resolve, reject)
+                        } else {
+                            getHTTPFlowBodyByIdResponseStream.cancel()
+                            activeRequests.delete(params.uuid)
+                        }
+                    }).catch(err => {
+                        getHTTPFlowBodyByIdResponseStream.cancel()
+                        activeRequests.delete(params.uuid)
+                        reject(err)
+                    })
+                }
+            })
+
+            context.getHTTPFlowBodyByIdResponseStream.on("error", (e) => {
+                if (!win) {
+                    return
+                }
+                reject(e)
+            })
+        })
     })
 
     // asyncQueryMITMRuleExtractedData wrapper

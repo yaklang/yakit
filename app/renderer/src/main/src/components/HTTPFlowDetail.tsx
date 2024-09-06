@@ -381,6 +381,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 }}
                                                 url={flow.Url}
                                                 downstreamProxyStr={props.downstreamProxyStr}
+                                                historyId={flow.Id}
+                                                isRequestFlag={true}
                                             />
                                         )}
                                     </div>
@@ -409,6 +411,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 }}
                                                 url={flow.Url}
                                                 downstreamProxyStr={props.downstreamProxyStr}
+                                                historyId={flow.Id}
+                                                isRequestFlag={false}
                                             />
                                         )}
                                     </div>
@@ -1284,6 +1288,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => i.IsMatchRequest)}
                         url={flow.Url}
+                        historyId={flow.Id}
+                        isRequestFlag={true}
                     />
                 )
             }}
@@ -1396,6 +1402,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)
                         }
                         url={flow.Url}
+                        historyId={flow.Id}
+                        isRequestFlag={false}
                     />
                 )
             }}
