@@ -18,6 +18,7 @@ interface FuzzerSequenceProps {
     /**删除 fuzzerSequenceList 的同时也会删除 fuzzerSequenceCacheData中的 groupId相同的数据*/
     removeFuzzerSequenceList: (f: FuzzerSequenceListProps) => void
 
+    setFuzzerSequenceList: (v: FuzzerSequenceListProps[]) => void
     setFuzzerSequenceCacheData: (v: FuzzerSequenceCacheDataProps[]) => void
     queryFuzzerSequenceCacheDataByGroupId: (groupId: string) => SequenceProps[]
     addFuzzerSequenceCacheData: (groupId: string, v: SequenceProps[]) => void
@@ -65,6 +66,14 @@ export const useFuzzerSequence = createWithEqualityFn<FuzzerSequenceProps>()(
                         ...s,
                         fuzzerSequenceList: s.fuzzerSequenceList.filter((ele) => ele.groupId !== val.groupId),
                         fuzzerSequenceCacheData: s.fuzzerSequenceCacheData.filter((ele) => ele.groupId !== val.groupId)
+                    })
+                },
+                setFuzzerSequenceList: (values) => {
+                    const s = get()
+                    if (!s) return
+                    set({
+                        ...s,
+                        fuzzerSequenceList: values
                     })
                 },
                 setFuzzerSequenceCacheData: (values) => {
