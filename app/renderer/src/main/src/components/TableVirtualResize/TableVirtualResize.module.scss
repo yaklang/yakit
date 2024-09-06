@@ -477,7 +477,7 @@
         }
 
         .drag-line {
-            width: 1px;
+            width: 10px; /** 表格在弹窗里面时，可能线拖拽宽度不够导致onMouseUp事件触发不了 **/
             border-left: 1px dashed var(--yakit-primary-5);
             position: absolute;
             z-index: 9;

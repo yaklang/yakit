@@ -271,6 +271,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                         onCancel={() => setChromeLauncherParamsVisible(false)}
                         closable={true}
                         maskClosable={false}
+                        mask={false}
                         width='55%'
                         bodyStyle={{padding: 0}}
                         onOk={() => {
@@ -733,6 +734,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
     return (
         <div className={style["chrome-launcher-params-set-wrap"]}>
             <TableVirtualResize<ChromeLauncherParams>
+                enableDrag={false}
                 titleHeight={42}
                 title={
                     <YakitInput.Search
