@@ -92,14 +92,19 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
         setIsError(false)
         setCurrent(0)
         setIsPrivate(true)
+        setSubmitLoading(false)
     })
 
     const handleUpload = useMemoizedFn((request: API.PluginsEditRequest) => {
-        if (!request) return
+        if (!request) {
+            setSubmitLoading(false)
+            return
+        }
         if (!isLogin) {
             setMode("")
             errorInfo.current = "未登录，请登录后重试"
             setIsError(true)
+            setSubmitLoading(false)
             return
         }
 
@@ -168,8 +173,10 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
             handleCancel()
         }
     })
+    const [submitLoading, setSubmitLoading] = useState<boolean>(false)
     // 提交修改意见
     const handleModifyReason = useMemoizedFn((reason: string) => {
+        if (submitLoading) return
         if (!localPlugin.current) {
             yakitNotify("error", "未获取到插件信息，请关闭重试")
             return
@@ -178,6 +185,7 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
             yakitNotify("error", "未获取到插件UUID，请关闭重试")
             return
         }
+        setSubmitLoading(true)
         const info = pluginConvertLocalToOnline(localPlugin.current)
         handleUpload({...info, uuid: onlinePlugin.uuid, logDescription: reason})
     })
@@ -241,14 +249,14 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
             },
             {
                 title: "修改描述",
-                content: <PluginUploadModifyReason callback={handleModifyReason} />
+                content: <PluginUploadModifyReason loading={submitLoading} callback={handleModifyReason} />
             }
             // {
             //     title: "补充资料",
             //     content: <div></div>
             // }
         ]
-    }, [onlinePlugin, current, isPrivate])
+    }, [onlinePlugin, current, isPrivate, submitLoading])
 
     return (
         <YakitModal
@@ -267,7 +275,9 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
                     e.stopPropagation()
                 }}
             >
-                {loading && <YakitSpin spinning={loading} tip='获取插件信息中...' />}
+                {loading && (
+                    <YakitSpin wrapperClassName={styles["spin-loading"]} spinning={loading} tip='获取插件信息中...' />
+                )}
                 {!loading && isError && <YakitEmpty title={errorInfo.current || "意外错误，请关闭重试"} />}
                 {!loading && !!mode && (
                     <>
@@ -429,11 +439,12 @@ const PluginUploadPrivateScoreTip: React.FC<PluginUploadPrivateScoreTipProps> = 
 })
 
 interface PluginUploadModifyReasonProps {
+    loading?: boolean
     callback: (content: string) => void
 }
 /** @name 上传弹框-提交修改意见 */
 const PluginUploadModifyReason: React.FC<PluginUploadModifyReasonProps> = memo((props) => {
-    const {callback} = props
+    const {loading, callback} = props
 
     const [content, setContent] = useState<string>("")
     const handleSubmit = useMemoizedFn(() => {
@@ -466,7 +477,9 @@ const PluginUploadModifyReason: React.FC<PluginUploadModifyReasonProps> = memo((
                 />
             </div>
             <div className={styles["upload-modal-next-btn"]}>
-                <YakitButton onClick={handleSubmit}>提交</YakitButton>
+                <YakitButton loading={loading} onClick={handleSubmit}>
+                    提交
+                </YakitButton>
             </div>
         </>
     )
