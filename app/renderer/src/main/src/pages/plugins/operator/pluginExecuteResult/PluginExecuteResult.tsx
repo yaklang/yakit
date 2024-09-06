@@ -28,9 +28,6 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {CurrentHttpFlow, formatJson} from "@/pages/yakitStore/viewers/base"
-import {Timeline} from "antd"
-import {LogLevelToCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {WebTree} from "@/components/WebTree/WebTree"
 import classNames from "classnames"
@@ -39,20 +36,21 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {SolidViewgridIcon} from "@/assets/icon/solid"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {QueryPortsRequest} from "@/pages/assetViewer/PortAssetPage"
-import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {PortTable} from "@/pages/assetViewer/PortTable/PortTable"
 import {defQueryPortsRequest} from "@/pages/assetViewer/PortTable/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {yakitFailed} from "@/utils/notification"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {v4 as uuidv4} from "uuid"
 import {YakitRiskTable} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {QueryRisksRequest} from "@/pages/risks/YakitRiskTable/YakitRiskTableType"
 import {defQueryRisksRequest} from "@/pages/risks/YakitRiskTable/constants"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
+import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 
 const {TabPane} = PluginTabs
 
@@ -316,30 +314,95 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
 /** 基础插件信息 / 日志 */
 const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
     const {loading, messageList} = props
-    const list = useCreation(() => {
+    const [activeKey, setActiveKey] = useState<string>("plugin-log")
+
+    const list: StreamResult.Log[] = useCreation(() => {
         return (messageList || [])
             .filter((i) => {
-                return (
-                    !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-")) &&
-                    i?.level !== "json-risk"
-                )
+                return !((i?.level || "").startsWith("json-feature") || (i?.level || "").startsWith("feature-"))
             })
             .splice(0, 25)
-            .map((ele) => ({...ele, id: uuidv4()}))
             .reverse()
     }, [messageList])
+
+    const echartsLists: StreamResult.Log[] = useCreation(() => {
+        return messageList.filter((ele) => ele.level === "json-graph")
+    }, [messageList])
+    const textLists: StreamResult.Log[] = useCreation(() => {
+        const textTypes = ["text", "code"]
+        return messageList.filter((ele) => textTypes.includes(ele.level))
+    }, [messageList])
+    const logTabs = useCreation(() => {
+        const tab = [
+            {
+                name: "插件日志",
+                icon: <OutlineLogIcon />,
+                number: 0,
+                type: "plugin-log"
+            }
+        ]
+        if (!!echartsLists.length) {
+            tab.push({
+                name: "统计图表",
+                icon: <OutlineChartpieIcon />,
+                number: echartsLists.length,
+                type: "echarts-statistics"
+            })
+        }
+        if (!!textLists.length) {
+            tab.push({
+                name: "输出文本",
+                icon: <OutlineTerminalIcon />,
+                number: textLists.length,
+                type: "output-text"
+            })
+        }
+        return tab
+    }, [echartsLists, textLists])
+
+    const renderTabContent = useMemoizedFn((type) => {
+        switch (type) {
+            case "plugin-log":
+                return <LocalPluginLog loading={loading} list={list} />
+            case "echarts-statistics":
+                return <LocalList list={echartsLists} />
+            case "output-text":
+                return <LocalText list={textLists} />
+            default:
+                return <></>
+        }
+    })
+    const onTabChange = useMemoizedFn((key: string) => {
+        setActiveKey(key)
+    })
+
     return (
-        <PluginExecuteResultTabContent title='任务额外日志与结果'>
-            <Timeline reverse={true} pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                {list.map((e, index) => {
-                    return (
-                        <Timeline.Item key={e.id} color={LogLevelToCode(e.level)}>
-                            <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} onlyTime={true} />
-                        </Timeline.Item>
-                    )
-                })}
-            </Timeline>
-        </PluginExecuteResultTabContent>
+        <>
+            <PluginTabs
+                activeKey={activeKey}
+                onChange={onTabChange}
+                type='line'
+                wrapperClassName={styles["plugin-execute-log"]}
+            >
+                {logTabs.map((ele) => (
+                    <TabPane
+                        tab={
+                            <div
+                                className={classNames(styles["log-tab-name"], {
+                                    [styles["log-tab-name-active"]]: activeKey === ele.type
+                                })}
+                            >
+                                {ele.icon} {ele.name}
+                                {!!ele.number && <div className={styles["tab-number"]}>{ele.number}</div>}
+                            </div>
+                        }
+                        key={ele.type}
+                    >
+                        {renderTabContent(ele.type)}
+                    </TabPane>
+                ))}
+            </PluginTabs>
+        </>
     )
 })
 

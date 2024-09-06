@@ -369,7 +369,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                                         data={e.data}
                                                         level={e.level}
                                                         timestamp={e.timestamp}
-                                                        onlyTime={true}
                                                     />
                                                 </Timeline.Item>
                                             )

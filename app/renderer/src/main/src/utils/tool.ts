@@ -32,3 +32,8 @@ export const isArray = (value) => {
 export const isEmptyObject = (obj: object) => {
     return !(obj && Object.keys(obj).length > 0)
 }
+
+/**是否为有效数字 */
+export const isNumberNaN = (n: number) => {
+    return Number.isNaN(Number(n))
+}

@@ -3,6 +3,7 @@ import {failed, info} from "../../utils/notification"
 import {useMemoizedFn} from "ahooks"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "./useHoldGRPCStreamType"
 import {DefaultTabs} from "./constant"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -120,7 +121,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
 
     /** 放入日志队列 */
     const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
-        messages.current.unshift(log)
+        messages.current.unshift({...log, content: {...log.content, id: uuidv4()}})
         // 只缓存 100 条结果（日志类型 + 数据类型）
         if (messages.current.length > 100 && isLimitLogs) {
             messages.current.pop()
@@ -148,7 +149,6 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             if (data.IsMessage) {
                 try {
                     let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
-
                     // progress 进度条
                     if (obj.type === "progress") {
                         const processData = obj.content as StreamResult.Progress

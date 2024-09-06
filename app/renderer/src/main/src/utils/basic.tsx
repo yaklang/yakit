@@ -165,7 +165,9 @@ export const YakitVersion: React.FC<YakVersionProp> = (props) => {
 export interface AutoUpdateYakModuleViewerProp {
 
 }
-
+/**
+ * @deprecated 没有使用
+ */
 export const AutoUpdateYakModuleViewer: React.FC<AutoUpdateYakModuleViewerProp> = (props) => {
     const [end, setEnd] = useState(false);
     const [error, setError] = useState("");
