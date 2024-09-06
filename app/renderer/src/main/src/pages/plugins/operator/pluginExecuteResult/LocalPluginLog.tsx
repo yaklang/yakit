@@ -71,7 +71,6 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
                 return <LogNodeStatusErrorIcon />
             case "success":
                 return <LogNodeStatusSuccessIcon />
-            case "json":
             case "code":
             case "text":
                 return <LogNodeStatusCodeIcon />
@@ -147,19 +146,9 @@ export const LocalText: React.FC<LocalTextProps> = React.memo((props) => {
         <div className={styles["local-text-list"]}>
             {list.map((item) => {
                 return (
-                    <div key={item.id}>
-                        <div className={styles["text-heard"]}>
-                            <div className={styles["time"]}>
-                                <SolidCalendarIcon />
-                                <span>{formatTimestamp(item.timestamp)}</span>
-                            </div>
-                        </div>
-                        <EditorLogShow
-                            {...item}
-                            editorContentClassName={styles["editor-content-wrapper"]}
-                            showTime={false}
-                        />
-                    </div>
+                    <React.Fragment key={item.id}>
+                        <EditorLogShow {...item} showTime={false} />
+                    </React.Fragment>
                 )
             })}
         </div>

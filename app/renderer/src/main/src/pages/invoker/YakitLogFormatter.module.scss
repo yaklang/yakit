@@ -159,32 +159,47 @@
         font-size: 14px;
         line-height: 1.5;
         overflow-x: auto;
-        color: var(--yakit-header-color)
+        color: var(--yakit-header-color);
     }
 }
 
 .editor-body {
     @extend %display-column-center;
-    gap: 4px;
     .editor-heard {
         @extend %time-text;
+        margin-bottom: 8px;
     }
+
     .editor-content {
         border: 1px solid var(--yakit-border-color);
-        border-radius: 4px;
-        height: 300px;
-    }
-    .editor-expand-text {
-        @extend %expand-text;
-        @extend %display-flex-center;
-        gap: 4px;
-        .expand-icon {
-            width: 16px;
-            height: 16px;
-            svg {
-                width: 16px;
-                height: 16px;
+        border-radius: 8px;
+
+        .editor-content-title {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            padding: 10px 16px 10px 20px;
+            background-color: #fff;
+
+            color: var(--yakit-header-color);
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            border-radius: 8px 8px 0px 0px;
+
+            .editor-content-extra {
+                @extend %display-flex-center;
+                color: var(--yakit-body-text-color);
+                .time {
+                    @extend %display-flex-center;
+                    gap: 8px;
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 400;
+                }
             }
+        }
+        .editor {
+            height: 100px;
         }
     }
 }

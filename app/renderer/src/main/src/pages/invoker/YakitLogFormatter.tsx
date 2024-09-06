@@ -287,11 +287,9 @@ const JsonLogShow: React.FC<JsonLogShowProps> = React.memo((props) => {
         </div>
     )
 })
-interface EditorLogShowProps extends YakitLogFormatterProp {
-    editorContentClassName?: string
-}
+interface EditorLogShowProps extends YakitLogFormatterProp {}
 export const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) => {
-    const {timestamp, data, showTime = true, editorContentClassName = ""} = props
+    const {level, timestamp, data, showTime = true} = props
 
     const onExpand = useMemoizedFn(() => {
         const m = showYakitModal({
@@ -309,12 +307,22 @@ export const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) =>
     return (
         <div className={styles["editor-body"]}>
             {showTime && <div className={styles["editor-heard"]}>{formatTime(timestamp)}</div>}
-            <div className={classNames(styles["editor-content"], editorContentClassName)}>
-                <YakitEditor type={"plaintext"} value={data} />
-            </div>
-            <div className={styles["editor-expand-text"]} onClick={onExpand}>
-                <OutlineArrowsexpandIcon className={styles["expand-icon"]} />
-                查看
+
+            <div className={classNames(styles["editor-content"])}>
+                <div className={styles["editor-content-title"]}>
+                    <div>{level}</div>
+                    <div className={styles["editor-content-extra"]}>
+                        <div className={styles["time"]}>
+                            <SolidCalendarIcon />
+                            <span>{formatTimestamp(timestamp)}</span>
+                        </div>
+                        <Divider type='vertical' style={{margin: "0 8px"}} />
+                        <YakitButton type='text2' icon={<OutlineArrowsexpandIcon />} onClick={onExpand} />
+                    </div>
+                </div>
+                <div className={styles["editor"]}>
+                    <YakitEditor type={"plaintext"} value={data} />
+                </div>
             </div>
         </div>
     )
