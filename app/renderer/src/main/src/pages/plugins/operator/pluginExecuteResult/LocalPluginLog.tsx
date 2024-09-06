@@ -95,7 +95,7 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
     return (
         <div className={styles["log-body"]}>
             <div className={styles["log-heard"]}>{currentTime} 日志查询结果</div>
-            {list.length === 0 ? (
+            {!loading && list.length === 0 ? (
                 <YakitEmpty style={{paddingTop: 48}} title='暂无日志信息' />
             ) : (
                 <Timeline
