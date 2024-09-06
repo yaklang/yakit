@@ -142,7 +142,8 @@ export const emptyFuzzer: FuzzerResponse = {
     TooLargeResponseHeaderFile: "",
     TooLargeResponseBodyFile: "",
     DisableRenderStyles: false,
-    RuntimeID: ""
+    RuntimeID: "",
+    Discard: false
 }
 
 export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
