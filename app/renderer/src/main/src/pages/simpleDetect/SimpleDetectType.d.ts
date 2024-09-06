@@ -18,6 +18,8 @@ export interface SimpleDetectFormContentProps {
     inViewport: boolean
     form: FormInstance<SimpleDetectForm>
     refreshGroup: boolean
+    setInputType: (v:"content"|"path") => void
+    inputType: "content"|"path"
 }
 
 export interface SimpleDetectValueProps {

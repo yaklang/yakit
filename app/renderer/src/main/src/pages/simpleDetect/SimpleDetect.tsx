@@ -19,7 +19,7 @@ import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/Plugi
 import {PortScanExecuteExtraFormValue} from "../securityTool/newPortScan/NewPortScanType"
 import {defPortScanExecuteExtraFormValue} from "../securityTool/newPortScan/NewPortScan"
 import cloneDeep from "lodash/cloneDeep"
-import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitFormDraggerContentPath} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {useStore} from "@/store"
 import {
@@ -408,6 +408,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         onRecoverSimpleDetectTask(recoverRuntimeId)
     })
 
+    const [inputType,setInputType] = useState<"content"|"path">("content")
     const onStartExecute = useMemoizedFn((value: SimpleDetectForm) => {
         simpleDetectValuePropsRef.current.formValue = {...value}
         simpleDetectValuePropsRef.current.extraParamsValue = {...extraParamsValue}
@@ -470,6 +471,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         recoverSimpleDetectStreamEvent.reset()
         portScanRequestParamsRef.current = {...portScanRequestParams}
         startBruteParamsRef.current = {...newStartBruteParams}
+        if(inputType === "path"){
+            params.PortScanRequest.TargetsFile = params.PortScanRequest.Targets
+            params.PortScanRequest.Targets = ""
+        }
         /**继续任务后，再次点击开始执行，开启新任务 */
         apiSimpleDetect(params, tokenRef.current).then(() => {
             setExecuteStatus("process")
@@ -732,6 +737,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                 inViewport={inViewport}
                                 form={form}
                                 refreshGroup={refreshGroup}
+                                setInputType={setInputType}
+                                inputType={inputType}
                             />
                             <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                                 <div className={styles["simple-detect-form-operate"]}>
@@ -823,7 +830,7 @@ const marks: SliderMarks = {
     }
 }
 const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.memo((props) => {
-    const {disabled, inViewport, form, refreshGroup} = props
+    const {disabled, inViewport, form, refreshGroup, inputType, setInputType} = props
     const [groupOptions, setGroupOptions] = useState<string[]>([])
     const scanType = Form.useWatch("scanType", form)
     useEffect(() => {
@@ -852,7 +859,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
     })
     return (
         <>
-            <YakitFormDraggerContent
+            <YakitFormDraggerContentPath
                 formItemProps={{
                     name: "Targets",
                     label: "扫描目标",
@@ -865,6 +872,8 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
                 }}
                 help='可将TXT、Excel文件拖入框内或'
                 disabled={disabled}
+                onTextAreaType={setInputType}
+                textAreaType={inputType}
             />
             <Form.Item
                 label='扫描模式'

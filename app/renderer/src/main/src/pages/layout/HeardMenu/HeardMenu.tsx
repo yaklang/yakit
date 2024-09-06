@@ -30,8 +30,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakCodeEditor} from "@/utils/editors"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {failed, yakitNotify} from "@/utils/notification"
@@ -881,23 +879,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 onCancel={() => setVisibleImport(false)}
                 width='60%'
                 onOk={() => onImportJSON()}
+                okText="导入"
                 confirmLoading={importLoading}
                 bodyStyle={{padding: 0}}
             >
-                <Form className={style["json-import"]} layout='vertical'>
-                    <YakitFormDraggerContent
-                        accept='.json'
-                        textareaProps={{
-                            rows: 1,
-                            isShowResize: false
-                        }}
-                        value={""}
-                        onChange={(val) => {
-                            setMenuDataString(val)
-                            setRefreshTrigger(!refreshTrigger)
-                        }}
-                    />
-                    <Form.Item label='配置 JSON'>
                         <div style={{height: 400}}>
                             <YakCodeEditor
                                 refreshTrigger={refreshTrigger}
@@ -906,8 +891,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                 onChange={setMenuDataString}
                             />
                         </div>
-                    </Form.Item>
-                </Form>
             </YakitModal>
         </div>
     )

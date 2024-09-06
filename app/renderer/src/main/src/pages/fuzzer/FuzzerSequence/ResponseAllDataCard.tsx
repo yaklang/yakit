@@ -38,6 +38,7 @@ const ResponseAllDataCard: React.FC<ResponseAllDataCardProps> = React.memo((prop
                     refresh={refresh}
                     toWebFuzzer={true}
                     showBatchActions={true}
+                    pageType="History"
                 ></CurrentHttpFlow>
             </div>
         </div>

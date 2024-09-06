@@ -189,10 +189,10 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             let width: number = Math.floor((right - left) / 2)
             setMenuWidth(width)
         }
-        if (bottom - top < 700) {
-            let height: number = Math.floor((bottom - top) / 2 - 30)
-            setMenuHeight(height)
-        }
+     
+        let height: number = Math.floor((bottom - top) / 2 - 30)
+        setMenuHeight(height)
+        
         getData()
     }, [])
 
@@ -850,10 +850,9 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             let width: number = Math.floor((right - left) / 2)
             setMenuWidth(width)
         }
-        if (bottom - top < 720) {
-            let height: number = Math.floor((bottom - top) / 2 - 30)
-            setMenuHeight(height)
-        }
+
+        let height: number = Math.floor((bottom - top) / 2 - 30)
+        setMenuHeight(height)
     }, [])
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
     const [clickSegmentedType, setClickSegmentedType] = useState<"insert-tag" | "aiplugin">()
@@ -1019,10 +1018,9 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
             let width: number = Math.floor((right - left) / 2)
             setMenuWidth(width)
         }
-        if (bottom - top < 500) {
-            let height: number = Math.floor((bottom - top) / 2 - 30)
-            setMenuHeight(height)
-        }
+
+        let height: number = Math.floor((bottom - top) / 2 - 30)
+        setMenuHeight(height)
     }, [])
     return (
         <div

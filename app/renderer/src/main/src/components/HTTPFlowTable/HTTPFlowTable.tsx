@@ -963,6 +963,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 Tags: [...tagsFilter],
                 bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
             })
+            if(sort.orderBy === "DurationMs"){
+                sort.orderBy = "duration"
+            }
             sortRef.current = sort
             setTimeout(() => {
                 updateData()
@@ -1062,7 +1065,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
-
+        
         // 查询数据
         updateQueryParams(query)
         ipcRenderer
@@ -1858,6 +1861,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filters: contentType
             }
         }
+        const DurationMs: ColumnsTypeProps = {
+            title: "延迟(ms)",
+            dataKey: "DurationMs",
+            width: 200,
+            render: (text) => {
+                let timeMs:number = parseInt(text)
+                return <div className={style['duration-ms']}>{timeMs}</div>
+            },
+            // 此处排序会使偏移量新数据进入时乱序(ps：后续处理，考虑此处排序时偏移量新增数据在页面上不更新)
+            // sorterProps: {
+            //     sorter: true
+            // }
+        }
         const UpdatedAt: ColumnsTypeProps = {
             title: "请求时间",
             dataKey: "UpdatedAt",
@@ -1935,6 +1951,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 WebPayloads,
                 Tags,
                 IPAddress,
+                DurationMs,
                 BodyLength,
                 GetParamsTotal,
                 ContentType,
@@ -1952,6 +1969,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             HtmlTitle,
             Tags,
             IPAddress,
+            DurationMs,
             BodyLength,
             GetParamsTotal,
             ContentType,

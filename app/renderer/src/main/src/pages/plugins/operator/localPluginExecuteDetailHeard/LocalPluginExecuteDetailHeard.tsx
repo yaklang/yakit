@@ -21,7 +21,11 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
-import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
+import {
+    YakitFormDragger,
+    YakitFormDraggerContent,
+    YakitFormDraggerContentPath
+} from "@/components/yakitUI/YakitForm/YakitForm"
 import {failed} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import classNames from "classnames"
@@ -737,7 +741,7 @@ export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React
 })
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
-    const {form, disabled, type = "single", rawHTTPRequest = ""} = props
+    const {form, disabled, type = "single", rawHTTPRequest = "", inputType, setInputType} = props
 
     const requestType: RequestType = Form.useWatch("requestType", form)
     const rawItem = useMemo(() => {
@@ -789,22 +793,45 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
             </Form.Item>
             {requestType === "original" && <OutputFormComponentsByType item={rawItem} />}
             {requestType === "input" && (
-                <YakitFormDraggerContent
-                    className={styles["plugin-execute-form-item"]}
-                    formItemProps={{
-                        name: "Input",
-                        label: "扫描目标",
-                        rules: [{required: true}]
-                    }}
-                    accept='.txt,.xlsx,.xls,.csv'
-                    textareaProps={{
-                        placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
-                        rows: 3
-                    }}
-                    help='可将TXT、Excel文件拖入框内或'
-                    disabled={disabled}
-                    valueSeparator={"\r\n"}
-                />
+                <>
+                    {inputType && setInputType ? (
+                        <YakitFormDraggerContentPath
+                            className={styles["plugin-execute-form-item"]}
+                            formItemProps={{
+                                name: "Input",
+                                label: "扫描目标",
+                                rules: [{required: true}]
+                            }}
+                            accept='.txt,.xlsx,.xls,.csv'
+                            textareaProps={{
+                                placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+                                rows: 3
+                            }}
+                            help='可将TXT、Excel文件拖入框内或'
+                            disabled={disabled}
+                            valueSeparator={"\r\n"}
+                            onTextAreaType={setInputType}
+                            textAreaType={inputType}
+                        />
+                    ) : (
+                        <YakitFormDraggerContent
+                            className={styles["plugin-execute-form-item"]}
+                            formItemProps={{
+                                name: "Input",
+                                label: "扫描目标",
+                                rules: [{required: true}]
+                            }}
+                            accept='.txt,.xlsx,.xls,.csv'
+                            textareaProps={{
+                                placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+                                rows: 3
+                            }}
+                            help='可将TXT、Excel文件拖入框内或'
+                            disabled={disabled}
+                            valueSeparator={"\r\n"}
+                        />
+                    )}
+                </>
             )}
             {requestType === "httpFlowId" && (
                 <Form.Item label='请求ID' name='httpFlowId' required={true}>

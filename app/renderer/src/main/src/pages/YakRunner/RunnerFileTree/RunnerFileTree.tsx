@@ -2,7 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {CollapseList} from "../CollapseList/CollapseList"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
 import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
@@ -735,6 +735,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                                         type='text2'
                                         icon={<OutlinCompileIcon />}
                                         onClick={() => emiter.emit("onOpenAuditModal", "init")}
+                                    />
+                                </Tooltip>
+                                <Tooltip title={"刷新资源管理器"}>
+                                    <YakitButton
+                                        type='text2'
+                                        disabled={fileTree.length === 0}
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={() => {
+                                            emiter.emit("onRefreshTree")
+                                        }}
                                     />
                                 </Tooltip>
                                 <YakitDropdownMenu

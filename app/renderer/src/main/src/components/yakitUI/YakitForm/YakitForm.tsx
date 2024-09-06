@@ -1,11 +1,13 @@
-import {Upload, Form, Spin, Divider} from "antd"
+import {Upload, Form, Spin, Divider, Tooltip} from "antd"
 import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {
     FileDraggerProps,
     YakitDraggerContentProps,
     YakitDraggerProps,
     YakitFormDraggerContentProps,
-    YakitFormDraggerProps
+    YakitFormDraggerContentPathProps,
+    YakitFormDraggerProps,
+    YakitDraggerContentPathProps
 } from "./YakitFormType.d"
 import styles from "./YakitForm.module.scss"
 import classNames from "classnames"
@@ -20,6 +22,8 @@ import {YakitPopover} from "../YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
+import {YakitRadioButtons} from "../YakitRadioButtons/YakitRadioButtons"
+import { QuestionMarkCircleIcon } from "@/assets/newIcon"
 
 const {Dragger} = Upload
 
@@ -566,7 +570,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         </>
     )
 })
-/**内容显示的是文件中的内容，不显示路径；只支持选择文件 */
+/**内容显示的是文件中的内容(超过限制大小10M则无法上传)，不显示路径；只支持选择文件 */
 export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.memo((props) => {
     const {
         value,
@@ -580,10 +584,6 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         ...restProps
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
-    const [fileLimit, setFileLimit] = useState<string>()
-    const fileRef = useRef<HTMLDivElement>(null)
-    const [form] = Form.useForm()
-    const [inViewport] = useInViewport(fileRef)
     const renderContent = useMemoizedFn((helpNode: ReactNode) => {
         return (
             <YakitSpin spinning={uploadLoading}>
@@ -625,34 +625,14 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
             </YakitSpin>
         )
     })
-    useDebounceEffect(
-        () => {
-            getRemoteValue(RemoteGV.YakitDraggerContentFileLimit).then((e) => {
-                try {
-                    if (!e) {
-                        setFileLimit("1")
-                    } else {
-                        const obj = JSON.parse(e)
-                        if (obj.init === false) {
-                            setFileLimit(obj.fileLimit)
-                        }
-                    }
-                } catch (error) {
-                    setFileLimit("1")
-                }
-            })
-        },
-        [inViewport],
-        {wait: 300}
-    )
-    /**符合条件的文件，读取文件内容 */
+
+    /**默认10M之内，读取文件内容 */
     const onHandlerFile = useMemoizedFn((item: {size: number; path: string}) => {
-        if (!(fileLimit === undefined || fileLimit === "")) {
-            if (item.size / 1024 > +fileLimit * 1024) {
-                yakitNotify("error", `文件大小不能超过${fileLimit}M`)
-                return
-            }
+        if (item.size / 1024 > 10 * 1024) {
+            yakitNotify("warning", `文件过大，无法操作`)
+            return
         }
+
         const path = item.path.replace(/\\/g, "\\")
         if (isAcceptEligible(path, props.accept || ".*")) {
             onGetContent(path)
@@ -741,10 +721,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                 }}
             >
                 {renderContent(
-                    <div
-                        className={classNames(styles["form-item-help"], styles["form-item-content-help"])}
-                        ref={fileRef}
-                    >
+                    <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
                         <label>
                             {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
                             <span
@@ -757,56 +734,6 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                             </span>
                             上传
                         </label>
-                        <div className={styles["divider-line"]}></div>
-                        <YakitPopover
-                            overlayClassName={styles["form-item-setting-dropdown"]}
-                            placement='bottomLeft'
-                            content={
-                                <div onClick={(e) => e.stopPropagation()} style={{padding: "0 8px"}}>
-                                    <Form form={form} layout={"horizontal"}>
-                                        <Form.Item
-                                            label={"文件大小限制"}
-                                            name={"fileLimit"}
-                                            normalize={(value) => {
-                                                return value.replace(/\D/g, "")
-                                            }}
-                                        >
-                                            <YakitInput suffix='M' />
-                                        </Form.Item>
-                                    </Form>
-                                </div>
-                            }
-                            trigger={"click"}
-                            onVisibleChange={(visible) => {
-                                if (visible) {
-                                    getRemoteValue(RemoteGV.YakitDraggerContentFileLimit).then((e) => {
-                                        try {
-                                            if (!e) {
-                                                form.setFieldsValue({fileLimit: "1"})
-                                            } else {
-                                                const obj = JSON.parse(e)
-                                                if (obj.init === false) {
-                                                    form.setFieldsValue({fileLimit: obj.fileLimit})
-                                                }
-                                            }
-                                        } catch (error) {
-                                            form.setFieldsValue({fileLimit: "1"})
-                                        }
-                                    })
-                                } else {
-                                    setRemoteValue(
-                                        RemoteGV.YakitDraggerContentFileLimit,
-                                        JSON.stringify({fileLimit: form.getFieldValue("fileLimit"), init: false})
-                                    )
-                                    setFileLimit(form.getFieldValue("fileLimit"))
-                                }
-                            }}
-                        >
-                            <span className={styles["form-item-setting"]} onClick={(e) => e.stopPropagation()}>
-                                <UISettingSvgIcon className={styles["form-item-setting-icon"]} />
-                                设置
-                            </span>
-                        </YakitPopover>
                     </div>
                 )}
             </Dragger>
@@ -830,6 +757,253 @@ export const YakitFormDraggerContent: React.FC<YakitFormDraggerContentProps> = R
             )}
         >
             <YakitDraggerContent {...restProps} size={size} />
+        </Form.Item>
+    )
+})
+
+/**内容显示的是文件中的内容(超过限制大小10M则无法上传)，不显示路径；只支持选择文件 */
+export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = React.memo((props) => {
+    const {
+        value,
+        disabled,
+        size,
+        textareaProps = {},
+        onChange,
+        help,
+        showDefHelp,
+        valueSeparator = ",",
+        textAreaType,
+        onTextAreaType,
+        ...restProps
+    } = props
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false)
+    const renderContent = useMemoizedFn((helpNode: ReactNode) => {
+        return (
+            <YakitSpin spinning={uploadLoading}>
+                <YakitInput.TextArea
+                    placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                    value={value}
+                    disabled={disabled}
+                    {...textareaProps}
+                    onChange={(e) => {
+                        if (onChange) onChange(e.target.value)
+                        if (textareaProps.onChange) textareaProps.onChange(e)
+                        e.stopPropagation()
+                    }}
+                    onPressEnter={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onPressEnter) textareaProps.onPressEnter(e)
+                    }}
+                    onFocus={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onFocus) textareaProps.onFocus(e)
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onClick) textareaProps.onClick(e)
+                    }}
+                    onBlur={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onBlur) textareaProps.onBlur(e)
+                    }}
+                />
+                <div
+                    className={classNames(styles["dragger-help-middle"], {
+                        [styles["dragger-help-small"]]: size === "small",
+                        [styles["dragger-help-large"]]: size === "large"
+                    })}
+                >
+                    {helpNode}
+                </div>
+            </YakitSpin>
+        )
+    })
+
+    /**默认10M之内，读取文件内容 */
+    const onHandlerFile = useMemoizedFn((item: {size: number; path: string}) => {
+        const size = item.size
+        const path = item.path.replace(/\\/g, "\\")
+        if (isAcceptEligible(path, props.accept || ".*")) {
+            onGetContent(size, path)
+        } else {
+            yakitNotify("error", "文件类型不支持")
+        }
+    })
+    /**拖拽文件后的处理 */
+    const afterFileDrop = useMemoizedFn((e) => {
+        if (disabled) return
+        const {files = []} = e.dataTransfer
+        const filesLength = files.length
+        if (filesLength > 1) {
+            yakitNotify("error", "多选的文件只会选择其中一个文件处理")
+        }
+        if (filesLength > 0) {
+            const item = files[0]
+            onHandlerFile(item)
+        }
+    })
+    /**选择文件 */
+    const onUploadFile = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (disabled) return
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件",
+                properties: ["openFile"]
+            })
+            .then((data: {filePaths: string[]}) => {
+                const filesLength = data.filePaths.length
+                if (filesLength === 1) {
+                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                    ipcRenderer
+                        .invoke("fetch-file-info-by-path", path)
+                        .then((fileInfo) => {
+                            onHandlerFile({
+                                size: fileInfo.size,
+                                path
+                            })
+                        })
+                        .catch((err) => {
+                            yakitNotify("error", "文件数据读取异常:" + err)
+                        })
+                } else if (filesLength > 1) {
+                    yakitNotify("error", "只支持单文件上传")
+                }
+            })
+    })
+    /**通过文件路径获取文件内容 */
+    const onGetContent = useMemoizedFn((size: number, path: string) => {
+        if (size / 1024 > 10 * 1024) {
+            onTextAreaType("path")
+            if (onChange) onChange(path)
+            return
+        }
+        onTextAreaType("content")
+        setUploadLoading(true)
+        ipcRenderer
+            .invoke("fetch-file-content", path)
+            .then((res: string | {name: string; data: string[]}[]) => {
+                if (Array.isArray(res)) {
+                    // 表格文件读取出来的
+                    let data: string[] = []
+                    res.forEach((element) => {
+                        data = data.concat(element.data)
+                    })
+                    const value = data.join(valueSeparator)
+                    if (onChange) onChange(value)
+                } else {
+                    // 其他文件读取出来的
+                    if (onChange) onChange(res)
+                }
+            })
+            .catch((err) => {
+                failed("数据获取失败：" + err)
+            })
+            .finally(() => setTimeout(() => setUploadLoading(false), 200))
+    })
+    return (
+        <>
+            <Dragger
+                onDrop={afterFileDrop}
+                {...restProps}
+                disabled={disabled}
+                showUploadList={false}
+                directory={false}
+                multiple={false}
+                className={classNames(styles["yakit-dragger"], props.className)}
+                beforeUpload={() => {
+                    return false
+                }}
+            >
+                {renderContent(
+                    <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
+                        <label>
+                            {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
+                            <span
+                                className={classNames(styles["dragger-help-active"], {
+                                    [styles["dragger-help-active-disabled"]]: disabled
+                                })}
+                                onClick={onUploadFile}
+                            >
+                                <OutlineUploadIcon className={styles["upload-icon"]} /> 点击此处
+                            </span>
+                            上传
+                        </label>
+                        <div className={styles["divider-line"]}></div>
+                        <YakitPopover
+                            overlayClassName={styles["form-item-setting-dropdown"]}
+                            placement='bottomLeft'
+                            content={
+                                <div onClick={(e) => e.stopPropagation()} style={{padding: "0 8px"}}>
+                                    <div className={styles["content"]}>
+                                        <div className={styles["text"]}>读取方式
+                                            <Tooltip title="为避免读取大文件造成前端渲染失败，读取文件内容限制为10M，超过10M的文件请选择路径">
+                                              <QuestionMarkCircleIcon />  
+                                            </Tooltip>
+                                            
+                                            ：</div>
+                                        <YakitRadioButtons
+                                            size='small'
+                                            value={textAreaType}
+                                            onChange={(e) => {
+                                                onTextAreaType(e.target.value)
+                                            }}
+                                            buttonStyle='solid'
+                                            options={[
+                                                {
+                                                    value: "content",
+                                                    label: "文件内容"
+                                                },
+                                                {
+                                                    value: "path",
+                                                    label: "路径"
+                                                }
+                                            ]}
+                                        />
+                                    </div>
+                                </div>
+                            }
+                            trigger={"click"}
+                            onVisibleChange={(visible) => {
+                                if (visible) {
+                                } else {
+                                }
+                            }}
+                        >
+                            <span className={styles["form-item-setting"]} onClick={(e) => e.stopPropagation()}>
+                                <UISettingSvgIcon className={styles["form-item-setting-icon"]} />
+                                设置
+                            </span>
+                        </YakitPopover>
+                    </div>
+                )}
+            </Dragger>
+        </>
+    )
+})
+
+/**form表单item 内容显示的是文件中的内容或者路径（10M以上则显示路径）；只支持选择文件 */
+export const YakitFormDraggerContentPath: React.FC<YakitFormDraggerContentPathProps> = React.memo((props) => {
+    const {textAreaType, onTextAreaType, formItemProps = {}, size, formItemClassName, ...restProps} = props
+
+    return (
+        <Form.Item
+            {...formItemProps}
+            className={classNames(
+                styles["form-label-middle"],
+                {
+                    [styles["form-label-small"]]: size === "small",
+                    [styles["form-label-large"]]: size === "large"
+                },
+                formItemClassName
+            )}
+        >
+            <YakitDraggerContentPath
+                {...restProps}
+                size={size}
+                textAreaType={textAreaType}
+                onTextAreaType={onTextAreaType}
+            />
         </Form.Item>
     )
 })

@@ -758,6 +758,8 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
             }
             return convertHybridScanParams(params, pluginInfo)
         })
+
+        const [inputType,setInputType] = useState<"content"|"path">("content")
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value) => {
             const hybridScanParams: HybridScanControlAfterRequest = {
@@ -765,6 +767,10 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
                 HybridScanTaskSource: hybridScanTaskSource
             }
             hybridScanStreamEvent.reset()
+            if(inputType === "path" && hybridScanParams.Targets){
+                hybridScanParams.Targets.InputFile = [hybridScanParams.Targets.Input]
+                hybridScanParams.Targets.Input = ""
+            }
             apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
                 setIsExpand(false)
                 setExecuteStatus("process")
@@ -831,6 +837,8 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
                             disabled={isExecuting}
                             type='batch'
                             rawHTTPRequest={initRawHTTPRequest}
+                            inputType={inputType}
+                            setInputType={setInputType}
                         />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>

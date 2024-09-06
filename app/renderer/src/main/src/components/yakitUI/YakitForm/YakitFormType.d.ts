@@ -72,3 +72,15 @@ export interface YakitFormDraggerContentProps extends YakitDraggerContentProps {
     formItemClassName?: string
     formItemProps?: FormItemProps
 }
+
+export interface YakitDraggerContentPathProps extends YakitDraggerContentProps {
+    textAreaType: "content"|"path"
+    onTextAreaType:(v:"content"|"path") => void
+}
+
+export interface YakitFormDraggerContentPathProps extends YakitDraggerContentProps {
+    textAreaType: "content"|"path"
+    onTextAreaType:(v:"content"|"path") => void
+    formItemClassName?: string
+    formItemProps?: FormItemProps
+}

@@ -1083,8 +1083,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 return (
                     <>
                         <Form.Item labelCol={{span: 3}} wrapperCol={{span: 21}} name='localId' label='插件ID'>
-                            {/* placeholder='请输入插件ID，多个ID用”英文逗号“或”换行“分割...' */}
-                            <YakitInput.TextArea />
+                            <YakitInput.TextArea placeholder="请输入插件ID，多个ID用”英文逗号“或”换行“分割..."/>
                         </Form.Item>
                     </>
                 )
@@ -1140,9 +1139,10 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
 
         if (loadMode === "uploadId") {
+            const UUID:string[] = formValue.localId.split(/,|\r?\n/)
             setImportLoading(true)
             apiDownloadPluginOther({
-                UUID: [formValue.localId]
+                UUID
             })
                 .then(() => {
                     setVisible(false)
