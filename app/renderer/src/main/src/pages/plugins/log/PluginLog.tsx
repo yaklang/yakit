@@ -433,6 +433,15 @@ export const PluginLogs: React.FC<PluginLogProps> = memo((props) => {
     const resetFetchLogs = useMemoizedFn(() => {
         hasMore.current = true
         pageRef.current = 1
+        setResponse({
+            data: [],
+            pagemeta: {
+                page: 1,
+                limit: 20,
+                total: 0,
+                total_page: 0
+            }
+        })
         fetchLogs(pageRef.current)
     })
     // 重置日志列表数据
