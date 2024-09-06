@@ -4512,6 +4512,7 @@ message FuzzerResponse {
   bool DisableRenderStyles = 52;
 
   string RuntimeID = 53;
+  bool Discard = 54;
 }
 
 message RedirectHTTPFlow {

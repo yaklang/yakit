@@ -1596,13 +1596,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setFuzzerSequenceCacheData, clearFuzzerSequence, addFuzzerSequenceCacheData, fuzzerSequenceCacheData} =
+    const {setFuzzerSequenceCacheData, setFuzzerSequenceList,clearFuzzerSequence, addFuzzerSequenceCacheData} =
         useFuzzerSequence(
             (s) => ({
+                setFuzzerSequenceList:s.setFuzzerSequenceList,
                 setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
                 clearFuzzerSequence: s.clearFuzzerSequence,
                 addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData,
-                fuzzerSequenceCacheData: s.fuzzerSequenceCacheData
             }),
             shallow
         )
@@ -1700,8 +1700,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
     })
 
-    const onSetFuzzerSequenceCacheData = useMemoizedFn((cache) => {
+    const onSetFuzzerSequenceCacheData = useMemoizedFn((cache:FuzzerSequenceCacheDataProps[]) => {
         clearFuzzerSequence()
+        setFuzzerSequenceList(cache.map(ele=>({groupId:ele.groupId})))
         setFuzzerSequenceCacheData(cache)
     })
 

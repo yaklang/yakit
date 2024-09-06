@@ -241,6 +241,7 @@ export interface FuzzerResponse {
     DisableRenderStyles: boolean
 
     RuntimeID: string
+    Discard:boolean
 }
 
 export interface HistoryHTTPFuzzerTask {
@@ -425,7 +426,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         const matchers: HTTPResponseMatcher[] = value.matchers.map((ele) => ({
             ...ele,
             Action: getAction(ele.filterMode),
-            HitColor:!!getAction(ele.filterMode)?'':ele.HitColor,//只有仅匹配才传颜色
+            HitColor: !!getAction(ele.filterMode) ? "" : ele.HitColor //只有仅匹配才传颜色
         }))
         fuzzerRequests.Matchers = matchers
     }
@@ -599,7 +600,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
-
+   
+    const [droppedCount, setDroppedCount] = useState(0)
     // state
     const [loading, setLoading] = useState(false)
 
@@ -868,6 +870,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         resetResponse()
         setHistoryTask(undefined)
         setLoading(true)
+        setDroppedCount(0)
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, tokenRef.current).then(() => {
             ipcRenderer
@@ -923,6 +926,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setDefaultResponseSearch(affixSearch)
 
         setLoading(true)
+        setDroppedCount(0)
 
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
@@ -983,6 +987,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
+    const dCountRef = useRef<number>(0)
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
@@ -1033,6 +1038,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 reset()
             }
 
+            if (onIsDropped(data)) return
+
             const r = {
                 // 6.16
                 ...data,
@@ -1069,6 +1076,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             successCount = 0
             failedCount = 0
+            dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
                 setIsPause(true)
@@ -1104,6 +1112,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
     }, [])
+
+    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
+    const onIsDropped = useMemoizedFn((data) => {
+        if (data.Discard) {
+            // 丢弃不匹配的内容
+            dCountRef.current++
+            setDroppedCount(dCountRef.current)
+            return true
+        }
+        return false
+    })
 
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
         if (inViewport) setAll(extractedMap)
@@ -1278,8 +1297,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [successFuzzer])
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
-    const onShowResponseMatcherAndExtraction = useMemoizedFn((params:ShowResponseMatcherAndExtractionProps) => {
-        const {activeType,activeKey,order}=params;
+    const onShowResponseMatcherAndExtraction = useMemoizedFn((params: ShowResponseMatcherAndExtractionProps) => {
+        const {activeType, activeKey, order} = params
         setShowMatcherAndExtraction(true)
         setActiveType(activeType)
         switch (activeType) {
@@ -1288,8 +1307,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 break
             case "matchers":
                 setDefActiveKeyAndOrder({
-                    order:order||0,
-                    defActiveKey:activeKey
+                    order: order || 0,
+                    defActiveKey: activeKey
                 })
                 break
             default:
@@ -1681,7 +1700,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </>
                             )}
                             <div className={styles["fuzzer-heard-force"]}>
-                                <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
+                                <span className={styles["fuzzer-heard-https"]}></span>
                                 <YakitCheckbox
                                     checked={advancedConfigValue.isHttps}
                                     onChange={(e) =>
@@ -1784,6 +1803,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </YakitButton>
                             )}
                             <FuzzerExtraShow
+                                droppedCount={droppedCount}
                                 advancedConfigValue={advancedConfigValue}
                                 onlyOneResponse={onlyOneResponse}
                                 httpResponse={httpResponse}
@@ -2023,14 +2043,16 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
 }
 
 interface FuzzerExtraShowProps {
+    droppedCount:number
     advancedConfigValue: AdvancedConfigValueProps
     onlyOneResponse: boolean
     httpResponse: FuzzerResponse
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
-    const {advancedConfigValue, onlyOneResponse, httpResponse} = props
+    const {droppedCount,advancedConfigValue, onlyOneResponse, httpResponse} = props
     return (
         <div className={styles["display-flex"]}>
+            {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
             {advancedConfigValue.proxy.length > 0 && (
                 <Tooltip title={advancedConfigValue.proxy}>
                     <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
@@ -2812,7 +2834,7 @@ interface ResponseViewerProps {
     extractorValue: ExtractorValueProps
     defActiveKey: string
     defActiveType: MatchingAndExtraction
-    defActiveKeyAndOrder:MatcherActiveKey
+    defActiveKeyAndOrder: MatcherActiveKey
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
     webFuzzerValue: string
     isHttps?: boolean
@@ -2852,12 +2874,12 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             trigger: "setShowMatcherAndExtraction"
         })
         const [reason, setReason] = useState<string>("未知原因")
-        
+
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
         const [activeKeyAndOrder, setDefActiveKeyAndOrder] = useState<MatcherActiveKey>({
-            order:0,
-            defActiveKey:''
+            order: 0,
+            defActiveKey: ""
         })
         useEffect(() => {
             setActiveKey(defActiveKey)
@@ -2976,11 +2998,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const [url, setUrl] = useState<string>("")
         useDebounceEffect(
             () => {
-                ipcRenderer
-                    .invoke("ExtractUrl", {Request: request, IsHTTPS: isHttps})
-                    .then((data: {Url: string}) => {
-                        setUrl(data.Url)
-                    })
+                ipcRenderer.invoke("ExtractUrl", {Request: request, IsHTTPS: isHttps}).then((data: {Url: string}) => {
+                    setUrl(data.Url)
+                })
             },
             [request, isHttps],
             {wait: 300}
