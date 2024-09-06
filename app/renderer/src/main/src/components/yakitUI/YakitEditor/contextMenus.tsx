@@ -1,21 +1,22 @@
-import { OtherMenuListProps, YakitEditorKeyCode, YakitIMonacoEditor } from "./YakitEditorType"
-import { EditorMenuItemType } from "./EditorMenu"
-import { Space } from "antd"
-import { showModal } from "@/utils/showModal"
-import { AutoCard } from "../../AutoCard"
-import { YakitEditor } from "./YakitEditor"
-import { YakitButton } from "../YakitButton/YakitButton"
-import { monacoEditorClear, monacoEditorWrite } from "@/pages/fuzzer/fuzzerTemplates"
-import { failed, yakitNotify } from "@/utils/notification"
-import { fetchCursorContent, fetchSelectionRange } from "./editorUtils"
-import { useEffect, useRef, useState } from "react"
-import { AutoSpin } from "@/components/AutoSpin"
-import { YakitSpin } from "../YakitSpin/YakitSpin"
-import { showYakitModal } from "../YakitModal/YakitModalConfirm"
+import {OtherMenuListProps, YakitEditorKeyCode, YakitIMonacoEditor} from "./YakitEditorType"
+import {EditorMenuItemType} from "./EditorMenu"
+import {Space} from "antd"
+import {showModal} from "@/utils/showModal"
+import {AutoCard} from "../../AutoCard"
+import {YakitEditor} from "./YakitEditor"
+import {YakitButton} from "../YakitButton/YakitButton"
+import {monacoEditorClear, monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
+import {failed, yakitNotify} from "@/utils/notification"
+import {fetchCursorContent, fetchSelectionRange} from "./editorUtils"
+import {useEffect, useRef, useState} from "react"
+import {AutoSpin} from "@/components/AutoSpin"
+import {YakitSpin} from "../YakitSpin/YakitSpin"
+import {showYakitModal} from "../YakitModal/YakitModalConfirm"
 import emiter from "@/utils/eventBus/eventBus"
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from "@/assets/icon/colors"
+import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
+import {CodecResponseProps, CodecWorkProps} from "@/pages/codec/NewCodec"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 /** @name 基础菜单组配置信息 */
 export const baseMenuLists: OtherMenuListProps = {
@@ -25,16 +26,16 @@ export const baseMenuLists: OtherMenuListProps = {
                 key: "font-size",
                 label: "字体大小",
                 children: [
-                    { key: "font-size-small", label: "小" },
-                    { key: "font-size-middle", label: "中" },
-                    { key: "font-size-large", label: "大" }
+                    {key: "font-size-small", label: "小"},
+                    {key: "font-size-middle", label: "中"},
+                    {key: "font-size-large", label: "大"}
                 ]
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string) => { }
+        onRun: (editor: YakitIMonacoEditor, key: string) => {}
     },
     cut: {
-        menu: [{ key: "cut", label: "剪切" }],
+        menu: [{key: "cut", label: "剪切"}],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
             if (editor?.executeEdits) {
                 /** 获取需要剪切的范围 */
@@ -59,14 +60,14 @@ export const baseMenuLists: OtherMenuListProps = {
         }
     },
     copy: {
-        menu: [{ key: "copy", label: "复制" }],
+        menu: [{key: "copy", label: "复制"}],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
             if (editor) ipcRenderer.invoke("set-copy-clipboard", `${fetchCursorContent(editor, true)}`)
             return
         }
     },
     paste: {
-        menu: [{ key: "paste", label: "粘贴" }],
+        menu: [{key: "paste", label: "粘贴"}],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
             if (!editor) return
 
@@ -88,7 +89,7 @@ export const baseMenuLists: OtherMenuListProps = {
                         editor.focus()
                     }
                 })
-                .catch(() => { })
+                .catch(() => {})
 
             return
         }
@@ -96,32 +97,30 @@ export const baseMenuLists: OtherMenuListProps = {
 }
 
 interface MutateHTTPRequestParams {
-    Request: Uint8Array
-    FuzzMethods: string[]
-    ChunkEncode: boolean
-    UploadEncode: boolean
+    Text: string
+    WorkFlow: CodecWorkProps[]
 }
 
 /** @name 编码模块子菜单 */
-const codeSubmenu: { key: string; label: string }[] = [
-    { key: "double-urlencode", label: "双重 URL 编码" },
-    { key: "base64-url-encode", label: "先 Base64 后 URL 编码" },
-    { key: "base64", label: "Base64 编码" },
-    { key: "hex-encode", label: "HEX 编码（十六进制编码）" },
-    { key: "htmlencode", label: "HTML 编码" },
-    { key: "unicode-encode", label: "Unicode 编码（\\uXXXX 编码）" },
-    { key: "urlencode", label: "URL 编码" },
-    { key: "urlescape", label: "URL 编码(只编码特殊字符)" }
+const codeSubmenu: {key: string; label: string}[] = [
+    {key: "double-urlencode", label: "双重 URL 编码"},
+    {key: "base64-url-encode", label: "先 Base64 后 URL 编码"},
+    {key: "base64", label: "Base64 编码"},
+    {key: "hex-encode", label: "HEX 编码（十六进制编码）"},
+    {key: "htmlencode", label: "HTML 编码"},
+    {key: "unicode-encode", label: "Unicode 编码（\\uXXXX 编码）"},
+    {key: "urlencode", label: "URL 编码"},
+    {key: "urlescape", label: "URL 编码(只编码特殊字符)"}
 ]
 /** @name 解码模块子菜单 */
-const decodeSubmenu: { key: string; label: string }[] = [
-    { key: "url-base64-decode", label: "先 URL 后 Base64 解码" },
-    { key: "base64-decode", label: "Base64 解码" },
-    { key: "hex-decode", label: "HEX 解码（十六进制解码）" },
-    { key: "htmldecode", label: "HTML 解码" },
-    { key: "jwt-parse-weak", label: "JWT 解析（同时测试弱 Key）" },
-    { key: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）" },
-    { key: "urlunescape", label: "URL 解码" }
+const decodeSubmenu: {key: string; label: string}[] = [
+    {key: "url-base64-decode", label: "先 URL 后 Base64 解码"},
+    {key: "base64-decode", label: "Base64 解码"},
+    {key: "hex-decode", label: "HEX 解码（十六进制解码）"},
+    {key: "htmldecode", label: "HTML 解码"},
+    {key: "jwt-parse-weak", label: "JWT 解析（同时测试弱 Key）"},
+    {key: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）"},
+    {key: "urlunescape", label: "URL 解码"}
 ]
 /** @name HTTP数据包变形模块子菜单 */
 const httpSubmenu: {
@@ -130,29 +129,54 @@ const httpSubmenu: {
     params?: MutateHTTPRequestParams
     keybindings?: YakitEditorKeyCode[]
 }[] = [
-        {
-            key: "mutate-http-method-get",
-            label: "改变 HTTP 方法成 GET",
-            params: { FuzzMethods: ["GET"] } as MutateHTTPRequestParams,
-            keybindings: [
-                process.platform === "darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
-                YakitEditorKeyCode.Shift,
-                YakitEditorKeyCode.KEY_H
-            ]
-        },
-        {
-            key: "mutate-http-method-post",
-            label: "改变 HTTP 方法成 POST",
-            params: { FuzzMethods: ["POST"] } as MutateHTTPRequestParams
-        },
-        {
-            key: "mutate-http-method-head",
-            label: "改变 HTTP 方法成 HEAD",
-            params: { FuzzMethods: ["HEAD"] } as MutateHTTPRequestParams
-        },
-        { key: "mutate-chunked", label: "HTTP Chunk 编码", params: { ChunkEncode: true } as MutateHTTPRequestParams },
-        { key: "mutate-upload", label: "修改为上传数据包", params: { UploadEncode: true } as MutateHTTPRequestParams }
-    ]
+    {
+        key: "mutate-http-method-get",
+        label: "改变 HTTP 方法成 GET",
+        params: {
+            WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "GET"}]}]
+        } as MutateHTTPRequestParams,
+        keybindings: [
+            process.platform === "darwin" ? YakitEditorKeyCode.Meta : YakitEditorKeyCode.Control,
+            YakitEditorKeyCode.Shift,
+            YakitEditorKeyCode.KEY_H
+        ]
+    },
+    {
+        key: "mutate-http-method-post",
+        label: "改变 HTTP 方法成 POST",
+        params: {
+            WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "POST"}]}]
+        } as MutateHTTPRequestParams
+    },
+    {
+        key: "mutate-http-method-head",
+        label: "改变 HTTP 方法成 HEAD",
+        params: {
+            WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "HEAD"}]}]
+        } as MutateHTTPRequestParams
+    },
+    {
+        key: "mutate-chunked",
+        label: "HTTP Chunk 编码",
+        params: {
+            WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "Chunk 编码"}]}]
+        } as MutateHTTPRequestParams
+    },
+    {
+        key: "mutate-upload",
+        label: "修改为上传数据包",
+        params: {
+            WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "上传数据包"}]}]
+        } as MutateHTTPRequestParams
+    },
+    {
+        key: "mutate-upload-Post",
+        label: "修改为上传数据包（仅POST参数）",
+        params: {
+            WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "上传数据包(仅POST参数)"}]}]
+        } as MutateHTTPRequestParams
+    }
+]
 /** @name 内置菜单组配置信息 */
 
 export const extraMenuLists: OtherMenuListProps = {
@@ -200,9 +224,9 @@ export const extraMenuLists: OtherMenuListProps = {
                 children: [...httpSubmenu] as any as EditorMenuItemType[]
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string,pageId,isCustom) => {
+        onRun: (editor: YakitIMonacoEditor, key: string, pageId, isCustom) => {
             // 自定义HTTP数据包变形标记
-            if(isCustom){
+            if (isCustom) {
                 customMutateRequest(key, editor.getModel()?.getValue(), editor)
                 return
             }
@@ -212,7 +236,7 @@ export const extraMenuLists: OtherMenuListProps = {
             try {
                 const model = editor.getModel()
                 const fullText = model?.getValue()
-                mutateRequest({ ...params, Request: new Buffer(fullText || "") }, editor)
+                mutateRequest({...params, Text: fullText || ""}, editor)
             } catch (e) {
                 failed(`mutate request failed: ${e}`)
             }
@@ -223,26 +247,26 @@ export const extraMenuLists: OtherMenuListProps = {
             {
                 key: "customcontextmenu",
                 label: "插件扩展",
-                children: [],
-            },
+                children: []
+            }
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string,pageId,isAiPlugin:any) => {
+        onRun: (editor: YakitIMonacoEditor, key: string, pageId, isAiPlugin: any) => {
             try {
                 let scriptName = key
-                if(scriptName.startsWith("plugin-")){
+                if (scriptName.startsWith("plugin-")) {
                     scriptName = scriptName.slice("plugin-".length)
                 }
 
-                const model = editor.getModel();
+                const model = editor.getModel()
                 const selection = editor.getSelection()
                 let text = model?.getValue()
                 if (selection) {
-                    let selectText = model?.getValueInRange(selection)||""
+                    let selectText = model?.getValueInRange(selection) || ""
                     if (selectText.length > 0) {
                         text = selectText
                     }
                 }
-                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,isAiPlugin}))
+                emiter.emit("onOpenFuzzerModal", JSON.stringify({text, scriptName, isAiPlugin}))
             } catch (e) {
                 failed(`custom context menu execute failed: ${e}`)
             }
@@ -252,40 +276,39 @@ export const extraMenuLists: OtherMenuListProps = {
         menu: [
             {
                 key: "aiplugin",
-                label: <>
-                    <IconSolidAIIcon className={"ai-plugin-menu-icon-default"}/>
-                    <IconSolidAIWhiteIcon className={"ai-plugin-menu-icon-hover"}/>
-                    AI插件
-                </>,
-                children: [],
+                label: (
+                    <>
+                        <IconSolidAIIcon className={"ai-plugin-menu-icon-default"} />
+                        <IconSolidAIWhiteIcon className={"ai-plugin-menu-icon-hover"} />
+                        AI插件
+                    </>
+                ),
+                children: []
             }
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string,pageId,isAiPlugin:any) => {
+        onRun: (editor: YakitIMonacoEditor, key: string, pageId, isAiPlugin: any) => {
             try {
                 let scriptName = key
-                if(scriptName.startsWith("aiplugin-")){
+                if (scriptName.startsWith("aiplugin-")) {
                     scriptName = scriptName.slice("aiplugin-".length)
                 }
 
-                const model = editor.getModel();
+                const model = editor.getModel()
                 const selection = editor.getSelection()
                 let text = model?.getValue()
                 if (selection) {
-                    let selectText = model?.getValueInRange(selection)||""
+                    let selectText = model?.getValueInRange(selection) || ""
                     if (selectText.length > 0) {
                         text = selectText
                     }
                 }
-                emiter.emit("onOpenFuzzerModal",JSON.stringify({text,scriptName,isAiPlugin}))
+                emiter.emit("onOpenFuzzerModal", JSON.stringify({text, scriptName, isAiPlugin}))
             } catch (e) {
                 failed(`custom context menu execute failed: ${e}`)
             }
         }
     }
 }
-
-
-
 
 /** @name codec模块和JSON美化模块处理函数 */
 const execCodec = async (
@@ -295,11 +318,11 @@ const execCodec = async (
     replaceEditor?: YakitIMonacoEditor,
     clear?: boolean,
     scriptName?: string,
-    title?: string,
+    title?: string
 ) => {
     return ipcRenderer
-        .invoke("Codec", { Text: text, Type: typeStr, ScriptName: scriptName })
-        .then((result: { Result: string }) => {
+        .invoke("Codec", {Text: text, Type: typeStr, ScriptName: scriptName})
+        .then((result: {Result: string}) => {
             if (replaceEditor) {
                 let m = showModal({
                     width: "50%",
@@ -325,7 +348,7 @@ const execCodec = async (
                             }
                             size={"small"}
                         >
-                            <div style={{ width: "100%", height: 300 }}>
+                            <div style={{width: "100%", height: 300}}>
                                 <YakitEditor type={"http"} readOnly={true} value={result.Result} />
                             </div>
                         </AutoCard>
@@ -338,9 +361,9 @@ const execCodec = async (
                     title: title || "编码结果",
                     width: "50%",
                     content: (
-                        <div style={{ width: "100%" }}>
-                            <Space style={{ width: "100%" }} direction={"vertical"}>
-                                <div style={{ height: 300 }}>
+                        <div style={{width: "100%"}}>
+                            <Space style={{width: "100%"}} direction={"vertical"}>
+                                <div style={{height: 300}}>
                                     <YakitEditor fontSize={20} type={"html"} readOnly={true} value={result.Result} />
                                 </div>
                             </Space>
@@ -349,21 +372,20 @@ const execCodec = async (
                 })
             }
         })
-        .catch((e: any) => { })
+        .catch((e: any) => {})
 }
 
-interface MutateHTTPRequestResponse {
-    Result: Uint8Array
-    ExtraResults: Uint8Array[]
-}
 /** @name HTTP数据包变形模块处理函数 */
 const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEditor) => {
-    ipcRenderer.invoke("HTTPRequestMutate", params).then((result: MutateHTTPRequestResponse) => {
+    ipcRenderer.invoke("NewCodec", params).then((result: CodecResponseProps) => {
         if (editor) {
-
             // monacoEditorClear(editor)
             // monacoEditorReplace(editor, new Buffer(result.Result).toString("utf8"))
-            monacoEditorWrite(editor, new Buffer(result.Result).toString("utf8"), editor.getModel()?.getFullModelRange())
+            monacoEditorWrite(
+                editor,
+                new Buffer(result.RawResult).toString("utf8"),
+                editor.getModel()?.getFullModelRange()
+            )
             return
         }
     })
@@ -374,14 +396,15 @@ const customMutateRequest = (key: string, text?: string, editor?: YakitIMonacoEd
         return
     }
     ipcRenderer
-        .invoke("Codec", { Type: key, Text: text, Params: [], ScriptName: key })
+        .invoke("Codec", {Type: key, Text: text, Params: [], ScriptName: key})
         .then((res) => {
-            monacoEditorWrite(editor, new Buffer(res?.Result || "").toString("utf8"), editor.getModel()?.getFullModelRange())
+            monacoEditorWrite(
+                editor,
+                new Buffer(res?.Result || "").toString("utf8"),
+                editor.getModel()?.getFullModelRange()
+            )
         })
         .catch((err) => {
-            if (err) throw err;
+            if (err) throw err
         })
 }
-
-
-
