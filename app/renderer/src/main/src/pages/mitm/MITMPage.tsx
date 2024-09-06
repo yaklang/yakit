@@ -1139,12 +1139,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
 
         if (loadMode === "uploadId") {
-            const UUIDArr:string[] = formValue.localId.split("\n")
-            let UUID:string[] = []
-            UUIDArr.forEach((item)=>{
-                let arr = item.split(",")
-                UUID = [...UUID,...arr]
-            })
+            const UUID:string[] = formValue.localId.split(/,|\r?\n/)
             setImportLoading(true)
             apiDownloadPluginOther({
                 UUID

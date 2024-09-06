@@ -408,7 +408,6 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 executeParams["TargetsFile"] = executeParams["Targets"]
                 executeParams["Targets"] = ""
             }
-            console.log("onStartExecute---",executeParams);
             
             portScanStreamEvent.reset()
             setRuntimeId("")
