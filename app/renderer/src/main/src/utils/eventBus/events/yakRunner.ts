@@ -1,9 +1,13 @@
+import { LeftSideType } from "@/pages/YakRunner/LeftSideBar/LeftSideBarType"
+
 export type YakRunnerEventProps = {
     onJumpEditorDetail: string
     onOpenBottomDetail: string
     onOpenTerminaDetail?: string
     onRefreshRunnerHistory: string
-    onOpenFolderList: string
+    onRefreshAduitHistory?: string
+    // 打开文件树
+    onOpenFileTree: string
     // 刷新文件树
     onRefreshFileTree?: string
     // 重新设置文件树缓存（展开 点击 多选）
@@ -28,4 +32,16 @@ export type YakRunnerEventProps = {
     onOperationFileTree: string
     // 通过路径打开文件
     onOpenFileByPath: string
+    // 打开编译文件Modal
+    onOpenAuditModal?: string
+    // 刷新审计树
+    onRefreshAuditTree?: string
+    // 打开编译右侧详情
+    onOpenAuditRightDetail: string
+    // 打开审计树
+    onOpenAuditTree: string
+    // 重置审计模式缓存数据
+    onResetAuditStatus?: string
+    // 刷新审计详情（关闭节点信息）
+    onRefreshAuditDetail?: string
 }

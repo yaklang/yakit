@@ -61,6 +61,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {folderPath, data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} =
         props
 
+    const {loadTreeType} = useStore()
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(wrapper)
@@ -130,6 +131,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     // 缓存tree展开项 用于关闭后打开
     const onSaveYakRunnerLastExpanded = useMemoizedFn((value: string[]) => {
         setYakRunnerLastFolderExpanded({
+            loadTreeType,
             folderPath,
             expandedKeys: value
         })
@@ -260,6 +262,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
                 titleRender={(nodeData) => {
                     return (
                         <FileTreeNode
+                            loadTreeType={loadTreeType}
                             isDownCtrlCmd={isDownCtrlCmd}
                             info={nodeData}
                             foucsedKey={foucsedKey}
@@ -280,6 +283,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const {
+        loadTreeType,
         isDownCtrlCmd,
         info,
         foucsedKey,
@@ -441,7 +445,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             case "copy":
                 if (!!foucsedKey) {
                     setCopyPath(foucsedKey)
-                    success(`已获取路径 ${foucsedKey}`)
+                    // success(`已获取路径 ${foucsedKey}`)
                 }
                 break
             case "paste":
@@ -503,7 +507,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         }
                         setAreaInfo && setAreaInfo(newAreaInfo)
                     } else {
-                        emiter.emit("onOpenFolderList", path)
+                        emiter.emit("onOpenFileTree", path)
                         // 此处更改布局信息
                         const updatePath = (await judgeAreaExistFilesPath(areaInfo, getMapAllFileKey())).map(
                             (item) => item.path
@@ -665,7 +669,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const onNewFile = useMemoizedFn(async (path: string) => {
         // 判断文件夹内文件是否加载 如若未加载则需要先行加载
         if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
+            await loadFolderDetail(path, loadTreeType)
         }
         emiter.emit("onNewFileInFileTree", path)
     })
@@ -674,7 +678,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const onNewFolder = useMemoizedFn(async (path: string) => {
         // 判断文件夹内文件是否加载 如若未加载则需要先行加载
         if (!hasMapFolderDetail(path)) {
-            await loadFolderDetail(path)
+            await loadFolderDetail(path, loadTreeType)
         }
         emiter.emit("onNewFolderInFileTree", path)
     })
@@ -725,11 +729,13 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         }
     }, [info, copyPath])
 
+    // 此处关闭文件夹由于审计树没有树右键 因此只有文件树存在
     const closeFolder = useMemoizedFn(() => {
         setFileTree && setFileTree([])
     })
 
     const handleContextMenu = useMemoizedFn(() => {
+        if (loadTreeType === "audit") return
         showByRightContext({
             width: 180,
             type: "grey",

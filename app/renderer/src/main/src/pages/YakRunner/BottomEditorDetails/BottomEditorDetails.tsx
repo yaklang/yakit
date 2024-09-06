@@ -51,7 +51,7 @@ const {ipcRenderer} = window.require("electron")
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
 
-    const {activeFile, fileTree} = useStore()
+    const {activeFile, fileTree, loadTreeType} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
 
@@ -115,6 +115,12 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         } catch (error) {}
     })
 
+    useEffect(() => {
+        if (loadTreeType === "audit") {
+            setShowItem("output")
+        }
+    }, [loadTreeType])
+
     const terminalRef = useRef<any>(null)
     const terminalFocusRef = useRef<boolean>(false)
     const onOpenTerminaDetailFun = useMemoizedFn(() => {
@@ -169,19 +175,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         terminalFocusRef.current = true
     })
 
-    useEffect(() => {
-        if (terminalRef.current) {
-            terminalRef.current.terminal.textarea.addEventListener("blur", onBlur)
-            terminalRef.current.terminal.textarea.addEventListener("focus", onFocus)
-        }
-        return () => {
-            if (terminalRef.current) {
-                terminalRef.current.terminal.textarea.removeEventListener("blur", onBlur)
-                terminalRef.current.terminal.textarea.removeEventListener("focus", onFocus)
-            }
-        }
-    }, [terminalRef.current])
-
     // 输出缓存
     const outputCahceRef = useRef<string>("")
     // 输出流
@@ -210,8 +203,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 终端大小
     const terminalSizeRef = useRef<{row: number; col: number}>()
     // 终端当前展示项
-    const [terminalRunnerId, setTerminalRunnerId] = useState<string>("")
-    const [refreshList, setRefreshList] = useState<boolean>(false)
+    const [terminalRunnerId, setTerminalRunnerId, getTerminalRunnerId] = useGetState<string>("")
+    const [refreshList, setRefreshList, getRefreshList] = useGetState<boolean>(false)
     // 是否需要重新加载终端(终端已被整体关闭)
     const [isReloadTerminal, setReloadTerminal] = useState<boolean>(false)
 
@@ -234,6 +227,39 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             initTerminal()
         }
     }, [isShowEditorDetails, showItem, terminalRunnerId])
+
+    useEffect(() => {
+        if (terminalRef.current) {
+            terminalRef.current.terminal.textarea.addEventListener("blur", onBlur)
+            terminalRef.current.terminal.textarea.addEventListener("focus", onFocus)
+            terminalRef.current.terminal.onTitleChange((path: string) => {
+                // 此处路径用于终端列表名 由于需兼容mac liunx经与后端协商仅提取字符串存在\的名称其余完整展示
+                let title = path
+                if (path.includes("\\")) {
+                    const lastSlashIndex = path.lastIndexOf("\\")
+                    const fileName = path.substring(lastSlashIndex + 1)
+                    const lastIndex = fileName.lastIndexOf(".")
+                    if (lastIndex !== -1) {
+                        title = fileName.slice(0, lastIndex)
+                    } else {
+                        title = fileName
+                    }
+                }
+                const id = getTerminalRunnerId()
+                const terminalCache = getTerminalMap(id)
+                const obj: TerminalDetailsProps = JSON.parse(terminalCache)
+                obj.title = title
+                setTerminalMap(id, JSON.stringify(obj))
+                setRefreshList(!getRefreshList())
+            })
+        }
+        return () => {
+            if (terminalRef.current) {
+                terminalRef.current.terminal.textarea.removeEventListener("blur", onBlur)
+                terminalRef.current.terminal.textarea.removeEventListener("focus", onFocus)
+            }
+        }
+    }, [terminalRef.current])
 
     useEffect(() => {
         setTerminalIds(getMapAllTerminalKey())
@@ -307,7 +333,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const startTerminal = useMemoizedFn(() => {
         if (!terminalRef) return
         if (!terminalSizeRef.current) return
-
+        xtermClear(terminalRef)
         const runnnerId = uuidv4()
 
         // 启动
@@ -322,7 +348,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     id: runnnerId,
                     path: folderPathRef.current,
                     content: "",
-                    title: "powershell"
+                    title: ""
                 }
                 // 更新缓存
                 setTerminalMap(runnnerId, JSON.stringify(cache))
@@ -374,7 +400,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     id,
                     path,
                     content: obj.content + outPut,
-                    title: "powershell"
+                    title: obj.title
                 }
 
                 // 更新缓存
@@ -485,15 +511,17 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         <div className={styles["title"]}>语法检查</div>
                         {activeFile && <div className={styles["count"]}>{syntaxCheckData.length}</div>}
                     </div>
-                    <div
-                        className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "terminal",
-                            [styles["no-active-item"]]: showItem !== "terminal"
-                        })}
-                        onClick={() => setShowItem("terminal")}
-                    >
-                        <div className={styles["title"]}>终端</div>
-                    </div>
+                    {loadTreeType === "file" && (
+                        <div
+                            className={classNames(styles["item"], {
+                                [styles["active-item"]]: showItem === "terminal",
+                                [styles["no-active-item"]]: showItem !== "terminal"
+                            })}
+                            onClick={() => setShowItem("terminal")}
+                        >
+                            <div className={styles["title"]}>终端</div>
+                        </div>
+                    )}
                     <div
                         className={classNames(styles["item"], {
                             [styles["active-item"]]: showItem === "helpInfo",
@@ -639,8 +667,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             lineDirection='right'
                             lineStyle={{width: 4, backgroundColor: "rgb(49, 52, 63)"}}
                             lineInStyle={{backgroundColor: "#545663"}}
-                            firstNodeStyle={{padding: 0}}
-                            secondNodeStyle={{padding: 0}}
+                            firstNodeStyle={isShowTerminalList ? {padding: 0} : {padding: 0, minWidth: "100%"}}
+                            secondNodeStyle={isShowTerminalList ? {padding: 0} : {padding: 0, maxWidth: 0, minWidth: 0}}
                             // isShowDefaultLineStyle={false}
                             firstNode={
                                 <TerminalBox

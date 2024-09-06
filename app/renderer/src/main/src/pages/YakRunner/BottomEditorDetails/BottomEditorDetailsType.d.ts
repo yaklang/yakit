@@ -9,6 +9,7 @@ export interface BottomEditorDetailsProps {
 export type ShowItemType =  "output" | "syntaxCheck" | "terminal" | "helpInfo"
 
 export interface JumpToEditorProps {
+    isSelect?: boolean
     selections: Selection
     id: string
 }

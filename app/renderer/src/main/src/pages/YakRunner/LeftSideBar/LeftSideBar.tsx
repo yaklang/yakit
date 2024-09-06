@@ -1,22 +1,22 @@
 import React, {useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
-import {OutlineDocumenttextIcon, OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
+import {OutlinCompileTwoIcon, OutlineDocumenttextIcon, OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {LeftSideBarProps, LeftSideType} from "./LeftSideBarType"
 import {RunnerFileTree} from "../RunnerFileTree/RunnerFileTree"
 import {YakHelpDoc} from "../YakHelpDoc/YakHelpDoc"
 
 import classNames from "classnames"
 import styles from "./LeftSideBar.module.scss"
+import {AuditCode} from "../AuditCode/AuditCode"
 
 const {ipcRenderer} = window.require("electron")
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
-    const {addFileTab, isUnShow, setUnShow} = props
+    const {addFileTab, isUnShow, setUnShow, active, setActive} = props
 
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<string>>(new Set(["file-tree"]))
 
-    const [active, setActive] = React.useState<LeftSideType>("file-tree")
     const onSetActive = useMemoizedFn((type: LeftSideType) => {
         // if (type === active) {
         //     setActive(undefined)
@@ -78,6 +78,25 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                     <span className={styles["item-text"]}>帮助文档</span>
                     <OutlineQuestionmarkcircleIcon />
                 </div>
+                <div
+                    className={classNames(styles["left-side-bar-item"], {
+                        [styles["left-side-bar-item-active"]]: active === "audit-code",
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "audit-code" && isUnShow
+                        // [styles["left-side-bar-item-disable"]]: false
+                    })}
+                    onClick={() => {
+                        if (active !== "audit-code") {
+                            setUnShow(false)
+                        }
+                        if (active === "audit-code") {
+                            setUnShow(!isUnShow)
+                        }
+                        onSetActive("audit-code")
+                    }}
+                >
+                    <span className={styles["item-text"]}>代码审计</span>
+                    <OutlinCompileTwoIcon />
+                </div>
             </div>
 
             {/* 侧边栏对应展示内容 */}
@@ -98,6 +117,15 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         })}
                     >
                         <YakHelpDoc />
+                    </div>
+                )}
+                {rendered.current.has("audit-code") && (
+                    <div
+                        className={classNames(styles["content-wrapper"], {
+                            [styles["hidden-content"]]: active !== "audit-code" || isUnShow
+                        })}
+                    >
+                        <AuditCode />
                     </div>
                 )}
             </div>

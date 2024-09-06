@@ -20,7 +20,7 @@ export interface YakitMenuItemProps {
     /** tooltip提示，不填默认用label */
     title?: string
     /** 单项菜单类型(只在叶子节点时有效) */
-    type?: "success" | "danger" | "info"
+    type?: "success" | "danger" | "info" | "text"
     /**
      * 取消统一的固定高度，固定 padding
      * 取消悬浮、选中状态的颜色样式，只保存初始的背景、icon和文字颜色样式
@@ -68,6 +68,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         if (type === "success") return "yakit-menu-item-success"
         if (type === "danger") return "yakit-menu-item-danger"
         if (type === "info") return "yakit-menu-item-info"
+        if (type === "text") return "yakit-menu-item-text"
         return ""
     })
 

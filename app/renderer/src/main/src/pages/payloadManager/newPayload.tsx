@@ -160,7 +160,7 @@ interface CreateDictionariesProps {
     group?: string
 }
 
-interface SavePayloadProgress {
+export interface SavePayloadProgress {
     Progress: number
     Speed: string
     CostDurationVerbose: string

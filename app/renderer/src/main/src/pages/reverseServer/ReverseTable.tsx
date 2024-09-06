@@ -266,6 +266,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                 secondNode={
                     <YakitEditor
                         readOnly={true}
+                        type="http"
                         value={Uint8ArrayToString(selectRow?.raw || new Uint8Array())}
                     />
                 }

@@ -25,11 +25,13 @@ export interface FileDetailInfo {
     /** 代码 */
     code: string
     /** 文件语言 */
-    language: string
+    language?: string
     /** 打开文件的时间戳（用于打开编辑器列表排序） */
     openTimestamp: number
     /** 文件是否为文本文件 */
     isPlainText: boolean
+    /** 文件归属((单独打开/文件树打开)/审计树打开) */
+    fileSourceType: "file" | "audit"
     /** 文件是否有未保存的更改 */
     isDirty?: boolean
     /** 文件是否是当前活动的文件 */
@@ -38,6 +40,8 @@ export interface FileDetailInfo {
     position?: CursorPosition
     /** 当前选择区域 */
     selections?: Selection
+    /** 高亮显示区域 */
+    highLightRange?: Selection
     /** 是否未保存（用于临时文件创建） */
     isUnSave?: boolean
     /** 是否已被外部删除（文件树监控-删除） */
@@ -64,9 +68,8 @@ export interface RunnerTabsProps {
 
 export interface RunYakParamsProps {
     Script: string
-    Params: ExecParamItem[]
-    RunnerParamRaw: string
     WorkDir?: string
+    ScriptPath: string
 }
 
 export interface RunnerTabBarProps {
@@ -91,6 +94,7 @@ export interface RunnerTabPaneProps {
 
 export interface YakRunnerWelcomePageProps {
     addFileTab: () => void
+    setShowCompileModal: (v: boolean) => void
 }
 
 export interface YakitRunnerSaveModalProps {

@@ -1,8 +1,8 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePluscircleIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {CollapseList} from "../CollapseList/CollapseList"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
 import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
@@ -13,7 +13,7 @@ import {FileTree} from "../FileTree/FileTree"
 import classNames from "classnames"
 import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {
     getDefaultActiveFile,
@@ -22,6 +22,7 @@ import {
     getPathJoin,
     getPathParent,
     getYakRunnerHistory,
+    grpcFetchAuditTree,
     grpcFetchDeleteFile,
     judgeAreaExistFilePath,
     judgeAreaExistFilesPath,
@@ -54,15 +55,19 @@ import {v4 as uuidv4} from "uuid"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, success} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
+import {Tooltip} from "antd"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {AuditHistoryTable} from "../AuditCode/AuditCode"
 
 const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {addFileTab} = props
-    const {fileTree, areaInfo, activeFile} = useStore()
-    const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
+    const {fileTree, areaInfo, activeFile, loadTreeType} = useStore()
+    const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree, setLoadTreeType} = useDispatcher()
 
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
+    const [aduitList, setAduitList] = useState<{path: string; name: string}[]>([])
     // 选中的文件或文件夹
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
@@ -123,6 +128,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 isBottom: true
             })
         }
+
         return initTree
     }, [fileTree, refreshTree])
 
@@ -138,12 +144,27 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         } catch (error) {}
     })
 
+    const getAduitList = useMemoizedFn(async () => {
+        try {
+            const {res} = await grpcFetchAuditTree("/")
+            const arr = res.Resources.map(({Path, ResourceName}) => ({
+                path: Path,
+                name: ResourceName
+            }))
+            setAduitList(arr)
+        } catch (error) {}
+    })
+
     useEffect(() => {
         getHistoryList()
+        getAduitList()
         // 通知历史记录发生改变
         emiter.on("onRefreshRunnerHistory", getHistoryList)
+        // 通知最近编译发生改变
+        emiter.on("onRefreshAduitHistory", getAduitList)
         return () => {
             emiter.off("onRefreshRunnerHistory", getHistoryList)
+            emiter.off("onRefreshAduitHistory", getAduitList)
         }
     }, [])
 
@@ -163,13 +184,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             },
             {
                 key: "createFile",
-                label: "新建文件"
+                label: loadTreeType === "audit" ? "新建临时文件" : "新建文件"
             },
             {
                 key: "createFolder",
                 label: "新建文件夹",
-                // 未打开文件夹时 无法新建文件夹
-                disabled: fileTree.length === 0
+                // 未打开文件夹或为审计树时 无法新建文件夹
+                disabled: fileTree.length === 0 || loadTreeType === "audit"
             },
             {
                 type: "divider"
@@ -181,17 +202,49 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             {
                 key: "openFolder",
                 label: "打开文件夹"
+            },
+            {
+                key: "auditFolder",
+                label: "编译项目"
             }
         ]
         if (historyList.length > 0) {
             newMenu.push({
                 key: "history",
                 label: "最近打开",
-                children: [...historyList.map((item) => ({key: item.path, label: item.name}))]
+                children: [
+                    ...historyList.map((item) => {
+                        if (item.loadTreeType === "audit") {
+                            return {key: item.path, label: `${item.name}（编译）`}
+                        } else {
+                            return {key: item.path, label: item.name}
+                        }
+                    })
+                ]
             })
         }
+        if (aduitList.length > 0) {
+            let children: any = [
+                ...aduitList.slice(0, 10).map((item) => ({key: `aduit-${item.name}`, label: item.name})),
+                {
+                    type: "divider"
+                },
+                {
+                    key: "aduitAllList",
+                    label: "查看全部",
+                    type: "text"
+                }
+            ]
+
+            newMenu.push({
+                key: "auditHistory",
+                label: "最近编译",
+                children
+            })
+        }
+
         return newMenu
-    }, [historyList, fileTree])
+    }, [historyList, aduitList, fileTree])
 
     // 新建文件
     const onNewFile = useMemoizedFn(async (path: string) => {
@@ -471,12 +524,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [])
 
     const closeFolder = useMemoizedFn(() => {
+        setLoadTreeType && setLoadTreeType("file")
         setFileTree && setFileTree([])
+        emiter.emit("onResetAuditStatus")
     })
 
     const createFile = useMemoizedFn(async () => {
         // 未打开文件夹时 创建临时文件
-        if (fileTree.length === 0) {
+        if (fileTree.length === 0 || loadTreeType === "audit") {
             addFileTab()
         } else {
             // 如若未选择则默认最顶层
@@ -506,7 +561,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         if (fileDetail.isFolder) {
             // 判断文件夹内文件是否加载 如若未加载则需要先行加载
             if (!hasMapFolderDetail(fileDetail.path)) {
-                await loadFolderDetail(fileDetail.path)
+                await loadFolderDetail(fileDetail.path, loadTreeType)
             }
             onNewFolder(fileDetail.path)
         }
@@ -529,7 +584,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         path,
                         name
                     },
-                    isHistory: true
+                    isHistory: true,
+                    isOutside: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
@@ -546,35 +602,59 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             .then((data: any) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFolderList", absolutePath)
+                    emiter.emit("onOpenFileTree", absolutePath)
                 }
             })
     })
 
+    // 编译项目
+    const auditFolder = useMemoizedFn(() => {
+        emiter.emit("onOpenAuditModal")
+    })
+
+    const [visible, setVisible] = useState<boolean>(false)
+    // 查看全部（编译项目）
+    const aduitAllList = useMemoizedFn(() => {
+        setVisible(true)
+    })
+
     // 打开历史
-    const openHistory = useMemoizedFn((key) => {
+    const openHistory = useMemoizedFn((key: string) => {
         const filterArr = historyList.filter((item) => item.path === key)
+
         if (filterArr.length > 0) {
             const item = filterArr[0]
             // 打开文件
             if (item.isFile) {
                 const OpenFileByPathParams: OpenFileByPathProps = {
                     params: {
-                        path:item.path,
-                        name:item.name
+                        path: item.path,
+                        name: item.name
                     },
-                    isHistory: true
+                    isHistory: true,
+                    isOutside: true
                 }
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
             // 打开文件夹
             else {
-                emiter.emit("onOpenFolderList", item.path)
+                if (item.loadTreeType === "audit") {
+                    emiter.emit("onOpenAuditTree", item.name)
+                } else {
+                    emiter.emit("onOpenFileTree", item.path)
+                }
             }
         }
     })
 
-    const menuSelect = useMemoizedFn((key) => {
+    const openAuditHistory = useMemoizedFn((path: string) => {
+        const index = path.indexOf("-")
+        // 使用 substring 方法获取第一个 "-" 后的所有内容
+        const rootPath = path.substring(index + 1)
+        emiter.emit("onOpenAuditTree", rootPath)
+    })
+
+    const menuSelect = useMemoizedFn((key, keyPath: string[]) => {
         switch (key) {
             case "closeFolder":
                 closeFolder()
@@ -591,8 +671,19 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             case "openFolder":
                 openFolder()
                 break
+            case "auditFolder":
+                auditFolder()
+                break
+            case "aduitAllList":
+                aduitAllList()
+                break
             default:
-                openHistory(key)
+                if (keyPath.includes("auditHistory")) {
+                    openAuditHistory(key)
+                }
+                if (keyPath.includes("history")) {
+                    openHistory(key)
+                }
                 break
         }
     })
@@ -617,8 +708,19 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     )
 
+    const ref = useRef(null)
+    const getContainerSize = useSize(ref)
+    // 抽屉展示高度
+    const showHeight = useMemo(() => {
+        return getContainerSize?.height || 400
+    }, [getContainerSize])
+
+    // 关闭抽屉
+    const onCloseDrawer = useMemoizedFn(() => {
+        setVisible(false)
+    })
     return (
-        <div className={styles["runner-file-tree"]}>
+        <div className={styles["runner-file-tree"]} ref={ref}>
             <div className={styles["container"]}>
                 <OpenedFile />
 
@@ -626,18 +728,28 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
                             <div className={styles["title-style"]}>文件列表</div>
-                            <YakitDropdownMenu
-                                menu={{
-                                    data: menuData,
-                                    onClick: ({key}) => menuSelect(key)
-                                }}
-                                dropdown={{
-                                    trigger: ["click"],
-                                    placement: "bottomLeft"
-                                }}
-                            >
-                                <YakitButton type='text2' icon={<OutlinePluscircleIcon />} />
-                            </YakitDropdownMenu>
+                            <div className={styles["extra"]}>
+                                <Tooltip title={"编译当前项目"}>
+                                    <YakitButton
+                                        disabled={loadTreeType === "audit" || fileTree.length === 0}
+                                        type='text2'
+                                        icon={<OutlinCompileIcon />}
+                                        onClick={() => emiter.emit("onOpenAuditModal", "init")}
+                                    />
+                                </Tooltip>
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: menuData,
+                                        onClick: ({key, keyPath}) => menuSelect(key, keyPath)
+                                    }}
+                                    dropdown={{
+                                        trigger: ["click"],
+                                        placement: "bottomLeft"
+                                    }}
+                                >
+                                    <YakitButton type='text2' icon={<OutlinePluscircleIcon />} />
+                                </YakitDropdownMenu>
+                            </div>
                         </div>
 
                         <div className={styles["file-tree-tree"]}>
@@ -657,6 +769,20 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                     </div>
                 </div>
             </div>
+            <YakitDrawer
+                getContainer={ref.current || undefined}
+                placement='bottom'
+                mask={false}
+                closable={false}
+                keyboard={false}
+                height={showHeight + 26}
+                visible={visible}
+                bodyStyle={{padding: 0}}
+                className={classNames(styles["audit-history-drawer"])}
+                onClose={onCloseDrawer}
+            >
+                <AuditHistoryTable visible={visible} onClose={onCloseDrawer} />
+            </YakitDrawer>
         </div>
     )
 }

@@ -64,6 +64,7 @@ export interface FileTreeProps {
 }
 
 export interface FileTreeNodeProps {
+    loadTreeType: "file" | "audit"
     isDownCtrlCmd: boolean
     info: FileNodeProps
 

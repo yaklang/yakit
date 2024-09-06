@@ -1354,9 +1354,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             />
             <YakitSpin spinning={loading}>
                 {type === "hex" ? (
-                    <YakitEditor readOnly={true} value={code} />
+                    <YakitEditor readOnly={true} value={code} type="http"/>
                 ) : (
-                    <YakitEditor readOnly={true} value={code} />
+                    <YakitEditor readOnly={true} value={code} type="http"/>
                 )}
             </YakitSpin>
         </YakitCard>

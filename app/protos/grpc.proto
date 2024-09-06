@@ -1976,10 +1976,22 @@ message YaklangInspectInformationRequest {
 
 message YaklangLanguageSuggestionRequest {
   string InspectType = 1;// completion(补全) / hover(提示) / signature(签名) / definition(找定义) / reference(找引用)
+
+  // {
+  // from source code : support all InspectType
   string YakScriptType = 2;
   string YakScriptCode = 3;
-  Range Range = 4;
-  string ModelID = 5;
+  // }
+
+  Range Range = 4; // selected range 
+  string ModelID = 5; // monaco model id 
+
+  // {
+  // from database : support getReference 
+  // if set this progranName will use this from database 
+  string ProgramName = 6; 
+  string FileName = 7;
+  // } 
 }
 
 
@@ -5091,6 +5103,7 @@ message ExecRequest {
   bool NoDividedEngine = 7;
 
   string WorkDir = 8; // 工作目录
+  string ScriptPath = 9; // 脚本位置，与Script互斥，优先使用这个
 }
 
 message ExecResult {
@@ -5258,6 +5271,7 @@ message ModifyFingerprintResponse{
 message ReadFileRequest {
   string FilePath = 1;
   int64 BufSize = 2;
+  string FileSystem = 3; // "local" "ssadb"
 }
 
 message ReadFileResponse {
