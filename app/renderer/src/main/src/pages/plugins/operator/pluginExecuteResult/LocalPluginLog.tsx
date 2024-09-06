@@ -20,6 +20,7 @@ import {
 } from "@/assets/icon/colors"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
 import {formatTimestamp} from "@/utils/timeUtil"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 export interface LocalPluginLogList extends StreamResult.Log {}
 export interface LocalPluginLogProps {
@@ -94,24 +95,28 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
     return (
         <div className={styles["log-body"]}>
             <div className={styles["log-heard"]}>{currentTime} 日志查询结果</div>
-            <Timeline
-                reverse={true}
-                pending={loading}
-                pendingDot={
-                    <div className={styles["log-pending-dot"]}>
-                        <div className={styles["log-pending-dot-circle"]}></div>
-                    </div>
-                }
-                style={{margin: "10px 10px 0 8px"}}
-            >
-                {list.map((e, index) => {
-                    return (
-                        <Timeline.Item key={e.id} color='' dot={<>{logLevelToDot(e)}</>}>
-                            <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
-                        </Timeline.Item>
-                    )
-                })}
-            </Timeline>
+            {list.length === 0 ? (
+                <YakitEmpty style={{paddingTop: 48}} title='暂无日志信息' />
+            ) : (
+                <Timeline
+                    reverse={true}
+                    pending={loading}
+                    pendingDot={
+                        <div className={styles["log-pending-dot"]}>
+                            <div className={styles["log-pending-dot-circle"]}></div>
+                        </div>
+                    }
+                    style={{margin: "10px 10px 0 8px"}}
+                >
+                    {list.map((e, index) => {
+                        return (
+                            <Timeline.Item key={e.id} color='' dot={<>{logLevelToDot(e)}</>}>
+                                <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
+                            </Timeline.Item>
+                        )
+                    })}
+                </Timeline>
+            )}
         </div>
     )
 })

@@ -333,26 +333,31 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
         return messageList.filter((ele) => textTypes.includes(ele.level))
     }, [messageList])
     const logTabs = useCreation(() => {
-        return [
+        const tab = [
             {
                 name: "插件日志",
                 icon: <OutlineLogIcon />,
                 number: 0,
                 type: "plugin-log"
-            },
-            {
+            }
+        ]
+        if (!!echartsLists.length) {
+            tab.push({
                 name: "统计图表",
                 icon: <OutlineChartpieIcon />,
                 number: echartsLists.length,
                 type: "echarts-statistics"
-            },
-            {
+            })
+        }
+        if (!!textLists.length) {
+            tab.push({
                 name: "输出文本",
                 icon: <OutlineTerminalIcon />,
                 number: textLists.length,
                 type: "output-text"
-            }
-        ]
+            })
+        }
+        return tab
     }, [echartsLists, textLists])
 
     const renderTabContent = useMemoizedFn((type) => {
