@@ -26,7 +26,12 @@ const CodeMenuInfo: YakitMenuItemProps[] = [
     {key: "urlescape-path", label: "URL 路径编码（只编码特殊字符）"},
     {key: "double-urlencode", label: "双重 URL 编码"},
     {key: "hex-encode", label: "十六进制编码"},
-    {key: "json-unicode", label: "Unicode 中文编码"}
+    {key: "json-unicode", label: "Unicode 中文编码"},
+    {key: "MD5", label: "MD5 编码"},
+    {key: "SM3", label: "SM3 编码"},
+    {key: "SHA1", label: "SHA1 编码"},
+    {key: "SHA-256", label: "SHA-256 编码"},
+    {key: "SHA-512", label: "SHA-512 编码"}
 ]
 const DecodeMenuInfo: YakitMenuItemProps[] = [
     {key: "base64-decode", label: "Base64 解码"},
@@ -97,7 +102,39 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
         }
         isExec.current = true
         if (key === "fuzztag") {
-            clickExecFuzztab()
+            setActiveKey("fuzztag")
+            const newCodecParams = {
+                Text: question,
+                WorkFlow: [
+                    {
+                        CodecType: "Fuzz",
+                        Params: []
+                    }
+                ]
+            }
+            newCodec(newCodecParams)
+        } else if (["SHA-256", "SHA-512"].includes(key)) {
+            const newCodecParams = {
+                Text: question,
+                WorkFlow: [
+                    {
+                        CodecType: "SHA2",
+                        Params: [{Key: "size", Value: key}]
+                    }
+                ]
+            }
+            newCodec(newCodecParams)
+        } else if (["MD5", "SM3", "SHA1"].includes(key)) {
+            const newCodecParams = {
+                Text: question,
+                WorkFlow: [
+                    {
+                        CodecType: key,
+                        Params: []
+                    }
+                ]
+            }
+            newCodec(newCodecParams)
         } else {
             ipcRenderer
                 .invoke("Codec", {Type: key, Text: question, Params: [], ScriptName: ""})
@@ -105,34 +142,23 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     setAnswer(res?.Result || "")
                 })
                 .catch((err) => {
-                    yakitNotify("error", `CODEC 解码失败：${err}`)
+                    yakitNotify("error", `${err}`)
                 })
                 .finally(() => (isExec.current = false))
         }
     })
 
-    const clickExecFuzztab = useMemoizedFn(() => {
-        setActiveKey("fuzztag")
-        isExec.current = true
-        const newCodecParams = {
-            Text: question,
-            WorkFlow: [
-                {
-                    CodecType: "Fuzz",
-                    Params: []
-                }
-            ]
-        }
+    const newCodec = (params) => {
         ipcRenderer
-            .invoke("NewCodec", newCodecParams)
+            .invoke("NewCodec", params)
             .then((data: {Result: string; RawResult: Uint8Array}) => {
                 setAnswer(data.Result || "")
             })
             .catch((e) => {
-                yakitNotify("error", `fuzztab failed ${e}`)
+                yakitNotify("error", `${e}`)
             })
             .finally(() => (isExec.current = false))
-    })
+    }
 
     return (
         <div className={styles["menu-codec-wrapper"]}>
