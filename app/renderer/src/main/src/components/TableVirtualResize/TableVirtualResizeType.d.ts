@@ -1,4 +1,4 @@
-import {ReactNode} from "react"
+import {CSSProperties, ReactNode} from "react"
 import {SearchProps} from "antd/lib/input"
 import {SelectProps} from "antd"
 import {YakitInputProps} from "../yakitUI/YakitInput/YakitInputType"
@@ -128,6 +128,7 @@ export interface ColumnsTypeProps {
     // extra?: ReactNode
     beforeIconExtra?: ReactNode
     afterIconExtra?: ReactNode
+    customStyle?: boolean
 }
 
 interface FilterSearchInputProps extends SearchProps {

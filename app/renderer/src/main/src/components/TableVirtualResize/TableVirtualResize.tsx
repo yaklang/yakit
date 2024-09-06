@@ -1556,6 +1556,7 @@ const CellRender = React.memo(
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
                     [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"]
                 })}
+                style={columnsItem.customStyle && item.data["cellStyle"]}
                 onClick={(e) => {
                     // @ts-ignore
                     if (e.target.nodeName === "INPUT") return
@@ -1790,6 +1791,7 @@ const CellRenderDrop = React.memo(
                     [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"],
                     [styles["virtual-table-row-cell-move"]]: enableDragSort && colIndex === 0
                 })}
+                style={columnsItem.customStyle && item.data["cellStyle"]}
                 onClick={(e) => {
                     // @ts-ignore
                     if (e.target.nodeName === "INPUT") return

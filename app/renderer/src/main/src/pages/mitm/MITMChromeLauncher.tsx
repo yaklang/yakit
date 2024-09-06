@@ -1,19 +1,34 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {Alert, Form, Space, Tooltip, Typography, Modal} from "antd"
-import {failed, info} from "../../utils/notification"
+import {failed, info, yakitNotify} from "../../utils/notification"
 import {CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import style from "./MITMPage.module.scss"
-import {ChromeFrameSvgIcon, ChromeSvgIcon, RemoveIcon} from "@/assets/newIcon"
+import {
+    BanIcon,
+    ChromeFrameSvgIcon,
+    ChromeSvgIcon,
+    PencilAltIcon,
+    PlusIcon,
+    RemoveIcon,
+    TrashIcon
+} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {MITMConsts} from "./MITMConsts"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import classNames from "classnames"
+import {OutlineSaveIcon} from "@/assets/icon/outline"
+import {v4 as uuidv4} from "uuid"
+import {chromeLauncherParamsArr} from "@/defaultConstants/mitm"
+import {SolidStoreIcon} from "@/assets/icon/solid"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -48,6 +63,12 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
     const [defUserDataDir, setDefUserDataDir] = useState<string>("")
     const [isSaveUserData, setSaveUserData] = useState<boolean>(false)
     const [userDataDir, setUserDataDir] = useState<string>("")
+
+    const [chromeLauncherParamsVisible, setChromeLauncherParamsVisible] = useState<boolean>(false)
+    const chromeLauncherParamsSetRef = useRef<ChromeLauncherParamsSetRefProps>({
+        data: [],
+        tempEditItem: undefined
+    })
 
     useEffect(() => {
         // 获取连接引擎的地址参数
@@ -87,13 +108,45 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     username?: string
                     password?: string
                     disableCACertPage: boolean
-                } = {...params, username, password, userDataDir, disableCACertPage: props.disableCACertPage}
+                    chromeFlags: ChromeLauncherParams[]
+                } = {
+                    ...params,
+                    username,
+                    password,
+                    userDataDir,
+                    disableCACertPage: props.disableCACertPage,
+                    chromeFlags: []
+                }
 
                 setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + "")
                 userDataDirRef.current.onSetRemoteValues(userDataDir)
 
-                getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
-                    if (setting) newParams.chromePath = JSON.parse(setting)
+                Promise.allSettled([
+                    getRemoteValue(RemoteGV.GlobalChromePath),
+                    getRemoteValue(RemoteGV.ChromeLauncherParams)
+                ]).then((res) => {
+                    if (res[0].status === "fulfilled") {
+                        const value = res[0].value
+                        if (value) {
+                            newParams.chromePath = JSON.parse(value)
+                        }
+                    }
+
+                    if (res[1].status === "fulfilled") {
+                        const value = res[1].value
+                        if (value) {
+                            try {
+                                newParams.chromeFlags = JSON.parse(value)
+                            } catch (error) {
+                                newParams.chromeFlags = chromeLauncherParamsArr
+                            }
+                        } else {
+                            newParams.chromeFlags = chromeLauncherParamsArr
+                        }
+                    } else {
+                        newParams.chromeFlags = chromeLauncherParamsArr
+                    }
+
                     ipcRenderer
                         .invoke("LaunchChromeWithParams", newParams)
                         .then((e) => {
@@ -208,6 +261,56 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                 >
                     启动免配置 Chrome
                 </YakitButton>
+                <YakitButton type='text' onClick={() => setChromeLauncherParamsVisible(true)}>
+                    更多参数
+                </YakitButton>
+                {chromeLauncherParamsVisible && (
+                    <YakitModal
+                        title='浏览器参数配置'
+                        visible={chromeLauncherParamsVisible}
+                        onCancel={() => setChromeLauncherParamsVisible(false)}
+                        closable={true}
+                        maskClosable={false}
+                        mask={false}
+                        width='55%'
+                        bodyStyle={{padding: 0}}
+                        onOk={() => {
+                            if (chromeLauncherParamsSetRef.current.tempEditItem) {
+                                yakitNotify("info", "存在编辑项未保存，请点击保存按钮")
+                                return
+                            }
+
+                            const values = chromeLauncherParamsSetRef.current.data
+                                .map((item) => item["parameterName"])
+                                .filter((item) => item)
+                            const arr = values.filter((value, index) => values.indexOf(value) !== index)
+                            if (arr.length) {
+                                yakitNotify("info", `存在相同参数名：${arr.join(",")}`)
+                                return
+                            }
+
+                            const flag = chromeLauncherParamsSetRef.current.data.some(
+                                (value) => value.parameterName === "" && value.variableValues
+                            )
+                            if (flag) {
+                                yakitNotify("info", "存在参数名未填写")
+                                return
+                            }
+
+                            const saveChromeLauncherParamsArr = chromeLauncherParamsSetRef.current.data.filter(
+                                (item) =>
+                                    item["parameterName"] &&
+                                    !["--proxy-server", "--disable-extensions-except", "--load-extension"].includes(
+                                        item["parameterName"]
+                                    )
+                            )
+                            setRemoteValue(RemoteGV.ChromeLauncherParams, JSON.stringify(saveChromeLauncherParamsArr))
+                            setChromeLauncherParamsVisible(false)
+                        }}
+                    >
+                        <ChromeLauncherParamsSet ref={chromeLauncherParamsSetRef} />
+                    </YakitModal>
+                )}
             </Form.Item>
         </Form>
     )
@@ -339,3 +442,348 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
     )
 })
 export default ChromeLauncherButton
+
+export interface ChromeLauncherParams {
+    id: number
+    parameterName: string
+    variableValues: string
+    variableType: "input" | "bool"
+    desc: string
+    disabled: boolean
+    default: boolean
+    cellStyle?: CSSProperties
+}
+interface ChromeLauncherParamsSetRefProps {
+    data: ChromeLauncherParams[]
+    tempEditItem?: ChromeLauncherParams
+}
+interface ChromeLauncherParamsSetProps {
+    ref?: React.ForwardedRef<ChromeLauncherParamsSetRefProps>
+}
+const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.forwardRef((props, ref) => {
+    const [currentItem, setCurrentItem] = useState<ChromeLauncherParams>()
+    const [data, setData] = useState<ChromeLauncherParams[]>([])
+    const tempEditItem = useRef<ChromeLauncherParams>()
+    const [tempEditId, setTempEditId] = useState<number>()
+    const [searchVal, setSearchVal] = useState<string>("")
+    const [searchData, setSearchData] = useState<ChromeLauncherParams[]>([])
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            data: data,
+            tempEditItem: tempEditItem.current
+        }),
+        [data, tempEditItem]
+    )
+
+    useEffect(() => {
+        getRemoteValue(RemoteGV.ChromeLauncherParams).then((setting) => {
+            if (setting) {
+                try {
+                    const arr = JSON.parse(setting)
+                    setData(arr)
+                } catch (error) {
+                    setData(chromeLauncherParamsArr)
+                }
+            } else {
+                setData(chromeLauncherParamsArr)
+            }
+        })
+    }, [])
+
+    const onRemove = useMemoizedFn((record: ChromeLauncherParams) => {
+        if (record.id === tempEditId) {
+            tempEditItem.current = undefined
+            setTempEditId(undefined)
+        }
+        if (record.id === currentItem?.id) {
+            setCurrentItem(undefined)
+        }
+        setData(data.filter((t) => t.id !== record.id))
+        if (searchVal) setSearchData(searchData.filter((t) => t.id !== record.id))
+    })
+
+    const onEdit = useMemoizedFn((record: ChromeLauncherParams) => {
+        setData(handleEditData(data, record))
+        if (searchVal) setSearchData(handleEditData(searchData, record))
+    })
+    const handleEditData = (arr: ChromeLauncherParams[], record: ChromeLauncherParams) => {
+        const newData: ChromeLauncherParams[] = arr.map((item: ChromeLauncherParams) => {
+            if (item.id === record.id) {
+                item = {
+                    ...item,
+                    cellStyle: {
+                        padding: "6px 0"
+                    }
+                }
+                tempEditItem.current = item
+                setTempEditId(record.id)
+            }
+            return item
+        })
+        return newData
+    }
+
+    const onSave = useMemoizedFn((record: ChromeLauncherParams) => {
+        setData(handleSaveData(data, record))
+        if (searchVal)
+            setSearchData(
+                handleSaveData(searchData, record).filter((item) =>
+                    item.parameterName.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase())
+                )
+            )
+        tempEditItem.current = undefined
+        setTempEditId(undefined)
+    })
+    const handleSaveData = (arr: ChromeLauncherParams[], record: ChromeLauncherParams) => {
+        const newData: ChromeLauncherParams[] = arr.map((item: ChromeLauncherParams) => {
+            if (item.id === record.id && tempEditItem.current) {
+                item = {
+                    ...tempEditItem.current,
+                    cellStyle: undefined
+                }
+            }
+            return item
+        })
+        return newData
+    }
+
+    const onBan = useMemoizedFn((record: ChromeLauncherParams) => {
+        setData(handleBan(data, record))
+        if (searchVal) setSearchData(handleBan(searchData, record))
+    })
+    const handleBan = (arr: ChromeLauncherParams[], record: ChromeLauncherParams) => {
+        const newData: ChromeLauncherParams[] = arr.map((item: ChromeLauncherParams) => {
+            if (item.id === record.id) {
+                if (!record.disabled && record.id === currentItem?.id) {
+                    setCurrentItem(undefined)
+                }
+                item = {
+                    ...record,
+                    disabled: !record.disabled
+                }
+            }
+            return item
+        })
+        return newData
+    }
+
+    const disabledEdit = useMemoizedFn((record: ChromeLauncherParams) => {
+        return (
+            record.variableType === "bool" || record.disabled || !(tempEditId === undefined || tempEditId === record.id)
+        )
+    })
+    const disabledBan1 = useMemoizedFn((record: ChromeLauncherParams) => {
+        return record.disabled && !record.cellStyle
+    })
+    const disabledBan2 = useMemoizedFn((record: ChromeLauncherParams) => {
+        return record.cellStyle && !record.disabled
+    })
+    const disabledTrash = useMemoizedFn((record: ChromeLauncherParams) => {
+        return record.default || record.disabled
+    })
+
+    const columns: ColumnsTypeProps[] = useMemo(() => {
+        return [
+            {
+                title: "参数名",
+                dataKey: "parameterName",
+                customStyle: true,
+                render: (text, record: ChromeLauncherParams) => {
+                    return record.cellStyle && !record.default ? (
+                        <YakitInput
+                            defaultValue={text}
+                            style={{borderRadius: 0, borderColor: "var(--yakit-primary-5)"}}
+                            autoFocus={!record.default}
+                            onChange={(e) => {
+                                if (tempEditItem.current) {
+                                    tempEditItem.current = {
+                                        ...tempEditItem.current,
+                                        parameterName: e.target.value.trim()
+                                    }
+                                }
+                            }}
+                        />
+                    ) : (
+                        <div
+                            className='content-ellipsis'
+                            style={{
+                                paddingLeft: record.cellStyle ? 12 : undefined,
+                                color: record.disabled ? "var(--yakit-disable-text-color)" : undefined
+                            }}
+                        >
+                            {text}
+                        </div>
+                    )
+                }
+            },
+            {
+                title: "变量值（bool类型值为空）",
+                dataKey: "variableValues",
+                customStyle: true,
+                render: (text, record: ChromeLauncherParams) => {
+                    return record.variableType === "input" ? (
+                        record.cellStyle ? (
+                            <YakitInput
+                                defaultValue={text}
+                                style={{borderRadius: 0, borderColor: "var(--yakit-primary-5)"}}
+                                autoFocus={record.default}
+                                onChange={(e) => {
+                                    if (tempEditItem.current) {
+                                        tempEditItem.current = {
+                                            ...tempEditItem.current,
+                                            variableValues: e.target.value.trim()
+                                        }
+                                    }
+                                }}
+                            />
+                        ) : (
+                            <div
+                                className='content-ellipsis'
+                                style={{color: record.disabled ? "var(--yakit-disable-text-color)" : undefined}}
+                            >
+                                {text}
+                            </div>
+                        )
+                    ) : (
+                        ""
+                    )
+                }
+            },
+            {
+                title: "操作",
+                dataKey: "action",
+                width: 128,
+                fixed: "right",
+                render: (_, record: ChromeLauncherParams) => {
+                    return (
+                        <div className={style["table-action-icon"]}>
+                            {record.cellStyle ? (
+                                <Tooltip title={"保存"}>
+                                    <SolidStoreIcon
+                                        className={classNames(style["action-icon"], style["action-icon-save"])}
+                                        onClick={(e) => {
+                                            onSave(record)
+                                        }}
+                                    />
+                                </Tooltip>
+                            ) : (
+                                <Tooltip title={disabledEdit(record) ? "" : "编辑"}>
+                                    <PencilAltIcon
+                                        className={classNames(style["action-icon"], {
+                                            [style["action-icon-edit-disabled"]]: disabledEdit(record)
+                                        })}
+                                        onClick={(e) => {
+                                            if (disabledEdit(record)) {
+                                                return
+                                            }
+                                            onEdit(record)
+                                        }}
+                                    />
+                                </Tooltip>
+                            )}
+                            <Tooltip title={disabledBan2(record) ? "" : disabledBan1(record) ? "启用" : "禁用"}>
+                                <BanIcon
+                                    className={classNames(style["action-icon"], {
+                                        [style["action-icon-ban-disabled"]]: disabledBan1(record),
+                                        [style["action-icon-ban-disabled2"]]: disabledBan2(record)
+                                    })}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (disabledBan2(record)) {
+                                            return
+                                        }
+                                        onBan(record)
+                                    }}
+                                />
+                            </Tooltip>
+                            <TrashIcon
+                                className={classNames(style["icon-trash"], {
+                                    [style["action-icon-trash-disabled"]]: disabledTrash(record)
+                                })}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (disabledTrash(record)) {
+                                        return
+                                    }
+                                    onRemove(record)
+                                }}
+                            />
+                        </div>
+                    )
+                }
+            }
+        ]
+    }, [tempEditId])
+
+    const onSetCurrentRow = useDebounceFn(
+        (rowDate: ChromeLauncherParams) => {
+            setCurrentItem(rowDate)
+        },
+        {wait: 200}
+    ).run
+
+    useEffect(() => {
+        const arr = data.filter((item) =>
+            item.parameterName.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase())
+        )
+        setSearchData(arr)
+    }, [searchVal])
+
+    return (
+        <div className={style["chrome-launcher-params-set-wrap"]}>
+            <TableVirtualResize<ChromeLauncherParams>
+                enableDrag={false}
+                titleHeight={42}
+                title={
+                    <YakitInput.Search
+                        style={{width: 250}}
+                        placeholder='请输入参数名搜索'
+                        allowClear={true}
+                        onSearch={(value) => setSearchVal(value.trim())}
+                    />
+                }
+                extra={
+                    <YakitButton
+                        type='primary'
+                        disabled={tempEditId !== undefined}
+                        onClick={() => {
+                            const newItem: ChromeLauncherParams = {
+                                id: uuidv4(),
+                                parameterName: "",
+                                variableValues: "",
+                                variableType: "input",
+                                disabled: false,
+                                desc: "",
+                                default: false
+                            }
+                            setData((prevData) => [newItem, ...prevData])
+                            if (searchVal) setSearchData((prevData) => [newItem, ...prevData])
+                            setTimeout(() => {
+                                onSetCurrentRow(newItem)
+                                onEdit(newItem)
+                            }, 50)
+                        }}
+                    >
+                        <div className={style["button-add-params"]}>
+                            <PlusIcon />
+                            添加新参数
+                        </div>
+                    </YakitButton>
+                }
+                renderKey='id'
+                data={searchVal ? searchData : data}
+                columns={columns}
+                onRowClick={onSetCurrentRow}
+                currentSelectItem={currentItem}
+                pagination={{
+                    total: searchVal ? searchData.length : data.length,
+                    limit: 20,
+                    page: 1,
+                    onChange: () => {}
+                }}
+            />
+        </div>
+    )
+})

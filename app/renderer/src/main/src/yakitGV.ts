@@ -112,6 +112,8 @@ export enum RemoteGV {
     MITMDisableCACertPage = "mitm_disable_CACertPage",
     /**@name 缓存一级菜单选择的tab的key值 */
     SelectFirstMenuTabKey = "select-first-menu-tab-key",
+    /**@name 缓存谷歌免配置更多参数 */
+    ChromeLauncherParams = "chrome-launcher-params"
 }
 
 /** 项目逻辑全局变量 */
