@@ -1034,7 +1034,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
     const logInfoRef = useRef<string[]>([])
     useEffect(() => {
-        const progress = Math.floor(streamInfo.progressState.map((item) => item.progress)[0] || 0)
+        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
         // 当任务结束时 跳转打开编译列表
         if (progress === 1) {
             setTimeout(() => {
