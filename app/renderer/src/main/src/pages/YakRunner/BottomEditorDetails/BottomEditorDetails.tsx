@@ -191,8 +191,12 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 }
             }
         })
+        ipcRenderer.on("client-yak-error", async (e: any,data) => {
+            failed(`${data}`)
+        })
         return () => {
             ipcRenderer.removeAllListeners("client-yak-data")
+            ipcRenderer.removeAllListeners("client-yak-error")
         }
     }, [xtermRef])
 
