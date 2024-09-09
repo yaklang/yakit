@@ -4526,6 +4526,7 @@ message Paging {
   int64 Limit = 52;
   string OrderBy = 53;
   string Order = 54;
+  string RawOrder = 55;
 }
 
 message GetHTTPFlowByHashRequest {

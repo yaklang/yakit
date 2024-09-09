@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {Profiler, useEffect, useRef, useState} from "react"
 import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed, yakitNotify} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
@@ -506,32 +506,29 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
     const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
 
-    useEffect(
-        () => {
-            if (status === "idle") {
-                const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
-                getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
-                    getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
-                        if (!!data && !!is) {
-                            const cacheData: string[] = JSON.parse(data)
-                            if (cacheData.length) {
-                                onIsHasParams(false)
-                            } else {
-                                onIsHasParams(true)
-                            }
+    useEffect(() => {
+        if (status === "idle") {
+            const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
+            getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
+                getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
+                    if (!!data && !!is) {
+                        const cacheData: string[] = JSON.parse(data)
+                        if (cacheData.length) {
+                            onIsHasParams(false)
                         } else {
-                            if (noParamsCheckList.length) {
-                                onIsHasParams(false)
-                            } else {
-                                onIsHasParams(true)
-                            }
+                            onIsHasParams(true)
                         }
-                    })
+                    } else {
+                        if (noParamsCheckList.length) {
+                            onIsHasParams(false)
+                        } else {
+                            onIsHasParams(true)
+                        }
+                    }
                 })
-            }
-        },
-        [status, noParamsCheckList]
-    )
+            })
+        }
+    }, [status, noParamsCheckList])
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
@@ -648,8 +645,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             Pagination: {
                 Limit: limit || 200,
                 Page: 1,
-                OrderBy: "updated_at",
-                Order: "desc"
+                OrderBy: "",
+                Order: "",
+                RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
             },
             Keyword: searchKeyword,
             Type: isHasParams ? "mitm" : "mitm,port-scan",
@@ -677,7 +675,13 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                     Tag: tags,
                                     Type: "mitm,port-scan",
                                     Keyword: searchKeyword,
-                                    Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                                    Pagination: {
+                                        Limit: 20,
+                                        Order: "",
+                                        Page: 1,
+                                        OrderBy: "",
+                                        RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
+                                    },
                                     Group: {UnSetGroup: false, Group: groupNames},
                                     IncludedScriptNames: isSelectAll ? [] : noParamsCheckList,
                                     IsMITMParamPlugins: 2
@@ -1083,7 +1087,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 return (
                     <>
                         <Form.Item labelCol={{span: 3}} wrapperCol={{span: 21}} name='localId' label='插件ID'>
-                            <YakitInput.TextArea placeholder="请输入插件ID，多个ID用”英文逗号“或”换行“分割..."/>
+                            <YakitInput.TextArea placeholder='请输入插件ID，多个ID用”英文逗号“或”换行“分割...' />
                         </Form.Item>
                     </>
                 )
@@ -1139,7 +1143,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
 
         if (loadMode === "uploadId") {
-            const UUID:string[] = formValue.localId.split(/,|\r?\n/)
+            const UUID: string[] = formValue.localId.split(/,|\r?\n/)
             setImportLoading(true)
             apiDownloadPluginOther({
                 UUID
