@@ -1700,7 +1700,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </>
                             )}
                             <div className={styles["fuzzer-heard-force"]}>
-                                <span className={styles["fuzzer-heard-https"]}></span>
+                                <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
                                 <YakitCheckbox
                                     checked={advancedConfigValue.isHttps}
                                     onChange={(e) =>
