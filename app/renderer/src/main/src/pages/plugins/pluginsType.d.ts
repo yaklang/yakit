@@ -75,6 +75,10 @@ export interface YakParamProps {
     MethodType?: string
     /** 值 */
     Value?: any
+
+    /** 是否开启缓存(动态表单upload-folder-path:目前由前端决定) */
+    cacheRef?: any
+    cacheHistoryDataKey?: string
 }
 
 /** 本地插件信息 */
