@@ -337,7 +337,6 @@ export const setUpYaklangMonaco = () => {
             // disable fuzztag because of monaco editor bug
             xrawstring: [
                 // [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-                [/@escapes/, 'string.escape'],
                 [/[^`]/, 'string'],
                 [/`/, 'string', '@pop']
             ],
@@ -359,7 +358,6 @@ export const setUpYaklangMonaco = () => {
 
 
             frawstring: [
-                [/@escapes/, 'string.escape'],
                 [/@inlineExpr/, 'string.inline.expr'],
                 [/@invalidInlineExpr/, 'string.invalid'],
                 [/[^`]/, 'string'],
@@ -397,7 +395,6 @@ export const setUpYaklangMonaco = () => {
             ],
 
             rawstring: [
-                [/@escapes/, "string.escape"],
                 [/[^`]/, 'string'],
                 [/`/, 'string', '@pop']
             ],
