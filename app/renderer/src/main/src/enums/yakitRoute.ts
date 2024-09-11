@@ -81,5 +81,9 @@ export enum YakitRoute {
     // 数据统计
     Data_Statistics = "data_statistics",
     /**空间引擎 */
-    Space_Engine = "space-engine"
+    Space_Engine = "space-engine",
+    /**笔记本管理 */
+    Notepad_Manage = "notepad-manage",
+    /**笔记本内容编辑页面 */
+    Modify_Notepad = "modify-notepad"
 }
