@@ -139,6 +139,8 @@ const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
+const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
+const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -220,7 +222,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-webshell-manager": {label: "网站管理"},
     "beta-webshell-opt": {label: "WebShell 实例"},
     data_statistics: {label: "数据统计"},
-    "space-engine": {label: "空间引擎"}
+    "space-engine": {label: "空间引擎"},
+    "notepad-manage": {label: "记事本"},
+    "modify-notepad": {label: "编辑记事本"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -257,7 +261,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_DebugTrafficAnalize,
     YakitRoute.Plugin_Audit,
     YakitRoute.Beta_WebShellManager,
-    YakitRoute.Data_Statistics
+    YakitRoute.Data_Statistics,
+    YakitRoute.Notepad_Manage
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -292,7 +297,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Mod_Brute,
     YakitRoute.SimpleDetect,
     YakitRoute.DB_Risk,
-    YakitRoute.ShellReceiver
+    YakitRoute.ShellReceiver,
+    YakitRoute.Modify_Notepad
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -541,6 +547,10 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <DataStatistics />
         case YakitRoute.Space_Engine:
             return <SpaceEnginePage pageId={params?.id || ""} />
+        case YakitRoute.Notepad_Manage:
+            return <NotepadManage />
+        case YakitRoute.Modify_Notepad:
+            return <ModifyNotepad pageId={params?.id || ""} />
         default:
             return <div />
     }
