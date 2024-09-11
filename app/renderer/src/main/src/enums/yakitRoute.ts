@@ -79,5 +79,9 @@ export enum YakitRoute {
     // YakRunner代码扫描
     YakRunner_Code_Scan = "yakrunner-code-scan",
     // YakRunner代码审计
-    YakRunner_Audit_Code = "yakrunner-audit-code"
+    YakRunner_Audit_Code = "yakrunner-audit-code",
+    /**笔记本管理 */
+    Notepad_Manage = "notepad-manage",
+    /**笔记本内容编辑页面 */
+    Modify_Notepad = "modify-notepad"
 }
