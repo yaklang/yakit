@@ -1,0 +1,151 @@
+.yakit-image-textarea {
+    width: 100%;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-radius: 4px;
+    border: 1px solid #eaecf3;
+    cursor: text;
+}
+.yakit-image-textarea:hover {
+    border-color: #f69c5d;
+}
+.yakit-image-textarea:focus {
+    border-color: #f28b44;
+    box-shadow: 0 0 0 2px #fbe7d9;
+}
+
+.yakit-image-textarea-quotation {
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px;
+    background: #f8f8f8;
+
+    .del-btn {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #85899e;
+        }
+        &:hover {
+            svg {
+                color: #f28b44;
+            }
+        }
+    }
+
+    .divider-style {
+        width: 1px;
+        height: 16px;
+        background-color: #eaecf3;
+    }
+
+    .content-style {
+        flex: 1;
+        overflow: hidden;
+        color: #85899e;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+}
+
+.yakit-image-textarea-footer-operate {
+    display: flex;
+    justify-content: space-between;
+    .right-footer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .content-length {
+            padding: 2px 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            background: #f0f1f3;
+            color: #85899e;
+            font-size: 10px;
+            font-weight: 400;
+            line-height: 12px;
+        }
+    }
+}
+
+/* ---------- 输入内容框相关 ----------*/
+.yakit-image-textarea-body {
+    position: relative;
+
+    &::before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        content: attr(placeholder);
+        color: #ccd2de;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+    }
+}
+.yakit-image-textarea-no-empty::before {
+    display: none;
+}
+.yakit-image-textarea-body:focus {
+    outline: none;
+}
+.yakit-image-textarea-line {
+    margin: 2px 0;
+}
+
+/* ---------- 文字相关 ----------*/
+.yakit-image-textarea-text {
+    min-height: 16px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+/* ---------- 图片相关 ----------*/
+.yakit-image-textarea-image {
+    width: 100%;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .image-body {
+        border: 1px solid transparent;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        &:hover {
+            border-color: #f69c5d;
+        }
+    }
+    .image-actve {
+        border-color: #f28b44;
+    }
+}
+.horizontal-image {
+    min-height: 82px;
+    .image-body {
+        max-width: 400px;
+        min-height: 80px;
+    }
+}
+.vertical-image {
+    max-height: 242px;
+    .image-body {
+        min-width: 50px;
+        max-height: 240px;
+    }
+}
