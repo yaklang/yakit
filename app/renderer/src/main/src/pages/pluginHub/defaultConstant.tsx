@@ -9,8 +9,8 @@ import {
 import {YakScript} from "../invoker/schema"
 import {YakitPluginOnlineDetail} from "../plugins/online/PluginsOnlineType"
 import {ExportYakScriptStreamRequest} from "../plugins/local/PluginsLocalType"
-import cloneDeep from "lodash/cloneDeep"
-import {defaultFilter} from "../plugins/builtInData"
+import {defaultFilter, defaultSearch} from "../plugins/builtInData"
+import {convertLocalPluginsRequestParams} from "../plugins/utils"
 
 export const HubSideBarList: {key: PluginSourceType; title: string; icon: ReactNode; hint: string}[] = [
     {key: "online", title: "插件商店", icon: <OutlineOnlinePluginIcon />, hint: "插件商店"},
@@ -23,7 +23,12 @@ export const HubSideBarList: {key: PluginSourceType; title: string; icon: ReactN
 export const DefaultExportRequest: ExportYakScriptStreamRequest = {
     OutputFilename: "",
     Password: "",
-    Filter: cloneDeep(defaultFilter)
+    Filter: {
+        ...convertLocalPluginsRequestParams({
+            filter: defaultFilter,
+            search: defaultSearch
+        })
+    }
 }
 
 /** @name 插件相关操作提示语 */

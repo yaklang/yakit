@@ -742,7 +742,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         })
 
         const onSetCurrentRow = useDebounceFn(
-            (rowDate: FuzzerResponse) => {
+            (rowDate?: FuzzerResponse) => {
                 onRowClick(rowDate)
             },
             {wait: 200}

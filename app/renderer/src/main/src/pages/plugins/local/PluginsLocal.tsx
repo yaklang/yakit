@@ -80,8 +80,12 @@ const {ipcRenderer} = window.require("electron")
 const initExportLocalParams: ExportYakScriptStreamRequest = {
     OutputFilename: "",
     Password: "",
-    Filter: cloneDeep(defaultFilter)
-    // YakScriptIds: [],
+    Filter: {
+        ...convertLocalPluginsRequestParams({
+            filter: defaultFilter,
+            search: defaultSearch
+        })
+    }
 }
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {

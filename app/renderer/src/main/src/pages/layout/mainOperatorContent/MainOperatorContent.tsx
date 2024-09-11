@@ -124,6 +124,7 @@ import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetectConsta
 import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {useMenuHeight} from "@/store/menuHeight"
+import {HybridScanInputTarget} from "@/models/HybridScan"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -996,9 +997,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             selectGroup: bugTestValue ? [bugTestValue] : [],
                             formValue: {
                                 Targets: {
-                                    ...cloneDeep(defPluginBatchExecuteExtraFormValue),
-                                    Input: bugUrl ? JSON.parse(bugUrl).join(",") : ""
-                                }
+                                    HTTPRequestTemplate:cloneDeep(defPluginBatchExecuteExtraFormValue),
+                                    InputFile:[],
+                                    Input: bugUrl ? JSON.parse(bugUrl).join(",") : "",
+                                }  as HybridScanInputTarget
                             }
                         }
                     }
@@ -1635,7 +1637,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         unFuzzerCacheData.current = usePageInfo.subscribe(
             (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
             (selectedState, previousSelectedState) => {
-                saveFuzzerCache(selectedState)
+                saveFuzzerCache(selectedState as PageProps)
             }
         )
 
@@ -3997,7 +3999,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         const onScrollTabMenu = useThrottleFn(
-            (e) => {
+            () => {
                 if (tabMenuSubRef.current) {
                     const {scrollWidth, scrollLeft, clientWidth} = tabMenuSubRef.current
                     const scrollRight = scrollWidth - scrollLeft - clientWidth

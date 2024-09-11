@@ -768,7 +768,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
     const ref = useRef(null)
     const size = useSize(ref)
     const onScrollTabMenu = useThrottleFn(
-        (e) => {
+        () => {
             if (tabMenuSubRef.current) {
                 const {scrollWidth, scrollLeft, clientWidth} = tabMenuSubRef.current
                 const scrollRight = scrollWidth - scrollLeft - clientWidth

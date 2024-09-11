@@ -90,7 +90,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
         }
     })
     const onSetCurrentRow = useDebounceFn(
-        (rowDate: ReverseNotification) => {
+        (rowDate?: ReverseNotification) => {
             onRowClick(rowDate)
         },
         {wait: 200, leading: true}
