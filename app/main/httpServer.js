@@ -61,7 +61,7 @@ service.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             const res = {
                 code: 401,
-                message: error.response.data.reason,
+                message: error.response.data?.message || error.response.data.reason,
                 userInfo: USER_INFO
             }
             return Promise.resolve(res)
