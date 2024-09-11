@@ -148,6 +148,8 @@ const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
+const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
+const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -229,7 +231,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-code-scan": {label: "代码扫描"},
     "yakrunner-audit-code": {label: "代码审计"},
     "yakrunner-project-manager": {label: "项目管理"},
-    "rule-management": {label: "规则管理"}
+    "rule-management": {label: "规则管理"},
+    "notepad-manage": {label: "记事本"},
+    "modify-notepad": {label: "编辑记事本"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -265,7 +269,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Data_Statistics,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
-    YakitRoute.Rule_Management
+    YakitRoute.Rule_Management,
+    YakitRoute.Notepad_Manage
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -300,7 +305,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
-    YakitRoute.Rule_Management
+    YakitRoute.Rule_Management,
+    YakitRoute.Modify_Notepad
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -541,6 +547,10 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerProjectManager />
         case YakitRoute.Rule_Management:
             return <RuleManagement />
+        case YakitRoute.Notepad_Manage:
+            return <NotepadManage />
+        case YakitRoute.Modify_Notepad:
+            return <ModifyNotepad pageId={params?.id || ""} />
         default:
             return <div />
     }
@@ -1137,7 +1147,8 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
             PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
             PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
-            PrivateAllMenus[YakitRoute.Rule_Management]
+            PrivateAllMenus[YakitRoute.Rule_Management],
+            PrivateAllMenus[YakitRoute.YakRunner_Code_Scan]
         ]
     },
     {
