@@ -468,8 +468,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
 
     const onDelTag = useMemoizedFn((value: TagShowOpt) => {
         if (has(filters, value.tagType)) {
-            const list: TagShowOpt[] = filters[value.tagType]
-            filters[value.tagType] = list.filter((ele) => ele.value !== value.value)
+            filters[value.tagType] = (filters[value.tagType]||[]).filter((ele) => ele.value !== value.value)
             setFilters({...filters})
         }
     })

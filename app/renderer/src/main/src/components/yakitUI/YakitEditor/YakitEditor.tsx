@@ -25,7 +25,7 @@ import {
     YakitIModelDecoration,
     OperationRecord,
     OtherMenuListProps,
-    OperationRecordRes
+    OperationRecordRes,
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -554,7 +554,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 return
             case "yak-formatter":
                 if (!model) return
-                yakCompileAndFormat.run(editor, model)
+                if(editor)yakCompileAndFormat.run(editor, model)
                 return
 
             default:
@@ -698,7 +698,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             for (let menus in contextMenu) {
                 /* 需要排序项 */
                 if (typeof contextMenu[menus].order === "number") {
-                    sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]))
+                    sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[])
                 } else {
                     /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
                     rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))

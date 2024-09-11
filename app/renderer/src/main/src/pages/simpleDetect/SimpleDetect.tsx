@@ -111,7 +111,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         portScanParam: cloneDeep({
             ...defPortScanExecuteExtraFormValue,
             scanDeep: defaultScanDeep,
-            presetPort: scanDeepMapPresetPort[defaultScanDeep],
+            presetPort: [scanDeepMapPresetPort[defaultScanDeep]],
             Ports: PresetPorts[scanDeepMapPresetPort[defaultScanDeep]],
             HostAliveConcurrent: 200
         }),

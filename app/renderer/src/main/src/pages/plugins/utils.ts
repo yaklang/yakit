@@ -36,6 +36,7 @@ import {KVPair} from "@/models/kv"
 import {YakParamProps} from "./pluginsType"
 import {delInvalidPluginExecuteParams} from "../pluginEditor/utils/convert"
 import {APIFunc, APIOptionalFunc} from "@/apiUtils/type"
+import {omit} from "lodash"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1257,15 +1258,14 @@ export const convertHybridScanParams = (
         search = {...cloneDeep(defaultSearch)},
         filters = {...cloneDeep(defaultFilter)}
     } = pluginInfo
-    const hTTPRequestTemplate = {
-        ...cloneDeep(params.HTTPRequestTemplate)
-    }
 
-    delete hTTPRequestTemplate.Concurrent
-    delete hTTPRequestTemplate.TotalTimeoutSecond
-    delete hTTPRequestTemplate.Proxy
-    delete hTTPRequestTemplate.httpFlowId
-    delete hTTPRequestTemplate.requestType
+    const hTTPRequestTemplate = omit(cloneDeep(params.HTTPRequestTemplate), [
+        "Concurrent",
+        "TotalTimeoutSecond",
+        "Proxy",
+        "httpFlowId",
+        "requestType"
+    ]) as HTTPRequestBuilderParams
 
     const data: HybridScanControlAfterRequest = {
         Concurrent: params.Concurrent,

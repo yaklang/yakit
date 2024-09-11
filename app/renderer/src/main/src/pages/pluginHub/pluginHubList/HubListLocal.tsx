@@ -922,7 +922,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         const group: YakFilterRemoteObj[] = cloneDeep(filters).plugin_group?.map((item: API.PluginsSearchData) => ({
             name: item.value,
             total: item.count
-        }))
+        })) as YakFilterRemoteObj[]
         return group || []
     }, [filters])
 

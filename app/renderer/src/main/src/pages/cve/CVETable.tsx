@@ -324,7 +324,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         }
     })
     const onSetCurrentRow = useDebounceFn(
-        (rowDate: CVEDetail) => {
+        (rowDate?: CVEDetail) => {
             onRowClick(rowDate)
         },
         {wait: 200}

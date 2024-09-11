@@ -602,7 +602,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const preScrollBottom = useRef<number>(0)
     const prePage = useRef<number>(1)
     useScroll(containerRef, (val) => {
-        return onScrollContainer()
+        return !!onScrollContainer()
     })
 
     const onScrollContainer = useThrottleFn(
@@ -2072,7 +2072,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
                             size='small'
                             mode='tags'
                             wrapperStyle={{width: 124}}
-                            onChange={onChangeSelect}
+                            onChange={(v,o)=>onChangeSelect(v as string[],o as FiltersItemProps[])}
                             allowClear
                             value={Array.isArray(value) ? [...value] : []}
                             {...filterMultipleProps}

@@ -254,7 +254,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
         let defaultValue: CustomPluginExecuteFormValue | undefined = undefined
         // mitm 有默认参数和 cli 自定义参数
         if (pluginType === "mitm") {
-            defaultValue = cloneDeep(defPluginExecuteFormValue)
+            defaultValue = cloneDeep(defPluginExecuteFormValue) as any as CustomPluginExecuteFormValue
         }
 
         // 表单内数据

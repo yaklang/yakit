@@ -294,7 +294,7 @@ export const splitPluginParamsData = (value: Record<string, any>, customs: YakPa
             delete data[item.Field]
         }
     }
-    fixedValue = {...data}
+    fixedValue = {...data} as PluginExecuteExtraFormValue
 
     return {customValue, fixedValue}
 }
