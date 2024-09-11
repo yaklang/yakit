@@ -1,266 +1,245 @@
-import React, {useEffect, useState} from "react"
-import {Button, Popconfirm, Checkbox, Space, Table, Tag, Typography, Tooltip, Row, Col} from "antd"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
-import {failed} from "../../utils/notification"
-import {ReloadOutlined, SearchOutlined} from "@ant-design/icons"
-import {TableFilterDropdownString} from "../risks/RiskTable"
-import {useGetState, useMemoizedFn} from "ahooks"
-import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
-import {LineMenunIcon} from "../../assets/icons"
-import {ExportExcel} from "../../components/DataExport/DataExport"
-import {onRemoveToolFC} from "../../utils/deleteTool"
-
-import styles from "./DomainAssetPage.module.scss"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
+import {OutlineRefreshIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {yakitNotify} from "@/utils/notification"
+import {Divider} from "antd"
+import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {TrashIcon} from "@/assets/newIcon"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {onRemoveToolFC} from "@/utils/deleteTool"
+import {ExportExcel} from "@/components/DataExport/DataExport"
+import {formatJson} from "../yakitStore/viewers/base"
+import {useCampare} from "@/hook/useCompare/useCompare"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
+import styles from "./DomainAssetPage.module.scss"
+const {ipcRenderer} = window.require("electron")
 
-export interface Domain {
+const batchRefreshMenuData: YakitMenuItemProps[] = [
+    {
+        key: "noResetRefresh",
+        label: "仅刷新"
+    },
+    {
+        key: "resetRefresh",
+        label: "重置查询条件刷新"
+    }
+]
+
+interface Domain {
     ID?: number
     DomainName: string
     IPAddr: string
     HTTPTitle: string
 }
-
-export interface QueryDomainsRequest extends QueryGeneralRequest {
+interface QueryDomainsRequest extends QueryGeneralRequest {
     Network?: string
     DomainKeyword?: string
     Title?: string
 }
-
 export interface DomainAssetPageProps {}
-
-const {ipcRenderer} = window.require("electron")
-const {Text} = Typography
-
-const formatJson = (filterVal, jsonData) => {
-    return jsonData.map((v, index) =>
-        filterVal.map((j) => {
-            return v[j]
-        })
-    )
-}
-
-export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAssetPageProps) => {
-    const [params, setParams, getParams] = useGetState<QueryDomainsRequest>({
+export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+    const [selectList, setSelectList] = useState<Domain[]>([])
+    const isInitRequestRef = useRef<boolean>(true)
+    const [query, setQuery] = useState<QueryDomainsRequest>({
         Pagination: genDefaultPagination(20)
     })
+    const [loading, setLoading] = useState(false)
     const [response, setResponse] = useState<QueryGeneralResponse<Domain>>({
         Data: [],
         Pagination: genDefaultPagination(20),
         Total: 0
     })
-    const [loading, setLoading] = useState(false)
-    const {Data, Total, Pagination} = response
-    const [outputDomainKeyword, setOutputDomainKeyword] = useState("*")
-
-    const [checkedURL, setCheckedURL] = useState<string[]>([])
-    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const [checkedAll, setCheckedAll] = useState<boolean>(false)
-
-    const [allResponse, setAllResponse] = useState<QueryGeneralResponse<Domain>>({
-        Data: [],
-        Pagination: genDefaultPagination(20),
-        Total: 0
-    })
-    useEffect(() => {
-        if (checkedAll) {
-            const rowKeys = allResponse.Data.map((item) => (item.ID || "").toString()).filter((item) => item !== "")
-            setSelectedRowKeys(rowKeys)
-            setCheckedURL(allResponse.Data.map((item) => item.DomainName))
-        }
-    }, [checkedAll])
 
     useEffect(() => {
-        getAllData()
+        update(1)
     }, [])
-    const getAllData = () => {
-        ipcRenderer
-            .invoke("QueryDomains", {
-                All: true
-            })
-            .then((data: QueryGeneralResponse<Domain>) => {
-                setAllResponse(data)
-            })
-            .catch((e: any) => {
-                failed("QueryExecHistory failed: " + `${e}`)
-            })
-            .finally(() => {})
-    }
 
-    const update = useMemoizedFn((page?: number, limit?: number) => {
-        const newParams = {
-            ...getParams()
-        }
-        if (page) newParams.Pagination.Page = page
-        if (limit) newParams.Pagination.Limit = limit
-
-        setLoading(true)
-        ipcRenderer
-            .invoke("QueryDomains", newParams)
-            .then((data) => {
-                setResponse(data)
-            })
-            .catch((e: any) => {
-                failed("QueryExecHistory failed: " + `${e}`)
-            })
-            .finally(() => {
-                setTimeout(() => setLoading(false), 200)
-            })
-    })
-
-    // 单个删除
-    const delDomainSingle = useMemoizedFn((host: string) => {
-        const newParams = {
-            DomainKeyword: host
-        }
-        setLoading(true)
-        ipcRenderer
-            .invoke("DeleteDomains", newParams)
-            .then(() => {
-                update(1)
-                getAllData()
-            })
-            .catch((e) => {
-                failed(`DelDomain failed: ${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 300))
-    })
-
-    useEffect(() => {
-        update(1, 20)
-    }, [])
-    const columns = [
+    const columns: ColumnsTypeProps[] = [
         {
             title: "域名",
-            dataIndex: "DomainName",
-            filteredValue: (getParams()["DomainKeyword"] && ["DomainName"]) || null,
-            width: 400,
-            render: (_, i: Domain) => (
-                <Text style={{maxWidth: 400}} ellipsis={{tooltip: true}}>
-                    {i.DomainName}
-                </Text>
-            ),
-            filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+            dataKey: "DomainName",
+            ellipsis: true,
+            filterProps: {
+                filterKey: "DomainKeyword",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
             },
-            filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
-                return (
-                    params &&
-                    setParams && (
-                        <TableFilterDropdownString
-                            label={"搜索关键字"}
-                            params={params}
-                            setParams={setParams}
-                            filterName={"DomainKeyword"}
-                            confirm={confirm}
-                            setSelectedKeys={setSelectedKeys}
-                            update={update}
-                        />
-                    )
-                )
-            }
+            render: (text) => text || "-"
         },
         {
             title: "IP",
-            dataIndex: "IPAddr",
-            width: 470,
-            render: (_, i: Domain) => (
-                <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
-                    {i.IPAddr || "-"}
-                </Text>
-            ),
-            filteredValue: (getParams()["Network"] && ["IPAddr"]) || null,
-            filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+            dataKey: "IPAddr",
+            ellipsis: true,
+            filterProps: {
+                filterKey: "Network",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
             },
-            filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
-                return (
-                    params &&
-                    setParams && (
-                        <TableFilterDropdownString
-                            label={"搜索IP"}
-                            params={params}
-                            setParams={setParams}
-                            filterName={"Network"}
-                            confirm={confirm}
-                            setSelectedKeys={setSelectedKeys}
-                            update={update}
-                        />
-                    )
-                )
-            }
+            render: (text) => text || "-"
         },
         {
             title: "HTMLTitle",
-            dataIndex: "HTTPTitle",
-            width: 470,
-            render: (_, i: Domain) => (
-                <Text style={{maxWidth: 470}} ellipsis={{tooltip: true}}>
-                    {i.HTTPTitle || "-"}
-                </Text>
-            ),
-            filteredValue: (getParams()["Title"] && ["HTTPTitle"]) || null,
-            filterIcon: (filtered) => {
-                return params && <SearchOutlined style={{color: filtered ? "#1890ff" : undefined}} />
+            dataKey: "HTMLTitle",
+            ellipsis: true,
+            filterProps: {
+                filterKey: "Title",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
             },
-            filterDropdown: ({setSelectedKeys, selectedKeys, confirm}) => {
-                return (
-                    params &&
-                    setParams && (
-                        <TableFilterDropdownString
-                            label={"搜索关键字"}
-                            params={params}
-                            setParams={setParams}
-                            filterName={"Title"}
-                            confirm={confirm}
-                            setSelectedKeys={setSelectedKeys}
-                            update={update}
-                        />
-                    )
-                )
-            }
+            render: (text) => text || "-"
         },
         {
             title: "操作",
-            dataIndex: "Action",
-            render: (_, i: Domain) => (
-                <Space>
-                    <Button
-                        size='small'
-                        type={"link"}
+            dataKey: "action",
+            width: 60,
+            fixed: "right",
+            render: (_, record: Domain) => (
+                <>
+                    <YakitButton
+                        type='text'
                         danger
-                        onClick={() => {
-                            delDomainSingle(i.DomainName)
-                            setSelectedRowKeys([])
-                            setCheckedURL([])
-                            setCheckedAll(false)
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onRemoveSingle(record.DomainName, record.ID)
                         }}
-                    >
-                        删除
-                    </Button>
-                </Space>
+                        icon={<OutlineTrashIcon />}
+                    />
+                </>
             )
         }
     ]
-    const getData = useMemoizedFn((query) => {
+
+    const compareSelectList = useCampare(selectList)
+    const selectedRowKeys = useCreation(() => {
+        return selectList.map((item) => (item.ID || "").toString()).filter((item) => item !== "")
+    }, [compareSelectList])
+    const selectNum = useMemo(() => {
+        if (allCheck) return response.Total
+        else return selectList.length
+    }, [allCheck, compareSelectList, response.Total])
+
+    const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: Domain[], checked: boolean) => {
+        if (checked) {
+            setAllCheck(true)
+            setSelectList(response.Data)
+        } else {
+            setAllCheck(false)
+            setSelectList([])
+        }
+    })
+
+    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: Domain) => {
+        if (c) {
+            setSelectList((s) => [...s, selectedRows])
+        } else {
+            setAllCheck(false)
+            setSelectList((s) => s.filter((ele) => ele.ID !== selectedRows.ID))
+        }
+    })
+
+    const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+        const newQuery = {
+            ...query,
+            ...filter
+        }
+        setQuery(newQuery)
+    })
+
+    useDebounceEffect(
+        () => {
+            // 初次不通过此处请求数据
+            if (!isInitRequestRef.current) {
+                update(1)
+            }
+        },
+        [query],
+        {
+            wait: 200,
+            leading: true
+        }
+    )
+
+    const update = useMemoizedFn((page: number) => {
+        const paginationProps = {
+            ...query.Pagination,
+            Page: page,
+            Limit: 20
+        }
+        const finalParams: QueryDomainsRequest = {
+            ...query,
+            Pagination: paginationProps
+        }
+        const isInit = page === 1
+        isInitRequestRef.current = false
+        ipcRenderer
+            .invoke("QueryDomains", finalParams)
+            .then((res: QueryGeneralResponse<Domain>) => {
+                const d = isInit ? res.Data : (response?.Data || []).concat(res.Data)
+                setResponse({
+                    ...res,
+                    Data: d
+                })
+                if (isInit) {
+                    setIsRefresh(!isRefresh)
+                    setSelectList([])
+                    setAllCheck(false)
+                } else {
+                    if (allCheck) {
+                        setSelectList(d)
+                    }
+                }
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "QueryExecHistory failed: " + `${e}`)
+            })
+    })
+
+    const onRemoveSingle = (DomainName: string, ID?: number) => {
+        ipcRenderer
+            .invoke("DeleteDomains", {
+                DomainKeyword: DomainName
+            })
+            .then(() => {
+                setSelectList((s) => s.filter((ele) => ele.ID !== ID))
+                setResponse({
+                    ...response,
+                    Data: response.Data.filter((item) => item.ID !== ID),
+                    Total: response.Total - 1 > 0 ? response.Total - 1 : 0
+                })
+            })
+            .catch((e) => {
+                yakitNotify("error", `DelDomain failed: ${e}`)
+            })
+    }
+
+    const getData = useMemoizedFn((params) => {
         return new Promise((resolve) => {
             ipcRenderer
                 .invoke("QueryDomains", {
-                    ...params,
+                    ...query,
                     Pagination: {
-                        ...query
+                        ...params
                     }
                 })
                 .then((res: QueryGeneralResponse<any>) => {
                     const {Data} = res
-                    //    数据导出
+                    // 数据导出
                     let exportData: any = []
                     const header: string[] = []
                     const filterVal: string[] = []
                     columns.forEach((item) => {
-                        if (item.dataIndex !== "Action") {
+                        if (item.dataKey !== "action") {
                             header.push(item.title)
-                            filterVal.push(item.dataIndex)
+                            filterVal.push(item.dataKey)
                         }
                     })
                     exportData = formatJson(filterVal, Data)
@@ -271,175 +250,176 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props: DomainAss
                     })
                 })
                 .catch((e) => {
-                    failed("数据导出失败 " + `${e}`)
+                    yakitNotify("error", "数据导出失败 " + `${e}`)
                 })
         })
     })
 
-    const onRemove = useMemoizedFn(() => {
+    const onSendMenuSelect = (key: string) => {
+        switch (key) {
+            case "发送到漏洞检测":
+                if (allCheck) {
+                    yakitNotify("warning", "该批量操作不支持全选")
+                    return
+                }
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.PoC,
+                        params: {
+                            URL: JSON.stringify(selectList.map((item) => item.DomainName))
+                        }
+                    })
+                )
+                break
+            case "发送到爆破":
+                if (allCheck) {
+                    yakitNotify("warning", "该批量操作不支持全选")
+                    return
+                }
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.Mod_Brute,
+                        params: {
+                            targets: selectList.map((item) => item.DomainName).join(",")
+                        }
+                    })
+                )
+                break
+            default:
+                break
+        }
+    }
+
+    const onRemoveMultiple = () => {
         const transferParams = {
-            selectedRowKeys: checkedAll ? [] : selectedRowKeys,
-            params,
+            selectedRowKeys: response.Total === selectNum ? [] : selectedRowKeys,
+            params: query,
             interfaceName: "DeleteDomains",
             selectedRowKeysNmae: "IDs"
         }
         setLoading(true)
         onRemoveToolFC(transferParams)
             .then(() => {
-                refList()
-                setSelectedRowKeys([])
-                setCheckedURL([])
-                setCheckedAll(false)
+                setQuery({
+                    Pagination: genDefaultPagination(20)
+                })
+                setSelectList([])
+                setAllCheck(false)
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
-    })
-    const refList = useMemoizedFn(() => {
-        setParams({
-            Pagination: genDefaultPagination(20)
-        })
-        setTimeout(() => {
-            update(1)
-        }, 10)
-        setTimeout(() => {
-            getAllData()
-        }, 10)
-    })
+    }
+
+    const onRefreshMenuSelect = (key: string) => {
+        switch (key) {
+            case "noResetRefresh":
+                update(1)
+                break
+            case "resetRefresh":
+                setQuery({
+                    Pagination: genDefaultPagination(20)
+                })
+                break
+            default:
+                break
+        }
+    }
+
     return (
-        <Table<Domain>
-            className={styles["table-wrapper"]}
-            loading={loading}
-            pagination={{
-                size: "small",
-                current: +Pagination.Page,
-                pageSize: Pagination?.Limit || 10,
-                showSizeChanger: true,
-                total: Total,
-                showTotal: (i) => <Tag>共{i}条历史记录</Tag>,
-                onChange: (page: number, limit?: number) => {
-                    update(page, limit)
-                }
-            }}
-            title={(e) => {
-                return (
-                    <>
-                        <div style={{display: "flex", justifyContent: "space-between"}}>
-                            <Space>
-                                <div>域名资产</div>
-                                <Tooltip title='刷新会重置所有查询条件'>
-                                    <Button
-                                        type={"link"}
-                                        onClick={() => {
-                                            refList()
-                                        }}
-                                        size={"small"}
-                                        icon={<ReloadOutlined />}
-                                    />
-                                </Tooltip>
-                            </Space>
+        <div className={styles["NewDomainAssetPage"]}>
+            <TableVirtualResize<Domain>
+                loading={loading}
+                query={query}
+                isRefresh={isRefresh}
+                titleHeight={42}
+                title={
+                    <div className={styles["virtual-table-header-wrap"]}>
+                        <div className={styles["virtual-table-heard-left"]}>
+                            <div className={styles["virtual-table-heard-left-item"]}>
+                                <span className={styles["virtual-table-heard-left-text"]}>Total</span>
+                                <span className={styles["virtual-table-heard-left-number"]}>{response.Total}</span>
+                            </div>
+                            <Divider type='vertical' />
+                            <div className={styles["virtual-table-heard-left-item"]}>
+                                <span className={styles["virtual-table-heard-left-text"]}>Selected</span>
+                                <span className={styles["virtual-table-heard-left-number"]}>{selectNum}</span>
+                            </div>
                         </div>
-                        <Row>
-                            <Col span={12} style={{display: "flex", alignItems: "center"}}>
-                                <Checkbox
-                                    style={{marginLeft: 8}}
-                                    checked={checkedAll}
-                                    onChange={(e) => {
-                                        if (!e.target.checked) {
-                                            setSelectedRowKeys([])
-                                            setCheckedURL([])
-                                        }
-                                        setCheckedAll(e.target.checked)
-                                    }}
-                                    disabled={allResponse.Data.length === 0}
-                                >
-                                    全选
-                                </Checkbox>
-                                {selectedRowKeys.length > 0 && (
-                                    <Tag color='blue'>
-                                        已选{checkedAll ? allResponse.Total : selectedRowKeys?.length}条
-                                    </Tag>
-                                )}
-                            </Col>
-                            <Col span={12} style={{textAlign: "right"}}>
-                                <Space>
-                                    <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
-                                    <Popconfirm
-                                        title={
-                                            checkedAll
-                                                ? "确定删除所有域名资产吗? 不可恢复"
-                                                : "确定删除选择的域名资产吗？不可恢复"
-                                        }
-                                        onConfirm={onRemove}
-                                        disabled={selectedRowKeys.length === 0}
-                                    >
-                                        <Button size='small' danger={true} disabled={selectedRowKeys.length === 0}>
-                                            删除资产
-                                        </Button>
-                                    </Popconfirm>
-                                    <DropdownMenu
-                                        menu={{
-                                            data: [
-                                                {key: "bug-test", title: "发送到漏洞检测"},
-                                                {key: "brute", title: "发送到爆破"}
-                                            ]
-                                        }}
-                                        dropdown={{placement: "bottomRight"}}
-                                        onClick={(key) => {
-                                            if (checkedURL.length === 0) {
-                                                failed("请最少选择一个选项再进行操作")
-                                                return
-                                            }
-                                            switch (key) {
-                                                case "brute":
-                                                    emiter.emit(
-                                                        "openPage",
-                                                        JSON.stringify({
-                                                            route: YakitRoute.Mod_Brute,
-                                                            params: {
-                                                                targets: checkedURL.join(",")
-                                                            }
-                                                        })
-                                                    )
-                                                    break
-                                                case "bug-test":
-                                                    emiter.emit(
-                                                        "openPage",
-                                                        JSON.stringify({
-                                                            route: YakitRoute.PoC,
-                                                            params: {
-                                                                URL: JSON.stringify(checkedURL)
-                                                            }
-                                                        })
-                                                    )
-                                                    break
-                                                default:
-                                                    break
-                                            }
-                                        }}
-                                    >
-                                        <Button type='link' icon={<LineMenunIcon />}></Button>
-                                    </DropdownMenu>
-                                </Space>
-                            </Col>
-                        </Row>
-                    </>
-                )
-            }}
-            size={"small"}
-            bordered={true}
-            dataSource={Data}
-            rowKey={(e) => `${e.ID}`}
-            rowSelection={{
-                onChange: (selectedRowKeys, selectedRows) => {
-                    if (selectedRowKeys.length === allResponse.Data.length) setCheckedAll(true)
-                    else {
-                        setCheckedAll(false)
+                    </div>
+                }
+                extra={
+                    <div className={styles["domainAsset-table-extra"]}>
+                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
+                        <YakitDropdownMenu
+                            menu={{
+                                data: [
+                                    {key: "发送到漏洞检测", label: "发送到漏洞检测"},
+                                    {key: "发送到爆破", label: "发送到爆破"}
+                                ],
+                                onClick: ({key}) => {
+                                    onSendMenuSelect(key)
+                                }
+                            }}
+                            dropdown={{
+                                trigger: ["click"],
+                                placement: "bottomLeft",
+                                disabled: selectNum === 0
+                            }}
+                        >
+                            <YakitButton type='primary' icon={<SolidPaperairplaneIcon />}>
+                                发送到...
+                            </YakitButton>
+                        </YakitDropdownMenu>
+                        <YakitPopconfirm
+                            title={selectNum > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
+                            onConfirm={() => {
+                                onRemoveMultiple()
+                            }}
+                            placement='bottomRight'
+                        >
+                            <YakitButton type='outline1' colors='danger' icon={<TrashIcon />}>
+                                {selectNum > 0 ? "删除" : "清空"}
+                            </YakitButton>
+                        </YakitPopconfirm>
+                        <YakitDropdownMenu
+                            menu={{
+                                data: batchRefreshMenuData,
+                                onClick: ({key}) => {
+                                    onRefreshMenuSelect(key)
+                                }
+                            }}
+                            dropdown={{
+                                trigger: ["hover"],
+                                placement: "bottom"
+                            }}
+                        >
+                            <YakitButton type='text2' icon={<OutlineRefreshIcon />} />
+                        </YakitDropdownMenu>
+                    </div>
+                }
+                data={response.Data}
+                enableDrag={false}
+                renderKey='ID'
+                columns={columns}
+                useUpAndDown
+                onChange={onTableChange}
+                pagination={{
+                    total: response.Total,
+                    limit: response.Pagination.Limit,
+                    page: response.Pagination.Page,
+                    onChange: (page) => {
+                        update(page)
                     }
-                    setSelectedRowKeys(selectedRowKeys as string[])
-                    setCheckedURL(selectedRows.map((item) => item.DomainName))
-                },
-                selectedRowKeys
-            }}
-            columns={columns}
-        ></Table>
+                }}
+                rowSelection={{
+                    isAll: allCheck,
+                    type: "checkbox",
+                    selectedRowKeys,
+                    onSelectAll,
+                    onChangeCheckboxSingle
+                }}
+            ></TableVirtualResize>
+        </div>
     )
 }
