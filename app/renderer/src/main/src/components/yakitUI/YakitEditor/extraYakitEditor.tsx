@@ -17,12 +17,12 @@ import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
 import {Modal} from "antd"
 import {execAutoDecode} from "@/utils/encodec"
 import {YakitSystem} from "@/yakitGVDefine"
-import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAdvancedConfigShow} from "@/defaultConstants/HTTPFuzzerPage"
 import {v4 as uuidv4} from "uuid"
+import { newWebsocketFuzzerTab } from "@/pages/websocket/WebsocketFuzzer"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {

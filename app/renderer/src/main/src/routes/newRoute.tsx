@@ -11,7 +11,6 @@ import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
 import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
 import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
-import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
 import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
 import AccountAdminPage from "@/pages/loginOperationMenu/AccountAdminPage"
@@ -116,7 +115,8 @@ import {
     RiskPageInfoProps,
     ScanPortPageInfoProps,
     SimpleDetectPageInfoProps,
-    SpaceEnginePageInfoProps
+    SpaceEnginePageInfoProps,
+    WebsocketFuzzerPageInfoProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -133,6 +133,7 @@ import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
 import {YakRunner} from "@/pages/YakRunner/YakRunner"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
+import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -339,11 +340,6 @@ export interface ComponentParams {
     // 分享的初始化参数
     shareContent?: string
 
-    // websocket fuzzer 相关
-    wsTls?: boolean
-    wsRequest?: Uint8Array
-    wsToServer?: Uint8Array
-
     // yakit 插件日志详情参数
     YakScriptJournalDetailsId?: number
     // facade server参数
@@ -376,6 +372,8 @@ export interface ComponentParams {
     spaceEnginePageInfo?: SpaceEnginePageInfoProps
     /**简易版 安全检测页面 */
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
+    /**webSocket页面 */
+    websocketFuzzerPageInfo?: WebsocketFuzzerPageInfoProps
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
     /**漏洞与风险统计页面 */
@@ -426,7 +424,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 </Suspense>
             )
         case YakitRoute.WebsocketFuzzer:
-            return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} toServer={params?.wsToServer} />
+            return <WebsocketFuzzer pageId={params?.id || ""} />
         case YakitRoute.Codec:
             return <NewCodec id={params?.id || ""} />
         case YakitRoute.DataCompare:

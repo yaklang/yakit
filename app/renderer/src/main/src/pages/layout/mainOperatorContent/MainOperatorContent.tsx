@@ -125,6 +125,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {useMenuHeight} from "@/store/menuHeight"
 import {HybridScanInputTarget} from "@/models/HybridScan"
+import {defaultWebsocketFuzzerPageInfo} from "@/defaultConstants/WebsocketFuzzer"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -955,9 +956,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 {
                     openFlag: res.openFlag,
                     pageParams: {
-                        wsToServer: res.toServer,
-                        wsRequest: res.request,
-                        wsTls: res.tls
+                        websocketFuzzerPageInfo: {
+                            wsToServer: res.toServer,
+                            wsRequest: res.request,
+                            wsTls: res.tls
+                        }
                     }
                 }
             )
@@ -1274,6 +1277,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.SimpleDetect:
                             onSetSimpleDetectData(node, order)
                             break
+                        case YakitRoute.WebsocketFuzzer:
+                            onWebsocketFuzzer(node, order)
+                            break
                         default:
                             break
                     }
@@ -1303,6 +1309,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.SimpleDetect:
                             onSetSimpleDetectData(node, 1)
+                            break
+                        case YakitRoute.WebsocketFuzzer:
+                            onWebsocketFuzzer(node, 1)
                             break
                         default:
                             break
@@ -1999,6 +2008,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.SimpleDetect, newPageNode)
+    })
+    /**WebsocketFuzzer */
+    const onWebsocketFuzzer = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.WebsocketFuzzer,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                websocketFuzzerPageInfo: {
+                    ...(node?.pageParams?.websocketFuzzerPageInfo || defaultWebsocketFuzzerPageInfo)
+                }
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.WebsocketFuzzer, newPageNode)
     })
     /**
      * @description 设置专项漏洞

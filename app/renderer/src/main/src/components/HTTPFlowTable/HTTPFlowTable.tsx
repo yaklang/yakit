@@ -63,7 +63,6 @@ import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
-import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
@@ -77,6 +76,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {WEB_FUZZ_PROXY} from "@/defaultConstants/HTTPFuzzerPage"
 import {onSetRemoteValuesBase} from "../yakitUI/utils"
 import {CacheDropDownGV} from "@/yakitGV"
+import { newWebsocketFuzzerTab } from "@/pages/websocket/WebsocketFuzzer"
 
 const {ipcRenderer} = window.require("electron")
 

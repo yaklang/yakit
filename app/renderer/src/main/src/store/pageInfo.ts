@@ -60,6 +60,8 @@ interface PageParamsInfoProps {
     spaceEnginePageInfo?: SpaceEnginePageInfoProps
     /**简易版 安全检测页面 */
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
+    /**webSocketFuzzer页面 */
+    websocketFuzzerPageInfo?: WebsocketFuzzerPageInfoProps
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
     /**打开插件仓库页面 */
@@ -82,6 +84,11 @@ export interface SpaceEnginePageInfoProps {}
 export interface SimpleDetectPageInfoProps {
     /**执行批量执行的runtimeId */
     runtimeId: string
+}
+export interface WebsocketFuzzerPageInfoProps {
+    wsTls?: boolean
+    wsRequest?: Uint8Array
+    wsToServer?: Uint8Array
 }
 export interface PluginBatchExecutorPageInfoProps {
     /**执行批量执行的runtimeId */

@@ -3,10 +3,8 @@ import {Card} from "antd"
 import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {Uint8ArrayToString} from "@/utils/str"
 import {ThunderboltOutlined} from "@ant-design/icons"
-import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import {callCopyToClipboard} from "@/utils/basic"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -15,8 +13,8 @@ import {useMemoizedFn} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPHistorySourcePageType} from "@/components/HTTPHistory"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
+import {newWebsocketFuzzerTab} from "./WebsocketFuzzer"
 import styles from "./HTTPFlowForWebsocketViewer.module.scss"
-
 export interface HTTPFlowForWebsocketViewerProp {
     pageType?: HTTPHistorySourcePageType
     historyId?: string
@@ -51,7 +49,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                 height: 32,
                 minHeight: 32,
                 boxSizing: "content-box",
-                borderBottom: "1px solid var(--yakit-border-color);"
+                borderBottom: "1px solid var(--yakit-border-color)"
             }}
             bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
             title={
