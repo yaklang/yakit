@@ -8,7 +8,7 @@ import {useMemoizedFn} from "ahooks"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {QueryFuzzerConfigRequest} from "./utils"
 import {APIFunc} from "@/apiUtils/type"
-
+import {genDefaultPagination} from "@/pages/invoker/schema"
 interface TabRenameModalProps {
     title: string
     onClose: () => void
@@ -86,7 +86,10 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
     const onOK = useMemoizedFn(() => {
         setLoading(true)
         const query: QueryFuzzerConfigRequest = {
-            Limit: number
+            Pagination: {
+                ...genDefaultPagination(),
+                Limit: number
+            }
         }
         onRestore(query).finally(() => {
             setTimeout(() => {

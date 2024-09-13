@@ -1,5 +1,6 @@
 import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
+import {Paging} from "@/utils/yakQueryHTTPFlow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -8,7 +9,7 @@ export interface SaveFuzzerConfigRequest {
 }
 
 export interface QueryFuzzerConfigRequest {
-    Limit: number
+    Pagination: Paging
 }
 
 export interface QueryFuzzerConfigResponse {
@@ -20,8 +21,17 @@ export interface FuzzerConfig {
     Type: "page" | "pageGroup"
     Config: string
 }
-
-export const apiSaveFuzzerConfig: APIFunc<SaveFuzzerConfigRequest, null> = (params, hiddenError) => {
+export interface DbOperateMessage {
+    //表名 数据源
+    TableName: string
+    //操作 (增删改查)
+    Operation: string
+    //影响行数
+    EffectRows: string
+    //额外信息
+    ExtraMessage: string
+}
+export const apiSaveFuzzerConfig: APIFunc<SaveFuzzerConfigRequest, DbOperateMessage> = (params, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("SaveFuzzerConfig", params)
@@ -33,7 +43,10 @@ export const apiSaveFuzzerConfig: APIFunc<SaveFuzzerConfigRequest, null> = (para
     })
 }
 
-export const apiQueryFuzzerConfig: APIFunc<QueryFuzzerConfigRequest, QueryFuzzerConfigResponse> = (params, hiddenError) => {
+export const apiQueryFuzzerConfig: APIFunc<QueryFuzzerConfigRequest, QueryFuzzerConfigResponse> = (
+    params,
+    hiddenError
+) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("QueryFuzzerConfig", params)
