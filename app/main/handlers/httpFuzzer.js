@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const { ipcMain } = require("electron");
 const handlerHelper = require("./handleStreamWithContext");
 
 
@@ -68,12 +68,12 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("string-fuzzer", (e, params) => {
-        getClient().StringFuzzer({Template: params.template}, (err, data) => {
+        getClient().StringFuzzer({ Template: params.template }, (err, data) => {
             if (win) {
                 win.webContents.send(params.token, {
                     error: err,
                     data: err ? undefined : {
-                        Results: (data || {Results: []}).Results.map(i => {
+                        Results: (data || { Results: [] }).Results.map(i => {
                             return i.toString()
                         })
                     },
@@ -506,5 +506,53 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("ImportHTTPFuzzerTaskFromYaml", async (e, params) => {
         return await asyncImportHTTPFuzzerTaskFromYaml(params)
+    })
+
+    /** 保存 webfuzzer 页面配置 */
+    const asyncSaveFuzzerConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveFuzzerConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SaveFuzzerConfig", async (e, params) => {
+        return await asyncSaveFuzzerConfig(params)
+    })
+
+    /**查询 webfuzzer 页面配置 */
+    const asyncQueryFuzzerConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryFuzzerConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryFuzzerConfig", async (e, params) => {
+        return await asyncQueryFuzzerConfig(params)
+    })
+
+    /**删除 webfuzzer 页面配置 */
+    const asyncDeleteFuzzerConfig = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteFuzzerConfig(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteFuzzerConfig", async (e, params) => {
+        return await asyncDeleteFuzzerConfig(params)
     })
 }

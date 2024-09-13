@@ -79,7 +79,8 @@ import {
     OutlinePlusIcon,
     OutlineRefreshIcon,
     OutlineSortascendingIcon,
-    OutlineSortdescendingIcon
+    OutlineSortdescendingIcon,
+    OutlineStoreIcon
 } from "@/assets/icon/outline"
 
 import {FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData} from "@/pages/fuzzer/HTTPFuzzerPage"
@@ -126,6 +127,14 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {useMenuHeight} from "@/store/menuHeight"
 import {HybridScanInputTarget} from "@/models/HybridScan"
 import {defaultWebsocketFuzzerPageInfo} from "@/defaultConstants/WebsocketFuzzer"
+import {RestoreTabContent} from "./TabRenameModalContent"
+import {
+    FuzzerConfig,
+    QueryFuzzerConfigRequest,
+    SaveFuzzerConfigRequest,
+    apiQueryFuzzerConfig,
+    apiSaveFuzzerConfig
+} from "./utils"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -1000,10 +1009,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             selectGroup: bugTestValue ? [bugTestValue] : [],
                             formValue: {
                                 Targets: {
-                                    HTTPRequestTemplate:cloneDeep(defPluginBatchExecuteExtraFormValue),
-                                    InputFile:[],
-                                    Input: bugUrl ? JSON.parse(bugUrl).join(",") : "",
-                                }  as HybridScanInputTarget
+                                    HTTPRequestTemplate: cloneDeep(defPluginBatchExecuteExtraFormValue),
+                                    InputFile: [],
+                                    Input: bugUrl ? JSON.parse(bugUrl).join(",") : ""
+                                } as HybridScanInputTarget
                             }
                         }
                     }
@@ -1099,7 +1108,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         pluginName: data.pluginName
                     }
                     onBeforeRemovePage(info)
-                    
                 }
             }
             return
@@ -1607,23 +1615,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setFuzzerSequenceCacheData, setFuzzerSequenceList,clearFuzzerSequence, addFuzzerSequenceCacheData} =
+    const {setFuzzerSequenceCacheData, setFuzzerSequenceList, clearFuzzerSequence, addFuzzerSequenceCacheData} =
         useFuzzerSequence(
             (s) => ({
-                setFuzzerSequenceList:s.setFuzzerSequenceList,
+                setFuzzerSequenceList: s.setFuzzerSequenceList,
                 setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
                 clearFuzzerSequence: s.clearFuzzerSequence,
-                addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData,
+                addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData
             }),
             shallow
         )
-    useInterval(
-        () => {
-            onCacheHistoryWF()
-        },
-        1000 * 60 * 5 /** 每5分钟执行一次*/,
-        {immediate: true}
-    )
+    // useInterval(
+    //     () => {
+    //         onCacheHistoryWF()
+    //     },
+    //     1000 * 60 * 5 /** 每5分钟执行一次*/,
+    //     {immediate: true}
+    // )
     // fuzzer-tab页数据订阅事件
     const unFuzzerCacheData = useRef<any>(null)
     // web-fuzzer多开页面缓存数据
@@ -1658,29 +1666,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     }, [])
-    /**
-     * 1.目前只缓存一个历史，后续可能会缓存多个历史供用户选择；
-     * 2.多个历史缓存需要考虑后端接口在数据过大的时候会报错，给不了前端数据的问题
-     * 3.多个历史记录缓存还需要考虑前端的WF和序列组之间数据的对应关系
-     * */
-    const onCacheHistoryWF = useMemoizedFn(async () => {
-        try {
-            // WF
-            const resWF = await getRemoteProjectValue(RemoteGV.FuzzerCache)
-            const cacheWF = JSON.parse(resWF || "[]")
-            if (cacheWF.length > 0) {
-                const historyList = [cacheWF]
-                setRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList, JSON.stringify(historyList))
-            }
-            // FuzzerSequence
-            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCache)
-            const cacheSequence = JSON.parse(resSequence || "[]")
-            if (cacheSequence.length > 0) {
-                const historySequenceList = [cacheSequence]
-                setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
-            }
-        } catch (error) {}
-    })
     const onInitFuzzer = useMemoizedFn(async () => {
         if (!isEnpriTraceAgent()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
@@ -1711,9 +1696,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
     })
 
-    const onSetFuzzerSequenceCacheData = useMemoizedFn((cache:FuzzerSequenceCacheDataProps[]) => {
+    const onSetFuzzerSequenceCacheData = useMemoizedFn((cache: FuzzerSequenceCacheDataProps[]) => {
         clearFuzzerSequence()
-        setFuzzerSequenceList(cache.map(ele=>({groupId:ele.groupId})))
+        setFuzzerSequenceList(cache.map((ele) => ({groupId: ele.groupId})))
         setFuzzerSequenceCacheData(cache)
     })
 
@@ -2058,43 +2043,79 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("main-container-add-compare")
         }
     }, [pageCache])
-    /**从历史记录中恢复上一次的数据 */
+    /**从历史记录中恢复数据 */
     const onRestoreHistory = useMemoizedFn((routeKey: YakitRoute) => {
         switch (routeKey) {
             case YakitRoute.HTTPFuzzer:
-                onRestoreHTTPFuzzer()
+                const m = showYakitModal({
+                    title: "恢复标签页",
+                    footer: null,
+                    content: <RestoreTabContent onClose={() => m.destroy()} onRestore={onRestoreHTTPFuzzer} />
+                })
                 break
 
             default:
                 break
         }
     })
-    const onRestoreHTTPFuzzer = useMemoizedFn(async () => {
-        try {
-            setLoading(true)
-            const resWF = await getRemoteProjectValue(RemoteGV.FuzzerCacheHistoryList)
-            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList)
-            if (!!resWF) {
-                const listWF = JSON.parse(resWF)
-                if (listWF?.length > 0) {
-                    const itemWF = listWF[0]
-                    await fetchFuzzerList(itemWF)
-                }
-                if (!!resSequence) {
-                    const listSequence = JSON.parse(resSequence)
-                    if (listSequence?.length > 0) {
-                        const itemSequence = listSequence[0]
-                        await onSetFuzzerSequenceCacheData(itemSequence)
+    const onRestoreHTTPFuzzer: (query: QueryFuzzerConfigRequest) => Promise<null> = useMemoizedFn(async (query) => {
+        return new Promise(async (resolve) => {
+            apiQueryFuzzerConfig(query).then(async ({Data}) => {
+                try {
+                    const pageList = Data.map((ele) => ({
+                        ...JSON.parse(ele.Config)
+                    }))
+                    if (pageList.length > 0) {
+                        await fetchFuzzerList(pageList)
+                        // FuzzerSequence
+                        const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList)
+                        if (!!resSequence) {
+                            const listSequence = JSON.parse(resSequence)
+                            if (listSequence?.length > 0) {
+                                const itemSequence = listSequence[0]
+                                await onSetFuzzerSequenceCacheData(itemSequence)
+                            }
+                        }
                     }
+                    resolve(null)
+                } catch (error) {
+                    yakitNotify("error", `WF历史数据恢复失败:${error}`)
                 }
-            } else {
-                yakitNotify("error", "历史记录为空")
-            }
+            })
+        })
+    })
 
-            setTimeout(() => setLoading(false), 200)
-        } catch (error) {
-            yakitNotify("error", `WF历史数据恢复失败:${error}`)
+    /**保存历史记录 */
+    const onSaveHistory = useMemoizedFn((routeKey: YakitRoute) => {
+        switch (routeKey) {
+            case YakitRoute.HTTPFuzzer:
+                onSaveHTTPFuzzer()
+                break
+
+            default:
+                break
         }
+    })
+    const onSaveHTTPFuzzer = useMemoizedFn(async () => {
+        const wfPageInfo = pages.get(YakitRoute.HTTPFuzzer)?.pageList || []
+        const pageData: FuzzerConfig[] = getFuzzerProcessedCacheData(wfPageInfo).map((item) => ({
+            PageId: item.id,
+            Type: item.id.endsWith("group") ? "pageGroup" : "page",
+            Config: JSON.stringify(item)
+        }))
+        const params: SaveFuzzerConfigRequest = {
+            Data: pageData
+        }
+        setLoading(true)
+        apiSaveFuzzerConfig(params).then(async () => {
+            // FuzzerSequence
+            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCache)
+            const cacheSequence = JSON.parse(resSequence || "[]")
+            if (cacheSequence.length > 0) {
+                const historySequenceList = [cacheSequence]
+                setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
+            }
+        }).finally(()=> setTimeout(() => setLoading(false), 200))
     })
     return (
         <Content>
@@ -2115,6 +2136,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         onBeforeRemovePage(removeItem)
                     }}
                     onRestoreHistory={onRestoreHistory}
+                    onSaveHistory={onSaveHistory}
                 />
             </YakitSpin>
             <YakitModal
@@ -2168,8 +2190,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 })
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
-    const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage, onRestoreHistory} =
-        props
+    const {
+        currentTabKey,
+        setCurrentTabKey,
+        onRemove,
+        pageCache,
+        setPageCache,
+        openMultipleMenuPage,
+        onRestoreHistory,
+        onSaveHistory
+    } = props
     const {updateMenuBodyHeight} = useMenuHeight(
         (s) => ({
             updateMenuBodyHeight: s.updateMenuBodyHeight
@@ -2237,13 +2267,14 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
                 openMultipleMenuPage={openMultipleMenuPage}
                 onSetPageCache={onSetPageCache}
                 onRestoreHistory={onRestoreHistory}
+                onSaveHistory={onSaveHistory}
             />
         </div>
     )
 })
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
-    const {pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory} = props
+    const {pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory, onSaveHistory} = props
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -2273,6 +2304,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                                 index={index}
                                 onSetPageCache={onSetPageCache}
                                 onRestoreHistory={onRestoreHistory}
+                                onSaveHistory={onSaveHistory}
                             />
                         )}
                     </div>
@@ -2493,7 +2525,16 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
 })
 
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
-    const {pageItem, index, pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache, onRestoreHistory} = props
+    const {
+        pageItem,
+        index,
+        pageCache,
+        currentTabKey,
+        openMultipleMenuPage,
+        onSetPageCache,
+        onRestoreHistory,
+        onSaveHistory
+    } = props
     // webFuzzer 序列化
     const [type, setType] = useState<WebFuzzerType>("config")
 
@@ -2657,6 +2698,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                 openMultipleMenuPage={openMultipleMenuPage}
                 onSetPageCache={(list) => onSetPageCache(list, index)}
                 onRestoreHistory={onRestoreHistory}
+                onSaveHistory={onSaveHistory}
             />
             <div className={styles["render-sub-page"]}>
                 <RenderSubPage
@@ -2684,7 +2726,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             setSelectSubMenu,
             onSetPageCache,
             openMultipleMenuPage,
-            onRestoreHistory
+            onRestoreHistory,
+            onSaveHistory
         } = props
 
         //拖拽组件相关
@@ -3427,6 +3470,12 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     key: "removeFromGroup"
                 })
             }
+            if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                menuData.push({
+                    label: "恢复标签页",
+                    key: "restoreTab"
+                })
+            }
             showByRightContext(
                 {
                     width: 180,
@@ -3448,6 +3497,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 break
                             case "newGroup":
                                 onNewGroup(item)
+                                break
+                            case "restoreTab":
+                                onRestoreHistory(currentTabKey)
                                 break
                             default:
                                 onAddToGroup(item, key)
@@ -4175,13 +4227,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                         )
                                     )}
                                     {isWebFuzzerRoute && (
-                                        <Tooltip
-                                            title='恢复WebFuzzer标签页;5分钟更新一次历史数据'
-                                            placement={isExpand ? "left" : "top"}
-                                        >
-                                            <OutlineRefreshIcon
+                                        <Tooltip title='保存WebFuzzer历史数据' placement={isExpand ? "left" : "top"}>
+                                            <OutlineStoreIcon
                                                 className={styles["extra-operate-icon"]}
-                                                onClick={() => onRestoreHistory(currentTabKey)}
+                                                onClick={() => onSaveHistory(currentTabKey)}
                                             />
                                         </Tooltip>
                                     )}

@@ -97,6 +97,8 @@ export interface TabContentProps {
     onRemove: (p: PageCache) => void
     /**从历史中恢复tab数据 */
     onRestoreHistory: (v: YakitRoute | string) => void
+    /**保存tab数据 */
+    onSaveHistory: (v: YakitRoute | string) => void
 }
 
 /**
@@ -109,6 +111,8 @@ export interface TabChildrenProps {
     onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
     /**从历史中恢复tab数据 */
     onRestoreHistory: (v: YakitRoute | string) => void
+    /**保存tab数据 */
+    onSaveHistory: (v: YakitRoute | string) => void
 }
 
 /**
@@ -157,6 +161,8 @@ export interface SubTabListProps {
     index: number
     /**从历史中恢复tab数据 */
     onRestoreHistory: (v: YakitRoute | string) => void
+    /**保存tab数据 */
+    onSaveHistory: (v: YakitRoute | string) => void
 }
 
 export interface SubTabsProps {
@@ -176,6 +182,8 @@ export interface SubTabsProps {
     onSetPageCache: (m: MultipleNodeInfo[]) => void
     /**从历史中恢复tab数据 */
     onRestoreHistory: (v: YakitRoute | string) => void
+    /**保存tab数据 */
+    onSaveHistory: (v: YakitRoute | string) => void
 }
 /**
  * @description 二级tab item
