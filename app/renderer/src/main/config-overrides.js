@@ -49,12 +49,20 @@ module.exports = {
         })),
         addWebpackModuleRule(
             {
-                test: [/\.css$/, /\.scss$/], // 可以打包后缀为scss/css的文件
-                exclude: [/\.module\.(css|scss)/],
+                test: [/\.css$/,], // 可以打包后缀为css的文件
+                exclude: [/\.module\.(css)/],
                 use: [
                     devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
                     "css-loader",
-                    "sass-loader"
+                    "postcss-loader"
+                ]
+            },
+            {
+                test: [/\.scss$/], // 可以打包后缀为scss的文件
+                exclude: [/\.module\.(scss)/],
+                use: [
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
+                    "sass-loader",
                 ]
             },
             {
