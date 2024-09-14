@@ -241,7 +241,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             ForceDisableKeepAlive,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
-        ) => {
+        ) => { 
             return ipcRenderer
                 .invoke(
                     "mitm-start-call",
@@ -505,7 +505,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [listNames, setListNames] = useState<string[]>([]) // 存储的 带参全部本地插件 或者 不带参本地插件 =》 由tab切换决定
 
     const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
-
+    const isFirst = useRef<boolean>(true)
     useEffect(
         () => {
             if (status === "idle") {
@@ -514,6 +514,10 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
                         if (!!data && !!is) {
                             const cacheData: string[] = JSON.parse(data)
+                            if(isFirst.current){
+                                setNoParamsCheckList(cacheData)
+                                isFirst.current = false
+                            }
                             if (cacheData.length) {
                                 onIsHasParams(false)
                             } else {
