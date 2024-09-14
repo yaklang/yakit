@@ -599,7 +599,7 @@ const Home: React.FC<HomeProp> = (props) => {
             return "临时项目"
         } else {
             return curProjectInfo?.ProjectName
-                ? curProjectInfo?.ProjectName.substring(1, curProjectInfo?.ProjectName.length - 1)
+                ? curProjectInfo?.ProjectName
                 : getReleaseEditionName()
         }
     }, [curProjectInfo])
