@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip, Avatar, Form} from "antd"
+import {Badge, Modal, Tooltip, Avatar, Form, Divider} from "antd"
 import {
     RiskStateSvgIcon,
     UISettingSvgIcon,
@@ -33,7 +33,7 @@ import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAge
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
-import {getLocalValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {GithubSvgIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
@@ -81,6 +81,8 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
+import { YakitSegmented } from "../yakitUI/YakitSegmented/YakitSegmented"
+import { MessageCenter } from "../MessageCenter/MessageCenter"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1541,7 +1543,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const {userInfo} = useStore()
 
     const [show, setShow] = useState<boolean>(false)
-    const [type, setType] = useState<"letter" | "update">("update")
 
     /** Yakit版本号 */
     const [yakitVersion, setYakitVersion] = useState<string>("dev")
@@ -1810,12 +1811,45 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         )
     }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion])
 
+    const [noticeType,setNoticeType] = useState<"message"|"update">("message")
+    useEffect(()=>{
+        // console.log("userInfo.isLogin---",userInfo.isLogin);
+        // 未登录时 仅允许查看
+        if(!userInfo.isLogin){
+            setNoticeType("update")
+        }
+    },[userInfo.isLogin])
+
+    const getAllMessage = useMemoizedFn(()=>{
+        setShow(false)
+        emiter.emit("openAllMessageNotification")
+    })
+
     const notice = useMemo(() => {
         return (
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-notice-body"]}>
                     <div className={styles["notice-version-header"]}>
-                        <div className={styles["header-title"]}>更新通知</div>
+                        <YakitSegmented
+                                value={noticeType}
+                                onChange={(v) => {
+                                    const value = v as "message"|"update"
+                                    setNoticeType(value)
+                                }}
+                                options={[
+                                    {
+                                        label: "消息中心",
+                                        value: "message",
+                                        disabled: !userInfo.isLogin
+                                    },
+                                    {
+                                        label: "更新通知",
+                                        value: "update",
+                                    },
+                                ]}
+                            />
+                        
+                        {noticeType==="update" ?
                         <div className={styles["switch-title"]}>
                             启动检测更新
                             <YakitSwitch
@@ -1828,10 +1862,28 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     setIsCheck(!val)
                                 }}
                             />
+                        </div>:
+                        <div className={styles['message-title']}>
+                            <YakitButton
+                                type='text'
+                                style={{fontWeight: 400}}
+                                onClick={(e) => e.preventDefault()}
+                            >
+                                全部已读
+                            </YakitButton>
+                            <Divider type={"vertical"} style={{margin: "0px 8px 0px"}} />
+                            <YakitButton
+                                type='text'
+                                style={{fontWeight: 400,color:"#85899E"}}
+                                onClick={getAllMessage}
+                            >
+                                查看全部
+                            </YakitButton>
                         </div>
+                        }
                     </div>
 
-                    {type === "update" && (
+                    {noticeType==="update"? 
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
                                 <UIOpUpdateYakit
@@ -1865,16 +1917,19 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     <GithubSvgIcon className={styles["icon-style"]} /> 历史版本
                                 </div>
                             </div>
+                        </div>:
+                        <div className={styles['notice-info-wrapper']}>
+                            <MessageCenter getAllMessage={getAllMessage}/>
                         </div>
-                    )}
+                    }
+                    
                 </div>
             </div>
         )
     }, [
         isCheck,
-        type,
         userInfo.role,
-
+        userInfo.isLogin,
         yakitVersion,
         yakitLastVersion,
         isYakitUpdateWait,
@@ -1886,7 +1941,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         moreYaklangVersionList,
         lowerYaklangLastVersion,
         isRemoteMode,
-        communityYaklang
+        communityYaklang,
+        noticeType
     ])
 
     return (

@@ -79,6 +79,7 @@
     "sudo-prompt": "^9.2.1",
     "throttle-debounce": "^5.0.0",
     "throttleit": "^2.0.0",
-    "tree-kill": "^1.2.2"
+    "tree-kill": "^1.2.2",
+    "ws": "^8.18.0"
   }
 }

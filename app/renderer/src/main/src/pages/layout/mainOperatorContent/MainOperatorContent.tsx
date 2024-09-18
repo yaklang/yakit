@@ -125,6 +125,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {useMenuHeight} from "@/store/menuHeight"
 import {HybridScanInputTarget} from "@/models/HybridScan"
+import { closeWebSocket, startWebSocket } from "@/utils/webSocket/webSocket"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -361,6 +362,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             closeDuplexConn()
         }
     }, [])
+
+    // 在组件启动的时候，执行一次，用于初始化WebSocket推送（DuplexConnection）
+    useEffect(()=>{
+        startWebSocket()
+        return () => {
+            // 当组件销毁的时候，关闭WebSocket
+            closeWebSocket()
+        }
+    },[])
 
     /** ---------- 新逻辑 start ---------- */
 
