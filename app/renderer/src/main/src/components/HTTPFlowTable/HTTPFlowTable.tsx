@@ -76,7 +76,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {WEB_FUZZ_PROXY} from "@/defaultConstants/HTTPFuzzerPage"
 import {onSetRemoteValuesBase} from "../yakitUI/utils"
 import {CacheDropDownGV} from "@/yakitGV"
-import { newWebsocketFuzzerTab } from "@/pages/websocket/WebsocketFuzzer"
+import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -963,7 +963,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 Tags: [...tagsFilter],
                 bodyLength: !!(afterBodyLength || beforeBodyLength) // 用来判断响应长度的icon颜色是否显示蓝色
             })
-            if(sort.orderBy === "DurationMs"){
+            if (sort.orderBy === "DurationMs") {
                 sort.orderBy = "duration"
             }
             sortRef.current = sort
@@ -1049,13 +1049,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         // 来源为插件执行时 使其部分筛选条件失效
-        if(toPlugin){
+        if (toPlugin) {
             query = {
                 ...query,
                 ExcludeInUrl: [],
                 ExcludePath: [],
                 ExcludeSuffix: [],
-                ExcludeContentType:[],
+                ExcludeContentType: [],
                 IncludeInUrl: [],
                 IncludePath: [],
                 IncludeSuffix: [],
@@ -1065,7 +1065,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
-        
+
         // 查询数据
         updateQueryParams(query)
         ipcRenderer
@@ -1866,9 +1866,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             dataKey: "DurationMs",
             width: 200,
             render: (text) => {
-                let timeMs:number = parseInt(text)
-                return <div className={style['duration-ms']}>{timeMs}</div>
-            },
+                let timeMs: number = parseInt(text)
+                return <div className={style["duration-ms"]}>{timeMs}</div>
+            }
             // 此处排序会使偏移量新数据进入时乱序(ps：后续处理，考虑此处排序时偏移量新增数据在页面上不更新)
             // sorterProps: {
             //     sorter: true
