@@ -132,6 +132,7 @@ import {
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
 import {YakRunner} from "@/pages/YakRunner/YakRunner"
+import { YakRunnerCodeScan } from "@/pages/yakRunnerCodeScan/yakRunnerCodeScan";
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 
@@ -220,7 +221,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-webshell-manager": {label: "网站管理"},
     "beta-webshell-opt": {label: "WebShell 实例"},
     data_statistics: {label: "数据统计"},
-    "space-engine": {label: "空间引擎"}
+    "space-engine": {label: "空间引擎"},
+    "yakrunner-code-scan": {label: "代码扫描"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -292,7 +294,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Mod_Brute,
     YakitRoute.SimpleDetect,
     YakitRoute.DB_Risk,
-    YakitRoute.ShellReceiver
+    YakitRoute.ShellReceiver,
+    YakitRoute.YakRunner_Code_Scan
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -541,6 +544,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <DataStatistics />
         case YakitRoute.Space_Engine:
             return <SpaceEnginePage pageId={params?.id || ""} />
+        case YakitRoute.YakRunner_Code_Scan:
+            return <YakRunnerCodeScan />
         default:
             return <div />
     }

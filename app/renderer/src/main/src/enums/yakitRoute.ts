@@ -81,5 +81,7 @@ export enum YakitRoute {
     // 数据统计
     Data_Statistics = "data_statistics",
     /**空间引擎 */
-    Space_Engine = "space-engine"
+    Space_Engine = "space-engine",
+    // YakRunner代码扫描
+    YakRunner_Code_Scan = "yakrunner-code-scan"
 }

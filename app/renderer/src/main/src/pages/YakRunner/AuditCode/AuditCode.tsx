@@ -39,6 +39,7 @@ import {
     OutlineArrowcirclerightIcon,
     OutlineChevronrightIcon,
     OutlineDeprecatedIcon,
+    OutlineScanIcon,
     OutlineSearchIcon,
     OutlineTrashIcon,
     OutlineXIcon
@@ -61,6 +62,7 @@ import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import useDispatcher from "../hooks/useDispatcher"
+import { addToTab } from "@/pages/MainTabs"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -923,6 +925,16 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                     <div className={styles["audit-path"]}>{obj.path}</div>
                                     <div className={styles["audit-time"]}>{obj.time}</div>
                                     <div className={styles["audit-opt"]}>
+                                        <Tooltip title={"代码扫描"}>
+                                            <YakitButton
+                                                type='text'
+                                                icon={<OutlineScanIcon className={styles["to-icon"]} />}
+                                                onClick={() => {
+                                                    addToTab("**yak-runner-code-scan")
+                                                }}
+                                            />
+                                        </Tooltip>
+
                                         {/* 此处的Tooltip会导致页面抖动(待处理) */}
                                         {/* <Tooltip title={"打开项目"}> */}
                                         <YakitButton
