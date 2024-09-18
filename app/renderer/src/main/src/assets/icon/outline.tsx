@@ -5458,7 +5458,6 @@ export const OutlileHistoryIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlileHistory} {...props} />
 }
 
-
 const OutlinCompile = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
         <path
@@ -5492,4 +5491,38 @@ const OutlinCompileTwo = () => (
  */
 export const OutlinCompileTwoIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlinCompileTwo} {...props} />
+}
+
+const OutlineScan = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M2.6665 5.33366V4.00033C2.6665 3.6467 2.80698 3.30756 3.05703 3.05752C3.30708 2.80747 3.64622 2.66699 3.99984 2.66699H5.33317'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M10.6665 2.66699H11.9998C12.3535 2.66699 12.6926 2.80747 12.9426 3.05752C13.1927 3.30756 13.3332 3.6467 13.3332 4.00033V5.33366'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M13.3332 10.667V12.0003C13.3332 12.3539 13.1927 12.6931 12.9426 12.9431C12.6926 13.1932 12.3535 13.3337 11.9998 13.3337H10.6665'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M5.33317 13.3337H3.99984C3.64622 13.3337 3.30708 13.1932 3.05703 12.9431C2.80698 12.6931 2.6665 12.3539 2.6665 12.0003V10.667'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M5.3335 8L10.6668 8' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+    </svg>
+)
+
+export const OutlineScanIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineScan} {...props} />
 }
