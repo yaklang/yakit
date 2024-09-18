@@ -106,7 +106,7 @@ import {
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
-import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
+import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, getFuzzerProcessedCacheData} from "@/store/pageInfo"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
@@ -141,6 +141,7 @@ import {
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {KVPair} from "@/models/kv"
 import {FuncBtn} from "../plugins/funcTemplate"
+import {FuzzerConfig, SaveFuzzerConfigRequest, apiSaveFuzzerConfig} from "../layout/mainOperatorContent/utils"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -241,7 +242,7 @@ export interface FuzzerResponse {
     DisableRenderStyles: boolean
 
     RuntimeID: string
-    Discard:boolean
+    Discard: boolean
 }
 
 export interface HistoryHTTPFuzzerTask {
@@ -600,7 +601,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
-   
+
     const [droppedCount, setDroppedCount] = useState(0)
     // state
     const [loading, setLoading] = useState(false)
@@ -955,6 +956,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
         }
+        onSaveHTTPFuzzerByPageId()
+    })
+    /**保存当前页面的历史数据 */
+    const onSaveHTTPFuzzerByPageId = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (!currentItem) return
+        const cacheData = getFuzzerProcessedCacheData([currentItem])[0]
+        if (!cacheData) return
+        const pageData: FuzzerConfig = {
+            PageId: cacheData.id,
+            Type: "page",
+            Config: JSON.stringify(cacheData)
+        }
+        const params: SaveFuzzerConfigRequest = {
+            Data: [pageData]
+        }
+        apiSaveFuzzerConfig(params)
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
@@ -2043,13 +2061,13 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
 }
 
 interface FuzzerExtraShowProps {
-    droppedCount:number
+    droppedCount: number
     advancedConfigValue: AdvancedConfigValueProps
     onlyOneResponse: boolean
     httpResponse: FuzzerResponse
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
-    const {droppedCount,advancedConfigValue, onlyOneResponse, httpResponse} = props
+    const {droppedCount, advancedConfigValue, onlyOneResponse, httpResponse} = props
     return (
         <div className={styles["display-flex"]}>
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
