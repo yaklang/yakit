@@ -135,7 +135,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                         }}
                     />
                     <YakitPopconfirm
-                        title={"删除数据会将数据包内容与缓存一起删除，且不可恢复，确定删除吗?"}
+                        title={"将会删除数据包与缓存数据，确定删除吗"}
                         onConfirm={() => {
                             deleteAll()
                         }}
