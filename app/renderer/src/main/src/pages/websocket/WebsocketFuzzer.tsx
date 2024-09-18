@@ -155,6 +155,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
         })
         return () => {
             ipcRenderer.invoke("cancel-CreateWebsocketFuzzer", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
             clearInterval(timer)
