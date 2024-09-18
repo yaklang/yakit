@@ -564,6 +564,11 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
                     multiple={false}
                     help='可将文件夹拖入框内或点击此处'
                     disabled={disabled}
+                    autoCompleteProps={{
+                        ref:item.cacheRef,
+                        cacheHistoryDataKey: item.cacheHistoryDataKey
+                    }}
+                    renderType={item.cacheHistoryDataKey?"autoComplete":undefined}
                 />
             )
         // 其他基础类型

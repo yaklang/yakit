@@ -1,5 +1,12 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {AuditCodeProps, AuditNodeProps, AuditTreeNodeProps, AuditTreeProps, AuditYakUrlProps} from "./AuditCodeType"
+import {
+    AuditCodeProps,
+    AuditNodeDetailProps,
+    AuditNodeProps,
+    AuditTreeNodeProps,
+    AuditTreeProps,
+    AuditYakUrlProps
+} from "./AuditCodeType"
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
 import {YakScript} from "@/pages/invoker/schema"
@@ -61,7 +68,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
     const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys} = props
 
     const handleSelect = useMemoizedFn(() => {
-        onSelected(true, info)
+        onSelected(true, info, getDetail)
     })
 
     const isExpanded = useMemo(() => {
@@ -189,7 +196,10 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
     const [inViewport] = useInViewport(wrapper)
     const size = useSize(wrapper)
 
-    const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps) => {
+    const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
+        if (detail?.url) {
+            emiter.emit("onScrollToFileTree", detail?.url)
+        }
         setFoucsedKey(node.id)
         onJump(node)
         onContext(node)
@@ -585,6 +595,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     const [plugin, setPlugin] = useState<YakScript>()
     const [form] = Form.useForm()
 
+    const cacheRef = useRef<any>()
     // 获取参数
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
@@ -599,9 +610,21 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         handleFetchParams()
     }, [])
 
+    const YakRunnerAuditCodeCache = "YakRunnerAuditCodeCache"
     // 必要参数
     const requiredParams = useMemo(() => {
-        return plugin?.Params.filter((item) => !!item.Required) || []
+        return (
+            plugin?.Params.filter((item) => !!item.Required).map((item) => {
+                if (item.Field === "ProgramPath") {
+                    return {
+                        ...item,
+                        cacheRef,
+                        cacheHistoryDataKey: YakRunnerAuditCodeCache
+                    }
+                }
+                return item
+            }) || []
+        )
     }, [plugin?.Params])
 
     // 设置默认值
@@ -682,7 +705,10 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     const request: Record<string, any> = {}
                     for (let el of plugin?.Params || []) request[el.Field] = value[el.Field] || undefined
                     requestParams.ExecParams = getYakExecutorParam({...value})
-
+                    // 缓存项目路径
+                    if (value?.ProgramPath) {
+                        cacheRef.current.onSetRemoteValues(value?.ProgramPath)
+                    }
                     onStartAudit(value["programName"], requestParams)
                 })
                 .catch(() => {})

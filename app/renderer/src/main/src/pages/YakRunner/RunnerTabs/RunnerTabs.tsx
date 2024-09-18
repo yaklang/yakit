@@ -871,7 +871,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
             if (info.path !== activeFile?.path) {
                 const newActiveFile = await getDefaultActiveFile(info)
                 setActiveFile && setActiveFile(newActiveFile)
-                if (info.parent) {
+                if (info.parent || info.fileSourceType === "audit") {
                     emiter.emit("onScrollToFileTree", info.path)
                 }
             }

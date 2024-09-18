@@ -236,7 +236,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         isFirst && emiter.emit("onResetFileTree")
     })
 
-    const startMonitorFolder = useMemoizedFn((absolutePath) => {
+    const startMonitorFolder = useMemoizedFn((absolutePath, treeType: "file" | "audit") => {
         // 先停止 再启用
         const stopData = StringToUint8Array(
             JSON.stringify({
@@ -248,6 +248,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             MessageType: "file_monitor",
             Timestamp: new Date().getTime()
         })
+        // 审计树时屏蔽文件监控
+        if (treeType === "audit") return
         const startData = StringToUint8Array(
             JSON.stringify({
                 operate: "new",
@@ -261,62 +263,64 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
     })
 
-    const onInitTreeFun = useMemoizedFn(async (rootPath: string, isFirst: boolean = true) => {
-        onResetAuditStatusFun()
-        // 开启文件夹监听
-        startMonitorFolder(rootPath)
-        // console.log("onOpenFileTreeFun", rootPath)
-        const lastFolder = await getNameByPath(rootPath)
+    const onInitTreeFun = useMemoizedFn(
+        async (rootPath: string, treeType: "file" | "audit", isFirst: boolean = true) => {
+            onResetAuditStatusFun()
+            // 开启文件夹监听
+            startMonitorFolder(rootPath, treeType)
+            // console.log("onOpenFileTreeFun", rootPath)
+            const lastFolder = await getNameByPath(rootPath)
 
-        if (rootPath.length > 0 && lastFolder.length > 0) {
-            resetMap(isFirst)
-            const node: FileNodeMapProps = {
-                parent: null,
-                name: lastFolder,
-                path: rootPath,
-                isFolder: true,
-                icon: FolderDefault
-            }
-
-            handleFetchFileList(rootPath, (list) => {
-                // 如若打开空文件夹 则不可展开
-                if (list.length === 0) {
-                    node.isLeaf = true
+            if (rootPath.length > 0 && lastFolder.length > 0) {
+                resetMap(isFirst)
+                const node: FileNodeMapProps = {
+                    parent: null,
+                    name: lastFolder,
+                    path: rootPath,
+                    isFolder: true,
+                    icon: FolderDefault
                 }
-                setMapFileDetail(rootPath, node)
-                const children: FileTreeListProps[] = []
 
-                let childArr: string[] = []
-                list.forEach((item) => {
-                    // 注入文件结构Map
-                    childArr.push(item.path)
-                    // 文件Map
-                    setMapFileDetail(item.path, item)
-                    // 注入tree结构
-                    children.push({path: item.path})
+                handleFetchFileList(rootPath, (list) => {
+                    // 如若打开空文件夹 则不可展开
+                    if (list.length === 0) {
+                        node.isLeaf = true
+                    }
+                    setMapFileDetail(rootPath, node)
+                    const children: FileTreeListProps[] = []
+
+                    let childArr: string[] = []
+                    list.forEach((item) => {
+                        // 注入文件结构Map
+                        childArr.push(item.path)
+                        // 文件Map
+                        setMapFileDetail(item.path, item)
+                        // 注入tree结构
+                        children.push({path: item.path})
+                    })
+                    // 文件结构Map
+                    setMapFolderDetail(rootPath, childArr)
+
+                    if (list) setFileTree([{path: rootPath}])
                 })
-                // 文件结构Map
-                setMapFolderDetail(rootPath, childArr)
 
-                if (list) setFileTree([{path: rootPath}])
-            })
-
-            // 打开文件夹时接入历史记录
-            const history: YakRunnerHistoryProps = {
-                isFile: false,
-                name: lastFolder,
-                path: rootPath,
-                loadTreeType: getLoadTreeType()
+                // 打开文件夹时接入历史记录
+                const history: YakRunnerHistoryProps = {
+                    isFile: false,
+                    name: lastFolder,
+                    path: rootPath,
+                    loadTreeType: getLoadTreeType()
+                }
+                setYakRunnerHistory(history)
             }
-            setYakRunnerHistory(history)
         }
-    })
+    )
 
     // 加载文件树(初次加载)
     const onOpenFileTreeFun = useMemoizedFn(async (absolutePath: string) => {
         // console.log("文件树---", absolutePath)
         setLoadTreeType("file")
-        onInitTreeFun(absolutePath)
+        onInitTreeFun(absolutePath, "file")
     })
 
     // 加载审计树(初次加载)
@@ -324,7 +328,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         // console.log("审计树---", name)
         setLoadTreeType("audit")
         setProjectNmae(name)
-        onInitTreeFun(`/${name}`)
+        onInitTreeFun(`/${name}`, "audit")
     })
 
     // 刷新文件/审计树
@@ -332,10 +336,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         if (loadTreeType === "file") {
             if (fileTree.length > 0) {
                 const ProjectPath = fileTree[0].path
-                onInitTreeFun(ProjectPath, false)
+                onInitTreeFun(ProjectPath, "file", false)
             }
         } else {
-            projectNmae && onInitTreeFun(`/${projectNmae}`, false)
+            projectNmae && onInitTreeFun(`/${projectNmae}`, "audit", false)
         }
     })
 
@@ -1034,7 +1038,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
     const logInfoRef = useRef<string[]>([])
     useEffect(() => {
-        const progress = Math.floor(streamInfo.progressState.map((item) => item.progress)[0] || 0)
+        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
         // 当任务结束时 跳转打开编译列表
         if (progress === 1) {
             setTimeout(() => {
