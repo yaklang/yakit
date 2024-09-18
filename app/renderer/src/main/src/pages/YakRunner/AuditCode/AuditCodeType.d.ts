@@ -17,10 +17,16 @@ export interface AuditTreeProps {
     onJump: (v:AuditNodeProps) => void
 }
 
+export interface AuditNodeDetailProps{
+    fileName: string;
+    start_line: number;
+    url: string;
+}
+
 export interface AuditTreeNodeProps {
     info: AuditNodeProps
     expandedKeys: string[]
-    onSelected: (selected: boolean, node: AuditNodeProps) => any
+    onSelected: (selected: boolean, node: AuditNodeProps, nodeDetail?:AuditNodeDetailProps) => any
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
     setFoucsedKey: (v: string) => void

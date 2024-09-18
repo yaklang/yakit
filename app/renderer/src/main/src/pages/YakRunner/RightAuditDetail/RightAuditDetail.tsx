@@ -49,6 +49,7 @@ export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
                         })}
                         onClick={(e) => {
                             e.stopPropagation()
+                            emiter.emit("onScrollToFileTree", code_range.url)
                             onDetail(code_range)
                         }}
                     >
@@ -528,7 +529,9 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 highLightRange
             }
         }
-
+        // 定位文件树
+        emiter.emit("onScrollToFileTree", url)
+        // 打开文件
         emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
         // 纯跳转行号
         setTimeout(() => {
