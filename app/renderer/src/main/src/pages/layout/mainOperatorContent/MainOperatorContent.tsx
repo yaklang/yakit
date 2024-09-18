@@ -2060,11 +2060,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     const onRestoreHTTPFuzzer: (query: QueryFuzzerConfigRequest) => Promise<null> = useMemoizedFn(async (query) => {
         return new Promise(async (resolve) => {
-            apiQueryFuzzerConfig(query).then(async ({Data}) => {
+            apiQueryFuzzerConfig(query).then(async ({Data=[]}) => {
                 try {
-                    const pageList = Data.map((ele) => ({
-                        ...JSON.parse(ele.Config)
-                    }))
+                    const pageList =
+                        Data.map((ele) => ({
+                            ...JSON.parse(ele.Config)
+                        })) || []
                     if (pageList.length > 0) {
                         await fetchFuzzerList(pageList)
                         // FuzzerSequence
@@ -2076,6 +2077,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 await onSetFuzzerSequenceCacheData(itemSequence)
                             }
                         }
+                    } else {
+                        yakitNotify("info", `暂无WF历史数据`)
                     }
                     resolve(null)
                 } catch (error) {
@@ -2107,15 +2110,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             Data: pageData
         }
         setLoading(true)
-        apiSaveFuzzerConfig(params).then(async () => {
-            // FuzzerSequence
-            const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCache)
-            const cacheSequence = JSON.parse(resSequence || "[]")
-            if (cacheSequence.length > 0) {
-                const historySequenceList = [cacheSequence]
-                setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
-            }
-        }).finally(()=> setTimeout(() => setLoading(false), 200))
+        apiSaveFuzzerConfig(params)
+            .then(async () => {
+                // FuzzerSequence
+                const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCache)
+                const cacheSequence = JSON.parse(resSequence || "[]")
+                if (cacheSequence.length > 0) {
+                    const historySequenceList = [cacheSequence]
+                    setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
+                }
+            })
+            .finally(() => setTimeout(() => setLoading(false), 200))
     })
     return (
         <Content>

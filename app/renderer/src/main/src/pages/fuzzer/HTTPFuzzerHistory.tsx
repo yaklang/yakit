@@ -16,10 +16,11 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {DeleteFuzzerConfigRequest, apiDeleteFuzzerConfig} from "../layout/mainOperatorContent/utils"
 
 export interface HTTPFuzzerHistorySelectorProp {
     currentSelectId?: number
-    onSelect: (i: number, page: number,showAll:boolean) => any
+    onSelect: (i: number, page: number, showAll: boolean) => any
     onDeleteAllCallback: () => void
     fuzzerTabIndex: string
 }
@@ -71,10 +72,24 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             .invoke("DeleteHistoryHTTPFuzzerTask", removeParams)
             .then(() => {
                 info("Delete History")
+                deleteFuzzerConfig()
                 reload(1, limit)
                 props.onDeleteAllCallback()
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
+    })
+    /**删除 对应的配置缓存历史数据 */
+    const deleteFuzzerConfig = useMemoizedFn(() => {
+        let deleteFuzzerConfigRequest: DeleteFuzzerConfigRequest = {
+            PageId: [],
+            DeleteAll: false
+        }
+        if (showAll) {
+            deleteFuzzerConfigRequest.DeleteAll = true
+        } else {
+            deleteFuzzerConfigRequest.PageId = [fuzzerTabIndex]
+        }
+        apiDeleteFuzzerConfig(deleteFuzzerConfigRequest)
     })
 
     const reload = useMemoizedFn((pageInt: number, limitInt: number, first?: boolean) => {
@@ -120,7 +135,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                         }}
                     />
                     <YakitPopconfirm
-                        title={"确定删除吗？"}
+                        title={"删除数据会将数据包内容与缓存一起删除，且不可恢复，确定删除吗?"}
                         onConfirm={() => {
                             deleteAll()
                         }}
@@ -223,7 +238,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                                     onClick={(e) => {
                                         e.preventDefault()
                                         const page = (paging.Page - 1) * 10 + index + 1
-                                        props.onSelect(i.Id, page,showAll)
+                                        props.onSelect(i.Id, page, showAll)
                                     }}
                                     bordered={false}
                                 >

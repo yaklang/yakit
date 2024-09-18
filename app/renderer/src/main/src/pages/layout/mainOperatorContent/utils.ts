@@ -9,6 +9,7 @@ export interface SaveFuzzerConfigRequest {
 }
 
 export interface QueryFuzzerConfigRequest {
+    PageId?: string[]
     Pagination: Paging
 }
 
@@ -53,6 +54,22 @@ export const apiQueryFuzzerConfig: APIFunc<QueryFuzzerConfigRequest, QueryFuzzer
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询fuzzer历史失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface DeleteFuzzerConfigRequest {
+    PageId: string[]
+    DeleteAll: boolean
+}
+export const apiDeleteFuzzerConfig: APIFunc<DeleteFuzzerConfigRequest, DbOperateMessage> = (params, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteFuzzerConfig", params)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "删除fuzzer历史失败:" + e)
                 reject(e)
             })
     })
