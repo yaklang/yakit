@@ -221,11 +221,10 @@
                 align-items: center;
                 height: 36px;
                 font-size: 12px;
-                .header-title {
-                    color: var(--yakit-body-text-color);
-                }
                 .switch-title {
                     color: var(--yakit-header-color);
+                }
+                .message-title {
                 }
             }
 
@@ -277,6 +276,12 @@
                         }
                     }
                 }
+            }
+
+            .notice-info-wrapper {
+                padding: 12px 8px 16px;
+                max-height: 80vh;
+                overflow: auto;
             }
 
             .notice-footer {

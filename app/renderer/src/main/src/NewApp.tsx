@@ -295,6 +295,17 @@ function NewApp() {
         }
     })
 
+    useEffect(()=>{
+        // 登录账号时 连接 WebSocket 服务器
+        if(userInfo.isLogin){
+            ipcRenderer.invoke("socket-start")
+        }
+        // 退出账号时 关闭 WebSocket 服务器
+        else{
+            ipcRenderer.invoke("socket-close")
+        }
+    },[userInfo.isLogin])
+
     if (!agreed) {
         return (
             <>
