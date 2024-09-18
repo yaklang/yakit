@@ -524,18 +524,15 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 onIsHasParams(true)
                             }
                         } else {
-                            onIsHasParams(true)
+                            if (noParamsCheckList.length) {
+                                onIsHasParams(false)
+                            } else {
+                                onIsHasParams(true)
+                            }
                         }
-                    } else {
-                        if (noParamsCheckList.length) {
-                            onIsHasParams(false)
-                        } else {
-                            onIsHasParams(true)
-                        }
-                    }
+                    })
                 })
-            })
-        }
+            }
     }, [status, noParamsCheckList])
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
