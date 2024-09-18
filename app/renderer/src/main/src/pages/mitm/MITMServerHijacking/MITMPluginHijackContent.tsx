@@ -152,7 +152,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     // 是否允许获取默认勾选值
     const isDefaultCheck = useRef<boolean>(false)
-    
+
     const compareHasParamsCheckList = useCampare(hasParamsCheckList)
     useEffect(() => {
         if (hasParamsCheckList.includes(tempShowPluginHistory)) {
@@ -537,7 +537,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     Tag: tags,
                                     Type: "mitm,port-scan",
                                     Keyword: searchKeyword,
-                                    Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                                    Pagination: {
+                                        Limit: 20,
+                                        Order: "",
+                                        Page: 1,
+                                        OrderBy: "",
+                                        RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
+                                    },
                                     Group: {UnSetGroup: false, Group: groupNames},
                                     IsMITMParamPlugins: isHasParams ? 1 : 2,
                                     IncludedScriptNames: isHasParams

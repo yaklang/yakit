@@ -167,8 +167,9 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             Pagination: {
                 Limit: 20,
                 Page: 1,
-                OrderBy: "updated_at",
-                Order: "desc"
+                OrderBy: "",
+                Order: "",
+                RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
             },
             Keyword: searchKeyword,
             IncludedScriptNames: [],
@@ -243,7 +244,13 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                         Tag: tags,
                         Type: isHasParams ? "mitm" : "mitm,port-scan",
                         Keyword: searchKeyword,
-                        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"},
+                        Pagination: {
+                            Limit: 20,
+                            Order: "",
+                            Page: 1,
+                            OrderBy: "",
+                            RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
+                        },
                         Group: {UnSetGroup: false, Group: groupNames},
                         IsMITMParamPlugins: isHasParams ? 1 : 2
                     }}

@@ -23,6 +23,7 @@ export interface PaginationSchema {
     Limit: number
     OrderBy: string
     Order: string
+    RawOrder?: string
 }
 
 export type ExecHistoryRecordResponse = QueryGeneralResponse<ExecHistoryRecord>
