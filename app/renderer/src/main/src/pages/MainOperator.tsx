@@ -49,6 +49,7 @@ import "./main.scss"
 import "./GlobalClass.scss"
 import { setUpSyntaxFlowMonaco } from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import { MessageCenterModal } from "@/components/MessageCenter/MessageCenter"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -396,8 +397,22 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const [chatShow, setChatShow] = useState<boolean>(false)
 
     const onChatCS = useMemoizedFn(() => {
+        setMessageCenterShow(false)
         setChatShow(true)
     })
+
+    /** 消息中心 相关逻辑 */
+    const [messageCenterShow, setMessageCenterShow] = useState<boolean>(false)
+    const openAllMessageNotificationFun = useMemoizedFn(()=>{
+        setChatShow(false)
+        setMessageCenterShow(true)
+    })
+    useEffect(()=>{
+        emiter.on("openAllMessageNotification", openAllMessageNotificationFun)
+        return () => {
+            emiter.off("openAllMessageNotification", openAllMessageNotificationFun)
+        }
+    },[])
 
     /** 通知软件打开页面 */
     const openMenu = (info: RouteToPageProps) => {
@@ -601,6 +616,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             <img src={yakitCattle} />
                         </div>
                     )}
+                    
+                    <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow}/>
                 </Layout>
             </WaterMark>
             {controlShow && <ControlOperation controlName={controlName} />}

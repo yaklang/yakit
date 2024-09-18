@@ -12,4 +12,6 @@ export type GlobalEventProps = {
     onRefRisksRead: string
     /**系统代理已刷新 */
     onRefConfigSystemProxy: string
+    /**消息通知查看全部 */
+    openAllMessageNotification?: string
 }
