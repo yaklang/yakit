@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn, useVirtualList} from "ahooks"
+import {useGetState, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./MessageCenter.module.scss"
@@ -81,10 +81,10 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
 export interface MessageCenterVirtualListProps {}
 
 export const MessageCenterVirtualList: React.FC<MessageCenterVirtualListProps> = (props) => {
-    const containerRef = useRef(null)
-    const wrapperRef = useRef(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const wrapperRef = useRef<HTMLDivElement>(null)
     const [vlistHeigth, setVListHeight] = useState(600)
-    const originalList = useMemo(() => Array.from(Array(99999).keys()), [])
+    const originalList = useMemo(() => Array.from(Array(20).keys()), [])
 
     const [list, scrollTo] = useVirtualList(originalList, {
         containerTarget: containerRef,
@@ -92,6 +92,48 @@ export const MessageCenterVirtualList: React.FC<MessageCenterVirtualListProps> =
         itemHeight: 66,
         overscan: 10
     })
+
+    const isVerticalScrollRef = useRef<boolean>(false)
+    const size = useSize(wrapperRef)
+
+    const handleScroll = useThrottleFn(
+        () => {
+            if (containerRef.current) {
+                const {scrollTop, scrollHeight, clientHeight} = containerRef.current
+                const isVerticalScroll = scrollHeight > clientHeight
+                // 校验是否有垂直滚动条
+                isVerticalScrollRef.current = isVerticalScroll
+                const bottom = scrollHeight - clientHeight - scrollTop
+                if (isVerticalScroll && bottom <= 20) {
+                    console.log("滚轮到底")
+                }
+                if (isVerticalScroll && scrollTop < 10) {
+                    // 注：滚轮到顶部时 监听是否有新增缓存数据(此数据socket通知) 有则拼接上
+                    console.log("滚轮到顶")
+                }
+            }
+        },
+        {wait: 200, leading: false}
+    ).run
+
+    useEffect(() => {
+        const container = containerRef.current
+        if (container) {
+            container.addEventListener("scroll", handleScroll)
+        }
+        return () => {
+            if (container) {
+                container.removeEventListener("scroll", handleScroll)
+            }
+        }
+    }, [originalList])
+
+    useEffect(() => {
+        handleScroll()
+    }, [size?.width])
+
+    // 如果没有滚轮 新数据进来时直接头部插入
+
     return (
         <>
             <ReactResizeDetector
@@ -125,6 +167,13 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     const {visible, setVisible} = props
     const [width, setWidth] = useState<number>(481)
 
+    const onSetWidth = useThrottleFn(
+        (value) => {
+            setWidth(value)
+        },
+        {wait: 50, leading: false}
+    ).run
+    
     return (
         <Resizable
             style={{position: "absolute"}}
@@ -145,14 +194,19 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                 topLeft: false
             }}
             onResize={(event, direction, elementRef, delta) => {
-                setWidth(elementRef.clientWidth)
+                onSetWidth(elementRef.clientWidth)
             }}
         >
             <div className={styles["message-center-layout"]}>
                 <div className={styles["message-header"]}>
                     <div className={styles["title"]}>消息中心</div>
                     <div className={styles["extra"]}>
-                        <YakitButton size="small" type='text2' icon={<RemoveIcon />} onClick={() => setVisible(false)} />
+                        <YakitButton
+                            size='small'
+                            type='text2'
+                            icon={<RemoveIcon />}
+                            onClick={() => setVisible(false)}
+                        />
                     </div>
                 </div>
                 <YakitTabs
