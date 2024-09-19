@@ -38,7 +38,6 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     info("选中的文件名为空")
                     return
                 }
-
                 const index = filename.lastIndexOf(".")
                 if (mode === "file:dir") {
                     if (index !== -1) {

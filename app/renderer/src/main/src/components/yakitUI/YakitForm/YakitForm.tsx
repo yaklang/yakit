@@ -23,7 +23,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
 import {YakitRadioButtons} from "../YakitRadioButtons/YakitRadioButtons"
-import { QuestionMarkCircleIcon } from "@/assets/newIcon"
+import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 
 const {Dragger} = Upload
 
@@ -108,6 +108,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         [fileName],
         {wait: 300}
     )
+
     /**文件处理 */
     const getContent = useMemoizedFn((path: string, fileType: string) => {
         if (!path) {
@@ -115,7 +116,6 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             return
         }
         const index = path.lastIndexOf(".")
-
         if (fileExtensionIsExist) {
             if (selectType === "file" && index === -1) {
                 failed("请输入正确的路径")
@@ -127,7 +127,6 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                 return
             }
         }
-
         // 设置名字
         if (setFileName) {
             setFileName(path)
@@ -936,12 +935,13 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                             content={
                                 <div onClick={(e) => e.stopPropagation()} style={{padding: "0 8px"}}>
                                     <div className={styles["content"]}>
-                                        <div className={styles["text"]}>读取方式
-                                            <Tooltip title="为避免读取大文件造成前端渲染失败，读取文件内容限制为10M，超过10M的文件请选择路径">
-                                              <QuestionMarkCircleIcon />  
+                                        <div className={styles["text"]}>
+                                            读取方式
+                                            <Tooltip title='为避免读取大文件造成前端渲染失败，读取文件内容限制为10M，超过10M的文件请选择路径'>
+                                                <QuestionMarkCircleIcon />
                                             </Tooltip>
-                                            
-                                            ：</div>
+                                            ：
+                                        </div>
                                         <YakitRadioButtons
                                             size='small'
                                             value={textAreaType}
