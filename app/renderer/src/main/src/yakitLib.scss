@@ -16,6 +16,7 @@ html {
 // 行数可通过设置 变量 --yakit-ellipsis-row 控制
 .yakit-content-multiLine-ellipsis {
     display: -webkit-box;
+    line-clamp: var(--yakit-ellipsis-row);
     -webkit-line-clamp: var(--yakit-ellipsis-row);
     -webkit-box-orient: vertical;
 }

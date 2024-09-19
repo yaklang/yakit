@@ -123,11 +123,10 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
-        NetWorkApi<API.DeleteResource, API.ActionSucceeded>({
-            method: "post",
-            url: "delete/resource",
-            data: {
-                file_type: "img",
+        NetWorkApi<API.DeleteOssResource, API.ActionSucceeded>({
+            method: "delete",
+            url: "oss/resource",
+            params: {
                 file_name: [imgName]
             }
         })
@@ -145,7 +144,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
     // 修改头像
     const setAvatar = useMemoizedFn(async (file) => {
         await ipcRenderer
-            .invoke("upload-img", {path: file.path, type: file.type})
+            .invoke("upload-img", {path: file.path, type: "headImg"})
             .then((res) => {
                 let imgUrl: string = res.data
                 NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
