@@ -86,6 +86,8 @@ export enum RemoteGV {
     WebFuzzerOneResEditorBeautifyRender = "webFuzzer_one_res_editor_beautify_render",
     /**@name 专项漏洞关键词搜索缓存 */
     PocPluginKeywords = "poc-plugin-keywords",
+    /**@name 代码扫描关键词搜索缓存 */
+    CodeScanKeywords = "code-scan-keywords",
     /**@name MITM 用户数据是否保存 */
     MITMUserDataSave = "mitm_user_data_save",
     /**@name WebFuzzer高级配置内容的显/隐 */

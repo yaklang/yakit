@@ -1,0 +1,55 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+%divider-style {
+    width: 1px;
+    height: 12px;
+    background-color: #eaecf3;
+}
+@mixin execute-title($text) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
+    .#{$text}-executor-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow: hidden;
+
+        .#{$text}-executor-title-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #31343f;
+            line-height: 16px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+    }
+    .#{$text}-executor-btn {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .#{$text}-executor-body {
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        padding: 0 12px 16px;
+        height: 100%;
+    }
+    @media screen and (max-width: 1200px) {
+        .#{$text}-executor-btn {
+            gap: 8px;
+        }
+    }
+}

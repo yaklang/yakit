@@ -1,0 +1,128 @@
+@use "./securityTool.scss" as securityTool;
+.yakrunner-codec-scan {
+    @extend %display-flex-center;
+    flex: 1 1;
+    height: 100%;
+    overflow: hidden;
+    .left-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        height: 100%;
+        overflow: hidden;
+        border-right: 1px solid #eaecf3;
+        padding: 12px 8px;
+        width: 33.33333%;
+        max-width: 432px;
+        min-width: 320px;
+        .left-header-search {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            padding: 0 4px;
+            .header-type-wrapper {
+                @extend %display-flex-center;
+                gap: 8px;
+                .header-text {
+                    color: var(--yakit-header-color);
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 16px; /* 133.333% */
+                }
+            }
+        }
+    }
+    .left-wrapper-hidden {
+        display: none;
+    }
+    .midden-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        width: 300px;
+        border-right: 1px solid var(--yakit-border-color);
+        padding: 12px 8px;
+        gap: 8px;
+        flex-shrink: 0;
+        .midden-heard {
+            @extend %display-flex-center;
+            gap: 4px;
+            height: 24px;
+            .heard-right {
+                @extend %display-flex-center;
+                justify-content: space-between;
+                flex: 1;
+                .heard-tip {
+                    color: var(--yakit-helper-text-color);
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 16px; /* 133.333% */
+                }
+                .heard-number {
+                    color: var(--yakit-primary-5);
+                    margin-left: 4px;
+                }
+            }
+        }
+        .plugin-list-by-group-wrapper {
+            display: flex;
+            flex: 1;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .plugin-list-by-group-wrapper-hidden {
+            display: none;
+        }
+    }
+}
+
+.code-scan-group-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    .filter-wrapper {
+        @extend %display-column-center;
+        gap: 8px;
+        .header-search {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            padding: 0 4px;
+        }
+        .filter-body {
+            @extend %display-flex-center;
+            justify-content: space-between;
+            padding: 0 4px;
+            .filter-body-left {
+                @extend %display-flex-center;
+                .count-num {
+                    color: var(--color-gray-text-02, #b4bbca);
+                    font-size: 12px;
+                    line-height: 16px;
+                    .num-style {
+                        color: #f28b44;
+                        margin-left: 4px;
+                    }
+                }
+                .count-num:first-child {
+                    margin-left: 4px;
+                }
+            }
+            .filter-body-right {
+                @extend %display-flex-center;
+            }
+        }
+    }
+}
+
+.code-scan-execute-wrapper{
+    @include securityTool.execute-title("code-scan");
+    .code-scan-executor-body {
+        padding: 0 12px 16px;
+    }
+}
+
+.code-scan-by-group-list-wrapper{
+    width: 100%;
+}
