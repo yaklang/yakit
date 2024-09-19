@@ -117,15 +117,16 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             return
         }
         const index = path.lastIndexOf(".")
-
-        if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-            failed("请输入正确的路径")
-            return
-        }
-
-        if (props.accept && !props.accept.split(",").includes(fileType)) {
-            failed(`仅支持${props.accept}格式的文件`)
-            return
+        if (fileExtensionIsExist) {
+            if (selectType === "file" && index === -1) {
+                failed("请输入正确的路径")
+                return
+            }
+    
+            if (props.accept && !props.accept.split(",").includes(fileType)) {
+                failed(`仅支持${props.accept}格式的文件`)
+                return
+            }
         }
         // 设置名字
         if (setFileName) {
