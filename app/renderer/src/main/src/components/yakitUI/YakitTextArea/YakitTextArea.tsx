@@ -166,7 +166,7 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
     const uploadFiles = (file) => {
         setFilesLoading(true)
         ipcRenderer
-            .invoke("upload-img", {path: file.path, type: file.type})
+            .invoke("upload-img", {path: file.path, type: "img"})
             .then((res) => {
                 setFiles && setFiles(files.concat(res.data))
             })
