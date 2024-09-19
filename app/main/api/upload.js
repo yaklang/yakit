@@ -7,13 +7,14 @@ const crypto = require("crypto")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("upload-img", async (event, params) => {
-        const {path, type} = params
+        const {path, type, uuid} = params
         // 创建数据流
         // console.log('time1',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
         const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
         const formData = new FormData()
         formData.append("file_name", readerStream)
         formData.append("type", type)
+        if (uuid) formData.append("uuid", uuid)
         const res = httpApi(
             "post",
             "upload/img",
@@ -214,7 +215,7 @@ module.exports = (win, getClient) => {
 
     // 上传 base64 图片
     ipcMain.handle("upload-base64-img", async (event, params) => {
-        const {base64, type} = params
+        const {base64, type, uuid} = params
 
         // 去掉 Base64 字符串前缀
         const data = base64.replace(/^data:image\/\w+;base64,/, "")
@@ -224,6 +225,7 @@ module.exports = (win, getClient) => {
         const formData = new FormData()
         formData.append("file_name", binaryData)
         formData.append("type", type)
+        if (uuid) formData.append("uuid", uuid)
         const res = await httpApi(
             "post",
             "upload/img",
