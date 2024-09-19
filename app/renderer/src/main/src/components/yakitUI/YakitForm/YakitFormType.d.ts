@@ -18,13 +18,11 @@ export interface FileDraggerProps {
     onDrop?: (e: React.DragEvent<HTMLDivElement>) => void
 }
 export interface YakitFormDraggerProps extends YakitDraggerProps {
-    showFailedFlag?: boolean
     formItemClassName?: string
     formItemProps?: FormItemProps
 }
 /**拖拽/点击文件,回显文件路径组件props */
 export interface YakitDraggerProps extends FileDraggerProps {
-    showFailedFlag?: boolean
     size?: YakitSizeType
     inputProps?: InputProps
     /**@description selectType为file,该属性才有效*/

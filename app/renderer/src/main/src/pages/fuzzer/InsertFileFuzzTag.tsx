@@ -39,12 +39,7 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     return
                 }
                 const index = filename.lastIndexOf(".")
-                if (mode !== "file:dir") {
-                    if (index === -1) {
-                        failed("请输入正确的路径")
-                        return
-                    }
-                } else {
+                if (mode === "file:dir") {
                     if (index !== -1) {
                         failed("请输入正确的路径")
                         return
@@ -99,7 +94,7 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                 selectType={mode !== "file:dir" ? "file" : "folder"}
                 isShowPathNumber={false}
                 multiple={false}
-                showFailedFlag={false}
+                fileExtensionIsExist={false}
                 renderType='autoComplete'
                 onChange={(val) => {
                     setFilename(val)

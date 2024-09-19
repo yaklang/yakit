@@ -97,7 +97,6 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         disabled,
         isShowPathNumber = true,
         multiple = true,
-        showFailedFlag = true,
         fileExtensionIsExist = true
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -166,7 +165,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -190,7 +189,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -220,7 +219,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                 e.stopPropagation()
                                 const index = name.lastIndexOf(".")
                                 if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                    showFailedFlag && failed("请输入正确的路径")
+                                    failed("请输入正确的路径")
                                     return
                                 }
                                 if (fileNumber > 1 && multiple === false) {
@@ -244,7 +243,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -275,7 +274,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             e.stopPropagation()
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
@@ -299,7 +298,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             if (!name) return
                             const index = name.lastIndexOf(".")
                             if (selectType === "file" && index === -1 && fileExtensionIsExist) {
-                                showFailedFlag && failed("请输入正确的路径")
+                                failed("请输入正确的路径")
                                 return
                             }
                             if (fileNumber > 1 && multiple === false) {
