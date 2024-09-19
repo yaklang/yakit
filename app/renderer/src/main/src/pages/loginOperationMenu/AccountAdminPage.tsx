@@ -6,7 +6,6 @@ import {
     Input,
     Modal,
     Form,
-    Popconfirm,
     Tag,
     Avatar,
     Cascader,
@@ -32,6 +31,7 @@ import {useStore} from "@/store"
 import { unReadable } from "../dynamicControl/DynamicControl"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 const {ipcRenderer} = window.require("electron")
 export interface ShowUserInfoProps extends API.NewUrmResponse {
     onClose: () => void
@@ -938,7 +938,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                                                             className='department-item-operation-icon'
                                                         />
                                                     </Popover>
-                                                    <Popconfirm
+                                                    <YakitPopconfirm
                                                         title={"确定删除此项吗？不可恢复"}
                                                         onConfirm={(e) => {
                                                             onRemove(nodeData.key, nodeData.pid)
@@ -952,7 +952,7 @@ const OrganizationAdminPage: React.FC<OrganizationAdminPageProps> = (props) => {
                                                             }}
                                                             className='department-item-operation-icon'
                                                         />
-                                                    </Popconfirm>
+                                                    </YakitPopconfirm>
                                                     {nodeData.isShowAddBtn && (
                                                         <PlusOutlined
                                                             className='department-item-operation-add-icon'
@@ -1292,11 +1292,11 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                     >
                         编辑
                     </Button>
-                    <Popconfirm title={"确定要重置该用户密码吗？"} onConfirm={() => onReset(i.uid, i.user_name)}>
+                    <YakitPopconfirm title={"确定要重置该用户密码吗？"} onConfirm={() => onReset(i.uid, i.user_name)}>
                         <Button size='small' type="link">
                             重置密码
                         </Button>
-                    </Popconfirm>
+                    </YakitPopconfirm>
                     <Button
                         size='small'
                         type="link"
@@ -1304,7 +1304,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                     >
                         复制远程连接
                     </Button>
-                    <Popconfirm
+                    <YakitPopconfirm
                         title={"确定删除该用户吗？"}
                         onConfirm={() => {
                             onRemove([i.uid], i.department_id)
@@ -1314,7 +1314,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                         <Button size={"small"} danger={true} type="link">
                             删除
                         </Button>
-                    </Popconfirm>
+                    </YakitPopconfirm>
                 </Space>
             )
         }
@@ -1346,7 +1346,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                 <div className='operation'>
                     <Space>
                         {!!selectedRowKeys.length ? (
-                            <Popconfirm
+                            <YakitPopconfirm
                                 title={"确定删除选择的用户吗？不可恢复"}
                                 onConfirm={() => {
                                     onRemove(selectedRowKeys)
@@ -1355,7 +1355,7 @@ const AccountAdminPage: React.FC<AccountAdminPageProps> = (props) => {
                                 <Button type='primary' htmlType='submit' size='small'>
                                     批量删除
                                 </Button>
-                            </Popconfirm>
+                            </YakitPopconfirm>
                         ) : (
                             <Button type='primary' size='small' disabled={true}>
                                 批量删除

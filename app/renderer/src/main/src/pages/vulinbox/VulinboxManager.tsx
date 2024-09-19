@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
 import {failed, info, success, yakitNotify} from "@/utils/notification";
-import {Form, Popconfirm, Progress, Space, Tag} from "antd";
+import {Form, Progress, Space, Tag} from "antd";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
 import {randomString} from "@/utils/randomUtil";
@@ -17,6 +17,7 @@ import styles from "@/pages/screenRecorder/ScreenRecorderPage.module.scss";
 import {ChromeFrameSvgIcon, ChromeSvgIcon} from "@/assets/newIcon";
 import {CheckOutlined} from "@ant-design/icons";
 import {openExternalWebsite} from "@/utils/openWebsite";
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 
 export interface VulinboxManagerProp {
 
@@ -84,13 +85,13 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 </YakitButton>}
             </> : <Tag color={"red"}>未安装</Tag>}
             {available && (
-                started ? <Popconfirm title={"确定要关闭靶场进程吗？"} onConfirm={() => {
+                started ? <YakitPopconfirm title={"确定要关闭靶场进程吗？"} onConfirm={() => {
                         ipcRenderer.invoke("cancel-StartVulinbox", token).then(() => {
                             setStarted(false)
                         })
                     }}>
                         <YakitButton colors="danger">关闭靶场</YakitButton>
-                    </Popconfirm> :
+                    </YakitPopconfirm> :
                     <YakitButton type={"primary"} onClick={() => {
                         const m = showYakitModal({
                             title: "启动靶场参数", width: "50%",
@@ -117,7 +118,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                     }}>启动靶场</YakitButton>
             )}
         </Space>} bodyStyle={{padding: 0}} extra={(
-            <Popconfirm title={"将从互联网下载靶场程序并安装"} onConfirm={() => {
+            <YakitPopconfirm title={"将从互联网下载靶场程序并安装"} onConfirm={() => {
                 const m = showYakitModal({
                     title: "安装靶场",
                     width: "50%",
@@ -138,7 +139,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 <YakitButton type={"outline1"}>
                     安装靶场
                 </YakitButton>
-            </Popconfirm>
+            </YakitPopconfirm>
 
         )}
         >

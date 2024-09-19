@@ -5,6 +5,7 @@ import {InputItem} from "@/utils/inputUtil"
 import CopyToClipboard from "react-copy-to-clipboard"
 import "./LicensePage.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 const {ipcRenderer} = window.require("electron")
 const {Item} = Form
 
@@ -96,9 +97,9 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                                         }
                                     }}
                                 >
-                                    <Button type={"link"} size={"small"}>
+                                    <YakitButton type={"text"} size={"small"}>
                                         点此复制该 License 请求码
-                                    </Button>
+                                    </YakitButton>
                                 </CopyToClipboard>
                             </Item>
                             <Divider />
@@ -110,9 +111,9 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                                 value={paramsObj.licenseActivation}
                             />
                             <Item label={" "} colon={false}>
-                                <Button type={"primary"} htmlType={"submit"} style={{width: "100%", height: 60}}>
+                                <YakitButton type={"primary"} htmlType={"submit"} style={{width: "100%", height: 60}}>
                                     点此使用 License 激活您的产品
-                                </Button>
+                                </YakitButton>
                             </Item>
                         </Form>
                     </Col>

@@ -203,3 +203,11 @@
         }
     }
 }
+
+.detail-header-info {
+    :global {
+        .ant-descriptions-item-content {
+            max-width: 90px;
+        }
+    }
+}

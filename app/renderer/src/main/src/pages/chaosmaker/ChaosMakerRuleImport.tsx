@@ -1,11 +1,12 @@
 import React, {useState} from "react";
-import {Form, Popconfirm, Space} from "antd";
+import {Form, Space} from "antd";
 import {SelectOne} from "@/utils/inputUtil";
 import {YakEditor} from "@/utils/editors";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {useMemoizedFn} from "ahooks";
 import {failed, info} from "@/utils/notification";
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 
 export interface ChaosMakerRuleImportProp {
     onFinished?: ()=>any
@@ -39,14 +40,14 @@ export const ChaosMakerRuleImport: React.FC<ChaosMakerRuleImportProp> = (props) 
 
     return <AutoCard size={"small"} bordered={true} title={"导入流量规则"} extra={(
         <Space>
-            <Popconfirm
+            <YakitPopconfirm
                 title={"你确认要导入这些规则吗？"}
                 onConfirm={()=>{
                     onSubmit()
                 }}
             >
                 <YakitButton>导入流量规则</YakitButton>
-            </Popconfirm>
+            </YakitPopconfirm>
         </Space>
     )}>
         <Form

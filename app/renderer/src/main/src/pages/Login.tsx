@@ -9,6 +9,8 @@ import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivat
 import {showModal} from "../utils/showModal"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {apiDownloadPluginMine} from "./plugins/utils"
+import { YakitModalConfirm } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
 
 export interface LoginProp {
@@ -68,7 +70,8 @@ const Login: React.FC<LoginProp> = (props) => {
         ipcRenderer.on("fetch-signin-data", (e, res: any) => {
             const {ok, info} = res
             if (ok) {
-                Modal.confirm({
+                const m = YakitModalConfirm({
+                    type: "white",
                     title: "数据同步",
                     icon: <ExclamationCircleOutlined />,
                     content: "是否选择将远端的数据同步本地",
@@ -76,10 +79,12 @@ const Login: React.FC<LoginProp> = (props) => {
                         apiDownloadPluginMine()
                         setTimeout(() => setLoading(false), 200)
                         props.onCancel()
+                        m.destroy()
                     },
                     onCancel() {
                         setTimeout(() => setLoading(false), 200)
                         props.onCancel()
+                        m.destroy()
                     }
                 })
             } else {
@@ -102,7 +107,7 @@ const Login: React.FC<LoginProp> = (props) => {
             width={409}
             style={{top: "25%"}}
         >
-            <AutoSpin spinning={loading}>
+            <YakitSpin spinning={loading}>
                 <div className='login-type-body'>
                     <h2 className='login-text'>登录</h2>
                     <div className='login-icon-body'>
@@ -130,7 +135,7 @@ const Login: React.FC<LoginProp> = (props) => {
                         </div> */}
                     </div>
                 </div>
-            </AutoSpin>
+            </YakitSpin>
         </Modal>
     )
 }

@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Empty, Form, Popconfirm, Space, Steps} from "antd";
+import {Empty, Form, Space, Steps} from "antd";
 import {randomString} from "@/utils/randomUtil";
 import {ExecuteChaosMakerRuleRequest} from "@/pages/chaosmaker/ChaosMakerOperators";
 import {InputInteger, SelectOne} from "@/utils/inputUtil";
@@ -10,6 +10,7 @@ import {AutoCard} from "@/components/AutoCard";
 import {PluginResultUI, StatusCardProps} from "@/pages/yakitStore/viewers/base";
 import {StatisticCard} from "@ant-design/pro-card";
 import {StatusCardViewer} from "@/pages/mitm/MITMYakScriptLoader";
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 
 export interface ChaosMakerRunningStepsProp {
     params?: ExecuteChaosMakerRuleRequest
@@ -63,7 +64,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                 stepIndex={1} key={1} title={"进行模拟攻击"} description={(
                 <>
                     {
-                        step === 1 && <Popconfirm
+                        step === 1 && <YakitPopconfirm
                             title={"确定要停止当前进程？"}
                             onConfirm={() => {
                                 ipcRenderer.invoke("cancel-ExecuteChaosMakerRule", token)
@@ -74,7 +75,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                             }}>
                                 停止模拟
                             </YakitButton>
-                        </Popconfirm>
+                        </YakitPopconfirm>
 
                     }
                 </>

@@ -37,6 +37,7 @@ export interface YakitLogViewersProp {
 }
 
 export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
+    console.log(123, props.data);
     return (
         <Timeline pending={!props.finished} reverse={true}>
             {(props.data || []).map((e) => {

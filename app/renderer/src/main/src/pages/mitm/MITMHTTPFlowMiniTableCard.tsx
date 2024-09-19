@@ -1,8 +1,9 @@
 import React from "react";
-import {Button, Card, Col, List, Popconfirm, Row, Space} from "antd";
+import {Button, Card, Col, List, Row, Space} from "antd";
 import {genDefaultPagination, YakScriptHookItem, YakScriptHooks} from "../invoker/schema";
 import {HTTPFlowMiniTable} from "../../components/HTTPFlowMiniTable";
 import { MITMPluginListProp } from "./MITMServerHijacking/MITMPluginLocalList";
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 
 
 export interface MITMPluginCardProp extends MITMPluginListProp {
@@ -54,7 +55,7 @@ export const YakScriptHooksViewer: React.FC<YakScriptHooksViewerProp> = (props) 
                         </Col>
                         <Col span={8}>
                             <div style={{width: "100%", textAlign: "right"}}>
-                                <Popconfirm
+                                <YakitPopconfirm
                                     title={"确定要移除该 Hook 吗？"}
                                     onConfirm={() => {
                                         ipcRenderer.invoke("mitm-remove-hook", {
@@ -67,7 +68,7 @@ export const YakScriptHooksViewer: React.FC<YakScriptHooksViewerProp> = (props) 
                                         danger={true} size={"small"}
                                         type={"link"}
                                     >移除Hook</Button>
-                                </Popconfirm>
+                                </YakitPopconfirm>
                             </div>
                         </Col>
 

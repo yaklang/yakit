@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from "react";
 import {showModal} from "@/utils/showModal";
-import {Alert, Button, Form, Popconfirm, Space, Spin, Table, Tag, Tooltip} from "antd";
+import {Alert, Button, Form, Space, Spin, Table, Tag, Tooltip} from "antd";
 import {useMemoizedFn} from "ahooks";
 import {CopyableField, InputItem} from "@/utils/inputUtil";
 import {PlusOutlined, QuestionOutlined, ReloadOutlined} from "@ant-design/icons";
 import {formatTimestamp} from "@/utils/timeUtil";
 import {info} from "@/utils/notification";
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -141,7 +142,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                         >
                             修改
                         </Button>
-                        <Popconfirm title={"删除本环境变量"} onConfirm={() => {
+                        <YakitPopconfirm title={"删除本环境变量"} onConfirm={() => {
                             ipcRenderer.invoke("DelKey", {Key: key.Key}).then(() => {
                                 info("删除成功")
                                 updateKeys()
@@ -150,7 +151,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                             <Button
                                 size={"small"} danger={true}
                             >删除</Button>
-                        </Popconfirm>
+                        </YakitPopconfirm>
                     </Space>
                 }
             },

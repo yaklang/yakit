@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useRef} from "react"
-import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popconfirm, Popover, Checkbox} from "antd"
+import {Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popover, Checkbox} from "antd"
 import {AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest} from "../../../components/WebsiteTree"
 import {HTTPFlowMiniTable} from "../../../components/HTTPFlowMiniTable"
 import {genDefaultPagination, QueryGeneralResponse} from "../../invoker/schema"
@@ -15,6 +15,7 @@ import {ChevronDownIcon} from "@/assets/newIcon"
 import "./WebsiteTreeStyle.css"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 export interface WebsiteTreeViewerProp {
     pageMode?: boolean
@@ -301,14 +302,14 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                     content={
                                                         <Menu className={style["http-history-table-drop-down-batch"]}>
                                                             <Menu.Item>
-                                                                <Popconfirm
+                                                                <YakitPopconfirm
                                                                     title={"确定删除选择的URL吗？不可恢复"}
                                                                     onConfirm={() => {
                                                                         delManyReord()
                                                                     }}
                                                                 >
                                                                     批量删除
-                                                                </Popconfirm>
+                                                                </YakitPopconfirm>
                                                             </Menu.Item>
                                                             <Menu.Item>
                                                                 <ExportExcel

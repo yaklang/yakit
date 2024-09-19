@@ -108,6 +108,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                             () => m.destroy(),
                                             props.downstreamProxyStr || ""
                                         ),
+                                        bodyStyle: {paddingTop: 5}
                                     })
                                 }}
                             >详情</Button>
@@ -174,7 +175,8 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                             findHTTPFlowById(i),
                                             () => m.destroy(),
                                             props.downstreamProxyStr || ""
-                                        )
+                                        ),
+                                        bodyStyle: {paddingTop: 5}
                                     })
                                 }}
                             >详情</Button>

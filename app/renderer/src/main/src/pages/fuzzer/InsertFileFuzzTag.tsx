@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from "react"
-import {showModal} from "../../utils/showModal"
 import {Button, Form} from "antd"
 import {failed, info} from "../../utils/notification"
 import {InputItem, SelectOne} from "../../utils/inputUtil"
@@ -122,6 +121,7 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
     const [mode, setMode] = useState<"file" | "file:line" | "file:dir">("file:line")
     return (
         <Form
+            style={{paddingTop: 20}}
             labelCol={{span: 5}}
             wrapperCol={{span: 14}}
             onSubmitCapture={(e) => {
@@ -146,23 +146,31 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
                     })
             }}
         >
-            <InputItem label={"文本"} textarea={true} textareaRow={8} value={content} setValue={setContent} />
-            <SelectOne
-                label={" "}
-                colon={false}
-                data={[
-                    {value: "file", text: "文件内容"},
-                    {value: "file:line", text: "按行读取文件"}
-                ]}
-                value={mode}
-                setValue={setMode}
-            />
-            {/*<InputItem label={"临时文件路径"} value={filename} setValue={setFilename} disable={true}/>*/}
             <Form.Item colon={false} label={" "}>
-                <Button type='primary' htmlType='submit'>
+                <YakitRadioButtons
+                    buttonStyle='solid'
+                    options={[
+                        {
+                            value: "file",
+                            label: "文件内容"
+                        },
+                        {
+                            value: "file:line",
+                            label: "按行读取文件"
+                        }
+                    ]}
+                    value={mode}
+                    onChange={(e) => {
+                        setMode(e.target.value)
+                    }}
+                />
+            </Form.Item>
+            <InputItem label={"文本"} textarea={true} textareaRow={8} value={content} setValue={setContent} />
+            <Form.Item colon={false} label={" "} style={{textAlign: 'right'}}>
+                <YakitButton type='primary' htmlType='submit' size="large">
                     {" "}
                     确定插入标签{" "}
-                </Button>
+                </YakitButton>
             </Form.Item>
         </Form>
     )
@@ -188,9 +196,9 @@ export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: Mo
 }
 
 export const insertTemporaryFileFuzzTag = (onInsert: (i: string) => any) => {
-    let m = showModal({
+    let m = showYakitModal({
         title: "复制你想要作为字典的文本",
-        width: "800px",
+        width: "40%",
         content: (
             <>
                 <InsertTextToFuzzTag
@@ -200,6 +208,7 @@ export const insertTemporaryFileFuzzTag = (onInsert: (i: string) => any) => {
                     }}
                 />
             </>
-        )
+        ),
+        footer: null
     })
 }

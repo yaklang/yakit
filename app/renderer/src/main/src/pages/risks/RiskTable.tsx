@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Space, Table, Tag, Form, Typography, Descriptions, Popconfirm, Tooltip, Menu} from "antd"
+import {Button, Space, Table, Tag, Form, Typography, Descriptions, Tooltip, Menu} from "antd"
 import {Risk} from "./schema"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -23,6 +23,7 @@ import {showByContextMenu} from "../../components/functionTemplate/showByContext
 
 import "./RiskTable.css"
 import {Uint8ArrayToString} from "@/utils/str"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 export interface RiskTableProp {
     severity?: string
@@ -559,7 +560,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             btnProps={{size: "small"}}
                                             fileName='风险与漏洞'
                                         />
-                                        <Popconfirm
+                                        <YakitPopconfirm
                                             title={
                                                 selectedRowKeys.length > 0
                                                     ? "确定删除选择的风险与漏洞吗？不可恢复"
@@ -570,7 +571,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                                             <Button size='small' danger={true}>
                                                 删除数据
                                             </Button>
-                                        </Popconfirm>
+                                        </YakitPopconfirm>
                                     </Space>
                                 </div>
                                 {showSelectedTag()}
