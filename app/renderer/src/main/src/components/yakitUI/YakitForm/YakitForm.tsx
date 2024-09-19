@@ -23,7 +23,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
 import {YakitRadioButtons} from "../YakitRadioButtons/YakitRadioButtons"
-import { QuestionMarkCircleIcon } from "@/assets/newIcon"
+import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 
 const {Dragger} = Upload
 
@@ -121,7 +121,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                 failed("请输入正确的路径")
                 return
             }
-    
+
             if (props.accept && !props.accept.split(",").includes(fileType)) {
                 failed(`仅支持${props.accept}格式的文件`)
                 return
@@ -151,7 +151,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "textarea":
                 return (
                     <YakitInput.TextArea
-                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
+                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
                         value={fileName || name}
                         disabled={disabled}
                         {...textareaProps}
@@ -205,7 +205,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "autoComplete":
                 return (
                     <YakitAutoComplete
-                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
+                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
                         value={fileName || name}
                         disabled={disabled}
                         {...autoCompleteProps}
@@ -259,7 +259,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             default:
                 return (
                     <YakitInput
-                        placeholder={multiple ? '路径支持手动输入,输入多个请用逗号分隔' : '路径支持手动输入'}
+                        placeholder={multiple ? "路径支持手动输入,输入多个请用逗号分隔" : "路径支持手动输入"}
                         size={size}
                         value={fileName || name}
                         disabled={disabled}
@@ -385,7 +385,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     if (props.accept && !acceptFlag) {
                         failed(`仅支持${props.accept}格式的文件`)
                     }
-                    
+
                     // 设置名字
                     if (setFileName) setFileName(absolutePath.join(","))
                 }
@@ -935,12 +935,13 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                             content={
                                 <div onClick={(e) => e.stopPropagation()} style={{padding: "0 8px"}}>
                                     <div className={styles["content"]}>
-                                        <div className={styles["text"]}>读取方式
-                                            <Tooltip title="为避免读取大文件造成前端渲染失败，读取文件内容限制为10M，超过10M的文件请选择路径">
-                                              <QuestionMarkCircleIcon />  
+                                        <div className={styles["text"]}>
+                                            读取方式
+                                            <Tooltip title='为避免读取大文件造成前端渲染失败，读取文件内容限制为10M，超过10M的文件请选择路径'>
+                                                <QuestionMarkCircleIcon />
                                             </Tooltip>
-                                            
-                                            ：</div>
+                                            ：
+                                        </div>
                                         <YakitRadioButtons
                                             size='small'
                                             value={textAreaType}
