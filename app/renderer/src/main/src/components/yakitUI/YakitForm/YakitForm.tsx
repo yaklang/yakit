@@ -101,7 +101,15 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         fileExtensionIsExist = true
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
-    const [name, setName] = useState<string>("")
+    const [name, setName] = useState<string>(fileName || "")
+    useDebounceEffect(
+        () => {
+            setName(fileName || "")
+        },
+        [fileName],
+        {wait: 300}
+    )
+
     /**文件处理 */
     const getContent = useMemoizedFn((path: string, fileType: string) => {
         if (!path) {
@@ -358,6 +366,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             })
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
+                let acceptFlag = true
                 if (filesLength) {
                     const absolutePath: string[] = []
                     data.filePaths.forEach((p) => {
@@ -365,11 +374,18 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         if (fileExtensionIsExist) {
                             if (isAcceptEligible(path, props.accept || ".*")) {
                                 absolutePath.push(path)
+                            } else {
+                                acceptFlag = false
                             }
                         } else {
                             absolutePath.push(path)
                         }
                     })
+
+                    if (props.accept && !acceptFlag) {
+                        failed(`仅支持${props.accept}格式的文件`)
+                    }
+                    
                     // 设置名字
                     if (setFileName) setFileName(absolutePath.join(","))
                 }

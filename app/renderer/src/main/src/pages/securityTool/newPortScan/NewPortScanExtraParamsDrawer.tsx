@@ -325,7 +325,6 @@ interface FingerprintSettingsPanelProps {
 export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> = React.memo((props) => {
     const {key, isSimpleDetect, ...restProps} = props
     const form = Form.useFormInstance()
-    const UserFingerprintFiles = Form.useWatch("UserFingerprintFiles", form)
 
     /**选择预设端口设置Ports值 */
     const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
@@ -483,10 +482,6 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                     help='可将yaml、yml文件拖入框内或'
                     selectType='file'
                     multiple={true}
-                    onChange={(val) => {
-                        form.setFieldsValue({UserFingerprintFiles: val})
-                    }}
-                    value={UserFingerprintFiles}
                 />
             </YakitPanel>
         </>
