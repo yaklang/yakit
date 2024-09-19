@@ -3,8 +3,12 @@ import styles from "./TabRenameModalContent.module.scss"
 import {RemoveIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import { TextAreaRef } from "antd/lib/input/TextArea"
-
+import {TextAreaRef} from "antd/lib/input/TextArea"
+import {useMemoizedFn} from "ahooks"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {QueryFuzzerConfigRequest} from "./utils"
+import {APIFunc} from "@/apiUtils/type"
+import {genDefaultPagination} from "@/pages/invoker/schema"
 interface TabRenameModalProps {
     title: string
     onClose: () => void
@@ -70,3 +74,52 @@ const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) 
 })
 
 export default TabRenameModalContent
+
+interface RestoreTabContentProps {
+    onClose: () => void
+    onRestore: APIFunc<QueryFuzzerConfigRequest, null>
+}
+export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((props) => {
+    const {onClose, onRestore} = props
+    const [number, setNumber] = useState<number>(20)
+    const [loading, setLoading] = useState<boolean>(false)
+    const onOK = useMemoizedFn(() => {
+        setLoading(true)
+        const query: QueryFuzzerConfigRequest = {
+            Pagination: {
+                ...genDefaultPagination(),
+                Limit: number
+            }
+        }
+        onRestore(query).finally(() => {
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+            onClose()
+        })
+    })
+    return (
+        <div className={styles["restore-tab-content"]}>
+            <div className={styles["item"]}>
+                <span>恢复最近</span>
+                <YakitInputNumber
+                    min={1}
+                    max={100}
+                    style={{width: 350}}
+                    value={number}
+                    onChange={(v) => setNumber(v as number)}
+                />
+                <span>个标签页</span>
+            </div>
+            <div className={styles["item-tip"]}>恢复标签页不能超过100个</div>
+            <div className={styles["footer"]}>
+                <YakitButton type='outline2' onClick={onClose}>
+                    取消
+                </YakitButton>
+                <YakitButton type='primary' onClick={onOK} loading={loading}>
+                    确定
+                </YakitButton>
+            </div>
+        </div>
+    )
+})

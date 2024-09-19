@@ -47,7 +47,7 @@ import {
     QuestionMarkCircleIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
-import {PaginationSchema} from "../invoker/schema"
+import {PaginationSchema, genDefaultPagination} from "../invoker/schema"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -106,7 +106,7 @@ import {
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
-import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
+import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, getFuzzerProcessedCacheData} from "@/store/pageInfo"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
@@ -137,10 +137,18 @@ import {
     WEB_FUZZ_HOTPATCH_CODE,
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
     WEB_FUZZ_PROXY,
-    defaultLabel
+    defaultLabel,
+    defaultAdvancedConfigValue
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {KVPair} from "@/models/kv"
 import {FuncBtn} from "../plugins/funcTemplate"
+import {
+    FuzzerConfig,
+    QueryFuzzerConfigRequest,
+    SaveFuzzerConfigRequest,
+    apiQueryFuzzerConfig,
+    apiSaveFuzzerConfig
+} from "../layout/mainOperatorContent/utils"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -241,7 +249,7 @@ export interface FuzzerResponse {
     DisableRenderStyles: boolean
 
     RuntimeID: string
-    Discard:boolean
+    Discard: boolean
 }
 
 export interface HistoryHTTPFuzzerTask {
@@ -595,12 +603,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // 切换【配置】/【规则】高级内容显示 type
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
-    const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
     const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
-   
+
     const [droppedCount, setDroppedCount] = useState(0)
     // state
     const [loading, setLoading] = useState(false)
@@ -841,24 +848,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFuzzerTableMaxData(DefFuzzerTableMaxData)
     })
 
-    // 从历史记录中恢复
-    useEffect(() => {
-        if (!historyTask) {
-            return
-        }
-        if (historyTask.Request === "") {
-            requestRef.current = Uint8ArrayToString(historyTask.RequestRaw, "utf8")
-        } else {
-            requestRef.current = historyTask.Request
-        }
-        setAdvancedConfigValue({
-            ...advancedConfigValue,
-            isHttps: historyTask.IsHTTPS,
-            isGmTLS: historyTask.IsGmTLS,
-            proxy: historyTask.Proxy ? historyTask.Proxy.split(",") : []
-        })
-        refreshRequest()
-    }, [historyTask])
     const retryRef = useRef<boolean>(false)
     const matchRef = useRef<boolean>(false)
 
@@ -868,7 +857,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const loadHistory = useMemoizedFn((id: number) => {
         resetResponse()
-        setHistoryTask(undefined)
         setLoading(true)
         setDroppedCount(0)
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
@@ -876,10 +864,55 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
                 .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
-                    setHistoryTask(data.OriginRequest)
+                    const {OriginRequest} = data
+                    if (OriginRequest.Request === "") {
+                        requestRef.current = Uint8ArrayToString(OriginRequest.RequestRaw, "utf8")
+                    } else {
+                        requestRef.current = OriginRequest.Request
+                    }
+                    onSetFuzzerConfig(OriginRequest)
                     setCurrentSelectId(id)
+                    refreshRequest()
                 })
         })
+    })
+    const onSetFuzzerConfig = useMemoizedFn((historyData: HistoryHTTPFuzzerTask) => {
+        const query: QueryFuzzerConfigRequest = {
+            Pagination: {
+                ...genDefaultPagination(),
+                Limit: 1
+            },
+            PageId: [props.id]
+        }
+        const history = {
+            isHttps: historyData.IsHTTPS,
+            isGmTLS: historyData.IsGmTLS,
+            proxy: historyData.Proxy ? historyData.Proxy.split(",") : []
+        }
+        apiQueryFuzzerConfig(query)
+            .then(({Data = []}) => {
+                try {
+                    if (Data.length > 0) {
+                        const item = {
+                            ...JSON.parse(Data[0].Config).pageParams
+                        }
+                        setAdvancedConfigValue({
+                            ...defaultAdvancedConfigValue,
+                            actualHost: item.actualHost,
+                            params: item.params,
+                            extractors: item.extractors,
+                            matchers: item.matchers,
+                            ...history
+                        })
+                    }
+                } catch (error) {
+                    setAdvancedConfigValue((v) => ({...v, ...history}))
+                    yakitNotify("error", `WF历史数据恢复失败:${error}`)
+                }
+            })
+            .catch(() => {
+                setAdvancedConfigValue((v) => ({...v, ...history}))
+            })
     })
     const responseViewerRef = useRef<MatcherAndExtractionRefProps>({
         validate: () => new Promise(() => {})
@@ -919,8 +952,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         resetResponse()
-        // 清楚历史任务的标记
-        setHistoryTask(undefined)
 
         //  更新默认搜索
         setDefaultResponseSearch(affixSearch)
@@ -955,6 +986,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
         }
+        onSaveHTTPFuzzerByPageId()
+    })
+    /**保存当前页面的历史数据 */
+    const onSaveHTTPFuzzerByPageId = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (!currentItem) return
+        const cacheData = getFuzzerProcessedCacheData([currentItem])[0]
+        if (!cacheData) return
+        const pageData: FuzzerConfig = {
+            PageId: cacheData.id,
+            Type: "page",
+            Config: JSON.stringify(cacheData)
+        }
+        const params: SaveFuzzerConfigRequest = {
+            Data: [pageData]
+        }
+        apiSaveFuzzerConfig(params)
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
@@ -2043,13 +2091,13 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
 }
 
 interface FuzzerExtraShowProps {
-    droppedCount:number
+    droppedCount: number
     advancedConfigValue: AdvancedConfigValueProps
     onlyOneResponse: boolean
     httpResponse: FuzzerResponse
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
-    const {droppedCount,advancedConfigValue, onlyOneResponse, httpResponse} = props
+    const {droppedCount, advancedConfigValue, onlyOneResponse, httpResponse} = props
     return (
         <div className={styles["display-flex"]}>
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}

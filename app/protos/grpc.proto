@@ -242,6 +242,10 @@ service Yak {
   rpc QueryFuzzerLabel(Empty) returns (QueryFuzzerLabelResponse);
   rpc DeleteFuzzerLabel(DeleteFuzzerLabelRequest) returns (Empty);
 
+  rpc SaveFuzzerConfig(SaveFuzzerConfigRequest) returns (DbOperateMessage);
+  rpc QueryFuzzerConfig(QueryFuzzerConfigRequest) returns (QueryFuzzerConfigResponse);
+  rpc DeleteFuzzerConfig(DeleteFuzzerConfigRequest) returns (DbOperateMessage);
+
   // HTTPFuzzerResponse
   // 这个挺特殊的，因为数据包太多了，会卡，所以后端会保存一份，通过这个接口做缓存查询
   rpc QueryHTTPFuzzerResponseByTaskId(QueryHTTPFuzzerResponseByTaskIdRequest) returns (QueryHTTPFuzzerResponseByTaskIdResponse) ;
@@ -1815,6 +1819,30 @@ message FuzzerLabel {
 
 message DeleteFuzzerLabelRequest {
   string Hash = 1;
+}
+
+message SaveFuzzerConfigRequest {
+  repeated FuzzerConfig Data = 1;
+}
+
+message QueryFuzzerConfigRequest {
+    Paging Pagination = 1;
+    repeated string PageId =2;
+}
+
+message QueryFuzzerConfigResponse {
+  repeated FuzzerConfig Data = 1;
+}
+
+message FuzzerConfig {
+  string PageId = 1;
+  string Type = 2;
+  string Config = 3;
+}
+
+message DeleteFuzzerConfigRequest {
+  repeated string PageId = 1;
+  bool DeleteAll =2;
 }
 
 message ExtractDataRequest {
@@ -5305,4 +5333,11 @@ message GenerateReverseShellCommandRequest{
 message GenerateReverseShellCommandResponse{
   GeneralResponse Status = 1;
   string Result = 2;
+}
+
+message DbOperateMessage {
+  string TableName = 1; // 表名 数据源
+  string Operation = 2; // 操作 (增删改查)
+  int64 EffectRows = 3; // 影响行数
+  string ExtraMessage = 4; // 额外信息
 }
