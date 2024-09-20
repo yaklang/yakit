@@ -5,8 +5,8 @@ export interface YakitRoundCornerTagProps {
     /**
      * round-corner-tag的颜色
      * @default primary (本质为灰色)
-     * @description primary | blue | green
+     * @description primary | blue | green | info
      */
-    color?: "primary" | "blue" | "green"
+    color?: "primary" | "blue" | "green" | "info"
     children?: ReactNode
 }

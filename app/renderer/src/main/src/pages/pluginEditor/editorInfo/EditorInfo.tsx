@@ -155,7 +155,6 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 ScriptName: (data.ScriptName || "").trim(),
                 Help: (data.Help || "").trim() || undefined,
                 Tags: toTagKey(data.Tags || []),
-                Notes: data.Notes || undefined,
                 EnablePluginSelector: EnablePluginSelector,
                 PluginSelectorTypes: data.PluginSelectorTypes || (EnablePluginSelector ? [] : undefined)
             }
@@ -514,7 +513,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 )
 
 /** @name 插件类型下拉框组件 */
-const PluginTypeSelect: React.FC<YakitSelectProps> = memo((props) => {
+export const PluginTypeSelect: React.FC<YakitSelectProps> = memo((props) => {
     const {dropdownClassName, wrapperClassName, ...rest} = props
 
     return (
