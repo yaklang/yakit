@@ -47,3 +47,11 @@ $color-type: (
         color: var(--ui-neutral-70);
     }
 }
+
+.yakit-round-corner-tag-info {
+    color: var(--ui-neutral-70);
+    background-color: tools.fetch-color-transparen(var(--ui-neutral-60), 10%);
+    svg {
+        color: var(--ui-neutral-70);
+    }
+}

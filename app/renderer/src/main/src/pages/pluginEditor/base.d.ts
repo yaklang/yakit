@@ -17,8 +17,6 @@ export interface YakitPluginBaseInfo {
     Help?: string
     /** 插件tags */
     Tags: string[]
-    /** 备注 */
-    Notes?: string
     /** 是否激活插件联动 */
     EnablePluginSelector?: boolean
     /** 插件联动类型 */
