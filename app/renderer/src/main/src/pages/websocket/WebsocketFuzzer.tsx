@@ -196,7 +196,9 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                 ToServer: StringToUint8Array(wsToServer)
             },
             token
-        )
+        ).then(() => {
+            setWsToServer("")
+        })
     })
 
     return (
