@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.milkdown {
+  @apply bg-slate-50 px-2 py-4 m-5 border rounded;
+  .ProseMirror-selectednode{
+    outline: 2px solid fuchsia;
+  }
+  
+  .ProseMirror-focused{
+    outline:0;
+  }
+}
+
+.editor {
+  @apply mx-auto;
+}
+
+@import './codeBlock.css';
+@import './imageBlock.css';
+@import './imageInline.css';
+@import './listItemBlock.css';
+@import './placeholder.css';
+
+
