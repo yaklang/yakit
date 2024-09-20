@@ -421,7 +421,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 data.ScriptName = base.ScriptName
                 data.Help = base.Help
                 data.Tags = base.Tags
-                data.Notes = base.Notes
                 data.EnablePluginSelector = base.EnablePluginSelector
                 data.PluginSelectorTypes = base.PluginSelectorTypes
             }
