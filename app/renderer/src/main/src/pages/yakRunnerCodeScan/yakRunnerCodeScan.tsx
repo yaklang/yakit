@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {
+    CodeScaMainExecuteContentProps,
     CodeScanByGroupProps,
     CodeScanExecuteContentProps,
     CodeScanExecuteLogProps,
@@ -7,13 +8,13 @@ import {
     CodeScanGroupByKeyWordProps,
     YakRunnerCodeScanProps
 } from "./yakRunnerCodeScanType"
-import {Divider, Tooltip} from "antd"
+import {Divider, Form, Tooltip} from "antd"
 import {} from "@ant-design/icons"
 import {useControllableValue, useCreation, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./YakRunnerCodeScan.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -33,6 +34,9 @@ import {GroupCount} from "../invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
+import {randomString} from "@/utils/randomUtil"
 const {ipcRenderer} = window.require("electron")
 
 const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo((props) => {
@@ -185,6 +189,10 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         setHidden(false)
     })
 
+    const selectGroupListAll = useCreation(() => {
+        return []
+    },[])
+
     return (
         <div className={styles["yakrunner-codec-scan"]}>
             <div
@@ -206,7 +214,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                 </div>
                 <CodeScanGroupByKeyWord inViewport={inViewport} />
             </div>
-            <CodeScanExecuteContent hidden={hidden} setHidden={setHidden} onClearAll={onClearAll} />
+            <CodeScanExecuteContent hidden={hidden} setHidden={setHidden} selectGroupList={selectGroupListAll} onClearAll={onClearAll} />
         </div>
     )
 }
@@ -224,8 +232,8 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
     })
     return (
         <div
-            className={classNames(styles["code-scan-by-group"], {
-                [styles["code-scan-by-group-hidden"]]: hidden
+            className={classNames(styles["code-scan-by-group-wrapper"], {
+                [styles["code-scan-by-group-wrapper-hidden"]]: hidden
             })}
         >
             <RollingLoadList<any>
@@ -265,7 +273,7 @@ const CodeScanGroupByKeyWordItem: React.FC<CodeScanGroupByKeyWordItemProps> = Re
 })
 
 const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo((props) => {
-    const {onClearAll} = props
+    const {onClearAll,selectGroupList} = props
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
         defaultValue: false,
         valuePropName: "hidden",
@@ -299,6 +307,10 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     const pluginLogDisabled = useCreation(() => {
         return !isExecuting
     }, [isExecuting])
+
+    const selectGroupNum = useCreation(() => {
+        return selectGroupList.length
+    }, [selectGroupList])
 
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -362,7 +374,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
             <div className={styles["code-scan-execute-wrapper"]}>
                 <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                     <div className={styles["code-scan-executor-title"]}>
-                        <span className={styles["code-scan-executor-title-text"]}>插件执行</span>
+                        <span className={styles["code-scan-executor-title-text"]}>规则执行</span>
                     </div>
                     <div className={styles["code-scan-executor-btn"]}>
                         {true && <PluginExecuteProgress percent={1} name={"ttt"} />}
@@ -415,7 +427,13 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         />
                     </div>
                 </ExpandAndRetract>
-                <div className={styles["code-scan-executor-body"]}>main</div>
+                <div className={styles["code-scan-executor-body"]}>
+                    <CodeScanMainExecuteContent
+                        isExpand={isExpand}
+                        executeStatus={executeStatus}
+                        selectNum={selectGroupNum}
+                    />
+                </div>
             </div>
             <React.Suspense fallback={<>loading...</>}>
                 {visibleRaskList && (
@@ -473,5 +491,175 @@ export const CodeScanExecuteLog: React.FC<CodeScanExecuteLogProps> = React.memo(
                 classNameRow={styles["code-scan-log-item"]}
             />
         </div>
+    )
+})
+
+export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo((props) => {
+    const {isExpand,selectNum} = props
+    const [form] = Form.useForm()
+
+    const [runtimeId, setRuntimeId] = useState<string>("")
+
+    const [pauseLoading, setPauseLoading] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "pauseLoading",
+        trigger: "setPauseLoading"
+    })
+    const [continueLoading, setContinueLoading] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "continueLoading",
+        trigger: "setContinueLoading"
+    })
+    /**执行状态 */
+    const [executeStatus, setExecuteStatus] = useControllableValue<any>(props, {
+        defaultValue: "default",
+        valuePropName: "executeStatus",
+        trigger: "setExecuteStatus"
+    })
+    const tokenRef = useRef<string>(randomString(40))
+    const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
+        taskName: "hybrid-scan",
+        apiKey: "HybridScan",
+        token: tokenRef.current,
+        onEnd: () => {
+            hybridScanStreamEvent.stop()
+            setTimeout(() => {
+                setPauseLoading(false)
+                setContinueLoading(false)
+            }, 200)
+        },
+        onError: (error) => {
+            hybridScanStreamEvent.stop()
+            setTimeout(() => {
+                setExecuteStatus("error")
+                setPauseLoading(false)
+                setContinueLoading(false)
+            }, 200)
+            yakitNotify("error", `[Mod] hybrid-scan error: ${error}`)
+        },
+        setRuntimeId: (rId) => {
+            setRuntimeId(rId)
+            if (runtimeId !== rId) {
+                onUpdateExecutorPageInfo(rId)
+            }
+        },
+        setTaskStatus: (val) => {
+            switch (val) {
+                case "default":
+                    setExecuteStatus("default")
+                    break
+                case "done":
+                    setExecuteStatus("finished")
+                    break
+                case "error":
+                    setExecuteStatus("error")
+                    break
+                case "executing":
+                    setPauseLoading(false)
+                    setContinueLoading(false)
+                    setExecuteStatus("process")
+                    break
+                case "paused":
+                    setExecuteStatus("paused")
+                    break
+                default:
+                    break
+            }
+        },
+        onGetInputValue: (v) => onInitInputValue(v)
+    })
+
+    /**更新该页面最新的runtimeId */
+    const onUpdateExecutorPageInfo = useMemoizedFn((runtimeId: string) => {})
+
+    /**设置输入模块的初始值 */
+    const onInitInputValue = useMemoizedFn((value: any) => {})
+
+    const isExecuting = useCreation(() => {
+        // if (executeStatus === "process") return true
+        // if (executeStatus === "paused") return true
+        return false
+    }, [])
+
+    const isShowResult = useCreation(() => {
+        return isExecuting || runtimeId
+    }, [isExecuting, runtimeId])
+
+    /**开始执行 */
+    const onStartExecute = useMemoizedFn(async (value) => {})
+
+    /**取消执行 */
+    const onStopExecute = useMemoizedFn(() => {})
+
+    /**暂停 */
+    const onPause = useMemoizedFn(() => {})
+
+    /**继续 */
+    const onContinue = useMemoizedFn(() => {})
+    return (
+        <>
+            <div
+                className={classNames(styles["code-scan-execute-form-wrapper"], {
+                    [styles["code-scan-execute-form-wrapper-hidden"]]: !isExpand
+                })}
+            >
+                <Form
+                    form={form}
+                    onFinish={onStartExecute}
+                    labelCol={{span: 6}}
+                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                    validateMessages={{
+                        /* eslint-disable no-template-curly-in-string */
+                        required: "${label} 是必填字段"
+                    }}
+                    labelWrap={true}
+                >
+                    <Form.Item label='项目名称' name='project'>
+                        <YakitInput placeholder='请输入项目名称' />
+                    </Form.Item>
+                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                        <div className={styles["code-scan-execute-form-operate"]}>
+                            {isExecuting ? (
+                                <>
+                                    {executeStatus === "paused" && !pauseLoading && (
+                                        <YakitButton size='large' onClick={onContinue} loading={continueLoading}>
+                                            继续
+                                        </YakitButton>
+                                    )}
+                                    {(executeStatus === "process" || pauseLoading) && (
+                                        <YakitButton size='large' onClick={onPause} loading={pauseLoading}>
+                                            暂停
+                                        </YakitButton>
+                                    )}
+                                    <YakitButton
+                                        danger
+                                        onClick={onStopExecute}
+                                        size='large'
+                                        disabled={pauseLoading || continueLoading}
+                                    >
+                                        停止
+                                    </YakitButton>
+                                </>
+                            ) : (
+                                <>
+                                    <YakitButton htmlType='submit' size='large' disabled={selectNum === 0}>
+                                        开始执行
+                                    </YakitButton>
+                                </>
+                            )}
+                        </div>
+                    </Form.Item>
+                </Form>
+            </div>
+            {isShowResult && (
+                <PluginExecuteResult
+                    streamInfo={streamInfo}
+                    runtimeId={runtimeId}
+                    loading={isExecuting}
+                    defaultActiveKey={undefined}
+                    pluginExecuteResultWrapper={""}
+                />
+            )}
+        </>
     )
 })
