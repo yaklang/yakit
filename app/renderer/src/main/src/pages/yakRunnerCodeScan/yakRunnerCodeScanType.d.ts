@@ -17,6 +17,7 @@ export interface CodeScanExecuteContentProps {
     hidden: boolean
     setHidden: (v:boolean) => void
     onClearAll: () => void
+    selectGroupList: string[]
 }
 
 export interface CodeScanByGroupProps {
@@ -26,4 +27,10 @@ export interface CodeScanByGroupProps {
 
 export interface CodeScanExecuteLogProps {
     hidden: boolean
+}
+
+export interface CodeScaMainExecuteContentProps {
+    isExpand: boolean
+    executeStatus: any
+    selectNum: number
 }
