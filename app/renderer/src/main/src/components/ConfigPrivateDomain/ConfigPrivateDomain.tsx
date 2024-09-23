@@ -246,12 +246,21 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             }
         }
     ]
+
+    const [yakitEEImg, setyYakitEEImg] = useState<string>()
+    useEffect(() => {
+        if (enterpriseLogin) {
+            ipcRenderer.invoke("GetStaticImgEEByType", {type: "loginImg"}).then((res) => {
+                setyYakitEEImg(res)
+            })
+        }
+    }, [])
     return (
         <div className='private-domain'>
             {enterpriseLogin && (
                 <div className='login-title-show'>
                     <div className='icon-box'>
-                        <img src={yakitImg} className='type-icon-img' />
+                        <img src={yakitEEImg} className='type-icon-img' />
                     </div>
                     <div className='title-box'>企业登录</div>
                 </div>

@@ -1,4 +1,4 @@
-import React, {memo, ReactNode, Suspense, useEffect, useState} from "react"
+import React, {memo, ReactNode, Suspense, useEffect, useMemo, useState} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {DesktopComputerSvgIcon, YakitLogoSvgIcon} from "@/assets/newIcon"
 import {Typography} from "antd"
@@ -101,7 +101,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
             window.removeEventListener("resize", wrapperResize)
         }
     }, [])
-
+    
     return (
         <div className={styles["software-settings-wrapper"]}>
             <div className={styles["software-settings-container"]}>
