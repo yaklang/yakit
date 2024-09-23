@@ -423,7 +423,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         } else if (userInfo.isLogin) {
             return userInfo.companyName || ""
         } else if (isEnpriTrace()) {
-            return "EnpriTrace-试用版"
+            return ""
         } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }
