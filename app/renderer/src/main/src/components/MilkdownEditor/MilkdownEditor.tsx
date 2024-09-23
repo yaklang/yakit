@@ -1,14 +1,14 @@
 import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
 import React from "react"
 
-import {Milkdown, useEditor} from "@milkdown/react"
+import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {blockquoteSchema, codeBlockSchema, commonmark} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {nord} from "@milkdown/theme-nord"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 
-import {useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
+import {ProsemirrorAdapterProvider, useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
 import {tooltip, TooltipView} from "./Tooltip"
 import {BlockView, menuAPI} from "./Block"
 import {block} from "@milkdown/plugin-block" // 引入block插件
@@ -25,6 +25,7 @@ import {placeholderConfig, placeholderPlugin} from "./Placeholder"
 import {$view} from "@milkdown/kit/utils"
 import {CustomCodeComponent} from "./CodeBlock"
 import {Blockquote} from "./Blockquote"
+import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
 
 const markdown = `# Milkdown React Commonmark
 
@@ -68,8 +69,7 @@ Editor
 
 `
 
-interface MilkdownEditorProps {}
-export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) => {
+const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
     useEditor((root) => {
@@ -166,4 +166,14 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) 
     }, [])
 
     return <Milkdown />
+})
+
+export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) => {
+    return (
+        <MilkdownProvider>
+            <ProsemirrorAdapterProvider>
+                <CustomMilkdown />
+            </ProsemirrorAdapterProvider>
+        </MilkdownProvider>
+    )
 })
