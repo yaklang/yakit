@@ -2,8 +2,7 @@ import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
 import React from "react"
 
 import {Milkdown, useEditor} from "@milkdown/react"
-import {commonmark, imageSchema} from "@milkdown/kit/preset/commonmark"
-
+import {blockquoteSchema, codeBlockSchema, commonmark} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {nord} from "@milkdown/theme-nord"
 import {history} from "@milkdown/kit/plugin/history"
@@ -14,17 +13,8 @@ import {tooltip, TooltipView} from "./Tooltip"
 import {BlockView, menuAPI} from "./Block"
 import {block} from "@milkdown/plugin-block" // 引入block插件
 import {cursor} from "@milkdown/kit/plugin/cursor"
-
 import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
 import {listItemBlockComponent} from "@milkdown/kit/component/list-item-block"
-import {codeBlockComponent, codeBlockConfig} from "@milkdown/kit/component/code-block"
-
-import {html} from "@milkdown/kit/component"
-import {languages} from "@codemirror/language-data"
-import {basicSetup} from "codemirror"
-import {defaultKeymap} from "@codemirror/commands"
-import {keymap} from "@codemirror/view"
-import {oneDark} from "@codemirror/theme-one-dark"
 
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
 
@@ -32,6 +22,9 @@ import "@milkdown/theme-nord/style.css"
 import "./css/index.css"
 import {yakitInfo} from "@/utils/notification"
 import {placeholderConfig, placeholderPlugin} from "./Placeholder"
+import {$view} from "@milkdown/kit/utils"
+import {CustomCodeComponent} from "./CodeBlock"
+import {Blockquote} from "./Blockquote"
 
 const markdown = `# Milkdown React Commonmark
 
@@ -75,19 +68,6 @@ Editor
 
 `
 
-const check = html`
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="w-6 h-6"
-    >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-    </svg>
-`
-
 interface MilkdownEditorProps {}
 export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) => {
     const nodeViewFactory = useNodeViewFactory()
@@ -108,6 +88,7 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) 
                             component: BlockView
                         })
                     })
+
                     ctx.update(imageBlockConfig.key, (value) => ({
                         uploadButton: () => <div>uploadButton</div>,
                         imageIcon: () => <div>imageBlockConfig-imageIcon</div>,
@@ -131,14 +112,6 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) 
                     //         return <span className='label'>{label}</span>
                     //     }
                     // })
-                    ctx.update(codeBlockConfig.key, (defaultConfig) => ({
-                        ...defaultConfig,
-                        languages,
-                        extensions: [basicSetup, oneDark, keymap.of(defaultKeymap)],
-                        renderLanguage: (language, selected) => {
-                            return html`<span class="leading">${selected ? check : null}</span>${language}`
-                        }
-                    }))
 
                     ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
                         ...defaultConfig,
@@ -151,12 +124,6 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) 
                             yakitInfo("Link copied")
                         }
                     }))
-
-                    ctx.update(placeholderConfig.key, (prev) => {
-                        return {
-                            ...prev
-                        }
-                    })
                 })
                 .config(nord)
                 .use(commonmark)
@@ -166,13 +133,13 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) 
                 .use(history)
                 .use(clipboard)
                 // Add a custom node view
-                // .use(
-                //     $view(blockquoteSchema.node, () =>
-                //         nodeViewFactory({
-                //             component: Blockquote
-                //         })
-                //     )
-                // )
+                .use(
+                    $view(blockquoteSchema.node, () =>
+                        nodeViewFactory({
+                            component: Blockquote
+                        })
+                    )
+                )
                 // block
                 .use(block) // 使用 block 插件，启用块手柄
                 .use(menuAPI)
@@ -181,7 +148,15 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) 
                 // listItem
                 .use(listItemBlockComponent)
                 // code
-                .use(codeBlockComponent)
+                // .use(codeBlockComponent)
+                .use(
+                    $view(codeBlockSchema.node, () => {
+                        return nodeViewFactory({
+                            component: CustomCodeComponent,
+                            stopEvent: (e) => true
+                        })
+                    })
+                )
                 // linkTooltip
                 .use(linkTooltipPlugin)
                 // placeholder
