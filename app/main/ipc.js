@@ -251,6 +251,9 @@ module.exports = {
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient)
 
+        // 读取企业版静态资源
+        require("./handlers/staticEE").register(win, getClient)
+
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach((item) => {
