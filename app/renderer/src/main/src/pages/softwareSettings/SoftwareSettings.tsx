@@ -1,4 +1,4 @@
-import React, {memo, ReactNode, Suspense, useEffect, useState} from "react"
+import React, {memo, ReactNode, Suspense, useEffect, useMemo, useState} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {DesktopComputerSvgIcon, YakitLogoSvgIcon} from "@/assets/newIcon"
 import {Typography} from "antd"
@@ -9,11 +9,11 @@ import {ProjectManageProp} from "./ProjectManage"
 
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
-import { isEnpriTrace, isEnpriTraceAgent } from "@/utils/envfile"
-import yakitEEProject from "@/assets/yakitFontEE.png";
-import yakitSEProject from "@/assets/yakitFontSE.png";
-import yakitEEMiniProject from "@/assets/yakitEE.png";
-import yakitSEMiniProject from "@/assets/yakitSE.png";
+import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+// import yakitEEProject from "@/assets/yakitFontEE.png"
+import yakitSEProject from "@/assets/yakitFontSE.png"
+// import yakitEEMiniProject from "@/assets/yakitEE.png";
+import yakitSEMiniProject from "@/assets/yakitSE.png"
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 
@@ -26,17 +26,7 @@ interface SettingsMenuProp {
     name: string
     icon: ReactNode
 }
-const ProjectLogo = (showMini:boolean) => {
-    if(isEnpriTrace()){
-        return <img style={{height:"100%"}} src={showMini?yakitEEMiniProject:yakitEEProject} alt="暂无图片" />
-    }
-    else if(isEnpriTraceAgent()){
-        return <img style={{height:"100%"}} src={showMini?yakitSEMiniProject:yakitSEProject} alt="暂无图片" />
-    }
-    else{
-        return <YakitLogoSvgIcon />
-    }
-}
+
 const SettingsMenu: SettingsMenuProp[] = [
     {
         key: "project",
@@ -100,6 +90,39 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
         }
     }, [])
 
+    const [yakitEEMiniProject, setYakitEEMiniProject] = useState<string>()
+    const [yakitEEProject, setYakitEEProject] = useState<string>()
+
+    useEffect(() => {
+        if (isEnpriTrace()) {
+            ipcRenderer.invoke("GetStaticImgEEByType", {type: "miniProject"}).then((res) => {
+                setYakitEEMiniProject(res)
+            })
+            ipcRenderer.invoke("GetStaticImgEEByType", {type: "project"}).then((res) => {
+                setYakitEEProject(res)
+            })
+        }
+    }, [])
+
+    const ProjectLogo = useMemoizedFn((showMini: boolean) => {
+        if (isEnpriTrace()) {
+            return (
+                <img
+                    style={
+                        showMini
+                            ? {height: 35, width: 35, objectFit: "scale-down"}
+                            : {height: "100%", width: "100%", objectFit: "cover"}
+                    }
+                    src={showMini ? yakitEEMiniProject : yakitEEProject}
+                    alt='暂无图片'
+                />
+            )
+        } else if (isEnpriTraceAgent()) {
+            return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
+        } else {
+            return <YakitLogoSvgIcon />
+        }
+    })
     return (
         <div className={styles["software-settings-wrapper"]}>
             <div className={styles["software-settings-container"]}>
@@ -109,9 +132,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                         [styles["left-mini-body"]]: showMini
                     })}
                 >
-                    <div className={styles["navbar-logo"]}>
-                        {ProjectLogo(showMini)}
-                    </div>
+                    <div className={styles["navbar-logo"]}>{ProjectLogo(showMini)}</div>
 
                     <div className={styles["navbar-list-wrapper"]}>
                         <div className={styles["list-body"]}>

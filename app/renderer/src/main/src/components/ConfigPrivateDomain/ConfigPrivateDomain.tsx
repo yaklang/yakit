@@ -7,7 +7,6 @@ import {loginOut, aboutLoginUpload, loginHTTPFlowsToOnline} from "@/utils/login"
 import {useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useStore} from "@/store"
-import yakitImg from "@/assets/yakit.jpg"
 import {API} from "@/services/swagger/resposeType"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
@@ -93,7 +92,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         companyHeadImg: res.from_platform === "company" ? res.head_img : null,
                         role: res.role,
                         user_id: res.user_id,
-                        token: res.token,
+                        token: res.token
                     }
                     setStoreUserInfo(user)
                     if (data?.next) {
@@ -230,12 +229,21 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             }
         }
     ]
+
+    const [yakitEEImg, setyYakitEEImg] = useState<string>()
+    useEffect(() => {
+        if (enterpriseLogin) {
+            ipcRenderer.invoke("GetStaticImgEEByType", {type: "loginImg"}).then((res) => {
+                setyYakitEEImg(res)
+            })
+        }
+    }, [])
     return (
         <div className='private-domain'>
             {enterpriseLogin && (
                 <div className='login-title-show'>
                     <div className='icon-box'>
-                        <img src={yakitImg} className='type-icon-img' />
+                        <img src={yakitEEImg} className='type-icon-img' />
                     </div>
                     <div className='title-box'>企业登录</div>
                 </div>
