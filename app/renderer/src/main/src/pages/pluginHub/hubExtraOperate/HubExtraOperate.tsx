@@ -389,7 +389,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 const m = showYakitModal({
                     title: "插件基础检测",
                     type: "white",
-                    width: 506,
+                    width: "50%",
                     centered: true,
                     maskClosable: false,
                     closable: true,

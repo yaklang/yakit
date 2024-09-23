@@ -991,7 +991,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     <YakitModal
                         title='插件基础检测'
                         type='white'
-                        width={506}
+                        width={"50%"}
                         centered={true}
                         maskClosable={false}
                         closable={true}
