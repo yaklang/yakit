@@ -129,9 +129,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             })
             .then((data) => {
                 addHttpHistoryList(values.BaseUrl)
-                if (values.Proxy) {
-                    addProxyList(values.Proxy)
-                }
+                addProxyList(values.Proxy)
                 setFormValue(values)
                 if (!enterpriseLogin) {
                     ipcRenderer.invoke("ipc-sign-out")
