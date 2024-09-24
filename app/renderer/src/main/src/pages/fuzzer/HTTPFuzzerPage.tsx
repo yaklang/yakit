@@ -59,6 +59,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {Size} from "re-resizable"
 import {
     BodyLengthInputNumber,
+    DurationMsInputNumber,
     HTTPFuzzerPageTable,
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
@@ -2198,9 +2199,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         beforeBodyLength: undefined
         // bodyLengthUnit: "B"
     })
+    const [durationMsLength, setDurationMsLength] = useState<HTTPFuzzerPageTableQuery>({
+        afterDurationMs: undefined,
+        beforeDurationMs: undefined
+    })
 
     const [responseExtractorVisible, setResponseExtractorVisible] = useState<boolean>(false)
     const bodyLengthRef = useRef<any>()
+    const durationMsRef = useRef<any>()
 
     useEffect(() => {
         setStatusCode(query?.StatusCode)
@@ -2210,6 +2216,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             afterBodyLength: query?.afterBodyLength,
             beforeBodyLength: query?.beforeBodyLength
             // bodyLengthUnit: query?.bodyLengthUnit || "B"
+        })
+        setDurationMsLength({
+            afterDurationMs: query?.afterDurationMs,
+            beforeDurationMs: query?.beforeDurationMs
         })
     }, [query])
 
@@ -2475,13 +2485,24 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     showFooter={false}
                                 />
                             </div>
+                            <div className={styles["second-node-search-item"]}>
+                                <span>延迟</span>
+                                <DurationMsInputNumber
+                                    ref={durationMsRef}
+                                    query={durationMsLength}
+                                    setQuery={() => {}}
+                                    showFooter={false}
+                                />
+                            </div>
                         </div>
                     }
                     onVisibleChange={(b) => {
                         if (!b) {
                             const l = bodyLengthRef?.current?.getValue() || {}
+                            const d = durationMsRef?.current?.getValue() || {}
                             setQuery({
                                 ...l,
+                                ...d,
                                 keyWord: keyWord,
                                 StatusCode: statusCode,
                                 Color: color
@@ -2498,6 +2519,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 (query?.StatusCode?.length || 0) > 0 ||
                                 query?.afterBodyLength ||
                                 query?.beforeBodyLength ||
+                                query?.afterDurationMs ||
+                                query?.beforeDurationMs ||
                                 (query?.Color?.length || 0) > 0
                             )
                         }
