@@ -32,7 +32,8 @@ export interface PortScanParams {
     SynConcurrent: number
     Active: boolean
     FingerprintMode: "service" | "web" | "all"
-    UserFingerprintFiles: string
+    UserFingerprintFiles: string[]
+    UserFingerprintFilesStr?: string
     SaveToDB: boolean
     SaveClosedPorts: boolean
     TargetsFile?: string
@@ -49,6 +50,7 @@ export interface PortScanParams {
     ExcludePorts?: string
     EnableBasicCrawler?: boolean
     EnableBrute?: boolean
+    SkipCveBaseLine?: boolean
     BasicCrawlerRequestMax?: number
 
     SynScanNetInterface?: string

@@ -113,7 +113,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             scanDeep: defaultScanDeep,
             presetPort: [scanDeepMapPresetPort[defaultScanDeep]],
             Ports: PresetPorts[scanDeepMapPresetPort[defaultScanDeep]],
-            HostAliveConcurrent: 200
+            HostAliveConcurrent: 50
         }),
         bruteExecuteParam: cloneDeep(defaultBruteExecuteExtraFormValue)
     })
@@ -408,7 +408,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         onRecoverSimpleDetectTask(recoverRuntimeId)
     })
 
-    const [inputType,setInputType] = useState<"content"|"path">("content")
+    const [inputType, setInputType] = useState<"content" | "path">("content")
     const onStartExecute = useMemoizedFn((value: SimpleDetectForm) => {
         simpleDetectValuePropsRef.current.formValue = {...value}
         simpleDetectValuePropsRef.current.extraParamsValue = {...extraParamsValue}
@@ -435,11 +435,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             Mode: "all",
             Proto: ["tcp"],
             EnableBrute: !!value.pluginGroup?.includes("弱口令"),
+            SkipCveBaseLine: !!value.pluginGroup?.includes("CVE合规类漏洞"),
             LinkPluginConfig: linkPluginConfig,
             Targets: value.Targets,
             SkippedHostAliveScan: !!value.SkippedHostAliveScan,
             TaskName: taskName
         }
+
+        delete portScanRequestParams.UserFingerprintFilesStr
+
         switch (value.scanDeep) {
             // 快速
             case 3:
@@ -471,11 +475,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         recoverSimpleDetectStreamEvent.reset()
         portScanRequestParamsRef.current = {...portScanRequestParams}
         startBruteParamsRef.current = {...newStartBruteParams}
-        if(inputType === "path"){
+        if (inputType === "path") {
             params.PortScanRequest.TargetsFile = params.PortScanRequest.Targets
             params.PortScanRequest.Targets = ""
         }
         /**继续任务后，再次点击开始执行，开启新任务 */
+        console.log("执行", params)
         apiSimpleDetect(params, tokenRef.current).then(() => {
             setExecuteStatus("process")
             setIsExpand(false)
@@ -521,14 +526,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             }
 
             const pluginGroup = getPluginGroup(formValue.scanType, formValue.pluginGroup)
-
+            delete simpleDetectValuePropsRef.current?.extraParamsValue?.portScanParam.UserFingerprintFilesStr
+            const simpleDetectValue = simpleDetectValuePropsRef.current
             const params: RecordPortScanRequest = {
                 LastRecord: {
                     LastRecordPtr: Number.isNaN(filePtrValue) ? 0 : filePtrValue,
                     Percent: streamInfo.progressState.length > 0 ? streamInfo.progressState[0].progress : 0,
                     YakScriptOnlineGroup: pluginGroup,
                     ExtraInfo: JSON.stringify({
-                        simpleDetectValue: simpleDetectValuePropsRef.current
+                        simpleDetectValue
                     })
                 },
                 StartBruteParams: startBruteParamsRef.current,
@@ -564,7 +570,15 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     })
     /**保存额外参数 */
     const onSaveExtraParams = useMemoizedFn((v: SimpleDetectExtraParam) => {
-        setExtraParamsValue({...v} as SimpleDetectExtraParam)
+        setExtraParamsValue({
+            ...v,
+            portScanParam: {
+                ...v.portScanParam,
+                UserFingerprintFiles: v.portScanParam.UserFingerprintFilesStr
+                    ? v.portScanParam.UserFingerprintFilesStr.split(",")
+                    : []
+            }
+        } as SimpleDetectExtraParam)
         setExtraParamsVisible(false)
         form.setFieldsValue({
             SkippedHostAliveScan: !!v.portScanParam?.SkippedHostAliveScan
@@ -614,7 +628,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     }, [streamInfo])
     const disabledReport = useCreation(() => {
         switch (executeStatus) {
-            case 'process':
+            case "process":
                 return true
             default:
                 return false
@@ -853,7 +867,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
             const newGroup: string[] = group
                 .map((item) => item.Value)
                 .filter((item) => item !== "基础扫描")
-                .concat("弱口令")
+                .concat(["CVE合规类漏洞", "弱口令"])
             setGroupOptions([...new Set(newGroup)])
         })
     })
@@ -883,7 +897,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
                     <>
                         {scanTypeExtra}
                         {scanType === "专项扫描" && (
-                            <Form.Item noStyle name='pluginGroup' initialValue={["弱口令"]}>
+                            <Form.Item noStyle name='pluginGroup' initialValue={["CVE合规类漏洞", "弱口令"]}>
                                 <Checkbox.Group className={styles["plugin-group-wrapper"]} disabled={disabled}>
                                     {groupOptions.map((ele) => (
                                         <YakitCheckbox key={ele} value={ele}>

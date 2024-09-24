@@ -57,7 +57,7 @@ const defaultFingerprintSetting = {
     ProbeTimeout: defPortScanExecuteExtraFormValue.ProbeTimeout,
     Proxy: defPortScanExecuteExtraFormValue.Proxy,
     FingerprintMode: defPortScanExecuteExtraFormValue.FingerprintMode,
-    UserFingerprintFiles: defPortScanExecuteExtraFormValue.UserFingerprintFiles
+    UserFingerprintFilesStr: defPortScanExecuteExtraFormValue.UserFingerprintFilesStr
 }
 /** SYN 配置 */
 const defaultSYNSetting = {
@@ -473,16 +473,18 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                         ]}
                     />
                 </Form.Item>
-                <YakitFormDragger
-                    formItemProps={{
-                        name: "UserFingerprintFiles",
-                        label: "自定义指纹"
-                    }}
-                    accept='.yaml,.yml'
-                    help='可将yaml、yml文件拖入框内或'
-                    selectType='file'
-                    multiple={true}
-                />
+                {!isSimpleDetect && (
+                    <YakitFormDragger
+                        formItemProps={{
+                            name: "UserFingerprintFilesStr",
+                            label: "自定义指纹"
+                        }}
+                        accept='.yaml,.yml'
+                        help='可将yaml、yml文件拖入框内或'
+                        selectType='file'
+                        multiple={true}
+                    />
+                )}
             </YakitPanel>
         </>
     )
