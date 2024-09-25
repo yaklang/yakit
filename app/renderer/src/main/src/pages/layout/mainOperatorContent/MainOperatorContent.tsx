@@ -135,6 +135,7 @@ import {
     apiQueryFuzzerConfig,
     apiSaveFuzzerConfig
 } from "./utils"
+import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -492,6 +493,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.HTTPHacker:
                 addHTTPHackerPage(params)
                 break
+            case YakitRoute.Modify_Notepad:
+                addModifyNotepad(params)
+                break
             default:
                 break
         }
@@ -570,6 +574,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {
                 pageParams: {
                     simpleDetectPageInfo: {...data}
+                }
+            }
+        )
+    })
+    const addModifyNotepad = useMemoizedFn((data) => {
+        openMenuPage(
+            {route: YakitRoute.Modify_Notepad},
+            {
+                pageParams: {
+                    modifyNotepadPageInfo: {...data}
                 }
             }
         )
@@ -1231,10 +1245,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 let verbose =
                     nodeParams?.verbose ||
                     `${tabName}-${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
-                if (route === YakitRoute.HTTPFuzzer) {
-                    // webFuzzer页面二级tab名称改为WF，特殊
-                    verbose =
-                        nodeParams?.verbose || `${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
+
+                switch (route) {
+                    case YakitRoute.HTTPFuzzer:
+                        verbose =
+                            nodeParams?.verbose ||
+                            `${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
+                        break
+                    case YakitRoute.Modify_Notepad:
+                        verbose =
+                            nodeParams?.verbose ||
+                            `Untitled-${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
+                        break
+                    default:
+                        break
                 }
                 const node: MultipleNodeInfo = {
                     id: tabId,
@@ -1287,6 +1311,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, order)
+                        case YakitRoute.Modify_Notepad:
+                            onSetModifyNotepadData(node, order)
                             break
                         default:
                             break
@@ -1320,6 +1346,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, 1)
+                        case YakitRoute.Modify_Notepad:
+                            onSetModifyNotepadData(node, 1)
                             break
                         default:
                             break
@@ -2012,6 +2040,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         addPagesDataCache(YakitRoute.WebsocketFuzzer, newPageNode)
     })
+
+    /**记事本编辑 */
+    const onSetModifyNotepadData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.Modify_Notepad,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                modifyNotepadPageInfo: {...(node?.pageParams?.modifyNotepadPageInfo || defaultModifyNotepadPageInfo)}
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.Modify_Notepad, newPageNode)
+    })
+    
     /**
      * @description 设置专项漏洞
      */
