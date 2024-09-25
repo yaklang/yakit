@@ -69,6 +69,8 @@ interface PageParamsInfoProps {
     /**新建漏洞与风险统计页面 */
     riskPageInfo?: RiskPageInfoProps
     hTTPHackerPageInfo?: HTTPHackerPageInfoProps
+    /**记事本编辑页面 */
+    modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
 }
 
 export interface AddYakitScriptPageInfoProps {
@@ -171,6 +173,9 @@ export interface HTTPHackerPageInfoProps {
     immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
+export interface ModifyNotepadPageInfoProps{
+    
+}
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
 
