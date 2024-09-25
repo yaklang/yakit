@@ -44,7 +44,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {useScreenRecorder} from "@/store/screenRecorder"
 import {ResultObjProps, remoteOperation} from "@/pages/dynamicControl/DynamicControl"
-import {useStore, yakitDynamicStatus} from "@/store"
+import {useEeSystemConfig, useStore, yakitDynamicStatus} from "@/store"
 import yakitCattle from "@/assets/yakitCattle.png"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
@@ -79,6 +79,8 @@ import {Tooltip} from "antd"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {clearTerminalMap, getMapAllTerminalKey} from "@/pages/YakRunner/BottomEditorDetails/TerminalBox/TerminalMap"
 import {grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/grpc"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 
 const {ipcRenderer} = window.require("electron")
@@ -174,14 +176,38 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineLink])
 
-    // 企业版游客信息统计埋点
+    // 获取企业版配置信息
+    const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
     useEffect(() => {
-        if (engineLink && isEnpriTrace()) {
+        let collectData = false
+        eeSystemConfig.forEach((item) => {
+            if (item.configName === "collectData") {
+                collectData = item.isOpen
+            }
+        })
+        let timer
+        if (collectData) {
             visitorsStatisticsFun()
-            let id = setInterval(visitorsStatisticsFun, 60000)
-            return () => clearInterval(id)
+            timer = setInterval(visitorsStatisticsFun, 60000)
+        }
+        return () => {
+            timer && clearInterval(timer)
+        }
+    }, [eeSystemConfig])
+    useEffect(() => {
+        if (engineLink) {
+            NetWorkApi<any, API.SystemConfigResponse>({
+                method: "get",
+                url: "system/config"
+            }).then((config) => {
+                const data = config.data || []
+                setEeSystemConfig([...data])
+            }).catch(() => {
+                setEeSystemConfig([])
+            })
         }
     }, [engineLink])
+
 
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */

@@ -6,7 +6,7 @@ import {failed, success, yakitFailed} from "@/utils/notification"
 import {loginOut, aboutLoginUpload, loginHTTPFlowsToOnline} from "@/utils/login"
 import {useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {useStore} from "@/store"
+import {useEeSystemConfig, useStore} from "@/store"
 import yakitImg from "@/assets/yakit.jpg"
 import {API} from "@/services/swagger/resposeType"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -16,6 +16,8 @@ import {InformationCircleIcon} from "@/assets/newIcon"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
+import {isEnpriTrace} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -68,6 +70,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         } catch (error) {}
     }
     // 企业登录
+    const {setEeSystemConfig} = useEeSystemConfig()
     const loginUser = useMemoizedFn(() => {
         const {user_name, pwd} = getFormValue()
         NetWorkApi<API.UrmLoginRequest, API.UserData>({
@@ -93,15 +96,39 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         companyHeadImg: res.from_platform === "company" ? res.head_img : null,
                         role: res.role,
                         user_id: res.user_id,
-                        token: res.token,
+                        token: res.token
                     }
                     setStoreUserInfo(user)
                     if (data?.next) {
-                        aboutLoginUpload(res.token)
-                        loginHTTPFlowsToOnline(res.token)
                         success("企业登录成功")
                         onClose && onClose()
                         onSuccee && onSuccee()
+                        if (isEnpriTrace()) {
+                            NetWorkApi<any, API.SystemConfigResponse>({
+                                method: "get",
+                                url: "system/config"
+                            }).then((config) => {
+                                const data = config.data || []
+                                setEeSystemConfig([...data])
+                                let syncData = false
+                                data.forEach((item) => {
+                                    if (item.configName === "syncData") {
+                                        syncData = item.isOpen
+                                    }
+                                })
+
+                                // 企业版同步各账号的流量数据、漏洞数据等到Web端
+                                if (syncData) {
+                                    aboutLoginUpload(res.token)
+                                    loginHTTPFlowsToOnline(res.token)
+                                }
+                            }).catch(() => {
+                                setEeSystemConfig([])
+                            })
+                        } else {
+                            aboutLoginUpload(res.token)
+                            loginHTTPFlowsToOnline(res.token)
+                        }
                     }
                     // 首次登录强制修改密码
                     if (!res.loginTime) {
@@ -148,6 +175,18 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         .catch(() => {})
                 } else {
                     setRemoteValue(RemoteGV.HttpSetting, JSON.stringify(values))
+                }
+
+                if (!enterpriseLogin && isEnpriTrace()) {
+                    NetWorkApi<any, API.SystemConfigResponse>({
+                        method: "get",
+                        url: "system/config"
+                    }).then((config) => {
+                        const data = config.data || []
+                        setEeSystemConfig([...data])
+                    }).catch(() => {
+                        setEeSystemConfig([])
+                    })
                 }
             })
             .catch((e: any) => {

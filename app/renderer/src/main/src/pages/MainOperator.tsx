@@ -1,4 +1,4 @@
-import React, {ReactNode, memo, useEffect, useRef, useState} from "react"
+import React, {ReactNode, memo, useEffect, useMemo, useRef, useState} from "react"
 import {Alert, Avatar, Button, Layout, Modal, Space, Upload} from "antd"
 import {CameraOutlined} from "@ant-design/icons"
 import {failed, info, success, yakitNotify} from "../utils/notification"
@@ -15,7 +15,7 @@ import {AutoSpin} from "../components/AutoSpin"
 import {addToTab} from "./MainTabs"
 import Login from "./Login"
 import SetPassword from "./SetPassword"
-import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
+import {useEeSystemConfig, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {refreshToken} from "@/utils/login"
 import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
@@ -66,7 +66,7 @@ export const defaultUserInfo: UserInfoProps = {
     companyHeadImg: null,
     role: null,
     user_id: null,
-    token: "",
+    token: ""
 }
 
 export interface MainProp {
@@ -416,14 +416,32 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         emiter.emit("menuOpenPage", JSON.stringify(info))
     }
 
-    const waterMarkStr = (): string => {
+    const {eeSystemConfig} = useEeSystemConfig()
+
+    const getEnpriTraceWaterMark = (defaltWater: string) => {
+        let openWatermark = true
+        let eeWatermarkStr = defaltWater
+        eeSystemConfig.forEach((item) => {
+            if (item.configName === "openWatermark") {
+                openWatermark = item.isOpen
+                if (item.content) {
+                    eeWatermarkStr = item.content
+                }
+            }
+        })
+        return openWatermark ? eeWatermarkStr : " "
+    }
+    const waterMarkStr = () => {
         // 社区版无水印
         if (isCommunityEdition()) {
             return ""
         } else if (userInfo.isLogin) {
+            if (isEnpriTrace()) {
+                return getEnpriTraceWaterMark(userInfo.companyName || " ")
+            }
             return userInfo.companyName || ""
         } else if (isEnpriTrace()) {
-            return "EnpriTrace-试用版"
+            return getEnpriTraceWaterMark("EnpriTrace-试用版")
         } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }
@@ -519,7 +537,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     return (
         <>
-            <WaterMark content={waterMarkStr()} style={controlShow ? {display: "none"} : {overflow: "hidden", height: "100%"}}>
+            <WaterMark
+                content={waterMarkStr()}
+                style={controlShow ? {display: "none"} : {overflow: "hidden", height: "100%"}}
+            >
                 <Layout
                     className='yakit-main-layout main-content-tabs yakit-layout-tabs'
                     style={controlShow ? {display: "none"} : {}}

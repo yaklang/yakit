@@ -1,4 +1,5 @@
 import {ResultObjProps} from "@/pages/dynamicControl/DynamicControl"
+import {API} from "@/services/swagger/resposeType"
 import {create} from "zustand"
 
 export interface UserInfoProps {
@@ -82,4 +83,15 @@ export const yakitDynamicStatus = create<YakitDynamicStatusProps>((set, get) => 
         secret: ""
     },
     setDynamicStatus: (info) => set({dynamicStatus: info})
+}))
+
+interface EeSystemConfigProps {
+    /**@name 企业版web端系统配置项 */
+    eeSystemConfig: API.SystemConfigList[]
+    setEeSystemConfig: (config: API.SystemConfigList[]) => void
+}
+
+export const useEeSystemConfig = create<EeSystemConfigProps>((set, get) => ({
+    eeSystemConfig: [],
+    setEeSystemConfig: (config) => set({eeSystemConfig: config})
 }))

@@ -7,6 +7,9 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState} from "ahooks"
 import {aboutLoginUpload, loginHTTPFlowsToOnline} from "@/utils/login"
 import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+import {useEeSystemConfig} from "@/store"
+import { NetWorkApi } from "@/services/fetch"
+import { API } from "@/services/swagger/resposeType"
 const {ipcRenderer} = window.require("electron")
 export interface EnterpriseJudgeLoginProps {
     setJudgeLicense: (v: boolean) => void
@@ -24,13 +27,37 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
         judgeLicense()
     }, [])
 
+    const {setEeSystemConfig} = useEeSystemConfig()
     const judgeLogin = () => {
         ipcRenderer
             .invoke("get-login-user-info", {})
             .then((e) => {
                 if (e?.isLogin) {
-                    aboutLoginUpload(e?.token)
-                    loginHTTPFlowsToOnline(e?.token)
+                    if (isEnpriTrace()) {
+                        NetWorkApi<any, API.SystemConfigResponse>({
+                            method: "get",
+                            url: "system/config"
+                        }).then((config) => {
+                            const data = config.data || []
+                            setEeSystemConfig([...data])
+                            let syncData = false
+                            data.forEach((item) => {
+                                if (item.configName === "syncData") {
+                                    syncData = item.isOpen
+                                }
+                            })
+
+                            if (syncData) {
+                                aboutLoginUpload(e.token)
+                                loginHTTPFlowsToOnline(e.token)
+                            }
+                        }).catch(() => {
+                            setEeSystemConfig([])
+                        })
+                    } else {
+                        aboutLoginUpload(e?.token)
+                        loginHTTPFlowsToOnline(e?.token)
+                    }
                     setJudgeLogin(true)
                     setJudgeLicense(false)
                 } else {
@@ -96,7 +123,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                             <ConfigPrivateDomain
                                 enterpriseLogin={true}
                                 onSuccee={() => setJudgeLicense(false)}
-                                skipShow={isEnpriTrace()||isEnpriTraceAgent()}
+                                skipShow={isEnpriTrace() || isEnpriTraceAgent()}
                             />
                         </div>
                     ) : (
