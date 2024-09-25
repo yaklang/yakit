@@ -64,7 +64,10 @@ export const BlockView = () => {
         editor.ctx?.get(menuAPI.key).show(tr.selection.from)
     }
     return (
-        <div ref={ref} className='absolute w-6 bg-slate-200 rounded hover:bg-slate-300 cursor-grab'>
+        <div
+            ref={ref}
+            style={{position: "absolute", width: 60, cursor: "grab"}}
+        >
             <div onClick={() => onAdd()}>+添加</div>
             <svg
                 xmlns='http://www.w3.org/2000/svg'
@@ -72,7 +75,7 @@ export const BlockView = () => {
                 viewBox='0 0 24 24'
                 strokeWidth={1.5}
                 stroke='currentColor'
-                className='w-6 h-6'
+                style={{width: 24, height: 24}}
             >
                 <path
                     strokeLinecap='round'
