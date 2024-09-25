@@ -410,7 +410,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
             <YakitModal
                 title='修改源码评分'
                 type='white'
-                width={506}
+                width={"50%"}
                 centered={true}
                 maskClosable={false}
                 closable={false}

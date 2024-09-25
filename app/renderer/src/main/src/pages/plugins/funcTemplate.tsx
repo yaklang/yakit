@@ -1701,7 +1701,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                                                 {item.Item}
                                             </div>
                                             <div className={styles["opt-content"]}>
-                                                {item.Suggestion}
+                                                <pre>{item.Suggestion}</pre>
                                                 {errorPosition && (
                                                     <span className={styles["error-position"]}> {errorPosition}</span>
                                                 )}
@@ -1761,7 +1761,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
         <YakitModal
             title='插件基础检测'
             type='white'
-            width={506}
+            width={"50%"}
             centered={true}
             maskClosable={false}
             closable={true}
